@@ -10,6 +10,7 @@
     "seed-draft": "tsx scripts/seed-draft.ts",
     "draft-server": "tsx scripts/draft-server.ts",
     "draft-cli": "tsx scripts/draft-cli.ts",
+    "ingest": "tsx scripts/ingest.ts",
     "test": "vitest run",
     "test:watch": "vitest"
   },

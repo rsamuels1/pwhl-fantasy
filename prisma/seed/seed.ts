@@ -52,16 +52,16 @@ function mockPlayers(): RawPlayer[] {
 }
 
 class MockStatsSource implements StatsSource {
-  async fetchTeams(): Promise<RawTeam[]> {
+  async fetchTeams(_season: string): Promise<RawTeam[]> {
     return MOCK_TEAMS;
   }
-  async fetchPlayers(): Promise<RawPlayer[]> {
+  async fetchPlayers(_season: string): Promise<RawPlayer[]> {
     return mockPlayers();
   }
-  async fetchGames(): Promise<RawGame[]> {
+  async fetchGames(_season: string): Promise<RawGame[]> {
     return []; // add a few mock games as needed for scoring tests
   }
-  async fetchStatLines(): Promise<RawStatLine[]> {
+  async fetchStatLines(_gameExternalId: string): Promise<RawStatLine[]> {
     return [];
   }
 }

@@ -231,7 +231,7 @@ function PlayerPanel({
   const handleSearch = (q: string) => {
     setSearch(q);
     if (searchRef.current) clearTimeout(searchRef.current);
-    searchRef.current = setTimeout(() => onSearch(q || undefined), 300);
+    searchRef.current = setTimeout(() => onSearch(q || ""), 300);
   };
 
   const posOrder: Record<string, number> = { FORWARD: 0, DEFENSE: 1, GOALIE: 2 };
@@ -255,7 +255,7 @@ function PlayerPanel({
             value={search}
             onChange={(e) => handleSearch(e.target.value)}
           />
-          <button style={styles.btnSecondary} onClick={() => onSearch(search || undefined)}>
+          <button style={styles.btnSecondary} onClick={() => onSearch(search || "")}>
             Search
           </button>
         </div>
