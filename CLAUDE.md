@@ -12,8 +12,8 @@ lineups, and compete in weekly head-to-head matchups scored from real game stats
 ## Hard constraints / things that bite
 
 1. **No official PWHL fantasy API.** All real-world data flows through the `StatsSource`
-   interface in `lib/ingestion/source.ts`. Never call a stats provider directly from
-   app code — go through that interface. The concrete source is TBD; build against a mock.
+   interface in `lib/ingestion/source.ts`. The concrete implementation is `HockeytechSource`
+   in `lib/ingestion/hockeytech.ts` — never call it from app code, only from ingestion scripts.
 2. **Season start date is not yet official.** Code assumes a ~Nov 2026 opener and a draft
    ~1 week prior. Don't hardcode dates; read them from `FantasyLeague.draftStartsAt` and
    `Game.startsAt`.
@@ -42,6 +42,10 @@ npm run seed           # load mock teams/players/games for development
 npm run seed-draft     # create a throwaway 4-team draft-ready league (run after seed)
 npm run draft-server   # start the WebSocket draft server on :8080
 npm run draft-cli -- --league <id> --team <id> [--start]  # terminal client for one team
+npm run ingest -- --season 2025-26          # pull real data from HockeyTech (slow, needs network)
+npm run ingest -- --season 2025-26 --no-stats  # teams/players/games only, skip stat lines
+npm run export-fixture -- --season 2025-26  # snapshot DB → tests/fixtures/2025-26/*.json
+npm run seed-fixture -- --season 2025-26    # load fixture JSON → DB (fast, offline)
 npm test               # run all tests
 npx vitest run tests/draft.test.ts  # run a single test file
 ```
@@ -53,6 +57,76 @@ npm run draft-server                 # in one terminal
 npm run draft-cli -- --league <id> --team <id> --start  # terminal 1 (commissioner)
 npm run draft-cli -- --league <id> --team <id>          # terminal 2..N
 ```
+
+## Real data source: HockeyTech / LeagueStat
+
+The PWHL licenses [HockeyTech](https://www.hockeytech.com) (also called LeagueStat). The
+concrete adapter is `lib/ingestion/hockeytech.ts`.
+
+**Credentials (public, embedded in every thepwhl.com page — no registration needed):**
+```
+API key:      446521baf8c38984
+Client code:  pwhl
+Base URL:     https://lscluster.hockeytech.com/feed/index.php
+```
+
+**Response format:** JSONP — every response is wrapped in `(` … `)`. Strip one character
+from each end before `JSON.parse`. No auth headers, no cookies, no rate-limit observed.
+
+**Key endpoints** (all GET, params: `key=…&client_code=pwhl&site_id=2&league_id=1&lang=en`):
+
+| view | purpose | notes |
+|---|---|---|
+| `statviewfeed&view=gameSummary&game_id=N` | box score + per-player stats | skaters in `homeTeam.skaters[]`, goalies in `homeTeam.goalieLog[]` (not `goalies[]` — that has zeros) |
+| `statviewfeed&view=gameCenterPlayByPlay&game_id=N` | flat array of 163 events | types: `goal`, `shot`, `blocked_shot`, `hit`, `penalty`, `faceoff`, `goalie_change` |
+| `statviewfeed&view=schedule&season_id=N` | full season schedule | response shape: `[{sections:[{data:[{prop,row}]}]}]`; team IDs in `prop.home_team_city.teamLink` |
+| `statviewfeed&view=roster&team_id=N&season_id=N` | team roster | shape: `{roster:[{sections:[{title,data:[{row:{player_id,name,position,tp_jersey_number}}]}]}]}` |
+| `modulekit&view=seasons&fmt=json` | list all season IDs | use to map "2025-26" → `season_id` |
+
+**Season IDs** (as of June 2026):
+
+| season_id | name | playoff |
+|---|---|---|
+| 9 | 2026 Playoffs | yes |
+| 8 | 2025-26 Regular Season | no |
+| 6 | 2025 Playoffs | yes |
+| 5 | 2024-25 Regular Season | no |
+| 3 | 2024 Playoffs | yes |
+| 1 | 2024 Regular Season | no |
+
+**Stat-line gotchas:**
+- Goalie stats live in `homeTeam.goalieLog[]`, not `homeTeam.goalies[]` (the goalies array has all-zero stats).
+- `win` / `shutout` aren't explicit fields — derive: win = team won AND goalie played; shutout = `goalsAgainst==0 AND saves>0 AND only one goalie played`.
+- Per-player power-play points aren't in the player stats row. Derive them from `periods[].goals` where `properties.isPowerPlay=="1"`, summing scorer + assist players.
+- `timeOnIce` in goalieLog can be `null` for goalies who didn't play — skip those rows.
+
+**Real-time (live games):** Firebase Realtime Database WebSockets at `wss://leaguestat-b9523.firebaseio.com/` push score/event updates. Not needed for historical data; relevant for the live-scoring loop (build phase 4).
+
+**Known data quality issues:**
+- Schedule `date_with_day` is "Wed, May 8" with no year. Precise `startsAt` comes from `gameSummary.details.GameDateISO8601`. The ingest script backfills it during stat-line import.
+- Roster `name` field is a full string ("Jamie Lee Rattray"). We split on the last space for firstName/lastName — handles compound first names correctly.
+- Some players appear in gameSummary who aren't in the season roster (callups, etc.). The ingest skips stat lines for players not in the DB rather than failing.
+
+## Test fixture: 2025-26 regular season
+
+`tests/fixtures/2025-26/` contains a snapshot of the full 2025-26 regular season:
+8 teams, ~220 players, 120 games, ~4,900 stat lines — all with known real-world outcomes.
+
+Use it to test scoring logic, standings calculations, and anything that needs a realistic
+data set without hitting the network:
+
+```bash
+npm run seed-fixture -- --season 2025-26   # loads in ~30s, fully offline
+```
+
+Re-export if the schema changes:
+```bash
+npm run ingest -- --season 2025-26         # re-pull from HockeyTech
+npm run export-fixture -- --season 2025-26 # overwrite the JSON files
+```
+
+The fixture JSON uses `externalId` references everywhere (no internal cuids), so it
+survives DB resets and schema migrations.
 
 ## Build order (matches the launch timeline)
 
