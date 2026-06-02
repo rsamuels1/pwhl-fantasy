@@ -168,6 +168,10 @@ model FantasyLeague {
   // Validate the shape in application code (see lib/scoring).
   scoringSettings Json @default("{}")
   rosterSettings  Json @default("{}") // slots per position, bench size, etc.
+  
+  // Playoff settings: { teamsInPlayoff: number, topSeedsWithBye: number, roundDurationPeriods: number, higherSeedWinsTies: boolean }
+  playoffSettings Json @default("{\"teamsInPlayoff\": 6, \"topSeedsWithBye\": 2, \"roundDurationPeriods\": 2, \"higherSeedWinsTies\": true}")
+  playoffStatus   PlayoffStatus @default(NOT_STARTED)
 
   teams    FantasyTeam[]
   draft    Draft?
@@ -183,6 +187,12 @@ model FantasyLeague {
 enum DraftType {
   SNAKE
   AUCTION
+}
+
+enum PlayoffStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETE
 }
 
 enum FantasyLeagueStatus {
@@ -311,6 +321,10 @@ model Matchup {
   // if scoring settings change retroactively.
   homeScore Float?
   awayScore Float?
+  
+  // Playoff fields
+  isPlayoff Boolean @default(false)
+  round     Int? // 1=first round, 2=semifinals, 3=finals; null for regular season
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

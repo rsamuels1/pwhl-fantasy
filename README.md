@@ -15,6 +15,12 @@ npm run dev                   # http://localhost:3000
 npm test                      # run the scoring engine tests
 ```
 
+To seed a playoff test league and sample playoff matchups:
+
+```bash
+npx tsx scripts/seed-playoff.ts [--init-playoffs]
+```
+
 You need a local PostgreSQL database (or a hosted one). Point `DATABASE_URL` at it.
 
 ## Project structure
@@ -50,6 +56,21 @@ You need a local PostgreSQL database (or a hosted one). Point `DATABASE_URL` at 
 Fantasy points are always recomputed from raw `StatLine` rows via `lib/scoring`. This
 means a league can change its scoring rules and every past matchup recomputes correctly.
 Cached scores on `Matchup` are an optimization, never the source of truth.
+
+## Playoff integration
+
+A new playoff system now sits on top of the existing fantasy workflow without replacing
+regular-season scoring or standings. Playoff matchups are stored in `Matchup` rows with
+`isPlayoff=true` and `round`, while regular-season standings continue to be computed
+from `!isPlayoff` matchups.
+
+The new playoff flow includes:
+- league playoff settings in `FantasyLeague.playoffSettings`
+- playoff status tracking in `FantasyLeague.playoffStatus`
+- bracket generation in `lib/playoffs/`
+- playoff matchup creation in `lib/scoring/matchups.ts`
+- new endpoints under `app/api/leagues/[leagueId]`
+- bracket UI at `app/league/[leagueId]/bracket`
 
 ## Note on entry fees
 

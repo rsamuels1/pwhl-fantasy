@@ -46,6 +46,7 @@ npm run ingest -- --season 2025-26          # pull real data from HockeyTech (sl
 npm run ingest -- --season 2025-26 --no-stats  # teams/players/games only, skip stat lines
 npm run export-fixture -- --season 2025-26  # snapshot DB → tests/fixtures/2025-26/*.json
 npm run seed-fixture -- --season 2025-26    # load fixture JSON → DB (fast, offline)
+npx tsx scripts/seed-playoff.ts [--init-playoffs]  # seed a playoff test league and optionally initialize playoffs
 npm test               # run all tests
 npx vitest run tests/draft.test.ts  # run a single test file
 ```
@@ -134,8 +135,26 @@ survives DB resets and schema migrations.
 2. Roster ingestion pipeline (against mock source) + scoring engine ✅ (scoring done)
 3. **Draft room** — server logic ✅, React UI 🔨 in progress
 4. Live scoring loop: matchups, standings, waivers, trades
-5. Integration + load test the draft room + beta
-6. Public launch ~early Nov, drafts ~1 week before opener
+5. Playoff bracket and postseason flow — standings, seeding, bracket generation, playoff matchups, and results
+6. Integration + load test the draft room + beta
+7. Public launch ~early Nov, drafts ~1 week before opener
+
+## Playoff bracket system
+
+A new playoff layer is integrated into the existing fantasy flow without changing how regular season matchups, scoring, or standings work.
+
+- `FantasyLeague.playoffSettings` now stores playoff rules: `teamsInPlayoff`, `topSeedsWithBye`, `roundDurationPeriods`, and `higherSeedWinsTies`.
+- `FantasyLeague.playoffStatus` tracks `NOT_STARTED`, `IN_PROGRESS`, and `COMPLETE`.
+- `Matchup` rows now support `isPlayoff` and `round`, so playoff matchups are stored in the same table as regular season games and can reuse existing scoring/standings logic.
+- Regular season standings are still computed from `!isPlayoff` matchups by `lib/playoffs/seeding.ts`.
+- New `lib/playoffs/` modules handle seeding, bracket generation, playoff periods, and lifecycle.
+- `lib/scoring/matchups.ts` now includes `generatePlayoffMatchups(...)` to create/update playoff `Matchup` rows safely.
+- New API endpoints:
+  - `GET /api/leagues/[leagueId]/standings` returns standings plus playoff eligibility and seed info
+  - `GET /api/leagues/[leagueId]/bracket` returns the generated playoff bracket
+  - `POST /api/leagues/[leagueId]/start-playoffs` initializes playoffs from regular season standings
+- New UI route: `app/league/[leagueId]/bracket` renders standings and the playoff bracket view.
+- The format is single-elimination for the top 6 teams, with the top 2 seeds receiving byes and higher seeds winning ties.
 
 ## Draft module (`lib/draft/`)
 

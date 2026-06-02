@@ -413,3 +413,63 @@ export async function scoreVtfWeek(
   }
   return results;
 }
+
+// ── playoff matchup generation ────────────────────────────────────────────────
+
+export interface PlayoffMatchupPairing {
+  homeTeamId: string;
+  awayTeamId: string;
+  round: number;
+  startsAt: Date;
+  endsAt: Date;
+}
+
+/**
+ * Generate playoff matchups for a league.
+ * 
+ * Creates Matchup rows for each playoff matchup, with isPlayoff=true and round set.
+ * Safe to re-run: will update existing matchups.
+ */
+export async function generatePlayoffMatchups(
+  leagueId: string,
+  pairings: PlayoffMatchupPairing[],
+  prisma: PrismaClient
+): Promise<void> {
+  for (const pairing of pairings) {
+    const existing = await prisma.matchup.findFirst({
+      where: {
+        leagueId,
+        round: pairing.round,
+        homeTeamId: pairing.homeTeamId,
+      },
+      select: { id: true },
+    });
+
+    if (existing) {
+      await prisma.matchup.update({
+        where: { id: existing.id },
+        data: {
+          homeTeamId: pairing.homeTeamId,
+          awayTeamId: pairing.awayTeamId,
+          startsAt: pairing.startsAt,
+          endsAt: pairing.endsAt,
+          isPlayoff: true,
+          round: pairing.round,
+        },
+      });
+    } else {
+      await prisma.matchup.create({
+        data: {
+          leagueId,
+          week: 0, // Placeholder; playoffs don't use week numbers in the same way
+          homeTeamId: pairing.homeTeamId,
+          awayTeamId: pairing.awayTeamId,
+          startsAt: pairing.startsAt,
+          endsAt: pairing.endsAt,
+          isPlayoff: true,
+          round: pairing.round,
+        },
+      });
+    }
+  }
+}
