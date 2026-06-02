@@ -12,6 +12,7 @@
     "draft-cli": "tsx scripts/draft-cli.ts",
     "ingest": "tsx scripts/ingest.ts",
     "replay-week": "tsx scripts/replay-week.ts",
+    "replay-week-vtf": "tsx scripts/replay-week-vtf.ts",
     "export-fixture": "tsx scripts/export-fixture.ts",
     "seed-fixture": "tsx scripts/seed-fixture.ts",
     "test": "vitest run",

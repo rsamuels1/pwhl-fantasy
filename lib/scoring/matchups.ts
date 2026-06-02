@@ -292,3 +292,124 @@ export async function scoreLeagueMatchups(
     await scoreMatchup(id, prisma);
   }
 }
+
+// ── vs-the-field (VTF) scoring ────────────────────────────────────────────────
+// Each week every team is compared against every other team. C(N,2) Matchup
+// rows per period. A team's weekly record = (wins, losses, ties) across all
+// N-1 opponents, accumulated into a season standing.
+
+// Compute one score per active team. Called once per period rather than once
+// per matchup pair, so we issue N queries instead of 2*C(N,2).
+export async function computeAllTeamScores(
+  leagueId: string,
+  period: ScoringPeriod,
+  scoringSettings: ScoringSettings,
+  prisma: PrismaClient
+): Promise<Map<string, number>> {
+  const teams = await prisma.fantasyTeam.findMany({
+    where: { leagueId },
+    select: { id: true },
+  });
+  const scores = new Map<string, number>();
+  for (const { id } of teams) {
+    scores.set(id, await computeTeamScore(id, period, scoringSettings, prisma));
+  }
+  return scores;
+}
+
+// Generate all-vs-all Matchup rows for every scoring period in the season.
+// Creates C(N,2) rows per period. Safe to re-run (find-then-create).
+export async function generateVtfMatchups(
+  leagueId: string,
+  season: string,
+  prisma: PrismaClient
+): Promise<ScoringPeriod[]> {
+  const league = await prisma.fantasyLeague.findUniqueOrThrow({
+    where: { id: leagueId },
+    include: { teams: { orderBy: { draftOrder: "asc" } } },
+  });
+  const teamIds = league.teams.map((t) => t.id);
+  if (teamIds.length < 2) throw new Error("Need at least 2 teams");
+
+  const gameDates = await prisma.game
+    .findMany({ where: { season }, select: { startsAt: true } })
+    .then((rows) => rows.map((r) => r.startsAt));
+  const periods = derivePeriods(gameDates);
+  if (periods.length === 0) throw new Error(`No games found for season ${season}`);
+
+  // Batch per period: delete any existing rows for this league+week then
+  // createMany. Much faster than N*C(N,2) individual find-then-create trips.
+  for (const period of periods) {
+    await prisma.matchup.deleteMany({ where: { leagueId, week: period.week } });
+    const data = [];
+    for (let i = 0; i < teamIds.length; i++) {
+      for (let j = i + 1; j < teamIds.length; j++) {
+        data.push({
+          leagueId,
+          week: period.week,
+          startsAt: period.startsAt,
+          endsAt: period.endsAt,
+          homeTeamId: teamIds[i],
+          awayTeamId: teamIds[j],
+        });
+      }
+    }
+    await prisma.matchup.createMany({ data });
+  }
+  return periods;
+}
+
+export interface WeeklyResult {
+  score: number;
+  wins: number;
+  losses: number;
+  ties: number;
+}
+
+// Score all VTF matchups for one week. Computes each team's score once, fills
+// all matchup rows with the cached scores, and returns W-L-T for each team.
+export async function scoreVtfWeek(
+  leagueId: string,
+  week: number,
+  period: ScoringPeriod,
+  prisma: PrismaClient
+): Promise<Map<string, WeeklyResult>> {
+  const league = await prisma.fantasyLeague.findUniqueOrThrow({
+    where: { id: leagueId },
+    select: { scoringSettings: true },
+  });
+  const settings = parseScoringSettings(league.scoringSettings);
+  const scores = await computeAllTeamScores(leagueId, period, settings, prisma);
+
+  // Persist cached scores to all matchup rows for the week.
+  const matchups = await prisma.matchup.findMany({
+    where: { leagueId, week },
+    select: { id: true, homeTeamId: true, awayTeamId: true },
+  });
+  for (const m of matchups) {
+    await prisma.matchup.update({
+      where: { id: m.id },
+      data: {
+        homeScore: scores.get(m.homeTeamId) ?? null,
+        awayScore: scores.get(m.awayTeamId) ?? null,
+      },
+    });
+  }
+
+  // Derive W-L-T for each team from the scores map.
+  const teamIds = [...scores.keys()];
+  const results = new Map<string, WeeklyResult>();
+  for (const teamId of teamIds) {
+    const myScore = scores.get(teamId)!;
+    let wins = 0, losses = 0, ties = 0;
+    for (const otherId of teamIds) {
+      if (otherId === teamId) continue;
+      const theirScore = scores.get(otherId)!;
+      if (myScore > theirScore) wins++;
+      else if (myScore < theirScore) losses++;
+      else ties++;
+    }
+    results.set(teamId, { score: myScore, wins, losses, ties });
+  }
+  return results;
+}
