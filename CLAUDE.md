@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-Context for Claude Code when working in this repo. Read this before making changes.
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## What this is
 
@@ -35,18 +35,30 @@ lineups, and compete in weekly head-to-head matchups scored from real game stats
 ## Commands
 
 ```bash
-npm run dev            # start dev server
-npx prisma migrate dev # apply schema changes
+npm run dev            # start Next.js dev server
+npx prisma db push     # sync schema to DB without a migration file (use in dev against Neon)
 npx prisma studio      # inspect the DB
 npm run seed           # load mock teams/players/games for development
-npm test               # run tests (scoring engine has the most important coverage)
+npm run seed-draft     # create a throwaway 4-team draft-ready league (run after seed)
+npm run draft-server   # start the WebSocket draft server on :8080
+npm run draft-cli -- --league <id> --team <id> [--start]  # terminal client for one team
+npm test               # run all tests
+npx vitest run tests/draft.test.ts  # run a single test file
+```
+
+**Full local draft loop:**
+```bash
+npm run seed && npm run seed-draft   # prints leagueId + team ids
+npm run draft-server                 # in one terminal
+npm run draft-cli -- --league <id> --team <id> --start  # terminal 1 (commissioner)
+npm run draft-cli -- --league <id> --team <id>          # terminal 2..N
 ```
 
 ## Build order (matches the launch timeline)
 
 1. Scaffold + schema + auth + seed data ✅
 2. Roster ingestion pipeline (against mock source) + scoring engine ✅ (scoring done)
-3. **Draft room** ✅ server logic done — see `lib/draft/`. Frontend still to build.
+3. **Draft room** — server logic ✅, React UI 🔨 in progress
 4. Live scoring loop: matchups, standings, waivers, trades
 5. Integration + load test the draft room + beta
 6. Public launch ~early Nov, drafts ~1 week before opener
@@ -69,6 +81,10 @@ Run locally: `npm run draft-server` (ws://localhost:8080?league=<id>). The clock
 is server-side and absolute (`expiresAt` epoch ms); a client disconnect can't
 stall the draft because TIMEOUT auto-picks on the server. Every pick persists
 immediately, so a server restart rebuilds state via `buildEngineState()`.
+
+**Server-side gotchas fixed (don't regress):**
+- `getRoom` uses a `Map<string, Promise<DraftRoom>>` (not `Map<string, DraftRoom>`) to prevent a race where concurrent JOINs each call `buildEngineState` and end up in separate rooms, breaking broadcast.
+- START/PAUSE/RESUME emit a `PERSIST_STATUS` effect so draft status survives server restarts. Without it, `buildEngineState` reads `PENDING` from the DB even mid-draft.
 
 ## Conventions
 
