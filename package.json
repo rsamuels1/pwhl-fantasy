@@ -1,0 +1,38 @@
+{
+  "name": "pwhl-fantasy",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "seed": "tsx prisma/seed/seed.ts",
+    "seed-draft": "tsx scripts/seed-draft.ts",
+    "draft-server": "tsx scripts/draft-server.ts",
+    "draft-cli": "tsx scripts/draft-cli.ts",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.0.0",
+    "next": "^14.0.0",
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0",
+    "ws": "^8.16.0"
+  },
+  "devDependencies": {
+    "@types/ws": "^8.5.10",
+    "prisma": "^5.0.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.0.0",
+    "vitest": "^1.0.0"
+  },
+  "allowScripts": {
+    "@prisma/client@5.22.0": true,
+    "@prisma/engines@5.22.0": true,
+    "esbuild@0.28.0": true,
+    "esbuild@0.21.5": true,
+    "fsevents@2.3.3": true,
+    "prisma@5.22.0": true
+  }
+}
