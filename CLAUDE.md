@@ -154,8 +154,10 @@ Key pieces:
 - **PlayerPanel** — two tabs: Available (search + position filter + sortable stat columns from
   prior season, plus "+Q" to add to queue) and Queue (reorder with ↑/↓, remove, or pick
   directly when on the clock). Auto-refreshes after every pick.
-- **NeedsPanel** — right column; shows each roster slot type with `have/need` counts so
-  managers know which positions to target. Turns green when filled, orange when 1 left.
+- **NeedsPanel** — right column; shows each draftable slot (F/D/G/UTIL/BENCH) with
+  `have/need` counts via slot-assignment simulation (same priority as seed scripts:
+  position → UTIL → BENCH). Turns green when filled, orange when 1 left. IR is not
+  a draftable row — a note at the bottom says "fill from waivers".
 - **MyPicks** — right column below NeedsPanel; full list of drafted players with position tags.
 
 Stats are served from `GET /api/leagues/[leagueId]/draft/players` which aggregates the most
@@ -211,6 +213,23 @@ immediately, so a server restart rebuilds state via `buildEngineState()`.
 **Server-side gotchas fixed (don't regress):**
 - `getRoom` uses a `Map<string, Promise<DraftRoom>>` (not `Map<string, DraftRoom>`) to prevent a race where concurrent JOINs each call `buildEngineState` and end up in separate rooms, breaking broadcast.
 - START/PAUSE/RESUME emit a `PERSIST_STATUS` effect so draft status survives server restarts. Without it, `buildEngineState` reads `PENDING` from the DB even mid-draft.
+
+## Roster configuration
+
+The canonical 13-slot roster (used everywhere — seed scripts, tests, draft, scoring):
+
+```
+{ forward: 2, defense: 2, goalie: 1, util: 1, bench: 6, ir: 1 }
+```
+
+- **13 total slots**, but only **12 draft rounds** — IR is filled from the waiver wire
+  post-draft, never drafted. `rostersToRounds` intentionally excludes `ir` from its sum.
+- UTIL accepts any skater (F or D), not goalies — same convention as Yahoo.
+- Slot-assignment priority when filling a roster from picks: natural position → UTIL
+  (skaters only) → BENCH.
+
+Any time you add a new seed script or test that creates a `FantasyLeague`, use this
+`rosterSettings` value. Never hardcode a different one without a comment explaining why.
 
 ## Conventions
 

@@ -1,15 +1,3 @@
-// PWHL Fantasy — initial database schema
-// Provider: PostgreSQL. ORM: Prisma.
-//
-// Design notes:
-// - "League data" (teams, players, games, stat lines) is mirrored FROM the PWHL.
-//   It is read-only as far as your app's users are concerned and is refreshed by
-//   an ingestion job. Keep it cleanly separated from "fantasy" tables.
-// - "Fantasy data" (fantasy leagues, rosters, drafts, matchups) is user-owned.
-// - Stat lines are stored raw (per player, per real game). Fantasy points are
-//   COMPUTED from raw stats against a league's scoring settings, never stored as
-//   the source of truth — so you can change scoring rules and recompute.
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -19,53 +7,36 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ============================================================
-// LEAGUE DATA (mirrored from PWHL — refreshed by ingestion job)
-// ============================================================
-
 model Team {
   id           String   @id @default(cuid())
-  // Stable external id from your stats source, so re-imports are idempotent.
   externalId   String   @unique
-  name         String // e.g. "Minnesota Frost"
+  name         String
   city         String
-  abbreviation String   @unique // e.g. "MIN"
-  conference   String? // null until/if the league defines them for 12 teams
-  active       Boolean  @default(true) // false for folded/relocated franchises
-
-  players   Player[]
-  homeGames Game[]   @relation("HomeTeam")
-  awayGames Game[]   @relation("AwayTeam")
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-enum Position {
-  FORWARD
-  DEFENSE
-  GOALIE
+  abbreviation String   @unique
+  conference   String?
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  awayGames    Game[]   @relation("AwayTeam")
+  homeGames    Game[]   @relation("HomeTeam")
+  players      Player[]
 }
 
 model Player {
-  id         String   @id @default(cuid())
-  externalId String   @unique // stable id from stats source
-  firstName  String
-  lastName   String
-  position   Position
-  jersey     Int?
-  active     Boolean  @default(true) // false if released / not on a 26-27 roster
-
-  // Current team. Nullable: free agents during the open signing period have no team.
-  teamId String?
-  team   Team?   @relation(fields: [teamId], references: [id])
-
-  statLines      StatLine[]
-  rosterEntries  RosterEntry[]
-  draftPicks     DraftPick[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id            String        @id @default(cuid())
+  externalId    String        @unique
+  firstName     String
+  lastName      String
+  position      Position
+  jersey        Int?
+  active        Boolean       @default(true)
+  teamId        String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  draftPicks    DraftPick[]
+  team          Team?         @relation(fields: [teamId], references: [id])
+  rosterEntries RosterEntry[]
+  statLines     StatLine[]
 
   @@index([teamId])
   @@index([lastName, firstName])
@@ -74,25 +45,170 @@ model Player {
 model Game {
   id         String     @id @default(cuid())
   externalId String     @unique
-  season     String // e.g. "2026-27"
+  season     String
   startsAt   DateTime
   status     GameStatus @default(SCHEDULED)
-
   homeTeamId String
-  homeTeam   Team   @relation("HomeTeam", fields: [homeTeamId], references: [id])
   awayTeamId String
-  awayTeam   Team   @relation("AwayTeam", fields: [awayTeamId], references: [id])
-
-  homeScore Int?
-  awayScore Int?
-
-  statLines StatLine[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  homeScore  Int?
+  awayScore  Int?
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+  awayTeam   Team       @relation("AwayTeam", fields: [awayTeamId], references: [id])
+  homeTeam   Team       @relation("HomeTeam", fields: [homeTeamId], references: [id])
+  statLines  StatLine[]
 
   @@index([season, startsAt])
   @@index([status])
+}
+
+model StatLine {
+  id             String   @id @default(cuid())
+  playerId       String
+  gameId         String
+  goals          Int      @default(0)
+  assists        Int      @default(0)
+  shots          Int      @default(0)
+  plusMinus      Int      @default(0)
+  penaltyMinutes Int      @default(0)
+  powerPlayPts   Int      @default(0)
+  hits           Int      @default(0)
+  blocks         Int      @default(0)
+  saves          Int      @default(0)
+  goalsAgainst   Int      @default(0)
+  shutout        Boolean  @default(false)
+  win            Boolean  @default(false)
+  timeOnIceSecs  Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  game           Game     @relation(fields: [gameId], references: [id])
+  player         Player   @relation(fields: [playerId], references: [id])
+
+  @@unique([playerId, gameId])
+  @@index([gameId])
+}
+
+model User {
+  id           String          @id @default(cuid())
+  email        String          @unique
+  displayName  String
+  passwordHash String?
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  ownedLeagues FantasyLeague[] @relation("Commissioner")
+  memberships  FantasyTeam[]
+}
+
+model FantasyLeague {
+  id              String              @id @default(cuid())
+  name            String
+  season          String              @default("2026-27")
+  draftType       DraftType           @default(SNAKE)
+  status          FantasyLeagueStatus @default(PRE_DRAFT)
+  maxTeams        Int                 @default(10)
+  commissionerId  String
+  scoringSettings Json                @default("{}")
+  rosterSettings  Json                @default("{}")
+  playoffSettings Json                @default("{\"teamsInPlayoff\": 6, \"topSeedsWithBye\": 2, \"higherSeedWinsTies\": true, \"roundDurationPeriods\": 2}")
+  playoffStatus   PlayoffStatus       @default(NOT_STARTED)
+  draftStartsAt   DateTime?
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  draft           Draft?
+  commissioner    User                @relation("Commissioner", fields: [commissionerId], references: [id])
+  teams           FantasyTeam[]
+  matchups        Matchup[]
+
+  @@index([status])
+}
+
+model FantasyTeam {
+  id           String        @id @default(cuid())
+  name         String
+  leagueId     String
+  ownerId      String
+  draftOrder   Int?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  draftPicks   DraftPick[]
+  league       FantasyLeague @relation(fields: [leagueId], references: [id])
+  owner        User          @relation(fields: [ownerId], references: [id])
+  awayMatchups Matchup[]     @relation("AwayFantasyTeam")
+  homeMatchups Matchup[]     @relation("HomeFantasyTeam")
+  roster       RosterEntry[]
+
+  @@unique([leagueId, ownerId])
+  @@index([leagueId])
+}
+
+model RosterEntry {
+  id            String      @id @default(cuid())
+  fantasyTeamId String
+  playerId      String
+  slot          LineupSlot  @default(BENCH)
+  acquired      DateTime    @default(now())
+  fantasyTeam   FantasyTeam @relation(fields: [fantasyTeamId], references: [id])
+  player        Player      @relation(fields: [playerId], references: [id])
+
+  @@unique([fantasyTeamId, playerId])
+  @@index([fantasyTeamId])
+}
+
+model Draft {
+  id            String        @id @default(cuid())
+  leagueId      String        @unique
+  status        DraftStatus   @default(PENDING)
+  pickTimerSecs Int           @default(90)
+  currentPick   Int           @default(1)
+  startedAt     DateTime?
+  completedAt   DateTime?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  league        FantasyLeague @relation(fields: [leagueId], references: [id])
+  picks         DraftPick[]
+}
+
+model DraftPick {
+  id            String      @id @default(cuid())
+  draftId       String
+  overall       Int
+  round         Int
+  fantasyTeamId String
+  playerId      String?
+  pickedAt      DateTime?
+  draft         Draft       @relation(fields: [draftId], references: [id])
+  fantasyTeam   FantasyTeam @relation(fields: [fantasyTeamId], references: [id])
+  player        Player?     @relation(fields: [playerId], references: [id])
+
+  @@unique([draftId, overall])
+  @@index([draftId])
+}
+
+model Matchup {
+  id         String        @id @default(cuid())
+  leagueId   String
+  week       Int
+  startsAt   DateTime
+  endsAt     DateTime
+  homeTeamId String
+  awayTeamId String
+  homeScore  Float?
+  awayScore  Float?
+  isPlayoff  Boolean       @default(false)
+  round      Int?
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+  awayTeam   FantasyTeam   @relation("AwayFantasyTeam", fields: [awayTeamId], references: [id])
+  homeTeam   FantasyTeam   @relation("HomeFantasyTeam", fields: [homeTeamId], references: [id])
+  league     FantasyLeague @relation(fields: [leagueId], references: [id])
+
+  @@index([leagueId, week])
+}
+
+enum Position {
+  FORWARD
+  DEFENSE
+  GOALIE
 }
 
 enum GameStatus {
@@ -100,88 +216,6 @@ enum GameStatus {
   LIVE
   FINAL
   POSTPONED
-}
-
-// One row per player per real game. The atomic unit of scoring.
-model StatLine {
-  id       String @id @default(cuid())
-  playerId String
-  player   Player @relation(fields: [playerId], references: [id])
-  gameId   String
-  game     Game   @relation(fields: [gameId], references: [id])
-
-  // Skater stats
-  goals          Int @default(0)
-  assists        Int @default(0)
-  shots          Int @default(0)
-  plusMinus      Int @default(0)
-  penaltyMinutes Int @default(0)
-  powerPlayPts   Int @default(0)
-  hits           Int @default(0)
-  blocks         Int @default(0)
-
-  // Goalie stats
-  saves          Int  @default(0)
-  goalsAgainst   Int  @default(0)
-  shutout        Boolean @default(false)
-  win            Boolean @default(false)
-  timeOnIceSecs  Int  @default(0)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // A player can only have one stat line per game.
-  @@unique([playerId, gameId])
-  @@index([gameId])
-}
-
-// ============================================================
-// FANTASY DATA (user-owned)
-// ============================================================
-
-model User {
-  id           String   @id @default(cuid())
-  email        String   @unique
-  displayName  String
-  // Store a password HASH only if you roll your own auth; prefer an auth provider.
-  passwordHash String?
-
-  memberships    FantasyTeam[]
-  ownedLeagues   FantasyLeague[] @relation("Commissioner")
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model FantasyLeague {
-  id            String              @id @default(cuid())
-  name          String
-  season        String              @default("2026-27")
-  draftType     DraftType           @default(SNAKE)
-  status        FantasyLeagueStatus @default(PRE_DRAFT)
-  maxTeams      Int                 @default(10)
-
-  commissionerId String
-  commissioner   User   @relation("Commissioner", fields: [commissionerId], references: [id])
-
-  // Scoring rules live as JSON so each league can customize without a migration.
-  // Validate the shape in application code (see lib/scoring).
-  scoringSettings Json @default("{}")
-  rosterSettings  Json @default("{}") // slots per position, bench size, etc.
-  
-  // Playoff settings: { teamsInPlayoff: number, topSeedsWithBye: number, roundDurationPeriods: number, higherSeedWinsTies: boolean }
-  playoffSettings Json @default("{\"teamsInPlayoff\": 6, \"topSeedsWithBye\": 2, \"roundDurationPeriods\": 2, \"higherSeedWinsTies\": true}")
-  playoffStatus   PlayoffStatus @default(NOT_STARTED)
-
-  teams    FantasyTeam[]
-  draft    Draft?
-  matchups Matchup[]
-
-  draftStartsAt DateTime? // ~ a week before the real season opener
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-
-  @@index([status])
 }
 
 enum DraftType {
@@ -202,46 +236,6 @@ enum FantasyLeagueStatus {
   COMPLETE
 }
 
-model FantasyTeam {
-  id      String @id @default(cuid())
-  name    String
-
-  leagueId String
-  league   FantasyLeague @relation(fields: [leagueId], references: [id])
-  ownerId  String
-  owner    User          @relation(fields: [ownerId], references: [id])
-
-  draftOrder Int? // slot in the draft (1..maxTeams)
-
-  roster       RosterEntry[]
-  draftPicks   DraftPick[]
-  homeMatchups Matchup[]     @relation("HomeFantasyTeam")
-  awayMatchups Matchup[]     @relation("AwayFantasyTeam")
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // One team per user per league.
-  @@unique([leagueId, ownerId])
-  @@index([leagueId])
-}
-
-// A player currently rostered by a fantasy team, plus their lineup slot.
-model RosterEntry {
-  id            String  @id @default(cuid())
-  fantasyTeamId String
-  fantasyTeam   FantasyTeam @relation(fields: [fantasyTeamId], references: [id])
-  playerId      String
-  player        Player      @relation(fields: [playerId], references: [id])
-
-  slot     LineupSlot @default(BENCH)
-  acquired DateTime   @default(now())
-
-  // A player can't be on two slots at once on the same team.
-  @@unique([fantasyTeamId, playerId])
-  @@index([fantasyTeamId])
-}
-
 enum LineupSlot {
   FORWARD
   DEFENSE
@@ -251,83 +245,9 @@ enum LineupSlot {
   IR
 }
 
-// ============================================================
-// DRAFT
-// ============================================================
-
-model Draft {
-  id        String      @id @default(cuid())
-  leagueId  String      @unique
-  league    FantasyLeague @relation(fields: [leagueId], references: [id])
-  status    DraftStatus @default(PENDING)
-  // Seconds each manager has to pick before auto-pick.
-  pickTimerSecs Int     @default(90)
-  currentPick   Int     @default(1) // overall pick number, 1-based
-
-  picks DraftPick[]
-
-  startedAt   DateTime?
-  completedAt DateTime?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-}
-
 enum DraftStatus {
   PENDING
   IN_PROGRESS
   PAUSED
   COMPLETE
-}
-
-model DraftPick {
-  id      String @id @default(cuid())
-  draftId String
-  draft   Draft  @relation(fields: [draftId], references: [id])
-
-  overall Int // 1-based overall pick number
-  round   Int
-  // Which fantasy team is on the clock / made the pick.
-  fantasyTeamId String
-  fantasyTeam   FantasyTeam @relation(fields: [fantasyTeamId], references: [id])
-
-  // Null until the pick is made (lets you pre-seed the full pick board).
-  playerId String?
-  player   Player?  @relation(fields: [playerId], references: [id])
-  pickedAt DateTime?
-
-  @@unique([draftId, overall])
-  @@index([draftId])
-}
-
-// ============================================================
-// MATCHUPS / SCORING PERIODS
-// ============================================================
-
-model Matchup {
-  id       String @id @default(cuid())
-  leagueId String
-  league   FantasyLeague @relation(fields: [leagueId], references: [id])
-
-  week      Int
-  startsAt  DateTime
-  endsAt    DateTime
-
-  homeTeamId String
-  homeTeam   FantasyTeam @relation("HomeFantasyTeam", fields: [homeTeamId], references: [id])
-  awayTeamId String
-  awayTeam   FantasyTeam @relation("AwayFantasyTeam", fields: [awayTeamId], references: [id])
-
-  // Final computed scores, cached after a period closes. Recompute from StatLines
-  // if scoring settings change retroactively.
-  homeScore Float?
-  awayScore Float?
-  
-  // Playoff fields
-  isPlayoff Boolean @default(false)
-  round     Int? // 1=first round, 2=semifinals, 3=finals; null for regular season
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([leagueId, week])
 }

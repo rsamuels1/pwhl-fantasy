@@ -301,7 +301,36 @@ const SLOT_LABELS: Record<string, string> = {
   goalie: "Goalie",
   util: "Util",
   bench: "Bench",
+  ir: "IR",
 };
+
+// Simulate slot assignment from drafted picks, matching the same priority order
+// used by seed scripts: natural position → util (skaters only) → bench.
+function simulateSlotFill(
+  picks: Array<{ playerId: string }>,
+  positions: Record<string, string>,
+  settings: Record<string, number>
+): Record<string, number> {
+  const caps = { ...settings };
+  const filled: Record<string, number> = Object.fromEntries(
+    Object.keys(caps).map((k) => [k, 0])
+  );
+  for (const pick of picks) {
+    const pos = positions[pick.playerId]?.toLowerCase() ?? "";
+    if (pos === "forward" && (filled.forward ?? 0) < (caps.forward ?? 0)) {
+      filled.forward = (filled.forward ?? 0) + 1;
+    } else if (pos === "defense" && (filled.defense ?? 0) < (caps.defense ?? 0)) {
+      filled.defense = (filled.defense ?? 0) + 1;
+    } else if (pos === "goalie" && (filled.goalie ?? 0) < (caps.goalie ?? 0)) {
+      filled.goalie = (filled.goalie ?? 0) + 1;
+    } else if (pos !== "goalie" && (filled.util ?? 0) < (caps.util ?? 0)) {
+      filled.util = (filled.util ?? 0) + 1;
+    } else {
+      filled.bench = (filled.bench ?? 0) + 1;
+    }
+  }
+  return filled;
+}
 
 function NeedsPanel({
   draft,
@@ -316,26 +345,24 @@ function NeedsPanel({
 }) {
   const myPicks = draft.completed.filter((p) => p.fantasyTeamId === myTeamId);
 
-  // Count drafted by position
-  const drafted: Record<string, number> = { forward: 0, defense: 0, goalie: 0 };
-  for (const pick of myPicks) {
-    const pos = playerPositions[pick.playerId]?.toLowerCase();
-    if (pos) drafted[pos] = (drafted[pos] ?? 0) + 1;
-  }
+  const filled = simulateSlotFill(myPicks, playerPositions, rosterSettings);
 
-  const totalNeeded = Object.values(rosterSettings).reduce((s, n) => s + n, 0);
+  // Draft rounds exclude IR (filled from waivers post-draft).
+  const draftSlots = Object.entries(rosterSettings)
+    .filter(([k]) => k !== "ir")
+    .reduce((s, [, n]) => s + n, 0);
   const totalDrafted = myPicks.length;
+
+  const draftableSlots = Object.entries(rosterSettings).filter(([k]) => k !== "ir");
 
   return (
     <div style={styles.card}>
       <div style={styles.cardTitle}>Roster Needs</div>
       <div style={{ marginBottom: 8, fontSize: 12, color: "var(--muted)" }}>
-        {totalDrafted} / {totalNeeded} picks made
+        {totalDrafted} / {draftSlots} picks made
       </div>
-      {Object.entries(rosterSettings).map(([slot, need]) => {
-        // Map slot keys to positions for counting (util/bench count any)
-        const posKey = slot === "forward" ? "forward" : slot === "defense" ? "defense" : slot === "goalie" ? "goalie" : null;
-        const have = posKey != null ? (drafted[posKey] ?? 0) : 0;
+      {draftableSlots.map(([slot, need]) => {
+        const have = filled[slot] ?? 0;
         const remaining = Math.max(0, need - have);
         const done = remaining === 0;
         return (
@@ -343,13 +370,22 @@ function NeedsPanel({
             <span style={{ flex: 1, color: done ? "var(--muted)" : "var(--text)" }}>
               {SLOT_LABELS[slot] ?? slot}
             </span>
-            <span style={{ color: done ? "var(--green)" : remaining <= 1 ? "var(--clock-warn)" : "var(--text)", fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>
-              {posKey != null ? `${have}/${need}` : `—/${need}`}
+            <span style={{
+              color: done ? "var(--green)" : remaining <= 1 ? "var(--clock-warn)" : "var(--text)",
+              fontWeight: 600,
+              fontVariantNumeric: "tabular-nums",
+            }}>
+              {have}/{need}
             </span>
             {done && <span style={{ fontSize: 10, color: "var(--green)" }}>✓</span>}
           </div>
         );
       })}
+      {(rosterSettings.ir ?? 0) > 0 && (
+        <div style={{ marginTop: 6, fontSize: 11, color: "var(--muted)" }}>
+          +{rosterSettings.ir} IR slot{rosterSettings.ir > 1 ? "s" : ""} (fill from waivers)
+        </div>
+      )}
     </div>
   );
 }
@@ -968,11 +1004,11 @@ const styles = {
     fontWeight: 600,
   },
   pickCell: {
-    width: 52,
-    height: 44,
+    width: 48,
+    height: 38,
     textAlign: "center" as const,
     borderRadius: 4,
-    padding: "3px 2px",
+    padding: "2px 2px",
     cursor: "default",
   },
   recentRow: {

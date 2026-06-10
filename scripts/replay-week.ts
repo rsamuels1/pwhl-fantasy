@@ -50,7 +50,7 @@ async function buildLeague(pwhlTeams: Array<{ id: string; abbreviation: string }
       maxTeams: pwhlTeams.length,
       status: "IN_SEASON",
       scoringSettings: DEFAULT_SCORING as object,
-      rosterSettings: { forward: 9, defense: 6, goalie: 2 },
+      rosterSettings: { forward: 2, defense: 2, goalie: 1, util: 1, bench: 6, ir: 1 },
     },
   });
 

@@ -24,13 +24,13 @@ const SEASON = "2025-26";
 const LEAGUE_NAME = "VTF Validation League";
 const NUM_TEAMS = 10;
 
-// Roster slot caps: 6F + 4D + 2G + 1 UTIL + 4 BENCH + 1 IR = 18
+// Roster slot caps: 2F + 2D + 1G + 1 UTIL + 6 BENCH + 1 IR = 13
 const SLOT_CAPS: Record<LineupSlot, number> = {
-  FORWARD: 6,
-  DEFENSE: 4,
-  GOALIE: 2,
+  FORWARD: 2,
+  DEFENSE: 2,
+  GOALIE: 1,
   UTIL: 1,
-  BENCH: 4,
+  BENCH: 6,
   IR: 1,
 };
 const ACTIVE_SLOTS: LineupSlot[] = ["FORWARD", "DEFENSE", "GOALIE", "UTIL"];

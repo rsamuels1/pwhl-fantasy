@@ -45,9 +45,11 @@ export function rostersToRounds(rosterSettings: {
   goalie?: number;
   util?: number;
   bench?: number;
+  ir?: number; // IR slots are filled from waivers post-draft, not drafted
 }): number {
   const { forward = 0, defense = 0, goalie = 0, util = 0, bench = 0 } =
     rosterSettings;
+  // IR intentionally excluded — players are not drafted into IR slots.
   const total = forward + defense + goalie + util + bench;
   if (total < 1) throw new Error("Roster settings sum to zero slots");
   return total;

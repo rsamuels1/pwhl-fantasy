@@ -18,9 +18,10 @@ const LEAGUE_NAME = "Dev Draft League";
 const NUM_TEAMS = 4; // small, so a full draft finishes fast in the terminal
 const PICK_TIMER_SECS = 30;
 
-// Roster settings sum to the number of rounds. 4 rounds keeps a 4-team draft
-// to 16 picks total — quick to watch end to end.
-const ROSTER_SETTINGS = { forward: 2, defense: 1, goalie: 1 };
+// 13-slot roster: 2F + 2D + 1G + 1 UTIL + 6 BENCH + 1 IR = 13 total.
+// IR is not drafted (filled from waivers), so rostersToRounds yields 12 rounds.
+// 4 teams × 12 rounds = 48 picks total.
+const ROSTER_SETTINGS = { forward: 2, defense: 2, goalie: 1, util: 1, bench: 6, ir: 1 };
 
 async function main() {
   // Clean any prior dev league so re-runs start fresh.
@@ -39,7 +40,9 @@ async function main() {
     console.log("Removed previous dev league.");
   }
 
-  // A commissioner user + one owner per team.
+  // The commissioner also owns team 1 (draftOrder 1), matching the real app flow
+  // where the league creator always joins as a manager. This is required for the
+  // draft room's isCommissioner check: myTeam.ownerId === league.commissionerId.
   const commissioner = await prisma.user.upsert({
     where: { email: "commish@dev.local" },
     update: {},
@@ -59,14 +62,18 @@ async function main() {
 
   const teams = [];
   for (let i = 1; i <= NUM_TEAMS; i++) {
-    const owner = await prisma.user.upsert({
-      where: { email: `owner${i}@dev.local` },
-      update: {},
-      create: { email: `owner${i}@dev.local`, displayName: `Owner ${i}` },
-    });
+    // Team 1 is owned by the commissioner; remaining teams get separate owner accounts.
+    const owner =
+      i === 1
+        ? commissioner
+        : await prisma.user.upsert({
+            where: { email: `owner${i}@dev.local` },
+            update: {},
+            create: { email: `owner${i}@dev.local`, displayName: `Owner ${i}` },
+          });
     const team = await prisma.fantasyTeam.create({
       data: {
-        name: `Team ${i}`,
+        name: i === 1 ? "Commish Team" : `Team ${i}`,
         leagueId: league.id,
         ownerId: owner.id,
         draftOrder: i, // 1..N
@@ -102,14 +109,18 @@ async function main() {
   console.log("\n=== Draft-ready league created ===");
   console.log(`leagueId: ${league.id}`);
   console.log(`rounds: ${rounds}  picks: ${order.length}  timer: ${PICK_TIMER_SECS}s`);
-  console.log("\nTeams (use these to join from the CLI):");
+  console.log("\nTeams:");
   for (const t of teams) {
-    console.log(`  draftOrder ${t.draftOrder}  ${t.name}  id=${t.id}`);
+    const tag = t.draftOrder === 1 ? " ← commissioner (owns Start button)" : "";
+    console.log(`  draftOrder ${t.draftOrder}  ${t.name}  id=${t.id}${tag}`);
   }
-  console.log("\nNext:");
+  console.log("\nBrowser draft:");
+  console.log(`  Commissioner: http://localhost:3000/draft/${league.id}?team=${teams[0].id}`);
+  console.log("  Press Start in the draft room to begin.\n");
+  console.log("CLI draft (alternative):");
   console.log("  1. npm run draft-server");
-  console.log(`  2. npm run draft-cli -- --league ${league.id} --team <teamId>`);
-  console.log("     (open one terminal per team; commissioner starts with --start)\n");
+  console.log(`  2. npm run draft-cli -- --league ${league.id} --team <teamId> --start  # commissioner`);
+  console.log(`  3. npm run draft-cli -- --league ${league.id} --team <teamId>           # other teams\n`);
 }
 
 main()
