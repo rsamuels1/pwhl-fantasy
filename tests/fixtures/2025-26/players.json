@@ -1,0 +1,1658 @@
+[
+  {
+    "externalId": "1",
+    "firstName": "Hannah",
+    "lastName": "Brandt",
+    "position": "FORWARD",
+    "jersey": 20,
+    "teamExternalId": "1"
+  },
+  {
+    "externalId": "100",
+    "firstName": "Natalie",
+    "lastName": "Spooner",
+    "position": "FORWARD",
+    "jersey": 24,
+    "teamExternalId": "6"
+  },
+  {
+    "externalId": "101",
+    "firstName": "Alexa",
+    "lastName": "Vasko",
+    "position": "FORWARD",
+    "jersey": 10,
+    "teamExternalId": "5"
+  },
+  {
+    "externalId": "102",
+    "firstName": "Claire",
+    "lastName": "Butorac",
+    "position": "FORWARD",
+    "jersey": 7,
+    "teamExternalId": "2"
+  },
+  {
+    "externalId": "104",
+    "firstName": "Denisa",
+    "lastName": "Křížová",
+    "position": "FORWARD",
+    "jersey": 44,
+    "teamExternalId": "4"
+  },
+  {
+    "externalId": "108",
+    "firstName": "Samantha",
+    "lastName": "Isbell",
+    "position": "FORWARD",
+    "jersey": 5,
+    "teamExternalId": "3"
+  },
+  {
+    "externalId": "11",
+    "firstName": "Sophie",
+    "lastName": "Jaques",
+    "position": "DEFENSE",
+    "jersey": 16,
+    "teamExternalId": "9"
+  },
+  {
+    "externalId": "114",
+    "firstName": "Abby",
+    "lastName": "Boreen",
+    "position": "FORWARD",
+    "jersey": 22,
+    "teamExternalId": "9"
+  },
+  {
+    "externalId": "115",
+    "firstName": "Michela",
+    "lastName": "Cava",
+    "position": "FORWARD",
+    "jersey": 86,
+    "teamExternalId": "5"
+  },
+  {
+    "externalId": "116",
+    "firstName": "Clair",
+    "lastName": "DeGeorge",
+    "position": "FORWARD",
+    "jersey": 41,
+    "teamExternalId": "4"
+  },
+  {
+    "externalId": "118",
+    "firstName": "Emma",
+    "lastName": "Greco",
+    "position": "DEFENSE",
+    "jersey": 25,
+    "teamExternalId": "5"
+  },
+  {
+    "externalId": "12",
+    "firstName": "Megan",
+    "lastName": "Keller",
+    "position": "DEFENSE",
+    "jersey": 5,
+    "teamExternalId": "1"
+  },
+  {
+    "externalId": "123",
+    "firstName": "Maddie",
+    "lastName": "Rooney",
+    "position": "GOALIE",
+    "jersey": 35,
+    "teamExternalId": "2"
+  },
+  {
+    "externalId": "126",
+    "firstName": "Samantha",
+    "lastName": "Cogan",
+    "position": "FORWARD",
+    "jersey": 8,
+    "teamExternalId": "2"
+  },
+  {
+    "externalId": "128",
+    "firstName": "Kaitlin",
+    "lastName": "Willoughby",
+    "position": "FORWARD",
+    "jersey": 19,
+    "teamExternalId": "3"
+  },
+  {
+    "externalId": "129",
+    "firstName": "Mellissa",
+    "lastName": "Channell-Watkins",
+    "position": "DEFENSE",
+    "jersey": 23,
+    "teamExternalId": "9"
+  },
+  {
+    "externalId": "13",
+    "firstName": "Hilary",
+    "lastName": "Knight",
+    "position": "FORWARD",
+    "jersey": 21,
+    "teamExternalId": "8"
+  },
+  {
+    "externalId": "131",
+    "firstName": "Olivia",
+    "lastName": "Knowles",
+    "position": "DEFENSE",
+    "jersey": 9,
+    "teamExternalId": "4"
+  },
+  {
+    "externalId": "132",
+    "firstName": "Jessica",
+    "lastName": "Kondas",
+    "position": "DEFENSE",
+    "jersey": 2,
+    "teamExternalId": "6"
+  },
+  {
+    "externalId": "134",
+    "firstName": "Carly",
+    "lastName": "Jackson",
+    "position": "GOALIE",
+    "jersey": 70,
+    "teamExternalId": "8"
+  },
+  {
+    "externalId": "138",
+    "firstName": "Mikyla",
+    "lastName": "Grant-Mentis",
+    "position": "FORWARD",
+    "jersey": 13,
+    "teamExternalId": "8"
+  },
+  {
+    "externalId": "140",
+    "firstName": "Malia",
+    "lastName": "Schneider",
+    "position": "FORWARD",
+    "jersey": 18,
+    "teamExternalId": "9"
+  },
+  {
+    "externalId": "142",
+    "firstName": "Natalie",
+    "lastName": "Snodgrass",
+    "position": "FORWARD",
+    "jersey": 8,
+    "teamExternalId": "8"
+  },
+  {
+    "externalId": "147",
+    "firstName": "Savannah",
+    "lastName": "Norcross",
+    "position": "FORWARD",
+    "jersey": 7,
+    "teamExternalId": "4"
+  },
+  {
+    "externalId": "149",
+    "firstName": "Jill",
+    "lastName": "Saulnier",
+    "position": "FORWARD",
+    "jersey": 44,
+    "teamExternalId": "1"
+  },
+  {
+    "externalId": "15",
+    "firstName": "Alina",
+    "lastName": "Müller",
+    "position": "FORWARD",
+    "jersey": 11,
+    "teamExternalId": "1"
+  },
+  {
+    "externalId": "155",
+    "firstName": "Corinne",
+    "lastName": "Schroeder",
+    "position": "GOALIE",
+    "jersey": 30,
+    "teamExternalId": "8"
+  },
+  {
+    "externalId": "156",
+    "firstName": "Gabrielle",
+    "lastName": "David",
+    "position": "FORWARD",
+    "jersey": 28,
+    "teamExternalId": "8"
+  },
+  {
+    "externalId": "157",
+    "firstName": "Catherine",
+    "lastName": "Dubois",
+    "position": "FORWARD",
+    "jersey": 28,
+    "teamExternalId": "3"
+  },
+  {
+    "externalId": "16",
+    "firstName": "Jamie Lee",
+    "lastName": "Rattray",
+    "position": "FORWARD",
+    "jersey": 47,
+    "teamExternalId": "1"
+  },
+  {
+    "externalId": "161",
+    "firstName": "Tereza",
+    "lastName": "Vanišová",
+    "position": "FORWARD",
+    "jersey": 13,
+    "teamExternalId": "9"
+  },
+  {
+    "externalId": "162",
+    "firstName": "Madison",
+    "lastName": "Bizal",
+    "position": "DEFENSE",
+    "jersey": 9,
+    "teamExternalId": "2"
+  },
+  {
+    "externalId": "166",
+    "firstName": "Marlène",
+    "lastName": "Boissonnault",
+    "position": "GOALIE",
+    "jersey": 1,
+    "teamExternalId": "2"
+  },
+  {
+    "externalId": "167",
+    "firstName": "Sidney",
+    "lastName": "Morin",
+    "position": "DEFENSE",
+    "jersey": 5,
+    "teamExternalId": "2"
+  },
+  {
+    "externalId": "169",
+    "firstName": "Claire",
+    "lastName": "Thompson",
+    "position": "DEFENSE",
+    "jersey": 42,
+    "teamExternalId": "9"
+  },
+  {
+    "externalId": "17",
+    "firstName": "Theresa",
+    "lastName": "Schafzahl",
+    "position": "FORWARD",
+    "jersey": 37,
+    "teamExternalId": "8"
+  },
+  {
+    "externalId": "18",
+    "firstName": "Sophie",
+    "lastName": "Shirley",
+    "position": "FORWARD",
+    "jersey": 9,
+    "teamExternalId": "1"
+  },
+  {
+    "externalId": "180",
+    "firstName": "Sydney",
+    "lastName": "Bard",
+    "position": "DEFENSE",
+    "jersey": 11,
+    "teamExternalId": "9"
+  },
+  {
+    "externalId": "181",
+    "firstName": "Hannah",
+    "lastName": "Bilka",
+    "position": "FORWARD",
+    "jersey": 19,
+    "teamExternalId": "8"
+  },
+  {
+    "externalId": "182",
+    "firstName": "Hadley",
+    "lastName": "Hartmetz",
+    "position": "DEFENSE",
+    "jersey": 6,
+    "teamExternalId": "1"
+  },
+  {
+    "externalId": "183",
+    "firstName": "Shay",
+    "lastName": "Maloney",
+    "position": "FORWARD",
+    "jersey": 27,
+    "teamExternalId": "1"
+  },
+  {
+    "externalId": "185",
+    "firstName": "Daniela",
+    "lastName": "Pejšová",
+    "position": "DEFENSE",
+    "jersey": 55,
+    "teamExternalId": "1"
+  },
+  {
+    "externalId": "188",
+    "firstName": "Mae",
+    "lastName": "Batherson",
+    "position": "DEFENSE",
+    "jersey": 21,
+    "teamExternalId": "2"
+  },
+  {
+    "externalId": "189",
+    "firstName": "Britta",
+    "lastName": "Curl-Salemme",
+    "position": "FORWARD",
+    "jersey": 77,
+    "teamExternalId": "2"
+  },
+  {
+    "externalId": "190",
+    "firstName": "Klára",
+    "lastName": "Hymlárová",
+    "position": "FORWARD",
+    "jersey": 71,
+    "teamExternalId": "2"
+  },
+  {
+    "externalId": "191",
+    "firstName": "Katy",
+    "lastName": "Knoll",
+    "position": "FORWARD",
+    "jersey": 6,
+    "teamExternalId": "2"
+  },
+  {
+    "externalId": "192",
+    "firstName": "Brooke",
+    "lastName": "McQuigge",
+    "position": "FORWARD",
+    "jersey": 27,
+    "teamExternalId": "5"
+  },
+  {
+    "externalId": "194",
+    "firstName": "Kaitlyn",
+    "lastName": "O'Donohoe",
+    "position": "FORWARD",
+    "jersey": 16,
+    "teamExternalId": "2"
+  },
+  {
+    "externalId": "195",
+    "firstName": "Dominique",
+    "lastName": "Petrie",
+    "position": "FORWARD",
+    "jersey": 14,
+    "teamExternalId": "2"
+  },
+  {
+    "externalId": "196",
+    "firstName": "Cayla",
+    "lastName": "Barnes",
+    "position": "DEFENSE",
+    "jersey": 3,
+    "teamExternalId": "8"
+  },
+  {
+    "externalId": "198",
+    "firstName": "Jenn",
+    "lastName": "Gardiner",
+    "position": "FORWARD",
+    "jersey": 12,
+    "teamExternalId": "9"
+  },
+  {
+    "externalId": "199",
+    "firstName": "Dara",
+    "lastName": "Greig",
+    "position": "FORWARD",
+    "jersey": 17,
+    "teamExternalId": "3"
+  },
+  {
+    "externalId": "2",
+    "firstName": "Emily",
+    "lastName": "Brown",
+    "position": "DEFENSE",
+    "jersey": 11,
+    "teamExternalId": "8"
+  },
+  {
+    "externalId": "20",
+    "firstName": "Kendall Coyne",
+    "lastName": "Schofield",
+    "position": "FORWARD",
+    "jersey": 26,
+    "teamExternalId": "2"
+  },
+  {
+    "externalId": "200",
+    "firstName": "Anna",
+    "lastName": "Kjellbin",
+    "position": "DEFENSE",
+    "jersey": 71,
+    "teamExternalId": "6"
+  },
+  {
+    "externalId": "201",
+    "firstName": "Lina",
+    "lastName": "Ljungblom",
+    "position": "FORWARD",
+    "jersey": 25,
+    "teamExternalId": "3"
+  },
+  {
+    "externalId": "202",
+    "firstName": "Kelly Ann",
+    "lastName": "Nadeau",
+    "position": "DEFENSE",
+    "jersey": 51,
+    "teamExternalId": "3"
+  },
+  {
+    "externalId": "203",
+    "firstName": "Anna",
+    "lastName": "Wilgren",
+    "position": "DEFENSE",
+    "jersey": 5,
+    "teamExternalId": "8"
+  },
+  {
+    "externalId": "204",
+    "firstName": "Emmy",
+    "lastName": "Fecteau",
+    "position": "FORWARD",
+    "jersey": 29,
+    "teamExternalId": "4"
+  },
+  {
+    "externalId": "205",
+    "firstName": "Sarah",
+    "lastName": "Fillier",
+    "position": "FORWARD",
+    "jersey": 10,
+    "teamExternalId": "4"
+  },
+  {
+    "externalId": "206",
+    "firstName": "Elle",
+    "lastName": "Hartje",
+    "position": "FORWARD",
+    "jersey": 4,
+    "teamExternalId": "4"
+  },
+  {
+    "externalId": "207",
+    "firstName": "Lauren",
+    "lastName": "Bernard",
+    "position": "DEFENSE",
+    "jersey": 16,
+    "teamExternalId": "4"
+  },
+  {
+    "externalId": "208",
+    "firstName": "Megan",
+    "lastName": "Carter",
+    "position": "DEFENSE",
+    "jersey": 27,
+    "teamExternalId": "8"
+  },
+  {
+    "externalId": "209",
+    "firstName": "Izzy",
+    "lastName": "Daniel",
+    "position": "FORWARD",
+    "jersey": 8,
+    "teamExternalId": "9"
+  },
+  {
+    "externalId": "21",
+    "firstName": "Taylor",
+    "lastName": "Heise",
+    "position": "FORWARD",
+    "jersey": 27,
+    "teamExternalId": "2"
+  },
+  {
+    "externalId": "210",
+    "firstName": "Julia",
+    "lastName": "Gosling",
+    "position": "FORWARD",
+    "jersey": 88,
+    "teamExternalId": "8"
+  },
+  {
+    "externalId": "211",
+    "firstName": "Raygan",
+    "lastName": "Kirk",
+    "position": "GOALIE",
+    "jersey": 1,
+    "teamExternalId": "6"
+  },
+  {
+    "externalId": "212",
+    "firstName": "Laura",
+    "lastName": "Kluge",
+    "position": "FORWARD",
+    "jersey": 25,
+    "teamExternalId": "1"
+  },
+  {
+    "externalId": "214",
+    "firstName": "Noemi",
+    "lastName": "Neubauerová",
+    "position": "DEFENSE",
+    "jersey": 81,
+    "teamExternalId": "1"
+  },
+  {
+    "externalId": "217",
+    "firstName": "Taylor",
+    "lastName": "House",
+    "position": "FORWARD",
+    "jersey": 22,
+    "teamExternalId": "5"
+  },
+  {
+    "externalId": "219",
+    "firstName": "Stephanie",
+    "lastName": "Markowski",
+    "position": "DEFENSE",
+    "jersey": 6,
+    "teamExternalId": "5"
+  },
+  {
+    "externalId": "22",
+    "firstName": "Nicole",
+    "lastName": "Hensley",
+    "position": "GOALIE",
+    "jersey": 29,
+    "teamExternalId": "2"
+  },
+  {
+    "externalId": "220",
+    "firstName": "Mannon",
+    "lastName": "McMahon",
+    "position": "FORWARD",
+    "jersey": 19,
+    "teamExternalId": "9"
+  },
+  {
+    "externalId": "221",
+    "firstName": "Anna",
+    "lastName": "Meixner",
+    "position": "FORWARD",
+    "jersey": 94,
+    "teamExternalId": "9"
+  },
+  {
+    "externalId": "222",
+    "firstName": "Gwyneth",
+    "lastName": "Philips",
+    "position": "GOALIE",
+    "jersey": 33,
+    "teamExternalId": "5"
+  },
+  {
+    "externalId": "223",
+    "firstName": "Ronja",
+    "lastName": "Savolainen",
+    "position": "DEFENSE",
+    "jersey": 88,
+    "teamExternalId": "5"
+  },
+  {
+    "externalId": "224",
+    "firstName": "Danielle",
+    "lastName": "Serdachny",
+    "position": "FORWARD",
+    "jersey": 92,
+    "teamExternalId": "8"
+  },
+  {
+    "externalId": "227",
+    "firstName": "Gabby",
+    "lastName": "Rosenthal",
+    "position": "FORWARD",
+    "jersey": 15,
+    "teamExternalId": "9"
+  },
+  {
+    "externalId": "228",
+    "firstName": "Kayle",
+    "lastName": "Osborne",
+    "position": "GOALIE",
+    "jersey": 82,
+    "teamExternalId": "4"
+  },
+  {
+    "externalId": "229",
+    "firstName": "Maja Nylén",
+    "lastName": "Persson",
+    "position": "DEFENSE",
+    "jersey": 8,
+    "teamExternalId": "4"
+  },
+  {
+    "externalId": "23",
+    "firstName": "Kelly",
+    "lastName": "Pannek",
+    "position": "FORWARD",
+    "jersey": 12,
+    "teamExternalId": "2"
+  },
+  {
+    "externalId": "230",
+    "firstName": "Allyson",
+    "lastName": "Simpson",
+    "position": "DEFENSE",
+    "jersey": 20,
+    "teamExternalId": "4"
+  },
+  {
+    "externalId": "232",
+    "firstName": "Rylind",
+    "lastName": "MacKinnon",
+    "position": "DEFENSE",
+    "jersey": 53,
+    "teamExternalId": "1"
+  },
+  {
+    "externalId": "236",
+    "firstName": "Kendall",
+    "lastName": "Cooper",
+    "position": "DEFENSE",
+    "jersey": 4,
+    "teamExternalId": "2"
+  },
+  {
+    "externalId": "237",
+    "firstName": "Jenna",
+    "lastName": "Buglioni",
+    "position": "FORWARD",
+    "jersey": 10,
+    "teamExternalId": "8"
+  },
+  {
+    "externalId": "238",
+    "firstName": "Sanni",
+    "lastName": "Ahola",
+    "position": "GOALIE",
+    "jersey": 1,
+    "teamExternalId": "5"
+  },
+  {
+    "externalId": "239",
+    "firstName": "Anna",
+    "lastName": "Shokhina",
+    "position": "FORWARD",
+    "jersey": 97,
+    "teamExternalId": "9"
+  },
+  {
+    "externalId": "24",
+    "firstName": "Lee",
+    "lastName": "Stecklein",
+    "position": "DEFENSE",
+    "jersey": 2,
+    "teamExternalId": "2"
+  },
+  {
+    "externalId": "240",
+    "firstName": "Fanuza",
+    "lastName": "Kadirova",
+    "position": "FORWARD",
+    "jersey": 71,
+    "teamExternalId": "5"
+  },
+  {
+    "externalId": "241",
+    "firstName": "Sarah",
+    "lastName": "Wozniewicz",
+    "position": "FORWARD",
+    "jersey": 23,
+    "teamExternalId": "5"
+  },
+  {
+    "externalId": "242",
+    "firstName": "Rory",
+    "lastName": "Guilday",
+    "position": "DEFENSE",
+    "jersey": 5,
+    "teamExternalId": "5"
+  },
+  {
+    "externalId": "243",
+    "firstName": "Ella",
+    "lastName": "Huber",
+    "position": "FORWARD",
+    "jersey": 26,
+    "teamExternalId": "1"
+  },
+  {
+    "externalId": "244",
+    "firstName": "Emma",
+    "lastName": "Gentry",
+    "position": "FORWARD",
+    "jersey": 20,
+    "teamExternalId": "6"
+  },
+  {
+    "externalId": "245",
+    "firstName": "Kristýna",
+    "lastName": "Kaltounková",
+    "position": "FORWARD",
+    "jersey": 98,
+    "teamExternalId": "4"
+  },
+  {
+    "externalId": "246",
+    "firstName": "Haley",
+    "lastName": "Winn",
+    "position": "DEFENSE",
+    "jersey": 8,
+    "teamExternalId": "1"
+  },
+  {
+    "externalId": "247",
+    "firstName": "Abby",
+    "lastName": "Hustler",
+    "position": "FORWARD",
+    "jersey": 74,
+    "teamExternalId": "2"
+  },
+  {
+    "externalId": "248",
+    "firstName": "Anna",
+    "lastName": "Segedi",
+    "position": "FORWARD",
+    "jersey": 51,
+    "teamExternalId": "9"
+  },
+  {
+    "externalId": "249",
+    "firstName": "Anne",
+    "lastName": "Cherkowski",
+    "position": "FORWARD",
+    "jersey": 24,
+    "teamExternalId": "4"
+  },
+  {
+    "externalId": "25",
+    "firstName": "Grace",
+    "lastName": "Zumwinkle",
+    "position": "FORWARD",
+    "jersey": 13,
+    "teamExternalId": "2"
+  },
+  {
+    "externalId": "250",
+    "firstName": "Hannah",
+    "lastName": "Murphy",
+    "position": "GOALIE",
+    "jersey": 83,
+    "teamExternalId": "8"
+  },
+  {
+    "externalId": "251",
+    "firstName": "Dayle",
+    "lastName": "Ross",
+    "position": "DEFENSE",
+    "jersey": 2,
+    "teamExternalId": "4"
+  },
+  {
+    "externalId": "252",
+    "firstName": "Michelle",
+    "lastName": "Karvinen",
+    "position": "FORWARD",
+    "jersey": 33,
+    "teamExternalId": "9"
+  },
+  {
+    "externalId": "253",
+    "firstName": "Nicole",
+    "lastName": "Gosling",
+    "position": "DEFENSE",
+    "jersey": 61,
+    "teamExternalId": "3"
+  },
+  {
+    "externalId": "254",
+    "firstName": "Mia",
+    "lastName": "Biotti",
+    "position": "DEFENSE",
+    "jersey": 7,
+    "teamExternalId": "1"
+  },
+  {
+    "externalId": "255",
+    "firstName": "Riley",
+    "lastName": "Brengman",
+    "position": "DEFENSE",
+    "jersey": 16,
+    "teamExternalId": "1"
+  },
+  {
+    "externalId": "256",
+    "firstName": "Olivia",
+    "lastName": "Mobley",
+    "position": "FORWARD",
+    "jersey": 15,
+    "teamExternalId": "1"
+  },
+  {
+    "externalId": "259",
+    "firstName": "Abby",
+    "lastName": "Newhook",
+    "position": "FORWARD",
+    "jersey": 19,
+    "teamExternalId": "1"
+  },
+  {
+    "externalId": "26",
+    "firstName": "Claire",
+    "lastName": "Dalton",
+    "position": "FORWARD",
+    "jersey": 42,
+    "teamExternalId": "6"
+  },
+  {
+    "externalId": "262",
+    "firstName": "Amanda",
+    "lastName": "Thiele",
+    "position": "GOALIE",
+    "jersey": 30,
+    "teamExternalId": "1"
+  },
+  {
+    "externalId": "263",
+    "firstName": "Peyton",
+    "lastName": "Anderson",
+    "position": "FORWARD",
+    "jersey": 91,
+    "teamExternalId": "2"
+  },
+  {
+    "externalId": "264",
+    "firstName": "Brooke",
+    "lastName": "Becker",
+    "position": "DEFENSE",
+    "jersey": 15,
+    "teamExternalId": "2"
+  },
+  {
+    "externalId": "269",
+    "firstName": "Vanessa",
+    "lastName": "Upson",
+    "position": "FORWARD",
+    "jersey": 24,
+    "teamExternalId": "2"
+  },
+  {
+    "externalId": "271",
+    "firstName": "Tamara",
+    "lastName": "Giaquinto",
+    "position": "DEFENSE",
+    "jersey": 12,
+    "teamExternalId": "3"
+  },
+  {
+    "externalId": "272",
+    "firstName": "Skylar",
+    "lastName": "Irving",
+    "position": "FORWARD",
+    "jersey": 88,
+    "teamExternalId": "3"
+  },
+  {
+    "externalId": "273",
+    "firstName": "Maya",
+    "lastName": "Labad",
+    "position": "FORWARD",
+    "jersey": 4,
+    "teamExternalId": "3"
+  },
+  {
+    "externalId": "274",
+    "firstName": "Natálie",
+    "lastName": "Mlýnková",
+    "position": "FORWARD",
+    "jersey": 96,
+    "teamExternalId": "3"
+  },
+  {
+    "externalId": "277",
+    "firstName": "Anna",
+    "lastName": "Bargman",
+    "position": "FORWARD",
+    "jersey": 22,
+    "teamExternalId": "4"
+  },
+  {
+    "externalId": "279",
+    "firstName": "Kira",
+    "lastName": "Juodikis",
+    "position": "FORWARD",
+    "jersey": 55,
+    "teamExternalId": "4"
+  },
+  {
+    "externalId": "28",
+    "firstName": "Ann-Renée",
+    "lastName": "Desbiens",
+    "position": "GOALIE",
+    "jersey": 35,
+    "teamExternalId": "3"
+  },
+  {
+    "externalId": "280",
+    "firstName": "Casey",
+    "lastName": "O'Brien",
+    "position": "FORWARD",
+    "jersey": 26,
+    "teamExternalId": "4"
+  },
+  {
+    "externalId": "282",
+    "firstName": "Callie",
+    "lastName": "Shanahan",
+    "position": "GOALIE",
+    "jersey": 37,
+    "teamExternalId": "4"
+  },
+  {
+    "externalId": "283",
+    "firstName": "Nicole",
+    "lastName": "Vallario",
+    "position": "DEFENSE",
+    "jersey": 11,
+    "teamExternalId": "4"
+  },
+  {
+    "externalId": "285",
+    "firstName": "Maddi",
+    "lastName": "Wheeler",
+    "position": "FORWARD",
+    "jersey": 18,
+    "teamExternalId": "4"
+  },
+  {
+    "externalId": "286",
+    "firstName": "Peyton",
+    "lastName": "Hemp",
+    "position": "FORWARD",
+    "jersey": 29,
+    "teamExternalId": "5"
+  },
+  {
+    "externalId": "288",
+    "firstName": "Vita",
+    "lastName": "Poniatovskaia",
+    "position": "DEFENSE",
+    "jersey": 9,
+    "teamExternalId": "5"
+  },
+  {
+    "externalId": "289",
+    "firstName": "Kathryn",
+    "lastName": "Reilly",
+    "position": "DEFENSE",
+    "jersey": 8,
+    "teamExternalId": "5"
+  },
+  {
+    "externalId": "290",
+    "firstName": "Kendra",
+    "lastName": "Woodland",
+    "position": "GOALIE",
+    "jersey": 70,
+    "teamExternalId": "5"
+  },
+  {
+    "externalId": "291",
+    "firstName": "Lily",
+    "lastName": "Delianedis",
+    "position": "FORWARD",
+    "jersey": 7,
+    "teamExternalId": "8"
+  },
+  {
+    "externalId": "292",
+    "firstName": "Jada",
+    "lastName": "Habisch",
+    "position": "FORWARD",
+    "jersey": 52,
+    "teamExternalId": "8"
+  },
+  {
+    "externalId": "293",
+    "firstName": "Sydney",
+    "lastName": "Langseth",
+    "position": "FORWARD",
+    "jersey": 71,
+    "teamExternalId": "8"
+  },
+  {
+    "externalId": "294",
+    "firstName": "Lyndie",
+    "lastName": "Lobdell",
+    "position": "DEFENSE",
+    "jersey": 24,
+    "teamExternalId": "8"
+  },
+  {
+    "externalId": "295",
+    "firstName": "Marah",
+    "lastName": "Wagner",
+    "position": "FORWARD",
+    "jersey": 66,
+    "teamExternalId": "8"
+  },
+  {
+    "externalId": "296",
+    "firstName": "Olivia",
+    "lastName": "Wallin",
+    "position": "FORWARD",
+    "jersey": 14,
+    "teamExternalId": "5"
+  },
+  {
+    "externalId": "298",
+    "firstName": "Emily",
+    "lastName": "Zumwinkle",
+    "position": "DEFENSE",
+    "jersey": 6,
+    "teamExternalId": "8"
+  },
+  {
+    "externalId": "30",
+    "firstName": "Kristin",
+    "lastName": "O'Neill",
+    "position": "FORWARD",
+    "jersey": 43,
+    "teamExternalId": "4"
+  },
+  {
+    "externalId": "300",
+    "firstName": "Brianna",
+    "lastName": "Brooks",
+    "position": "FORWARD",
+    "jersey": 17,
+    "teamExternalId": "9"
+  },
+  {
+    "externalId": "301",
+    "firstName": "Katie",
+    "lastName": "Chan",
+    "position": "FORWARD",
+    "jersey": 9,
+    "teamExternalId": "9"
+  },
+  {
+    "externalId": "305",
+    "firstName": "Nina",
+    "lastName": "Jobst-Smith",
+    "position": "DEFENSE",
+    "jersey": 28,
+    "teamExternalId": "9"
+  },
+  {
+    "externalId": "306",
+    "firstName": "Darcie",
+    "lastName": "Lappan",
+    "position": "FORWARD",
+    "jersey": 72,
+    "teamExternalId": "9"
+  },
+  {
+    "externalId": "31",
+    "firstName": "Marie-Philip",
+    "lastName": "Poulin",
+    "position": "FORWARD",
+    "jersey": 29,
+    "teamExternalId": "3"
+  },
+  {
+    "externalId": "310",
+    "firstName": "Madison",
+    "lastName": "Samoskevich",
+    "position": "DEFENSE",
+    "jersey": 7,
+    "teamExternalId": "9"
+  },
+  {
+    "externalId": "311",
+    "firstName": "Hanna",
+    "lastName": "Baskin",
+    "position": "DEFENSE",
+    "jersey": 10,
+    "teamExternalId": "6"
+  },
+  {
+    "externalId": "313",
+    "firstName": "Sara",
+    "lastName": "Hjalmarsson",
+    "position": "FORWARD",
+    "jersey": 19,
+    "teamExternalId": "6"
+  },
+  {
+    "externalId": "315",
+    "firstName": "Lauren",
+    "lastName": "Messier",
+    "position": "FORWARD",
+    "jersey": 16,
+    "teamExternalId": "6"
+  },
+  {
+    "externalId": "316",
+    "firstName": "Clara Van",
+    "lastName": "Wieren",
+    "position": "FORWARD",
+    "jersey": 25,
+    "teamExternalId": "6"
+  },
+  {
+    "externalId": "317",
+    "firstName": "Kiara",
+    "lastName": "Zanon",
+    "position": "FORWARD",
+    "jersey": 11,
+    "teamExternalId": "6"
+  },
+  {
+    "externalId": "32",
+    "firstName": "Laura",
+    "lastName": "Stacey",
+    "position": "FORWARD",
+    "jersey": 7,
+    "teamExternalId": "3"
+  },
+  {
+    "externalId": "320",
+    "firstName": "Nadia",
+    "lastName": "Mattivi",
+    "position": "DEFENSE",
+    "jersey": 93,
+    "teamExternalId": "3"
+  },
+  {
+    "externalId": "321",
+    "firstName": "Sini",
+    "lastName": "Karjalainen",
+    "position": "DEFENSE",
+    "jersey": 2,
+    "teamExternalId": "9"
+  },
+  {
+    "externalId": "34",
+    "firstName": "Alex",
+    "lastName": "Carpenter",
+    "position": "FORWARD",
+    "jersey": 25,
+    "teamExternalId": "8"
+  },
+  {
+    "externalId": "35",
+    "firstName": "Jade",
+    "lastName": "Downie-Landry",
+    "position": "FORWARD",
+    "jersey": 77,
+    "teamExternalId": "3"
+  },
+  {
+    "externalId": "36",
+    "firstName": "Jessie",
+    "lastName": "Eldridge",
+    "position": "FORWARD",
+    "jersey": 18,
+    "teamExternalId": "1"
+  },
+  {
+    "externalId": "37",
+    "firstName": "Élizabeth",
+    "lastName": "Giguère",
+    "position": "FORWARD",
+    "jersey": 18,
+    "teamExternalId": "2"
+  },
+  {
+    "externalId": "38",
+    "firstName": "Brooke",
+    "lastName": "Hobson",
+    "position": "DEFENSE",
+    "jersey": 11,
+    "teamExternalId": "5"
+  },
+  {
+    "externalId": "39",
+    "firstName": "Alexandra",
+    "lastName": "Labelle",
+    "position": "FORWARD",
+    "jersey": 13,
+    "teamExternalId": "3"
+  },
+  {
+    "externalId": "4",
+    "firstName": "Shiann",
+    "lastName": "Darkangelo",
+    "position": "FORWARD",
+    "jersey": 27,
+    "teamExternalId": "3"
+  },
+  {
+    "externalId": "40",
+    "firstName": "Paetyn",
+    "lastName": "Levis",
+    "position": "FORWARD",
+    "jersey": 19,
+    "teamExternalId": "4"
+  },
+  {
+    "externalId": "41",
+    "firstName": "Abbey",
+    "lastName": "Levy",
+    "position": "GOALIE",
+    "jersey": 39,
+    "teamExternalId": "1"
+  },
+  {
+    "externalId": "42",
+    "firstName": "Abby",
+    "lastName": "Roque",
+    "position": "FORWARD",
+    "jersey": 11,
+    "teamExternalId": "3"
+  },
+  {
+    "externalId": "44",
+    "firstName": "Ella",
+    "lastName": "Shelton",
+    "position": "DEFENSE",
+    "jersey": 17,
+    "teamExternalId": "6"
+  },
+  {
+    "externalId": "45",
+    "firstName": "Kayla",
+    "lastName": "Vespa",
+    "position": "FORWARD",
+    "jersey": 81,
+    "teamExternalId": "4"
+  },
+  {
+    "externalId": "46",
+    "firstName": "Olivia",
+    "lastName": "Zafuto",
+    "position": "DEFENSE",
+    "jersey": 73,
+    "teamExternalId": "1"
+  },
+  {
+    "externalId": "47",
+    "firstName": "Micah",
+    "lastName": "Zandee-Hart",
+    "position": "DEFENSE",
+    "jersey": 28,
+    "teamExternalId": "4"
+  },
+  {
+    "externalId": "48",
+    "firstName": "Sandra",
+    "lastName": "Abstreiter",
+    "position": "GOALIE",
+    "jersey": 30,
+    "teamExternalId": "3"
+  },
+  {
+    "externalId": "49",
+    "firstName": "Lexie",
+    "lastName": "Adzija",
+    "position": "FORWARD",
+    "jersey": 78,
+    "teamExternalId": "8"
+  },
+  {
+    "externalId": "5",
+    "firstName": "Jessica",
+    "lastName": "DiGirolamo",
+    "position": "DEFENSE",
+    "jersey": 22,
+    "teamExternalId": "3"
+  },
+  {
+    "externalId": "50",
+    "firstName": "Ashton",
+    "lastName": "Bell",
+    "position": "DEFENSE",
+    "jersey": 21,
+    "teamExternalId": "9"
+  },
+  {
+    "externalId": "51",
+    "firstName": "Amanda",
+    "lastName": "Boulier",
+    "position": "DEFENSE",
+    "jersey": 44,
+    "teamExternalId": "3"
+  },
+  {
+    "externalId": "52",
+    "firstName": "Zoe",
+    "lastName": "Boyd",
+    "position": "DEFENSE",
+    "jersey": 3,
+    "teamExternalId": "1"
+  },
+  {
+    "externalId": "53",
+    "firstName": "Emily",
+    "lastName": "Clark",
+    "position": "FORWARD",
+    "jersey": 26,
+    "teamExternalId": "5"
+  },
+  {
+    "externalId": "54",
+    "firstName": "Kristin Della",
+    "lastName": "Rovere",
+    "position": "FORWARD",
+    "jersey": 21,
+    "teamExternalId": "6"
+  },
+  {
+    "externalId": "56",
+    "firstName": "Savannah",
+    "lastName": "Harmon",
+    "position": "DEFENSE",
+    "jersey": 15,
+    "teamExternalId": "6"
+  },
+  {
+    "externalId": "57",
+    "firstName": "Gabbie",
+    "lastName": "Hughes",
+    "position": "FORWARD",
+    "jersey": 17,
+    "teamExternalId": "5"
+  },
+  {
+    "externalId": "58",
+    "firstName": "Brianne",
+    "lastName": "Jenner",
+    "position": "FORWARD",
+    "jersey": 19,
+    "teamExternalId": "5"
+  },
+  {
+    "externalId": "59",
+    "firstName": "Emerance",
+    "lastName": "Maschmeyer",
+    "position": "GOALIE",
+    "jersey": 38,
+    "teamExternalId": "9"
+  },
+  {
+    "externalId": "6",
+    "firstName": "Aerin",
+    "lastName": "Frankel",
+    "position": "GOALIE",
+    "jersey": 31,
+    "teamExternalId": "1"
+  },
+  {
+    "externalId": "60",
+    "firstName": "Jincy",
+    "lastName": "Roese",
+    "position": "DEFENSE",
+    "jersey": 33,
+    "teamExternalId": "2"
+  },
+  {
+    "externalId": "61",
+    "firstName": "Hayley",
+    "lastName": "Scamurra",
+    "position": "FORWARD",
+    "jersey": 16,
+    "teamExternalId": "3"
+  },
+  {
+    "externalId": "62",
+    "firstName": "Aneta",
+    "lastName": "Tejralová",
+    "position": "DEFENSE",
+    "jersey": 2,
+    "teamExternalId": "8"
+  },
+  {
+    "externalId": "63",
+    "firstName": "Daryl",
+    "lastName": "Watts",
+    "position": "FORWARD",
+    "jersey": 9,
+    "teamExternalId": "6"
+  },
+  {
+    "externalId": "64",
+    "firstName": "Kristen",
+    "lastName": "Campbell",
+    "position": "GOALIE",
+    "jersey": 50,
+    "teamExternalId": "9"
+  },
+  {
+    "externalId": "65",
+    "firstName": "Jesse",
+    "lastName": "Compher",
+    "position": "FORWARD",
+    "jersey": 18,
+    "teamExternalId": "6"
+  },
+  {
+    "externalId": "66",
+    "firstName": "Maggie",
+    "lastName": "Connors",
+    "position": "FORWARD",
+    "jersey": 22,
+    "teamExternalId": "6"
+  },
+  {
+    "externalId": "67",
+    "firstName": "Renata",
+    "lastName": "Fast",
+    "position": "DEFENSE",
+    "jersey": 14,
+    "teamExternalId": "6"
+  },
+  {
+    "externalId": "68",
+    "firstName": "Kali",
+    "lastName": "Flanagan",
+    "position": "DEFENSE",
+    "jersey": 6,
+    "teamExternalId": "6"
+  },
+  {
+    "externalId": "71",
+    "firstName": "Jocelyne",
+    "lastName": "Larocque",
+    "position": "DEFENSE",
+    "jersey": 3,
+    "teamExternalId": "5"
+  },
+  {
+    "externalId": "72",
+    "firstName": "Rebecca",
+    "lastName": "Leslie",
+    "position": "FORWARD",
+    "jersey": 37,
+    "teamExternalId": "5"
+  },
+  {
+    "externalId": "73",
+    "firstName": "Emma",
+    "lastName": "Maltais",
+    "position": "FORWARD",
+    "jersey": 27,
+    "teamExternalId": "6"
+  },
+  {
+    "externalId": "74",
+    "firstName": "Allie",
+    "lastName": "Munroe",
+    "position": "DEFENSE",
+    "jersey": 12,
+    "teamExternalId": "6"
+  },
+  {
+    "externalId": "75",
+    "firstName": "Sarah",
+    "lastName": "Nurse",
+    "position": "FORWARD",
+    "jersey": 20,
+    "teamExternalId": "9"
+  },
+  {
+    "externalId": "76",
+    "firstName": "Blayre",
+    "lastName": "Turnbull",
+    "position": "FORWARD",
+    "jersey": 40,
+    "teamExternalId": "6"
+  },
+  {
+    "externalId": "78",
+    "firstName": "Susanna",
+    "lastName": "Tapani",
+    "position": "FORWARD",
+    "jersey": 77,
+    "teamExternalId": "1"
+  },
+  {
+    "externalId": "79",
+    "firstName": "Maggie",
+    "lastName": "Flaherty",
+    "position": "DEFENSE",
+    "jersey": 91,
+    "teamExternalId": "3"
+  },
+  {
+    "externalId": "8",
+    "firstName": "Loren",
+    "lastName": "Gabel",
+    "position": "FORWARD",
+    "jersey": 36,
+    "teamExternalId": "1"
+  },
+  {
+    "externalId": "83",
+    "firstName": "Erin",
+    "lastName": "Ambrose",
+    "position": "DEFENSE",
+    "jersey": 23,
+    "teamExternalId": "3"
+  },
+  {
+    "externalId": "84",
+    "firstName": "Kati",
+    "lastName": "Tabin",
+    "position": "DEFENSE",
+    "jersey": 9,
+    "teamExternalId": "3"
+  },
+  {
+    "externalId": "85",
+    "firstName": "Elaine",
+    "lastName": "Chuli",
+    "position": "GOALIE",
+    "jersey": 29,
+    "teamExternalId": "6"
+  },
+  {
+    "externalId": "86",
+    "firstName": "Emma",
+    "lastName": "Woods",
+    "position": "FORWARD",
+    "jersey": 67,
+    "teamExternalId": "6"
+  },
+  {
+    "externalId": "87",
+    "firstName": "Jaime",
+    "lastName": "Bourbonnais",
+    "position": "DEFENSE",
+    "jersey": 14,
+    "teamExternalId": "4"
+  },
+  {
+    "externalId": "88",
+    "firstName": "Kateřina",
+    "lastName": "Mrázová",
+    "position": "FORWARD",
+    "jersey": 16,
+    "teamExternalId": "5"
+  },
+  {
+    "externalId": "89",
+    "firstName": "Hannah",
+    "lastName": "Miller",
+    "position": "FORWARD",
+    "jersey": 34,
+    "teamExternalId": "9"
+  },
+  {
+    "externalId": "9",
+    "firstName": "Taylor",
+    "lastName": "Girard",
+    "position": "FORWARD",
+    "jersey": 17,
+    "teamExternalId": "4"
+  },
+  {
+    "externalId": "90",
+    "firstName": "Natalie",
+    "lastName": "Buchbinder",
+    "position": "DEFENSE",
+    "jersey": 22,
+    "teamExternalId": "2"
+  },
+  {
+    "externalId": "91",
+    "firstName": "Brooke",
+    "lastName": "Bryant",
+    "position": "FORWARD",
+    "jersey": 17,
+    "teamExternalId": "8"
+  },
+  {
+    "externalId": "97",
+    "firstName": "Liz",
+    "lastName": "Schepers",
+    "position": "FORWARD",
+    "jersey": 13,
+    "teamExternalId": "1"
+  },
+  {
+    "externalId": "98",
+    "firstName": "Maureen",
+    "lastName": "Murphy",
+    "position": "FORWARD",
+    "jersey": 21,
+    "teamExternalId": "3"
+  },
+  {
+    "externalId": "99",
+    "firstName": "Mariah",
+    "lastName": "Keopple",
+    "position": "DEFENSE",
+    "jersey": 20,
+    "teamExternalId": "8"
+  }
+]

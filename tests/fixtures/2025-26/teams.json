@@ -1,0 +1,50 @@
+[
+  {
+    "externalId": "1",
+    "name": "Boston Fleet",
+    "city": "Boston",
+    "abbreviation": "BOS"
+  },
+  {
+    "externalId": "2",
+    "name": "Minnesota Frost",
+    "city": "Minnesota",
+    "abbreviation": "MIN"
+  },
+  {
+    "externalId": "3",
+    "name": "Montréal Victoire",
+    "city": "Montréal",
+    "abbreviation": "MTL"
+  },
+  {
+    "externalId": "4",
+    "name": "New York Sirens",
+    "city": "New York",
+    "abbreviation": "NY"
+  },
+  {
+    "externalId": "5",
+    "name": "Ottawa Charge",
+    "city": "Ottawa",
+    "abbreviation": "OTT"
+  },
+  {
+    "externalId": "6",
+    "name": "Toronto Sceptres",
+    "city": "Toronto",
+    "abbreviation": "TOR"
+  },
+  {
+    "externalId": "8",
+    "name": "Seattle Torrent",
+    "city": "Seattle",
+    "abbreviation": "SEA"
+  },
+  {
+    "externalId": "9",
+    "name": "Vancouver Goldeneyes",
+    "city": "Vancouver",
+    "abbreviation": "VAN"
+  }
+]

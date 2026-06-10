@@ -80,7 +80,6 @@ export async function GET(
         : false,
     },
     orderBy: [{ position: "asc" }, { lastName: "asc" }],
-    take: 200,
   });
 
   const result: PlayerStats[] = players.map((p) => {

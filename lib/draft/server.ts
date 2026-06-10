@@ -62,7 +62,6 @@ class DraftRoom {
             : {}),
         },
         include: { team: true },
-        take: 40,
         orderBy: [{ position: "asc" }, { lastName: "asc" }],
       });
       this.send(ws, {
