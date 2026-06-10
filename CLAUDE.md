@@ -138,6 +138,7 @@ survives DB resets and schema migrations.
 3. **Draft room** — server logic ✅, React UI ✅
 4. Live scoring loop: matchups, standings, waivers, trades
    - Lineup management ✅ (set active/bench slots, per-player game-time locking)
+   - Season matchup lifecycle ✅ (period generation, VTF scoring, status progression)
 5. Playoff bracket and postseason flow — standings, seeding, bracket generation, playoff matchups, and results ✅
 6. Integration + load test the draft room + beta
 7. Public launch ~early Nov, drafts ~1 week before opener
@@ -287,6 +288,60 @@ per-player, not whole-lineup.
 **Dashboard:** team cards now show a "Set lineup" button linking to the lineup page. The dashboard
 also surfaces teams from leagues the user commissions (not just teams they directly own), which
 fixes the "no teams" problem when using seed-created commissioner accounts.
+
+## Season lifecycle (`lib/season/`)
+
+Generates and advances the fantasy season's scoring periods. Reuses the existing VTF scoring
+functions — no new scoring math.
+
+**Pure engine (`lib/season/lifecycle.ts`):**
+`computeSeasonState(periods, games, scoredWeeks, nowMs)` — takes time as a parameter (same
+pattern as the draft engine). Never reads the wall clock directly. Returns a `SeasonState`
+with each period's status:
+- `UPCOMING` — `startsAt > nowMs`
+- `ACTIVE`   — `startsAt <= nowMs < endsAt`
+- `SCORING_PENDING` — `endsAt <= nowMs` and matchup scores not yet cached
+- `COMPLETE` — ended and scores cached
+
+`pendingWeeks(state)` — returns the subset of `ScoringPeriod`s that need scoring right now.
+
+**DB layer (`lib/season/index.ts`):**
+- `getSeasonState(leagueId, nowMs, prisma)` — loads game dates + scored weeks from DB, calls
+  the pure engine, returns `SeasonState`. Scored weeks are derived from `Matchup.homeScore != null`
+  — no new schema column needed.
+- `startSeason(leagueId, prisma)` — calls `generateVtfMatchups` to create all period matchups
+  upfront, sets `FantasyLeague.status = IN_SEASON`.
+- `advanceSeason(leagueId, nowMs, prisma)` — scores all `SCORING_PENDING` periods by calling
+  `scoreVtfWeek`, updates `FantasyLeague.status` to `COMPLETE` when all periods are done.
+
+**Persistence:** no new schema columns. Season status lives in `FantasyLeague.status`
+(`IN_SEASON` / `COMPLETE`). Period completion is derived from cached `Matchup` scores, which
+already survive restarts.
+
+**API routes:**
+- `GET  /api/leagues/[leagueId]/season` — current state using real `Date.now()`
+- `POST /api/leagues/[leagueId]/season` `{ action: "start" | "advance" }` — production controls
+- `POST /api/leagues/[leagueId]/season/advance` `{ simulatedDate, action? }` — **DEV/TEST ONLY**
+
+**Test harness (`/season/advance` route):**
+Gated by `NODE_ENV !== "production"` (or `ALLOW_SEASON_ADVANCE=true`). Calls the exact same
+`advanceSeason()` function as production — no special code path. The only difference is the
+`nowMs` value. Pass a `simulatedDate` past a period's `endsAt` and that period gets scored.
+Because the 2025-26 fixture has all games as `FINAL`, every period is immediately scoreable
+once `nowMs` passes its end date.
+
+**UI:** `app/league/[leagueId]/season/` — period table showing week, dates, game counts,
+final counts, and status badge. In dev mode a yellow-bordered panel shows the simulated-date
+controls and "Start season" / "Advance to date" buttons. The UI re-renders after each advance
+without a full page reload.
+
+**To test against the 2025-26 fixture:** the league's `season` field must be `"2025-26"` so
+the game queries match. Load fixture with `npm run seed-fixture -- --season 2025-26`, then
+use the Season page's dev controls to step through periods.
+
+**Tests:** `tests/season-lifecycle.test.ts` (13 tests) — pure engine only, no DB required.
+Covers all period status transitions, multi-week gap skipping, `pendingWeeks` selection, and
+catching-up when multiple periods are behind.
 
 ## Conventions
 

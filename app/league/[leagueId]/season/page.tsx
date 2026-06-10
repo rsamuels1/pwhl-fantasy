@@ -1,0 +1,29 @@
+import { notFound } from "next/navigation";
+import { prisma } from "@/lib/db";
+import { getSeasonState } from "@/lib/season";
+import SeasonView from "./SeasonView";
+
+interface Props {
+  params: Promise<{ leagueId: string }>;
+}
+
+export default async function SeasonPage({ params }: Props) {
+  const { leagueId } = await params;
+
+  const league = await prisma.fantasyLeague.findUnique({
+    where: { id: leagueId },
+    select: { id: true, name: true },
+  });
+  if (!league) notFound();
+
+  const state = await getSeasonState(leagueId, Date.now(), prisma);
+  const isDev = process.env.NODE_ENV !== "production";
+
+  return (
+    <SeasonView
+      leagueId={leagueId}
+      initialState={state}
+      isDev={isDev}
+    />
+  );
+}
