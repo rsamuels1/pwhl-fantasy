@@ -61,7 +61,8 @@ export async function POST(
       state,
     });
   } catch (err) {
-    console.error(err);
-    return NextResponse.json({ error: "Advance failed." }, { status: 500 });
+    const message = err instanceof Error ? err.message : "Advance failed.";
+    console.error("[season/advance]", message);
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

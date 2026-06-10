@@ -51,7 +51,8 @@ export async function POST(
 
     return NextResponse.json({ error: "Unknown action." }, { status: 400 });
   } catch (err) {
-    console.error(err);
-    return NextResponse.json({ error: "Season action failed." }, { status: 500 });
+    const message = err instanceof Error ? err.message : "Season action failed.";
+    console.error("[season]", message);
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

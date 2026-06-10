@@ -46,6 +46,21 @@ export async function startSeason(leagueId: string, prisma: PrismaClient): Promi
     select: { season: true, status: true },
   });
 
+  // Detect season mismatch before hitting the internal error from generateVtfMatchups.
+  const gameCount = await prisma.game.count({ where: { season: league.season } });
+  if (gameCount === 0) {
+    const available = await prisma.game.findMany({
+      distinct: ["season"],
+      select: { season: true },
+    });
+    const seasons = available.map((g) => g.season).join(", ");
+    throw new Error(
+      `League season is "${league.season}" but no games exist for that season. ` +
+      `Available seasons in DB: ${seasons || "none"}. ` +
+      `Load the fixture with: npm run seed-fixture -- --season ${seasons || "<season>"}`
+    );
+  }
+
   await generateVtfMatchups(leagueId, league.season, prisma);
 
   await prisma.fantasyLeague.update({
