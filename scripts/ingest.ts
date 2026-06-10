@@ -3,9 +3,10 @@
 // Idempotent: safe to re-run; upserts by externalId.
 //
 // Usage:
-//   npm run ingest -- --season 2025-26          # regular season
-//   npm run ingest -- --season-id 5             # by HockeyTech season_id directly
-//   npm run ingest -- --season 2025-26 --no-stats  # skip stat lines (teams/players/games only)
+//   npm run ingest -- --season 2025-26                    # regular season
+//   npm run ingest -- --season-id 5                       # by HockeyTech season_id directly
+//   npm run ingest -- --season 2025-26 --no-stats         # skip stat lines (teams/players/games only)
+//   npm run ingest -- --season 2025-26 --resume           # skip games that already have stat lines
 
 import { PrismaClient, type GameStatus } from "@prisma/client";
 import { HockeytechSource, fetchGameStartTime } from "../lib/ingestion/hockeytech";
@@ -25,9 +26,11 @@ async function main() {
     process.exit(1);
   }
   const noStats = process.argv.includes("--no-stats");
+  const resume = process.argv.includes("--resume");
 
   console.log(`\nIngesting season "${season}" from HockeyTech…`);
   if (noStats) console.log("  (--no-stats: skipping stat lines)");
+  if (resume) console.log("  (--resume: skipping games that already have stat lines)");
 
   // ── Teams ──────────────────────────────────────────────────────────────────
   console.log("\n[1/4] Fetching teams…");
@@ -129,6 +132,14 @@ async function main() {
 
     for (const game of finalGames) {
       try {
+        if (resume) {
+          const existing = await prisma.statLine.count({ where: { gameId: game.id } });
+          if (existing > 0) {
+            statGames++;
+            statLines += existing;
+            continue;
+          }
+        }
         const lines = await source.fetchStatLines(game.externalId);
 
         for (const l of lines) {
