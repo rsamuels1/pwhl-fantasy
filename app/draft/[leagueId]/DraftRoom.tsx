@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { useDraftSocket } from "@/hooks/useDraftSocket";
 import type { DraftState, PlayerSummary } from "@/lib/draft/messages";
 import type { PickSlot } from "@/lib/draft/snake";
+import type { PlayerStats } from "@/app/api/leagues/[leagueId]/draft/players/route";
 
 // ---------------------------------------------------------------------------
 // Top bar
@@ -291,12 +292,98 @@ function MyPicks({
 }
 
 // ---------------------------------------------------------------------------
-// Player list + queue management
+// Roster needs panel
 // ---------------------------------------------------------------------------
+
+const SLOT_LABELS: Record<string, string> = {
+  forward: "Forward",
+  defense: "Defense",
+  goalie: "Goalie",
+  util: "Util",
+  bench: "Bench",
+};
+
+function NeedsPanel({
+  draft,
+  myTeamId,
+  rosterSettings,
+  playerPositions,
+}: {
+  draft: DraftState;
+  myTeamId: string;
+  rosterSettings: Record<string, number>;
+  playerPositions: Record<string, string>;
+}) {
+  const myPicks = draft.completed.filter((p) => p.fantasyTeamId === myTeamId);
+
+  // Count drafted by position
+  const drafted: Record<string, number> = { forward: 0, defense: 0, goalie: 0 };
+  for (const pick of myPicks) {
+    const pos = playerPositions[pick.playerId]?.toLowerCase();
+    if (pos) drafted[pos] = (drafted[pos] ?? 0) + 1;
+  }
+
+  const totalNeeded = Object.values(rosterSettings).reduce((s, n) => s + n, 0);
+  const totalDrafted = myPicks.length;
+
+  return (
+    <div style={styles.card}>
+      <div style={styles.cardTitle}>Roster Needs</div>
+      <div style={{ marginBottom: 8, fontSize: 12, color: "var(--muted)" }}>
+        {totalDrafted} / {totalNeeded} picks made
+      </div>
+      {Object.entries(rosterSettings).map(([slot, need]) => {
+        // Map slot keys to positions for counting (util/bench count any)
+        const posKey = slot === "forward" ? "forward" : slot === "defense" ? "defense" : slot === "goalie" ? "goalie" : null;
+        const have = posKey != null ? (drafted[posKey] ?? 0) : 0;
+        const remaining = Math.max(0, need - have);
+        const done = remaining === 0;
+        return (
+          <div key={slot} style={{ display: "flex", alignItems: "center", gap: 8, padding: "4px 0", borderBottom: "1px solid var(--border)", fontSize: 12 }}>
+            <span style={{ flex: 1, color: done ? "var(--muted)" : "var(--text)" }}>
+              {SLOT_LABELS[slot] ?? slot}
+            </span>
+            <span style={{ color: done ? "var(--green)" : remaining <= 1 ? "var(--clock-warn)" : "var(--text)", fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>
+              {posKey != null ? `${have}/${need}` : `—/${need}`}
+            </span>
+            {done && <span style={{ fontSize: 10, color: "var(--green)" }}>✓</span>}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Player list + stats + queue management
+// ---------------------------------------------------------------------------
+
+type SortKey = "points" | "goals" | "assists" | "ppp" | "shots" | "hits" | "blocks" | "wins" | "saves" | "savePct" | "shutouts" | "gp";
+
+const SKATER_COLS: { key: SortKey; label: string }[] = [
+  { key: "gp", label: "GP" },
+  { key: "goals", label: "G" },
+  { key: "assists", label: "A" },
+  { key: "points", label: "PTS" },
+  { key: "ppp", label: "PPP" },
+  { key: "shots", label: "SOG" },
+  { key: "hits", label: "HIT" },
+  { key: "blocks", label: "BLK" },
+];
+
+const GOALIE_COLS: { key: SortKey; label: string }[] = [
+  { key: "gp", label: "GP" },
+  { key: "wins", label: "W" },
+  { key: "saves", label: "SV" },
+  { key: "goalsAgainst" as SortKey, label: "GA" },
+  { key: "savePct", label: "SV%" },
+  { key: "shutouts", label: "SO" },
+];
 
 function PlayerPanel({
   draft,
   teamId,
+  leagueId,
   available,
   queue,
   onPick,
@@ -305,6 +392,7 @@ function PlayerPanel({
 }: {
   draft: DraftState;
   teamId: string;
+  leagueId: string;
   available: PlayerSummary[];
   queue: string[];
   onPick: (playerId: string) => void;
@@ -313,30 +401,74 @@ function PlayerPanel({
 }) {
   const [search, setSearch] = useState("");
   const [activeTab, setActiveTab] = useState<"available" | "queue">("available");
+  const [posFilter, setPosFilter] = useState<"" | "FORWARD" | "DEFENSE" | "GOALIE">("");
+  const [sortKey, setSortKey] = useState<SortKey>("points");
+  const [statsMap, setStatsMap] = useState<Record<string, PlayerStats>>({});
+  const [statSeason, setStatSeason] = useState<string | null>(null);
+  const [loadingStats, setLoadingStats] = useState(false);
   const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const fetchControllerRef = useRef<AbortController | null>(null);
 
   const onClock = draft.order.find((s) => s.overall === draft.currentOverall);
   const isMyTurn = draft.status === "IN_PROGRESS" && onClock?.fantasyTeamId === teamId;
   const drafted = new Set(draft.draftedPlayerIds);
 
+  // Fetch stats from the API whenever search or position filter changes
+  const fetchStats = useCallback(
+    async (q: string, pos: string) => {
+      fetchControllerRef.current?.abort();
+      const ctrl = new AbortController();
+      fetchControllerRef.current = ctrl;
+      setLoadingStats(true);
+      try {
+        const params = new URLSearchParams();
+        if (q) params.set("search", q);
+        if (pos) params.set("position", pos);
+        const res = await fetch(`/api/leagues/${leagueId}/draft/players?${params}`, {
+          signal: ctrl.signal,
+        });
+        if (!res.ok) return;
+        const data = await res.json() as { season: string | null; players: PlayerStats[] };
+        setStatSeason(data.season);
+        setStatsMap((prev) => {
+          const next = { ...prev };
+          for (const p of data.players) next[p.id] = p;
+          return next;
+        });
+      } catch {
+        // aborted or network error — ignore
+      } finally {
+        setLoadingStats(false);
+      }
+    },
+    [leagueId]
+  );
+
+  // Load on mount and when filters change
+  useEffect(() => {
+    fetchStats(search, posFilter);
+  }, [posFilter]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const handleSearch = (q: string) => {
     setSearch(q);
     if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
-    searchTimerRef.current = setTimeout(() => onSearch(q || ""), 300);
+    searchTimerRef.current = setTimeout(() => {
+      onSearch(q || "");
+      fetchStats(q, posFilter);
+    }, 300);
+  };
+
+  const handlePosFilter = (pos: "" | "FORWARD" | "DEFENSE" | "GOALIE") => {
+    setPosFilter(pos);
+    // Reset sort to something sensible for the position
+    if (pos === "GOALIE") setSortKey("wins");
+    else setSortKey("points");
   };
 
   const addToQueue = (id: string) => {
-    if (!queue.includes(id)) {
-      const next = [...queue, id];
-      onSetQueue(next);
-    }
+    if (!queue.includes(id)) onSetQueue([...queue, id]);
   };
-
-  const removeFromQueue = (id: string) => {
-    const next = queue.filter((q) => q !== id);
-    onSetQueue(next);
-  };
-
+  const removeFromQueue = (id: string) => onSetQueue(queue.filter((q) => q !== id));
   const moveInQueue = (id: string, dir: -1 | 1) => {
     const idx = queue.indexOf(id);
     if (idx < 0) return;
@@ -347,10 +479,21 @@ function PlayerPanel({
     onSetQueue(next);
   };
 
-  const posOrder: Record<string, number> = { FORWARD: 0, DEFENSE: 1, GOALIE: 2 };
-  const availablePlayers = [...available]
+  // Merge available players with stats, apply position filter, sort
+  const showingGoalies = posFilter === "GOALIE";
+  const cols = showingGoalies ? GOALIE_COLS : SKATER_COLS;
+
+  const rows = available
     .filter((p) => !drafted.has(p.id))
-    .sort((a, b) => (posOrder[a.position] ?? 9) - (posOrder[b.position] ?? 9));
+    .filter((p) => !posFilter || p.position === posFilter)
+    .map((p) => ({ player: p, stats: statsMap[p.id] ?? null }))
+    .sort((a, b) => {
+      const av = (a.stats as Record<string, number | null> | null)?.[sortKey] ?? -1;
+      const bv = (b.stats as Record<string, number | null> | null)?.[sortKey] ?? -1;
+      // For GA lower is better; for everything else higher is better
+      if (sortKey === ("goalsAgainst" as SortKey)) return (av as number) - (bv as number);
+      return (bv as number) - (av as number);
+    });
 
   const queuedPlayers = queue
     .map((id) => available.find((p) => p.id === id))
@@ -370,11 +513,7 @@ function PlayerPanel({
           {(["available", "queue"] as const).map((tab) => (
             <button
               key={tab}
-              style={{
-                ...styles.tab,
-                background: activeTab === tab ? "var(--accent)" : "transparent",
-                color: activeTab === tab ? "#fff" : "var(--muted)",
-              }}
+              style={{ ...styles.tab, background: activeTab === tab ? "var(--accent)" : "transparent", color: activeTab === tab ? "#fff" : "var(--muted)" }}
               onClick={() => setActiveTab(tab)}
             >
               {tab === "available" ? "Available" : `Queue (${queuedPlayers.length})`}
@@ -384,42 +523,77 @@ function PlayerPanel({
 
         {activeTab === "available" && (
           <>
-            <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
+            {/* Search + position filter */}
+            <div style={{ display: "flex", gap: 8, marginBottom: 8, flexWrap: "wrap" as const }}>
               <input
-                style={styles.input}
-                placeholder="Search players…"
+                style={{ ...styles.input, flex: 1, minWidth: 140 }}
+                placeholder="Search by last name…"
                 value={search}
                 onChange={(e) => handleSearch(e.target.value)}
               />
+              <div style={{ display: "flex", gap: 4 }}>
+                {(["", "FORWARD", "DEFENSE", "GOALIE"] as const).map((pos) => (
+                  <button
+                    key={pos || "all"}
+                    style={{ ...styles.tab, padding: "4px 10px", background: posFilter === pos ? "var(--accent)" : "transparent", color: posFilter === pos ? "#fff" : "var(--muted)" }}
+                    onClick={() => handlePosFilter(pos)}
+                  >
+                    {pos === "" ? "All" : pos === "FORWARD" ? "F" : pos === "DEFENSE" ? "D" : "G"}
+                  </button>
+                ))}
+              </div>
             </div>
 
-            {availablePlayers.length === 0 ? (
+            {statSeason && (
+              <div style={{ fontSize: 11, color: "var(--muted)", marginBottom: 6 }}>
+                Stats: {statSeason} season{loadingStats ? " · loading…" : ""}
+              </div>
+            )}
+
+            {rows.length === 0 ? (
               <p style={{ color: "var(--muted)", padding: "8px 0", fontSize: 12 }}>
                 {available.length === 0 ? "Loading players…" : "No players match."}
               </p>
             ) : (
-              <div style={{ overflowY: "auto", maxHeight: "calc(100vh - 300px)" }}>
-                <table style={{ ...styles.table, width: "100%" }}>
-                  <thead>
+              <div style={{ overflowX: "auto", overflowY: "auto", maxHeight: "calc(100vh - 320px)" }}>
+                <table style={{ ...styles.table, width: "100%", minWidth: 560 }}>
+                  <thead style={{ position: "sticky", top: 0, background: "var(--bg)", zIndex: 1 }}>
                     <tr style={{ color: "var(--muted)", fontSize: 11, textTransform: "uppercase" }}>
                       <th style={styles.th}>Pos</th>
-                      <th style={styles.th}>Team</th>
-                      <th style={styles.th}>Player</th>
+                      <th style={styles.th}>Tm</th>
+                      <th style={{ ...styles.th, minWidth: 130 }}>Player</th>
+                      {cols.map((c) => (
+                        <th
+                          key={c.key}
+                          style={{ ...styles.th, textAlign: "right", cursor: "pointer", color: sortKey === c.key ? "var(--accent-strong)" : "var(--muted)", userSelect: "none" }}
+                          onClick={() => setSortKey(c.key)}
+                          title={`Sort by ${c.label}`}
+                        >
+                          {c.label}{sortKey === c.key ? " ▾" : ""}
+                        </th>
+                      ))}
                       <th />
                     </tr>
                   </thead>
                   <tbody>
-                    {availablePlayers.map((p) => (
+                    {rows.map(({ player: p, stats: s }) => (
                       <tr key={p.id} style={styles.playerRow}>
                         <td style={{ padding: "5px 6px" }}><PosTag pos={p.position} /></td>
-                        <td style={{ padding: "5px 6px", color: "var(--muted)", fontSize: 12 }}>{p.team ?? "FA"}</td>
-                        <td style={{ padding: "5px 6px", fontSize: 13 }}>{p.name}</td>
+                        <td style={{ padding: "5px 6px", color: "var(--muted)", fontSize: 11, whiteSpace: "nowrap" }}>{p.team ?? "FA"}</td>
+                        <td style={{ padding: "5px 6px", fontSize: 13, whiteSpace: "nowrap" }}>{p.name}</td>
+                        {cols.map((c) => {
+                          const val = s ? (s as Record<string, number | null>)[c.key] : null;
+                          const display = val == null ? "—" : c.key === "savePct" ? (val as number).toFixed(3).replace(/^0/, "") : String(val);
+                          return (
+                            <td key={c.key} style={{ padding: "5px 6px", textAlign: "right", fontSize: 12, fontVariantNumeric: "tabular-nums", color: sortKey === c.key ? "var(--text)" : "var(--muted)" }}>
+                              {display}
+                            </td>
+                          );
+                        })}
                         <td style={{ padding: "5px 6px", textAlign: "right" }}>
                           <div style={{ display: "flex", gap: 6, justifyContent: "flex-end" }}>
                             {isMyTurn && (
-                              <button style={styles.btnPick} onClick={() => onPick(p.id)}>
-                                Pick
-                              </button>
+                              <button style={styles.btnPick} onClick={() => onPick(p.id)}>Pick</button>
                             )}
                             <button
                               style={{ ...styles.btnSecondary, fontSize: 11, padding: "3px 8px" }}
@@ -451,24 +625,31 @@ function PlayerPanel({
               </p>
             ) : (
               <div>
-                {queuedPlayers.map((p, i) => (
-                  <div key={p.id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 0", borderBottom: "1px solid var(--border)", fontSize: 12 }}>
-                    <span style={{ color: "var(--muted)", minWidth: 18, fontSize: 11 }}>{i + 1}</span>
-                    <PosTag pos={p.position} />
-                    <span style={{ flex: 1 }}>{p.name}</span>
-                    <span style={{ color: "var(--muted)", fontSize: 11 }}>{p.team ?? "FA"}</span>
-                    <div style={{ display: "flex", gap: 4 }}>
-                      <button style={styles.queueBtn} onClick={() => moveInQueue(p.id, -1)} disabled={i === 0} title="Move up">↑</button>
-                      <button style={styles.queueBtn} onClick={() => moveInQueue(p.id, 1)} disabled={i === queuedPlayers.length - 1} title="Move down">↓</button>
-                      {isMyTurn && (
-                        <button style={{ ...styles.btnPick, fontSize: 11, padding: "3px 8px" }} onClick={() => onPick(p.id)}>
-                          Pick
-                        </button>
+                {queuedPlayers.map((p, i) => {
+                  const s = statsMap[p.id];
+                  return (
+                    <div key={p.id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 0", borderBottom: "1px solid var(--border)", fontSize: 12 }}>
+                      <span style={{ color: "var(--muted)", minWidth: 18, fontSize: 11 }}>{i + 1}</span>
+                      <PosTag pos={p.position} />
+                      <span style={{ flex: 1 }}>{p.name}</span>
+                      {s && p.position !== "GOALIE" && (
+                        <span style={{ color: "var(--muted)", fontSize: 11 }}>{s.points}pts</span>
                       )}
-                      <button style={{ ...styles.queueBtn, color: "var(--red)" }} onClick={() => removeFromQueue(p.id)} title="Remove">✕</button>
+                      {s && p.position === "GOALIE" && (
+                        <span style={{ color: "var(--muted)", fontSize: 11 }}>{s.wins}W</span>
+                      )}
+                      <span style={{ color: "var(--muted)", fontSize: 11 }}>{p.team ?? "FA"}</span>
+                      <div style={{ display: "flex", gap: 4 }}>
+                        <button style={styles.queueBtn} onClick={() => moveInQueue(p.id, -1)} disabled={i === 0}>↑</button>
+                        <button style={styles.queueBtn} onClick={() => moveInQueue(p.id, 1)} disabled={i === queuedPlayers.length - 1}>↓</button>
+                        {isMyTurn && (
+                          <button style={{ ...styles.btnPick, fontSize: 11, padding: "3px 8px" }} onClick={() => onPick(p.id)}>Pick</button>
+                        )}
+                        <button style={{ ...styles.queueBtn, color: "var(--red)" }} onClick={() => removeFromQueue(p.id)}>✕</button>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
@@ -510,11 +691,13 @@ export default function DraftRoom({
   teamId,
   teamNames,
   isCommissioner,
+  rosterSettings,
 }: {
   leagueId: string;
   teamId: string;
   teamNames: Record<string, string>;
   isCommissioner: boolean;
+  rosterSettings: Record<string, number>;
 }) {
   const { connStatus, draft, available, lastError, start, makePick, listAvailable, setQueue, pause, resume } =
     useDraftSocket(leagueId, teamId);
@@ -531,19 +714,17 @@ export default function DraftRoom({
     }
   }, [available]);
 
-  // Load available players on connect and after each pick
-  const prevPickCount = useRef(0);
+  // Preload players as soon as draft state arrives (even before start),
+  // then refresh after each pick so the list stays current.
+  const prevPickCount = useRef(-1);
   useEffect(() => {
     if (!draft) return;
     const count = draft.completed.length;
-    if (draft.status === "IN_PROGRESS" && count !== prevPickCount.current) {
+    if (count !== prevPickCount.current) {
       prevPickCount.current = count;
       listAvailable();
     }
-    if (draft.status === "IN_PROGRESS" && available.length === 0) {
-      listAvailable();
-    }
-  }, [draft?.status, draft?.completed.length, available.length, listAvailable]);
+  }, [draft?.completed.length, listAvailable]);
 
   const handleSetQueue = useCallback(
     (ids: string[]) => {
@@ -616,11 +797,12 @@ export default function DraftRoom({
             />
           </div>
 
-          {/* Center column: player search + queue */}
+          {/* Center column: player search + stats + queue */}
           <div style={styles.centerCol}>
             <PlayerPanel
               draft={draft}
               teamId={teamId}
+              leagueId={leagueId}
               available={available}
               queue={queue}
               onPick={makePick}
@@ -629,14 +811,22 @@ export default function DraftRoom({
             />
           </div>
 
-          {/* Right column: my roster */}
+          {/* Right column: my roster + needs */}
           <div style={styles.rightCol}>
-            <MyPicks
+            <NeedsPanel
               draft={draft}
               myTeamId={teamId}
-              playerNames={playerNames.current}
+              rosterSettings={rosterSettings}
               playerPositions={playerPositions.current}
             />
+            <div style={{ marginTop: 12 }}>
+              <MyPicks
+                draft={draft}
+                myTeamId={teamId}
+                playerNames={playerNames.current}
+                playerPositions={playerPositions.current}
+              />
+            </div>
           </div>
         </div>
       )}

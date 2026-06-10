@@ -151,9 +151,20 @@ Key pieces:
 - **TopBar** — shows clock, on-clock team name, Start/Pause/Resume (commissioner only).
 - **PickBoard** — full snake grid; cells show last-name of drafted player or team initials.
 - **RecentPicks** — last 10 picks with player name, team name, auto flag.
-- **PlayerPanel** — two tabs: Available (search + "+Q" to add to queue) and Queue (reorder
-  with ↑/↓, remove, or pick directly when on the clock). Auto-refreshes after every pick.
-- **MyPicks** — right-column roster of all your drafted players.
+- **PlayerPanel** — two tabs: Available (search + position filter + sortable stat columns from
+  prior season, plus "+Q" to add to queue) and Queue (reorder with ↑/↓, remove, or pick
+  directly when on the clock). Auto-refreshes after every pick.
+- **NeedsPanel** — right column; shows each roster slot type with `have/need` counts so
+  managers know which positions to target. Turns green when filled, orange when 1 left.
+- **MyPicks** — right column below NeedsPanel; full list of drafted players with position tags.
+
+Stats are served from `GET /api/leagues/[leagueId]/draft/players` which aggregates the most
+recent completed regular season's `StatLine` rows per player. Skater columns: GP, G, A, PTS,
+PPP, SOG, HIT, BLK. Goalie columns: GP, W, SV, GA, SV%, SO. Clicking a column header sorts.
+Stats are fetched over HTTP (not WebSocket) and cached in a `statsMap` ref in `PlayerPanel`.
+
+`rosterSettings` is fetched server-side in the page and passed into `DraftRoom` so both
+`NeedsPanel` and future logic can read it without an extra DB call.
 
 Player names are resolved client-side from the `AVAILABLE` server messages; `playerNames`
 and `playerPositions` are stored in refs so they survive across re-renders without

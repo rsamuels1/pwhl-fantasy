@@ -27,6 +27,7 @@ export default async function DraftPage({ params, searchParams }: Props) {
       id: true,
       name: true,
       commissionerId: true,
+      rosterSettings: true,
       teams: {
         select: { id: true, name: true, ownerId: true },
         orderBy: { draftOrder: "asc" },
@@ -44,12 +45,15 @@ export default async function DraftPage({ params, searchParams }: Props) {
     league.teams.map((t) => [t.id, t.name])
   );
 
+  const rosterSettings = (league.rosterSettings ?? {}) as Record<string, number>;
+
   return (
     <DraftRoom
       leagueId={leagueId}
       teamId={teamId}
       teamNames={teamNames}
       isCommissioner={myTeam.ownerId === league.commissionerId}
+      rosterSettings={rosterSettings}
     />
   );
 }
