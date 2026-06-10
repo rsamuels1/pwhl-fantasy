@@ -194,12 +194,26 @@ function roundRobinPairs(n: number, rounds: number): Array<Array<[number, number
   return schedule;
 }
 
+function shiftPeriodsToStart(periods: ScoringPeriod[], startAt: Date): ScoringPeriod[] {
+  const firstStart = periods.reduce(
+    (min, period) => (period.startsAt < min ? period.startsAt : min),
+    periods[0].startsAt
+  );
+  const offsetMs = startAt.getTime() - firstStart.getTime();
+  return periods.map((period) => ({
+    week: period.week,
+    startsAt: new Date(period.startsAt.getTime() + offsetMs),
+    endsAt: new Date(period.endsAt.getTime() + offsetMs),
+  }));
+}
+
 // Generate Matchup rows for a league's full season and upsert them.
 // Safe to re-run: upserts on (leagueId, week, homeTeamId).
 export async function generateMatchups(
   leagueId: string,
   season: string,
-  prisma: PrismaClient
+  prisma: PrismaClient,
+  options?: { startAt?: Date }
 ): Promise<ScoringPeriod[]> {
   const league = await prisma.fantasyLeague.findUniqueOrThrow({
     where: { id: leagueId },
@@ -213,8 +227,11 @@ export async function generateMatchups(
     .findMany({ where: { season }, select: { startsAt: true } })
     .then((rows) => rows.map((r) => r.startsAt));
 
-  const periods = derivePeriods(gameDates);
+  let periods = derivePeriods(gameDates);
   if (periods.length === 0) throw new Error(`No games found for season ${season}`);
+  if (options?.startAt) {
+    periods = shiftPeriodsToStart(periods, options.startAt);
+  }
 
   const schedule = roundRobinPairs(teamIds.length, periods.length);
 

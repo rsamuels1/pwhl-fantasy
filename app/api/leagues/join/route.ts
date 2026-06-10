@@ -1,0 +1,75 @@
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/db";
+import { generateShortId } from "@/lib/id";
+
+export async function POST(req: NextRequest) {
+  try {
+    const body = await req.json();
+    const leagueId = String(body.leagueId || "").trim();
+    const teamName = String(body.teamName || "").trim();
+    const ownerEmail = String(body.ownerEmail || "").trim();
+    const ownerName = String(body.ownerName || "").trim();
+
+    if (!leagueId || !teamName || !ownerEmail) {
+      return NextResponse.json({ error: "League ID, team name, and owner email are required." }, { status: 400 });
+    }
+
+    const league = await prisma.fantasyLeague.findUnique({ where: { id: leagueId } });
+    if (!league) {
+      return NextResponse.json({ error: "League not found." }, { status: 404 });
+    }
+
+    // Check if user already exists
+    const existingUser = await prisma.user.findUnique({ where: { email: ownerEmail } });
+    
+    // Check if user already owns a team in this league (before any updates)
+    if (existingUser) {
+      const existingTeam = await prisma.fantasyTeam.findFirst({
+        where: { leagueId, ownerId: existingUser.id },
+      });
+      if (existingTeam) {
+        return NextResponse.json({ error: "This email already owns a team in the league." }, { status: 400 });
+      }
+    }
+
+    // For non-commissioners, enforce maxTeams limit
+    const isCommissioner = league.commissionerId === (existingUser?.id || null);
+    if (!isCommissioner) {
+      const teamCount = await prisma.fantasyTeam.count({ where: { leagueId } });
+      if (teamCount >= league.maxTeams) {
+        return NextResponse.json({ error: "League has reached the maximum number of teams." }, { status: 400 });
+      }
+    }
+
+    // Create or update user
+    const owner = await prisma.user.upsert({
+      where: { email: ownerEmail },
+      update: { displayName: ownerName || ownerEmail.split("@")[0] },
+      create: { email: ownerEmail, displayName: ownerName || ownerEmail.split("@")[0] },
+    });
+
+    // Get current team count for draft order
+    const teamCount = await prisma.fantasyTeam.count({ where: { leagueId } });
+    const draftOrder = teamCount + 1;
+
+    const team = await prisma.fantasyTeam.create({
+      data: {
+        id: generateShortId(teamName),
+        name: teamName,
+        leagueId,
+        ownerId: owner.id,
+        draftOrder,
+      },
+    });
+
+    return NextResponse.json({
+      leagueId,
+      teamId: team.id,
+      draftOrder,
+      message: "Team created successfully. Use the Team ID to join the draft room.",
+    });
+  } catch (error) {
+    console.error("Error joining league:", error);
+    return NextResponse.json({ error: "Failed to join league." }, { status: 500 });
+  }
+}
