@@ -281,6 +281,17 @@ per-player, not whole-lineup.
 **API:** `GET /api/leagues/[leagueId]/lineup?team=<id>` and `PUT /api/leagues/[leagueId]/lineup`
 `{ teamId, playerId, slot }`. PUT validates eligibility, capacity, and lock before updating.
 
+**Player stats toggle:** the lineup page shows per-player stats inline, with a "Season / Last week"
+toggle in the header.
+- **Season** — aggregate of all `StatLine` rows for the player in the league's season (e.g. `2025-26`).
+- **Last week** — aggregate for the most recently completed scoring period, derived via `getSeasonState`
+  (the same period engine used by `advanceSeason`). Label shows "Week N (Mon – Sun)".
+- Stats are aggregated server-side in `lineup/page.tsx` using `scoreStatLine` from `lib/scoring`
+  and passed to `LineupManager` as `seasonStats` and `lastWeekStats` maps.
+- Skater display: GP, G, A, PTS, PPP, SOG, HIT, BLK, FP. Goalie: GP, W, SV, GA, SV%, SO, FP.
+- Empty states: "No games last week" (last-week view) or "No prior-season data" (season view) for
+  rookies/expansion players. Never blank or a JS error.
+
 **Scoring integration:** no changes needed — `computeTeamScore` already reads `slot NOT IN [BENCH, IR]`.
 
 **Nav:** "Lineup" link added to the league layout nav (`app/league/[leagueId]/layout.tsx`).
@@ -288,6 +299,13 @@ per-player, not whole-lineup.
 **Dashboard:** team cards now show a "Set lineup" button linking to the lineup page. The dashboard
 also surfaces teams from leagues the user commissions (not just teams they directly own), which
 fixes the "no teams" problem when using seed-created commissioner accounts.
+
+## Roster page (`app/league/[leagueId]/roster/`)
+
+Replaced the single long scroll (all teams stacked) with a per-team tab filter. A row of team-name
+pills at the top acts as the selector; clicking one updates `?team=<id>` in the URL. The server
+page reads `searchParams.team` and defaults to `teams[0]` if absent. Only the selected team's
+roster card is rendered — no JS needed for switching.
 
 ## Season lifecycle (`lib/season/`)
 

@@ -17,6 +17,25 @@ export interface RosterEntryRow {
   eligibleSlots: SlotType[];
 }
 
+export interface PlayerStatsRow {
+  gp: number;
+  goals: number;
+  assists: number;
+  shots: number;
+  plusMinus: number;
+  penaltyMinutes: number;
+  powerPlayPts: number;
+  hits: number;
+  blocks: number;
+  saves: number;
+  goalsAgainst: number;
+  wins: number;
+  shutouts: number;
+  fantasyPoints: number;
+}
+
+type StatsView = "season" | "lastWeek";
+
 interface Props {
   leagueId: string;
   teamId: string;
@@ -24,6 +43,9 @@ interface Props {
   leagueName: string;
   initialRoster: RosterEntryRow[];
   rosterSettings: RosterSettings;
+  seasonStats: Record<string, PlayerStatsRow | null>;
+  lastWeekStats: Record<string, PlayerStatsRow | null>;
+  lastWeekLabel: string | null; // e.g. "Week 3 (Jan 20 – Jan 26)"
 }
 
 const ACTIVE_SLOTS: SlotType[] = ["FORWARD", "DEFENSE", "GOALIE", "UTIL"];
@@ -52,18 +74,19 @@ function buildActiveSeats(settings: RosterSettings): Array<{ slot: SlotType; ind
 
 export default function LineupManager({
   leagueId, teamId, teamName, initialRoster, rosterSettings,
+  seasonStats, lastWeekStats, lastWeekLabel,
 }: Props) {
   const [roster, setRoster] = useState<RosterEntryRow[]>(initialRoster);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [statsView, setStatsView] = useState<StatsView>("season");
 
   const selected = selectedId ? roster.find((p) => p.playerId === selectedId) ?? null : null;
   const activeSeats = buildActiveSeats(rosterSettings);
   const benchPlayers = roster.filter((p) => p.slot === "BENCH");
   const irPlayers = roster.filter((p) => p.slot === "IR");
 
-  // Map each active seat to its occupying player (fill in order per slot type).
   const seatedActive: Array<{ slot: SlotType; index: number; player: RosterEntryRow | null }> = (() => {
     const bySlot: Record<string, RosterEntryRow[]> = {};
     for (const p of roster) {
@@ -80,9 +103,12 @@ export default function LineupManager({
     });
   })();
 
+  function getStats(playerId: string): PlayerStatsRow | null {
+    return statsView === "season" ? (seasonStats[playerId] ?? null) : (lastWeekStats[playerId] ?? null);
+  }
+
   async function moveTo(targetSlot: SlotType, targetPlayerId?: string) {
     if (!selected) return;
-    // If clicking the same player or same slot, deselect.
     if (targetPlayerId === selected.playerId) { setSelectedId(null); return; }
     const newSlot = targetPlayerId
       ? roster.find((p) => p.playerId === targetPlayerId)?.slot ?? targetSlot
@@ -91,7 +117,6 @@ export default function LineupManager({
 
     setError(null);
     const prev = roster;
-    // Optimistic: move selected player to new slot; if swapping with another player, move them to selected's old slot.
     setRoster((r) => r.map((p) => {
       if (p.playerId === selected.playerId) return { ...p, slot: newSlot };
       if (targetPlayerId && p.playerId === targetPlayerId) return { ...p, slot: selected.slot };
@@ -119,19 +144,15 @@ export default function LineupManager({
     setError(null);
   }
 
-  // Can the selected player move to this slot?
   function canMoveTo(slot: SlotType): boolean {
     if (!selected) return false;
     return selected.eligibleSlots.includes(slot) && slot !== selected.slot;
   }
 
-  // Is this specific seat a valid drop target for the selected player?
   function seatIsTarget(seatSlot: SlotType, occupant: RosterEntryRow | null): boolean {
     if (!selected) return false;
     if (occupant?.playerId === selected.playerId) return false;
-    // Empty seat: can we fill this slot type?
     if (!occupant) return canMoveTo(seatSlot);
-    // Occupied seat: is a swap valid? (selected can go to seatSlot AND occupant can go to selected.slot)
     return canMoveTo(seatSlot) && occupant.eligibleSlots.includes(selected.slot);
   }
 
@@ -140,13 +161,37 @@ export default function LineupManager({
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
       {/* Header */}
-      <div style={{ display: "flex", alignItems: "baseline", gap: 12, flexWrap: "wrap" }}>
-        <h1 style={{ fontSize: 22, margin: 0 }}>{teamName}</h1>
-        <span style={{ color: "#64748b", fontSize: 13 }}>
-          {activeCount} active · {benchPlayers.length} bench
-          {isPending && <span style={{ marginLeft: 10, color: "#60a5fa" }}>Saving…</span>}
-        </span>
+      <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", justifyContent: "space-between" }}>
+        <div style={{ display: "flex", alignItems: "baseline", gap: 12, flexWrap: "wrap" }}>
+          <h1 style={{ fontSize: 22, margin: 0 }}>{teamName}</h1>
+          <span style={{ color: "#64748b", fontSize: 13 }}>
+            {activeCount} active · {benchPlayers.length} bench
+            {isPending && <span style={{ marginLeft: 10, color: "#60a5fa" }}>Saving…</span>}
+          </span>
+        </div>
+
+        {/* Stats view toggle */}
+        <div style={{ display: "flex", gap: 4, background: "rgba(255,255,255,0.05)", borderRadius: 8, padding: 3 }}>
+          {(["season", "lastWeek"] as StatsView[]).map((view) => (
+            <button
+              key={view}
+              onClick={() => setStatsView(view)}
+              style={{
+                padding: "5px 12px", borderRadius: 6, border: "none", cursor: "pointer", fontSize: 12, fontWeight: 600,
+                background: statsView === view ? "rgba(99,102,241,0.3)" : "transparent",
+                color: statsView === view ? "#a5b4fc" : "#64748b",
+                transition: "background 0.1s, color 0.1s",
+              }}
+            >
+              {view === "season" ? "Season" : (lastWeekLabel ? `Last week` : "Last week")}
+            </button>
+          ))}
+        </div>
       </div>
+
+      {statsView === "lastWeek" && lastWeekLabel && (
+        <div style={{ fontSize: 12, color: "#64748b" }}>{lastWeekLabel}</div>
+      )}
 
       {selected && (
         <div style={{
@@ -191,7 +236,7 @@ export default function LineupManager({
                   }}
                   style={{
                     display: "grid", gridTemplateColumns: "36px 1fr",
-                    gap: 10, alignItems: "center",
+                    gap: 10, alignItems: "start",
                     padding: "9px 12px", borderRadius: 10,
                     border: `1px solid ${isTarget ? "rgba(99,102,241,0.5)" : isSelected ? "rgba(99,102,241,0.4)" : "rgba(148,163,184,0.1)"}`,
                     background: isTarget
@@ -204,9 +249,11 @@ export default function LineupManager({
                     outline: isTarget ? "1px solid rgba(99,102,241,0.3)" : "none",
                   }}
                 >
-                  <SlotBadge slot={slot} />
+                  <div style={{ paddingTop: 2 }}>
+                    <SlotBadge slot={slot} />
+                  </div>
                   {player ? (
-                    <PlayerInfo player={player} isSelected={isSelected} />
+                    <PlayerInfo player={player} isSelected={isSelected} stats={getStats(player.playerId)} statsView={statsView} />
                   ) : (
                     <span style={{ color: isTarget ? "#a5b4fc" : "#475569", fontSize: 13, fontStyle: isTarget ? "normal" : "italic" }}>
                       {isTarget ? "Move here" : "Empty"}
@@ -244,7 +291,7 @@ export default function LineupManager({
                     }}
                     style={{
                       display: "grid", gridTemplateColumns: "36px 1fr",
-                      gap: 10, alignItems: "center",
+                      gap: 10, alignItems: "start",
                       padding: "9px 12px", borderRadius: 10,
                       border: `1px solid ${isTarget ? "rgba(99,102,241,0.5)" : isSelected ? "rgba(99,102,241,0.4)" : "rgba(148,163,184,0.08)"}`,
                       background: isTarget
@@ -256,8 +303,10 @@ export default function LineupManager({
                       transition: "background 0.1s, border-color 0.1s",
                     }}
                   >
-                    <SlotBadge slot="BENCH" />
-                    <PlayerInfo player={player} isSelected={isSelected} />
+                    <div style={{ paddingTop: 2 }}>
+                      <SlotBadge slot="BENCH" />
+                    </div>
+                    <PlayerInfo player={player} isSelected={isSelected} stats={getStats(player.playerId)} statsView={statsView} />
                   </div>
                 );
               })}
@@ -281,15 +330,17 @@ export default function LineupManager({
                       onClick={() => selectPlayer(player.playerId)}
                       style={{
                         display: "grid", gridTemplateColumns: "36px 1fr",
-                        gap: 10, alignItems: "center",
+                        gap: 10, alignItems: "start",
                         padding: "9px 12px", borderRadius: 10,
                         border: `1px solid ${isSelected ? "rgba(99,102,241,0.4)" : "rgba(239,68,68,0.15)"}`,
                         background: isSelected ? "rgba(99,102,241,0.08)" : "rgba(239,68,68,0.05)",
                         cursor: "pointer",
                       }}
                     >
-                      <SlotBadge slot="IR" />
-                      <PlayerInfo player={player} isSelected={isSelected} />
+                      <div style={{ paddingTop: 2 }}>
+                        <SlotBadge slot="IR" />
+                      </div>
+                      <PlayerInfo player={player} isSelected={isSelected} stats={getStats(player.playerId)} statsView={statsView} />
                     </div>
                   );
                 })}
@@ -299,7 +350,6 @@ export default function LineupManager({
         </div>
       </div>
 
-      {/* Deselect hint */}
       {selected && (
         <button
           onClick={() => setSelectedId(null)}
@@ -328,30 +378,101 @@ function SlotBadge({ slot }: { slot: SlotType }) {
   );
 }
 
-function PlayerInfo({ player, isSelected }: { player: RosterEntryRow; isSelected: boolean }) {
+function PlayerInfo({
+  player, isSelected, stats, statsView,
+}: {
+  player: RosterEntryRow;
+  isSelected: boolean;
+  stats: PlayerStatsRow | null;
+  statsView: StatsView;
+}) {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 6, minWidth: 0, overflow: "hidden" }}>
-      <span style={{
-        fontWeight: 600, fontSize: 14,
-        color: isSelected ? "#e2e8f0" : "#cbd5e1",
-        whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
-      }}>
-        {player.name}
-      </span>
-      <span style={{ fontSize: 11, color: POS_COLORS[player.position], flexShrink: 0 }}>
-        {player.position[0]}
-      </span>
-      {player.teamAbbr && (
-        <span style={{ fontSize: 11, color: "#475569", flexShrink: 0 }}>{player.teamAbbr}</span>
-      )}
-      {!player.active && (
-        <span style={{ fontSize: 10, color: "#ef4444", background: "rgba(239,68,68,0.12)", padding: "1px 5px", borderRadius: 4, flexShrink: 0 }}>
-          INJ
+    <div style={{ display: "flex", flexDirection: "column", gap: 3, minWidth: 0 }}>
+      {/* Name row */}
+      <div style={{ display: "flex", alignItems: "center", gap: 6, minWidth: 0, overflow: "hidden" }}>
+        <span style={{
+          fontWeight: 600, fontSize: 14,
+          color: isSelected ? "#e2e8f0" : "#cbd5e1",
+          whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
+        }}>
+          {player.name}
+        </span>
+        <span style={{ fontSize: 11, color: POS_COLORS[player.position], flexShrink: 0 }}>
+          {player.position[0]}
+        </span>
+        {player.teamAbbr && (
+          <span style={{ fontSize: 11, color: "#475569", flexShrink: 0 }}>{player.teamAbbr}</span>
+        )}
+        {!player.active && (
+          <span style={{ fontSize: 10, color: "#ef4444", background: "rgba(239,68,68,0.12)", padding: "1px 5px", borderRadius: 4, flexShrink: 0 }}>
+            INJ
+          </span>
+        )}
+        {player.lockedAt && (
+          <span title={`Locked — game started ${new Date(player.lockedAt).toLocaleTimeString()}`} style={{ fontSize: 11, flexShrink: 0 }}>🔒</span>
+        )}
+      </div>
+
+      {/* Stats row */}
+      {stats ? (
+        player.position === "GOALIE" ? (
+          <GoalieStats stats={stats} />
+        ) : (
+          <SkaterStats stats={stats} />
+        )
+      ) : (
+        <span style={{ fontSize: 11, color: "#334155", fontStyle: "italic" }}>
+          {statsView === "lastWeek" ? "No games last week" : "No prior-season data"}
         </span>
       )}
-      {player.lockedAt && (
-        <span title={`Locked — game started ${new Date(player.lockedAt).toLocaleTimeString()}`} style={{ fontSize: 11, flexShrink: 0 }}>🔒</span>
-      )}
+    </div>
+  );
+}
+
+function SkaterStats({ stats }: { stats: PlayerStatsRow }) {
+  const pts = stats.goals + stats.assists;
+  return (
+    <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+      <StatCell label="GP" value={stats.gp} />
+      <StatCell label="G" value={stats.goals} />
+      <StatCell label="A" value={stats.assists} />
+      <StatCell label="PTS" value={pts} highlight />
+      <StatCell label="PPP" value={stats.powerPlayPts} />
+      <StatCell label="SOG" value={stats.shots} />
+      <StatCell label="HIT" value={stats.hits} />
+      <StatCell label="BLK" value={stats.blocks} />
+      <StatCell label="FP" value={stats.fantasyPoints.toFixed(1)} highlight gold />
+    </div>
+  );
+}
+
+function GoalieStats({ stats }: { stats: PlayerStatsRow }) {
+  const svPct = stats.saves + stats.goalsAgainst > 0
+    ? (stats.saves / (stats.saves + stats.goalsAgainst)).toFixed(3).replace(/^0/, "")
+    : "—";
+  return (
+    <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+      <StatCell label="GP" value={stats.gp} />
+      <StatCell label="W" value={stats.wins} highlight />
+      <StatCell label="SV" value={stats.saves} />
+      <StatCell label="GA" value={stats.goalsAgainst} />
+      <StatCell label="SV%" value={svPct} />
+      <StatCell label="SO" value={stats.shutouts} />
+      <StatCell label="FP" value={stats.fantasyPoints.toFixed(1)} highlight gold />
+    </div>
+  );
+}
+
+function StatCell({ label, value, highlight = false, gold = false }: {
+  label: string; value: string | number; highlight?: boolean; gold?: boolean;
+}) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", minWidth: 26 }}>
+      <span style={{ fontSize: 9, color: "#475569", textTransform: "uppercase", letterSpacing: 0.5 }}>{label}</span>
+      <span style={{
+        fontSize: 12, fontWeight: highlight ? 700 : 400,
+        color: gold ? "#fbbf24" : highlight ? "#e2e8f0" : "#94a3b8",
+      }}>{value}</span>
     </div>
   );
 }
