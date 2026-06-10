@@ -133,11 +133,33 @@ survives DB resets and schema migrations.
 
 1. Scaffold + schema + auth + seed data ✅
 2. Roster ingestion pipeline (against mock source) + scoring engine ✅ (scoring done)
-3. **Draft room** — server logic ✅, React UI 🔨 in progress
+3. **Draft room** — server logic ✅, React UI ✅
 4. Live scoring loop: matchups, standings, waivers, trades
-5. Playoff bracket and postseason flow — standings, seeding, bracket generation, playoff matchups, and results
+5. Playoff bracket and postseason flow — standings, seeding, bracket generation, playoff matchups, and results ✅
 6. Integration + load test the draft room + beta
 7. Public launch ~early Nov, drafts ~1 week before opener
+
+## Draft room UI (`app/draft/[leagueId]/`)
+
+The live draft room is a full-page client component at `app/draft/[leagueId]/page.tsx`.
+Each manager opens `/draft/<leagueId>?team=<teamId>`. The server page fetches team names
+and determines if the viewer is the commissioner, then passes that down to `DraftRoom.tsx`.
+
+Key pieces:
+- `hooks/useDraftSocket.ts` — WebSocket hook; exposes `start`, `makePick`, `listAvailable`,
+  `setQueue`, `pause`, `resume`. Connects to `NEXT_PUBLIC_DRAFT_WS_URL` (default `ws://localhost:8080`).
+- **TopBar** — shows clock, on-clock team name, Start/Pause/Resume (commissioner only).
+- **PickBoard** — full snake grid; cells show last-name of drafted player or team initials.
+- **RecentPicks** — last 10 picks with player name, team name, auto flag.
+- **PlayerPanel** — two tabs: Available (search + "+Q" to add to queue) and Queue (reorder
+  with ↑/↓, remove, or pick directly when on the clock). Auto-refreshes after every pick.
+- **MyPicks** — right-column roster of all your drafted players.
+
+Player names are resolved client-side from the `AVAILABLE` server messages; `playerNames`
+and `playerPositions` are stored in refs so they survive across re-renders without
+causing extra renders themselves.
+
+CSS vars used: `--surface`, `--clock-warn` (both now defined in `globals.css`).
 
 ## Playoff bracket system
 

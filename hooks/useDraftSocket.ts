@@ -19,6 +19,8 @@ export interface DraftSocket {
   makePick: (playerId: string) => void;
   listAvailable: (search?: string) => void;
   setQueue: (playerIds: string[]) => void;
+  pause: () => void;
+  resume: () => void;
 }
 
 const WS_BASE =
@@ -101,5 +103,8 @@ export function useDraftSocket(leagueId: string, teamId: string): DraftSocket {
     [send]
   );
 
-  return { connStatus, draft, available, lastError, start, makePick, listAvailable, setQueue };
+  const pause = useCallback(() => send({ type: "PAUSE" }), [send]);
+  const resume = useCallback(() => send({ type: "RESUME" }), [send]);
+
+  return { connStatus, draft, available, lastError, start, makePick, listAvailable, setQueue, pause, resume };
 }

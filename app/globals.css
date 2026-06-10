@@ -11,6 +11,8 @@
   --accent-strong: #818cf8;
   --green: #22c55e;
   --red: #ef4444;
+  --surface: rgba(255,255,255,0.04);
+  --clock-warn: #f97316;
 }
 
 html { scroll-behavior: smooth; }
