@@ -137,6 +137,7 @@ survives DB resets and schema migrations.
 2. Roster ingestion pipeline (against mock source) + scoring engine ✅ (scoring done)
 3. **Draft room** — server logic ✅, React UI ✅
 4. Live scoring loop: matchups, standings, waivers, trades
+   - Lineup management ✅ (set active/bench slots, per-player game-time locking)
 5. Playoff bracket and postseason flow — standings, seeding, bracket generation, playoff matchups, and results ✅
 6. Integration + load test the draft room + beta
 7. Public launch ~early Nov, drafts ~1 week before opener
@@ -249,6 +250,43 @@ The canonical 13-slot roster (used everywhere — seed scripts, tests, draft, sc
 
 Any time you add a new seed script or test that creates a `FantasyLeague`, use this
 `rosterSettings` value. Never hardcode a different one without a comment explaining why.
+
+## Lineup management (`app/league/[leagueId]/lineup/`)
+
+Route: `/league/<leagueId>/lineup?team=<teamId>`. If no `team` param, renders a team picker.
+
+The page is a server component that fetches the roster + today's games (for lock status), then
+passes everything to `LineupManager.tsx` (client component) as initial props — no client-side
+fetch on load.
+
+**UI — click-to-swap interaction:**
+- Two-column layout: active slots (F/D/G/UTIL) on the left, bench + IR on the right.
+- Click a player to select them (purple highlight, banner prompt).
+- Valid destination slots light up with an indigo border. Click one to move the player.
+- Clicking an occupied slot with a selected player swaps them if both moves are valid.
+- Click the selected player again, or "✕ Cancel selection", to deselect.
+- Locked players (🔒) cannot be moved — their team's game has already started today.
+
+**Validation (`lib/lineup.ts` — pure, no IO):**
+- Position eligibility: F/D can play their slot or UTIL; G can only play GOALIE; any can play BENCH.
+- IR: inactive players only (`player.active = false`).
+- Slot capacity checked against `rosterSettings` on both client (highlight) and server (API).
+- All validation logic lives in `lib/lineup.ts`; tested in `tests/lineup.test.ts` (17 tests).
+
+**Locking:** a player is locked once their real team's game has started today (UTC day). Determined
+server-side in both the page loader and the API — `lockTime()` in `lib/lineup.ts`. Lock is
+per-player, not whole-lineup.
+
+**API:** `GET /api/leagues/[leagueId]/lineup?team=<id>` and `PUT /api/leagues/[leagueId]/lineup`
+`{ teamId, playerId, slot }`. PUT validates eligibility, capacity, and lock before updating.
+
+**Scoring integration:** no changes needed — `computeTeamScore` already reads `slot NOT IN [BENCH, IR]`.
+
+**Nav:** "Lineup" link added to the league layout nav (`app/league/[leagueId]/layout.tsx`).
+
+**Dashboard:** team cards now show a "Set lineup" button linking to the lineup page. The dashboard
+also surfaces teams from leagues the user commissions (not just teams they directly own), which
+fixes the "no teams" problem when using seed-created commissioner accounts.
 
 ## Conventions
 
