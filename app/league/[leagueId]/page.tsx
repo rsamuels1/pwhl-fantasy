@@ -50,7 +50,7 @@ export default async function LeagueOverviewPage({ params }: { params: { leagueI
   return (
     <div style={{ display: "grid", gap: 20 }}>
       <section style={{ display: "grid", gap: 18 }}>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 16", alignItems: "center" }}>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 16, alignItems: "center" }}>
           <div>
             <h1 style={{ fontSize: 32, marginBottom: 8 }}>{league.name}</h1>
             <p style={{ color: "#94a3b8", maxWidth: 760 }}>
