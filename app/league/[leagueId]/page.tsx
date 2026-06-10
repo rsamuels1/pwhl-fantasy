@@ -23,8 +23,8 @@ export default async function LeagueOverviewPage({ params }: { params: { leagueI
   const league = await prisma.fantasyLeague.findUnique({
     where: { id: leagueId },
     include: {
-      teams: { select: { id: true, name: true } },
-      draft: { select: { id: true, status: true } },
+      teams: true,
+      draft: { select: { id: true, status: true, completedAt: true, startedAt: true } },
     },
   });
 
@@ -33,6 +33,12 @@ export default async function LeagueOverviewPage({ params }: { params: { leagueI
   }
 
   const isCommissioner = user?.id === league.commissionerId;
+
+  const firstPlayoffMatchup = await prisma.matchup.findFirst({
+    where: { leagueId, isPlayoff: true },
+    orderBy: { startsAt: "asc" },
+    select: { startsAt: true },
+  });
 
   const matchups = await prisma.matchup.findMany({
     where: { leagueId },
@@ -50,23 +56,41 @@ export default async function LeagueOverviewPage({ params }: { params: { leagueI
   return (
     <div style={{ display: "grid", gap: 20 }}>
       <section style={{ display: "grid", gap: 18 }}>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 16, alignItems: "center" }}>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 16, alignItems: "flex-start", justifyContent: "space-between" }}>
           <div>
             <h1 style={{ fontSize: 32, marginBottom: 8 }}>{league.name}</h1>
-            <p style={{ color: "#94a3b8", maxWidth: 760 }}>
+            <p style={{ color: "#94a3b8", maxWidth: 600 }}>
               Season {league.season} · {league.teams.length} teams · {league.status.replace("_", " ")}
               {isCommissioner && <span style={{ marginLeft: 8, color: "#6366f1" }}>· You're the commissioner</span>}
             </p>
           </div>
-          <div style={{ display: "grid", gap: 10, width: "min(100%, 480px)" }}>
-            <div style={cardStyle}>
-              <strong>Playoff status</strong>
-              <p>{league.playoffStatus.replace("_", " ")}</p>
-            </div>
-            <div style={cardStyle}>
-              <strong>Draft window</strong>
-              <p>{league.draftStartsAt ? formatDate(new Date(league.draftStartsAt)) : "Not scheduled"}</p>
-            </div>
+          <div style={{ display: "flex", gap: 8, flexShrink: 0, flexWrap: "wrap" }}>
+            <StatusPill
+              label="Playoffs"
+              value={firstPlayoffMatchup
+                ? formatDate(new Date(firstPlayoffMatchup.startsAt))
+                : league.playoffStatus === "NOT_STARTED" ? "Not started" : league.playoffStatus.replace("_", " ")}
+              color={league.playoffStatus === "IN_PROGRESS" ? "#34d399" : league.playoffStatus === "COMPLETE" ? "#60a5fa" : "#64748b"}
+            />
+            <StatusPill
+              label="Draft"
+              value={
+                league.draft?.status === "COMPLETE"
+                  ? league.draft.completedAt
+                    ? `Done ${formatDate(new Date(league.draft.completedAt))}`
+                    : "Complete"
+                  : league.draft?.status === "IN_PROGRESS"
+                  ? "In progress"
+                  : league.draftStartsAt
+                  ? formatDate(new Date(league.draftStartsAt))
+                  : "Not scheduled"
+              }
+              color={
+                league.draft?.status === "COMPLETE" ? "#34d399"
+                : league.draft?.status === "IN_PROGRESS" ? "#f59e0b"
+                : "#64748b"
+              }
+            />
           </div>
         </div>
 
@@ -169,6 +193,24 @@ export default async function LeagueOverviewPage({ params }: { params: { leagueI
           </>
         )}
       </section>
+    </div>
+  );
+}
+
+function StatusPill({ label, value, color }: { label: string; value: string; color: string }) {
+  return (
+    <div style={{
+      display: "flex", flexDirection: "column", gap: 2,
+      padding: "8px 14px", borderRadius: 12,
+      background: "rgba(255,255,255,0.04)",
+      border: `1px solid rgba(148,163,184,0.12)`,
+    }}>
+      <span style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "#64748b" }}>
+        {label}
+      </span>
+      <span style={{ fontSize: 13, fontWeight: 600, color }}>
+        {value}
+      </span>
     </div>
   );
 }
