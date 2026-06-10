@@ -632,12 +632,11 @@ function PlayerPanel({
                               <button style={styles.btnPick} onClick={() => onPick(p.id)}>Pick</button>
                             )}
                             <button
-                              style={{ ...styles.btnSecondary, fontSize: 11, padding: "3px 8px" }}
-                              onClick={() => addToQueue(p.id)}
-                              disabled={queue.includes(p.id)}
-                              title="Add to queue"
+                              style={styles.starBtn}
+                              onClick={() => queue.includes(p.id) ? removeFromQueue(p.id) : addToQueue(p.id)}
+                              title={queue.includes(p.id) ? "Remove from queue" : "Add to queue"}
                             >
-                              +Q
+                              {queue.includes(p.id) ? "★" : "☆"}
                             </button>
                           </div>
                         </td>
@@ -935,6 +934,15 @@ const styles = {
     borderRadius: 4,
     padding: "2px 6px",
     fontSize: 11,
+    cursor: "pointer" as const,
+  },
+  starBtn: {
+    background: "transparent",
+    border: "none",
+    padding: "2px 4px",
+    fontSize: 15,
+    lineHeight: 1,
+    color: "var(--accent-strong)",
     cursor: "pointer" as const,
   },
   tab: {
