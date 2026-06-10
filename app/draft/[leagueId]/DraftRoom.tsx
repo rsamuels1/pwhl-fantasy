@@ -422,6 +422,8 @@ function PlayerPanel({
   leagueId,
   available,
   queue,
+  initialStats,
+  initialStatSeason,
   onPick,
   onSearch,
   onSetQueue,
@@ -431,6 +433,8 @@ function PlayerPanel({
   leagueId: string;
   available: PlayerSummary[];
   queue: string[];
+  initialStats: PlayerStats[];
+  initialStatSeason: string | null;
   onPick: (playerId: string) => void;
   onSearch: (q: string) => void;
   onSetQueue: (ids: string[]) => void;
@@ -439,8 +443,10 @@ function PlayerPanel({
   const [activeTab, setActiveTab] = useState<"available" | "queue">("available");
   const [posFilter, setPosFilter] = useState<"" | "FORWARD" | "DEFENSE" | "GOALIE">("");
   const [sortKey, setSortKey] = useState<SortKey>("points");
-  const [statsMap, setStatsMap] = useState<Record<string, PlayerStats>>({});
-  const [statSeason, setStatSeason] = useState<string | null>(null);
+  const [statsMap, setStatsMap] = useState<Record<string, PlayerStats>>(() =>
+    Object.fromEntries(initialStats.map((s) => [s.id, s]))
+  );
+  const [statSeason, setStatSeason] = useState<string | null>(initialStatSeason);
   const [loadingStats, setLoadingStats] = useState(false);
   const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const fetchControllerRef = useRef<AbortController | null>(null);
@@ -449,7 +455,7 @@ function PlayerPanel({
   const isMyTurn = draft.status === "IN_PROGRESS" && onClock?.fantasyTeamId === teamId;
   const drafted = new Set(draft.draftedPlayerIds);
 
-  // Fetch stats from the API whenever search or position filter changes
+  // Only hit the API for filtered searches — initial full list comes from SSR props.
   const fetchStats = useCallback(
     async (q: string, pos: string) => {
       fetchControllerRef.current?.abort();
@@ -480,8 +486,10 @@ function PlayerPanel({
     [leagueId]
   );
 
-  // Load on mount and when filters change
+  // Only fetch on position filter change (not on initial mount — SSR props cover that).
+  const isFirstRender = useRef(true);
   useEffect(() => {
+    if (isFirstRender.current) { isFirstRender.current = false; return; }
     fetchStats(search, posFilter);
   }, [posFilter]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -726,6 +734,8 @@ export default function DraftRoom({
   teamId,
   teamNames,
   isCommissioner,
+  initialStats,
+  statSeason,
   rosterSettings,
 }: {
   leagueId: string;
@@ -733,6 +743,8 @@ export default function DraftRoom({
   teamNames: Record<string, string>;
   isCommissioner: boolean;
   rosterSettings: Record<string, number>;
+  initialStats: PlayerStats[];
+  statSeason: string | null;
 }) {
   const { connStatus, draft, available, lastError, start, makePick, listAvailable, setQueue, pause, resume } =
     useDraftSocket(leagueId, teamId);
@@ -840,6 +852,8 @@ export default function DraftRoom({
               leagueId={leagueId}
               available={available}
               queue={queue}
+              initialStats={initialStats}
+              initialStatSeason={statSeason}
               onPick={makePick}
               onSearch={listAvailable}
               onSetQueue={handleSetQueue}

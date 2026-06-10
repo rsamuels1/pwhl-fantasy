@@ -1,17 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-
-// Aggregated prior-season stats for every active player, used by the draft room
-// player browser. Expensive to compute so results are cached per request in the
-// server (Next.js route-handler cache). Clients should not hammer this endpoint
-// on every keystroke — use it once on load plus on search change.
+import { Prisma } from "@prisma/client";
 
 export interface PlayerStats {
   id: string;
   name: string;
   position: "FORWARD" | "DEFENSE" | "GOALIE";
   team: string | null;
-  // Skater
   gp: number;
   goals: number;
   assists: number;
@@ -21,7 +16,6 @@ export interface PlayerStats {
   shots: number;
   hits: number;
   blocks: number;
-  // Goalie
   wins: number;
   saves: number;
   goalsAgainst: number;
@@ -29,90 +23,97 @@ export interface PlayerStats {
   savePct: number | null;
 }
 
-export async function GET(
-  req: NextRequest,
-  { params }: { params: { leagueId: string } }
-) {
-  const { leagueId } = params;
-  const url = new URL(req.url);
-  const search = url.searchParams.get("search") ?? "";
-  const position = url.searchParams.get("position") ?? ""; // FORWARD | DEFENSE | GOALIE | ""
-
-  // Find the most recent completed regular season to pull stats from.
-  // We look for the latest season string (e.g. "2025-26") that has any games.
-  const latestSeason = await prisma.game.findFirst({
+// Cached so every keystroke search doesn't re-query the season.
+let cachedSeason: string | null | undefined = undefined;
+async function getLatestSeason(): Promise<string | null> {
+  if (cachedSeason !== undefined) return cachedSeason;
+  const row = await prisma.game.findFirst({
     where: { status: "FINAL" },
     orderBy: { startsAt: "desc" },
     select: { season: true },
   });
+  cachedSeason = row?.season ?? null;
+  return cachedSeason;
+}
 
-  const season = latestSeason?.season ?? null;
+export async function GET(
+  req: NextRequest,
+  { params }: { params: { leagueId: string } }
+) {
+  const url = new URL(req.url);
+  const search = url.searchParams.get("search") ?? "";
+  const position = url.searchParams.get("position") ?? "";
 
-  const players = await prisma.player.findMany({
-    where: {
-      active: true,
-      ...(search ? { lastName: { contains: search, mode: "insensitive" } } : {}),
-      ...(position ? { position: position as "FORWARD" | "DEFENSE" | "GOALIE" } : {}),
-    },
-    select: {
-      id: true,
-      firstName: true,
-      lastName: true,
-      position: true,
-      team: { select: { abbreviation: true } },
-      statLines: season
-        ? {
-            where: { game: { season } },
-            select: {
-              goals: true,
-              assists: true,
-              plusMinus: true,
-              powerPlayPts: true,
-              shots: true,
-              hits: true,
-              blocks: true,
-              saves: true,
-              goalsAgainst: true,
-              shutout: true,
-              win: true,
-            },
-          }
-        : false,
-    },
-    orderBy: [{ position: "asc" }, { lastName: "asc" }],
-  });
+  const season = await getLatestSeason();
 
-  const result: PlayerStats[] = players.map((p) => {
-    const lines = (p.statLines ?? []) as Array<{
-      goals: number; assists: number; plusMinus: number; powerPlayPts: number;
-      shots: number; hits: number; blocks: number;
-      saves: number; goalsAgainst: number; shutout: boolean; win: boolean;
-    }>;
-    const gp = lines.length;
-    const goals = lines.reduce((s, l) => s + l.goals, 0);
-    const assists = lines.reduce((s, l) => s + l.assists, 0);
-    const saves = lines.reduce((s, l) => s + l.saves, 0);
-    const goalsAgainst = lines.reduce((s, l) => s + l.goalsAgainst, 0);
+  // Single aggregation query — let the DB do the summing instead of
+  // loading every stat line row into Node memory.
+  type AggRow = {
+    id: string; firstName: string; lastName: string;
+    position: string; abbreviation: string | null;
+    gp: bigint; goals: bigint; assists: bigint; plusMinus: bigint;
+    ppp: bigint; shots: bigint; hits: bigint; blocks: bigint;
+    saves: bigint; goalsAgainst: bigint; wins: bigint; shutouts: bigint;
+  };
+
+  const searchFilter = search ? Prisma.sql`AND p."lastName" ILIKE ${"%" + search + "%"}` : Prisma.empty;
+  const posFilter = position ? Prisma.sql`AND p.position = ${position}::"Position"` : Prisma.empty;
+  const seasonFilter = season ? Prisma.sql`AND g.season = ${season}` : Prisma.sql`AND FALSE`;
+
+  const rows = await prisma.$queryRaw<AggRow[]>`
+    SELECT
+      p.id,
+      p."firstName",
+      p."lastName",
+      p.position::text,
+      t.abbreviation,
+      COUNT(sl.id)                        AS gp,
+      COALESCE(SUM(sl.goals), 0)          AS goals,
+      COALESCE(SUM(sl.assists), 0)        AS assists,
+      COALESCE(SUM(sl."plusMinus"), 0)    AS "plusMinus",
+      COALESCE(SUM(sl."powerPlayPts"), 0) AS ppp,
+      COALESCE(SUM(sl.shots), 0)          AS shots,
+      COALESCE(SUM(sl.hits), 0)           AS hits,
+      COALESCE(SUM(sl.blocks), 0)         AS blocks,
+      COALESCE(SUM(sl.saves), 0)          AS saves,
+      COALESCE(SUM(sl."goalsAgainst"), 0) AS "goalsAgainst",
+      COALESCE(SUM(CASE WHEN sl.win THEN 1 ELSE 0 END), 0)     AS wins,
+      COALESCE(SUM(CASE WHEN sl.shutout THEN 1 ELSE 0 END), 0) AS shutouts
+    FROM "Player" p
+    LEFT JOIN "Team" t ON t.id = p."teamId"
+    LEFT JOIN "StatLine" sl ON sl."playerId" = p.id
+    LEFT JOIN "Game" g ON g.id = sl."gameId" ${seasonFilter}
+    WHERE p.active = true
+    ${searchFilter}
+    ${posFilter}
+    GROUP BY p.id, p."firstName", p."lastName", p.position, t.abbreviation
+    ORDER BY p.position, p."lastName"
+  `;
+
+  const result: PlayerStats[] = rows.map((r) => {
+    const saves = Number(r.saves);
+    const goalsAgainst = Number(r.goalsAgainst);
     const totalFaced = saves + goalsAgainst;
-
+    const goals = Number(r.goals);
+    const assists = Number(r.assists);
     return {
-      id: p.id,
-      name: `${p.firstName} ${p.lastName}`,
-      position: p.position,
-      team: p.team?.abbreviation ?? null,
-      gp,
+      id: r.id,
+      name: `${r.firstName} ${r.lastName}`,
+      position: r.position as PlayerStats["position"],
+      team: r.abbreviation ?? null,
+      gp: Number(r.gp),
       goals,
       assists,
       points: goals + assists,
-      plusMinus: lines.reduce((s, l) => s + l.plusMinus, 0),
-      ppp: lines.reduce((s, l) => s + l.powerPlayPts, 0),
-      shots: lines.reduce((s, l) => s + l.shots, 0),
-      hits: lines.reduce((s, l) => s + l.hits, 0),
-      blocks: lines.reduce((s, l) => s + l.blocks, 0),
-      wins: lines.filter((l) => l.win).length,
+      plusMinus: Number(r.plusMinus),
+      ppp: Number(r.ppp),
+      shots: Number(r.shots),
+      hits: Number(r.hits),
+      blocks: Number(r.blocks),
+      wins: Number(r.wins),
       saves,
       goalsAgainst,
-      shutouts: lines.filter((l) => l.shutout).length,
+      shutouts: Number(r.shutouts),
       savePct: totalFaced > 0 ? saves / totalFaced : null,
     };
   });
