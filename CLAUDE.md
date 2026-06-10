@@ -39,11 +39,12 @@ npm run dev            # start Next.js dev server
 npx prisma db push     # sync schema to DB without a migration file (use in dev against Neon)
 npx prisma studio      # inspect the DB
 npm run seed           # load mock teams/players/games for development
-npm run seed-draft     # create a throwaway 4-team draft-ready league (run after seed)
+npm run seed-draft     # create a throwaway 4-team draft-ready league (commissioner owns team 1)
 npm run draft-server   # start the WebSocket draft server on :8080
 npm run draft-cli -- --league <id> --team <id> [--start]  # terminal client for one team
 npm run ingest -- --season 2025-26          # pull real data from HockeyTech (slow, needs network)
 npm run ingest -- --season 2025-26 --no-stats  # teams/players/games only, skip stat lines
+npm run ingest -- --season 2025-26 --resume    # skip games that already have stat lines (resume interrupted run)
 npm run export-fixture -- --season 2025-26  # snapshot DB → tests/fixtures/2025-26/*.json
 npm run seed-fixture -- --season 2025-26    # load fixture JSON → DB (fast, offline)
 npx tsx scripts/seed-playoff.ts [--init-playoffs]  # seed a playoff test league and optionally initialize playoffs
@@ -111,7 +112,8 @@ from each end before `JSON.parse`. No auth headers, no cookies, no rate-limit ob
 ## Test fixture: 2025-26 regular season
 
 `tests/fixtures/2025-26/` contains a snapshot of the full 2025-26 regular season:
-8 teams, ~220 players, 120 games, ~4,900 stat lines — all with known real-world outcomes.
+8 teams, 207 players, 120 games, 4,793 stat lines — all with known real-world outcomes.
+This fixture is populated and committed; load it instead of hitting the network.
 
 Use it to test scoring logic, standings calculations, and anything that needs a realistic
 data set without hitting the network:
@@ -151,22 +153,30 @@ Key pieces:
 - **TopBar** — shows clock, on-clock team name, Start/Pause/Resume (commissioner only).
 - **PickBoard** — full snake grid; cells show last-name of drafted player or team initials.
 - **RecentPicks** — last 10 picks with player name, team name, auto flag.
-- **PlayerPanel** — two tabs: Available (search + position filter + sortable stat columns from
-  prior season, plus "+Q" to add to queue) and Queue (reorder with ↑/↓, remove, or pick
-  directly when on the clock). Auto-refreshes after every pick.
+- **PlayerPanel** — two tabs: Available (search + position filter buttons + sortable stat
+  columns from prior season + star button to queue/unqueue) and Queue (reorder with ↑/↓,
+  remove, or pick directly when on the clock). Auto-refreshes player list after every pick.
 - **NeedsPanel** — right column; shows each draftable slot (F/D/G/UTIL/BENCH) with
   `have/need` counts via slot-assignment simulation (same priority as seed scripts:
   position → UTIL → BENCH). Turns green when filled, orange when 1 left. IR is not
   a draftable row — a note at the bottom says "fill from waivers".
 - **MyPicks** — right column below NeedsPanel; full list of drafted players with position tags.
 
-Stats are served from `GET /api/leagues/[leagueId]/draft/players` which aggregates the most
-recent completed regular season's `StatLine` rows per player. Skater columns: GP, G, A, PTS,
-PPP, SOG, HIT, BLK. Goalie columns: GP, W, SV, GA, SV%, SO. Clicking a column header sorts.
-Stats are fetched over HTTP (not WebSocket) and cached in a `statsMap` ref in `PlayerPanel`.
+Stats are aggregated server-side in `app/draft/[leagueId]/page.tsx` via a single SQL
+`GROUP BY` query and passed as `initialStats` props to `DraftRoom` — no client-side fetch
+on initial load. The API route `GET /api/leagues/[leagueId]/draft/players` is only called
+for filtered searches (position filter or name search) after the initial render.
+Skater columns: GP, G, A, PTS, PPP, SOG, HIT, BLK. Goalie columns: GP, W, SV, GA, SV%, SO.
+Clicking a column header sorts. `LIST_AVAILABLE` (WebSocket) has no row limit — with ~220
+real players the full list is always returned.
 
-`rosterSettings` is fetched server-side in the page and passed into `DraftRoom` so both
-`NeedsPanel` and future logic can read it without an extra DB call.
+`rosterSettings`, `initialStats`, and `statSeason` are all fetched server-side in the page
+and passed into `DraftRoom` so the client never needs an extra DB round trip on load.
+
+**`seed-draft` note:** the commissioner is owner of team 1 (draftOrder 1). The draft room
+derives `isCommissioner` from `myTeam.ownerId === league.commissionerId` — if the seed script
+ever creates a commissioner user who doesn't own a team, the Start/Pause/Resume buttons will
+not appear. The current script avoids this by reusing the commissioner user as team 1's owner.
 
 Player names are resolved client-side from the `AVAILABLE` server messages; `playerNames`
 and `playerPositions` are stored in refs so they survive across re-renders without
