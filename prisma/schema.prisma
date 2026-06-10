@@ -155,17 +155,18 @@ model RosterEntry {
 }
 
 model Draft {
-  id            String        @id @default(cuid())
-  leagueId      String        @unique
-  status        DraftStatus   @default(PENDING)
-  pickTimerSecs Int           @default(90)
-  currentPick   Int           @default(1)
-  startedAt     DateTime?
-  completedAt   DateTime?
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
-  league        FantasyLeague @relation(fields: [leagueId], references: [id])
-  picks         DraftPick[]
+  id                String        @id @default(cuid())
+  leagueId          String        @unique
+  status            DraftStatus   @default(PENDING)
+  pickTimerSecs     Int           @default(30)
+  currentPick       Int           @default(1)
+  startedAt         DateTime?
+  completedAt       DateTime?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  autoPickTimerSecs Int           @default(10)
+  league            FantasyLeague @relation(fields: [leagueId], references: [id])
+  picks             DraftPick[]
 }
 
 model DraftPick {
@@ -176,6 +177,7 @@ model DraftPick {
   fantasyTeamId String
   playerId      String?
   pickedAt      DateTime?
+  auto          Boolean     @default(false)
   draft         Draft       @relation(fields: [draftId], references: [id])
   fantasyTeam   FantasyTeam @relation(fields: [fantasyTeamId], references: [id])
   player        Player?     @relation(fields: [playerId], references: [id])

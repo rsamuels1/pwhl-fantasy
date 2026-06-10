@@ -41,6 +41,9 @@ export interface DraftState {
   expiresAt: number | null;
   completed: CompletedPick[];
   draftedPlayerIds: string[];
+  // Auto-escalation state — re-derived from pick history, broadcast so clients can render correctly.
+  autoPickCounts: Record<string, number>; // consecutive auto picks per team
+  autoFlaggedTeams: string[];             // teams currently on the reduced clock
 }
 
 export type ServerMessage =

@@ -7,6 +7,12 @@
 import type { PickSlot } from "./snake";
 import type { CompletedPick, DraftState, DraftErrorCode } from "./messages";
 
+// Timer durations come from draft settings so they're tunable per-league.
+export interface TimerConfig {
+  baseSecs: number; // normal pick clock
+  autoSecs: number; // reduced clock for flagged (auto-escalated) teams
+}
+
 export interface EngineState {
   draftId: string;
   status: DraftState["status"];
@@ -17,29 +23,32 @@ export interface EngineState {
   draftedPlayerIds: Set<string>;
   // Per-team pre-ranked queues for auto-pick. fantasyTeamId -> ordered playerIds.
   queues: Map<string, string[]>;
+  // Auto-escalation: re-derived from pick history on restart, so no extra persistence needed.
+  autoPickCounts: Map<string, number>; // consecutive auto picks per team (resets on manual)
+  autoFlaggedTeams: Set<string>;       // teams whose clock is reduced to autoSecs
 }
 
 // Actions the engine understands. "TIMEOUT" is fired by the server's timer.
 export type Action =
-  | { kind: "START"; nowMs: number; pickTimerSecs: number }
+  | { kind: "START"; nowMs: number; timerConfig: TimerConfig }
   | {
       kind: "MAKE_PICK";
       fantasyTeamId: string;
       overall: number;
       playerId: string;
       nowMs: number;
-      pickTimerSecs: number;
+      timerConfig: TimerConfig;
       playerExists: boolean;
     }
   | {
       kind: "TIMEOUT";
       nowMs: number;
-      pickTimerSecs: number;
+      timerConfig: TimerConfig;
       // Ordered list of still-available players by default ranking, for fallback.
       bestAvailable: string[];
     }
   | { kind: "PAUSE" }
-  | { kind: "RESUME"; nowMs: number; pickTimerSecs: number };
+  | { kind: "RESUME"; nowMs: number; timerConfig: TimerConfig };
 
 // Side-effects for the outer layer to perform. The engine never does IO itself.
 export type Effect =
@@ -61,19 +70,45 @@ function slotFor(state: EngineState, overall: number): PickSlot | undefined {
   return state.order.find((s) => s.overall === overall);
 }
 
-// currentOverall is 1-based; order.length is the total pick count.
-// When they're equal we're making the final pick. The >= guards against
-// impossible out-of-bounds state without adding a separate assertion.
 function isLastPick(state: EngineState): boolean {
   return state.currentOverall >= state.order.length;
 }
 
-// Apply a confirmed pick: record it, mark player taken, advance the clock.
+// How many seconds the timer should run for a given team's upcoming pick.
+function timerSecsFor(teamId: string, flaggedTeams: Set<string>, config: TimerConfig): number {
+  return flaggedTeams.has(teamId) ? config.autoSecs : config.baseSecs;
+}
+
+// Update auto-escalation counters and flags after a pick resolves.
+// Returns new copies of the Maps/Sets — engine state is treated as immutable.
+function updateAutoState(
+  teamId: string,
+  isAuto: boolean,
+  counts: Map<string, number>,
+  flagged: Set<string>
+): { counts: Map<string, number>; flagged: Set<string> } {
+  const newCounts = new Map(counts);
+  const newFlagged = new Set(flagged);
+
+  if (isAuto) {
+    const next = (newCounts.get(teamId) ?? 0) + 1;
+    newCounts.set(teamId, next);
+    if (next >= 2) newFlagged.add(teamId);
+  } else {
+    // Manual pick: clear the counter and any flag
+    newCounts.set(teamId, 0);
+    newFlagged.delete(teamId);
+  }
+
+  return { counts: newCounts, flagged: newFlagged };
+}
+
+// Apply a confirmed pick: record it, advance the clock, update auto state.
 function applyPick(
   state: EngineState,
   playerId: string,
   nowMs: number,
-  pickTimerSecs: number,
+  timerConfig: TimerConfig,
   auto: boolean
 ): EngineResult {
   const slot = slotFor(state, state.currentOverall)!;
@@ -94,6 +129,14 @@ function applyPick(
     { kind: "BROADCAST_PICK", pick },
   ];
 
+  // Update auto-escalation state for the team that just picked.
+  const { counts: newCounts, flagged: newFlagged } = updateAutoState(
+    slot.fantasyTeamId,
+    auto,
+    state.autoPickCounts,
+    state.autoFlaggedTeams
+  );
+
   if (isLastPick(state)) {
     const next: EngineState = {
       ...state,
@@ -101,18 +144,26 @@ function applyPick(
       expiresAt: null,
       completed,
       draftedPlayerIds: drafted,
+      autoPickCounts: newCounts,
+      autoFlaggedTeams: newFlagged,
     };
     effects.push({ kind: "CLEAR_TIMER" }, { kind: "COMPLETE" });
     return { state: next, effects };
   }
 
-  const expiresAt = nowMs + pickTimerSecs * 1000;
+  // Timer duration for the NEXT team on the clock.
+  const nextSlot = slotFor(state, state.currentOverall + 1)!;
+  const nextSecs = timerSecsFor(nextSlot.fantasyTeamId, newFlagged, timerConfig);
+  const expiresAt = nowMs + nextSecs * 1000;
+
   const next: EngineState = {
     ...state,
     currentOverall: state.currentOverall + 1,
     expiresAt,
     completed,
     draftedPlayerIds: drafted,
+    autoPickCounts: newCounts,
+    autoFlaggedTeams: newFlagged,
   };
   effects.push({ kind: "SCHEDULE_TIMER", expiresAt });
   return { state: next, effects };
@@ -128,7 +179,10 @@ export function reduce(state: EngineState, action: Action): EngineResult {
           error: { code: "DRAFT_NOT_ACTIVE", message: "Draft already started" },
         };
       }
-      const expiresAt = action.nowMs + action.pickTimerSecs * 1000;
+      // First team on the clock — use their timer duration.
+      const firstSlot = slotFor(state, 1)!;
+      const firstSecs = timerSecsFor(firstSlot.fantasyTeamId, state.autoFlaggedTeams, action.timerConfig);
+      const expiresAt = action.nowMs + firstSecs * 1000;
       const next: EngineState = {
         ...state,
         status: "IN_PROGRESS",
@@ -153,7 +207,6 @@ export function reduce(state: EngineState, action: Action): EngineResult {
           error: { code: "DRAFT_NOT_ACTIVE", message: "Draft is not active" },
         };
       }
-      // Stale or out-of-turn: the overall they sent isn't the live pick.
       if (action.overall !== state.currentOverall) {
         return {
           state,
@@ -183,13 +236,7 @@ export function reduce(state: EngineState, action: Action): EngineResult {
           error: { code: "PLAYER_TAKEN", message: "Player already drafted" },
         };
       }
-      return applyPick(
-        state,
-        action.playerId,
-        action.nowMs,
-        action.pickTimerSecs,
-        false
-      );
+      return applyPick(state, action.playerId, action.nowMs, action.timerConfig, false);
     }
 
     case "PAUSE": {
@@ -219,7 +266,10 @@ export function reduce(state: EngineState, action: Action): EngineResult {
           error: { code: "DRAFT_NOT_ACTIVE", message: "Draft is not paused" },
         };
       }
-      const expiresAt = action.nowMs + action.pickTimerSecs * 1000;
+      // Honor the current team's flag state when resuming.
+      const slot = slotFor(state, state.currentOverall)!;
+      const secs = timerSecsFor(slot.fantasyTeamId, state.autoFlaggedTeams, action.timerConfig);
+      const expiresAt = action.nowMs + secs * 1000;
       const next: EngineState = { ...state, status: "IN_PROGRESS", expiresAt };
       return {
         state: next,
@@ -236,7 +286,6 @@ export function reduce(state: EngineState, action: Action): EngineResult {
         return { state, effects: [] }; // stale timer; ignore
       }
       const slot = slotFor(state, state.currentOverall)!;
-      // Prefer the team's pre-ranked queue, skipping anyone already taken.
       const queue = state.queues.get(slot.fantasyTeamId) ?? [];
       const fromQueue = queue.find((id) => !state.draftedPlayerIds.has(id));
       const pickId =
@@ -244,16 +293,9 @@ export function reduce(state: EngineState, action: Action): EngineResult {
         action.bestAvailable.find((id) => !state.draftedPlayerIds.has(id));
 
       if (!pickId) {
-        // No players left to auto-pick (shouldn't happen with a valid pool).
         return { state, effects: [] };
       }
-      return applyPick(
-        state,
-        pickId,
-        action.nowMs,
-        action.pickTimerSecs,
-        true
-      );
+      return applyPick(state, pickId, action.nowMs, action.timerConfig, true);
     }
   }
 }
@@ -267,5 +309,20 @@ export function toWireState(state: EngineState): DraftState {
     expiresAt: state.expiresAt,
     completed: state.completed,
     draftedPlayerIds: [...state.draftedPlayerIds],
+    autoPickCounts: Object.fromEntries(state.autoPickCounts),
+    autoFlaggedTeams: [...state.autoFlaggedTeams],
   };
+}
+
+// Re-derive autoPickCounts and autoFlaggedTeams from the pick history.
+// Call this in buildEngineState instead of persisting these separately.
+export function deriveAutoState(
+  completed: CompletedPick[]
+): { autoPickCounts: Map<string, number>; autoFlaggedTeams: Set<string> } {
+  let counts = new Map<string, number>();
+  let flagged = new Set<string>();
+  for (const pick of completed) {
+    ({ counts, flagged } = updateAutoState(pick.fantasyTeamId, pick.auto, counts, flagged));
+  }
+  return { autoPickCounts: counts, autoFlaggedTeams: flagged };
 }

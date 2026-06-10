@@ -11,7 +11,7 @@
 import { WebSocketServer, WebSocket } from "ws";
 import { PrismaClient } from "@prisma/client";
 import { generateSnakeOrder, rostersToRounds } from "./snake";
-import { reduce, toWireState, type EngineState, type Effect } from "./engine";
+import { reduce, toWireState, deriveAutoState, type EngineState, type Effect, type TimerConfig } from "./engine";
 import type { ClientMessage, ServerMessage, CompletedPick } from "./messages";
 
 const prisma = new PrismaClient();
@@ -23,7 +23,7 @@ class DraftRoom {
 
   constructor(
     private state: EngineState,
-    private readonly pickTimerSecs: number
+    private readonly timerConfig: TimerConfig
   ) {}
 
   addSocket(ws: WebSocket, fantasyTeamId: string) {
@@ -87,8 +87,32 @@ class DraftRoom {
         overall: msg.overall,
         playerId: msg.playerId,
         nowMs: Date.now(),
-        pickTimerSecs: this.pickTimerSecs,
+        timerConfig: this.timerConfig,
         playerExists,
+      });
+      if (result.error) {
+        this.send(ws, { type: "ERROR", ...result.error });
+        return;
+      }
+      this.state = result.state;
+      await this.runEffects(result.effects);
+    }
+
+    if (msg.type === "PAUSE") {
+      const result = reduce(this.state, { kind: "PAUSE" });
+      if (result.error) {
+        this.send(ws, { type: "ERROR", ...result.error });
+        return;
+      }
+      this.state = result.state;
+      await this.runEffects(result.effects);
+    }
+
+    if (msg.type === "RESUME") {
+      const result = reduce(this.state, {
+        kind: "RESUME",
+        nowMs: Date.now(),
+        timerConfig: this.timerConfig,
       });
       if (result.error) {
         this.send(ws, { type: "ERROR", ...result.error });
@@ -105,7 +129,7 @@ class DraftRoom {
     const result = reduce(this.state, {
       kind: "TIMEOUT",
       nowMs: Date.now(),
-      pickTimerSecs: this.pickTimerSecs,
+      timerConfig: this.timerConfig,
       bestAvailable,
     });
     this.state = result.state;
@@ -116,7 +140,7 @@ class DraftRoom {
     const result = reduce(this.state, {
       kind: "START",
       nowMs: Date.now(),
-      pickTimerSecs: this.pickTimerSecs,
+      timerConfig: this.timerConfig,
     });
     this.state = result.state;
     return this.runEffects(result.effects);
@@ -183,7 +207,7 @@ class DraftRoom {
         where: {
           draftId_overall: { draftId: this.state.draftId, overall: pick.overall },
         },
-        data: { playerId: pick.playerId, pickedAt: new Date() },
+        data: { playerId: pick.playerId, auto: pick.auto, pickedAt: new Date() },
       }),
       prisma.draft.update({
         where: { id: this.state.draftId },
@@ -199,8 +223,7 @@ class DraftRoom {
     ]);
   }
 
-  // Default auto-pick ranking. Replace with a real projection/ADP source later;
-  // for now, any undrafted player works for local testing.
+  // Default auto-pick ranking. Replace with a real projection/ADP source later.
   private async bestAvailablePlayerIds(): Promise<string[]> {
     const players = await prisma.player.findMany({
       where: { active: true, id: { notIn: [...this.state.draftedPlayerIds] } },
@@ -223,10 +246,11 @@ class DraftRoom {
 }
 
 // Build (or rebuild) engine state for a league's draft from the database.
-// On a cold start mid-draft this reconstructs everything from persisted picks.
+// On a cold start mid-draft this reconstructs everything from persisted picks,
+// including auto-escalation state re-derived from DraftPick.auto history.
 export async function buildEngineState(leagueId: string): Promise<{
   state: EngineState;
-  pickTimerSecs: number;
+  timerConfig: TimerConfig;
 }> {
   const league = await prisma.fantasyLeague.findUniqueOrThrow({
     where: { id: leagueId },
@@ -238,7 +262,6 @@ export async function buildEngineState(leagueId: string): Promise<{
     (league.rosterSettings as Record<string, number>) ?? {}
   );
 
-  // Teams ordered by their assigned draftOrder (1..N).
   const ordered = [...league.teams]
     .filter((t) => t.draftOrder != null)
     .sort((a, b) => (a.draftOrder! - b.draftOrder!))
@@ -256,9 +279,12 @@ export async function buildEngineState(leagueId: string): Promise<{
     round: p.round,
     fantasyTeamId: p.fantasyTeamId,
     playerId: p.playerId!,
-    auto: false,
+    auto: p.auto,
   }));
   const drafted = new Set(completed.map((c) => c.playerId));
+
+  // Re-derive auto-escalation state from pick history — no separate persistence needed.
+  const { autoPickCounts, autoFlaggedTeams } = deriveAutoState(completed);
 
   const status = league.draft.status as EngineState["status"];
   const currentOverall =
@@ -269,26 +295,30 @@ export async function buildEngineState(leagueId: string): Promise<{
     status,
     order,
     currentOverall,
-    expiresAt: null, // reset on next START/SCHEDULE; clock is server-owned
+    expiresAt: null,
     completed,
     draftedPlayerIds: drafted,
     queues: new Map(),
+    autoPickCounts,
+    autoFlaggedTeams,
   };
-  return { state, pickTimerSecs: league.draft.pickTimerSecs };
+
+  const timerConfig: TimerConfig = {
+    baseSecs: league.draft.pickTimerSecs,
+    autoSecs: league.draft.autoPickTimerSecs,
+  };
+
+  return { state, timerConfig };
 }
 
-// Minimal server bootstrap. Maps each connection to a league's DraftRoom.
-// Promise-keyed so concurrent getRoom calls for the same league share one
-// buildEngineState call. Without this, each simultaneous JOIN triggers a
-// separate async load and each ends up with its own DraftRoom — sockets
-// scatter across rooms and broadcast never reaches all clients.
+// Promise-keyed so concurrent JOINs for the same league share one buildEngineState call.
 const roomPromises = new Map<string, Promise<DraftRoom>>();
 
 export function getRoom(leagueId: string): Promise<DraftRoom> {
   let p = roomPromises.get(leagueId);
   if (!p) {
     p = buildEngineState(leagueId).then(
-      ({ state, pickTimerSecs }) => new DraftRoom(state, pickTimerSecs)
+      ({ state, timerConfig }) => new DraftRoom(state, timerConfig)
     );
     roomPromises.set(leagueId, p);
   }
@@ -299,7 +329,6 @@ export function startDraftServer(port = 8080) {
   const wss = new WebSocketServer({ port });
 
   wss.on("connection", (ws, req) => {
-    // Expect ?league=<id> on the connection URL.
     const url = new URL(req.url ?? "", "http://localhost");
     const leagueId = url.searchParams.get("league");
     if (!leagueId) {

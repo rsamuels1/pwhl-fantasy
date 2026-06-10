@@ -210,7 +210,7 @@ render broadcast state — they never run the clock or decide whose turn it is.
 - `messages.ts` — the websocket wire contract (client/server message types).
 - `engine.ts` — pure reducer `(state, action) -> { state, effects }`. ALL draft
   rules live here (turn validation, taken-player checks, timeout auto-pick,
-  completion). No IO, so it's fully unit-tested in `tests/draft.test.ts`.
+  auto-escalation, completion). No IO, so it's fully unit-tested in `tests/draft.test.ts`.
 - `server.ts` — IO layer: `ws` sockets + the real timer + Prisma persistence.
   Performs the effects the engine returns; swap `broadcast`/sockets for a hosted
   realtime service without touching the engine.
@@ -220,9 +220,18 @@ is server-side and absolute (`expiresAt` epoch ms); a client disconnect can't
 stall the draft because TIMEOUT auto-picks on the server. Every pick persists
 immediately, so a server restart rebuilds state via `buildEngineState()`.
 
+**Auto-escalation rule:** each team tracks consecutive auto-picks. At 2 in a row, the
+team is "flagged" and their clock drops from `baseSecs` (30s default) to `autoSecs` (10s
+default), stored in `Draft.pickTimerSecs` / `Draft.autoPickTimerSecs`. A manual pick
+within the short window clears the flag and restores the base clock. The flag and counter
+are re-derived in `buildEngineState` from `DraftPick.auto` history — no extra column needed.
+`DraftState` broadcasts `autoPickCounts` and `autoFlaggedTeams` so the UI can show the
+correct clock and flag status. All logic lives in `engine.ts`; timer dispatch is unchanged.
+
 **Server-side gotchas fixed (don't regress):**
 - `getRoom` uses a `Map<string, Promise<DraftRoom>>` (not `Map<string, DraftRoom>`) to prevent a race where concurrent JOINs each call `buildEngineState` and end up in separate rooms, breaking broadcast.
 - START/PAUSE/RESUME emit a `PERSIST_STATUS` effect so draft status survives server restarts. Without it, `buildEngineState` reads `PENDING` from the DB even mid-draft.
+- `DraftPick.auto` is now persisted (was computed-only before). Required for auto-escalation rebuild on restart.
 
 ## Roster configuration
 
