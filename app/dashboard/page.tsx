@@ -9,14 +9,42 @@ export default async function DashboardPage() {
     redirect("/login");
   }
 
-  const teams = await prisma.fantasyTeam.findMany({
-    where: { ownerId: user.id },
-    include: {
-      league: true,
-      roster: { include: { player: { include: { team: { select: { abbreviation: true } } } } } },
-    },
-    orderBy: { createdAt: "desc" },
-  });
+  // Find teams the user owns directly, OR teams in leagues they commission
+  // (commissioner always has a team in their own league in dev seeds).
+  const [ownedTeams, commissionedLeagues] = await Promise.all([
+    prisma.fantasyTeam.findMany({
+      where: { ownerId: user.id },
+      include: {
+        league: true,
+        roster: { include: { player: { include: { team: { select: { abbreviation: true } } } } } },
+      },
+      orderBy: { createdAt: "desc" },
+    }),
+    prisma.fantasyLeague.findMany({
+      where: { commissionerId: user.id },
+      select: { id: true },
+    }),
+  ]);
+
+  // Pull in any teams from commissioned leagues not already in ownedTeams.
+  const ownedTeamLeagueIds = new Set(ownedTeams.map((t) => t.leagueId));
+  const extraLeagueIds = commissionedLeagues
+    .map((l) => l.id)
+    .filter((id) => !ownedTeamLeagueIds.has(id));
+
+  const extraTeams = extraLeagueIds.length > 0
+    ? await prisma.fantasyTeam.findMany({
+        where: { leagueId: { in: extraLeagueIds } },
+        include: {
+          league: true,
+          roster: { include: { player: { include: { team: { select: { abbreviation: true } } } } } },
+        },
+        orderBy: { draftOrder: "asc" },
+        take: 1, // just show the first team per extra league
+      })
+    : [];
+
+  const teams = [...ownedTeams, ...extraTeams];
 
   const teamIds = teams.map((team) => team.id);
   const upcomingMatchups = await prisma.matchup.findMany({
@@ -69,15 +97,25 @@ export default async function DashboardPage() {
                         <h3 style={{ margin: 0 }}>{team.name}</h3>
                         <p className="team-meta">{team.league.name} · Season {team.league.season}</p>
                       </div>
-                      <Link href={`/team/${team.id}`} className="button-secondary">View team</Link>
+                      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "flex-start" }}>
+                        <Link
+                          href={`/league/${team.leagueId}/lineup?team=${team.id}`}
+                          className="button-primary"
+                        >
+                          Set lineup
+                        </Link>
+                        <Link href={`/league/${team.leagueId}`} className="button-secondary">League</Link>
+                      </div>
                     </div>
 
-                    <p className="panel-text">Roster size: {team.roster.length} · Draft order: {team.draftOrder ?? "Unassigned"}</p>
+                    <p className="panel-text">
+                      {team.roster.length} players · Draft order: {team.draftOrder ?? "Unassigned"}
+                    </p>
 
                     {team.roster.length > 0 && (
                       <p className="panel-text" style={{ fontSize: "0.95rem" }}>
                         {team.roster.slice(0, 5).map((entry) => `${entry.player.firstName} ${entry.player.lastName}`).join(", ")}
-                        {team.roster.length > 5 ? "…" : ""}
+                        {team.roster.length > 5 ? ` +${team.roster.length - 5} more` : ""}
                       </p>
                     )}
 
