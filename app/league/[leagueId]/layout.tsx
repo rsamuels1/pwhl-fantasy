@@ -37,6 +37,7 @@ export default function LeagueLayout({ children, params }: LeagueLayoutProps) {
             { label: "Standings", href: `${basePath}/standings` },
             { label: "Matchups", href: `${basePath}/matchups` },
             { label: "Draft", href: `${basePath}/draft` },
+            { label: "Lineup", href: `${basePath}/lineup` },
             { label: "Roster", href: `${basePath}/roster` },
             { label: "Bracket", href: `${basePath}/bracket` },
             { label: "Settings", href: `${basePath}/settings` },
