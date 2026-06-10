@@ -751,9 +751,14 @@ export default function DraftRoom({
 
   const [queue, setQueueLocal] = useState<string[]>([]);
 
-  // Build name + position lookup from the available players list
-  const playerNames = useRef<Record<string, string>>({});
-  const playerPositions = useRef<Record<string, string>>({});
+  // Seed name + position lookup from SSR stats so all players are known immediately,
+  // then keep it current as the WebSocket AVAILABLE messages arrive.
+  const playerNames = useRef<Record<string, string>>(
+    Object.fromEntries(initialStats.map((s) => [s.id, s.name]))
+  );
+  const playerPositions = useRef<Record<string, string>>(
+    Object.fromEntries(initialStats.map((s) => [s.id, s.position]))
+  );
   useEffect(() => {
     for (const p of available) {
       playerNames.current[p.id] = p.name;
