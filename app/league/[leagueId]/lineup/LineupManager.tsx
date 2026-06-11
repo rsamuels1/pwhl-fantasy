@@ -16,6 +16,7 @@ export interface RosterEntryRow {
   lockedAt: string | null;
   eligibleSlots: SlotType[];
   gamesThisPeriod: number | null;
+  hasPlayedThisPeriod: boolean;
 }
 
 export interface PlayerStatsRow {
@@ -154,6 +155,12 @@ export default function LineupManager({
 
   function canMoveTo(slot: SlotType): boolean {
     if (!selected) return false;
+    // Can't demote an active player who has already played this period to bench/IR
+    if (
+      selected.hasPlayedThisPeriod &&
+      ACTIVE_SLOTS.includes(selected.slot) &&
+      !ACTIVE_SLOTS.includes(slot)
+    ) return false;
     return selected.eligibleSlots.includes(slot) && slot !== selected.slot;
   }
 
@@ -322,7 +329,8 @@ export default function LineupManager({
               {benchPlayers.map((player) => {
                 const isSelected = player.playerId === selectedId;
                 const isTarget = selected && selected.playerId !== player.playerId
-                  && player.eligibleSlots.includes(selected.slot);
+                  && player.eligibleSlots.includes(selected.slot)
+                  && !(selected.hasPlayedThisPeriod && ACTIVE_SLOTS.includes(selected.slot));
                 return (
                   <div
                     key={player.playerId}
@@ -455,7 +463,20 @@ function PlayerInfo({
         {player.lockedAt && (
           <span title={`Locked — game started ${new Date(player.lockedAt).toLocaleTimeString()}`} style={{ fontSize: 11, flexShrink: 0 }}>🔒</span>
         )}
-        {player.gamesThisPeriod !== null && !player.lockedAt && (
+        {player.hasPlayedThisPeriod && ACTIVE_SLOTS.includes(player.slot) && !player.lockedAt && (
+          <span
+            title="Already played this period — cannot be moved to bench"
+            style={{
+              fontSize: 10, fontWeight: 700, flexShrink: 0,
+              padding: "1px 5px", borderRadius: 4,
+              background: "rgba(52,211,153,0.1)",
+              color: "#34d399",
+            }}
+          >
+            ✓ Played
+          </span>
+        )}
+        {player.gamesThisPeriod !== null && !player.lockedAt && !player.hasPlayedThisPeriod && (
           <span
             title={player.position === "GOALIE" ? "Team games left this period (goalie may not start every game)" : "Games left this period"}
             style={{

@@ -5,6 +5,9 @@ import { validateSlotMove, lockTime, eligibleSlots } from "@/lib/lineup";
 import type { RosterSettings } from "@/lib/lineup";
 import { apiRequireAuth, apiRequireLeagueMember } from "@/lib/auth";
 import { getDevNowFromRequest } from "@/lib/devTime";
+import { getSeasonState } from "@/lib/season";
+
+const ACTIVE_SLOTS: LineupSlot[] = ["FORWARD", "DEFENSE", "GOALIE", "UTIL"];
 
 // GET /api/leagues/[leagueId]/lineup?team=<teamId>
 // Returns the team's roster entries with player info and per-player lock status.
@@ -144,6 +147,21 @@ export async function PUT(
 
   const settings = (team.league.rosterSettings ?? {}) as RosterSettings;
 
+  // Helper: check if a player has played any games in the current active scoring period.
+  // Used to block demoting an active player who has already accumulated points.
+  async function hasPlayedThisPeriod(playerId: string): Promise<boolean> {
+    const seasonState = await getSeasonState(leagueId, nowMsPut, prisma);
+    const activePeriod = seasonState.activePeriod;
+    if (!activePeriod) return false;
+    const count = await prisma.statLine.count({
+      where: {
+        playerId,
+        game: { startsAt: { gte: activePeriod.startsAt, lte: new Date(nowMsPut) } },
+      },
+    });
+    return count > 0;
+  }
+
   // Atomic swap: A ↔ B — capacity-neutral, so skip capacity check; only validate eligibility.
   if (body.swapWithPlayerId) {
     const entryB = team.roster.find((e) => e.playerId === body.swapWithPlayerId);
@@ -152,6 +170,14 @@ export async function PUT(
     const slotA = entry.slot;
     const slotB = entryB.slot;
     if (slotA === slotB) return NextResponse.json({ success: true }); // no-op
+
+    // Block swapping an active player who has already played this period to bench/IR
+    if (ACTIVE_SLOTS.includes(slotA) && !ACTIVE_SLOTS.includes(slotB) && await hasPlayedThisPeriod(entry.playerId)) {
+      return NextResponse.json(
+        { error: `${entry.player.firstName} ${entry.player.lastName} has already played this week and cannot be moved to bench.` },
+        { status: 409 }
+      );
+    }
 
     const eligA = eligibleSlots(entry.player.position, entry.player.active);
     const eligB = eligibleSlots(entryB.player.position, entryB.player.active);
@@ -180,6 +206,14 @@ export async function PUT(
     ]);
 
     return NextResponse.json({ success: true });
+  }
+
+  // Block moving an active player who has already played this period to bench/IR
+  if (ACTIVE_SLOTS.includes(entry.slot) && !ACTIVE_SLOTS.includes(targetSlot) && await hasPlayedThisPeriod(entry.playerId)) {
+    return NextResponse.json(
+      { error: `${entry.player.firstName} ${entry.player.lastName} has already played this week and cannot be moved to bench.` },
+      { status: 409 }
+    );
   }
 
   const rosterMap = team.roster.map((e) => ({ playerId: e.playerId, slot: e.slot }));

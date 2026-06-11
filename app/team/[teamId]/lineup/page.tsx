@@ -201,6 +201,7 @@ export default async function TeamLineupPage({ params }: Props) {
       lockedAt: locked?.toISOString() ?? null,
       eligibleSlots: eligibleSlots(entry.player.position as "FORWARD" | "DEFENSE" | "GOALIE", entry.player.active) as RosterEntryRow["slot"][],
       gamesThisPeriod: periodForGames ? (gamesPerTeam.get(pTeamId ?? "") ?? 0) : null,
+      hasPlayedThisPeriod: (thisWeekStats[entry.playerId]?.gp ?? 0) > 0,
     };
   });
 
