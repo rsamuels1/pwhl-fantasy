@@ -283,8 +283,15 @@ server-side in both the page loader and the API — `lockTime(playerTeamId, game
 per-player, not whole-lineup.
 
 **API:** `GET /api/leagues/[leagueId]/lineup?team=<id>` and `PUT /api/leagues/[leagueId]/lineup`
-`{ teamId, playerId, slot }`. PUT validates eligibility, capacity, and lock before updating.
-Both handlers use `getDevNowFromRequest(req)` so they respect the dev simulation cookie.
+`{ teamId, playerId, slot, swapWithPlayerId? }`. When `swapWithPlayerId` is present, both
+players atomically exchange slots in a `prisma.$transaction` — capacity is not checked (a swap
+is count-neutral), only eligibility is validated. When absent, the single-player move path runs
+full eligibility + capacity + lock validation. Both handlers use `getDevNowFromRequest(req)` so
+they respect the dev simulation cookie.
+
+**Swap direction:** the `LineupManager` always sends `swapWithPlayerId` when moving into an
+occupied slot (bench→active or active→bench). This is the only safe path when a slot is full —
+the single-player move path would fail capacity validation even if the net result is neutral.
 
 **Player stats toggle:** the lineup page shows per-player stats inline, with a three-way toggle:
 "This week / Last week / Season" (toggle order in UI). Tab is disabled when no data exists for
@@ -301,7 +308,7 @@ that view.
   maps alongside `lastWeekLabel` and `thisWeekLabel` strings.
 - Skater display: GP, G, A, PTS, PPP, SOG, HIT, BLK, FP. Goalie: GP, W, SV, GA, SV%, SO, FP.
 
-**Games remaining this period:** each player card shows a small badge indicating how many games their PWHL team has remaining in the current scoring period. Uses `periodForGames = activePeriod ?? upcomingPeriod` so the badge is correct both mid-week (ACTIVE) and between weeks (UPCOMING). Query: `startsAt > now AND startsAt < periodForGames.endsAt AND status != FINAL`. Three distinct states:
+**Games remaining this period:** each player card shows a small badge indicating how many games their PWHL team has remaining in the current scoring period. Uses `periodForGames = activePeriod ?? upcomingPeriod` so the badge is correct both mid-week (ACTIVE) and between weeks (UPCOMING). Query: `startsAt > now AND startsAt < periodForGames.endsAt` — **no** `status != FINAL` filter; the historical fixture has all games as `FINAL`, so filtering by status would zero out all badges when simulating. `startsAt > now` alone is sufficient to establish "not yet played." Three distinct states:
 - `N` (e.g. "2G left") — indigo badge; confirmed games still to play.
 - `0` ("0 left") — muted gray; schedule loaded, team confirmed done this period.
 - No badge — no active or upcoming period, or schedule doesn't extend far enough (unknown, never shown as a false zero).
@@ -669,6 +676,21 @@ lineup or matchup page and see it reflect the same simulated point in time.
 
 In production (`NODE_ENV === "production"`) both helpers unconditionally return `Date.now()` —
 the cookie is never read.
+
+## Build gotchas
+
+- **`next build` vs `next dev`**: `next dev` is lenient with TypeScript; `next build` runs a full
+  `tsc` check. Always run `npx tsc --noEmit` before deploying to catch errors that only surface
+  at build time.
+- **Stale `.next` cache**: if `npm run build` fails with `PageNotFoundError: Cannot find module
+  for page: /_error`, delete `.next/` and rebuild: `rm -rf .next && npm run build`. Vercel does
+  a clean build so this only affects local builds.
+- **`rosterSettings as Record<string, number>`**: when summing slot counts via `Object.values()`,
+  cast to `Record<string, number>` not `any` — `as any` makes the array `unknown[]` and breaks
+  the `reduce` type.
+- **`DraftRoom` sort key**: `SortKey` includes `"goalsAgainst"` as a proper union member (not a
+  cast). Sort comparator uses `stats?.[sortKey] as number | null` — direct indexed access, no
+  `Record<string, number | null>` cast needed.
 
 ## Conventions
 
