@@ -106,6 +106,8 @@ export async function computeTeamScoreDetailed(
     name: string;
     position: string;
     slot: string;
+    teamId: string | null;
+    teamAbbr: string | null;
     points: number;
     gameCount: number;
     statBreakdown: ScoringBreakdown[];
@@ -116,7 +118,14 @@ export async function computeTeamScoreDetailed(
       fantasyTeamId,
       slot: { notIn: ["BENCH", "IR"] },
     },
-    include: { player: { select: { id: true, firstName: true, lastName: true, position: true } } },
+    include: {
+      player: {
+        select: {
+          id: true, firstName: true, lastName: true, position: true,
+          team: { select: { id: true, abbreviation: true } },
+        },
+      },
+    },
   });
 
   if (entries.length === 0) return { total: 0, players: [] };
@@ -187,6 +196,8 @@ export async function computeTeamScoreDetailed(
         name: `${p.firstName} ${p.lastName}`,
         position: p.position,
         slot: slotMap.get(pid) ?? "BENCH",
+        teamId: p.team?.id ?? null,
+        teamAbbr: p.team?.abbreviation ?? null,
         points: pts,
         gameCount: games,
         statBreakdown,

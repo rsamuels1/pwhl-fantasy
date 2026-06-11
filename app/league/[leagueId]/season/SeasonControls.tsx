@@ -18,6 +18,7 @@ export default function SeasonControls({ leagueId, periods, onResult }: Props) {
   const [error, setError] = useState<string | null>(null);
   // Default to 1 minute past the ACTIVE period end so one click ends the current week.
   // Fall back to the first SCORING_PENDING period if no active period exists.
+  // This handles historical fixture data where all periods are SCORING_PENDING on first load.
   const activePeriod = periods.find((p) => p.status === "ACTIVE");
   const firstPending = periods.find((p) => p.status === "SCORING_PENDING");
   const targetPeriod = activePeriod ?? firstPending;
@@ -38,7 +39,27 @@ export default function SeasonControls({ leagueId, periods, onResult }: Props) {
     const data = await res.json() as { message?: string; state?: SeasonState; error?: string };
     setLoading(false);
     if (!res.ok || data.error) { setError(data.error ?? "Request failed."); return; }
-    if (data.state) onResult(data.state, data.message ?? "Done.");
+    if (data.state) {
+      // Auto-advance the date picker to the next target period so the next click
+      // is always ready to go without manual input.
+      const newPeriods = (data.state.periods as SeasonState["periods"]).map((p) => ({
+        ...p,
+        period: {
+          ...p.period,
+          startsAt: new Date(p.period.startsAt),
+          endsAt: new Date(p.period.endsAt),
+        },
+      }));
+      const newActive = newPeriods.find((p) => p.status === "ACTIVE");
+      const newPending = newPeriods.find((p) => p.status === "SCORING_PENDING");
+      const newTarget = newActive ?? newPending;
+      if (newTarget) {
+        setSimulatedDate(
+          new Date(newTarget.period.endsAt.getTime() + 60_000).toISOString().slice(0, 16)
+        );
+      }
+      onResult(data.state, data.message ?? "Done.");
+    }
   }
 
   return (
@@ -53,22 +74,26 @@ export default function SeasonControls({ leagueId, periods, onResult }: Props) {
       <p style={{ margin: "0 0 12px", fontSize: 12, color: "#94a3b8" }}>
         Drives the production engine with a simulated date. No special code path.
       </p>
-      {/* Quick action: end current week with one click */}
-      {activePeriod && (
+      {/* Quick action: score the next pending or active week with one click */}
+      {targetPeriod && (
         <div style={{ marginBottom: 12, display: "flex", alignItems: "center", gap: 10 }}>
           <button
             onClick={() => {
-              const endDate = new Date(activePeriod.period.endsAt.getTime() + 60_000).toISOString().slice(0, 16);
+              const endDate = new Date(targetPeriod.period.endsAt.getTime() + 60_000).toISOString().slice(0, 16);
               setSimulatedDate(endDate);
               call("advance", endDate);
             }}
             disabled={loading}
             style={{ ...btn("#f59e0b"), display: "flex", alignItems: "center", gap: 6 }}
           >
-            {loading ? "…" : `⏭ End week ${activePeriod.period.week} now`}
+            {loading ? "…" : activePeriod
+              ? `⏭ End week ${targetPeriod.period.week} now`
+              : `▶ Score week ${targetPeriod.period.week}`}
           </button>
           <span style={{ fontSize: 11, color: "#64748b" }}>
-            Scores the active week and advances to week {activePeriod.period.week + 1}
+            {activePeriod
+              ? `Scores the active week and advances to week ${targetPeriod.period.week + 1}`
+              : `Scores week ${targetPeriod.period.week} using simulated date`}
           </span>
         </div>
       )}

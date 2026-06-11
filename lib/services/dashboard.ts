@@ -22,6 +22,8 @@ export interface PlayerMatchupRow {
   name: string;
   position: string;
   slot: string;
+  teamAbbr: string | null;
+  gamesThisPeriod: number | null;
   points: number;
   gameCount: number;
   statBreakdown: ScoringBreakdown[];
@@ -44,6 +46,7 @@ export interface ActivityEvent {
 export interface ActiveMatchup {
   week: number;
   period: ScoringPeriod;
+  status: "active" | "upcoming"; // "upcoming" = period hasn't started yet; scores are 0
   myTeam: { id: string; name: string; score: number };
   opponentTeam: { id: string; name: string; score: number };
   myProjected: number;
@@ -76,17 +79,22 @@ export async function getDashboardData(
 
   const scoringSettings = parseScoringSettings(league.scoringSettings);
 
-  // Resolve the active scoring period
+  // Resolve the active scoring period, or fall back to the next upcoming one.
   const seasonState = await getSeasonState(leagueId, nowMs, prisma);
   const activePeriod = seasonState.activePeriod;
+  const upcomingPeriod = !activePeriod
+    ? seasonState.periods.find((p) => p.status === "UPCOMING")?.period ?? null
+    : null;
+  const displayPeriod = activePeriod ?? upcomingPeriod;
+  const isUpcoming = !activePeriod && !!upcomingPeriod;
 
   // Use real LeagueEvent rows; fall back to draft picks if no events yet
   const realEvents = await getLeagueActivity(leagueId, 10, prisma);
   const leagueActivity: ActivityEvent[] =
     realEvents.length > 0 ? realEvents : await getLeagueActivityFallback(leagueId, prisma);
 
-  if (!activePeriod) {
-    // Off-season or pre-season — no live matchup to show
+  if (!displayPeriod) {
+    // Off-season or pre-season with no upcoming periods yet
     return {
       activeMatchup: null,
       remainingPlayers: [],
@@ -96,11 +104,11 @@ export async function getDashboardData(
     };
   }
 
-  // Find my matchup this week
+  // Find my matchup for the display period
   const matchup = await prisma.matchup.findFirst({
     where: {
       leagueId,
-      week: activePeriod.week,
+      week: displayPeriod.week,
       isPlayoff: false,
       OR: [{ homeTeamId: myTeamId }, { awayTeamId: myTeamId }],
     },
@@ -124,31 +132,117 @@ export async function getDashboardData(
   const myTeam = isHome ? matchup.homeTeam : matchup.awayTeam;
   const opponentTeam = isHome ? matchup.awayTeam : matchup.homeTeam;
 
+  // For upcoming periods scores are 0; skip heavy scoring queries.
+  if (isUpcoming) {
+    const [myProjected, opponentProjected, upcomingRoster] = await Promise.all([
+      projectTeamRemainingScore(myTeamId, 0, displayPeriod, scoringSettings, prisma),
+      projectTeamRemainingScore(opponentTeam.id, 0, displayPeriod, scoringSettings, prisma),
+      prisma.rosterEntry.findMany({
+        where: { fantasyTeamId: myTeamId, slot: { notIn: ["BENCH", "IR"] } },
+        include: {
+          player: {
+            select: {
+              id: true, firstName: true, lastName: true, position: true,
+              team: { select: { id: true, abbreviation: true } },
+            },
+          },
+        },
+      }),
+    ]);
+
+    const upcomingTeamIds = [...new Set(
+      upcomingRoster.map((e) => e.player.team?.id).filter((id): id is string => !!id)
+    )];
+    const upcomingGames = upcomingTeamIds.length > 0
+      ? await prisma.game.findMany({
+          where: {
+            startsAt: { gte: displayPeriod.startsAt, lt: displayPeriod.endsAt },
+            status: { not: "FINAL" },
+            OR: [{ homeTeamId: { in: upcomingTeamIds } }, { awayTeamId: { in: upcomingTeamIds } }],
+          },
+          select: { homeTeamId: true, awayTeamId: true },
+        })
+      : [];
+    const upcomingGamesPerTeam = new Map<string, number>();
+    for (const g of upcomingGames) {
+      upcomingGamesPerTeam.set(g.homeTeamId, (upcomingGamesPerTeam.get(g.homeTeamId) ?? 0) + 1);
+      upcomingGamesPerTeam.set(g.awayTeamId, (upcomingGamesPerTeam.get(g.awayTeamId) ?? 0) + 1);
+    }
+
+    const myUpcomingPlayers: PlayerMatchupRow[] = upcomingRoster.map((e) => ({
+      playerId: e.playerId,
+      name: `${e.player.firstName} ${e.player.lastName}`,
+      position: e.player.position,
+      slot: e.slot,
+      teamAbbr: e.player.team?.abbreviation ?? null,
+      gamesThisPeriod: e.player.team?.id
+        ? (upcomingGamesPerTeam.get(e.player.team.id) ?? 0)
+        : null,
+      points: 0,
+      gameCount: 0,
+      statBreakdown: [],
+    }));
+
+    return {
+      activeMatchup: {
+        week: displayPeriod.week,
+        period: displayPeriod,
+        status: "upcoming",
+        myTeam: { ...myTeam, score: 0 },
+        opponentTeam: { ...opponentTeam, score: 0 },
+        myProjected,
+        opponentProjected,
+        winProbability: winProbability(myProjected, opponentProjected),
+        myPlayers: myUpcomingPlayers,
+        opponentPlayers: [],
+      },
+      remainingPlayers: [],
+      topPerformers: [],
+      disappointments: [],
+      leagueActivity,
+    };
+  }
+
   // Score both teams in parallel
   const [myDetailed, opponentDetailed] = await Promise.all([
-    computeTeamScoreDetailed(myTeamId, activePeriod, scoringSettings, prisma),
-    computeTeamScoreDetailed(opponentTeam.id, activePeriod, scoringSettings, prisma),
+    computeTeamScoreDetailed(myTeamId, displayPeriod, scoringSettings, prisma),
+    computeTeamScoreDetailed(opponentTeam.id, displayPeriod, scoringSettings, prisma),
   ]);
 
   // Project totals for both teams in parallel
   const [myProjected, opponentProjected] = await Promise.all([
-    projectTeamRemainingScore(
-      myTeamId,
-      myDetailed.total,
-      activePeriod,
-      scoringSettings,
-      prisma
-    ),
-    projectTeamRemainingScore(
-      opponentTeam.id,
-      opponentDetailed.total,
-      activePeriod,
-      scoringSettings,
-      prisma
-    ),
+    projectTeamRemainingScore(myTeamId, myDetailed.total, displayPeriod, scoringSettings, prisma),
+    projectTeamRemainingScore(opponentTeam.id, opponentDetailed.total, displayPeriod, scoringSettings, prisma),
   ]);
 
   const winProb = winProbability(myProjected, opponentProjected);
+
+  // Games remaining in this period per PWHL team (for both rosters)
+  const allPlayers = [...myDetailed.players, ...opponentDetailed.players];
+  const pwhlTeamIds = [...new Set(allPlayers.map((p) => p.teamId).filter((id): id is string => !!id))];
+  const now = new Date();
+  const remainingGameRows = pwhlTeamIds.length > 0
+    ? await prisma.game.findMany({
+        where: {
+          startsAt: { gt: now, lt: displayPeriod.endsAt },
+          status: { not: "FINAL" },
+          OR: [{ homeTeamId: { in: pwhlTeamIds } }, { awayTeamId: { in: pwhlTeamIds } }],
+        },
+        select: { homeTeamId: true, awayTeamId: true },
+      })
+    : [];
+  const gamesPerTeam = new Map<string, number>();
+  for (const g of remainingGameRows) {
+    gamesPerTeam.set(g.homeTeamId, (gamesPerTeam.get(g.homeTeamId) ?? 0) + 1);
+    gamesPerTeam.set(g.awayTeamId, (gamesPerTeam.get(g.awayTeamId) ?? 0) + 1);
+  }
+
+  function withGames<T extends { teamId: string | null }>(players: T[]): (T & { gamesThisPeriod: number | null })[] {
+    return players.map((p) => ({
+      ...p,
+      gamesThisPeriod: p.teamId !== null ? (gamesPerTeam.get(p.teamId) ?? 0) : null,
+    }));
+  }
 
   // Top performers and disappointments from my roster
   const sorted = [...myDetailed.players].sort((a, b) => b.points - a.points);
@@ -170,23 +264,20 @@ export async function getDashboardData(
     }));
 
   // Remaining players tonight for my team
-  const remainingPlayers = await getRemainingPlayersTonight(
-    myTeamId,
-    scoringSettings,
-    prisma
-  );
+  const remainingPlayers = await getRemainingPlayersTonight(myTeamId, scoringSettings, prisma);
 
   return {
     activeMatchup: {
-      week: activePeriod.week,
-      period: activePeriod,
+      week: displayPeriod.week,
+      period: displayPeriod,
+      status: "active",
       myTeam: { ...myTeam, score: myDetailed.total },
       opponentTeam: { ...opponentTeam, score: opponentDetailed.total },
       myProjected,
       opponentProjected,
       winProbability: winProb,
-      myPlayers: myDetailed.players,
-      opponentPlayers: opponentDetailed.players,
+      myPlayers: withGames(myDetailed.players),
+      opponentPlayers: withGames(opponentDetailed.players),
     },
     remainingPlayers,
     topPerformers,
