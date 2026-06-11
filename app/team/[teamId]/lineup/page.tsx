@@ -155,11 +155,12 @@ export default async function TeamLineupPage({ params }: Props) {
     fullTeam.roster.map((e) => e.player.team?.id).filter((id): id is string => !!id)
   )];
   // Games remaining = scheduled games from now → period end (not yet FINAL)
+  // No status filter — historical fixture games are FINAL but still "future" relative to sim date.
+  // `startsAt > now` already proves the game hasn't been played yet from the manager's perspective.
   const remainingGameRows = periodForGames && pwhlTeamIds.length > 0
     ? await prisma.game.findMany({
         where: {
           startsAt: { gt: now, lt: periodForGames.endsAt },
-          status: { not: "FINAL" },
           OR: [{ homeTeamId: { in: pwhlTeamIds } }, { awayTeamId: { in: pwhlTeamIds } }],
         },
         select: { homeTeamId: true, awayTeamId: true },
