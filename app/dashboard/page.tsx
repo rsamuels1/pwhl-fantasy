@@ -134,41 +134,79 @@ export default async function DashboardPage() {
   const actions: { label: string; href: string; teamName: string }[] = [];
   teams.forEach((team, i) => {
     const summary = summaries[i];
-    if (
-      team.league.draftStartsAt &&
-      team.league.status === "PRE_DRAFT"
-    ) {
+    const league = team.league;
+
+    // Draft live right now — highest priority
+    if (league.draft?.status === "IN_PROGRESS") {
+      actions.push({
+        label: "🎯 Draft is live right now!",
+        href: `/draft/${team.leagueId}?team=${team.id}`,
+        teamName: team.name,
+      });
+    }
+
+    // Draft upcoming within 7 days
+    if (league.status === "PRE_DRAFT" && league.draftStartsAt) {
       const daysUntil = Math.ceil(
-        (new Date(team.league.draftStartsAt).getTime() - nowMs) / (1000 * 60 * 60 * 24)
+        (new Date(league.draftStartsAt).getTime() - nowMs) / 86_400_000
       );
       if (daysUntil >= 0 && daysUntil <= 7) {
         actions.push({
           label: daysUntil === 0 ? "Draft is today!" : `Draft in ${daysUntil} day${daysUntil === 1 ? "" : "s"}`,
           href: `/league/${team.leagueId}/admin`,
-          teamName: team.league.name,
+          teamName: league.name,
         });
       }
     }
-    // Draft just completed — prompt to set lineup
+
+    // Draft complete but season hasn't started — set lineup before opener
     if (
-      team.league.draft?.status === "COMPLETE" &&
-      team.league.draft?.completedAt &&
-      nowMs - new Date(team.league.draft.completedAt).getTime() < 7 * 24 * 60 * 60 * 1000
+      league.draft?.status === "COMPLETE" &&
+      league.status !== "IN_SEASON" &&
+      league.status !== "COMPLETE"
     ) {
       actions.push({
-        label: "Draft done! Set your Week 1 lineup",
+        label: "Draft complete — set your lineup before the season starts",
         href: `/team/${team.id}/lineup`,
         teamName: team.name,
       });
     }
 
-    // Active week — remind to confirm starters
-    if (summary?.status === "active") {
+    // New week just started (within 48 h of period start) — prompt to set lineup
+    if (
+      summary?.status === "active" &&
+      nowMs - summary.startsAt.getTime() < 48 * 3_600_000
+    ) {
       actions.push({
-        label: `Week ${summary.week} is live — check your starters`,
+        label: `Week ${summary.week} just started — set your lineup`,
         href: `/team/${team.id}/lineup`,
         teamName: team.name,
       });
+    }
+
+    // Tight active matchup — within 5 pts either way
+    if (summary?.status === "active" && (summary.myScore > 0 || summary.oppScore > 0)) {
+      const diff = Math.abs(summary.myScore - summary.oppScore);
+      if (diff < 5) {
+        const leading = summary.myScore >= summary.oppScore;
+        actions.push({
+          label: `⚡ Tight match — you're ${leading ? "up" : "down"} ${diff.toFixed(1)} pts`,
+          href: `/team/${team.id}/matchup`,
+          teamName: team.name,
+        });
+      }
+    }
+
+    // Upcoming matchup starting within 24 h
+    if (summary?.status === "upcoming") {
+      const hoursUntil = (summary.startsAt.getTime() - nowMs) / 3_600_000;
+      if (hoursUntil >= 0 && hoursUntil <= 24) {
+        actions.push({
+          label: `Week ${summary.week} starts soon — prep your lineup`,
+          href: `/team/${team.id}/lineup`,
+          teamName: team.name,
+        });
+      }
     }
   });
 
