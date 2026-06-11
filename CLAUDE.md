@@ -513,6 +513,19 @@ gracefully to draft pick history.
 
 **API:** `GET /api/leagues/[leagueId]/matchup-summary?team=<id>` — wraps `getDashboardData`.
 
+**Inline lineup editor (upcoming matchups):** when `status === "upcoming"`, the matchup page
+shows `InlineLineupEditor` (client component) instead of the read-only `RosterTable` for the
+user's team. It displays active starters + bench players with games-remaining badges and allows
+click-to-swap directly on the page. Bench players are fetched server-side in `matchup/page.tsx`
+using the same games-per-team batch query as the lineup page. After a successful swap the
+component calls `router.refresh()` to reload with the updated lineup.
+
+**Atomic swap endpoint:** `PUT /api/leagues/[leagueId]/lineup` accepts an optional
+`swapWithPlayerId` field. When present, both players exchange slots in a single
+`prisma.$transaction`. Capacity is not checked (a swap is slot-count-neutral); only eligibility
+is validated (can player A play slot B? can player B play slot A?). The single-player move path
+is unchanged.
+
 **Gotchas (don't regress):**
 - `computeTeamScoreDetailed` in `lib/scoring/matchups.ts` always returns all active roster
   players, even those with 0 points this period. The `players` array is built from `playerIds`

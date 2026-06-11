@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { requireAuth, requireTeamOwner } from "@/lib/auth";
 import { getDashboardData, type ActiveMatchup, type PlayerMatchupRow } from "@/lib/services/dashboard";
+import InlineLineupEditor, { type LineupPlayer } from "./InlineLineupEditor";
 import { getSwingPlayers } from "@/lib/matchups/swingPlayers";
 import { parseScoringSettings } from "@/lib/scoring/settings";
 import { getDevNow } from "@/lib/devTime";
@@ -36,6 +37,41 @@ export default async function TeamMatchupPage({
       scoringSettings,
       prisma
     );
+  }
+
+  // For upcoming matchups, fetch bench players + their games-remaining so the
+  // inline lineup editor can show swap options without navigating away.
+  let benchPlayers: LineupPlayer[] = [];
+  if (activeMatchup?.status === "upcoming") {
+    const period = activeMatchup.period;
+    const benchEntries = await prisma.rosterEntry.findMany({
+      where: { fantasyTeamId: teamId, slot: "BENCH" },
+      include: { player: { select: { id: true, firstName: true, lastName: true, position: true, team: { select: { id: true, abbreviation: true } } } } },
+    });
+    const benchTeamIds = [...new Set(benchEntries.map((e) => e.player.team?.id).filter((id): id is string => !!id))];
+    const benchGames = benchTeamIds.length > 0
+      ? await prisma.game.findMany({
+          where: {
+            startsAt: { gte: period.startsAt, lt: period.endsAt },
+            status: { not: "FINAL" },
+            OR: [{ homeTeamId: { in: benchTeamIds } }, { awayTeamId: { in: benchTeamIds } }],
+          },
+          select: { homeTeamId: true, awayTeamId: true },
+        })
+      : [];
+    const benchGamesPerTeam = new Map<string, number>();
+    for (const g of benchGames) {
+      benchGamesPerTeam.set(g.homeTeamId, (benchGamesPerTeam.get(g.homeTeamId) ?? 0) + 1);
+      benchGamesPerTeam.set(g.awayTeamId, (benchGamesPerTeam.get(g.awayTeamId) ?? 0) + 1);
+    }
+    benchPlayers = benchEntries.map((e) => ({
+      playerId: e.playerId,
+      name: `${e.player.firstName} ${e.player.lastName}`,
+      position: e.player.position,
+      slot: "BENCH",
+      teamAbbr: e.player.team?.abbreviation ?? null,
+      gamesThisPeriod: e.player.team?.id ? (benchGamesPerTeam.get(e.player.team.id) ?? 0) : null,
+    }));
   }
 
   return (
@@ -127,20 +163,39 @@ export default async function TeamMatchupPage({
 
           <div style={{
             display: "grid",
-            gridTemplateColumns: activeMatchup.status === "upcoming" ? "1fr" : "1fr 1fr",
+            gridTemplateColumns: activeMatchup.status === "upcoming" ? "1fr 1fr" : "1fr 1fr",
             gap: 16,
           }}>
-            <RosterTable
-              title={activeMatchup.myTeam.name}
-              players={activeMatchup.myPlayers}
-              showSetLineup
-              teamId={teamId}
-            />
-            {activeMatchup.status !== "upcoming" && (
-              <RosterTable
-                title={activeMatchup.opponentTeam.name}
-                players={activeMatchup.opponentPlayers}
-              />
+            {activeMatchup.status === "upcoming" ? (
+              <>
+                <Card title={activeMatchup.myTeam.name}>
+                  <InlineLineupEditor
+                    leagueId={leagueId}
+                    teamId={teamId}
+                    active={activeMatchup.myPlayers.map((p) => ({ ...p, slot: p.slot }))}
+                    bench={benchPlayers}
+                  />
+                </Card>
+                <Card title={activeMatchup.opponentTeam.name}>
+                  <RosterTable
+                    title=""
+                    players={activeMatchup.opponentPlayers}
+                  />
+                </Card>
+              </>
+            ) : (
+              <>
+                <RosterTable
+                  title={activeMatchup.myTeam.name}
+                  players={activeMatchup.myPlayers}
+                  showSetLineup
+                  teamId={teamId}
+                />
+                <RosterTable
+                  title={activeMatchup.opponentTeam.name}
+                  players={activeMatchup.opponentPlayers}
+                />
+              </>
             )}
           </div>
         </>
@@ -260,22 +315,9 @@ function MatchupHero({ matchup, teamId }: { matchup: ActiveMatchup; teamId: stri
           </p>
           <h2 style={{ fontSize: 28, fontWeight: 800, marginBottom: 6 }}>{leadLabel}</h2>
           {isUpcoming && (
-            <>
-              <p style={{ color: "#94a3b8", fontSize: 14, marginBottom: 12 }}>
-                Projected: {matchup.myProjected.toFixed(1)} – {matchup.opponentProjected.toFixed(1)}
-              </p>
-              <a
-                href={`/team/${teamId}/lineup`}
-                style={{
-                  display: "inline-block",
-                  padding: "8px 18px", borderRadius: 10,
-                  background: "rgba(245,158,11,0.2)", border: "1px solid rgba(245,158,11,0.4)",
-                  color: "#fbbf24", fontSize: 13, fontWeight: 600, textDecoration: "none",
-                }}
-              >
-                Set lineup →
-              </a>
-            </>
+            <p style={{ color: "#94a3b8", fontSize: 14 }}>
+              Projected: {matchup.myProjected.toFixed(1)} – {matchup.opponentProjected.toFixed(1)}
+            </p>
           )}
         </div>
         <div style={{ display: "flex", gap: 24, alignItems: "center" }}>

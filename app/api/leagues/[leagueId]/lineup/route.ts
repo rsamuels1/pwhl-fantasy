@@ -83,7 +83,7 @@ export async function PUT(
   const myTeam = await apiRequireLeagueMember(leagueId, auth.id);
   if (myTeam instanceof NextResponse) return myTeam;
 
-  const body = await req.json() as { teamId?: string; playerId?: string; slot?: string };
+  const body = await req.json() as { teamId?: string; playerId?: string; slot?: string; swapWithPlayerId?: string };
 
   if (!body.teamId || !body.playerId || !body.slot) {
     return NextResponse.json({ error: "Missing teamId, playerId, or slot" }, { status: 400 });
@@ -143,8 +143,46 @@ export async function PUT(
   }
 
   const settings = (team.league.rosterSettings ?? {}) as RosterSettings;
-  const rosterMap = team.roster.map((e) => ({ playerId: e.playerId, slot: e.slot }));
 
+  // Atomic swap: A ↔ B — capacity-neutral, so skip capacity check; only validate eligibility.
+  if (body.swapWithPlayerId) {
+    const entryB = team.roster.find((e) => e.playerId === body.swapWithPlayerId);
+    if (!entryB) return NextResponse.json({ error: "Swap player not on roster." }, { status: 404 });
+
+    const slotA = entry.slot;
+    const slotB = entryB.slot;
+    if (slotA === slotB) return NextResponse.json({ success: true }); // no-op
+
+    const eligA = eligibleSlots(entry.player.position, entry.player.active);
+    const eligB = eligibleSlots(entryB.player.position, entryB.player.active);
+    if (!eligA.includes(slotB)) {
+      return NextResponse.json(
+        { error: `${entry.player.firstName} ${entry.player.lastName} cannot play the ${slotB} slot.` },
+        { status: 422 }
+      );
+    }
+    if (!eligB.includes(slotA)) {
+      return NextResponse.json(
+        { error: `${entryB.player.firstName} ${entryB.player.lastName} cannot play the ${slotA} slot.` },
+        { status: 422 }
+      );
+    }
+
+    await prisma.$transaction([
+      prisma.rosterEntry.update({
+        where: { fantasyTeamId_playerId: { fantasyTeamId: body.teamId, playerId: body.playerId } },
+        data: { slot: slotB },
+      }),
+      prisma.rosterEntry.update({
+        where: { fantasyTeamId_playerId: { fantasyTeamId: body.teamId, playerId: body.swapWithPlayerId } },
+        data: { slot: slotA },
+      }),
+    ]);
+
+    return NextResponse.json({ success: true });
+  }
+
+  const rosterMap = team.roster.map((e) => ({ playerId: e.playerId, slot: e.slot }));
   const validationError = validateSlotMove(
     entry.player.position,
     entry.player.active,
