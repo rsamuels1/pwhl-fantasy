@@ -1,8 +1,8 @@
-import Link from "next/link";
 import type { ReactNode } from "react";
 import { cookies } from "next/headers";
 import { requireAuth, requireTeamOwner } from "@/lib/auth";
 import DevTimeClear from "@/components/DevTimeClear";
+import TeamNav from "./TeamNav";
 
 interface TeamLayoutProps {
   children: ReactNode;
@@ -19,69 +19,18 @@ export default async function TeamLayout({ children, params }: TeamLayoutProps) 
     ? cookieStore.get("pwhl_dev_sim_date")?.value ?? null
     : null;
 
-  const basePath = `/team/${teamId}`;
-  const navItems = [
-    { label: "My Matchup", href: `${basePath}/matchup` },
-    { label: "My Lineup", href: `${basePath}/lineup` },
-    { label: "My Roster", href: `${basePath}/roster` },
-  ];
-
   return (
     <div style={{ minHeight: "100vh", background: "#0f1117", color: "#e2e8f0" }}>
-      <div style={{ maxWidth: 1200, margin: "0 auto", padding: "24px 16px" }}>
-        <header style={{ marginBottom: 20 }}>
-          <div style={{ display: "flex", flexWrap: "wrap", alignItems: "baseline", gap: 12 }}>
-            <h1 style={{ fontSize: 22, fontWeight: 700, margin: 0 }}>{team.name}</h1>
-            <Link
-              href={`/league/${team.league.id}`}
-              style={{ color: "#64748b", fontSize: 14, textDecoration: "none" }}
-            >
-              {team.league.name}
-            </Link>
-          </div>
+      <div style={{ maxWidth: 1200, margin: "0 auto", padding: "20px 16px 0" }}>
+        <header style={{ marginBottom: 16 }}>
+          <h1 style={{ fontSize: 20, fontWeight: 700, margin: 0 }}>{team.name}</h1>
         </header>
 
-        <nav
-          style={{
-            display: "flex",
-            flexWrap: "wrap",
-            alignItems: "center",
-            gap: 10,
-            marginBottom: 24,
-          }}
-        >
-          {navItems.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                justifyContent: "center",
-                padding: "10px 14px",
-                borderRadius: 999,
-                background: "rgba(255,255,255,0.06)",
-                color: "#e2e8f0",
-                textDecoration: "none",
-                fontSize: 13,
-              }}
-            >
-              {item.label}
-            </Link>
-          ))}
-
-          <Link
-            href={`/league/${team.league.id}`}
-            style={{
-              marginLeft: "auto",
-              fontSize: 13,
-              color: "#64748b",
-              textDecoration: "none",
-            }}
-          >
-            ← League
-          </Link>
-        </nav>
+        <TeamNav
+          teamId={teamId}
+          leagueId={team.league.id}
+          leagueName={team.league.name}
+        />
 
         {simDateRaw && (
           <div style={{
@@ -95,7 +44,7 @@ export default async function TeamLayout({ children, params }: TeamLayoutProps) 
           </div>
         )}
 
-        <main>{children}</main>
+        <main style={{ paddingBottom: 40 }}>{children}</main>
       </div>
     </div>
   );

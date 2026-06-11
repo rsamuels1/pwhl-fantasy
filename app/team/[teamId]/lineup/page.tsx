@@ -147,7 +147,6 @@ export default async function TeamLineupPage({ params }: Props) {
     ? await prisma.game.findMany({
         where: {
           startsAt: { gt: now, lt: activePeriod.endsAt },
-          status: { not: "FINAL" },
           OR: [{ homeTeamId: { in: pwhlTeamIds } }, { awayTeamId: { in: pwhlTeamIds } }],
         },
         select: { homeTeamId: true, awayTeamId: true },

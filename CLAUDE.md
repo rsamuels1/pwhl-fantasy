@@ -578,8 +578,11 @@ Nav items shown to all members: Overview, Standings, Schedule, Bracket, Rosters.
 A "My Franchise →" button links to `/team/[myTeamId]/matchup` when the user has a team.
 Matchup, Lineup, and Roster are NOT in the league nav — they live in the team layout.
 
-The team layout (`app/team/[teamId]/layout.tsx`) nav: My Matchup, My Lineup, My Roster, plus a
-"← League" escape hatch.
+The team layout (`app/team/[teamId]/layout.tsx`) renders a persistent tab bar via
+`TeamNav.tsx` (client component, uses `usePathname()` for active state). Tabs:
+**Matchup · Lineup · Roster · Standings** (league standings page), plus a `"League ↗"` escape
+hatch on the right. Active tab has white text + 2px indigo underline; inactive tabs are muted
+gray. Standings links to `/league/[leagueId]/standings` since standings are league-scoped.
 
 ### Login flow
 

@@ -56,7 +56,7 @@ export default function SeasonControls({ leagueId, periods, onResult }: Props) {
       const newTarget = newActive ?? newPending;
       if (newTarget) {
         setSimulatedDate(
-          new Date(newTarget.period.endsAt.getTime() + 60_000).toISOString().slice(0, 16)
+          new Date(newTarget.period.startsAt.getTime() + 60_000).toISOString().slice(0, 16)
         );
       }
       onResult(data.state, data.message ?? "Done.");
