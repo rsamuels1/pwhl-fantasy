@@ -2,7 +2,6 @@ import { notFound, redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { computeStandings } from "@/lib/playoffs/seeding";
 import { requireAuth, requireLeagueMember } from "@/lib/auth";
-import LeagueSimulationControls from "@/components/LeagueSimulationControls";
 import Link from "next/link";
 
 function formatDate(date: Date) {
@@ -29,13 +28,6 @@ export default async function LeagueOverviewPage({ params }: { params: { leagueI
 
   if (!league) {
     notFound();
-  }
-
-  // In-season: redirect to the user's franchise matchup page
-  if (league.status === "IN_SEASON") {
-    const myTeam = league.teams.find((t) => t.ownerId === user.id);
-    if (myTeam) redirect(`/team/${myTeam.id}/matchup`);
-    redirect(`/league/${leagueId}/standings`);
   }
 
   // Draft in progress: redirect to draft room
@@ -129,7 +121,6 @@ export default async function LeagueOverviewPage({ params }: { params: { leagueI
             ) : (
               <p style={{ color: "#94a3b8" }}>No upcoming matchup available yet.</p>
             )}
-            <LeagueSimulationControls leagueId={league.id} />
           </div>
 
           <div style={cardStyle}>

@@ -1,18 +1,58 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { requireAuth, requireTeamOwner } from "@/lib/auth";
+import { scoreStatLine, DEFAULT_SCORING } from "@/lib/scoring";
+import type { ScoringSettings } from "@/lib/scoring";
+import { Prisma } from "@prisma/client";
+import RosterManager from "./RosterManager";
+import type { RosterPlayerRow, FreeAgentRow, SkaterStats, GoalieStats } from "./RosterManager";
+import type { RosterSettings } from "@/lib/lineup";
 
 interface Props {
   params: Promise<{ teamId: string }>;
 }
 
-function formatPlayer(player: {
-  firstName: string; lastName: string; position: string;
-  jersey: number | null; team: { abbreviation: string } | null;
-}) {
-  const jersey = player.jersey ? ` #${player.jersey}` : "";
-  const team = player.team?.abbreviation ? ` · ${player.team.abbreviation}` : "";
-  return `${player.firstName} ${player.lastName}${jersey}${team}`;
+// Total max roster size from rosterSettings.
+function maxRosterSize(settings: RosterSettings): number {
+  return (
+    (settings.forward ?? 0) + (settings.defense ?? 0) + (settings.goalie ?? 0) +
+    (settings.util ?? 0) + (settings.bench ?? 0) + (settings.ir ?? 0)
+  );
+}
+
+// Aggregate raw stat lines into a typed stats object.
+type RawLine = {
+  playerId: string; goals: number; assists: number; shots: number; plusMinus: number;
+  penaltyMinutes: number; powerPlayPts: number; hits: number; blocks: number;
+  saves: number; goalsAgainst: number; shutout: boolean; win: boolean;
+};
+
+function buildRosterStats(
+  lines: RawLine[],
+  playerId: string,
+  position: string,
+  scoring: ScoringSettings
+): SkaterStats | GoalieStats | null {
+  const playerLines = lines.filter((l) => l.playerId === playerId);
+  if (playerLines.length === 0) return null;
+  const fp = playerLines.reduce((s, l) => s + scoreStatLine(l, position as import("@prisma/client").Position, scoring), 0);
+  if (position === "GOALIE") {
+    let wins = 0, saves = 0, goalsAgainst = 0, shutouts = 0;
+    for (const l of playerLines) {
+      if (l.win) wins++;
+      saves += l.saves;
+      goalsAgainst += l.goalsAgainst;
+      if (l.shutout) shutouts++;
+    }
+    const totalFaced = saves + goalsAgainst;
+    return { gp: playerLines.length, wins, saves, goalsAgainst, shutouts, fantasyPoints: Math.round(fp * 100) / 100, savePct: totalFaced > 0 ? saves / totalFaced : null };
+  }
+  let goals = 0, assists = 0, plusMinus = 0, ppp = 0, shots = 0, hits = 0, blocks = 0;
+  for (const l of playerLines) {
+    goals += l.goals; assists += l.assists; plusMinus += l.plusMinus;
+    ppp += l.powerPlayPts; shots += l.shots; hits += l.hits; blocks += l.blocks;
+  }
+  return { gp: playerLines.length, goals, assists, points: goals + assists, plusMinus, ppp, shots, hits, blocks, fantasyPoints: Math.round(fp * 100) / 100 };
 }
 
 export default async function TeamRosterPage({ params }: Props) {
@@ -23,7 +63,7 @@ export default async function TeamRosterPage({ params }: Props) {
   const team = await prisma.fantasyTeam.findUnique({
     where: { id: teamId },
     include: {
-      owner: { select: { displayName: true } },
+      league: { select: { id: true, rosterSettings: true, scoringSettings: true, season: true } },
       roster: {
         include: {
           player: {
@@ -34,48 +74,130 @@ export default async function TeamRosterPage({ params }: Props) {
       },
     },
   });
-
   if (!team) notFound();
 
-  return (
-    <div style={{ display: "grid", gap: 20 }}>
-      <section style={panelStyle}>
-        <h1 style={{ fontSize: 24, marginBottom: 4 }}>{team.name}</h1>
-        <p style={{ color: "#94a3b8", marginBottom: 20 }}>
-          {team.roster.length} players · Owner: {team.owner.displayName}
-        </p>
+  const settings = (team.league.rosterSettings ?? {}) as RosterSettings;
+  const scoring = (
+    team.league.scoringSettings && typeof team.league.scoringSettings === "object" &&
+    "skater" in (team.league.scoringSettings as object)
+      ? team.league.scoringSettings
+      : DEFAULT_SCORING
+  ) as ScoringSettings;
+  const season = team.league.season;
 
-        {team.roster.length === 0 ? (
-          <p style={{ color: "#94a3b8" }}>No roster entries yet.</p>
-        ) : (
-          <div style={{ display: "grid", gap: 10 }}>
-            {team.roster.map((entry) => (
-              <div
-                key={entry.id}
-                style={{
-                  display: "flex", justifyContent: "space-between", alignItems: "center",
-                  padding: "12px 14px", background: "rgba(255,255,255,0.03)", borderRadius: 14,
-                }}
-              >
-                <div>
-                  <div style={{ fontWeight: 600 }}>{formatPlayer(entry.player)}</div>
-                  <div style={{ color: "#94a3b8", fontSize: 13 }}>{entry.slot}</div>
-                </div>
-                <span style={{ color: "#94a3b8", fontSize: 13 }}>
-                  {new Date(entry.acquired).toLocaleDateString()}
-                </span>
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
-    </div>
+  // Season stat lines for rostered players.
+  const playerIds = team.roster.map((e) => e.playerId);
+  const rosterLines = playerIds.length > 0
+    ? await prisma.statLine.findMany({
+        where: { playerId: { in: playerIds }, game: { season } },
+        select: {
+          playerId: true, goals: true, assists: true, shots: true, plusMinus: true,
+          penaltyMinutes: true, powerPlayPts: true, hits: true, blocks: true,
+          saves: true, goalsAgainst: true, shutout: true, win: true,
+        },
+      })
+    : [];
+
+  const rosterRows: RosterPlayerRow[] = team.roster.map((e) => ({
+    entryId: e.id,
+    playerId: e.playerId,
+    name: `${e.player.firstName} ${e.player.lastName}`,
+    position: e.player.position as RosterPlayerRow["position"],
+    teamAbbr: e.player.team?.abbreviation ?? null,
+    slot: e.slot,
+    active: e.player.active,
+    acquired: e.acquired.toISOString(),
+    stats: buildRosterStats(rosterLines as RawLine[], e.playerId, e.player.position, scoring),
+  }));
+
+  // Free agents: all active players not on any roster in this league.
+  // Reuse the aggregation SQL from draft/players but add a NOT IN filter.
+  type AggRow = {
+    id: string; firstName: string; lastName: string;
+    position: string; abbreviation: string | null;
+    gp: bigint; goals: bigint; assists: bigint; plusMinus: bigint;
+    ppp: bigint; shots: bigint; hits: bigint; blocks: bigint;
+    saves: bigint; goalsAgainst: bigint; wins: bigint; shutouts: bigint; fp: number;
+  };
+
+  const leagueId = team.league.id;
+  const faRows = await prisma.$queryRaw<AggRow[]>`
+    SELECT
+      p.id,
+      p."firstName",
+      p."lastName",
+      p.position::text,
+      t.abbreviation,
+      COUNT(sl.id)                                                    AS gp,
+      COALESCE(SUM(sl.goals), 0)                                      AS goals,
+      COALESCE(SUM(sl.assists), 0)                                    AS assists,
+      COALESCE(SUM(sl."plusMinus"), 0)                                AS "plusMinus",
+      COALESCE(SUM(sl."powerPlayPts"), 0)                             AS ppp,
+      COALESCE(SUM(sl.shots), 0)                                      AS shots,
+      COALESCE(SUM(sl.hits), 0)                                       AS hits,
+      COALESCE(SUM(sl.blocks), 0)                                     AS blocks,
+      COALESCE(SUM(sl.saves), 0)                                      AS saves,
+      COALESCE(SUM(sl."goalsAgainst"), 0)                             AS "goalsAgainst",
+      COALESCE(SUM(CASE WHEN sl.win THEN 1 ELSE 0 END), 0)           AS wins,
+      COALESCE(SUM(CASE WHEN sl.shutout THEN 1 ELSE 0 END), 0)       AS shutouts,
+      0::float                                                         AS fp
+    FROM "Player" p
+    LEFT JOIN "Team" t ON t.id = p."teamId"
+    LEFT JOIN "StatLine" sl ON sl."playerId" = p.id
+    LEFT JOIN "Game" g ON g.id = sl."gameId" AND g.season = ${season}
+    WHERE p.active = true
+      AND p.id NOT IN (
+        SELECT DISTINCT re."playerId"
+        FROM "RosterEntry" re
+        JOIN "FantasyTeam" ft ON ft.id = re."fantasyTeamId"
+        WHERE ft."leagueId" = ${leagueId}
+      )
+    GROUP BY p.id, p."firstName", p."lastName", p.position, t.abbreviation
+    ORDER BY (COALESCE(SUM(sl.goals), 0) + COALESCE(SUM(sl.assists), 0)) DESC, p."lastName"
+  `;
+
+  const freeAgents: FreeAgentRow[] = faRows.map((r) => {
+    const gp = Number(r.gp);
+    const position = r.position as FreeAgentRow["position"];
+    if (position === "GOALIE") {
+      const saves = Number(r.saves);
+      const ga = Number(r.goalsAgainst);
+      const totalFaced = saves + ga;
+      return {
+        playerId: r.id,
+        name: `${r.firstName} ${r.lastName}`,
+        position,
+        teamAbbr: r.abbreviation ?? null,
+        stats: gp === 0 ? null : {
+          gp, wins: Number(r.wins), saves, goalsAgainst: ga, shutouts: Number(r.shutouts),
+          savePct: totalFaced > 0 ? saves / totalFaced : null, fantasyPoints: 0,
+        } as GoalieStats,
+      };
+    }
+    const goals = Number(r.goals);
+    const assists = Number(r.assists);
+    return {
+      playerId: r.id,
+      name: `${r.firstName} ${r.lastName}`,
+      position,
+      teamAbbr: r.abbreviation ?? null,
+      stats: gp === 0 ? null : {
+        gp, goals, assists, points: goals + assists,
+        plusMinus: Number(r.plusMinus), ppp: Number(r.ppp),
+        shots: Number(r.shots), hits: Number(r.hits), blocks: Number(r.blocks),
+        fantasyPoints: 0,
+      } as SkaterStats,
+    };
+  });
+
+  return (
+    <RosterManager
+      leagueId={leagueId}
+      teamId={teamId}
+      teamName={team.name}
+      maxRosterSize={maxRosterSize(settings)}
+      initialRoster={rosterRows}
+      freeAgents={freeAgents}
+    />
   );
 }
-
-const panelStyle: React.CSSProperties = {
-  background: "rgba(255,255,255,0.04)",
-  border: "1px solid rgba(148,163,184,0.14)",
-  borderRadius: 20,
-  padding: 20,
-};
