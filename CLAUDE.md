@@ -137,10 +137,13 @@ survives DB resets and schema migrations.
 2. Roster ingestion pipeline (against mock source) + scoring engine ✅ (scoring done)
 3. **Draft room** — server logic ✅, React UI ✅
 4. Live scoring loop: matchups, standings, waivers, trades
-   - Lineup management ✅ (set active/bench slots, per-player game-time locking)
+   - Lineup management ✅ (set active/bench slots, per-player game-time locking, play-lock rule)
    - Season matchup lifecycle ✅ (period generation, VTF scoring, status progression)
-   - Matchup-first product ✅ (current matchup page, projections, win probability, activity feed)
+   - Matchup-first product ✅ (fantasy home, projections, win probability, lineup alerts, storyline chip)
    - Auth & authorization ✅ (middleware, membership guards, commissioner admin panel)
+   - Schedule page ✅ (`/team/[teamId]/schedule` — PWHL games this period, progress bar, player counts)
+   - Dashboard action items ✅ (contextual alerts: draft live, new week, close match, upcoming soon)
+   - Sim-date audit ✅ (all pages and API routes respect `pwhl_dev_sim_date` cookie)
 5. Playoff bracket and postseason flow — standings, seeding, bracket generation, playoff matchups, and results ✅
 6. Integration + load test the draft room + beta
 7. Public launch ~early Nov, drafts ~1 week before opener
@@ -282,12 +285,25 @@ server-side in both the page loader and the API — `lockTime(playerTeamId, game
 `lib/lineup.ts`. `nowMs` is optional; omit for real time, pass `getDevNow()` in dev mode. Lock is
 per-player, not whole-lineup.
 
+**Play-lock rule (active→bench/IR restriction):** a player who has played any game in the current
+active scoring period (`StatLine` count > 0 for games with `startsAt <= nowMs`) cannot be moved
+from an active slot to bench or IR. This prevents gaming the scoring by retroactively benching
+underperformers after they've already contributed (or not) to the score. The rule:
+- Is enforced server-side in `PUT /api/leagues/[leagueId]/lineup` for both single-move and swap paths.
+  The API calls `getSeasonState` to find the active period, then counts stat lines in `[period.startsAt, nowMs]`.
+- Is enforced client-side via `hasPlayedThisPeriod: boolean` on `RosterEntryRow`. `canMoveTo(slot)`
+  returns false when the selected player has played and the target is BENCH/IR. Bench player cards
+  are not highlighted as valid swap targets either.
+- Does NOT block active-to-active swaps (FORWARD ↔ UTIL is still allowed).
+- Is signaled visually with a green `✓ Played` badge on active players in `PlayerInfo`.
+- `hasPlayedThisPeriod` is derived server-side in `lineup/page.tsx` from `thisWeekStats[playerId]?.gp > 0`.
+
 **API:** `GET /api/leagues/[leagueId]/lineup?team=<id>` and `PUT /api/leagues/[leagueId]/lineup`
 `{ teamId, playerId, slot, swapWithPlayerId? }`. When `swapWithPlayerId` is present, both
 players atomically exchange slots in a `prisma.$transaction` — capacity is not checked (a swap
-is count-neutral), only eligibility is validated. When absent, the single-player move path runs
-full eligibility + capacity + lock validation. Both handlers use `getDevNowFromRequest(req)` so
-they respect the dev simulation cookie.
+is count-neutral), only eligibility and the play-lock rule are validated. When absent, the
+single-player move path runs full eligibility + capacity + lock + play-lock validation. Both
+handlers use `getDevNowFromRequest(req)` so they respect the dev simulation cookie.
 
 **Swap direction:** the `LineupManager` always sends `swapWithPlayerId` when moving into an
 occupied slot (bench→active or active→bench). This is the only safe path when a slot is full —
@@ -414,20 +430,19 @@ once `nowMs` passes its end date.
 **UI:** `app/league/[leagueId]/season/` — period table showing week, dates, game counts,
 final counts, and status badge. In dev mode a yellow-bordered panel shows:
 - **"⏭ End week N now"** — scores the active (or first pending) week. After scoring, the cookie
-  and date picker land at the **start** of the next period (ACTIVE), not its end. This gives a
-  natural window to navigate to the lineup page, review games-remaining badges, and adjust the
-  lineup before returning to click "⏭ End week N+1 now".
-- **Simulated "now" date picker** — manual control; defaults to 1 minute past the target period's end.
+  lands at **9am UTC on the first day of the next period** — the next week is immediately ACTIVE.
+- **"+1 Day →"** — advances the sim date by 24 hours without scoring anything. Lets you step
+  through a week day-by-day to observe how games-remaining badges and lock state change.
+- **Simulated "now" date picker** — manual override; defaults to 1 minute past the target period's end.
 - **"Start season"** / **"Advance to date"** / **"Clear sim date"** buttons.
 The UI re-renders after each advance without a full page reload. After each advance, the
-`pwhl_dev_sim_date` cookie is set so all other pages reflect the same simulated time (see Dev
-simulation mode below).
+`pwhl_dev_sim_date` cookie is set so all other pages reflect the same simulated time.
 
 **Two-step simulation workflow:**
-1. Click "▶ Score week N" → week N scored; cookie + date picker land at `week N+1 startsAt + 1min`
+1. Click "▶ Score week N" → week N scored; cookie lands at 9am of week N+1 day 1
 2. Navigate to `/team/[id]/lineup` → week N+1 is ACTIVE; games-remaining badges show counts
-3. Adjust lineup, then return to season page
-4. Click "⏭ End week N+1 now" → repeat
+3. Optionally step forward with "+1 Day" to see lock state evolve
+4. Adjust lineup, then return to season page and click "⏭ End week N+1 now" → repeat
 
 **Games-remaining with the 2025-26 fixture:** the historical fixture has all games as `FINAL`.
 The games-remaining query uses `startsAt > now` (which already proves the game is in the future)
@@ -448,9 +463,10 @@ catching-up when multiple periods are behind.
 The URL space is split into two zones:
 
 - **`/team/[teamId]/`** — personal franchise pages. Only the team owner can access these.
-  - `/team/[teamId]/matchup` — current matchup hero, swing players, roster breakdown
+  - `/team/[teamId]/matchup` — fantasy home: lineup alerts, score hero, playing tonight, swing players, roster breakdown
   - `/team/[teamId]/lineup` — set active/bench slots with lock indicators and games-remaining badges
   - `/team/[teamId]/roster` — personal roster + free agent listings (add/drop)
+  - `/team/[teamId]/schedule` — PWHL game schedule for this period, progress bar, per-game player counts
 - **`/league/[leagueId]/`** — communal league views. Any league member can access these.
   - `/league/[leagueId]/` — overview (standings snapshot, next matchup, recent results)
   - `/league/[leagueId]/standings` — full standings table (user's row highlighted)
@@ -478,29 +494,29 @@ and `/team/*` routes.
 
 ## Matchup page (`app/team/[teamId]/matchup/`)
 
-The primary in-season landing page, now team-scoped. No team picker needed — auth enforces ownership.
+The primary in-season landing page ("Fantasy Home"), team-scoped. No team picker — auth enforces ownership.
 
 **What it shows:**
-- `MatchupHero` — win probability bar at the top (above scores), then scores, then lead/trailing
-  label. Bar shows `"My Team 74%"` left and `"26% Opponent"` right with the leading side bolded
-  indigo. "Upcoming" variant hides the bar, shows projected scores and a "Set lineup →" CTA
-- Swing players — active roster players whose remaining games this period could flip the result
-- Remaining players tonight — who's playing today and what they're projected to score
-- Top performers / disappointments for the active period
-- Roster breakdown for both teams with per-player stat chips and games-remaining badges
-- League activity feed (draft picks, major performances)
+- **Lineup alert strip** — red banner at very top when active starters have `gamesThisPeriod === 0 AND gameCount === 0` (never played, no scheduled games left). Does NOT flag players who already scored.
+- **`MatchupHero`** — 52px/900-weight scores color-coded (indigo=winning, red=trailing, amber=upcoming), win probability bar below scores, lead gap in accent color, "Set lineup →" CTA when upcoming.
+- **Storyline chip** — "🔥 [Player] is leading your team with X.X pts this week" when `topPerformers[0].points > 0`.
+- **Playing tonight** — always rendered during active periods (empty state: "No starters playing tonight"). Uses `getRemainingPlayersTonight(nowMs)`.
+- **Swing players** — active roster players whose remaining games could flip the result. Only shown for active matchups, not upcoming.
+- **Roster breakdown** — both teams with per-player stat chips and games-remaining badges.
+- **League activity feed** — draft picks, major performances.
 
 **Key modules:**
 - `lib/scoring/index.ts` — `scoreStatLineDetailed()` returns `{ total, breakdown[] }` with
   per-category point contributions. `ScoringBreakdown = { label, stat, multiplier, points }`.
 - `lib/scoring/settings.ts` — `parseScoringSettings(raw)` validates and returns `ScoringSettings`.
 - `lib/projections/index.ts` — `projectPlayer(playerId, position, scoringSettings, prisma, nGames=5)`
-  rolling average; `projectTeamRemainingScore(...)` uses `Player.teamId` → `Game WHERE homeTeamId
-  OR awayTeamId IN teamIds` (NOT `Game.players` which doesn't exist); `winProbability(my, opp)`
-  logistic function with k=15.
+  rolling average; `projectTeamRemainingScore(fantasyTeamId, earnedSoFar, period, settings, prisma, nowMs)`
+  and `getRemainingPlayersTonight(fantasyTeamId, settings, prisma, nowMs)` — both accept `nowMs` so
+  dev sim mode shows correct results; `winProbability(my, opp)` logistic function with k=15.
 - `lib/matchups/swingPlayers.ts` — `getSwingPlayers(myTeamId, opponentTeamId, period, ...)`.
 - `lib/services/dashboard.ts` — `getDashboardData(leagueId, myTeamId, nowMs, prisma)` assembles
-  the full matchup view model. Falls back to draft pick history when no `LeagueEvent` records exist.
+  the full matchup view model including `lineupAlerts`. Falls back to draft pick history when no
+  `LeagueEvent` records exist.
 - `lib/services/activity.ts` — `getLeagueActivity(leagueId, limit, prisma)` and `emitEvent(...)`.
   Uses `(prisma as any).leagueEvent` guards since the model requires `prisma db push` to activate.
 
@@ -538,15 +554,39 @@ is validated (can player A play slot B? can player B play slot A?). The single-p
 is unchanged.
 
 **Gotchas (don't regress):**
-- `computeTeamScoreDetailed` in `lib/scoring/matchups.ts` always returns all active roster
-  players, even those with 0 points this period. The `players` array is built from `playerIds`
-  (all active entries) and falls back to `{ pts: 0, games: 0, statBreakdown: [] }` for players
-  with no stat lines yet. If you rewrite this function, don't filter to `byPlayer.entries()` only
-  — that silently drops players who haven't played yet and shows "No active players" for their
-  opponent's roster on the matchup page.
+- `computeTeamScoreDetailed(fantasyTeamId, period, scoringSettings, prisma, nowMs?)` in
+  `lib/scoring/matchups.ts` caps the stat line query upper bound to `min(nowMs, period.endsAt)` when
+  `nowMs` is provided. This makes the matchup score consistent with the lineup page's "This week" tab —
+  both only count games that have started by the simulated time. `getDashboardData` always passes
+  `nowMs` to both calls. **Don't remove the `nowMs` argument** — it fixes the Eldridge-style
+  discrepancy where the matchup page counted future games the lineup page hadn't seen yet.
+- `computeTeamScoreDetailed` always returns all active roster players, even those with 0 points
+  this period. Falls back to `{ pts: 0, games: 0, statBreakdown: [] }` for players with no stat
+  lines yet. Don't filter to `byPlayer.entries()` only — that silently drops players who haven't
+  played yet and shows "No active players" for their opponent's roster.
 - `getDashboardData` fetches both `myRoster` and `opponentRoster` for upcoming periods
   (when `isUpcoming = true`). Both rosters use the same `activeRosterInclude` and the same
   games-remaining batch query. Dropping the opponent fetch leaves the opponent column empty.
+- Remaining games queries in `dashboard.ts` use `startsAt > nowDate` with **no** `status: { not: "FINAL" }`
+  filter. The historical fixture has all games as `FINAL`; the status filter would zero out all badges
+  when simulating. `startsAt > now` alone proves the game hasn't happened yet.
+
+## Dashboard (`/dashboard`)
+
+Multi-team landing page for users with more than one team. Single-team users go directly to
+`/team/[teamId]/matchup` after login. The dashboard uses `getMatchupQuickSummary` (in
+`lib/services/matchup-summary.ts`) for lightweight per-team matchup cards.
+
+**Action items** (shown in amber strip at top when non-empty): contextual alerts across all teams.
+- **Draft live** — `draft.status === "IN_PROGRESS"` → "🎯 Draft is live right now!"
+- **Draft upcoming** — `league.status === "PRE_DRAFT"` and `draftStartsAt` within 7 days
+- **Draft complete, pre-season** — `draft.status === "COMPLETE"` AND `league.status !== "IN_SEASON"
+  AND !== "COMPLETE"` → "Draft complete — set your lineup before the season starts". **Condition
+  intentionally does NOT use `completedAt` time** — that timestamp is real-world and would be
+  in the future relative to sim dates (Jan 2026 sim vs June 2026 real), making the check always true.
+- **New week started** — active period, `startsAt` within 48h of `nowMs` → "Week N just started — set your lineup"
+- **Tight match** — active, score > 0, `|myScore - oppScore| < 5` → "⚡ Tight match — you're up/down X pts"
+- **Upcoming soon** — upcoming period starting within 24h → "Week N starts soon — prep your lineup"
 
 ## Auth & authorization
 
@@ -618,9 +658,16 @@ Matchup, Lineup, and Roster are NOT in the league nav — they live in the team 
 
 The team layout (`app/team/[teamId]/layout.tsx`) renders a persistent tab bar via
 `TeamNav.tsx` (client component, uses `usePathname()` for active state). Tabs:
-**Matchup · Lineup · Roster · Standings** (league standings page), plus a `"League ↗"` escape
-hatch on the right. Active tab has white text + 2px indigo underline; inactive tabs are muted
+**Matchup · Lineup · Roster · Schedule · Standings** (league standings page), plus a `"League ↗"`
+escape hatch on the right. Active tab has white text + 2px indigo underline; inactive tabs are muted
 gray. Standings links to `/league/[leagueId]/standings` since standings are league-scoped.
+
+### Logout
+
+`GET /api/auth/logout` — clears the `pwhl_user_email` cookie and redirects to `/`. Implemented
+as a GET handler so the nav "Logout" link (`<a href="/api/auth/logout">`) works without JS.
+Earlier versions only had a POST handler, which caused the link to bounce to a blank page while
+leaving the user still logged in.
 
 ### Login flow
 
@@ -644,11 +691,11 @@ lineup or matchup page and see it reflect the same simulated point in time.
 
 **How it works:**
 - `SeasonControls.tsx` sets `document.cookie = "pwhl_dev_sim_date=<iso>; path=/; max-age=86400"`
-  after every successful advance call. The cookie value is the date used to score the period
-  (i.e., `period.endsAt + 1min`), which equals the START of the next period — putting it in
-  ACTIVE state immediately. The `setSimulatedDate` React state is also set to `nextPeriod.startsAt
-  + 1min` (not `endsAt`) so the date picker reflects the same position and doesn't invite
-  accidentally scoring the next week immediately.
+  after every successful advance call. The cookie value is set to **9am UTC on the first day of
+  the next period** — this puts the next week in ACTIVE state while giving a realistic morning
+  start time to test games-remaining badges and lineup decisions before games begin.
+- A **"+1 Day →"** button in `SeasonControls` advances the cookie by exactly 24 hours, letting
+  you step through the week day-by-day without scoring a whole new period.
 - A "Clear sim date" button in `SeasonControls` and a "Clear" link in the layout banner both
   set `max-age=0` to remove the cookie and reload.
 - A yellow "⚠ Dev mode · Simulated: [date] · Clear" banner appears in both the league and team
@@ -663,16 +710,20 @@ lineup or matchup page and see it reflect the same simulated point in time.
 
 **Pages that use `getDevNow()`:**
 - `app/team/[teamId]/lineup/page.tsx` — `nowMs` drives `getSeasonState`, the "today's games"
-  window for lock detection, games-remaining queries, and `lockTime()`. The games-remaining
-  query uses only `startsAt > now` without a `status != FINAL` filter — logically redundant
-  in production (future games can't be FINAL) and necessary for the historical fixture to
-  show correct counts.
+  window for lock detection, games-remaining queries, and `lockTime()`. Games-remaining query
+  uses only `startsAt > now` without a `status != FINAL` filter — necessary for the historical
+  fixture to show correct counts.
 - `app/team/[teamId]/matchup/page.tsx` — passed to `getDashboardData`.
+- `app/league/[leagueId]/page.tsx` — current week detection (max week whose `startsAt <= nowMs`).
+- `app/league/[leagueId]/matchups/page.tsx` — current week highlighting.
 - `app/league/[leagueId]/season/page.tsx` and `admin/page.tsx` — passed to `getSeasonState`.
+- `app/dashboard/page.tsx` — passed to `getMatchupQuickSummary` and action item timing.
 
 **API routes that use `getDevNowFromRequest()`:**
-- `app/api/leagues/[leagueId]/lineup/route.ts` — GET and PUT both use it for the "today" window
-  and `lockTime()`.
+- `app/api/leagues/[leagueId]/lineup/route.ts` — GET and PUT both use it for the "today" window,
+  `lockTime()`, and the play-lock stat line check.
+- `app/api/leagues/[leagueId]/matchup-summary/route.ts` — passed to `getDashboardData`.
+- `app/api/leagues/[leagueId]/season/route.ts` — GET state, POST start, POST advance.
 
 In production (`NODE_ENV === "production"`) both helpers unconditionally return `Date.now()` —
 the cookie is never read.

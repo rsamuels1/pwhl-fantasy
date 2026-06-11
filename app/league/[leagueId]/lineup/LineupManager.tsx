@@ -476,7 +476,7 @@ function PlayerInfo({
             ✓ Played
           </span>
         )}
-        {player.gamesThisPeriod !== null && !player.lockedAt && !player.hasPlayedThisPeriod && (
+        {player.gamesThisPeriod !== null && !player.lockedAt && (
           <span
             title={player.position === "GOALIE" ? "Team games left this period (goalie may not start every game)" : "Games left this period"}
             style={{

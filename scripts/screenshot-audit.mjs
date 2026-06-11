@@ -18,22 +18,25 @@ const AUTH_EMAIL = "commish@dev.local";
 const LEAGUE_ID = "cmq8mmity0002qpiaed7atip4";
 const TEAM_ID   = "cmq8mmiwl0004qpiavbk104cb";
 
-// Pages to capture
-const PAGES = [
-  { name: "01-homepage",  url: "/",                                          auth: false },
-  { name: "02-dashboard", url: "/dashboard",                                 auth: true  },
-  { name: "03-matchup",   url: `/team/${TEAM_ID}/matchup`,                   auth: true  },
-  { name: "04-lineup",    url: `/team/${TEAM_ID}/lineup`,                    auth: true  },
-  { name: "05-roster",    url: `/team/${TEAM_ID}/roster`,                    auth: true  },
-  { name: "06-league",    url: `/league/${LEAGUE_ID}`,                       auth: true  },
-  { name: "07-standings", url: `/league/${LEAGUE_ID}/standings`,             auth: true  },
-  { name: "08-draft",     url: `/draft/${LEAGUE_ID}?team=${TEAM_ID}`,        auth: true  },
-  { name: "09-settings",  url: `/league/${LEAGUE_ID}/settings`,              auth: true  },
-  { name: "10-admin",     url: `/league/${LEAGUE_ID}/admin`,                 auth: true  },
-  { name: "11-invite",    url: `/invite/${LEAGUE_ID}`,                       auth: false },
-  { name: "12-login",     url: "/login",                                     auth: false },
-  { name: "13-create-league", url: "/create-league",                         auth: false },
-  { name: "14-join-league",   url: "/join-league",                           auth: false },
+// ── Logged-out pages ──────────────────────────────────────────────────────────
+const LOGGED_OUT = [
+  { name: "01-homepage",      url: "/" },
+  { name: "02-login",         url: "/login" },
+  { name: "03-register",      url: "/create-league" },
+];
+
+// ── Logged-in (commissioner) pages ───────────────────────────────────────────
+const LOGGED_IN = [
+  { name: "04-dashboard",          url: "/dashboard" },
+  { name: "05-team-matchup",       url: `/team/${TEAM_ID}/matchup` },
+  { name: "06-team-roster",        url: `/team/${TEAM_ID}/roster` },
+  { name: "07-team-lineup",        url: `/team/${TEAM_ID}/lineup` },
+  { name: "08-league-overview",    url: `/league/${LEAGUE_ID}` },
+  { name: "09-league-standings",   url: `/league/${LEAGUE_ID}/standings` },
+  { name: "10-league-matchups",    url: `/league/${LEAGUE_ID}/matchups` },
+  { name: "11-draft-room",         url: `/draft/${LEAGUE_ID}?team=${TEAM_ID}` },
+  { name: "12-league-settings",    url: `/league/${LEAGUE_ID}/settings` },
+  { name: "13-commissioner-admin", url: `/league/${LEAGUE_ID}/admin` },
 ];
 
 const VIEWPORTS = [
@@ -52,43 +55,63 @@ for (const viewport of VIEWPORTS) {
   const vpDir = join(OUT_DIR, viewport.label);
   mkdirSync(vpDir, { recursive: true });
 
-  const context = await browser.newContext({
+  // ── Logged-out context ────────────────────────────────────────────────────
+  const loggedOutCtx = await browser.newContext({
     viewport: { width: viewport.width, height: viewport.height },
     deviceScaleFactor: viewport.deviceScaleFactor ?? 1,
     isMobile: viewport.isMobile ?? false,
   });
 
-  // Log in once — set auth cookie
-  const loginPage = await context.newPage();
+  console.log("  [logged-out]");
+  for (const page of LOGGED_OUT) {
+    const destFile = join(vpDir, `${page.name}.png`);
+    const pg = await loggedOutCtx.newPage();
+    try {
+      await pg.goto(`${BASE}${page.url}`, { waitUntil: "networkidle", timeout: 15000 });
+      await pg.waitForTimeout(600);
+      await pg.screenshot({ path: destFile, fullPage: true });
+      console.log(`    ✓ ${page.name}`);
+    } catch (err) {
+      console.error(`    ✗ ${page.name} — ${err.message}`);
+    } finally {
+      await pg.close();
+    }
+  }
+  await loggedOutCtx.close();
+
+  // ── Logged-in context ─────────────────────────────────────────────────────
+  const loggedInCtx = await browser.newContext({
+    viewport: { width: viewport.width, height: viewport.height },
+    deviceScaleFactor: viewport.deviceScaleFactor ?? 1,
+    isMobile: viewport.isMobile ?? false,
+  });
+
+  // Authenticate once
+  const loginPage = await loggedInCtx.newPage();
   const loginRes = await loginPage.request.post(`${BASE}/api/auth/login`, {
     data: { email: AUTH_EMAIL, displayName: "Commish" },
     headers: { "Content-Type": "application/json" },
   });
   const loginData = await loginRes.json();
-  console.log("  Auth cookie set for", AUTH_EMAIL, "→ redirectTo:", loginData.redirectTo ?? "(no redirect)");
+  console.log(`  [logged-in] auth → ${loginData.redirectTo ?? "(no redirect)"}`);
   await loginPage.close();
 
-  for (const page of PAGES) {
+  console.log("  [logged-in]");
+  for (const page of LOGGED_IN) {
     const destFile = join(vpDir, `${page.name}.png`);
-    const pg = await context.newPage();
-
+    const pg = await loggedInCtx.newPage();
     try {
-      await pg.goto(`${BASE}${page.url}`, { waitUntil: "networkidle", timeout: 15000 });
-
-      // Wait for main content to appear
-      await pg.waitForTimeout(600);
-
-      // Full-page screenshot
+      await pg.goto(`${BASE}${page.url}`, { waitUntil: "networkidle", timeout: 20000 });
+      await pg.waitForTimeout(800);
       await pg.screenshot({ path: destFile, fullPage: true });
-      console.log(`  ✓ ${page.name}`);
+      console.log(`    ✓ ${page.name}`);
     } catch (err) {
-      console.error(`  ✗ ${page.name} — ${err.message}`);
+      console.error(`    ✗ ${page.name} — ${err.message}`);
     } finally {
       await pg.close();
     }
   }
-
-  await context.close();
+  await loggedInCtx.close();
 }
 
 await browser.close();
