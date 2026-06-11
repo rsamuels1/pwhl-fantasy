@@ -130,10 +130,13 @@ export default function LineupManager({
     setSelectedId(null);
 
     startTransition(async () => {
+      const body = targetPlayerId
+        ? { teamId, playerId: selected.playerId, slot: newSlot, swapWithPlayerId: targetPlayerId }
+        : { teamId, playerId: selected.playerId, slot: newSlot };
       const res = await fetch(`/api/leagues/${leagueId}/lineup`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ teamId, playerId: selected.playerId, slot: newSlot }),
+        body: JSON.stringify(body),
       });
       if (!res.ok) {
         const data = await res.json() as { error?: string };
@@ -252,7 +255,7 @@ export default function LineupManager({
       )}
 
       {/* Two-column layout */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, alignItems: "start" }}>
+      <div className="lineup-grid">
 
         {/* LEFT: Active slots */}
         <div style={panel}>

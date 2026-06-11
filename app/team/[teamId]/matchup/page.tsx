@@ -131,7 +131,7 @@ export default async function TeamMatchupPage({
           )}
 
           {(topPerformers.length > 0 || disappointments.length > 0) && (
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+            <div className="matchup-2col">
               {topPerformers.length > 0 && (
                 <Card title="Top performers">
                   {topPerformers.map((p) => (
@@ -161,11 +161,7 @@ export default async function TeamMatchupPage({
             </div>
           )}
 
-          <div style={{
-            display: "grid",
-            gridTemplateColumns: activeMatchup.status === "upcoming" ? "1fr 1fr" : "1fr 1fr",
-            gap: 16,
-          }}>
+          <div className="matchup-2col">
             {activeMatchup.status === "upcoming" ? (
               <>
                 <Card title={activeMatchup.myTeam.name}>
@@ -406,7 +402,7 @@ function RosterTable({ title, players, showSetLineup, teamId }: {
       {/* Column headers */}
       <div style={{
         display: "grid",
-        gridTemplateColumns: "44px 1fr 56px 80px",
+        gridTemplateColumns: "44px 1fr 44px 60px",
         gap: 8, padding: "6px 16px",
         fontSize: 10, fontWeight: 700, letterSpacing: "0.07em",
         textTransform: "uppercase", color: "#475569",
@@ -428,7 +424,7 @@ function RosterTable({ title, players, showSetLineup, teamId }: {
             key={p.playerId}
             style={{
               display: "grid",
-              gridTemplateColumns: "44px 1fr 56px 80px",
+              gridTemplateColumns: "44px 1fr 44px 60px",
               gap: 8, padding: "10px 16px",
               alignItems: "center",
               borderTop: i === 0 ? "none" : "1px solid rgba(148,163,184,0.05)",
@@ -505,7 +501,7 @@ function RosterTable({ title, players, showSetLineup, teamId }: {
       {/* Row total */}
       {players.length > 0 && (
         <div style={{
-          display: "grid", gridTemplateColumns: "44px 1fr 56px 80px",
+          display: "grid", gridTemplateColumns: "44px 1fr 44px 60px",
           gap: 8, padding: "10px 16px",
           borderTop: "1px solid rgba(148,163,184,0.1)",
         }}>

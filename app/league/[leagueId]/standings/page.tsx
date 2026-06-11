@@ -37,7 +37,7 @@ export default async function StandingsPage({ params }: { params: { leagueId: st
         </p>
 
         <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 700 }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 480 }}>
             <thead>
               <tr style={{ color: "#94a3b8", textAlign: "left", borderBottom: "1px solid rgba(148,163,184,0.2)" }}>
                 <th style={thStyle}>#</th>
@@ -46,8 +46,8 @@ export default async function StandingsPage({ params }: { params: { leagueId: st
                 <th style={thStyle}>W</th>
                 <th style={thStyle}>L</th>
                 <th style={thStyle}>T</th>
-                <th style={thStyle}>PF</th>
-                <th style={thStyle}>PA</th>
+                <th style={thStyle} className="standings-hide-mobile">PF</th>
+                <th style={thStyle} className="standings-hide-mobile">PA</th>
               </tr>
             </thead>
             <tbody>
@@ -67,8 +67,8 @@ export default async function StandingsPage({ params }: { params: { leagueId: st
                   <td style={tdStyle}>{standing.wins}</td>
                   <td style={tdStyle}>{standing.losses}</td>
                   <td style={tdStyle}>{standing.ties}</td>
-                  <td style={tdStyle}>{standing.pointsFor}</td>
-                  <td style={tdStyle}>{standing.pointsAgainst}</td>
+                  <td style={tdStyle} className="standings-hide-mobile">{standing.pointsFor}</td>
+                  <td style={tdStyle} className="standings-hide-mobile">{standing.pointsAgainst}</td>
                 </tr>
                 );
               })}
@@ -81,13 +81,13 @@ export default async function StandingsPage({ params }: { params: { leagueId: st
 }
 
 const thStyle: React.CSSProperties = {
-  padding: "12px 10px",
+  padding: "10px 8px",
   fontSize: 13,
   fontWeight: 700,
 };
 
 const tdStyle: React.CSSProperties = {
-  padding: "14px 10px",
+  padding: "12px 8px",
   fontSize: 14,
   color: "#e2e8f0",
 };

@@ -21,6 +21,7 @@ export default function TeamNav({ teamId, leagueId, leagueName }: Props) {
 
   return (
     <nav
+      className="team-nav"
       style={{
         display: "flex",
         alignItems: "center",

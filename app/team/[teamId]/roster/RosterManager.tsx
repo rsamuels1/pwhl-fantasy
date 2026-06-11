@@ -194,6 +194,7 @@ export default function RosterManager({
           {sortedRoster.length === 0 ? (
             <p style={{ color: "#64748b", margin: 0, fontSize: 13 }}>No players on your roster yet.</p>
           ) : (
+            <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
             <>
               {/* Skaters */}
               {skaterPositions && (
@@ -218,6 +219,7 @@ export default function RosterManager({
                 </>
               )}
             </>
+            </div>
           )}
         </div>
       )}
@@ -257,7 +259,7 @@ export default function RosterManager({
           </div>
 
           {/* Free agent table */}
-          <div style={panel}>
+          <div style={{ ...panel, overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
             <FaColHeader
               isGoalie={posFilter === "GOALIE"}
               sortKey={sortKey} sortAsc={sortAsc}
