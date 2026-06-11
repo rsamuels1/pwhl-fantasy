@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getDashboardData } from "@/lib/services/dashboard";
 import { apiRequireAuth, apiRequireLeagueMember } from "@/lib/auth";
+import { getDevNowFromRequest } from "@/lib/devTime";
 
 export async function GET(
   req: NextRequest,
@@ -15,6 +16,6 @@ export async function GET(
   const { leagueId } = params;
   const teamId = req.nextUrl.searchParams.get("team") ?? member.id;
 
-  const data = await getDashboardData(leagueId, teamId, Date.now(), prisma);
+  const data = await getDashboardData(leagueId, teamId, getDevNowFromRequest(req), prisma);
   return NextResponse.json(data);
 }

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getSeasonState, startSeason, advanceSeason } from "@/lib/season";
 import { apiRequireAuth, apiRequireLeagueMember, apiRequireCommissioner } from "@/lib/auth";
+import { getDevNowFromRequest } from "@/lib/devTime";
 
 // GET /api/leagues/[leagueId]/season — any league member
 export async function GET(
@@ -15,7 +16,7 @@ export async function GET(
   if (member instanceof NextResponse) return member;
 
   try {
-    const state = await getSeasonState(leagueId, Date.now(), prisma);
+    const state = await getSeasonState(leagueId, getDevNowFromRequest(req), prisma);
     return NextResponse.json(state);
   } catch (err) {
     console.error(err);
@@ -40,13 +41,13 @@ export async function POST(
   try {
     if (action === "start") {
       await startSeason(leagueId, prisma);
-      const state = await getSeasonState(leagueId, Date.now(), prisma);
+      const state = await getSeasonState(leagueId, getDevNowFromRequest(req), prisma);
       return NextResponse.json({ message: "Season started.", state });
     }
 
     if (action === "advance") {
-      const result = await advanceSeason(leagueId, Date.now(), prisma);
-      const state = await getSeasonState(leagueId, Date.now(), prisma);
+      const result = await advanceSeason(leagueId, getDevNowFromRequest(req), prisma);
+      const state = await getSeasonState(leagueId, getDevNowFromRequest(req), prisma);
       return NextResponse.json({
         message: result.scoredWeeks.length > 0
           ? `Scored week(s) ${result.scoredWeeks.join(", ")}.`

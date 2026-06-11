@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { computeStandings } from "@/lib/playoffs/seeding";
 import { requireAuth, requireLeagueMember } from "@/lib/auth";
 import { getLeagueActivity } from "@/lib/services/activity";
+import { getDevNow } from "@/lib/devTime";
 import Link from "next/link";
 
 export default async function LeagueOverviewPage({ params }: { params: { leagueId: string } }) {
@@ -41,14 +42,17 @@ export default async function LeagueOverviewPage({ params }: { params: { leagueI
     activity = await getLeagueActivity(leagueId, 5, prisma);
   } catch {}
 
-  // Determine the "current" week to feature: latest week with any unscored matchup,
-  // falling back to the latest scored week.
-  const unscoredWeeks = matchups.filter((m) => m.homeScore === null);
-  const currentWeek = unscoredWeeks.length > 0
-    ? Math.min(...unscoredWeeks.map((m) => m.week))
-    : matchups.length > 0
-    ? Math.max(...matchups.map((m) => m.week))
-    : null;
+  // Determine the "current" week using sim date: latest week whose period has started.
+  const nowMs = await getDevNow();
+  const startedMatchups = matchups.filter(
+    (m) => new Date(m.startsAt).getTime() <= nowMs
+  );
+  const currentWeek =
+    startedMatchups.length > 0
+      ? Math.max(...startedMatchups.map((m) => m.week))
+      : matchups.length > 0
+      ? Math.min(...matchups.map((m) => m.week))
+      : null;
 
   const thisWeekMatchups = currentWeek !== null
     ? matchups.filter((m) => m.week === currentWeek)
