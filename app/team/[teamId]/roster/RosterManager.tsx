@@ -310,6 +310,7 @@ function ColHeader({ isGoalie }: { isGoalie: boolean }) {
       fontSize: 10, fontWeight: 700, letterSpacing: "0.07em",
       textTransform: "uppercase", color: "#475569",
       borderBottom: "1px solid rgba(148,163,184,0.08)",
+      minWidth: isGoalie ? 480 : 540,
     }}>
       <span>Slot</span>
       <span>Player</span>
@@ -340,6 +341,7 @@ function RosterRow({ player, index, onDrop, disabled }: {
       padding: "9px 14px", alignItems: "center",
       borderTop: index === 0 ? "none" : "1px solid rgba(148,163,184,0.05)",
       background: index % 2 === 0 ? "transparent" : "rgba(255,255,255,0.01)",
+      minWidth: isGoalie ? 480 : 540,
     }}>
       <span style={{
         fontSize: 10, fontWeight: 700, textAlign: "center",
@@ -430,6 +432,7 @@ function FaColHeader({ isGoalie, sortKey, sortAsc, onSort }: {
       display: "grid", gridTemplateColumns: cols,
       gap: 8, padding: "6px 14px 8px",
       borderBottom: "1px solid rgba(148,163,184,0.08)",
+      minWidth: isGoalie ? 520 : 560,
     }}>
       <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase", color: "#475569" }}>Player</span>
       {isGoalie ? (
@@ -465,6 +468,7 @@ function FaRow({ player, index, isFull, rosterPlayers, pendingAdd, dropForAdd,
         display: "grid", gridTemplateColumns: cols, gap: 8,
         padding: "9px 14px", alignItems: "center",
         background: isThisPending ? "rgba(99,102,241,0.06)" : index % 2 === 0 ? "transparent" : "rgba(255,255,255,0.01)",
+        minWidth: isGoalie ? 520 : 560,
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 6, minWidth: 0 }}>
           <span style={{ fontWeight: 600, fontSize: 13, color: "#e2e8f0", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>

@@ -88,7 +88,7 @@ export default function SeasonView({ leagueId, initialState, isDev }: Props) {
 
           <div style={{ overflowX: "auto" }}>
           {/* Column headers */}
-          <div style={{ display: "grid", gridTemplateColumns: "48px 1fr 80px 80px 100px", gap: 8, padding: "0 8px 8px", borderBottom: "1px solid rgba(148,163,184,0.1)", fontSize: 11, color: "#475569", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", minWidth: 390 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "48px 1fr 80px 80px 100px", gap: 8, padding: "0 8px 8px", borderBottom: "1px solid rgba(148,163,184,0.1)", fontSize: 11, color: "#475569", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", minWidth: 420 }}>
             <span>Wk</span>
             <span>Dates</span>
             <span>Games</span>
@@ -96,7 +96,7 @@ export default function SeasonView({ leagueId, initialState, isDev }: Props) {
             <span>Status</span>
           </div>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: 2, marginTop: 4, minWidth: 390 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 2, marginTop: 4, minWidth: 420 }}>
             {periods.map(({ period, status, gamesTotal, gamesFinal }) => {
               const isActive = status === "ACTIVE";
               const color = STATUS_COLORS[status] ?? "#64748b";
@@ -115,7 +115,7 @@ export default function SeasonView({ leagueId, initialState, isDev }: Props) {
                   <span style={{ fontWeight: 700, color: isActive ? "#f59e0b" : "#94a3b8" }}>
                     {period.week}
                   </span>
-                  <span style={{ fontSize: 13, color: "#cbd5e1" }}>
+                  <span style={{ fontSize: 13, color: "#cbd5e1", whiteSpace: "nowrap" }}>
                     {fmt(period.startsAt)} – {fmt(period.endsAt)}
                   </span>
                   <span style={{ fontSize: 13, color: "#94a3b8" }}>{gamesTotal}</span>

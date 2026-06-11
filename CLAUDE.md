@@ -683,8 +683,9 @@ the cookie is never read.
   `tsc` check. Always run `npx tsc --noEmit` before deploying to catch errors that only surface
   at build time.
 - **Stale `.next` cache**: if `npm run build` fails with `PageNotFoundError: Cannot find module
-  for page: /_error`, delete `.next/` and rebuild: `rm -rf .next && npm run build`. Vercel does
-  a clean build so this only affects local builds.
+  for page: /_error` or `/_document`, delete `.next/` and rebuild: `rm -rf .next && npm run build`.
+  These are Next.js 14 internal errors that only surface when the cache is in a corrupted state.
+  Vercel does a clean build on every deploy so this only affects local builds.
 - **`rosterSettings as Record<string, number>`**: when summing slot counts via `Object.values()`,
   cast to `Record<string, number>` not `any` — `as any` makes the array `unknown[]` and breaks
   the `reduce` type.
