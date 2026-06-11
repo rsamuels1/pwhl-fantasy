@@ -1,6 +1,5 @@
 // Lightweight matchup summary for the Fantasy Home dashboard.
-// Returns weekly W-L-T record against the full field (VTF format).
-// Driven by nowMs (sim-date aware) — uses getSeasonState to find the "current" period.
+// VTF format: returns weekly W-L-T record against the full field, not a single opponent.
 
 import type { PrismaClient } from "@prisma/client";
 import { getSeasonState } from "@/lib/season";
@@ -44,7 +43,10 @@ export async function getMatchupQuickSummary(
 
   const { period } = current;
 
-  // Get all my matchups for this week (one per opponent in VTF)
+  // Total team count for the denominator
+  const teamsCount = await prisma.fantasyTeam.count({ where: { leagueId } });
+
+  // All matchup rows for my team this week
   const myMatchups = await prisma.matchup.findMany({
     where: {
       leagueId,
@@ -56,51 +58,33 @@ export async function getMatchupQuickSummary(
 
   if (myMatchups.length === 0) return null;
 
-  const teamsCount = await prisma.fantasyTeam.count({ where: { leagueId } });
+  const startsAt = myMatchups[0].startsAt;
 
-  // Already scored — count W-L-T from cached scores
-  const firstMatchup = myMatchups[0];
-  if (firstMatchup.homeScore !== null && firstMatchup.awayScore !== null) {
-    const myScore = firstMatchup.homeTeamId === teamId
-      ? firstMatchup.homeScore
-      : firstMatchup.awayScore;
-
-    let wins = 0, losses = 0, ties = 0;
+  // Already scored — read cached scores for all matchup rows
+  const allScored = myMatchups.every((m) => m.homeScore !== null && m.awayScore !== null);
+  if (allScored) {
+    let wins = 0, losses = 0, ties = 0, myScore = 0;
     for (const m of myMatchups) {
-      const mine = m.homeTeamId === teamId ? m.homeScore! : m.awayScore!;
-      const opp  = m.homeTeamId === teamId ? m.awayScore! : m.homeScore!;
-      if (mine > opp) wins++;
-      else if (mine < opp) losses++;
+      const iAmHome = m.homeTeamId === teamId;
+      const mine = iAmHome ? m.homeScore! : m.awayScore!;
+      const theirs = iAmHome ? m.awayScore! : m.homeScore!;
+      myScore = mine; // consistent across all rows
+      if (mine > theirs) wins++;
+      else if (mine < theirs) losses++;
       else ties++;
     }
-
-    return {
-      week: period.week,
-      status: "complete",
-      myScore,
-      wins,
-      losses,
-      ties,
-      teamsCount,
-      startsAt: firstMatchup.startsAt,
-    };
+    return { week: period.week, status: "complete", myScore, wins, losses, ties, teamsCount, startsAt };
   }
 
   // Upcoming — period hasn't started yet
   if (current.status === "UPCOMING") {
     return {
-      week: period.week,
-      status: "upcoming",
-      myScore: 0,
-      wins: 0,
-      losses: 0,
-      ties: 0,
-      teamsCount,
-      startsAt: firstMatchup.startsAt,
+      week: period.week, status: "upcoming",
+      myScore: 0, wins: 0, losses: 0, ties: 0, teamsCount, startsAt,
     };
   }
 
-  // Active — score all teams, compute live W-L-T
+  // Active — compute live scores for all teams
   const league = await prisma.fantasyLeague.findUniqueOrThrow({
     where: { id: leagueId },
     select: { scoringSettings: true },
@@ -117,16 +101,7 @@ export async function getMatchupQuickSummary(
     else ties++;
   }
 
-  return {
-    week: period.week,
-    status: "active",
-    myScore,
-    wins,
-    losses,
-    ties,
-    teamsCount,
-    startsAt: firstMatchup.startsAt,
-  };
+  return { week: period.week, status: "active", myScore, wins, losses, ties, teamsCount, startsAt };
 }
 
 // Returns the top 2 active-slot scorers for a team in the current scoring period.

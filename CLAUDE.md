@@ -540,6 +540,46 @@ gracefully to draft pick history.
 
 **API:** `GET /api/leagues/[leagueId]/matchup-summary?team=<id>` — wraps `getDashboardData`.
 
+**Dual-mode hero (VTF regular season / 1v1 playoffs):** `ActiveMatchup.opponentTeam` is
+**nullable**. Regular season is vs-the-field (VTF): `opponentTeam = null`, and the page renders
+`FieldHero` (my score + weekly field record + ranked `weeklyStandings`). Playoff/1v1 matchups set
+`opponentTeam`, `opponentProjected`, `winProbability`, and `rivalry`, and the page renders
+`DuelHero` (head-to-head scores, win-probability bar, season series record). `getSwingPlayers` and
+the opponent roster card are only rendered when `opponentTeam` is non-null — always guard, never
+assume it's set. `lib/services/matchup-summary.ts` (dashboard cards) stays VTF: it returns a weekly
+W-L-T record vs the full field (`wins`/`losses`/`ties`/`teamsCount`), not a single opponent.
+
+**Rivalry record:** `rivalry: { wins, losses, ties }` on `ActiveMatchup` is the season-long H2H
+record vs the current opponent, computed in `getDashboardData` via `getHeadToHeadRecord`
+(`lib/playoffs/seeding.ts`). Only populated in 1v1 mode.
+
+**Weekly recap card:** `DashboardData.lastResult` (`WeeklyRecap | null`) summarizes the most recent
+completed matchup (result, score, opponent, my top performer). Rendered as `RecapCard` near the top
+of the matchup page. Derived in `getLastResult` from the latest scored `Matchup` for the team.
+
+**Live score polling:** `components/LiveScoreRefresh.tsx` is a client component that calls
+`router.refresh()` on an interval (default 60s) and shows a "Live · updated Ns ago" pulse. Mounted
+in both hero variants whenever the matchup is not upcoming, so active scores refresh without a
+manual reload.
+
+## Commissioner announcements
+
+`FantasyLeague.announcement` (`String?`, nullable) holds a league-wide note set by the commissioner.
+- **Admin:** `components/AnnouncementForm.tsx` (client) posts to
+  `PUT /api/leagues/[leagueId]/announcement` (commissioner-only, trims + caps at 500 chars, empty
+  clears). Mounted in the admin panel "League announcement" section.
+- **Display:** rendered as a 📣 banner at the top of the league overview (`app/league/[leagueId]/page.tsx`)
+  when set. The overview's `findUnique` returns all scalar fields, so `league.announcement` is available.
+- Run `npx prisma db push` after pulling — the column was added to the schema.
+
+## Playoff race indicators (standings)
+
+`app/league/[leagueId]/standings/page.tsx` computes clinch/eliminate/games-back via `computeRace`
+(local helper) when results exist and playoffs haven't started. Each H2H win = 1 pt, tie = 0.5;
+max remaining points = games left. A team is **clinched** when the bubble team's ceiling can't pass
+it, **eliminated** when its own ceiling can't reach the current playoff line. Surfaces as: a banner
+summarizing the viewer's own status, and per-row chips (`✓ CLINCHED` / `✗ ELIM` / `BUBBLE` / `IN`).
+
 **Inline lineup editor (upcoming matchups):** when `status === "upcoming"`, the matchup page
 shows `InlineLineupEditor` (client component) instead of the read-only `RosterTable` for the
 user's team. It displays active starters + bench players with games-remaining badges and allows

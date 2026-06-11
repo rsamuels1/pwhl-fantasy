@@ -2,8 +2,9 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { requireAuth, requireTeamOwner } from "@/lib/auth";
-import { getDashboardData, type ActiveMatchup, type PlayerMatchupRow } from "@/lib/services/dashboard";
+import { getDashboardData, type ActiveMatchup, type PlayerMatchupRow, type WeeklyRecap } from "@/lib/services/dashboard";
 import InlineLineupEditor, { type LineupPlayer } from "./InlineLineupEditor";
+import LiveScoreRefresh from "@/components/LiveScoreRefresh";
 import { getSwingPlayers } from "@/lib/matchups/swingPlayers";
 import { parseScoringSettings } from "@/lib/scoring/settings";
 import { getDevNow } from "@/lib/devTime";
@@ -27,10 +28,11 @@ export default async function TeamMatchupPage({
   const scoringSettings = parseScoringSettings(league.scoringSettings);
   const nowMs = await getDevNow();
   const dashboard = await getDashboardData(leagueId, teamId, nowMs, prisma);
-  const { activeMatchup, remainingPlayers, topPerformers, disappointments, lineupAlerts, leagueActivity } = dashboard;
+  const { activeMatchup, remainingPlayers, topPerformers, disappointments, lineupAlerts, lastResult, leagueActivity } = dashboard;
 
+  // Swing players are a 1v1 concept — only meaningful in playoff (single-opponent) matchups.
   let swingPlayers: Awaited<ReturnType<typeof getSwingPlayers>> = [];
-  if (activeMatchup?.status === "active") {
+  if (activeMatchup?.status === "active" && activeMatchup.opponentTeam) {
     swingPlayers = await getSwingPlayers(
       teamId,
       activeMatchup.opponentTeam.id,
@@ -106,6 +108,9 @@ export default async function TeamMatchupPage({
           </Link>
         </div>
       )}
+
+      {/* ── 1b. Last week recap ── */}
+      {lastResult && <RecapCard recap={lastResult} />}
 
       {/* ── 2. Matchup hero ── */}
       {activeMatchup ? (
@@ -244,39 +249,32 @@ export default async function TeamMatchupPage({
       {/* ── 6. Rosters ── */}
       {activeMatchup && (
         <div className="matchup-2col">
-          {activeMatchup.status === "upcoming" ? (
-            <>
-              <Card>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-                  <h2 style={sectionHead}>{activeMatchup.myTeam.name}</h2>
-                  <Link href={`/team/${teamId}/lineup`} style={editLink}>Full lineup →</Link>
-                </div>
-                <InlineLineupEditor
-                  leagueId={leagueId}
-                  teamId={teamId}
-                  active={activeMatchup.myPlayers.map((p) => ({ ...p, slot: p.slot }))}
-                  bench={benchPlayers}
-                />
-              </Card>
-              <Card>
-                <h2 style={{ ...sectionHead, marginBottom: 14 }}>{activeMatchup.opponentTeam.name}</h2>
-                <RosterTable players={activeMatchup.opponentPlayers} />
-              </Card>
-            </>
-          ) : (
-            <>
-              <Card>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-                  <h2 style={sectionHead}>{activeMatchup.myTeam.name}</h2>
-                  <Link href={`/team/${teamId}/lineup`} style={editLink}>Edit lineup →</Link>
-                </div>
-                <RosterTable players={activeMatchup.myPlayers} />
-              </Card>
-              <Card>
-                <h2 style={{ ...sectionHead, marginBottom: 14 }}>{activeMatchup.opponentTeam.name}</h2>
-                <RosterTable players={activeMatchup.opponentPlayers} />
-              </Card>
-            </>
+          {/* My team — inline editor when upcoming, read-only table when active */}
+          <Card>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+              <h2 style={sectionHead}>{activeMatchup.myTeam.name}</h2>
+              <Link href={`/team/${teamId}/lineup`} style={editLink}>
+                {activeMatchup.status === "upcoming" ? "Full lineup →" : "Edit lineup →"}
+              </Link>
+            </div>
+            {activeMatchup.status === "upcoming" ? (
+              <InlineLineupEditor
+                leagueId={leagueId}
+                teamId={teamId}
+                active={activeMatchup.myPlayers.map((p) => ({ ...p, slot: p.slot }))}
+                bench={benchPlayers}
+              />
+            ) : (
+              <RosterTable players={activeMatchup.myPlayers} />
+            )}
+          </Card>
+
+          {/* Opponent roster — 1v1 (playoff) only. VTF surfaces the field in the hero. */}
+          {activeMatchup.opponentTeam && (
+            <Card>
+              <h2 style={{ ...sectionHead, marginBottom: 14 }}>{activeMatchup.opponentTeam.name}</h2>
+              <RosterTable players={activeMatchup.opponentPlayers} />
+            </Card>
           )}
         </div>
       )}
@@ -333,6 +331,41 @@ function Card({ children }: { children: React.ReactNode }) {
   );
 }
 
+function RecapCard({ recap }: { recap: WeeklyRecap }) {
+  const won = recap.result === "win";
+  const tie = recap.result === "tie";
+  const color = won ? "#34d399" : tie ? "#94a3b8" : "#f87171";
+  const bg = won ? "rgba(52,211,153,0.07)" : tie ? "rgba(148,163,184,0.05)" : "rgba(248,113,113,0.07)";
+  const verb = won ? "Won" : tie ? "Tied" : "Lost";
+  const resultLine = tie
+    ? `Week ${recap.week} ended in a ${recap.myScore.toFixed(1)}–${recap.opponentScore.toFixed(1)} tie with ${recap.opponentName}.`
+    : `${verb} Week ${recap.week} ${recap.myScore.toFixed(1)}–${recap.opponentScore.toFixed(1)} vs ${recap.opponentName}.`;
+
+  return (
+    <div style={{
+      background: bg, border: `1px solid ${color}33`,
+      borderRadius: 14, padding: "12px 16px",
+      display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap",
+    }}>
+      <span style={{
+        fontSize: 11, fontWeight: 800, letterSpacing: "0.05em", textTransform: "uppercase",
+        color, padding: "3px 9px", borderRadius: 20, background: `${color}1f`, flexShrink: 0,
+      }}>
+        Last week
+      </span>
+      <div style={{ fontSize: 13, color: "#cbd5e1" }}>
+        {resultLine}
+        {recap.myTopPerformer && (
+          <span style={{ color: "#64748b" }}>
+            {" "}{recap.myTopPerformer.name} led you with{" "}
+            <strong style={{ color: "#94a3b8" }}>{recap.myTopPerformer.points.toFixed(1)} pts</strong>.
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
+
 const sectionHead: React.CSSProperties = {
   fontSize: 15, fontWeight: 700, margin: 0, color: "#e2e8f0",
 };
@@ -347,40 +380,46 @@ const editLink: React.CSSProperties = {
 // ── MatchupHero ────────────────────────────────────────────────────────────────
 
 function MatchupHero({ matchup, teamId }: { matchup: ActiveMatchup; teamId: string }) {
-  const isUpcoming = matchup.status === "upcoming";
-  const myLead = matchup.myTeam.score - matchup.opponentTeam.score;
-  const winPct = Math.round(matchup.winProbability * 100);
-  const oppPct = 100 - winPct;
+  // Two modes: 1v1 (playoffs — single opponent, win probability, rivalry) and
+  // VTF (regular season — ranked against the whole field).
+  return matchup.opponentTeam
+    ? <DuelHero matchup={matchup} opponent={matchup.opponentTeam} teamId={teamId} />
+    : <FieldHero matchup={matchup} teamId={teamId} />;
+}
 
+function heroPeriodLabel(matchup: ActiveMatchup) {
   const fmt = (d: Date | string) =>
     new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" }).format(new Date(d));
-  const periodLabel = `${fmt(matchup.period.startsAt)} – ${fmt(new Date(new Date(matchup.period.endsAt).getTime() - 1))}`;
+  return `${fmt(matchup.period.startsAt)} – ${fmt(new Date(new Date(matchup.period.endsAt).getTime() - 1))}`;
+}
 
-  const iWinning = !isUpcoming && myLead > 0;
-  const tied = !isUpcoming && myLead === 0;
+// ── VTF (regular season): rank my team against the field ────────────────────────
+function FieldHero({ matchup, teamId }: { matchup: ActiveMatchup; teamId: string }) {
+  const isUpcoming = matchup.status === "upcoming";
+  const periodLabel = heroPeriodLabel(matchup);
+  const standings = matchup.weeklyStandings;
+  const myRank = standings.findIndex((s) => s.teamId === matchup.myTeam.id) + 1;
+  const total = standings.length;
+  const { wins, losses, ties } = matchup.myRecord;
+  const winningRecord = wins > losses;
 
-  const accentColor = isUpcoming ? "#f59e0b" : iWinning ? "#6366f1" : tied ? "#94a3b8" : "#ef4444";
-  const accentBg = isUpcoming ? "rgba(245,158,11,0.08)" : iWinning ? "rgba(99,102,241,0.1)" : tied ? "rgba(148,163,184,0.05)" : "rgba(239,68,68,0.08)";
+  const accentColor = isUpcoming ? "#f59e0b" : winningRecord ? "#6366f1" : losses > wins ? "#ef4444" : "#94a3b8";
+  const accentBg = isUpcoming ? "rgba(245,158,11,0.08)" : winningRecord ? "rgba(99,102,241,0.1)" : losses > wins ? "rgba(239,68,68,0.08)" : "rgba(148,163,184,0.05)";
 
   return (
-    <div style={{
-      background: accentBg,
-      border: `1px solid ${accentColor}40`,
-      borderRadius: 24, padding: "24px 24px 20px",
-    }}>
-      {/* Week label */}
-      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20, flexWrap: "wrap" }}>
-        <span style={{ fontSize: 12, color: "#64748b" }}>Week {matchup.week} · {periodLabel}</span>
-        {isUpcoming && (
-          <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 20, background: "rgba(245,158,11,0.15)", color: "#f59e0b" }}>
-            Upcoming
-          </span>
-        )}
+    <div style={{ background: accentBg, border: `1px solid ${accentColor}40`, borderRadius: 24, padding: "24px 24px 20px" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+          <span style={{ fontSize: 12, color: "#64748b" }}>Week {matchup.week} · {periodLabel}</span>
+          {isUpcoming && (
+            <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 20, background: "rgba(245,158,11,0.15)", color: "#f59e0b" }}>Upcoming</span>
+          )}
+        </div>
+        {!isUpcoming && <LiveScoreRefresh />}
       </div>
 
-      {/* Score block */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", alignItems: "center", gap: 12, marginBottom: 20 }}>
-        {/* My team */}
+      {/* My score + field record */}
+      <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 12, marginBottom: isUpcoming ? 4 : 18 }}>
         <div>
           <div style={{ fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>
             {matchup.myTeam.name}
@@ -388,12 +427,113 @@ function MatchupHero({ matchup, teamId }: { matchup: ActiveMatchup; teamId: stri
           <div style={{ fontSize: isUpcoming ? 32 : 52, fontWeight: 900, lineHeight: 1, color: isUpcoming ? "#475569" : "#e2e8f0", fontVariantNumeric: "tabular-nums" }}>
             {isUpcoming ? "—" : matchup.myTeam.score.toFixed(1)}
           </div>
-          <div style={{ fontSize: 12, color: "#475569", marginTop: 4 }}>
-            proj {matchup.myProjected.toFixed(1)}
-          </div>
+          <div style={{ fontSize: 12, color: "#475569", marginTop: 4 }}>proj {matchup.myProjected.toFixed(1)}</div>
         </div>
+        {!isUpcoming && (
+          <div style={{ textAlign: "right" }}>
+            <div style={{ fontSize: 11, color: "#64748b", marginBottom: 2 }}>vs field</div>
+            <div style={{ fontSize: 22, fontWeight: 800, color: accentColor }}>
+              {wins}–{losses}{ties > 0 ? `–${ties}` : ""}
+            </div>
+            {myRank > 0 && (
+              <div style={{ fontSize: 11, color: "#64748b", marginTop: 2 }}>#{myRank} of {total} this week</div>
+            )}
+          </div>
+        )}
+      </div>
 
-        {/* Center: status label */}
+      {/* Field standings (active only) */}
+      {!isUpcoming && (
+        <div style={{ display: "grid", gap: 2 }}>
+          {standings.map((s, i) => {
+            const isMe = s.teamId === matchup.myTeam.id;
+            return (
+              <div key={s.teamId} style={{
+                display: "grid", gridTemplateColumns: "20px 1fr auto", gap: 8, alignItems: "center",
+                padding: "5px 8px", borderRadius: 6,
+                background: isMe ? "rgba(99,102,241,0.1)" : "transparent",
+              }}>
+                <span style={{ fontSize: 11, color: "#475569", fontWeight: 700 }}>{i + 1}</span>
+                <span style={{ fontSize: 13, fontWeight: isMe ? 700 : 400, color: isMe ? "#a5b4fc" : "#cbd5e1", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  {s.name}{isMe && <span style={{ marginLeft: 6, fontSize: 10, color: "#6366f1" }}>YOU</span>}
+                </span>
+                <span style={{ fontSize: 13, fontWeight: 700, color: isMe ? "#e2e8f0" : "#64748b", fontVariantNumeric: "tabular-nums" }}>
+                  {s.score.toFixed(1)}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {isUpcoming && (
+        <div style={{ marginTop: 4 }}>
+          <Link href={`/team/${teamId}/lineup`} style={{
+            display: "inline-block", fontSize: 13, fontWeight: 700, padding: "8px 18px", borderRadius: 10,
+            background: "rgba(245,158,11,0.15)", color: "#fbbf24", border: "1px solid rgba(245,158,11,0.3)", textDecoration: "none",
+          }}>
+            Set lineup →
+          </Link>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── 1v1 (playoffs): head-to-head duel with win probability + rivalry ────────────
+function DuelHero({
+  matchup, opponent, teamId,
+}: {
+  matchup: ActiveMatchup;
+  opponent: NonNullable<ActiveMatchup["opponentTeam"]>;
+  teamId: string;
+}) {
+  const isUpcoming = matchup.status === "upcoming";
+  const myLead = matchup.myTeam.score - opponent.score;
+  const winPct = Math.round(matchup.winProbability * 100);
+  const oppPct = 100 - winPct;
+  const periodLabel = heroPeriodLabel(matchup);
+
+  const iWinning = !isUpcoming && myLead > 0;
+  const tied = !isUpcoming && myLead === 0;
+  const accentColor = isUpcoming ? "#f59e0b" : iWinning ? "#6366f1" : tied ? "#94a3b8" : "#ef4444";
+  const accentBg = isUpcoming ? "rgba(245,158,11,0.08)" : iWinning ? "rgba(99,102,241,0.1)" : tied ? "rgba(148,163,184,0.05)" : "rgba(239,68,68,0.08)";
+  const seriesGames = matchup.rivalry.wins + matchup.rivalry.losses + matchup.rivalry.ties;
+
+  return (
+    <div style={{ background: accentBg, border: `1px solid ${accentColor}40`, borderRadius: 24, padding: "24px 24px 20px" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 8, flexWrap: "wrap" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+          <span style={{ fontSize: 12, color: "#64748b" }}>Week {matchup.week} · {periodLabel}</span>
+          {matchup.isPlayoff && (
+            <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 20, background: "rgba(99,102,241,0.18)", color: "#a5b4fc" }}>Playoffs</span>
+          )}
+          {isUpcoming && (
+            <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 20, background: "rgba(245,158,11,0.15)", color: "#f59e0b" }}>Upcoming</span>
+          )}
+        </div>
+        {!isUpcoming && <LiveScoreRefresh />}
+      </div>
+
+      {seriesGames > 0 ? (
+        <div style={{ fontSize: 11, color: "#64748b", marginBottom: 16 }}>
+          Season series vs {opponent.name}:{" "}
+          <span style={{ fontWeight: 700, color: "#94a3b8" }}>
+            {matchup.rivalry.wins}–{matchup.rivalry.losses}{matchup.rivalry.ties > 0 ? `–${matchup.rivalry.ties}` : ""}
+          </span>
+        </div>
+      ) : (
+        <div style={{ marginBottom: 16 }} />
+      )}
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", alignItems: "center", gap: 12, marginBottom: 20 }}>
+        <div>
+          <div style={{ fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>{matchup.myTeam.name}</div>
+          <div style={{ fontSize: isUpcoming ? 32 : 52, fontWeight: 900, lineHeight: 1, color: isUpcoming ? "#475569" : "#e2e8f0", fontVariantNumeric: "tabular-nums" }}>
+            {isUpcoming ? "—" : matchup.myTeam.score.toFixed(1)}
+          </div>
+          <div style={{ fontSize: 12, color: "#475569", marginTop: 4 }}>proj {matchup.myProjected.toFixed(1)}</div>
+        </div>
         <div style={{ textAlign: "center" }}>
           {isUpcoming ? (
             <span style={{ fontSize: 13, fontWeight: 700, color: "#475569" }}>vs</span>
@@ -402,52 +542,36 @@ function MatchupHero({ matchup, teamId }: { matchup: ActiveMatchup; teamId: stri
               <div style={{ fontSize: 11, fontWeight: 700, color: accentColor, textTransform: "uppercase", letterSpacing: "0.05em" }}>
                 {tied ? "Tied" : iWinning ? "Winning" : "Trailing"}
               </div>
-              <div style={{ fontSize: 13, fontWeight: 800, color: accentColor, marginTop: 2 }}>
-                {tied ? "—" : `${Math.abs(myLead).toFixed(1)}`}
-              </div>
+              <div style={{ fontSize: 13, fontWeight: 800, color: accentColor, marginTop: 2 }}>{tied ? "—" : `${Math.abs(myLead).toFixed(1)}`}</div>
             </div>
           )}
         </div>
-
-        {/* Opponent */}
         <div style={{ textAlign: "right" }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>
-            {matchup.opponentTeam.name}
-          </div>
+          <div style={{ fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>{opponent.name}</div>
           <div style={{ fontSize: isUpcoming ? 32 : 52, fontWeight: 900, lineHeight: 1, color: isUpcoming ? "#475569" : "#94a3b8", fontVariantNumeric: "tabular-nums" }}>
-            {isUpcoming ? "—" : matchup.opponentTeam.score.toFixed(1)}
+            {isUpcoming ? "—" : opponent.score.toFixed(1)}
           </div>
-          <div style={{ fontSize: 12, color: "#475569", marginTop: 4 }}>
-            proj {matchup.opponentProjected.toFixed(1)}
-          </div>
+          <div style={{ fontSize: 12, color: "#475569", marginTop: 4 }}>proj {matchup.opponentProjected.toFixed(1)}</div>
         </div>
       </div>
 
-      {/* Win probability bar */}
       {!isUpcoming && (
         <div>
           <div style={{ height: 6, borderRadius: 999, background: "rgba(255,255,255,0.07)", overflow: "hidden", marginBottom: 6 }}>
             <div style={{ height: "100%", width: `${winPct}%`, background: winPct >= 50 ? "#6366f1" : "#ef4444", borderRadius: 999, transition: "width 0.4s" }} />
           </div>
           <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11 }}>
-            <span style={{ color: winPct >= 50 ? "#818cf8" : "#64748b", fontWeight: winPct >= 50 ? 700 : 400 }}>
-              {matchup.myTeam.name} {winPct}%
-            </span>
-            <span style={{ color: oppPct > winPct ? "#818cf8" : "#64748b", fontWeight: oppPct > winPct ? 700 : 400 }}>
-              {oppPct}% {matchup.opponentTeam.name}
-            </span>
+            <span style={{ color: winPct >= 50 ? "#818cf8" : "#64748b", fontWeight: winPct >= 50 ? 700 : 400 }}>{matchup.myTeam.name} {winPct}%</span>
+            <span style={{ color: oppPct > winPct ? "#818cf8" : "#64748b", fontWeight: oppPct > winPct ? 700 : 400 }}>{oppPct}% {opponent.name}</span>
           </div>
         </div>
       )}
 
-      {/* Upcoming CTA */}
       {isUpcoming && (
         <div style={{ marginTop: 4 }}>
           <Link href={`/team/${teamId}/lineup`} style={{
-            display: "inline-block", fontSize: 13, fontWeight: 700,
-            padding: "8px 18px", borderRadius: 10,
-            background: "rgba(245,158,11,0.15)", color: "#fbbf24",
-            border: "1px solid rgba(245,158,11,0.3)", textDecoration: "none",
+            display: "inline-block", fontSize: 13, fontWeight: 700, padding: "8px 18px", borderRadius: 10,
+            background: "rgba(245,158,11,0.15)", color: "#fbbf24", border: "1px solid rgba(245,158,11,0.3)", textDecoration: "none",
           }}>
             Set lineup →
           </Link>

@@ -105,6 +105,26 @@ export default async function LeagueOverviewPage({
         </div>
       )}
 
+      {/* ── Commissioner announcement ── */}
+      {league.announcement && (
+        <div style={{
+          padding: "14px 18px", borderRadius: 14,
+          background: "rgba(99,102,241,0.08)",
+          border: "1px solid rgba(99,102,241,0.25)",
+          display: "flex", gap: 12, alignItems: "flex-start",
+        }}>
+          <span style={{ fontSize: 16, flexShrink: 0 }}>📣</span>
+          <div>
+            <div style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "#818cf8", marginBottom: 4 }}>
+              Commissioner note
+            </div>
+            <p style={{ margin: 0, fontSize: 14, color: "#e2e8f0", whiteSpace: "pre-wrap", lineHeight: 1.5 }}>
+              {league.announcement}
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* ── League header ── */}
       <div style={{ display: "flex", alignItems: "baseline", gap: 12, flexWrap: "wrap" }}>
         <h1 style={{ fontSize: 28, margin: 0 }}>{league.name}</h1>

@@ -168,17 +168,13 @@ export default async function DashboardPage() {
       });
     }
 
-    // Tight active matchup — within 5 pts either way
-    if (summary?.status === "active" && (summary.myScore > 0 || summary.oppScore > 0)) {
-      const diff = Math.abs(summary.myScore - summary.oppScore);
-      if (diff < 5) {
-        const leading = summary.myScore >= summary.oppScore;
-        actions.push({
-          label: `⚡ Tight match — you're ${leading ? "up" : "down"} ${diff.toFixed(1)} pts`,
-          href: `/team/${team.id}/matchup`,
-          teamName: team.name,
-        });
-      }
+    // Tight week — your weekly field record is close (within one game)
+    if (summary?.status === "active" && summary.myScore > 0 && Math.abs(summary.wins - summary.losses) <= 1) {
+      actions.push({
+        label: `⚡ Tight week — you're ${summary.wins}–${summary.losses}${summary.ties > 0 ? `–${summary.ties}` : ""} vs the field`,
+        href: `/team/${team.id}/matchup`,
+        teamName: team.name,
+      });
     }
 
     // Upcoming matchup starting within 24 h

@@ -7,6 +7,7 @@ import Link from "next/link";
 import AddTeamForm from "@/components/AddTeamForm";
 import SetupDraftButton from "@/components/SetupDraftButton";
 import InviteLinkButton from "@/components/InviteLinkButton";
+import AnnouncementForm from "@/components/AnnouncementForm";
 import SeasonView from "../season/SeasonView";
 
 interface Props {
@@ -287,6 +288,15 @@ export default async function AdminPage({ params, searchParams }: Props) {
             Add at least 2 teams before setting up the draft.
           </p>
         )}
+      </section>
+
+      {/* ── League announcement ── */}
+      <section style={panelStyle}>
+        <h2 style={{ fontSize: 18, marginBottom: 8 }}>League announcement</h2>
+        <p style={{ color: "#94a3b8", fontSize: 14, marginBottom: 16 }}>
+          Pinned to the top of the league overview for every manager. Leave empty to hide it.
+        </p>
+        <AnnouncementForm leagueId={leagueId} initial={league.announcement} />
       </section>
 
       {/* ── Season management ── */}

@@ -40,6 +40,69 @@ function computeStreaks(
   return map;
 }
 
+// Playoff-race math. Each H2H win = 1 pt, tie = 0.5. A team's max remaining points
+// = games left * 1. With that we derive clinch/eliminate relative to the playoff line.
+interface RaceInfo {
+  status: "clinched" | "eliminated" | "in" | "bubble" | "out";
+  gamesBack: number | null; // points behind the playoff line (for teams out)
+  cushion: number | null;   // points ahead of the bubble (for teams in)
+}
+
+function computeRace(
+  standings: { fantasyTeamId: string; points: number; wins: number; losses: number; ties: number }[],
+  matchups: Matchup[],
+  cutoff: number
+): Map<string, RaceInfo> {
+  const map = new Map<string, RaceInfo>();
+  if (standings.length === 0 || cutoff <= 0 || cutoff >= standings.length) {
+    standings.forEach((s) =>
+      map.set(s.fantasyTeamId, { status: "in", gamesBack: null, cushion: null })
+    );
+    return map;
+  }
+
+  const totalWeeks = matchups
+    .filter((m) => !m.isPlayoff)
+    .reduce((max, m) => Math.max(max, m.week), 0);
+
+  const remainingFor = (teamId: string) => {
+    const played = matchups.filter(
+      (m) => !m.isPlayoff && m.homeScore !== null &&
+        (m.homeTeamId === teamId || m.awayTeamId === teamId)
+    ).length;
+    return Math.max(0, totalWeeks - played);
+  };
+
+  // Playoff line = points of the team currently in the last qualifying spot.
+  const lineTeam = standings[cutoff - 1];
+  const bubbleTeam = standings[cutoff]; // first team out
+
+  standings.forEach((s, i) => {
+    const rank = i + 1;
+    const inSpot = rank <= cutoff;
+    const remaining = remainingFor(s.fantasyTeamId);
+    const maxPoints = s.points + remaining;
+
+    let status: RaceInfo["status"];
+    if (inSpot) {
+      // Clinched if even at our floor, the bubble team's ceiling can't pass us.
+      const bubbleCeiling = bubbleTeam.points + remainingFor(bubbleTeam.fantasyTeamId);
+      status = bubbleCeiling < s.points ? "clinched" : rank === cutoff ? "bubble" : "in";
+    } else {
+      // Eliminated if our ceiling can't reach the current line team's points.
+      status = maxPoints < lineTeam.points ? "eliminated" : "out";
+    }
+
+    map.set(s.fantasyTeamId, {
+      status,
+      gamesBack: inSpot ? null : Math.round((lineTeam.points - s.points) * 10) / 10,
+      cushion: inSpot ? Math.round((s.points - bubbleTeam.points) * 10) / 10 : null,
+    });
+  });
+
+  return map;
+}
+
 export default async function StandingsPage({ params }: { params: { leagueId: string } }) {
   const leagueId = params.leagueId;
   const user = await requireAuth(`/league/${leagueId}/standings`);
@@ -64,8 +127,45 @@ export default async function StandingsPage({ params }: { params: { leagueId: st
   const playoffCutoff = playoffSettings?.teamsInPlayoff ?? null;
   const playoffsStarted = league.playoffStatus !== "NOT_STARTED";
 
+  // Playoff race indicators — only meaningful once results exist and before playoffs.
+  const hasResults = matchups.some((m) => !m.isPlayoff && m.homeScore !== null);
+  const race =
+    playoffCutoff !== null && hasResults && !playoffsStarted
+      ? computeRace(standings, matchups, playoffCutoff)
+      : null;
+
+  // Banner summarizing the user's own playoff status.
+  const myRaceIdx = standings.findIndex((s) => s.fantasyTeamId === myTeam.id);
+  const myRace = race?.get(myTeam.id) ?? null;
+  let myBanner: { text: string; color: string; bg: string } | null = null;
+  if (myRace && myRaceIdx >= 0) {
+    const rank = myRaceIdx + 1;
+    if (myRace.status === "clinched") {
+      myBanner = { text: `🎉 You've clinched a playoff spot (currently #${rank}).`, color: "#34d399", bg: "rgba(52,211,153,0.08)" };
+    } else if (myRace.status === "eliminated") {
+      myBanner = { text: `You've been eliminated from playoff contention (#${rank}).`, color: "#f87171", bg: "rgba(248,113,113,0.07)" };
+    } else if (myRace.status === "in" || myRace.status === "bubble") {
+      const cushion = myRace.cushion ?? 0;
+      myBanner = cushion > 0
+        ? { text: `In the playoff picture at #${rank} — ${cushion.toFixed(1)} ${cushion === 1 ? "game" : "games"} clear of the bubble.`, color: "#818cf8", bg: "rgba(99,102,241,0.08)" }
+        : { text: `On the playoff bubble at #${rank} — hold your spot.`, color: "#f59e0b", bg: "rgba(245,158,11,0.08)" };
+    } else {
+      const gb = myRace.gamesBack ?? 0;
+      myBanner = { text: `On the outside at #${rank} — ${gb.toFixed(1)} ${gb === 1 ? "game" : "games"} back of the playoff line.`, color: "#f59e0b", bg: "rgba(245,158,11,0.08)" };
+    }
+  }
+
   return (
     <div style={{ display: "grid", gap: 20 }}>
+      {myBanner && (
+        <div style={{
+          padding: "12px 16px", borderRadius: 12,
+          background: myBanner.bg, border: `1px solid ${myBanner.color}33`,
+          fontSize: 13, fontWeight: 600, color: myBanner.color,
+        }}>
+          {myBanner.text}
+        </div>
+      )}
       <section style={card}>
         <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 20, flexWrap: "wrap", gap: 8 }}>
           <h1 style={{ fontSize: 24, margin: 0 }}>Standings</h1>
@@ -101,17 +201,20 @@ export default async function StandingsPage({ params }: { params: { leagueId: st
                 const gapToNext = nextAbove ? (nextAbove.points - s.points).toFixed(1) : null;
 
                 let playoffChip: { label: string; color: string; bg: string } | null = null;
+                const raceInfo = race?.get(s.fantasyTeamId) ?? null;
                 if (playoffCutoff !== null) {
                   if (playoffsStarted) {
                     playoffChip = inPlayoffs
                       ? { label: "IN", color: "#34d399", bg: "rgba(52,211,153,0.1)" }
                       : { label: "OUT", color: "#64748b", bg: "rgba(100,116,139,0.1)" };
-                  } else {
-                    if (inPlayoffs && !onBubble) {
-                      playoffChip = { label: "IN", color: "#34d399", bg: "rgba(52,211,153,0.1)" };
-                    } else if (onBubble || (playoffCutoff !== null && index === playoffCutoff - 1 && standings.length > playoffCutoff)) {
-                      playoffChip = null; // handled by bubble row styling
-                    }
+                  } else if (raceInfo?.status === "clinched") {
+                    playoffChip = { label: "✓ CLINCHED", color: "#34d399", bg: "rgba(52,211,153,0.12)" };
+                  } else if (raceInfo?.status === "eliminated") {
+                    playoffChip = { label: "✗ ELIM", color: "#f87171", bg: "rgba(248,113,113,0.1)" };
+                  } else if (raceInfo?.status === "bubble" || onBubble) {
+                    playoffChip = { label: "BUBBLE", color: "#f59e0b", bg: "rgba(245,158,11,0.12)" };
+                  } else if (inPlayoffs) {
+                    playoffChip = { label: "IN", color: "#34d399", bg: "rgba(52,211,153,0.1)" };
                   }
                 }
 
