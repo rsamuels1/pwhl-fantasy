@@ -88,31 +88,85 @@ export default async function LeagueOverviewPage({ params }: { params: { leagueI
         {thisWeekMatchups.length === 0 ? (
           <p style={{ color: "#64748b", margin: 0, fontSize: 14 }}>No matchups scheduled yet.</p>
         ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: 2, marginTop: 12 }}>
-            {thisWeekMatchups.map((m, i) => {
+          <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 14 }}>
+            {thisWeekMatchups.map((m) => {
               const scored = m.homeScore !== null && m.awayScore !== null;
               const homeIsMe = m.homeTeamId === myTeamInLeague?.id;
               const awayIsMe = m.awayTeamId === myTeamInLeague?.id;
+              const isMyMatchup = homeIsMe || awayIsMe;
+              const homeWon = scored && m.homeScore! > m.awayScore!;
+              const awayWon = scored && m.awayScore! > m.homeScore!;
               return (
                 <div key={m.id} style={{
-                  display: "flex", alignItems: "center", gap: 0,
-                  padding: "10px 12px", borderRadius: 10,
-                  background: (homeIsMe || awayIsMe)
-                    ? "rgba(99,102,241,0.07)"
-                    : i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.015)",
-                  border: (homeIsMe || awayIsMe) ? "1px solid rgba(99,102,241,0.2)" : "1px solid transparent",
+                  display: "grid",
+                  gridTemplateColumns: "1fr auto 1fr",
+                  alignItems: "center",
+                  gap: "8px 12px",
+                  padding: "12px 16px",
+                  borderRadius: 12,
+                  background: isMyMatchup ? "rgba(99,102,241,0.07)" : "rgba(255,255,255,0.025)",
+                  border: isMyMatchup ? "1px solid rgba(99,102,241,0.25)" : "1px solid rgba(148,163,184,0.07)",
                 }}>
-                  <span style={{ flex: 1, fontSize: 14, fontWeight: homeIsMe ? 700 : 400, color: homeIsMe ? "#e2e8f0" : "#94a3b8", textAlign: "right" }}>
-                    {m.homeTeam.name}
-                  </span>
-                  <span style={{ width: 80, textAlign: "center", fontSize: 15, fontWeight: 700, color: "#64748b" }}>
-                    {scored
-                      ? `${m.homeScore?.toFixed(1)} – ${m.awayScore?.toFixed(1)}`
-                      : "vs"}
-                  </span>
-                  <span style={{ flex: 1, fontSize: 14, fontWeight: awayIsMe ? 700 : 400, color: awayIsMe ? "#e2e8f0" : "#94a3b8" }}>
-                    {m.awayTeam.name}
-                  </span>
+                  {/* Home team */}
+                  <div style={{ textAlign: "right", minWidth: 0 }}>
+                    <span style={{
+                      fontSize: 14,
+                      fontWeight: homeIsMe ? 700 : 500,
+                      color: homeIsMe ? "#e2e8f0" : "#94a3b8",
+                      display: "block",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                    }}>
+                      {m.homeTeam.name}
+                    </span>
+                    {scored && (
+                      <span style={{
+                        fontSize: 18,
+                        fontWeight: 800,
+                        color: homeWon ? "#e2e8f0" : "#475569",
+                        fontVariantNumeric: "tabular-nums",
+                      }}>
+                        {m.homeScore!.toFixed(1)}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Divider */}
+                  <div style={{
+                    fontSize: 11, fontWeight: 700,
+                    color: "#334155",
+                    textAlign: "center",
+                    letterSpacing: "0.5px",
+                    padding: "0 4px",
+                  }}>
+                    {scored ? "FINAL" : "VS"}
+                  </div>
+
+                  {/* Away team */}
+                  <div style={{ textAlign: "left", minWidth: 0 }}>
+                    <span style={{
+                      fontSize: 14,
+                      fontWeight: awayIsMe ? 700 : 500,
+                      color: awayIsMe ? "#e2e8f0" : "#94a3b8",
+                      display: "block",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                    }}>
+                      {m.awayTeam.name}
+                    </span>
+                    {scored && (
+                      <span style={{
+                        fontSize: 18,
+                        fontWeight: 800,
+                        color: awayWon ? "#e2e8f0" : "#475569",
+                        fontVariantNumeric: "tabular-nums",
+                      }}>
+                        {m.awayScore!.toFixed(1)}
+                      </span>
+                    )}
+                  </div>
                 </div>
               );
             })}
