@@ -402,14 +402,27 @@ once `nowMs` passes its end date.
 
 **UI:** `app/league/[leagueId]/season/` — period table showing week, dates, game counts,
 final counts, and status badge. In dev mode a yellow-bordered panel shows:
-- **"⏭ End week N now"** — one-click button that scores the current active week and advances to the next. Use this to step through weeks and check the lineup page with correct games-left data for each period. Shown for ACTIVE or SCORING_PENDING periods.
-- **Simulated "now" date picker** — manual control; defaults to 1 minute past the active period's end.
+- **"⏭ End week N now"** — scores the active (or first pending) week. After scoring, the cookie
+  and date picker land at the **start** of the next period (ACTIVE), not its end. This gives a
+  natural window to navigate to the lineup page, review games-remaining badges, and adjust the
+  lineup before returning to click "⏭ End week N+1 now".
+- **Simulated "now" date picker** — manual control; defaults to 1 minute past the target period's end.
 - **"Start season"** / **"Advance to date"** / **"Clear sim date"** buttons.
 The UI re-renders after each advance without a full page reload. After each advance, the
 `pwhl_dev_sim_date` cookie is set so all other pages reflect the same simulated time (see Dev
 simulation mode below).
 
-**Dev fixture for testing games-remaining:** `scripts/seed-future-games.ts` clones existing games into the next 7 days with `status=SCHEDULED` so the lineup page has an active period and shows badges. Run `npx tsx scripts/seed-future-games.ts` to seed, `--clear` to remove.
+**Two-step simulation workflow:**
+1. Click "▶ Score week N" → week N scored; cookie + date picker land at `week N+1 startsAt + 1min`
+2. Navigate to `/team/[id]/lineup` → week N+1 is ACTIVE; games-remaining badges show counts
+3. Adjust lineup, then return to season page
+4. Click "⏭ End week N+1 now" → repeat
+
+**Games-remaining with the 2025-26 fixture:** the historical fixture has all games as `FINAL`.
+The games-remaining query uses `startsAt > now` (which already proves the game is in the future)
+and does **not** filter by `status != FINAL` — so fixture games correctly appear as remaining
+when the simulated date is before their `startsAt`. No need to run `seed-future-games.ts` for
+basic dev simulation. That script still exists if you need SCHEDULED-status games for other reasons.
 
 **To test against the 2025-26 fixture:** the league's `season` field must be `"2025-26"` so
 the game queries match. Load fixture with `npm run seed-fixture -- --season 2025-26`, then
@@ -564,11 +577,12 @@ Commissioner-only page gated by `requireCommissioner`. Contains:
 
 **`/league/<id>` redirect rules** (`app/league/[leagueId]/page.tsx`):
 - Draft `IN_PROGRESS` → `/draft/<leagueId>?team=<teamId>`
-- League `IN_SEASON` or `COMPLETE` → `/team/<teamId>/matchup`
-- All other states (PRE_DRAFT, DRAFT_COMPLETE, no team yet) → renders the league overview
+- All other states → renders the league overview (standings snapshot, recent results, next matchup)
 
-The league overview page itself is a read-only snapshot for members with no team or pre-draft
-leagues. It has an "Admin panel →" link that only appears for commissioners.
+The league overview is the communal hub — always reachable regardless of season state. The
+login flow handles landing users on their team page after sign-in; don't redirect from the
+overview itself or it becomes unreachable from the league nav. It has an "Admin panel →" link
+that only appears for commissioners.
 
 ### League layout nav
 
@@ -606,7 +620,11 @@ lineup or matchup page and see it reflect the same simulated point in time.
 
 **How it works:**
 - `SeasonControls.tsx` sets `document.cookie = "pwhl_dev_sim_date=<iso>; path=/; max-age=86400"`
-  after every successful advance call.
+  after every successful advance call. The cookie value is the date used to score the period
+  (i.e., `period.endsAt + 1min`), which equals the START of the next period — putting it in
+  ACTIVE state immediately. The `setSimulatedDate` React state is also set to `nextPeriod.startsAt
+  + 1min` (not `endsAt`) so the date picker reflects the same position and doesn't invite
+  accidentally scoring the next week immediately.
 - A "Clear sim date" button in `SeasonControls` and a "Clear" link in the layout banner both
   set `max-age=0` to remove the cookie and reload.
 - A yellow "⚠ Dev mode · Simulated: [date] · Clear" banner appears in both the league and team
@@ -621,7 +639,10 @@ lineup or matchup page and see it reflect the same simulated point in time.
 
 **Pages that use `getDevNow()`:**
 - `app/team/[teamId]/lineup/page.tsx` — `nowMs` drives `getSeasonState`, the "today's games"
-  window for lock detection, games-remaining queries, and `lockTime()`.
+  window for lock detection, games-remaining queries, and `lockTime()`. The games-remaining
+  query uses only `startsAt > now` without a `status != FINAL` filter — logically redundant
+  in production (future games can't be FINAL) and necessary for the historical fixture to
+  show correct counts.
 - `app/team/[teamId]/matchup/page.tsx` — passed to `getDashboardData`.
 - `app/league/[leagueId]/season/page.tsx` and `admin/page.tsx` — passed to `getSeasonState`.
 

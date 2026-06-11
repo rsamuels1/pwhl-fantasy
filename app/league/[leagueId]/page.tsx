@@ -37,11 +37,6 @@ export default async function LeagueOverviewPage({ params }: { params: { leagueI
     redirect(`/draft/${leagueId}?team=${myTeam.id}`);
   }
 
-  // Active season or completed season → team matchup page
-  if ((league.status === "IN_SEASON" || league.status === "COMPLETE") && myTeam) {
-    redirect(`/team/${myTeam.id}/matchup`);
-  }
-
   const isCommissioner = user?.id === league.commissionerId;
 
   const firstPlayoffMatchup = await prisma.matchup.findFirst({
