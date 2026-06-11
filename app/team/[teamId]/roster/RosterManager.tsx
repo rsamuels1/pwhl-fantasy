@@ -305,12 +305,11 @@ function ColHeader({ isGoalie }: { isGoalie: boolean }) {
   return (
     <div style={{
       display: "grid",
-      gridTemplateColumns: isGoalie ? "44px 1fr 80px 50px 50px 50px 60px 48px" : "44px 1fr 40px 40px 50px 50px 40px 40px 60px 48px",
+      gridTemplateColumns: isGoalie ? "44px minmax(80px,1fr) 80px 50px 50px 50px 60px 48px" : "44px minmax(80px,1fr) 40px 40px 50px 50px 40px 40px 60px 48px",
       gap: 8, padding: "6px 14px",
       fontSize: 10, fontWeight: 700, letterSpacing: "0.07em",
       textTransform: "uppercase", color: "#475569",
       borderBottom: "1px solid rgba(148,163,184,0.08)",
-      minWidth: isGoalie ? 480 : 540,
     }}>
       <span>Slot</span>
       <span>Player</span>
@@ -330,8 +329,8 @@ function RosterRow({ player, index, onDrop, disabled }: {
   const isGoalie = player.position === "GOALIE";
   const s = player.stats;
   const cols = isGoalie
-    ? "44px 1fr 80px 50px 50px 50px 60px 48px"
-    : "44px 1fr 40px 40px 50px 50px 40px 40px 60px 48px";
+    ? "44px minmax(80px,1fr) 80px 50px 50px 50px 60px 48px"
+    : "44px minmax(80px,1fr) 40px 40px 50px 50px 40px 40px 60px 48px";
 
   const fmtSvPct = (v: number | null) => v != null ? v.toFixed(3).replace(/^0/, "") : "—";
 
@@ -341,7 +340,6 @@ function RosterRow({ player, index, onDrop, disabled }: {
       padding: "9px 14px", alignItems: "center",
       borderTop: index === 0 ? "none" : "1px solid rgba(148,163,184,0.05)",
       background: index % 2 === 0 ? "transparent" : "rgba(255,255,255,0.01)",
-      minWidth: isGoalie ? 480 : 540,
     }}>
       <span style={{
         fontSize: 10, fontWeight: 700, textAlign: "center",
@@ -410,8 +408,8 @@ function FaColHeader({ isGoalie, sortKey, sortAsc, onSort }: {
   isGoalie: boolean; sortKey: SortKey; sortAsc: boolean; onSort: (k: SortKey) => void;
 }) {
   const cols = isGoalie
-    ? "1fr 70px 70px 70px 70px 60px 80px"
-    : "1fr 50px 50px 50px 60px 60px 50px 50px 80px";
+    ? "minmax(80px,1fr) 70px 70px 70px 70px 60px 80px"
+    : "minmax(80px,1fr) 50px 50px 50px 60px 60px 50px 50px 80px";
 
   function SortTh({ label, k }: { label: string; k: SortKey }) {
     const active = sortKey === k;
@@ -432,7 +430,6 @@ function FaColHeader({ isGoalie, sortKey, sortAsc, onSort }: {
       display: "grid", gridTemplateColumns: cols,
       gap: 8, padding: "6px 14px 8px",
       borderBottom: "1px solid rgba(148,163,184,0.08)",
-      minWidth: isGoalie ? 520 : 560,
     }}>
       <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase", color: "#475569" }}>Player</span>
       {isGoalie ? (
@@ -458,8 +455,8 @@ function FaRow({ player, index, isFull, rosterPlayers, pendingAdd, dropForAdd,
   const s = player.stats;
   const isThisPending = pendingAdd === player.playerId;
   const cols = isGoalie
-    ? "1fr 70px 70px 70px 70px 60px 80px"
-    : "1fr 50px 50px 50px 60px 60px 50px 50px 80px";
+    ? "minmax(80px,1fr) 70px 70px 70px 70px 60px 80px"
+    : "minmax(80px,1fr) 50px 50px 50px 60px 60px 50px 50px 80px";
   const fmtSvPct = (v: number | null) => v != null ? v.toFixed(3).replace(/^0/, "") : "—";
 
   return (
@@ -468,7 +465,6 @@ function FaRow({ player, index, isFull, rosterPlayers, pendingAdd, dropForAdd,
         display: "grid", gridTemplateColumns: cols, gap: 8,
         padding: "9px 14px", alignItems: "center",
         background: isThisPending ? "rgba(99,102,241,0.06)" : index % 2 === 0 ? "transparent" : "rgba(255,255,255,0.01)",
-        minWidth: isGoalie ? 520 : 560,
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 6, minWidth: 0 }}>
           <span style={{ fontWeight: 600, fontSize: 13, color: "#e2e8f0", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
