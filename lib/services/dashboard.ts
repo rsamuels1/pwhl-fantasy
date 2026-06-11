@@ -134,24 +134,31 @@ export async function getDashboardData(
 
   // For upcoming periods scores are 0; skip heavy scoring queries.
   if (isUpcoming) {
-    const [myProjected, opponentProjected, upcomingRoster] = await Promise.all([
+    const activeRosterInclude = {
+      player: {
+        select: {
+          id: true, firstName: true, lastName: true, position: true,
+          team: { select: { id: true, abbreviation: true } },
+        },
+      },
+    } as const;
+
+    const [myProjected, opponentProjected, myRoster, opponentRoster] = await Promise.all([
       projectTeamRemainingScore(myTeamId, 0, displayPeriod, scoringSettings, prisma),
       projectTeamRemainingScore(opponentTeam.id, 0, displayPeriod, scoringSettings, prisma),
       prisma.rosterEntry.findMany({
         where: { fantasyTeamId: myTeamId, slot: { notIn: ["BENCH", "IR"] } },
-        include: {
-          player: {
-            select: {
-              id: true, firstName: true, lastName: true, position: true,
-              team: { select: { id: true, abbreviation: true } },
-            },
-          },
-        },
+        include: activeRosterInclude,
+      }),
+      prisma.rosterEntry.findMany({
+        where: { fantasyTeamId: opponentTeam.id, slot: { notIn: ["BENCH", "IR"] } },
+        include: activeRosterInclude,
       }),
     ]);
 
+    const allRoster = [...myRoster, ...opponentRoster];
     const upcomingTeamIds = [...new Set(
-      upcomingRoster.map((e) => e.player.team?.id).filter((id): id is string => !!id)
+      allRoster.map((e) => e.player.team?.id).filter((id): id is string => !!id)
     )];
     const upcomingGames = upcomingTeamIds.length > 0
       ? await prisma.game.findMany({
@@ -169,19 +176,21 @@ export async function getDashboardData(
       upcomingGamesPerTeam.set(g.awayTeamId, (upcomingGamesPerTeam.get(g.awayTeamId) ?? 0) + 1);
     }
 
-    const myUpcomingPlayers: PlayerMatchupRow[] = upcomingRoster.map((e) => ({
-      playerId: e.playerId,
-      name: `${e.player.firstName} ${e.player.lastName}`,
-      position: e.player.position,
-      slot: e.slot,
-      teamAbbr: e.player.team?.abbreviation ?? null,
-      gamesThisPeriod: e.player.team?.id
-        ? (upcomingGamesPerTeam.get(e.player.team.id) ?? 0)
-        : null,
-      points: 0,
-      gameCount: 0,
-      statBreakdown: [],
-    }));
+    function toPlayerRows(entries: typeof myRoster): PlayerMatchupRow[] {
+      return entries.map((e) => ({
+        playerId: e.playerId,
+        name: `${e.player.firstName} ${e.player.lastName}`,
+        position: e.player.position,
+        slot: e.slot,
+        teamAbbr: e.player.team?.abbreviation ?? null,
+        gamesThisPeriod: e.player.team?.id
+          ? (upcomingGamesPerTeam.get(e.player.team.id) ?? 0)
+          : null,
+        points: 0,
+        gameCount: 0,
+        statBreakdown: [],
+      }));
+    }
 
     return {
       activeMatchup: {
@@ -193,8 +202,8 @@ export async function getDashboardData(
         myProjected,
         opponentProjected,
         winProbability: winProbability(myProjected, opponentProjected),
-        myPlayers: myUpcomingPlayers,
-        opponentPlayers: [],
+        myPlayers: toPlayerRows(myRoster),
+        opponentPlayers: toPlayerRows(opponentRoster),
       },
       remainingPlayers: [],
       topPerformers: [],

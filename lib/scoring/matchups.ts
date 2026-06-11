@@ -180,17 +180,16 @@ export async function computeTeamScoreDetailed(
     });
   }
 
-  const players = [...byPlayer.entries()]
-    .map(([pid, { pts, games, categoryTotals }]) => {
+  // Include all active roster players, even those with 0 points this period.
+  const players = playerIds
+    .map((pid) => {
       const p = playerMap.get(pid)!;
-      const statBreakdown: ScoringBreakdown[] = [...categoryTotals.entries()].map(
-        ([label, { stat, multiplier }]) => ({
-          label,
-          stat,
-          multiplier,
-          points: round2(stat * multiplier),
-        })
-      );
+      const scored = byPlayer.get(pid);
+      const statBreakdown: ScoringBreakdown[] = scored
+        ? [...scored.categoryTotals.entries()].map(([label, { stat, multiplier }]) => ({
+            label, stat, multiplier, points: round2(stat * multiplier),
+          }))
+        : [];
       return {
         playerId: pid,
         name: `${p.firstName} ${p.lastName}`,
@@ -198,8 +197,8 @@ export async function computeTeamScoreDetailed(
         slot: slotMap.get(pid) ?? "BENCH",
         teamId: p.team?.id ?? null,
         teamAbbr: p.team?.abbreviation ?? null,
-        points: pts,
-        gameCount: games,
+        points: scored?.pts ?? 0,
+        gameCount: scored?.games ?? 0,
         statBreakdown,
       };
     })

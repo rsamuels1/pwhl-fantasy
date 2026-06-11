@@ -254,9 +254,10 @@ The canonical 13-slot roster (used everywhere — seed scripts, tests, draft, sc
 Any time you add a new seed script or test that creates a `FantasyLeague`, use this
 `rosterSettings` value. Never hardcode a different one without a comment explaining why.
 
-## Lineup management (`app/league/[leagueId]/lineup/`)
+## Lineup management (`app/team/[teamId]/lineup/`)
 
-Route: `/league/<leagueId>/lineup?team=<teamId>`. If no `team` param, renders a team picker.
+Route: `/team/<teamId>/lineup`. No team picker needed — auth enforces ownership via `requireTeamOwner`.
+The old `/league/<leagueId>/lineup?team=<teamId>` route is a redirect stub.
 
 The page is a server component that fetches the roster + today's games (for lock status), then
 passes everything to `LineupManager.tsx` (client component) as initial props — no client-side
@@ -277,11 +278,13 @@ fetch on load.
 - All validation logic lives in `lib/lineup.ts`; tested in `tests/lineup.test.ts` (17 tests).
 
 **Locking:** a player is locked once their real team's game has started today (UTC day). Determined
-server-side in both the page loader and the API — `lockTime()` in `lib/lineup.ts`. Lock is
+server-side in both the page loader and the API — `lockTime(playerTeamId, games, nowMs?)` in
+`lib/lineup.ts`. `nowMs` is optional; omit for real time, pass `getDevNow()` in dev mode. Lock is
 per-player, not whole-lineup.
 
 **API:** `GET /api/leagues/[leagueId]/lineup?team=<id>` and `PUT /api/leagues/[leagueId]/lineup`
 `{ teamId, playerId, slot }`. PUT validates eligibility, capacity, and lock before updating.
+Both handlers use `getDevNowFromRequest(req)` so they respect the dev simulation cookie.
 
 **Player stats toggle:** the lineup page shows per-player stats inline, with a "Season / Last week"
 toggle in the header.
@@ -304,18 +307,31 @@ Already-locked players (🔒) skip the badge since the manager can't act on them
 
 **Scoring integration:** no changes needed — `computeTeamScore` already reads `slot NOT IN [BENCH, IR]`.
 
-**Nav:** "Lineup" link added to the league layout nav (`app/league/[leagueId]/layout.tsx`).
+**Dashboard:** team cards link to `My Matchup` → `/team/${team.id}/matchup` and `Set Lineup` →
+`/team/${team.id}/lineup`. The dashboard surfaces teams from leagues the user commissions (not
+just teams they directly own), which fixes the "no teams" problem with seed-created commissioner
+accounts.
 
-**Dashboard:** team cards now show a "Set lineup" button linking to the lineup page. The dashboard
-also surfaces teams from leagues the user commissions (not just teams they directly own), which
-fixes the "no teams" problem when using seed-created commissioner accounts.
+## Roster pages
 
-## Roster page (`app/league/[leagueId]/roster/`)
+**`app/league/[leagueId]/roster/`** — "All Rosters" communal view. A row of team-name pills at
+the top filters by team via `?team=<id>`. Server-rendered, no JS needed for switching.
 
-Replaced the single long scroll (all teams stacked) with a per-team tab filter. A row of team-name
-pills at the top acts as the selector; clicking one updates `?team=<id>` in the URL. The server
-page reads `searchParams.team` and defaults to `teams[0]` if absent. Only the selected team's
-roster card is rendered — no JS needed for switching.
+**`app/team/[teamId]/roster/`** — personal roster management. Shows the owner's rostered players
+with season stats and a free-agent panel listing all active players not on any team in the league
+(raw SQL `NOT IN (SELECT playerId FROM RosterEntry WHERE leagueId = ...)`). Both skater and goalie
+stat aggregations are computed server-side and passed to `RosterManager` (client component).
+
+**Free agent fantasy points:** computed server-side from aggregated season totals using the
+league's scoring settings. Valid because all scoring terms are additive — `total FP = sum(goals)*goal
++ sum(assists)*assist + ...`. Free agent stats are filtered to the league's season via a subquery
+(`JOIN "Game" g ON g.id = sl."gameId" AND g.season = $season` inside the LEFT JOIN, not in a WHERE
+clause), which prevents stat lines from other seasons leaking into the count.
+
+**Add/drop refresh:** after a successful add (`handleAdd` in `RosterManager.tsx`), the component
+calls `router.refresh()` to re-run the server component and return complete stats for the new
+player. Never use `setRoster(data.roster!)` from the waiver API response — that response omits
+the `stats` field and would wipe stats from the UI.
 
 ## Service layer (`lib/services/`)
 
@@ -386,10 +402,12 @@ once `nowMs` passes its end date.
 
 **UI:** `app/league/[leagueId]/season/` — period table showing week, dates, game counts,
 final counts, and status badge. In dev mode a yellow-bordered panel shows:
-- **"⏭ End week N now"** — one-click button that scores the current active week and advances to the next. Use this to step through weeks and check the lineup page with correct games-left data for each period. Only shown when a period is ACTIVE.
-- **Simulated "now" date picker** — manual control; defaults to 1 minute past the active period's end (previously defaulted to the oldest backlog week, which was wrong).
-- **"Start season"** / **"Advance to date"** — existing production-engine wrappers.
-The UI re-renders after each advance without a full page reload.
+- **"⏭ End week N now"** — one-click button that scores the current active week and advances to the next. Use this to step through weeks and check the lineup page with correct games-left data for each period. Shown for ACTIVE or SCORING_PENDING periods.
+- **Simulated "now" date picker** — manual control; defaults to 1 minute past the active period's end.
+- **"Start season"** / **"Advance to date"** / **"Clear sim date"** buttons.
+The UI re-renders after each advance without a full page reload. After each advance, the
+`pwhl_dev_sim_date` cookie is set so all other pages reflect the same simulated time (see Dev
+simulation mode below).
 
 **Dev fixture for testing games-remaining:** `scripts/seed-future-games.ts` clones existing games into the next 7 days with `status=SCHEDULED` so the lineup page has an active period and shows badges. Run `npx tsx scripts/seed-future-games.ts` to seed, `--clear` to remove.
 
@@ -401,20 +419,53 @@ use the Season page's dev controls to step through periods.
 Covers all period status transitions, multi-week gap skipping, `pendingWeeks` selection, and
 catching-up when multiple periods are behind.
 
-## Matchup-first product (`app/league/[leagueId]/matchup/`)
+## Franchise-first URL structure
 
-The primary in-season landing page. When `FantasyLeague.status === "IN_SEASON"`, the league
-overview (`/league/<id>`) redirects here automatically.
+The URL space is split into two zones:
+
+- **`/team/[teamId]/`** — personal franchise pages. Only the team owner can access these.
+  - `/team/[teamId]/matchup` — current matchup hero, swing players, roster breakdown
+  - `/team/[teamId]/lineup` — set active/bench slots with lock indicators and games-remaining badges
+  - `/team/[teamId]/roster` — personal roster + free agent listings (add/drop)
+- **`/league/[leagueId]/`** — communal league views. Any league member can access these.
+  - `/league/[leagueId]/` — overview (standings snapshot, next matchup, recent results)
+  - `/league/[leagueId]/standings` — full standings table (user's row highlighted)
+  - `/league/[leagueId]/matchups` — full schedule with scored/upcoming matchups
+  - `/league/[leagueId]/bracket` — playoff bracket
+  - `/league/[leagueId]/roster` — all rosters across all teams ("All Rosters")
+  - `/league/[leagueId]/admin` — commissioner-only management panel
+  - `/league/[leagueId]/season` — season period table + dev simulation controls
+
+The old `/league/[leagueId]/matchup` and `/league/[leagueId]/lineup` routes still exist as
+redirect stubs that look up the user's team and redirect to `/team/[teamId]/matchup` etc.
+
+The league layout header includes a "My Franchise →" shortcut that links to `/team/[teamId]/matchup`
+for the current user. The team layout includes a "← League" escape hatch.
+
+**Auth helper:** `requireTeamOwner(teamId, userId)` in `lib/auth.ts` — returns the team
+(with `league.id` and `league.name` included) or calls `notFound()` if the user doesn't own it.
+Used by all `/team/[teamId]/` pages. The middleware at `middleware.ts` covers both `/league/*`
+and `/team/*` routes.
+
+**Entry points after login:**
+- Single-team user → `/team/[teamId]/matchup`
+- Multi-team user → `/dashboard`
+- `app/page.tsx` applies the same redirect for already-logged-in users.
+
+## Matchup page (`app/team/[teamId]/matchup/`)
+
+The primary in-season landing page, now team-scoped. No team picker needed — auth enforces ownership.
 
 **What it shows:**
-- `MatchupHero` — current score, projected final, win probability, progress bar
+- `MatchupHero` — current score, projected final, win probability, progress bar; "Upcoming" variant
+  with projected scores and "Set lineup →" CTA when the period hasn't started
 - Swing players — active roster players whose remaining games this period could flip the result
 - Remaining players tonight — who's playing today and what they're projected to score
 - Top performers / disappointments for the active period
-- Roster breakdown for both teams with per-player stat chips
+- Roster breakdown for both teams with per-player stat chips and games-remaining badges
 - League activity feed (draft picks, major performances)
 
-**Key new modules:**
+**Key modules:**
 - `lib/scoring/index.ts` — `scoreStatLineDetailed()` returns `{ total, breakdown[] }` with
   per-category point contributions. `ScoringBreakdown = { label, stat, multiplier, points }`.
 - `lib/scoring/settings.ts` — `parseScoringSettings(raw)` validates and returns `ScoringSettings`.
@@ -448,12 +499,23 @@ gracefully to draft pick history.
 
 **API:** `GET /api/leagues/[leagueId]/matchup-summary?team=<id>` — wraps `getDashboardData`.
 
+**Gotchas (don't regress):**
+- `computeTeamScoreDetailed` in `lib/scoring/matchups.ts` always returns all active roster
+  players, even those with 0 points this period. The `players` array is built from `playerIds`
+  (all active entries) and falls back to `{ pts: 0, games: 0, statBreakdown: [] }` for players
+  with no stat lines yet. If you rewrite this function, don't filter to `byPlayer.entries()` only
+  — that silently drops players who haven't played yet and shows "No active players" for their
+  opponent's roster on the matchup page.
+- `getDashboardData` fetches both `myRoster` and `opponentRoster` for upcoming periods
+  (when `isUpcoming = true`). Both rosters use the same `activeRosterInclude` and the same
+  games-remaining batch query. Dropping the opponent fetch leaves the opponent column empty.
+
 ## Auth & authorization
 
 ### Middleware (`middleware.ts` at repo root)
 
-Handles the cookie check globally before any league route:
-- `/league/*` — redirects to `/login?returnTo=<path>` if no cookie
+Handles the cookie check globally before any league or team route:
+- `/league/*` and `/team/*` — redirects to `/login?returnTo=<path>` if no cookie
 - `/api/leagues/*` — returns 401 if no cookie
 
 ### `lib/auth.ts` helpers
@@ -462,6 +524,7 @@ Handles the cookie check globally before any league route:
 - `requireAuth(returnTo?)` — returns `User` or redirects to `/login?returnTo=...`
 - `requireLeagueMember(leagueId, userId)` — returns `FantasyTeam` or calls `notFound()`
 - `requireCommissioner(leagueId, userId)` — returns `FantasyLeague` or calls `notFound()`
+- `requireTeamOwner(teamId, userId)` — returns `FantasyTeam & { league: { id, name } }` or calls `notFound()`. Used by all `/team/[teamId]/` pages.
 
 **API-level (return NextResponse on failure):**
 - `apiRequireAuth(req)` — returns `User | NextResponse(401)`
@@ -481,6 +544,7 @@ use the member guard; commissioner-only routes (season POST, start-playoffs, dra
 simulate) use the commissioner guard. Lineup PUT additionally verifies `teamId === myTeam.id`.
 
 All pages under `app/league/[leagueId]/` call `requireAuth` + `requireLeagueMember` at the top.
+All pages under `app/team/[teamId]/` call `requireAuth` + `requireTeamOwner` at the top.
 
 ### Dev credentials (from seed scripts)
 
@@ -503,22 +567,61 @@ snapshot for all members with an "Admin panel →" link that only appears for co
 ### League layout nav
 
 `app/league/[leagueId]/layout.tsx` is async and fetches the current user + league commissioner.
-Nav items shown to all members: Matchup, Overview, Standings, Schedule, Lineup, Roster, Bracket.
+Nav items shown to all members: Overview, Standings, Schedule, Bracket, Rosters.
 "Admin" is appended only when `user.id === league.commissionerId`.
+A "My Franchise →" button links to `/team/[myTeamId]/matchup` when the user has a team.
+Matchup, Lineup, and Roster are NOT in the league nav — they live in the team layout.
+
+The team layout (`app/team/[teamId]/layout.tsx`) nav: My Matchup, My Lineup, My Roster, plus a
+"← League" escape hatch.
 
 ### Login flow
 
 `POST /api/auth/login` returns `{ user, redirectTo }`:
 1. If `returnTo` is in the request body (same-origin path) → use it
-2. Else if user has exactly 1 team → `/league/<id>/matchup`
+2. Else if user has exactly 1 team → `/team/<teamId>/matchup`
 3. Else → `/dashboard`
 
 `app/login/page.tsx` reads `?returnTo` from `window.location.search` in a `useEffect`
 (avoids Suspense complexity with `useSearchParams`) and redirects to `data.redirectTo`
 after a successful login.
 
-`app/page.tsx` redirects logged-in users: 1 team → matchup page, otherwise → `/dashboard`.
+`app/page.tsx` redirects logged-in users: 1 team → `/team/<teamId>/matchup`, otherwise → `/dashboard`.
 `app/layout.tsx` is async and shows the user's display name + Logout link when logged in.
+
+## Dev simulation mode (`lib/devTime.ts`)
+
+In development, a `pwhl_dev_sim_date` cookie (ISO 8601 string) persists the simulated "now"
+across page navigations. This lets you advance a week in the season page, then navigate to the
+lineup or matchup page and see it reflect the same simulated point in time.
+
+**How it works:**
+- `SeasonControls.tsx` sets `document.cookie = "pwhl_dev_sim_date=<iso>; path=/; max-age=86400"`
+  after every successful advance call.
+- A "Clear sim date" button in `SeasonControls` and a "Clear" link in the layout banner both
+  set `max-age=0` to remove the cookie and reload.
+- A yellow "⚠ Dev mode · Simulated: [date] · Clear" banner appears in both the league and team
+  layouts whenever the cookie is present.
+
+**Helpers in `lib/devTime.ts`:**
+- `getDevNow(): Promise<number>` — reads `cookies()` from `next/headers` (async, Next.js 15).
+  Returns the cookie value as `ms` epoch, or real `Date.now()` if absent or in production.
+  Used by server component pages: `const nowMs = await getDevNow()`.
+- `getDevNowFromRequest(req: NextRequest): number` — sync, reads from `req.cookies`. Used by
+  API route handlers.
+
+**Pages that use `getDevNow()`:**
+- `app/team/[teamId]/lineup/page.tsx` — `nowMs` drives `getSeasonState`, the "today's games"
+  window for lock detection, games-remaining queries, and `lockTime()`.
+- `app/team/[teamId]/matchup/page.tsx` — passed to `getDashboardData`.
+- `app/league/[leagueId]/season/page.tsx` and `admin/page.tsx` — passed to `getSeasonState`.
+
+**API routes that use `getDevNowFromRequest()`:**
+- `app/api/leagues/[leagueId]/lineup/route.ts` — GET and PUT both use it for the "today" window
+  and `lockTime()`.
+
+In production (`NODE_ENV === "production"`) both helpers unconditionally return `Date.now()` —
+the cookie is never read.
 
 ## Conventions
 
@@ -526,7 +629,8 @@ after a successful login.
 - All external data is upserted by `externalId` so re-imports are idempotent.
 - Test the scoring engine thoroughly — it's pure and easy to test, and it's the core.
 - All pages under `app/league/[leagueId]/` must call `requireAuth` + `requireLeagueMember`
-  before any DB queries. All API routes under `app/api/leagues/[leagueId]/` must call the
+  before any DB queries. All pages under `app/team/[teamId]/` must call `requireAuth` +
+  `requireTeamOwner`. All API routes under `app/api/leagues/[leagueId]/` must call the
   `apiRequire*` guards. Commissioner-only actions use `requireCommissioner` / `apiRequireCommissioner`.
 - Use `(prisma as any).leagueEvent` with a null-check guard for any code that queries `LeagueEvent`
   until `prisma db push` + `prisma generate` has been run in the target environment.
