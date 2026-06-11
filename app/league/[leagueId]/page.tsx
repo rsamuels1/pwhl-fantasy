@@ -2,48 +2,30 @@ import { notFound, redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { computeStandings } from "@/lib/playoffs/seeding";
 import { requireAuth, requireLeagueMember } from "@/lib/auth";
+import { getLeagueActivity } from "@/lib/services/activity";
 import Link from "next/link";
-
-function formatDate(date: Date) {
-  return new Intl.DateTimeFormat("en-US", {
-    month: "short",
-    day: "numeric",
-    hour: "numeric",
-    minute: "numeric",
-  }).format(date);
-}
 
 export default async function LeagueOverviewPage({ params }: { params: { leagueId: string } }) {
   const leagueId = params.leagueId;
   const user = await requireAuth(`/league/${leagueId}`);
-  await requireLeagueMember(leagueId, user.id);
+  const myTeam = await requireLeagueMember(leagueId, user.id);
 
   const league = await prisma.fantasyLeague.findUnique({
     where: { id: leagueId },
     include: {
       teams: true,
-      draft: { select: { id: true, status: true, completedAt: true, startedAt: true } },
+      draft: { select: { id: true, status: true } },
     },
   });
 
-  if (!league) {
-    notFound();
-  }
+  if (!league) notFound();
 
-  const myTeam = league.teams.find((t) => t.ownerId === user?.id);
+  const myTeamInLeague = league.teams.find((t) => t.ownerId === user?.id);
 
   // Draft in progress → draft room
-  if (league.draft?.status === "IN_PROGRESS" && myTeam) {
-    redirect(`/draft/${leagueId}?team=${myTeam.id}`);
+  if (league.draft?.status === "IN_PROGRESS" && myTeamInLeague) {
+    redirect(`/draft/${leagueId}?team=${myTeamInLeague.id}`);
   }
-
-  const isCommissioner = user?.id === league.commissionerId;
-
-  const firstPlayoffMatchup = await prisma.matchup.findFirst({
-    where: { leagueId, isPlayoff: true },
-    orderBy: { startsAt: "asc" },
-    select: { startsAt: true },
-  });
 
   const matchups = await prisma.matchup.findMany({
     where: { leagueId },
@@ -52,175 +34,179 @@ export default async function LeagueOverviewPage({ params }: { params: { leagueI
   });
 
   const standings = computeStandings(league.teams, matchups);
-  const nextMatchup = matchups.find((m) => m.homeScore === null || m.awayScore === null);
-  const recentResults = matchups
-    .filter((m) => m.homeScore !== null && m.awayScore !== null)
-    .slice(-3)
-    .reverse();
+
+  // Activity feed — graceful fallback when LeagueEvent table doesn't exist yet
+  let activity: Awaited<ReturnType<typeof getLeagueActivity>> = [];
+  try {
+    activity = await getLeagueActivity(leagueId, 5, prisma);
+  } catch {}
+
+  // Determine the "current" week to feature: latest week with any unscored matchup,
+  // falling back to the latest scored week.
+  const unscoredWeeks = matchups.filter((m) => m.homeScore === null);
+  const currentWeek = unscoredWeeks.length > 0
+    ? Math.min(...unscoredWeeks.map((m) => m.week))
+    : matchups.length > 0
+    ? Math.max(...matchups.map((m) => m.week))
+    : null;
+
+  const thisWeekMatchups = currentWeek !== null
+    ? matchups.filter((m) => m.week === currentWeek)
+    : [];
+
+  const fmt = (d: Date) =>
+    new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" }).format(d);
 
   return (
-    <div style={{ display: "grid", gap: 20 }}>
-      <section style={{ display: "grid", gap: 18 }}>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 16, alignItems: "flex-start", justifyContent: "space-between" }}>
-          <div>
-            <h1 style={{ fontSize: 32, marginBottom: 8 }}>{league.name}</h1>
-            <p style={{ color: "#94a3b8", maxWidth: 600 }}>
-              Season {league.season} · {league.teams.length} teams · {league.status.replace("_", " ")}
-              {isCommissioner && <span style={{ marginLeft: 8, color: "#6366f1" }}>· You're the commissioner</span>}
-            </p>
-          </div>
-          <div style={{ display: "flex", gap: 8, flexShrink: 0, flexWrap: "wrap" }}>
-            <StatusPill
-              label="Playoffs"
-              value={firstPlayoffMatchup
-                ? formatDate(new Date(firstPlayoffMatchup.startsAt))
-                : league.playoffStatus === "NOT_STARTED" ? "Not started" : league.playoffStatus.replace("_", " ")}
-              color={league.playoffStatus === "IN_PROGRESS" ? "#34d399" : league.playoffStatus === "COMPLETE" ? "#60a5fa" : "#64748b"}
-            />
-            <StatusPill
-              label="Draft"
-              value={
-                league.draft?.status === "COMPLETE"
-                  ? league.draft.completedAt
-                    ? `Done ${formatDate(new Date(league.draft.completedAt))}`
-                    : "Complete"
-                  : league.draft?.status === "IN_PROGRESS"
-                  ? "In progress"
-                  : league.draftStartsAt
-                  ? formatDate(new Date(league.draftStartsAt))
-                  : "Not scheduled"
-              }
-              color={
-                league.draft?.status === "COMPLETE" ? "#34d399"
-                : league.draft?.status === "IN_PROGRESS" ? "#f59e0b"
-                : "#64748b"
-              }
-            />
-          </div>
-        </div>
+    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
 
-        <div style={{ display: "grid", gap: 16, gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))" }}>
-          <div style={cardStyle}>
-            <h2 style={{ marginBottom: 10 }}>Top standings</h2>
-            <div style={{ display: "grid", gap: 10 }}>
-              {standings.slice(0, 4).map((team, index) => (
-                <div key={team.fantasyTeamId} style={{ display: "flex", justifyContent: "space-between", gap: 10 }}>
-                  <span>{index + 1}. {team.teamName}</span>
-                  <span style={{ color: "#94a3b8" }}>{team.points.toFixed(1)} pts</span>
+      {/* ── League header ── */}
+      <div style={{ display: "flex", alignItems: "baseline", gap: 12, flexWrap: "wrap" }}>
+        <h1 style={{ fontSize: 28, margin: 0 }}>{league.name}</h1>
+        <span style={{ fontSize: 13, color: "#64748b" }}>
+          Season {league.season} · {league.teams.length} teams
+        </span>
+        {currentWeek !== null && (
+          <span style={{
+            fontSize: 12, fontWeight: 700, padding: "3px 10px", borderRadius: 20,
+            background: "rgba(99,102,241,0.12)", color: "#a5b4fc",
+          }}>
+            Week {currentWeek}
+          </span>
+        )}
+      </div>
+
+      {/* ── 1. This week's matchups ── */}
+      <section style={card}>
+        <h2 style={sectionTitle}>
+          {currentWeek !== null ? `Week ${currentWeek} Matchups` : "Matchups"}
+        </h2>
+        {thisWeekMatchups.length === 0 ? (
+          <p style={{ color: "#64748b", margin: 0, fontSize: 14 }}>No matchups scheduled yet.</p>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 2, marginTop: 12 }}>
+            {thisWeekMatchups.map((m, i) => {
+              const scored = m.homeScore !== null && m.awayScore !== null;
+              const homeIsMe = m.homeTeamId === myTeamInLeague?.id;
+              const awayIsMe = m.awayTeamId === myTeamInLeague?.id;
+              return (
+                <div key={m.id} style={{
+                  display: "flex", alignItems: "center", gap: 0,
+                  padding: "10px 12px", borderRadius: 10,
+                  background: (homeIsMe || awayIsMe)
+                    ? "rgba(99,102,241,0.07)"
+                    : i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.015)",
+                  border: (homeIsMe || awayIsMe) ? "1px solid rgba(99,102,241,0.2)" : "1px solid transparent",
+                }}>
+                  <span style={{ flex: 1, fontSize: 14, fontWeight: homeIsMe ? 700 : 400, color: homeIsMe ? "#e2e8f0" : "#94a3b8", textAlign: "right" }}>
+                    {m.homeTeam.name}
+                  </span>
+                  <span style={{ width: 80, textAlign: "center", fontSize: 15, fontWeight: 700, color: "#64748b" }}>
+                    {scored
+                      ? `${m.homeScore?.toFixed(1)} – ${m.awayScore?.toFixed(1)}`
+                      : "vs"}
+                  </span>
+                  <span style={{ flex: 1, fontSize: 14, fontWeight: awayIsMe ? 700 : 400, color: awayIsMe ? "#e2e8f0" : "#94a3b8" }}>
+                    {m.awayTeam.name}
+                  </span>
                 </div>
-              ))}
-            </div>
+              );
+            })}
           </div>
-
-          <div style={cardStyle}>
-            <h2 style={{ marginBottom: 10 }}>Next matchup</h2>
-            {nextMatchup ? (
-              <div style={{ display: "grid", gap: 8 }}>
-                <div style={{ fontWeight: 700 }}>{nextMatchup.homeTeam.name} vs {nextMatchup.awayTeam.name}</div>
-                <div style={{ color: "#94a3b8" }}>Week {nextMatchup.week} · {formatDate(new Date(nextMatchup.startsAt))}</div>
-              </div>
-            ) : (
-              <p style={{ color: "#94a3b8" }}>No upcoming matchup available yet.</p>
-            )}
-          </div>
-
-          <div style={cardStyle}>
-            <h2 style={{ marginBottom: 10 }}>Recent results</h2>
-            {recentResults.length > 0 ? (
-              <div style={{ display: "grid", gap: 10 }}>
-                {recentResults.map((matchup) => (
-                  <div key={matchup.id} style={{ display: "grid", gap: 4 }}>
-                    <span>{matchup.homeTeam.name} {matchup.homeScore} — {matchup.awayScore} {matchup.awayTeam.name}</span>
-                    <span style={{ color: "#94a3b8" }}>Wk {matchup.week}</span>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p style={{ color: "#94a3b8" }}>No results available yet.</p>
-            )}
-          </div>
-        </div>
-      </section>
-
-      <section style={cardStyle}>
-        <h2 style={{ marginBottom: 12 }}>League summary</h2>
-        <div style={{ display: "grid", gap: 12, gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))" }}>
-          <StatTile label="Teams" value={league.teams.length.toString()} />
-          <StatTile label="Playoff" value={league.playoffStatus.replace("_", " ")} />
-          <StatTile label="Draft type" value={league.draftType} />
-          <StatTile label="Max teams" value={league.maxTeams.toString()} />
-        </div>
-      </section>
-
-      <section style={{ display: "grid", gap: 18 }}>
-        <div className="dashboard-panel">
-          <div className="panel-headline">Teams in this league</div>
-          {league.teams.length === 0 ? (
-            <p className="panel-text">No teams yet.</p>
-          ) : (
-            <div style={{ display: "grid", gap: 12, gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", marginTop: 16 }}>
-              {league.teams.map((team) => (
-                <div key={team.id} style={{ ...cardStyle, display: "flex", flexDirection: "column", gap: 8 }}>
-                  <h3 style={{ margin: 0 }}>{team.name}</h3>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {isCommissioner && (
-          <div className="dashboard-panel">
-            <div className="panel-headline">Commissioner</div>
-            <p className="panel-text">Manage teams, draft, season, and playoff settings.</p>
-            <Link
-              href={`/league/${leagueId}/admin`}
-              style={{
-                display: "inline-block", marginTop: 12, padding: "10px 20px",
-                background: "rgba(99,102,241,0.2)", border: "1px solid rgba(99,102,241,0.4)",
-                borderRadius: 10, color: "#a5b4fc", fontWeight: 600, textDecoration: "none",
-              }}
-            >
-              Admin panel →
+        )}
+        {myTeamInLeague && (
+          <div style={{ marginTop: 14 }}>
+            <Link href={`/team/${myTeamInLeague.id}/matchup`} style={ctaLink}>
+              My Matchup →
             </Link>
           </div>
         )}
       </section>
+
+      {/* ── 2. Standings ── */}
+      <section style={card}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+          <h2 style={sectionTitle}>Standings</h2>
+          <Link href={`/league/${leagueId}/standings`} style={{ fontSize: 12, color: "#64748b", textDecoration: "none" }}>
+            Full standings →
+          </Link>
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+          {standings.map((s, i) => {
+            const isMe = s.fantasyTeamId === myTeamInLeague?.id;
+            return (
+              <div key={s.fantasyTeamId} style={{
+                display: "grid",
+                gridTemplateColumns: "28px 1fr 60px 60px",
+                gap: 8, padding: "8px 10px", borderRadius: 8, alignItems: "center",
+                background: isMe ? "rgba(99,102,241,0.07)" : "transparent",
+              }}>
+                <span style={{ fontSize: 12, color: "#475569", fontWeight: 700 }}>{i + 1}</span>
+                <span style={{ fontSize: 14, fontWeight: isMe ? 700 : 400, color: isMe ? "#a5b4fc" : "#e2e8f0" }}>
+                  {s.teamName}{isMe && <span style={{ marginLeft: 6, fontSize: 11, color: "#6366f1" }}>You</span>}
+                </span>
+                <span style={{ fontSize: 12, color: "#64748b", textAlign: "right" }}>{s.wins}–{s.losses}{s.ties > 0 ? `–${s.ties}` : ""}</span>
+                <span style={{ fontSize: 13, fontWeight: 600, color: "#94a3b8", textAlign: "right" }}>{s.points.toFixed(1)}</span>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* ── 3. League activity ── */}
+      {activity.length > 0 && (
+        <section style={card}>
+          <h2 style={{ ...sectionTitle, marginBottom: 12 }}>League activity</h2>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {activity.map((evt) => (
+              <div key={evt.id} style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "flex-start" }}>
+                <span style={{ fontSize: 13, color: "#cbd5e1", lineHeight: 1.5 }}>{evt.description}</span>
+                <span style={{ fontSize: 11, color: "#475569", flexShrink: 0 }}>
+                  {fmt(new Date(evt.createdAt))}
+                </span>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* ── 4. Teams ── */}
+      <section style={card}>
+        <h2 style={{ ...sectionTitle, marginBottom: 12 }}>Teams</h2>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+          {league.teams.map((t) => (
+            <span key={t.id} style={{
+              fontSize: 13, padding: "5px 12px", borderRadius: 20,
+              background: t.ownerId === user?.id ? "rgba(99,102,241,0.15)" : "rgba(255,255,255,0.05)",
+              color: t.ownerId === user?.id ? "#a5b4fc" : "#94a3b8",
+              border: t.ownerId === user?.id ? "1px solid rgba(99,102,241,0.3)" : "1px solid rgba(148,163,184,0.1)",
+            }}>
+              {t.name}
+            </span>
+          ))}
+        </div>
+      </section>
+
     </div>
   );
 }
 
-function StatusPill({ label, value, color }: { label: string; value: string; color: string }) {
-  return (
-    <div style={{
-      display: "flex", flexDirection: "column", gap: 2,
-      padding: "8px 14px", borderRadius: 12,
-      background: "rgba(255,255,255,0.04)",
-      border: `1px solid rgba(148,163,184,0.12)`,
-    }}>
-      <span style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "#64748b" }}>
-        {label}
-      </span>
-      <span style={{ fontSize: 13, fontWeight: 600, color }}>
-        {value}
-      </span>
-    </div>
-  );
-}
-
-function StatTile({ label, value }: { label: string; value: string }) {
-  return (
-    <div style={{ background: "rgba(255,255,255,0.03)", borderRadius: 16, padding: 16 }}>
-      <p style={{ marginBottom: 8, color: "#94a3b8", fontSize: 12, textTransform: "uppercase", letterSpacing: "0.08em" }}>{label}</p>
-      <p style={{ fontSize: 20, fontWeight: 700 }}>{value}</p>
-    </div>
-  );
-}
-
-const cardStyle: React.CSSProperties = {
+const card: React.CSSProperties = {
   background: "rgba(255,255,255,0.04)",
   border: "1px solid rgba(148,163,184,0.14)",
   borderRadius: 20,
   padding: 20,
 };
 
+const sectionTitle: React.CSSProperties = {
+  fontSize: 16, fontWeight: 700, margin: 0, color: "#e2e8f0",
+};
 
+const ctaLink: React.CSSProperties = {
+  display: "inline-block",
+  fontSize: 13, fontWeight: 600, color: "#a5b4fc",
+  padding: "6px 14px", borderRadius: 999,
+  background: "rgba(99,102,241,0.12)",
+  border: "1px solid rgba(99,102,241,0.3)",
+  textDecoration: "none",
+};

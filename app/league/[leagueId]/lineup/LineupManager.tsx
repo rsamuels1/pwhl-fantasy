@@ -83,7 +83,7 @@ export default function LineupManager({
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
-  const [statsView, setStatsView] = useState<StatsView>("season");
+  const [statsView, setStatsView] = useState<StatsView>(thisWeekLabel ? "thisWeek" : "season");
 
   const selected = selectedId ? roster.find((p) => p.playerId === selectedId) ?? null : null;
   const activeSeats = buildActiveSeats(rosterSettings);

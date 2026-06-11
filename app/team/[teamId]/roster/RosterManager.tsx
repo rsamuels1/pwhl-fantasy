@@ -62,6 +62,7 @@ const POS_COLORS: Record<string, string> = {
 };
 
 type Tab = "roster" | "freeAgents";
+type ViewMode = "cards" | "table";
 type SortKey = "name" | "pts" | "goals" | "assists" | "ppp" | "shots" | "hits" | "blocks" | "wins" | "savePct" | "fp";
 
 // ── main component ────────────────────────────────────────────────────────────
@@ -71,6 +72,7 @@ export default function RosterManager({
 }: Props) {
   const router = useRouter();
   const [tab, setTab] = useState<Tab>("roster");
+  const [viewMode, setViewMode] = useState<ViewMode>("cards");
   const [roster, setRoster] = useState<RosterPlayerRow[]>(initialRoster);
   const [posFilter, setPosFilter] = useState<Position | "ALL">("ALL");
   const [search, setSearch] = useState("");
@@ -190,35 +192,66 @@ export default function RosterManager({
 
       {/* ── MY ROSTER TAB ──────────────────────────────────────────────────── */}
       {tab === "roster" && (
-        <div style={panel}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          {/* View toggle */}
+          <div style={{ display: "flex", justifyContent: "flex-end" }}>
+            <div style={{ display: "flex", gap: 2, background: "rgba(255,255,255,0.04)", borderRadius: 8, padding: 2 }}>
+              {(["cards", "table"] as ViewMode[]).map((m) => (
+                <button key={m} onClick={() => setViewMode(m)} style={{
+                  padding: "5px 12px", borderRadius: 6, border: "none", cursor: "pointer",
+                  fontSize: 12, fontWeight: 600,
+                  background: viewMode === m ? "rgba(99,102,241,0.3)" : "transparent",
+                  color: viewMode === m ? "#a5b4fc" : "#64748b",
+                }}>
+                  {m === "cards" ? "⊞ Cards" : "≡ Table"}
+                </button>
+              ))}
+            </div>
+          </div>
+
           {sortedRoster.length === 0 ? (
-            <p style={{ color: "#64748b", margin: 0, fontSize: 13 }}>No players on your roster yet.</p>
+            <div style={panel}>
+              <p style={{ color: "#64748b", margin: 0, fontSize: 13 }}>No players on your roster yet.</p>
+            </div>
+          ) : viewMode === "cards" ? (
+            /* ── Card layout ── */
+            <div style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fill, minmax(170px, 1fr))",
+              gap: 12,
+            }}>
+              {sortedRoster.map((p) => (
+                <PlayerCard key={p.playerId} player={p}
+                  onDrop={() => handleDrop(p.playerId)} disabled={isPending} />
+              ))}
+            </div>
           ) : (
-            <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
-            <>
-              {/* Skaters */}
-              {skaterPositions && (
+            /* ── Table layout (unchanged) ── */
+            <div style={panel}>
+              <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
                 <>
-                  <ColHeader isGoalie={false} />
-                  {sortedRoster.filter((p) => p.position !== "GOALIE").map((p, i) => (
-                    <RosterRow key={p.playerId} player={p} index={i}
-                      onDrop={() => handleDrop(p.playerId)} disabled={isPending} />
-                  ))}
+                  {skaterPositions && (
+                    <>
+                      <ColHeader isGoalie={false} />
+                      {sortedRoster.filter((p) => p.position !== "GOALIE").map((p, i) => (
+                        <RosterRow key={p.playerId} player={p} index={i}
+                          onDrop={() => handleDrop(p.playerId)} disabled={isPending} />
+                      ))}
+                    </>
+                  )}
+                  {hasGoalies && (
+                    <>
+                      <div style={{ marginTop: skaterPositions ? 16 : 0 }}>
+                        <ColHeader isGoalie />
+                      </div>
+                      {sortedRoster.filter((p) => p.position === "GOALIE").map((p, i) => (
+                        <RosterRow key={p.playerId} player={p} index={i}
+                          onDrop={() => handleDrop(p.playerId)} disabled={isPending} />
+                      ))}
+                    </>
+                  )}
                 </>
-              )}
-              {/* Goalies */}
-              {hasGoalies && (
-                <>
-                  <div style={{ marginTop: skaterPositions ? 16 : 0 }}>
-                    <ColHeader isGoalie />
-                  </div>
-                  {sortedRoster.filter((p) => p.position === "GOALIE").map((p, i) => (
-                    <RosterRow key={p.playerId} player={p} index={i}
-                      onDrop={() => handleDrop(p.playerId)} disabled={isPending} />
-                  ))}
-                </>
-              )}
-            </>
+              </div>
             </div>
           )}
         </div>
@@ -295,6 +328,99 @@ export default function RosterManager({
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+// ── Player card (card view) ───────────────────────────────────────────────────
+
+function PlayerCard({ player, onDrop, disabled }: {
+  player: RosterPlayerRow; onDrop: () => void; disabled: boolean;
+}) {
+  const isGoalie = player.position === "GOALIE";
+  const s = player.stats;
+  const fmtSvPct = (v: number | null) => v != null ? v.toFixed(3).replace(/^0/, "") : "—";
+
+  const chips = isGoalie
+    ? [
+        { label: "W",   val: s ? String((s as GoalieStats).wins) : "—" },
+        { label: "SV%", val: s ? fmtSvPct((s as GoalieStats).savePct) : "—" },
+        { label: "SO",  val: s ? String((s as GoalieStats).shutouts) : "—" },
+      ]
+    : [
+        { label: "G",   val: s ? String((s as SkaterStats).goals) : "—" },
+        { label: "A",   val: s ? String((s as SkaterStats).assists) : "—" },
+        { label: "PTS", val: s ? String((s as SkaterStats).points) : "—" },
+      ];
+
+  return (
+    <div style={{
+      background: "rgba(255,255,255,0.04)",
+      border: "1px solid rgba(148,163,184,0.12)",
+      borderRadius: 16, padding: "14px 14px 12px",
+      display: "flex", flexDirection: "column", gap: 10,
+    }}>
+      {/* Badges row */}
+      <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+        <span style={{
+          fontSize: 10, fontWeight: 700, padding: "2px 6px", borderRadius: 5,
+          background: `${POS_COLORS[player.position]}20`, color: POS_COLORS[player.position],
+        }}>
+          {player.position[0]}
+        </span>
+        {player.teamAbbr && (
+          <span style={{ fontSize: 11, color: "#64748b" }}>{player.teamAbbr}</span>
+        )}
+        <span style={{
+          marginLeft: "auto", fontSize: 9, fontWeight: 700, padding: "2px 6px", borderRadius: 5,
+          background: `${SLOT_COLORS[player.slot] ?? "#64748b"}20`,
+          color: SLOT_COLORS[player.slot] ?? "#64748b",
+        }}>
+          {SLOT_LABELS[player.slot] ?? player.slot}
+        </span>
+      </div>
+
+      {/* Name */}
+      <div style={{ fontWeight: 700, fontSize: 14, color: "#e2e8f0", lineHeight: 1.3 }}>
+        {player.name}
+        {!player.active && (
+          <span style={{ marginLeft: 6, fontSize: 9, color: "#ef4444", background: "rgba(239,68,68,0.12)", padding: "1px 4px", borderRadius: 3 }}>INJ</span>
+        )}
+      </div>
+
+      {/* Fantasy points */}
+      <div>
+        <div style={{ fontSize: 22, fontWeight: 800, color: "#6366f1", lineHeight: 1 }}>
+          {s ? s.fantasyPoints.toFixed(1) : "—"}
+        </div>
+        <div style={{ fontSize: 10, color: "#475569", marginTop: 2 }}>fantasy pts</div>
+      </div>
+
+      {/* Stat chips */}
+      <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+        {chips.map((c) => (
+          <span key={c.label} style={{
+            fontSize: 11, padding: "3px 7px", borderRadius: 6,
+            background: "rgba(255,255,255,0.05)", color: "#94a3b8",
+          }}>
+            <span style={{ color: "#64748b", fontSize: 10 }}>{c.label} </span>{c.val}
+          </span>
+        ))}
+      </div>
+
+      {/* Drop button */}
+      <button
+        onClick={onDrop}
+        disabled={disabled}
+        style={{
+          fontSize: 11, fontWeight: 600, padding: "5px 0", borderRadius: 8,
+          border: "1px solid rgba(248,113,113,0.3)", cursor: "pointer",
+          background: "rgba(248,113,113,0.06)", color: "#f87171",
+          opacity: disabled ? 0.5 : 1, marginTop: "auto",
+        }}
+      >
+        Drop
+      </button>
     </div>
   );
 }

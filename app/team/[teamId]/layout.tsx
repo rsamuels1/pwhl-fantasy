@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { requireAuth, requireTeamOwner } from "@/lib/auth";
 import DevTimeClear from "@/components/DevTimeClear";
 import TeamNav from "./TeamNav";
+import BottomNav from "@/components/BottomNav";
 
 interface TeamLayoutProps {
   children: ReactNode;
@@ -44,8 +45,9 @@ export default async function TeamLayout({ children, params }: TeamLayoutProps) 
           </div>
         )}
 
-        <main style={{ paddingBottom: 40 }}>{children}</main>
+        <main className="bottom-nav-pad" style={{ paddingBottom: 40 }}>{children}</main>
       </div>
+      <BottomNav teamId={teamId} leagueId={team.league.id} />
     </div>
   );
 }

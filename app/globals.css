@@ -357,3 +357,9 @@ img { max-width: 100%; display: block; }
 @media (max-width: 640px) {
   .commissioner-grid { grid-template-columns: 1fr !important; }
 }
+
+.bottom-nav { display: none; }
+@media (max-width: 640px) {
+  .bottom-nav { display: flex; }
+  .bottom-nav-pad { padding-bottom: 68px !important; }
+}

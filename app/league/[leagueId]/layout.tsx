@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import DevTimeClear from "@/components/DevTimeClear";
+import BottomNav from "@/components/BottomNav";
 
 interface LeagueLayoutProps {
   children: ReactNode;
@@ -39,8 +40,10 @@ export default async function LeagueLayout({ children, params }: LeagueLayoutPro
     { label: "Schedule", href: `${basePath}/matchups` },
     { label: "Bracket", href: `${basePath}/bracket` },
     { label: "Rosters", href: `${basePath}/roster` },
-    ...(isCommissioner ? [{ label: "Admin", href: `${basePath}/admin` }] : []),
   ];
+  const adminItem = isCommissioner
+    ? { label: "⚙ Settings", href: `${basePath}/admin` }
+    : null;
 
   return (
     <div style={{ minHeight: "100vh", background: "#0f1117", color: "#e2e8f0" }}>
@@ -90,6 +93,7 @@ export default async function LeagueLayout({ children, params }: LeagueLayoutPro
             flexWrap: "wrap",
             gap: 10,
             marginBottom: 24,
+            alignItems: "center",
           }}
         >
           {navItems.map((item) => (
@@ -111,9 +115,29 @@ export default async function LeagueLayout({ children, params }: LeagueLayoutPro
               {item.label}
             </Link>
           ))}
+          {adminItem && (
+            <Link
+              href={adminItem.href}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                padding: "8px 12px",
+                borderRadius: 999,
+                border: "1px solid rgba(148,163,184,0.15)",
+                color: "#64748b",
+                textDecoration: "none",
+                fontSize: 12,
+                marginLeft: "auto",
+              }}
+            >
+              {adminItem.label}
+            </Link>
+          )}
         </nav>
 
-        <main>{children}</main>
+        <main className="bottom-nav-pad">{children}</main>
+        {myTeam && <BottomNav teamId={myTeam.id} leagueId={leagueId} />}
       </div>
     </div>
   );
