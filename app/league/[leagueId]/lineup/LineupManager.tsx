@@ -35,7 +35,7 @@ export interface PlayerStatsRow {
   fantasyPoints: number;
 }
 
-type StatsView = "season" | "lastWeek";
+type StatsView = "season" | "lastWeek" | "thisWeek";
 
 interface Props {
   leagueId: string;
@@ -47,6 +47,8 @@ interface Props {
   seasonStats: Record<string, PlayerStatsRow | null>;
   lastWeekStats: Record<string, PlayerStatsRow | null>;
   lastWeekLabel: string | null; // e.g. "Week 3 (Jan 20 – Jan 26)"
+  thisWeekStats: Record<string, PlayerStatsRow | null>;
+  thisWeekLabel: string | null; // e.g. "Week 4 (Dec 12 – Dec 19)"
 }
 
 const ACTIVE_SLOTS: SlotType[] = ["FORWARD", "DEFENSE", "GOALIE", "UTIL"];
@@ -75,7 +77,7 @@ function buildActiveSeats(settings: RosterSettings): Array<{ slot: SlotType; ind
 
 export default function LineupManager({
   leagueId, teamId, teamName, initialRoster, rosterSettings,
-  seasonStats, lastWeekStats, lastWeekLabel,
+  seasonStats, lastWeekStats, lastWeekLabel, thisWeekStats, thisWeekLabel,
 }: Props) {
   const [roster, setRoster] = useState<RosterEntryRow[]>(initialRoster);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -105,7 +107,9 @@ export default function LineupManager({
   })();
 
   function getStats(playerId: string): PlayerStatsRow | null {
-    return statsView === "season" ? (seasonStats[playerId] ?? null) : (lastWeekStats[playerId] ?? null);
+    if (statsView === "season") return seasonStats[playerId] ?? null;
+    if (statsView === "lastWeek") return lastWeekStats[playerId] ?? null;
+    return thisWeekStats[playerId] ?? null;
   }
 
   async function moveTo(targetSlot: SlotType, targetPlayerId?: string) {
@@ -201,25 +205,33 @@ export default function LineupManager({
 
         {/* Stats view toggle */}
         <div style={{ display: "flex", gap: 4, background: "rgba(255,255,255,0.05)", borderRadius: 8, padding: 3 }}>
-          {(["season", "lastWeek"] as StatsView[]).map((view) => (
-            <button
-              key={view}
-              onClick={() => setStatsView(view)}
-              style={{
-                padding: "5px 12px", borderRadius: 6, border: "none", cursor: "pointer", fontSize: 12, fontWeight: 600,
-                background: statsView === view ? "rgba(99,102,241,0.3)" : "transparent",
-                color: statsView === view ? "#a5b4fc" : "#64748b",
-                transition: "background 0.1s, color 0.1s",
-              }}
-            >
-              {view === "season" ? "Season" : (lastWeekLabel ? `Last week` : "Last week")}
-            </button>
-          ))}
+          {(["thisWeek", "lastWeek", "season"] as StatsView[]).map((view) => {
+            const label = view === "season" ? "Season" : view === "lastWeek" ? "Last week" : "This week";
+            const disabled = view === "thisWeek" && !thisWeekLabel;
+            return (
+              <button
+                key={view}
+                onClick={() => !disabled && setStatsView(view)}
+                disabled={disabled}
+                style={{
+                  padding: "5px 12px", borderRadius: 6, border: "none", cursor: disabled ? "default" : "pointer", fontSize: 12, fontWeight: 600,
+                  background: statsView === view ? "rgba(99,102,241,0.3)" : "transparent",
+                  color: disabled ? "#334155" : statsView === view ? "#a5b4fc" : "#64748b",
+                  transition: "background 0.1s, color 0.1s",
+                }}
+              >
+                {label}
+              </button>
+            );
+          })}
         </div>
       </div>
 
-      {statsView === "lastWeek" && lastWeekLabel && (
+      {(statsView === "lastWeek" && lastWeekLabel) && (
         <div style={{ fontSize: 12, color: "#64748b" }}>{lastWeekLabel}</div>
+      )}
+      {(statsView === "thisWeek" && thisWeekLabel) && (
+        <div style={{ fontSize: 12, color: "#64748b" }}>{thisWeekLabel}</div>
       )}
 
       {selected && (
@@ -464,7 +476,7 @@ function PlayerInfo({
         )
       ) : (
         <span style={{ fontSize: 11, color: "#334155", fontStyle: "italic" }}>
-          {statsView === "lastWeek" ? "No games last week" : "No prior-season data"}
+          {statsView === "lastWeek" ? "No games last week" : statsView === "thisWeek" ? "No games yet this week" : "No prior-season data"}
         </span>
       )}
     </div>

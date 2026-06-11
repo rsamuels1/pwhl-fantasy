@@ -286,21 +286,25 @@ per-player, not whole-lineup.
 `{ teamId, playerId, slot }`. PUT validates eligibility, capacity, and lock before updating.
 Both handlers use `getDevNowFromRequest(req)` so they respect the dev simulation cookie.
 
-**Player stats toggle:** the lineup page shows per-player stats inline, with a "Season / Last week"
-toggle in the header.
+**Player stats toggle:** the lineup page shows per-player stats inline, with a three-way toggle:
+"This week / Last week / Season" (toggle order in UI). Tab is disabled when no data exists for
+that view.
+- **This week** — stats from games played so far in the active scoring period (i.e., `startsAt >=
+  activePeriod.startsAt AND startsAt <= now`). Only available when a period is ACTIVE. Label shows
+  "Week N (Mon – Sun)". Empty state: "No games yet this week".
+- **Last week** — aggregate for the most recently COMPLETE scoring period. Label shows "Week N (Mon – Sun)".
+  Empty state: "No games last week".
 - **Season** — aggregate of all `StatLine` rows for the player in the league's season (e.g. `2025-26`).
-- **Last week** — aggregate for the most recently completed scoring period, derived via `getSeasonState`
-  (the same period engine used by `advanceSeason`). Label shows "Week N (Mon – Sun)".
-- Stats are aggregated server-side in `lineup/page.tsx` using `scoreStatLine` from `lib/scoring`
-  and passed to `LineupManager` as `seasonStats` and `lastWeekStats` maps.
+  Empty state: "No prior-season data" for rookies/expansion players.
+- All three views are aggregated server-side in `lineup/page.tsx` using `scoreStatLine` from
+  `lib/scoring` and passed to `LineupManager` as `seasonStats`, `lastWeekStats`, and `thisWeekStats`
+  maps alongside `lastWeekLabel` and `thisWeekLabel` strings.
 - Skater display: GP, G, A, PTS, PPP, SOG, HIT, BLK, FP. Goalie: GP, W, SV, GA, SV%, SO, FP.
-- Empty states: "No games last week" (last-week view) or "No prior-season data" (season view) for
-  rookies/expansion players. Never blank or a JS error.
 
-**Games remaining this period:** each player card shows a small badge indicating how many games their PWHL team has remaining in the current scoring period (i.e., `startsAt > now AND startsAt < activePeriod.endsAt AND status != FINAL`). Three distinct states:
+**Games remaining this period:** each player card shows a small badge indicating how many games their PWHL team has remaining in the current scoring period. Uses `periodForGames = activePeriod ?? upcomingPeriod` so the badge is correct both mid-week (ACTIVE) and between weeks (UPCOMING). Query: `startsAt > now AND startsAt < periodForGames.endsAt AND status != FINAL`. Three distinct states:
 - `N` (e.g. "2G left") — indigo badge; confirmed games still to play.
 - `0` ("0 left") — muted gray; schedule loaded, team confirmed done this period.
-- No badge — no active period or schedule doesn't extend far enough (unknown, never shown as a false zero).
+- No badge — no active or upcoming period, or schedule doesn't extend far enough (unknown, never shown as a false zero).
 Already-locked players (🔒) skip the badge since the manager can't act on them. Goalie badge tooltip notes it's team games, not confirmed starts. Data flows as `gamesThisPeriod: number | null` on `RosterEntryRow`; server uses one batch query (same pattern as `lib/matchups/swingPlayers.ts`) keyed on all roster PWHL team IDs.
 
 **Zero-games warning banner:** a yellow alert strip renders above the active-slot columns whenever any starter has `gamesThisPeriod === 0`. Lists the affected players by name and prompts the manager to bench them. Purely client-side derived from `gamesThisPeriod` — no extra data fetch.

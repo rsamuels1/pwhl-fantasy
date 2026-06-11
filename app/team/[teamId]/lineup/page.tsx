@@ -113,8 +113,13 @@ export default async function TeamLineupPage({ params }: Props) {
   const seasonState = await getSeasonState(leagueId, nowMs, prisma);
   const lastCompleted = [...seasonState.periods].reverse().find((p) => p.status === "COMPLETE");
   const activePeriod = seasonState.periods.find((p) => p.status === "ACTIVE")?.period ?? null;
+  const upcomingPeriod = !activePeriod
+    ? (seasonState.periods.find((p) => p.status === "UPCOMING")?.period ?? null)
+    : null;
+  // Period used for games-remaining badge: active if in-week, upcoming if between weeks
+  const periodForGames = activePeriod ?? upcomingPeriod;
 
-  const [seasonLines, lastWeekLines] = await Promise.all([
+  const [seasonLines, lastWeekLines, thisWeekLines] = await Promise.all([
     playerIds.length > 0
       ? prisma.statLine.findMany({
           where: { playerId: { in: playerIds }, game: { season: leagueSeason } },
@@ -125,12 +130,17 @@ export default async function TeamLineupPage({ params }: Props) {
       ? prisma.statLine.findMany({
           where: {
             playerId: { in: playerIds },
-            game: {
-              startsAt: {
-                gte: lastCompleted.period.startsAt,
-                lt: lastCompleted.period.endsAt,
-              },
-            },
+            game: { startsAt: { gte: lastCompleted.period.startsAt, lt: lastCompleted.period.endsAt } },
+          },
+          select: STAT_SELECT,
+        })
+      : Promise.resolve([] as RawStatLine[]),
+    // "This week" = games played so far in the active period, up to now
+    activePeriod && playerIds.length > 0
+      ? prisma.statLine.findMany({
+          where: {
+            playerId: { in: playerIds },
+            game: { startsAt: { gte: activePeriod.startsAt, lte: now } },
           },
           select: STAT_SELECT,
         })
@@ -139,14 +149,17 @@ export default async function TeamLineupPage({ params }: Props) {
 
   const seasonStats = aggregateStats(seasonLines, playerIds, positionMap, scoring);
   const lastWeekStats = aggregateStats(lastWeekLines, playerIds, positionMap, scoring);
+  const thisWeekStats = aggregateStats(thisWeekLines, playerIds, positionMap, scoring);
 
   const pwhlTeamIds = [...new Set(
     fullTeam.roster.map((e) => e.player.team?.id).filter((id): id is string => !!id)
   )];
-  const remainingGameRows = activePeriod && pwhlTeamIds.length > 0
+  // Games remaining = scheduled games from now → period end (not yet FINAL)
+  const remainingGameRows = periodForGames && pwhlTeamIds.length > 0
     ? await prisma.game.findMany({
         where: {
-          startsAt: { gt: now, lt: activePeriod.endsAt },
+          startsAt: { gt: now, lt: periodForGames.endsAt },
+          status: { not: "FINAL" },
           OR: [{ homeTeamId: { in: pwhlTeamIds } }, { awayTeamId: { in: pwhlTeamIds } }],
         },
         select: { homeTeamId: true, awayTeamId: true },
@@ -158,12 +171,19 @@ export default async function TeamLineupPage({ params }: Props) {
     gamesPerTeam.set(g.awayTeamId, (gamesPerTeam.get(g.awayTeamId) ?? 0) + 1);
   }
 
+  const fmt = (d: Date) =>
+    d.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
+
   let lastWeekLabel: string | null = null;
   if (lastCompleted) {
-    const fmt = (d: Date) =>
-      d.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
     const end = new Date(lastCompleted.period.endsAt.getTime() - 1);
     lastWeekLabel = `Week ${lastCompleted.period.week} (${fmt(lastCompleted.period.startsAt)} – ${fmt(end)})`;
+  }
+
+  let thisWeekLabel: string | null = null;
+  if (activePeriod) {
+    const end = new Date(activePeriod.endsAt.getTime() - 1);
+    thisWeekLabel = `Week ${activePeriod.week} (${fmt(activePeriod.startsAt)} – ${fmt(end)})`;
   }
 
   const roster: RosterEntryRow[] = fullTeam.roster.map((entry) => {
@@ -179,7 +199,7 @@ export default async function TeamLineupPage({ params }: Props) {
       slot: entry.slot as RosterEntryRow["slot"],
       lockedAt: locked?.toISOString() ?? null,
       eligibleSlots: eligibleSlots(entry.player.position as "FORWARD" | "DEFENSE" | "GOALIE", entry.player.active) as RosterEntryRow["slot"][],
-      gamesThisPeriod: activePeriod ? (gamesPerTeam.get(pTeamId ?? "") ?? 0) : null,
+      gamesThisPeriod: periodForGames ? (gamesPerTeam.get(pTeamId ?? "") ?? 0) : null,
     };
   });
 
@@ -194,6 +214,8 @@ export default async function TeamLineupPage({ params }: Props) {
       seasonStats={seasonStats}
       lastWeekStats={lastWeekStats}
       lastWeekLabel={lastWeekLabel}
+      thisWeekStats={thisWeekStats}
+      thisWeekLabel={thisWeekLabel}
     />
   );
 }
