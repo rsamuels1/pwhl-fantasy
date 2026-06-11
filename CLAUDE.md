@@ -307,6 +307,32 @@ pills at the top acts as the selector; clicking one updates `?team=<id>` in the 
 page reads `searchParams.team` and defaults to `teams[0]` if absent. Only the selected team's
 roster card is rendered — no JS needed for switching.
 
+## Service layer (`lib/services/`)
+
+Application services sit between API route handlers and domain/DB logic. They own
+orchestration: load data from Prisma, call pure domain functions, write results back.
+Route handlers do only HTTP wiring (parse input, call service, return JSON).
+
+Current services:
+- `standings-service.ts` — `getStandings(leagueId, prisma)`: loads teams + matchups, runs
+  `computeStandings`, decorates with playoff seed/eligibility. Used by the standings API route
+  and any page that needs ranked standings.
+- `playoff-service.ts` — `getBracket(leagueId, prisma)`: builds bracket and hydrates with
+  scored playoff matchups. `startPlayoffs(leagueId, prisma)`: validates preconditions, seeds
+  teams, generates bracket, creates DB rows, flips `playoffStatus`. Exports
+  `PlayoffNotStartedError` for typed HTTP status decisions in the route.
+
+`lib/season/index.ts` follows the same pattern (predates the `services/` directory) and
+should be considered part of this layer even though it lives under `lib/season/`.
+
+**Architecture note from review:** The pure domain engines (`lib/scoring/`, `lib/draft/`,
+`lib/playoffs/`, `lib/lineup.ts`) intentionally contain no IO. Services are the only place
+that combine Prisma with domain calls. Future additions (waivers, trades, notifications)
+should follow this pattern. Recommended next steps post-launch:
+- Event table for async scoring/cache-invalidation
+- Redis-backed draft coordinator for multi-node scaling
+(Both explicitly post-launch per the architecture review.)
+
 ## Season lifecycle (`lib/season/`)
 
 Generates and advances the fantasy season's scoring periods. Reuses the existing VTF scoring
