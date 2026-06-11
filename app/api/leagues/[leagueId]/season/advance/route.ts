@@ -10,6 +10,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getSeasonState, startSeason, advanceSeason } from "@/lib/season";
+import { apiRequireAuth, apiRequireCommissioner } from "@/lib/auth";
 
 function isAllowed(): boolean {
   return (
@@ -20,8 +21,6 @@ function isAllowed(): boolean {
 
 // POST /api/leagues/[leagueId]/season/advance
 // Body: { simulatedDate: string (ISO), action?: "start" | "advance" }
-//   simulatedDate — the "now" the engine will use
-//   action        — "start" generates matchups; "advance" (default) scores pending periods
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ leagueId: string }> }
@@ -31,6 +30,11 @@ export async function POST(
   }
 
   const { leagueId } = await params;
+  const auth = await apiRequireAuth(req);
+  if (auth instanceof NextResponse) return auth;
+  const commissioner = await apiRequireCommissioner(leagueId, auth.id);
+  if (commissioner instanceof NextResponse) return commissioner;
+
   const body = await req.json() as { simulatedDate?: string; action?: string };
 
   if (!body.simulatedDate) {

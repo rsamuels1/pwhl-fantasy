@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { generateSnakeOrder, rostersToRounds } from "@/lib/draft/snake";
+import { apiRequireAuth, apiRequireCommissioner } from "@/lib/auth";
 
 const DEFAULT_ROSTER_SETTINGS = {
   forward: 2,
@@ -14,6 +15,11 @@ export async function POST(
   req: NextRequest,
   { params }: { params: { leagueId: string } }
 ) {
+  const auth = await apiRequireAuth(req);
+  if (auth instanceof NextResponse) return auth;
+  const commissioner = await apiRequireCommissioner(params.leagueId, auth.id);
+  if (commissioner instanceof NextResponse) return commissioner;
+
   try {
     const leagueId = params.leagueId;
     const league = await prisma.fantasyLeague.findUnique({

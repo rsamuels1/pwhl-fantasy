@@ -118,6 +118,7 @@ model FantasyLeague {
   commissioner    User                @relation("Commissioner", fields: [commissionerId], references: [id])
   teams           FantasyTeam[]
   matchups        Matchup[]
+  leagueEvents    LeagueEvent[]
 
   @@index([status])
 }
@@ -252,4 +253,26 @@ enum DraftStatus {
   IN_PROGRESS
   PAUSED
   COMPLETE
+}
+
+enum EventType {
+  DRAFT_PICK
+  PLAYER_ADD
+  PLAYER_DROP
+  TRADE
+  PLAYOFF_QUALIFICATION
+  MAJOR_PERFORMANCE
+}
+
+model LeagueEvent {
+  id        String        @id @default(cuid())
+  leagueId  String
+  teamId    String?
+  playerId  String?
+  type      EventType
+  data      Json          @default("{}")
+  createdAt DateTime      @default(now())
+  league    FantasyLeague @relation(fields: [leagueId], references: [id])
+
+  @@index([leagueId, createdAt])
 }

@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { computeStandings } from "@/lib/playoffs/seeding";
+import { requireAuth, requireLeagueMember } from "@/lib/auth";
 
 function formatPoints(value: number) {
   return value.toFixed(1);
@@ -8,10 +9,12 @@ function formatPoints(value: number) {
 
 export default async function StandingsPage({ params }: { params: { leagueId: string } }) {
   const leagueId = params.leagueId;
+  const user = await requireAuth(`/league/${leagueId}/standings`);
+  await requireLeagueMember(leagueId, user.id);
 
   const league = await prisma.fantasyLeague.findUnique({
     where: { id: leagueId },
-    include: { teams: { select: { id: true, name: true } } },
+    include: { teams: true },
   });
 
   if (!league) {

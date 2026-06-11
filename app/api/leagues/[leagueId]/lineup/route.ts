@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import type { LineupSlot } from "@prisma/client";
 import { validateSlotMove, lockTime, eligibleSlots } from "@/lib/lineup";
 import type { RosterSettings } from "@/lib/lineup";
+import { apiRequireAuth, apiRequireLeagueMember } from "@/lib/auth";
 
 // GET /api/leagues/[leagueId]/lineup?team=<teamId>
 // Returns the team's roster entries with player info and per-player lock status.
@@ -11,6 +12,11 @@ export async function GET(
   { params }: { params: Promise<{ leagueId: string }> }
 ) {
   const { leagueId } = await params;
+  const auth = await apiRequireAuth(req);
+  if (auth instanceof NextResponse) return auth;
+  const member = await apiRequireLeagueMember(leagueId, auth.id);
+  if (member instanceof NextResponse) return member;
+
   const teamId = req.nextUrl.searchParams.get("team");
   if (!teamId) return NextResponse.json({ error: "Missing team" }, { status: 400 });
 
@@ -72,11 +78,22 @@ export async function PUT(
   { params }: { params: Promise<{ leagueId: string }> }
 ) {
   const { leagueId } = await params;
+  const auth = await apiRequireAuth(req);
+  if (auth instanceof NextResponse) return auth;
+  const myTeam = await apiRequireLeagueMember(leagueId, auth.id);
+  if (myTeam instanceof NextResponse) return myTeam;
+
   const body = await req.json() as { teamId?: string; playerId?: string; slot?: string };
 
   if (!body.teamId || !body.playerId || !body.slot) {
     return NextResponse.json({ error: "Missing teamId, playerId, or slot" }, { status: 400 });
   }
+
+  // Users may only modify their own team's lineup
+  if (body.teamId !== myTeam.id) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
   const targetSlot = body.slot as LineupSlot;
   const validSlots: LineupSlot[] = ["FORWARD","DEFENSE","GOALIE","UTIL","BENCH","IR"];
   if (!validSlots.includes(targetSlot)) {

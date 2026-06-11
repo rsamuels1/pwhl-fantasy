@@ -1,10 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { apiRequireAuth, apiRequireLeagueMember } from "@/lib/auth";
 
 export async function GET(
   req: NextRequest,
   { params }: { params: { leagueId: string } }
 ) {
+  const auth = await apiRequireAuth(req);
+  if (auth instanceof NextResponse) return auth;
+  const member = await apiRequireLeagueMember(params.leagueId, auth.id);
+  if (member instanceof NextResponse) return member;
+
   try {
     const leagueId = params.leagueId;
 
@@ -31,9 +37,6 @@ export async function GET(
     });
   } catch (error) {
     console.error("Error fetching matchups:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch matchups" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to fetch matchups" }, { status: 500 });
   }
 }

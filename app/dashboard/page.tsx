@@ -1,13 +1,9 @@
-import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
-import { getCurrentUser } from "@/lib/auth";
+import { requireAuth } from "@/lib/auth";
 import Link from "next/link";
 
 export default async function DashboardPage() {
-  const user = await getCurrentUser();
-  if (!user) {
-    redirect("/login");
-  }
+  const user = await requireAuth("/dashboard");
 
   // Find teams the user owns directly, OR teams in leagues they commission
   // (commissioner always has a team in their own league in dev seeds).

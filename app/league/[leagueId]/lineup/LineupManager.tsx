@@ -15,6 +15,7 @@ export interface RosterEntryRow {
   slot: SlotType;
   lockedAt: string | null;
   eligibleSlots: SlotType[];
+  gamesThisPeriod: number | null;
 }
 
 export interface PlayerStatsRow {
@@ -410,6 +411,19 @@ function PlayerInfo({
         )}
         {player.lockedAt && (
           <span title={`Locked — game started ${new Date(player.lockedAt).toLocaleTimeString()}`} style={{ fontSize: 11, flexShrink: 0 }}>🔒</span>
+        )}
+        {player.gamesThisPeriod !== null && !player.lockedAt && (
+          <span
+            title={player.position === "GOALIE" ? "Team games left this period (goalie may not start every game)" : "Games left this period"}
+            style={{
+              fontSize: 10, fontWeight: 600, flexShrink: 0,
+              padding: "1px 5px", borderRadius: 4,
+              background: player.gamesThisPeriod === 0 ? "rgba(100,116,139,0.15)" : "rgba(99,102,241,0.15)",
+              color: player.gamesThisPeriod === 0 ? "#64748b" : "#818cf8",
+            }}
+          >
+            {player.gamesThisPeriod === 0 ? "0 left" : `${player.gamesThisPeriod}G left`}
+          </span>
         )}
       </div>
 

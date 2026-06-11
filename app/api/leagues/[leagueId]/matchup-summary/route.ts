@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { getStandings } from "@/lib/services/standings-service";
+import { getDashboardData } from "@/lib/services/dashboard";
 import { apiRequireAuth, apiRequireLeagueMember } from "@/lib/auth";
 
 export async function GET(
@@ -12,12 +12,9 @@ export async function GET(
   const member = await apiRequireLeagueMember(params.leagueId, auth.id);
   if (member instanceof NextResponse) return member;
 
-  try {
-    const result = await getStandings(params.leagueId, prisma);
-    return NextResponse.json(result);
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : "Failed to fetch standings";
-    console.error("[standings]", msg);
-    return NextResponse.json({ error: msg }, { status: 500 });
-  }
+  const { leagueId } = params;
+  const teamId = req.nextUrl.searchParams.get("team") ?? member.id;
+
+  const data = await getDashboardData(leagueId, teamId, Date.now(), prisma);
+  return NextResponse.json(data);
 }

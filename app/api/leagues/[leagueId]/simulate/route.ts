@@ -1,8 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { generateMatchups, scoreLeagueMatchups } from "@/lib/scoring/matchups";
+import { apiRequireAuth, apiRequireCommissioner } from "@/lib/auth";
 
 export async function POST(req: NextRequest, { params }: { params: { leagueId: string } }) {
+  const auth = await apiRequireAuth(req);
+  if (auth instanceof NextResponse) return auth;
+  const commissioner = await apiRequireCommissioner(params.leagueId, auth.id);
+  if (commissioner instanceof NextResponse) return commissioner;
+
   try {
     const leagueId = params.leagueId;
     const body = await req.json();

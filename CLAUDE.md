@@ -292,6 +292,12 @@ toggle in the header.
 - Empty states: "No games last week" (last-week view) or "No prior-season data" (season view) for
   rookies/expansion players. Never blank or a JS error.
 
+**Games remaining this period:** each player card shows a small badge indicating how many games their PWHL team has remaining in the current scoring period (i.e., `startsAt > now AND startsAt < activePeriod.endsAt AND status != FINAL`). Three distinct states:
+- `N` (e.g. "2G left") — indigo badge; confirmed games still to play.
+- `0` ("0 left") — muted gray; schedule loaded, team confirmed done this period.
+- No badge — no active period or schedule doesn't extend far enough (unknown, never shown as a false zero).
+Already-locked players (🔒) skip the badge since the manager can't act on them. Goalie badge tooltip notes it's team games, not confirmed starts. Data flows as `gamesThisPeriod: number | null` on `RosterEntryRow`; server uses one batch query (same pattern as `lib/matchups/swingPlayers.ts`) keyed on all roster PWHL team IDs.
+
 **Scoring integration:** no changes needed — `computeTeamScore` already reads `slot NOT IN [BENCH, IR]`.
 
 **Nav:** "Lineup" link added to the league layout nav (`app/league/[leagueId]/layout.tsx`).

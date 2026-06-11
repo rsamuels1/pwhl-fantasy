@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { Prisma } from "@prisma/client";
+import { apiRequireAuth, apiRequireLeagueMember } from "@/lib/auth";
 
 export interface PlayerStats {
   id: string;
@@ -40,6 +41,11 @@ export async function GET(
   req: NextRequest,
   { params }: { params: { leagueId: string } }
 ) {
+  const auth = await apiRequireAuth(req);
+  if (auth instanceof NextResponse) return auth;
+  const member = await apiRequireLeagueMember(params.leagueId, auth.id);
+  if (member instanceof NextResponse) return member;
+
   const url = new URL(req.url);
   const search = url.searchParams.get("search") ?? "";
   const position = url.searchParams.get("position") ?? "";

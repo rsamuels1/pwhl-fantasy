@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { getSeasonState } from "@/lib/season";
+import { requireAuth, requireLeagueMember } from "@/lib/auth";
 import SeasonView from "./SeasonView";
 
 interface Props {
@@ -9,6 +10,8 @@ interface Props {
 
 export default async function SeasonPage({ params }: Props) {
   const { leagueId } = await params;
+  const user = await requireAuth(`/league/${leagueId}/season`);
+  await requireLeagueMember(leagueId, user.id);
 
   const league = await prisma.fantasyLeague.findUnique({
     where: { id: leagueId },

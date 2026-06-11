@@ -1,7 +1,24 @@
+import { redirect } from "next/navigation";
+import { prisma } from "@/lib/db";
+import { getCurrentUser } from "@/lib/auth";
 import Link from "next/link";
 import QuickDraftJoinForm from "@/components/QuickDraftJoinForm";
 
-export default function Home() {
+export default async function Home() {
+  const user = await getCurrentUser();
+
+  if (user) {
+    const teams = await prisma.fantasyTeam.findMany({
+      where: { ownerId: user.id },
+      select: { leagueId: true },
+      take: 2,
+    });
+    if (teams.length === 1) {
+      redirect(`/league/${teams[0].leagueId}/matchup`);
+    }
+    redirect("/dashboard");
+  }
+
   return (
     <main>
       <section className="hero-card">
@@ -9,13 +26,13 @@ export default function Home() {
           <p className="hero-eyebrow">PWHL Fantasy</p>
           <h1 className="hero-title">Manage draft nights, rosters, and playoff simulations with a polished fantasy interface.</h1>
           <p className="hero-text">
-            Build your league, run live drafts, and replay last season’s real game weeks in an experience inspired by top fantasy sports platforms.
+            Build your league, run live drafts, and replay last season's real game weeks in an experience inspired by top fantasy sports platforms.
           </p>
 
           <div className="hero-actions">
             <Link href="/create-league" className="button-primary">Create a league</Link>
             <Link href="/join-league" className="button-secondary">Join a league</Link>
-            <Link href="/dashboard" className="button-tertiary">View dashboard</Link>
+            <Link href="/login" className="button-tertiary">Log in</Link>
           </div>
 
           <div className="stat-grid">
@@ -25,7 +42,7 @@ export default function Home() {
             </div>
             <div className="stat-card">
               <strong>Season replay</strong>
-              <span className="panel-text">Simulate last year’s schedule as if the season starts tomorrow.</span>
+              <span className="panel-text">Simulate last year's schedule as if the season starts tomorrow.</span>
             </div>
             <div className="stat-card">
               <strong>Team analytics</strong>

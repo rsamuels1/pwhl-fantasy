@@ -1,10 +1,13 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const returnTo = searchParams.get("returnTo") ?? "";
+
   const [email, setEmail] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [status, setStatus] = useState<string | null>(null);
@@ -19,16 +22,16 @@ export default function LoginPage() {
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, displayName }),
+        body: JSON.stringify({ email, displayName, returnTo }),
       });
       const data = await res.json();
 
       if (!res.ok) {
         setStatus(data?.error || "Unable to log in.");
       } else {
-        router.push("/dashboard");
+        router.push(data.redirectTo ?? "/dashboard");
       }
-    } catch (error) {
+    } catch {
       setStatus("Unable to log in. Try again.");
     } finally {
       setLoading(false);
@@ -36,42 +39,50 @@ export default function LoginPage() {
   };
 
   return (
+    <div style={cardStyle}>
+      <h1 style={headingStyle}>Login or create an account</h1>
+      <p style={subheadingStyle}>
+        Use your email to register and manage your leagues from a single dashboard.
+      </p>
+
+      <form onSubmit={handleSubmit} style={{ display: "grid", gap: 14 }}>
+        <label style={labelStyle}>
+          Email
+          <input
+            style={inputStyle}
+            type="email"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            required
+          />
+        </label>
+
+        <label style={labelStyle}>
+          Display name
+          <input
+            style={inputStyle}
+            value={displayName}
+            onChange={(event) => setDisplayName(event.target.value)}
+            placeholder="Your public name"
+          />
+        </label>
+
+        <button type="submit" style={buttonStyle} disabled={loading || !email}>
+          {loading ? "Logging in…" : "Log in / Register"}
+        </button>
+      </form>
+
+      {status && <p style={{ color: "#f87171", marginTop: 16 }}>{status}</p>}
+    </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
     <main style={pageStyle}>
-      <div style={cardStyle}>
-        <h1 style={headingStyle}>Login or create an account</h1>
-        <p style={subheadingStyle}>
-          Use your email to register and manage your leagues from a single dashboard.
-        </p>
-
-        <form onSubmit={handleSubmit} style={{ display: "grid", gap: 14 }}>
-          <label style={labelStyle}>
-            Email
-            <input
-              style={inputStyle}
-              type="email"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              required
-            />
-          </label>
-
-          <label style={labelStyle}>
-            Display name
-            <input
-              style={inputStyle}
-              value={displayName}
-              onChange={(event) => setDisplayName(event.target.value)}
-              placeholder="Your public name"
-            />
-          </label>
-
-          <button type="submit" style={buttonStyle} disabled={loading || !email}>
-            {loading ? "Logging in…" : "Log in / Register"}
-          </button>
-        </form>
-
-        {status && <p style={{ color: "#f87171", marginTop: 16 }}>{status}</p>}
-      </div>
+      <Suspense fallback={<div style={cardStyle}><p style={{ color: "#94a3b8" }}>Loading…</p></div>}>
+        <LoginForm />
+      </Suspense>
     </main>
   );
 }

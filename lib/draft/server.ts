@@ -13,6 +13,7 @@ import { PrismaClient } from "@prisma/client";
 import { generateSnakeOrder, rostersToRounds } from "./snake";
 import { reduce, toWireState, deriveAutoState, type EngineState, type Effect, type TimerConfig } from "./engine";
 import type { ClientMessage, ServerMessage, CompletedPick } from "./messages";
+import { emitEvent, type LeagueEventType } from "../services/activity";
 
 const prisma = new PrismaClient();
 
@@ -23,7 +24,8 @@ class DraftRoom {
 
   constructor(
     private state: EngineState,
-    private readonly timerConfig: TimerConfig
+    private readonly timerConfig: TimerConfig,
+    private readonly leagueId: string
   ) {}
 
   addSocket(ws: WebSocket, fantasyTeamId: string) {
@@ -151,6 +153,7 @@ class DraftRoom {
       switch (e.kind) {
         case "PERSIST_PICK":
           await this.persistPick(e.pick);
+          await this.emitDraftPickEvent(e.pick);
           break;
         case "BROADCAST_PICK":
           this.broadcast({
@@ -221,6 +224,35 @@ class DraftRoom {
         },
       }),
     ]);
+  }
+
+  private async emitDraftPickEvent(pick: CompletedPick) {
+    const player = await prisma.player.findUnique({
+      where: { id: pick.playerId },
+      select: { firstName: true, lastName: true },
+    });
+    const team = await prisma.fantasyTeam.findUnique({
+      where: { id: pick.fantasyTeamId },
+      select: { name: true },
+    });
+    if (!player || !team) return;
+    const slot = this.state.order[pick.overall - 1];
+    await emitEvent(
+      {
+        leagueId: this.leagueId,
+        teamId: pick.fantasyTeamId,
+        playerId: pick.playerId,
+        type: "DRAFT_PICK" as LeagueEventType,
+        data: {
+          description: `${team.name} drafted ${player.firstName} ${player.lastName} (Round ${slot?.round ?? "?"}, Pick ${pick.overall})`,
+          playerName: `${player.firstName} ${player.lastName}`,
+          teamName: team.name,
+          overall: pick.overall,
+          auto: pick.auto,
+        },
+      },
+      prisma
+    );
   }
 
   // Default auto-pick ranking. Replace with a real projection/ADP source later.
@@ -318,7 +350,7 @@ export function getRoom(leagueId: string): Promise<DraftRoom> {
   let p = roomPromises.get(leagueId);
   if (!p) {
     p = buildEngineState(leagueId).then(
-      ({ state, timerConfig }) => new DraftRoom(state, timerConfig)
+      ({ state, timerConfig }) => new DraftRoom(state, timerConfig, leagueId)
     );
     roomPromises.set(leagueId, p);
   }

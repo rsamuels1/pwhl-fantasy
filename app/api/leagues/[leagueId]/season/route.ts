@@ -1,14 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getSeasonState, startSeason, advanceSeason } from "@/lib/season";
+import { apiRequireAuth, apiRequireLeagueMember, apiRequireCommissioner } from "@/lib/auth";
 
-// GET /api/leagues/[leagueId]/season
-// Returns the current season state using the real wall clock.
+// GET /api/leagues/[leagueId]/season — any league member
 export async function GET(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ leagueId: string }> }
 ) {
   const { leagueId } = await params;
+  const auth = await apiRequireAuth(req);
+  if (auth instanceof NextResponse) return auth;
+  const member = await apiRequireLeagueMember(leagueId, auth.id);
+  if (member instanceof NextResponse) return member;
+
   try {
     const state = await getSeasonState(leagueId, Date.now(), prisma);
     return NextResponse.json(state);
@@ -18,15 +23,17 @@ export async function GET(
   }
 }
 
-// POST /api/leagues/[leagueId]/season
-// Body: { action: "start" | "advance" }
-// "start"   — generates VTF matchups and sets status to IN_SEASON.
-// "advance" — scores any periods due right now (uses real wall clock).
+// POST /api/leagues/[leagueId]/season — commissioner only
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ leagueId: string }> }
 ) {
   const { leagueId } = await params;
+  const auth = await apiRequireAuth(req);
+  if (auth instanceof NextResponse) return auth;
+  const commissioner = await apiRequireCommissioner(leagueId, auth.id);
+  if (commissioner instanceof NextResponse) return commissioner;
+
   const body = await req.json() as { action?: string };
   const action = body.action ?? "advance";
 

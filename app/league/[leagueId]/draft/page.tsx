@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
+import { requireAuth, requireLeagueMember } from "@/lib/auth";
 import DraftSetupClient from "./DraftSetupClient";
 
 function formatDate(date: Date) {
@@ -13,6 +14,9 @@ function formatDate(date: Date) {
 
 export default async function LeagueDraftPage({ params }: { params: { leagueId: string } }) {
   const leagueId = params.leagueId;
+  const user = await requireAuth(`/league/${leagueId}/draft`);
+  await requireLeagueMember(leagueId, user.id);
+
   const league = await prisma.fantasyLeague.findUnique({
     where: { id: leagueId },
     include: {

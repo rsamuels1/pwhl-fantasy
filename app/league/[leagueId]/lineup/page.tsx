@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
+import { requireAuth, requireLeagueMember } from "@/lib/auth";
 import { eligibleSlots, lockTime } from "@/lib/lineup";
 import type { RosterSettings } from "@/lib/lineup";
 import { scoreStatLine, DEFAULT_SCORING } from "@/lib/scoring";
@@ -66,6 +67,9 @@ const STAT_SELECT = {
 
 export default async function LineupPage({ params, searchParams }: Props) {
   const { leagueId } = await params;
+  const user = await requireAuth(`/league/${leagueId}/lineup`);
+  await requireLeagueMember(leagueId, user.id);
+
   const { team: teamId } = await searchParams;
 
   if (!teamId) {
@@ -136,9 +140,10 @@ export default async function LineupPage({ params, searchParams }: Props) {
     team.roster.map((e) => [e.playerId, e.player.position as Position])
   );
 
-  // Find last completed period using the season-lifecycle engine.
+  // Find last completed period and the current active period using the season-lifecycle engine.
   const seasonState = await getSeasonState(leagueId, Date.now(), prisma);
   const lastCompleted = [...seasonState.periods].reverse().find((p) => p.status === "COMPLETE");
+  const activePeriod = seasonState.periods.find((p) => p.status === "ACTIVE")?.period ?? null;
 
   // Fetch season stats and last-week stats in parallel.
   const [seasonLines, lastWeekLines] = await Promise.all([
@@ -167,6 +172,27 @@ export default async function LineupPage({ params, searchParams }: Props) {
   const seasonStats = aggregateStats(seasonLines, playerIds, positionMap, scoring);
   const lastWeekStats = aggregateStats(lastWeekLines, playerIds, positionMap, scoring);
 
+  // Batch-query remaining games in the active period for all rostered players' PWHL teams.
+  const pwhlTeamIds = [...new Set(
+    team.roster.map((e) => e.player.team?.id).filter((id): id is string => !!id)
+  )];
+  const now = new Date();
+  const remainingGameRows = activePeriod && pwhlTeamIds.length > 0
+    ? await prisma.game.findMany({
+        where: {
+          startsAt: { gt: now, lt: activePeriod.endsAt },
+          status: { not: "FINAL" },
+          OR: [{ homeTeamId: { in: pwhlTeamIds } }, { awayTeamId: { in: pwhlTeamIds } }],
+        },
+        select: { homeTeamId: true, awayTeamId: true },
+      })
+    : [];
+  const gamesPerTeam = new Map<string, number>();
+  for (const g of remainingGameRows) {
+    gamesPerTeam.set(g.homeTeamId, (gamesPerTeam.get(g.homeTeamId) ?? 0) + 1);
+    gamesPerTeam.set(g.awayTeamId, (gamesPerTeam.get(g.awayTeamId) ?? 0) + 1);
+  }
+
   let lastWeekLabel: string | null = null;
   if (lastCompleted) {
     const fmt = (d: Date) =>
@@ -188,6 +214,7 @@ export default async function LineupPage({ params, searchParams }: Props) {
       slot: entry.slot as RosterEntryRow["slot"],
       lockedAt: locked?.toISOString() ?? null,
       eligibleSlots: eligibleSlots(entry.player.position as "FORWARD" | "DEFENSE" | "GOALIE", entry.player.active) as RosterEntryRow["slot"][],
+      gamesThisPeriod: activePeriod ? (gamesPerTeam.get(pTeamId ?? "") ?? 0) : null,
     };
   });
 

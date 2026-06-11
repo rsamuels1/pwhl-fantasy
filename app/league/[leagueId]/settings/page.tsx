@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
+import { requireAuth, requireLeagueMember } from "@/lib/auth";
 
 function prettyJson(value: unknown) {
   return JSON.stringify(value, null, 2);
@@ -7,6 +8,8 @@ function prettyJson(value: unknown) {
 
 export default async function SettingsPage({ params }: { params: { leagueId: string } }) {
   const leagueId = params.leagueId;
+  const user = await requireAuth(`/league/${leagueId}/settings`);
+  await requireLeagueMember(leagueId, user.id);
 
   const league = await prisma.fantasyLeague.findUnique({
     where: { id: leagueId },

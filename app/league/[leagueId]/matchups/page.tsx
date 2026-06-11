@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
+import { requireAuth, requireLeagueMember } from "@/lib/auth";
 
 function formatDate(date: Date) {
   return new Intl.DateTimeFormat("en-US", {
@@ -12,6 +13,8 @@ function formatDate(date: Date) {
 
 export default async function MatchupsPage({ params }: { params: { leagueId: string } }) {
   const leagueId = params.leagueId;
+  const user = await requireAuth(`/league/${leagueId}/matchups`);
+  await requireLeagueMember(leagueId, user.id);
 
   const league = await prisma.fantasyLeague.findUnique({ where: { id: leagueId } });
   if (!league) notFound();

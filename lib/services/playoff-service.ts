@@ -16,6 +16,7 @@ import {
 import { generatePlayoffMatchups } from "@/lib/scoring/matchups";
 import type { PlayoffMatchupPairing } from "@/lib/scoring/matchups";
 import { derivePlayoffPeriods } from "@/lib/playoffs/schedule";
+import { emitEvent, type LeagueEventType } from "@/lib/services/activity";
 
 // ─── getBracket ────────────────────────────────────────────────────────────────
 
@@ -189,6 +190,26 @@ export async function startPlayoffs(
     where: { id: leagueId },
     data: { playoffStatus: "IN_PROGRESS" },
   });
+
+  // Emit qualification events for each team that made the playoffs
+  const qualifyingTeams = seededTeams.slice(0, playoffSettings.teamsInPlayoff);
+  await Promise.all(
+    qualifyingTeams.map((team, i) =>
+      emitEvent(
+        {
+          leagueId,
+          teamId: team.fantasyTeamId,
+          type: "PLAYOFF_QUALIFICATION" as LeagueEventType,
+          data: {
+            description: `${team.teamName} qualified for the playoffs (Seed #${i + 1})`,
+            teamName: team.teamName,
+            seed: i + 1,
+          },
+        },
+        prisma
+      )
+    )
+  );
 
   return { leagueId, seededTeams: bracket.seededTeams, totalRounds, settings: playoffSettings };
 }

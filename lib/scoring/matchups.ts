@@ -9,7 +9,13 @@
 // - Active roster = slot NOT IN [BENCH, IR].
 
 import type { PrismaClient } from "@prisma/client";
-import { scoreStatLine, DEFAULT_SCORING, type ScoringSettings } from "./index";
+import {
+  scoreStatLine,
+  scoreStatLineDetailed,
+  DEFAULT_SCORING,
+  type ScoringSettings,
+  type ScoringBreakdown,
+} from "./index";
 import { derivePeriods, type ScoringPeriod } from "./periods";
 
 // ── helpers ───────────────────────────────────────────────────────────────────
@@ -99,8 +105,10 @@ export async function computeTeamScoreDetailed(
     playerId: string;
     name: string;
     position: string;
+    slot: string;
     points: number;
     gameCount: number;
+    statBreakdown: ScoringBreakdown[];
   }>;
 }> {
   const entries = await prisma.rosterEntry.findMany({
@@ -115,6 +123,7 @@ export async function computeTeamScoreDetailed(
 
   const playerIds = entries.map((e) => e.playerId);
   const playerMap = new Map(entries.map((e) => [e.playerId, e.player]));
+  const slotMap = new Map(entries.map((e) => [e.playerId, e.slot]));
 
   const lines = await prisma.statLine.findMany({
     where: {
@@ -124,40 +133,63 @@ export async function computeTeamScoreDetailed(
     include: { player: { select: { position: true } } },
   });
 
-  // Aggregate per player
-  const byPlayer = new Map<string, { pts: number; games: number }>();
+  // Aggregate per player — accumulate breakdown category totals across games
+  const byPlayer = new Map<
+    string,
+    { pts: number; games: number; categoryTotals: Map<string, { stat: number; multiplier: number }> }
+  >();
+
   for (const line of lines) {
-    const pts = scoreStatLine(
-      {
-        goals: line.goals,
-        assists: line.assists,
-        shots: line.shots,
-        plusMinus: line.plusMinus,
-        penaltyMinutes: line.penaltyMinutes,
-        powerPlayPts: line.powerPlayPts,
-        hits: line.hits,
-        blocks: line.blocks,
-        saves: line.saves,
-        goalsAgainst: line.goalsAgainst,
-        shutout: line.shutout,
-        win: line.win,
-      },
+    const statInput = {
+      goals: line.goals,
+      assists: line.assists,
+      shots: line.shots,
+      plusMinus: line.plusMinus,
+      penaltyMinutes: line.penaltyMinutes,
+      powerPlayPts: line.powerPlayPts,
+      hits: line.hits,
+      blocks: line.blocks,
+      saves: line.saves,
+      goalsAgainst: line.goalsAgainst,
+      shutout: line.shutout,
+      win: line.win,
+    };
+    const { total: pts, breakdown } = scoreStatLineDetailed(
+      statInput,
       line.player.position,
       scoringSettings
     );
-    const prev = byPlayer.get(line.playerId) ?? { pts: 0, games: 0 };
-    byPlayer.set(line.playerId, { pts: round2(prev.pts + pts), games: prev.games + 1 });
+    const prev = byPlayer.get(line.playerId) ?? { pts: 0, games: 0, categoryTotals: new Map() };
+    for (const b of breakdown) {
+      const existing = prev.categoryTotals.get(b.label) ?? { stat: 0, multiplier: b.multiplier };
+      prev.categoryTotals.set(b.label, { stat: existing.stat + b.stat, multiplier: b.multiplier });
+    }
+    byPlayer.set(line.playerId, {
+      pts: round2(prev.pts + pts),
+      games: prev.games + 1,
+      categoryTotals: prev.categoryTotals,
+    });
   }
 
   const players = [...byPlayer.entries()]
-    .map(([pid, { pts, games }]) => {
+    .map(([pid, { pts, games, categoryTotals }]) => {
       const p = playerMap.get(pid)!;
+      const statBreakdown: ScoringBreakdown[] = [...categoryTotals.entries()].map(
+        ([label, { stat, multiplier }]) => ({
+          label,
+          stat,
+          multiplier,
+          points: round2(stat * multiplier),
+        })
+      );
       return {
         playerId: pid,
         name: `${p.firstName} ${p.lastName}`,
         position: p.position,
+        slot: slotMap.get(pid) ?? "BENCH",
         points: pts,
         gameCount: games,
+        statBreakdown,
       };
     })
     .sort((a, b) => b.points - a.points);

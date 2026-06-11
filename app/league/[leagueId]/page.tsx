@@ -1,10 +1,8 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { computeStandings } from "@/lib/playoffs/seeding";
-import { getCurrentUser } from "@/lib/auth";
+import { requireAuth, requireLeagueMember } from "@/lib/auth";
 import LeagueSimulationControls from "@/components/LeagueSimulationControls";
-import AddTeamForm from "@/components/AddTeamForm";
-import SetupDraftButton from "@/components/SetupDraftButton";
 import Link from "next/link";
 
 function formatDate(date: Date) {
@@ -18,7 +16,8 @@ function formatDate(date: Date) {
 
 export default async function LeagueOverviewPage({ params }: { params: { leagueId: string } }) {
   const leagueId = params.leagueId;
-  const user = await getCurrentUser();
+  const user = await requireAuth(`/league/${leagueId}`);
+  await requireLeagueMember(leagueId, user.id);
 
   const league = await prisma.fantasyLeague.findUnique({
     where: { id: leagueId },
@@ -30,6 +29,17 @@ export default async function LeagueOverviewPage({ params }: { params: { leagueI
 
   if (!league) {
     notFound();
+  }
+
+  // In-season: redirect to the matchup-focused page
+  if (league.status === "IN_SEASON") {
+    redirect(`/league/${leagueId}/matchup`);
+  }
+
+  // Draft in progress: redirect to draft room
+  if (league.draft?.status === "IN_PROGRESS") {
+    const myTeam = league.teams.find((t) => t.ownerId === user?.id);
+    if (myTeam) redirect(`/draft/${leagueId}?team=${myTeam.id}`);
   }
 
   const isCommissioner = user?.id === league.commissionerId;
@@ -152,20 +162,12 @@ export default async function LeagueOverviewPage({ params }: { params: { leagueI
         <div className="dashboard-panel">
           <div className="panel-headline">Teams in this league</div>
           {league.teams.length === 0 ? (
-            <p className="panel-text">No teams yet. Add your first team to get started!</p>
+            <p className="panel-text">No teams yet.</p>
           ) : (
             <div style={{ display: "grid", gap: 12, gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", marginTop: 16 }}>
               {league.teams.map((team) => (
-                <div key={team.id} style={{ ...cardStyle, display: "flex", flexDirection: "column", justifyContent: "space-between", gap: 12 }}>
-                  <div>
-                    <h3 style={{ margin: 0, marginBottom: 4 }}>{team.name}</h3>
-                    <p style={{ color: "#94a3b8", margin: 0, fontSize: "0.9rem" }}>ID: {team.id}</p>
-                  </div>
-                  {league.draft && (
-                    <Link href={`/draft/${leagueId}?team=${team.id}`} className="button-secondary">
-                      Draft as {team.name.split(" ")[0]}
-                    </Link>
-                  )}
+                <div key={team.id} style={{ ...cardStyle, display: "flex", flexDirection: "column", gap: 8 }}>
+                  <h3 style={{ margin: 0 }}>{team.name}</h3>
                 </div>
               ))}
             </div>
@@ -173,24 +175,20 @@ export default async function LeagueOverviewPage({ params }: { params: { leagueI
         </div>
 
         {isCommissioner && (
-          <>
-            <AddTeamForm leagueId={leagueId} />
-
-            {!league.draft && league.teams.length >= 2 && (
-              <div className="dashboard-panel">
-                <div className="panel-headline">Start draft</div>
-                <p className="panel-text">Ready to begin drafting? Set up the draft board and start making picks.</p>
-                <SetupDraftButton leagueId={leagueId} />
-              </div>
-            )}
-
-            {league.draft && (
-              <div className="dashboard-panel">
-                <div className="panel-headline">Draft status</div>
-                <p className="panel-text">Draft {league.draft.status.toLowerCase()}. Pick any team to draft as them.</p>
-              </div>
-            )}
-          </>
+          <div className="dashboard-panel">
+            <div className="panel-headline">Commissioner</div>
+            <p className="panel-text">Manage teams, draft, season, and playoff settings.</p>
+            <Link
+              href={`/league/${leagueId}/admin`}
+              style={{
+                display: "inline-block", marginTop: 12, padding: "10px 20px",
+                background: "rgba(99,102,241,0.2)", border: "1px solid rgba(99,102,241,0.4)",
+                borderRadius: 10, color: "#a5b4fc", fontWeight: 600, textDecoration: "none",
+              }}
+            >
+              Admin panel →
+            </Link>
+          </div>
         )}
       </section>
     </div>
