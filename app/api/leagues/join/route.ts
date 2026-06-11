@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { generateShortId } from "@/lib/id";
+import { setAuthCookie } from "@/lib/auth";
 
 export async function POST(req: NextRequest) {
   try {
@@ -62,12 +63,15 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       leagueId,
       teamId: team.id,
       draftOrder,
-      message: "Team created successfully. Use the Team ID to join the draft room.",
+      redirectTo: `/league/${leagueId}?welcome=1`,
+      message: "Team created successfully.",
     });
+    setAuthCookie(response, owner.email);
+    return response;
   } catch (error) {
     console.error("Error joining league:", error);
     return NextResponse.json({ error: "Failed to join league." }, { status: 500 });

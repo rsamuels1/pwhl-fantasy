@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { DEFAULT_SCORING } from "@/lib/scoring";
 import { generateShortId } from "@/lib/id";
+import { setAuthCookie } from "@/lib/auth";
 
 export async function POST(req: NextRequest) {
   try {
@@ -55,11 +56,14 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       leagueId: league.id,
       commissionerId: commissioner.id,
-      message: "League created. Share the League ID with managers so they can join.",
+      redirectTo: `/league/${league.id}/admin?welcome=1`,
+      message: "League created.",
     });
+    setAuthCookie(response, commissioner.email);
+    return response;
   } catch (error) {
     console.error("Error creating league:", error);
     return NextResponse.json({ error: "Failed to create league." }, { status: 500 });

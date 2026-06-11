@@ -6,8 +6,15 @@ import { getLeagueActivity } from "@/lib/services/activity";
 import { getDevNow } from "@/lib/devTime";
 import Link from "next/link";
 
-export default async function LeagueOverviewPage({ params }: { params: { leagueId: string } }) {
+export default async function LeagueOverviewPage({
+  params,
+  searchParams,
+}: {
+  params: { leagueId: string };
+  searchParams?: { welcome?: string };
+}) {
   const leagueId = params.leagueId;
+  const isWelcome = searchParams?.welcome === "1";
   const user = await requireAuth(`/league/${leagueId}`);
   const myTeam = await requireLeagueMember(leagueId, user.id);
 
@@ -63,6 +70,33 @@ export default async function LeagueOverviewPage({ params }: { params: { leagueI
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+
+      {/* ── Welcome banner (shown once after joining) ── */}
+      {isWelcome && myTeamInLeague && (
+        <div style={{
+          padding: "16px 20px", borderRadius: 16,
+          background: "rgba(52,211,153,0.07)",
+          border: "1px solid rgba(52,211,153,0.2)",
+          display: "flex", flexDirection: "column", gap: 6,
+        }}>
+          <p style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "#34d399" }}>
+            ✓ You're in! {myTeamInLeague.name} is registered.
+          </p>
+          {league.draft?.status === "COMPLETE" ? (
+            <p style={{ margin: 0, fontSize: 13, color: "#64748b" }}>
+              The draft is done. <Link href={`/team/${myTeamInLeague.id}/lineup`} style={{ color: "#a5b4fc" }}>Set your lineup →</Link>
+            </p>
+          ) : league.draft?.status === "IN_PROGRESS" ? (
+            <p style={{ margin: 0, fontSize: 13, color: "#64748b" }}>
+              The draft is live right now! <Link href={`/draft/${leagueId}?team=${myTeamInLeague.id}`} style={{ color: "#a5b4fc" }}>Join the draft room →</Link>
+            </p>
+          ) : (
+            <p style={{ margin: 0, fontSize: 13, color: "#64748b" }}>
+              The commissioner will share a draft room link when it's time to pick. Watch your email.
+            </p>
+          )}
+        </div>
+      )}
 
       {/* ── League header ── */}
       <div style={{ display: "flex", alignItems: "baseline", gap: 12, flexWrap: "wrap" }}>

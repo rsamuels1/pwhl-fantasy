@@ -101,7 +101,7 @@ export default async function DashboardPage() {
 
   const ownedTeams = await prisma.fantasyTeam.findMany({
     where: { ownerId: user.id },
-    include: { league: { include: { draft: { select: { status: true } } } } },
+    include: { league: { include: { draft: { select: { status: true, completedAt: true } } } } },
     orderBy: { createdAt: "desc" },
   });
 
@@ -114,7 +114,7 @@ export default async function DashboardPage() {
   const extraTeams = commissionedLeagues.length > 0
     ? await prisma.fantasyTeam.findMany({
         where: { leagueId: { in: commissionedLeagues.map((l) => l.id) } },
-        include: { league: { include: { draft: { select: { status: true } } } } },
+        include: { league: { include: { draft: { select: { status: true, completedAt: true } } } } },
         orderBy: { draftOrder: "asc" },
         take: 1,
       })
@@ -149,9 +149,23 @@ export default async function DashboardPage() {
         });
       }
     }
+    // Draft just completed — prompt to set lineup
+    if (
+      team.league.draft?.status === "COMPLETE" &&
+      team.league.draft?.completedAt &&
+      nowMs - new Date(team.league.draft.completedAt).getTime() < 7 * 24 * 60 * 60 * 1000
+    ) {
+      actions.push({
+        label: "Draft done! Set your Week 1 lineup",
+        href: `/team/${team.id}/lineup`,
+        teamName: team.name,
+      });
+    }
+
+    // Active week — remind to confirm starters
     if (summary?.status === "active") {
       actions.push({
-        label: `Week ${summary.week} is active — check your starters`,
+        label: `Week ${summary.week} is live — check your starters`,
         href: `/team/${team.id}/lineup`,
         teamName: team.name,
       });

@@ -1,26 +1,38 @@
 "use client";
 
-import { useState } from "react";
-
-interface JoinResponse {
-  leagueId: string;
-  teamId: string;
-  message: string;
-}
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 export default function JoinLeaguePage() {
+  const router = useRouter();
   const [leagueId, setLeagueId] = useState("");
+  const [leagueName, setLeagueName] = useState<string | null>(null);
   const [teamName, setTeamName] = useState("");
   const [email, setEmail] = useState("");
   const [displayName, setDisplayName] = useState("");
-  const [status, setStatus] = useState<string | null>(null);
-  const [result, setResult] = useState<JoinResponse | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  // Pre-fill league ID from URL param (e.g. from invite link)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get("league") ?? "";
+    if (id) {
+      setLeagueId(id);
+      // Fetch league name to show context
+      fetch(`/api/leagues/list`)
+        .then((r) => r.json())
+        .then((leagues: { id: string; name: string }[]) => {
+          const match = leagues.find((l) => l.id === id);
+          if (match) setLeagueName(match.name);
+        })
+        .catch(() => {});
+    }
+  }, []);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setStatus(null);
-    setResult(null);
+    setError(null);
     setLoading(true);
 
     try {
@@ -37,13 +49,12 @@ export default function JoinLeaguePage() {
 
       const data = await res.json();
       if (!res.ok) {
-        setStatus(data?.error || "Failed to join league");
+        setError(data?.error || "Failed to join league");
       } else {
-        setResult(data);
-        setStatus("Joined league successfully.");
+        router.push(data.redirectTo ?? "/dashboard");
       }
-    } catch (error) {
-      setStatus("Unable to join league. Try again.");
+    } catch {
+      setError("Unable to join league. Try again.");
     } finally {
       setLoading(false);
     }
@@ -51,21 +62,47 @@ export default function JoinLeaguePage() {
 
   return (
     <div className="page-width" style={{ padding: "32px 16px" }}>
-      <div className="dashboard-panel" style={{ maxWidth: 640, margin: "0 auto" }}>
-        <div style={{ display: "grid", gap: 14 }}>
-          <h1 style={{ margin: 0 }}>Join an existing league</h1>
-          <p className="panel-text">Enter a league ID, choose a team name, and create your fantasy team.</p>
+      <div className="dashboard-panel" style={{ maxWidth: 560, margin: "0 auto" }}>
+        <div style={{ marginBottom: 24 }}>
+          {leagueName ? (
+            <>
+              <p style={{ fontSize: 12, fontWeight: 700, color: "#6366f1", textTransform: "uppercase", letterSpacing: "1px", margin: "0 0 8px" }}>
+                You're invited
+              </p>
+              <h1 style={{ margin: "0 0 8px", fontSize: 24 }}>Join {leagueName}</h1>
+              <p className="panel-text">Choose a team name and create your account to claim your spot.</p>
+            </>
+          ) : (
+            <>
+              <h1 style={{ margin: "0 0 8px", fontSize: 24 }}>Join a league</h1>
+              <p className="panel-text">Enter your league ID, choose a team name, and you're in.</p>
+            </>
+          )}
         </div>
 
-        <form onSubmit={handleSubmit} style={{ display: "grid", gap: 18, marginTop: 20 }}>
-          <label className="form-label">
-            League ID
-            <input className="form-input" value={leagueId} onChange={(event) => setLeagueId(event.target.value)} required />
-          </label>
+        <form onSubmit={handleSubmit} style={{ display: "grid", gap: 18 }}>
+          {!leagueName && (
+            <label className="form-label">
+              League ID
+              <input
+                className="form-input"
+                value={leagueId}
+                onChange={(e) => setLeagueId(e.target.value)}
+                required
+                placeholder="Paste the league ID from your commissioner"
+              />
+            </label>
+          )}
 
           <label className="form-label">
             Team name
-            <input className="form-input" value={teamName} onChange={(event) => setTeamName(event.target.value)} required />
+            <input
+              className="form-input"
+              value={teamName}
+              onChange={(e) => setTeamName(e.target.value)}
+              required
+              placeholder="e.g. Poulin Power Play"
+            />
           </label>
 
           <label className="form-label">
@@ -74,35 +111,39 @@ export default function JoinLeaguePage() {
               className="form-input"
               type="email"
               value={email}
-              onChange={(event) => setEmail(event.target.value)}
+              onChange={(e) => setEmail(e.target.value)}
               required
+              placeholder="you@example.com"
             />
           </label>
 
           <label className="form-label">
-            Display name
+            Display name <span style={{ color: "#475569", fontWeight: 400 }}>(optional)</span>
             <input
               className="form-input"
               value={displayName}
-              onChange={(event) => setDisplayName(event.target.value)}
-              placeholder="Your name"
+              onChange={(e) => setDisplayName(e.target.value)}
+              placeholder="Your public name in the league"
             />
           </label>
 
-          <button type="submit" className="button-primary" disabled={loading || !leagueId || !teamName || !email}>
-            {loading ? "Joining league…" : "Join league"}
+          {error && (
+            <p style={{ color: "#f87171", fontSize: 13, margin: 0 }}>{error}</p>
+          )}
+
+          <button
+            type="submit"
+            className="button-primary"
+            disabled={loading || !leagueId || !teamName || !email}
+          >
+            {loading ? "Joining…" : "Join league →"}
           </button>
         </form>
 
-        {status && <p className="panel-text" style={{ marginTop: 16 }}>{status}</p>}
-
-        {result && (
-          <div className="summary-card" style={{ marginTop: 18 }}>
-            <p>League ID: <strong>{result.leagueId}</strong></p>
-            <p>Team ID: <strong>{result.teamId}</strong></p>
-            <p style={{ color: "#22c55e" }}>{result.message}</p>
-          </div>
-        )}
+        <p style={{ marginTop: 20, fontSize: 13, color: "#475569", textAlign: "center" }}>
+          Starting a new league?{" "}
+          <a href="/create-league" style={{ color: "#a5b4fc" }}>Create one instead</a>
+        </p>
       </div>
     </div>
   );

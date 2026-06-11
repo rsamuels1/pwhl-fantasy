@@ -1,27 +1,21 @@
 "use client";
 
 import { useState } from "react";
-
-interface CreateResponse {
-  leagueId: string;
-  commissionerId: string;
-  message: string;
-}
+import { useRouter } from "next/navigation";
 
 export default function CreateLeaguePage() {
+  const router = useRouter();
   const [name, setName] = useState("PWHL Fantasy League");
   const [email, setEmail] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [maxTeams, setMaxTeams] = useState(10);
   const [useLastSeasonSimulation, setUseLastSeasonSimulation] = useState(false);
-  const [status, setStatus] = useState<string | null>(null);
-  const [result, setResult] = useState<CreateResponse | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setStatus(null);
-    setResult(null);
+    setError(null);
     setLoading(true);
 
     try {
@@ -39,13 +33,12 @@ export default function CreateLeaguePage() {
 
       const data = await res.json();
       if (!res.ok) {
-        setStatus(data?.error || "Failed to create league");
+        setError(data?.error || "Failed to create league");
       } else {
-        setResult(data);
-        setStatus("League created successfully.");
+        router.push(data.redirectTo ?? "/dashboard");
       }
-    } catch (error) {
-      setStatus("Unable to create league. Try again.");
+    } catch {
+      setError("Unable to create league. Try again.");
     } finally {
       setLoading(false);
     }
@@ -53,18 +46,27 @@ export default function CreateLeaguePage() {
 
   return (
     <div className="page-width" style={{ padding: "32px 16px" }}>
-      <div className="dashboard-panel" style={{ maxWidth: 640, margin: "0 auto" }}>
-        <div style={{ display: "grid", gap: 14 }}>
-          <h1 style={{ margin: 0 }}>Create a new league</h1>
+      <div className="dashboard-panel" style={{ maxWidth: 560, margin: "0 auto" }}>
+        <div style={{ marginBottom: 24 }}>
+          <p style={{ fontSize: 12, fontWeight: 700, color: "#6366f1", textTransform: "uppercase", letterSpacing: "1px", margin: "0 0 8px" }}>
+            Step 1 of 5
+          </p>
+          <h1 style={{ margin: "0 0 8px", fontSize: 24 }}>Create your league</h1>
           <p className="panel-text">
-            Start a new PWHL Fantasy league with a league name, commissioner details, and optional replay simulation.
+            You'll be the commissioner — you control the draft, settings, and invites.
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} style={{ display: "grid", gap: 18, marginTop: 20 }}>
+        <form onSubmit={handleSubmit} style={{ display: "grid", gap: 18 }}>
           <label className="form-label">
             League name
-            <input className="form-input" value={name} onChange={(event) => setName(event.target.value)} required />
+            <input
+              className="form-input"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+              placeholder="e.g. Friday Night Hockey League"
+            />
           </label>
 
           <label className="form-label">
@@ -73,60 +75,69 @@ export default function CreateLeaguePage() {
               className="form-input"
               type="email"
               value={email}
-              onChange={(event) => setEmail(event.target.value)}
+              onChange={(e) => setEmail(e.target.value)}
               required
+              placeholder="you@example.com"
             />
           </label>
 
           <label className="form-label">
-            Display name
+            Your display name
             <input
               className="form-input"
               value={displayName}
-              onChange={(event) => setDisplayName(event.target.value)}
+              onChange={(e) => setDisplayName(e.target.value)}
               placeholder="Commissioner name"
             />
           </label>
 
           <label className="form-label">
-            Maximum teams
-            <input
-              className="form-input"
-              type="number"
-              min={4}
-              max={20}
-              value={maxTeams}
-              onChange={(event) => setMaxTeams(Number(event.target.value))}
-              required
-            />
+            Max teams
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <input
+                className="form-input"
+                type="number"
+                min={4}
+                max={20}
+                value={maxTeams}
+                onChange={(e) => setMaxTeams(Number(e.target.value))}
+                required
+                style={{ maxWidth: 100 }}
+              />
+              <span style={{ fontSize: 13, color: "#64748b" }}>
+                {maxTeams} spots · most leagues use 8–12
+              </span>
+            </div>
           </label>
 
-          <label className="form-label" style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <label className="form-label" style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
             <input
               type="checkbox"
               checked={useLastSeasonSimulation}
-              onChange={(event) => setUseLastSeasonSimulation(event.target.checked)}
-              style={{ width: 18, height: 18 }}
+              onChange={(e) => setUseLastSeasonSimulation(e.target.checked)}
+              style={{ width: 18, height: 18, marginTop: 2, flexShrink: 0 }}
             />
-            <span style={{ color: "#e2e8f0", lineHeight: 1.5 }}>
-              Last Season Simulation — use last year’s real schedule and start game 1 as if it happens tomorrow.
+            <span style={{ color: "#e2e8f0", lineHeight: 1.5, fontSize: 14 }}>
+              <strong>Use 2025–26 simulation</strong>
+              <span style={{ display: "block", color: "#64748b", fontSize: 13, marginTop: 2 }}>
+                Play through last season's real schedule and stats — great for testing.
+              </span>
             </span>
           </label>
 
-          <button type="submit" className="button-primary" disabled={loading}>
-            {loading ? "Creating league…" : "Create league"}
+          {error && (
+            <p style={{ color: "#f87171", fontSize: 13, margin: 0 }}>{error}</p>
+          )}
+
+          <button type="submit" className="button-primary" disabled={loading || !email || !name}>
+            {loading ? "Creating league…" : "Create league →"}
           </button>
         </form>
 
-        {status && <p className="panel-text" style={{ marginTop: 16 }}>{status}</p>}
-
-        {result && (
-          <div className="summary-card" style={{ marginTop: 18 }}>
-            <p>League ID: <strong>{result.leagueId}</strong></p>
-            <p>Commissioner ID: <strong>{result.commissionerId}</strong></p>
-            <p style={{ color: "#22c55e" }}>{result.message}</p>
-          </div>
-        )}
+        <p style={{ marginTop: 20, fontSize: 13, color: "#475569", textAlign: "center" }}>
+          Already have an invite?{" "}
+          <a href="/join-league" style={{ color: "#a5b4fc" }}>Join a league instead</a>
+        </p>
       </div>
     </div>
   );

@@ -173,7 +173,6 @@ export async function getDashboardData(
       ? await prisma.game.findMany({
           where: {
             startsAt: { gte: displayPeriod.startsAt, lt: displayPeriod.endsAt },
-            status: { not: "FINAL" },
             OR: [{ homeTeamId: { in: upcomingTeamIds } }, { awayTeamId: { in: upcomingTeamIds } }],
           },
           select: { homeTeamId: true, awayTeamId: true },
@@ -239,12 +238,14 @@ export async function getDashboardData(
   // Games remaining in this period per PWHL team (for both rosters)
   const allPlayers = [...myDetailed.players, ...opponentDetailed.players];
   const pwhlTeamIds = [...new Set(allPlayers.map((p) => p.teamId).filter((id): id is string => !!id))];
-  const now = new Date();
+  // Use nowMs (not wall clock) so sim mode shows correct remaining counts.
+  // No status filter — the historical fixture has all games as FINAL; startsAt > now
+  // is sufficient to prove a game hasn't happened yet.
+  const nowDate = new Date(nowMs);
   const remainingGameRows = pwhlTeamIds.length > 0
     ? await prisma.game.findMany({
         where: {
-          startsAt: { gt: now, lt: displayPeriod.endsAt },
-          status: { not: "FINAL" },
+          startsAt: { gt: nowDate, lt: displayPeriod.endsAt },
           OR: [{ homeTeamId: { in: pwhlTeamIds } }, { awayTeamId: { in: pwhlTeamIds } }],
         },
         select: { homeTeamId: true, awayTeamId: true },
@@ -285,9 +286,15 @@ export async function getDashboardData(
   // Remaining players tonight for my team (sim-date-aware)
   const remainingPlayers = await getRemainingPlayersTonight(myTeamId, scoringSettings, prisma, nowMs);
 
-  // Lineup alerts: active starters with 0 games remaining this period
+  // Lineup alerts: active starters who have played zero games this period AND have
+  // no remaining games. Players who already scored are excluded (gameCount > 0).
   const lineupAlerts: LineupAlert[] = withGames(myDetailed.players)
-    .filter((p) => p.gamesThisPeriod === 0 && p.slot !== "BENCH" && p.slot !== "IR")
+    .filter((p) =>
+      p.gamesThisPeriod === 0 &&
+      p.gameCount === 0 &&
+      p.slot !== "BENCH" &&
+      p.slot !== "IR"
+    )
     .map((p) => ({ playerId: p.playerId, name: p.name, reason: "zero_games" as const }));
 
   return {
