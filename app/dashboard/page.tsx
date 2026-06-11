@@ -177,7 +177,7 @@ export default async function DashboardPage() {
                       </p>
                     </div>
 
-                    {/* Current competition hero */}
+                    {/* Competition hero: active/upcoming matchup, or last result if season complete */}
                     {summary ? (
                       <div style={{
                         padding: "14px 16px", borderRadius: 12,
@@ -194,7 +194,6 @@ export default async function DashboardPage() {
 
                         {summary.status === "active" && (summary.myScore > 0 || summary.oppScore > 0) ? (
                           <>
-                            {/* Live scores */}
                             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
                               <div style={{ textAlign: "left" }}>
                                 <div style={{ fontSize: 11, color: "#64748b", marginBottom: 2 }}>You</div>
@@ -210,7 +209,6 @@ export default async function DashboardPage() {
                                 </div>
                               </div>
                             </div>
-                            {/* Win probability bar */}
                             <div>
                               <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, marginBottom: 4 }}>
                                 <span style={{ fontWeight: 700, color: "#a5b4fc" }}>
@@ -231,13 +229,44 @@ export default async function DashboardPage() {
                             </div>
                           </>
                         ) : (
-                          /* Upcoming or active with no scores yet */
                           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                             <span style={{ fontSize: 14, fontWeight: 700, color: "#e2e8f0" }}>{team.name}</span>
                             <span style={{ fontSize: 12, color: "#475569" }}>vs</span>
                             <span style={{ fontSize: 14, color: "#94a3b8" }}>{summary.opponentName}</span>
                           </div>
                         )}
+                      </div>
+                    ) : lastResultDisplay ? (
+                      /* Season complete — promote last result into the hero slot */
+                      <div style={{
+                        padding: "14px 16px", borderRadius: 12,
+                        background: "rgba(255,255,255,0.03)",
+                        border: "1px solid rgba(148,163,184,0.1)",
+                      }}>
+                        <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 10, color: "#475569" }}>
+                          Week {lastResult!.week} · Final
+                        </div>
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                          <div style={{ textAlign: "left" }}>
+                            <div style={{ fontSize: 11, color: "#64748b", marginBottom: 2 }}>You</div>
+                            <div style={{ fontSize: 28, fontWeight: 900, lineHeight: 1, color: "#e2e8f0" }}>
+                              {lastResultDisplay.myScore.toFixed(1)}
+                            </div>
+                          </div>
+                          <span style={{
+                            fontWeight: 800, fontSize: 13, padding: "3px 8px", borderRadius: 6,
+                            color: outcomeColor[lastResultDisplay.outcome],
+                            background: `${outcomeColor[lastResultDisplay.outcome]}18`,
+                          }}>
+                            {lastResultDisplay.outcome}
+                          </span>
+                          <div style={{ textAlign: "right" }}>
+                            <div style={{ fontSize: 11, color: "#64748b", marginBottom: 2 }}>{lastResultDisplay.oppName}</div>
+                            <div style={{ fontSize: 28, fontWeight: 900, lineHeight: 1, color: "#64748b" }}>
+                              {lastResultDisplay.oppScore.toFixed(1)}
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     ) : (
                       <div style={{
@@ -247,22 +276,6 @@ export default async function DashboardPage() {
                         fontSize: 13, color: "#475569",
                       }}>
                         No matchup scheduled yet
-                      </div>
-                    )}
-
-                    {/* Last result */}
-                    {lastResultDisplay && (
-                      <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: "#64748b" }}>
-                        <span style={{
-                          fontWeight: 800, fontSize: 11, padding: "2px 6px", borderRadius: 4,
-                          color: outcomeColor[lastResultDisplay.outcome],
-                          background: `${outcomeColor[lastResultDisplay.outcome]}18`,
-                        }}>
-                          {lastResultDisplay.outcome}
-                        </span>
-                        <span>
-                          {lastResultDisplay.myScore.toFixed(1)}–{lastResultDisplay.oppScore.toFixed(1)} vs {lastResultDisplay.oppName}
-                        </span>
                       </div>
                     )}
 

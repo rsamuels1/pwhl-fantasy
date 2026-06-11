@@ -11,6 +11,7 @@ interface Props {
 const ICON: Record<string, string> = {
   matchup: "⚡",
   lineup: "✏",
+  schedule: "📅",
   roster: "👕",
   league: "🏆",
 };
@@ -19,10 +20,11 @@ export default function BottomNav({ teamId, leagueId }: Props) {
   const pathname = usePathname();
 
   const tabs = [
-    { key: "matchup", label: "Matchup", href: `/team/${teamId}/matchup` },
-    { key: "lineup",  label: "Lineup",  href: `/team/${teamId}/lineup` },
-    { key: "roster",  label: "Roster",  href: `/team/${teamId}/roster` },
-    { key: "league",  label: "League",  href: `/league/${leagueId}` },
+    { key: "matchup",  label: "Matchup",  href: `/team/${teamId}/matchup` },
+    { key: "lineup",   label: "Lineup",   href: `/team/${teamId}/lineup` },
+    { key: "schedule", label: "Schedule", href: `/team/${teamId}/schedule` },
+    { key: "roster",   label: "Roster",   href: `/team/${teamId}/roster` },
+    { key: "league",   label: "League",   href: `/league/${leagueId}` },
   ];
 
   return (

@@ -15,6 +15,7 @@ export default function TeamNav({ teamId, leagueId, leagueName }: Props) {
   const tabs = [
     { label: "Matchup",   href: `/team/${teamId}/matchup` },
     { label: "Lineup",    href: `/team/${teamId}/lineup` },
+    { label: "Schedule",  href: `/team/${teamId}/schedule` },
     { label: "Roster",    href: `/team/${teamId}/roster` },
     { label: "Standings", href: `/league/${leagueId}/standings` },
   ];

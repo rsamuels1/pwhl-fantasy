@@ -18,7 +18,6 @@ export default function SeasonControls({ leagueId, periods, onResult }: Props) {
   const [error, setError] = useState<string | null>(null);
   // Default to 1 minute past the ACTIVE period end so one click ends the current week.
   // Fall back to the first SCORING_PENDING period if no active period exists.
-  // This handles historical fixture data where all periods are SCORING_PENDING on first load.
   const activePeriod = periods.find((p) => p.status === "ACTIVE");
   const firstPending = periods.find((p) => p.status === "SCORING_PENDING");
   const targetPeriod = activePeriod ?? firstPending;
@@ -40,9 +39,8 @@ export default function SeasonControls({ leagueId, periods, onResult }: Props) {
     setLoading(false);
     if (!res.ok || data.error) { setError(data.error ?? "Request failed."); return; }
     if (data.state) {
-      document.cookie = `pwhl_dev_sim_date=${new Date(dateToUse).toISOString()}; path=/; max-age=86400`;
-      // Auto-advance the date picker to the next target period so the next click
-      // is always ready to go without manual input.
+      // After scoring, land at 9am on the first day of the next period so the
+      // manager can review the upcoming week and set lineups before advancing further.
       const newPeriods = (data.state.periods as SeasonState["periods"]).map((p) => ({
         ...p,
         period: {
@@ -54,13 +52,30 @@ export default function SeasonControls({ leagueId, periods, onResult }: Props) {
       const newActive = newPeriods.find((p) => p.status === "ACTIVE");
       const newPending = newPeriods.find((p) => p.status === "SCORING_PENDING");
       const newTarget = newActive ?? newPending;
+      let cookieDate = new Date(dateToUse).toISOString();
       if (newTarget) {
-        setSimulatedDate(
-          new Date(newTarget.period.startsAt.getTime() + 60_000).toISOString().slice(0, 16)
-        );
+        const d = new Date(newTarget.period.startsAt);
+        d.setHours(9, 0, 0, 0);
+        // If 9am is before period start, use period start + a few seconds
+        const morning = d.getTime() >= newTarget.period.startsAt.getTime()
+          ? d
+          : new Date(newTarget.period.startsAt.getTime() + 5_000);
+        cookieDate = morning.toISOString();
+        setSimulatedDate(morning.toISOString().slice(0, 16));
       }
+      document.cookie = `pwhl_dev_sim_date=${cookieDate}; path=/; max-age=86400`;
       onResult(data.state, data.message ?? "Done.");
     }
+  }
+
+  function advanceOneDay() {
+    const m = document.cookie.match(/pwhl_dev_sim_date=([^;]+)/);
+    const current = m ? new Date(decodeURIComponent(m[1])) : new Date();
+    current.setDate(current.getDate() + 1);
+    const iso = current.toISOString();
+    document.cookie = `pwhl_dev_sim_date=${iso}; path=/; max-age=86400`;
+    setSimulatedDate(iso.slice(0, 16));
+    window.location.reload();
   }
 
   return (
@@ -75,9 +90,10 @@ export default function SeasonControls({ leagueId, periods, onResult }: Props) {
       <p style={{ margin: "0 0 12px", fontSize: 12, color: "#94a3b8" }}>
         Drives the production engine with a simulated date. No special code path.
       </p>
-      {/* Quick action: score the next pending or active week with one click */}
-      {targetPeriod && (
-        <div style={{ marginBottom: 12, display: "flex", alignItems: "center", gap: 10 }}>
+
+      {/* Quick actions row */}
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 14, alignItems: "center" }}>
+        {targetPeriod && (
           <button
             onClick={() => {
               const endDate = new Date(targetPeriod.period.endsAt.getTime() + 60_000).toISOString().slice(0, 16);
@@ -85,19 +101,24 @@ export default function SeasonControls({ leagueId, periods, onResult }: Props) {
               call("advance", endDate);
             }}
             disabled={loading}
-            style={{ ...btn("#f59e0b"), display: "flex", alignItems: "center", gap: 6 }}
+            style={btn("#f59e0b")}
           >
             {loading ? "…" : activePeriod
-              ? `⏭ End week ${targetPeriod.period.week} now`
+              ? `⏭ End week ${targetPeriod.period.week}`
               : `▶ Score week ${targetPeriod.period.week}`}
           </button>
+        )}
+        <button onClick={advanceOneDay} disabled={loading} style={btn("#10b981")}>
+          +1 Day →
+        </button>
+        {targetPeriod && (
           <span style={{ fontSize: 11, color: "#64748b" }}>
             {activePeriod
-              ? `Scores the active week and advances to week ${targetPeriod.period.week + 1}`
-              : `Scores week ${targetPeriod.period.week} using simulated date`}
+              ? `Scores week ${targetPeriod.period.week}, lands at 9am week ${targetPeriod.period.week + 1}`
+              : `Scores week ${targetPeriod.period.week}`}
           </span>
-        </div>
-      )}
+        )}
+      </div>
 
       <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "flex-end" }}>
         <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
