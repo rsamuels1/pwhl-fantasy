@@ -19,21 +19,11 @@ export async function POST(req: NextRequest) {
       create: { email, displayName },
     });
 
-    // Determine where to send the user after login
+    // Always land on Fantasy Home so users see "how am I doing?" first.
+    // Honour an explicit returnTo if provided (same-origin only).
     let redirectTo = "/dashboard";
     if (returnTo && returnTo.startsWith("/")) {
-      // Honour the returnTo param (same-origin only — must start with /)
       redirectTo = returnTo;
-    } else {
-      // Smart default: 1 team → go straight to that matchup page
-      const teams = await prisma.fantasyTeam.findMany({
-        where: { ownerId: user.id },
-        select: { id: true, leagueId: true },
-        take: 2,
-      });
-      if (teams.length === 1) {
-        redirectTo = `/team/${teams[0].id}/matchup`;
-      }
     }
 
     const response = NextResponse.json({

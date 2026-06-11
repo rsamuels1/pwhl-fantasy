@@ -8,14 +8,6 @@ export default async function Home() {
   const user = await getCurrentUser();
 
   if (user) {
-    const teams = await prisma.fantasyTeam.findMany({
-      where: { ownerId: user.id },
-      select: { id: true },
-      take: 2,
-    });
-    if (teams.length === 1) {
-      redirect(`/team/${teams[0].id}/matchup`);
-    }
     redirect("/dashboard");
   }
 
