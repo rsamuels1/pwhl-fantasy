@@ -10,7 +10,7 @@ function formatPoints(value: number) {
 export default async function StandingsPage({ params }: { params: { leagueId: string } }) {
   const leagueId = params.leagueId;
   const user = await requireAuth(`/league/${leagueId}/standings`);
-  await requireLeagueMember(leagueId, user.id);
+  const myTeam = await requireLeagueMember(leagueId, user.id);
 
   const league = await prisma.fantasyLeague.findUnique({
     where: { id: leagueId },
@@ -51,10 +51,18 @@ export default async function StandingsPage({ params }: { params: { leagueId: st
               </tr>
             </thead>
             <tbody>
-              {standings.map((standing, index) => (
-                <tr key={standing.fantasyTeamId} style={{ borderBottom: "1px solid rgba(148,163,184,0.08)" }}>
+              {standings.map((standing, index) => {
+                const isMe = standing.fantasyTeamId === myTeam.id;
+                return (
+                <tr key={standing.fantasyTeamId} style={{
+                  background: isMe ? "rgba(99,102,241,0.08)" : "transparent",
+                  borderBottom: "1px solid rgba(148,163,184,0.08)",
+                }}>
                   <td style={tdStyle}>{index + 1}</td>
-                  <td style={tdStyle}>{standing.teamName}</td>
+                  <td style={{ ...tdStyle, fontWeight: isMe ? 700 : undefined, color: isMe ? "#a5b4fc" : "#e2e8f0" }}>
+                    {standing.teamName}
+                    {isMe && <span style={{ marginLeft: 8, fontSize: 11, color: "#6366f1" }}>You</span>}
+                  </td>
                   <td style={tdStyle}>{formatPoints(standing.points)}</td>
                   <td style={tdStyle}>{standing.wins}</td>
                   <td style={tdStyle}>{standing.losses}</td>
@@ -62,7 +70,8 @@ export default async function StandingsPage({ params }: { params: { leagueId: st
                   <td style={tdStyle}>{standing.pointsFor}</td>
                   <td style={tdStyle}>{standing.pointsAgainst}</td>
                 </tr>
-              ))}
+                );
+              })}
             </tbody>
           </table>
         </div>

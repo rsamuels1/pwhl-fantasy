@@ -5,6 +5,7 @@ import { getSeasonState } from "@/lib/season";
 import Link from "next/link";
 import AddTeamForm from "@/components/AddTeamForm";
 import SetupDraftButton from "@/components/SetupDraftButton";
+import LeagueSimulationControls from "@/components/LeagueSimulationControls";
 import SeasonView from "../season/SeasonView";
 
 interface Props {
@@ -115,6 +116,15 @@ export default async function AdminPage({ params }: Props) {
         ) : (
           <p style={{ color: "#94a3b8" }}>Add at least 2 teams to set up a draft.</p>
         )}
+      </section>
+
+      {/* Simulation */}
+      <section style={panelStyle}>
+        <h2 style={{ fontSize: 18, marginBottom: 4 }}>Simulate matchups</h2>
+        <p style={{ color: "#94a3b8", fontSize: 13, marginBottom: 0 }}>
+          Score weeks using last season's real stat lines.
+        </p>
+        <LeagueSimulationControls leagueId={leagueId} />
       </section>
 
       {/* Season management */}

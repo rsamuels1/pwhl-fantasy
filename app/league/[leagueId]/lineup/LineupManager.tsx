@@ -159,8 +159,36 @@ export default function LineupManager({
 
   const activeCount = roster.filter((p) => ACTIVE_SLOTS.includes(p.slot)).length;
 
+  const zeroGameStarters = roster.filter(
+    (p) => ACTIVE_SLOTS.includes(p.slot) && p.gamesThisPeriod === 0
+  );
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      {/* Zero-games warning banner */}
+      {zeroGameStarters.length > 0 && (
+        <div style={{
+          display: "flex", alignItems: "flex-start", gap: 10,
+          padding: "12px 16px", borderRadius: 10,
+          background: "rgba(251,191,36,0.08)",
+          border: "1px solid rgba(251,191,36,0.25)",
+        }}>
+          <span style={{ fontSize: 16, flexShrink: 0, marginTop: 1 }}>⚠️</span>
+          <div>
+            <span style={{ fontSize: 13, fontWeight: 600, color: "#fbbf24" }}>
+              {zeroGameStarters.length === 1
+                ? "1 starter has no games left this period"
+                : `${zeroGameStarters.length} starters have no games left this period`}
+            </span>
+            <span style={{ fontSize: 13, color: "#94a3b8" }}>
+              {" — "}
+              {zeroGameStarters.map((p) => p.name).join(", ")}
+              {" — consider moving them to bench."}
+            </span>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", justifyContent: "space-between" }}>
         <div style={{ display: "flex", alignItems: "baseline", gap: 12, flexWrap: "wrap" }}>

@@ -28,11 +28,11 @@ export async function POST(req: NextRequest) {
       // Smart default: 1 team → go straight to that matchup page
       const teams = await prisma.fantasyTeam.findMany({
         where: { ownerId: user.id },
-        select: { leagueId: true },
+        select: { id: true, leagueId: true },
         take: 2,
       });
       if (teams.length === 1) {
-        redirectTo = `/league/${teams[0].leagueId}/matchup`;
+        redirectTo = `/team/${teams[0].id}/matchup`;
       }
     }
 

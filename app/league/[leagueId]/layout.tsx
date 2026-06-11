@@ -16,32 +16,52 @@ export default async function LeagueLayout({ children, params }: LeagueLayoutPro
     getCurrentUser(),
     prisma.fantasyLeague.findUnique({
       where: { id: leagueId },
-      select: { commissionerId: true },
+      select: { commissionerId: true, name: true },
     }),
   ]);
 
   const isCommissioner = !!user && user.id === league?.commissionerId;
 
+  const myTeam = user
+    ? await prisma.fantasyTeam.findFirst({ where: { leagueId, ownerId: user.id }, select: { id: true } })
+    : null;
+
   const navItems = [
-    { label: "Matchup", href: `${basePath}/matchup` },
     { label: "Overview", href: `${basePath}` },
     { label: "Standings", href: `${basePath}/standings` },
     { label: "Schedule", href: `${basePath}/matchups` },
-    { label: "Lineup", href: `${basePath}/lineup` },
-    { label: "Roster", href: `${basePath}/roster` },
     { label: "Bracket", href: `${basePath}/bracket` },
+    { label: "Rosters", href: `${basePath}/roster` },
     ...(isCommissioner ? [{ label: "Admin", href: `${basePath}/admin` }] : []),
   ];
 
   return (
     <div style={{ minHeight: "100vh", background: "#0f1117", color: "#e2e8f0" }}>
       <div style={{ maxWidth: 1200, margin: "0 auto", padding: "24px 16px" }}>
-        <header style={{ marginBottom: 24 }}>
-          <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 12 }}>
-            <Link href="/" style={{ color: "#fff", textDecoration: "none", fontSize: 22, fontWeight: 700 }}>
-              PWHL Fantasy
-            </Link>
-            <span style={{ color: "#94a3b8", fontSize: 14 }}>League dashboard</span>
+        <header style={{ marginBottom: 20 }}>
+          <div style={{ display: "flex", flexWrap: "wrap", alignItems: "baseline", justifyContent: "space-between", gap: 12 }}>
+            <div style={{ display: "flex", alignItems: "baseline", gap: 12 }}>
+              <Link href="/" style={{ color: "#fff", textDecoration: "none", fontSize: 22, fontWeight: 700 }}>
+                PWHL Fantasy
+              </Link>
+              <span style={{ color: "#94a3b8", fontSize: 14 }}>{league?.name ?? "League"}</span>
+            </div>
+            {myTeam && (
+              <Link
+                href={`/team/${myTeam.id}/matchup`}
+                style={{
+                  fontSize: 13,
+                  color: "#a5b4fc",
+                  textDecoration: "none",
+                  padding: "6px 14px",
+                  borderRadius: 999,
+                  background: "rgba(99,102,241,0.12)",
+                  border: "1px solid rgba(99,102,241,0.3)",
+                }}
+              >
+                My Franchise →
+              </Link>
+            )}
           </div>
         </header>
 

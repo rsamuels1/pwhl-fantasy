@@ -31,9 +31,11 @@ export default async function LeagueOverviewPage({ params }: { params: { leagueI
     notFound();
   }
 
-  // In-season: redirect to the matchup-focused page
+  // In-season: redirect to the user's franchise matchup page
   if (league.status === "IN_SEASON") {
-    redirect(`/league/${leagueId}/matchup`);
+    const myTeam = league.teams.find((t) => t.ownerId === user.id);
+    if (myTeam) redirect(`/team/${myTeam.id}/matchup`);
+    redirect(`/league/${leagueId}/standings`);
   }
 
   // Draft in progress: redirect to draft room

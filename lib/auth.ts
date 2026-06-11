@@ -63,6 +63,19 @@ export async function requireLeagueMember(
   return team;
 }
 
+// Returns the user's FantasyTeam with its league, or calls notFound() if the user doesn't own it.
+export async function requireTeamOwner(
+  teamId: string,
+  userId: string
+): Promise<FantasyTeam & { league: Pick<FantasyLeague, "id" | "name"> }> {
+  const team = await prisma.fantasyTeam.findUnique({
+    where: { id: teamId },
+    include: { league: { select: { id: true, name: true } } },
+  });
+  if (!team || team.ownerId !== userId) notFound();
+  return team as FantasyTeam & { league: Pick<FantasyLeague, "id" | "name"> };
+}
+
 // Returns the league if the user is commissioner, otherwise calls notFound().
 export async function requireCommissioner(
   leagueId: string,

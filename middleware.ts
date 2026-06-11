@@ -6,8 +6,8 @@ export function middleware(req: NextRequest) {
   const cookie = req.cookies.get(SESSION_COOKIE)?.value;
   const { pathname } = req.nextUrl;
 
-  // League pages — redirect to login with returnTo
-  if (pathname.startsWith("/league/")) {
+  // League / team pages — redirect to login with returnTo
+  if (pathname.startsWith("/league/") || pathname.startsWith("/team/")) {
     if (!cookie) {
       const url = req.nextUrl.clone();
       url.pathname = "/login";
@@ -27,5 +27,5 @@ export function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/league/:path*", "/api/leagues/:path*"],
+  matcher: ["/league/:path*", "/team/:path*", "/api/leagues/:path*"],
 };

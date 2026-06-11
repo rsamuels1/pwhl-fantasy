@@ -16,22 +16,24 @@ interface Props {
 export default function SeasonControls({ leagueId, periods, onResult }: Props) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  // Default simulated date to 1 minute past the next unscored period end.
-  const nextPending = periods.find(
-    (p) => p.status === "SCORING_PENDING" || p.status === "ACTIVE"
-  );
-  const defaultDate = nextPending
-    ? new Date(nextPending.period.endsAt.getTime() + 60_000).toISOString().slice(0, 16)
+  // Default to 1 minute past the ACTIVE period end so one click ends the current week.
+  // Fall back to the first SCORING_PENDING period if no active period exists.
+  const activePeriod = periods.find((p) => p.status === "ACTIVE");
+  const firstPending = periods.find((p) => p.status === "SCORING_PENDING");
+  const targetPeriod = activePeriod ?? firstPending;
+  const defaultDate = targetPeriod
+    ? new Date(targetPeriod.period.endsAt.getTime() + 60_000).toISOString().slice(0, 16)
     : new Date().toISOString().slice(0, 16);
   const [simulatedDate, setSimulatedDate] = useState(defaultDate);
 
-  async function call(action: "start" | "advance") {
+  async function call(action: "start" | "advance", overrideDate?: string) {
     setLoading(true);
     setError(null);
+    const dateToUse = overrideDate ?? simulatedDate;
     const res = await fetch(`/api/leagues/${leagueId}/season/advance`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ simulatedDate: new Date(simulatedDate).toISOString(), action }),
+      body: JSON.stringify({ simulatedDate: new Date(dateToUse).toISOString(), action }),
     });
     const data = await res.json() as { message?: string; state?: SeasonState; error?: string };
     setLoading(false);
@@ -51,6 +53,26 @@ export default function SeasonControls({ leagueId, periods, onResult }: Props) {
       <p style={{ margin: "0 0 12px", fontSize: 12, color: "#94a3b8" }}>
         Drives the production engine with a simulated date. No special code path.
       </p>
+      {/* Quick action: end current week with one click */}
+      {activePeriod && (
+        <div style={{ marginBottom: 12, display: "flex", alignItems: "center", gap: 10 }}>
+          <button
+            onClick={() => {
+              const endDate = new Date(activePeriod.period.endsAt.getTime() + 60_000).toISOString().slice(0, 16);
+              setSimulatedDate(endDate);
+              call("advance", endDate);
+            }}
+            disabled={loading}
+            style={{ ...btn("#f59e0b"), display: "flex", alignItems: "center", gap: 6 }}
+          >
+            {loading ? "…" : `⏭ End week ${activePeriod.period.week} now`}
+          </button>
+          <span style={{ fontSize: 11, color: "#64748b" }}>
+            Scores the active week and advances to week {activePeriod.period.week + 1}
+          </span>
+        </div>
+      )}
+
       <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "flex-end" }}>
         <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
           <span style={{ fontSize: 11, color: "#94a3b8" }}>Simulated "now"</span>

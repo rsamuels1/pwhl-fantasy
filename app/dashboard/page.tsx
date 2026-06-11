@@ -94,12 +94,8 @@ export default async function DashboardPage() {
                         <p className="team-meta">{team.league.name} · Season {team.league.season}</p>
                       </div>
                       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "flex-start" }}>
-                        <Link
-                          href={`/league/${team.leagueId}/lineup?team=${team.id}`}
-                          className="button-primary"
-                        >
-                          Set lineup
-                        </Link>
+                        <Link href={`/team/${team.id}/matchup`} className="button-primary">My Matchup</Link>
+                        <Link href={`/team/${team.id}/lineup`} className="button-secondary">Set Lineup</Link>
                         <Link href={`/league/${team.leagueId}`} className="button-secondary">League</Link>
                       </div>
                     </div>

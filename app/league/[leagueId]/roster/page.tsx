@@ -48,7 +48,7 @@ export default async function RosterPage({ params, searchParams }: Props) {
   return (
     <div style={{ display: "grid", gap: 20 }}>
       <section style={panelStyle}>
-        <h1 style={{ fontSize: 24, marginBottom: 10 }}>Rosters</h1>
+        <h1 style={{ fontSize: 24, marginBottom: 10 }}>All Rosters</h1>
         <p style={{ color: "#94a3b8", marginBottom: 20 }}>
           Review every fantasy team roster and their lineup composition.
         </p>
