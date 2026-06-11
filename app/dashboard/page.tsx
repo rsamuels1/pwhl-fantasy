@@ -4,15 +4,19 @@ import { getDevNow } from "@/lib/devTime";
 import { getMatchupQuickSummary, getTeamTopPerformers, type MatchupQuickSummary } from "@/lib/services/matchup-summary";
 import Link from "next/link";
 
-const outcomeColor = { W: "#34d399", L: "#f87171", T: "#94a3b8" } as const;
-
 function MatchupHero({ summary, teamName }: { summary: MatchupQuickSummary; teamName: string }) {
   const isActive   = summary.status === "active";
   const isComplete = summary.status === "complete";
-  const hasScores  = summary.myScore > 0 || summary.oppScore > 0;
+  const hasScores  = summary.myScore > 0;
+  const opponents  = summary.teamsCount - 1; // how many teams you play each week
 
   const label = isActive ? "Active" : isComplete ? "Final" : "Upcoming";
   const accentColor = isActive ? "#6366f1" : "#475569";
+
+  // Win rate as a fraction of opponents (0–1)
+  const winRate = opponents > 0 ? summary.wins / opponents : 0;
+  const recordLabel = `${summary.wins}–${summary.losses}${summary.ties > 0 ? `–${summary.ties}` : ""}`;
+  const isWinningRecord = summary.wins > summary.losses;
 
   return (
     <div style={{
@@ -26,69 +30,48 @@ function MatchupHero({ summary, teamName }: { summary: MatchupQuickSummary; team
 
       {(isActive || isComplete) && hasScores ? (
         <>
-          {/* Score row */}
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: isComplete ? 0 : 10 }}>
-            <div style={{ textAlign: "left" }}>
-              <div style={{ fontSize: 11, color: "#64748b", marginBottom: 2 }}>You</div>
+          {/* Score + record row */}
+          <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 10 }}>
+            <div>
+              <div style={{ fontSize: 11, color: "#64748b", marginBottom: 2 }}>Your score</div>
               <div style={{ fontSize: 28, fontWeight: 900, lineHeight: 1, color: "#e2e8f0" }}>
                 {summary.myScore.toFixed(1)}
               </div>
             </div>
-
-            {isComplete ? (
-              /* W/L badge in the middle for final results */
-              (() => {
-                const outcome: "W" | "L" | "T" = summary.myScore > summary.oppScore ? "W" : summary.myScore < summary.oppScore ? "L" : "T";
-                return (
-                  <span style={{
-                    fontWeight: 800, fontSize: 13, padding: "3px 9px", borderRadius: 6,
-                    color: outcomeColor[outcome],
-                    background: `${outcomeColor[outcome]}18`,
-                  }}>
-                    {outcome}
-                  </span>
-                );
-              })()
-            ) : (
-              <div style={{ fontSize: 13, color: "#475569", fontWeight: 700 }}>vs</div>
-            )}
-
             <div style={{ textAlign: "right" }}>
-              <div style={{ fontSize: 11, color: "#64748b", marginBottom: 2 }}>{summary.opponentName}</div>
-              <div style={{ fontSize: 28, fontWeight: 900, lineHeight: 1, color: "#64748b" }}>
-                {summary.oppScore.toFixed(1)}
+              <div style={{ fontSize: 11, color: "#64748b", marginBottom: 2 }}>vs field</div>
+              <div style={{ fontSize: 22, fontWeight: 800, lineHeight: 1 }}>
+                <span style={{ color: isWinningRecord ? "#34d399" : summary.losses > summary.wins ? "#f87171" : "#94a3b8" }}>
+                  {recordLabel}
+                </span>
               </div>
             </div>
           </div>
 
-          {/* Win probability bar (active only) */}
-          {isActive && (
-            <div>
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, marginBottom: 4 }}>
-                <span style={{ fontWeight: 700, color: "#a5b4fc" }}>
-                  {Math.round(summary.winProbability * 100)}% win chance
-                </span>
-                <span style={{ color: "#475569" }}>
-                  {Math.round((1 - summary.winProbability) * 100)}% opp
-                </span>
-              </div>
-              <div style={{ height: 5, borderRadius: 3, background: "rgba(255,255,255,0.07)", overflow: "hidden" }}>
-                <div style={{
-                  height: "100%",
-                  width: `${Math.round(summary.winProbability * 100)}%`,
-                  borderRadius: 3,
-                  background: "linear-gradient(90deg, #6366f1, #818cf8)",
-                }} />
-              </div>
+          {/* Win rate bar */}
+          <div>
+            <div style={{ fontSize: 10, color: "#64748b", marginBottom: 3 }}>
+              {isComplete ? "Final record" : "Current record"} · {summary.wins} of {opponents} opponents outscored
             </div>
-          )}
+            <div style={{ height: 5, borderRadius: 3, background: "rgba(255,255,255,0.07)", overflow: "hidden" }}>
+              <div style={{
+                height: "100%",
+                width: `${Math.round(winRate * 100)}%`,
+                borderRadius: 3,
+                background: isWinningRecord
+                  ? "linear-gradient(90deg, #34d399, #6ee7b7)"
+                  : "linear-gradient(90deg, #6366f1, #818cf8)",
+              }} />
+            </div>
+          </div>
         </>
       ) : (
-        /* Upcoming, or active with no stats yet */
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <span style={{ fontSize: 14, fontWeight: 700, color: "#e2e8f0" }}>{teamName}</span>
-          <span style={{ fontSize: 12, color: "#475569" }}>vs</span>
-          <span style={{ fontSize: 14, color: "#94a3b8" }}>{summary.opponentName}</span>
+        /* Upcoming — no scores yet */
+        <div>
+          <div style={{ fontSize: 14, fontWeight: 700, color: "#e2e8f0", marginBottom: 4 }}>{teamName}</div>
+          <div style={{ fontSize: 12, color: "#64748b" }}>
+            vs all {opponents} teams · Week {summary.week}
+          </div>
         </div>
       )}
     </div>

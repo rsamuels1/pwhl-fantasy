@@ -1,14 +1,12 @@
 // Lightweight matchup summary for the Fantasy Home dashboard.
-// Returns only what a team card needs: current week, opponent, scores, win probability.
-// Driven by nowMs (sim-date aware) — uses getSeasonState to find the "current" period
-// rather than querying for homeScore: null, so dev simulation works correctly.
+// Returns weekly W-L-T record against the full field (VTF format).
+// Driven by nowMs (sim-date aware) — uses getSeasonState to find the "current" period.
 
 import type { PrismaClient } from "@prisma/client";
 import { getSeasonState } from "@/lib/season";
-import { computeTeamScore } from "@/lib/scoring/matchups";
+import { computeAllTeamScores } from "@/lib/scoring/matchups";
 import { parseScoringSettings } from "@/lib/scoring/settings";
 import { scoreStatLine, DEFAULT_SCORING } from "@/lib/scoring";
-import { winProbability } from "@/lib/projections";
 
 export interface TopPerformer {
   name: string;
@@ -18,10 +16,11 @@ export interface TopPerformer {
 export interface MatchupQuickSummary {
   week: number;
   status: "active" | "upcoming" | "complete";
-  opponentName: string;
   myScore: number;
-  oppScore: number;
-  winProbability: number;
+  wins: number;
+  losses: number;
+  ties: number;
+  teamsCount: number;
   startsAt: Date;
 }
 
@@ -34,10 +33,6 @@ export async function getMatchupQuickSummary(
   const state = await getSeasonState(leagueId, nowMs, prisma);
   if (state.periods.length === 0) return null;
 
-  // Pick the most relevant period based on nowMs.
-  // Priority: ACTIVE > SCORING_PENDING > UPCOMING > most-recent COMPLETE
-  // This ordering ensures an upcoming week is shown over last week's result,
-  // and last week's result is shown when there is nothing else.
   const { periods } = state;
   const active   = periods.find((p) => p.status === "ACTIVE");
   const pending  = periods.find((p) => p.status === "SCORING_PENDING");
@@ -49,34 +44,45 @@ export async function getMatchupQuickSummary(
 
   const { period } = current;
 
-  const matchup = await prisma.matchup.findFirst({
+  // Get all my matchups for this week (one per opponent in VTF)
+  const myMatchups = await prisma.matchup.findMany({
     where: {
       leagueId,
       OR: [{ homeTeamId: teamId }, { awayTeamId: teamId }],
       week: period.week,
       isPlayoff: false,
     },
-    include: { homeTeam: true, awayTeam: true },
   });
 
-  if (!matchup) return null;
+  if (myMatchups.length === 0) return null;
 
-  const iHome = matchup.homeTeamId === teamId;
-  const opponentName = iHome ? matchup.awayTeam.name : matchup.homeTeam.name;
-  const opponentTeamId = iHome ? matchup.awayTeamId : matchup.homeTeamId;
+  const teamsCount = await prisma.fantasyTeam.count({ where: { leagueId } });
 
-  // Already scored — return final result
-  if (matchup.homeScore !== null && matchup.awayScore !== null) {
-    const myScore  = iHome ? matchup.homeScore  : matchup.awayScore;
-    const oppScore = iHome ? matchup.awayScore : matchup.homeScore;
+  // Already scored — count W-L-T from cached scores
+  const firstMatchup = myMatchups[0];
+  if (firstMatchup.homeScore !== null && firstMatchup.awayScore !== null) {
+    const myScore = firstMatchup.homeTeamId === teamId
+      ? firstMatchup.homeScore
+      : firstMatchup.awayScore;
+
+    let wins = 0, losses = 0, ties = 0;
+    for (const m of myMatchups) {
+      const mine = m.homeTeamId === teamId ? m.homeScore! : m.awayScore!;
+      const opp  = m.homeTeamId === teamId ? m.awayScore! : m.homeScore!;
+      if (mine > opp) wins++;
+      else if (mine < opp) losses++;
+      else ties++;
+    }
+
     return {
       week: period.week,
       status: "complete",
-      opponentName,
       myScore,
-      oppScore,
-      winProbability: myScore > oppScore ? 1 : myScore < oppScore ? 0 : 0.5,
-      startsAt: matchup.startsAt,
+      wins,
+      losses,
+      ties,
+      teamsCount,
+      startsAt: firstMatchup.startsAt,
     };
   }
 
@@ -85,34 +91,41 @@ export async function getMatchupQuickSummary(
     return {
       week: period.week,
       status: "upcoming",
-      opponentName,
       myScore: 0,
-      oppScore: 0,
-      winProbability: 0.5,
-      startsAt: matchup.startsAt,
+      wins: 0,
+      losses: 0,
+      ties: 0,
+      teamsCount,
+      startsAt: firstMatchup.startsAt,
     };
   }
 
-  // Active (or scoring_pending with no cached scores) — compute running totals
+  // Active — score all teams, compute live W-L-T
   const league = await prisma.fantasyLeague.findUniqueOrThrow({
     where: { id: leagueId },
     select: { scoringSettings: true },
   });
   const settings = parseScoringSettings(league.scoringSettings);
+  const allScores = await computeAllTeamScores(leagueId, period, settings, prisma);
 
-  const [myScore, oppScore] = await Promise.all([
-    computeTeamScore(teamId, period, settings, prisma),
-    computeTeamScore(opponentTeamId, period, settings, prisma),
-  ]);
+  const myScore = allScores.get(teamId) ?? 0;
+  let wins = 0, losses = 0, ties = 0;
+  for (const [tid, score] of allScores) {
+    if (tid === teamId) continue;
+    if (myScore > score) wins++;
+    else if (myScore < score) losses++;
+    else ties++;
+  }
 
   return {
     week: period.week,
     status: "active",
-    opponentName,
     myScore,
-    oppScore,
-    winProbability: winProbability(myScore, oppScore),
-    startsAt: matchup.startsAt,
+    wins,
+    losses,
+    ties,
+    teamsCount,
+    startsAt: firstMatchup.startsAt,
   };
 }
 
