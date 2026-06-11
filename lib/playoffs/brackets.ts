@@ -252,9 +252,9 @@ export function recordMatchupResult(
   // Determine winner
   let winner: SeededTeam | undefined;
   if (homeScore > awayScore) {
-    winner = matchup.homeTeam;
+    winner = matchup.homeTeam ?? undefined;
   } else if (awayScore > homeScore) {
-    winner = matchup.awayTeam;
+    winner = matchup.awayTeam ?? undefined;
   } else {
     // Tie: higher seed wins if enabled
     if (higherSeedWinsTies && matchup.homeTeam && matchup.awayTeam) {

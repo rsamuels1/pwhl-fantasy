@@ -47,7 +47,7 @@ export function derivePlayoffPeriods(
     const gameDate = new Date(g.startsAt);
     // Estimate: each period is ~7 days. This is a rough heuristic.
     // In practice, you'd use the actual period boundaries.
-    return gameDate > new Date(sorted[regularSeasonEndWeek * 7]);
+    return gameDate > new Date(sorted[regularSeasonEndWeek * 7].startsAt);
   });
 
   if (!playoffStartGame) {

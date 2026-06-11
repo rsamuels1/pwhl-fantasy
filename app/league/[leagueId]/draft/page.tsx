@@ -52,7 +52,7 @@ export default async function LeagueDraftPage({ params }: { params: { leagueId: 
               </div>
               <div>
                 <strong>Progress</strong>
-                <p>{draftPicks} / {league.teams.length * Object.values(league.rosterSettings as any).reduce((sum: number, slot: number) => sum + slot, 0)} picks</p>
+                <p>{draftPicks} / {league.teams.length * Object.values(league.rosterSettings as Record<string, number>).reduce((sum, slot) => sum + slot, 0)} picks</p>
               </div>
             </div>
 
