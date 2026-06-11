@@ -1,8 +1,99 @@
 import { prisma } from "@/lib/db";
 import { requireAuth } from "@/lib/auth";
 import { getDevNow } from "@/lib/devTime";
-import { getMatchupQuickSummary } from "@/lib/services/matchup-summary";
+import { getMatchupQuickSummary, type MatchupQuickSummary } from "@/lib/services/matchup-summary";
 import Link from "next/link";
+
+const outcomeColor = { W: "#34d399", L: "#f87171", T: "#94a3b8" } as const;
+
+function MatchupHero({ summary, teamName }: { summary: MatchupQuickSummary; teamName: string }) {
+  const isActive   = summary.status === "active";
+  const isComplete = summary.status === "complete";
+  const hasScores  = summary.myScore > 0 || summary.oppScore > 0;
+
+  const label = isActive ? "Active" : isComplete ? "Final" : "Upcoming";
+  const accentColor = isActive ? "#6366f1" : "#475569";
+
+  return (
+    <div style={{
+      padding: "14px 16px", borderRadius: 12,
+      background: isActive ? "rgba(99,102,241,0.09)" : "rgba(255,255,255,0.04)",
+      border: `1px solid ${isActive ? "rgba(99,102,241,0.25)" : "rgba(148,163,184,0.1)"}`,
+    }}>
+      <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 8, color: accentColor }}>
+        Week {summary.week} · {label}
+      </div>
+
+      {(isActive || isComplete) && hasScores ? (
+        <>
+          {/* Score row */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: isComplete ? 0 : 10 }}>
+            <div style={{ textAlign: "left" }}>
+              <div style={{ fontSize: 11, color: "#64748b", marginBottom: 2 }}>You</div>
+              <div style={{ fontSize: 28, fontWeight: 900, lineHeight: 1, color: "#e2e8f0" }}>
+                {summary.myScore.toFixed(1)}
+              </div>
+            </div>
+
+            {isComplete ? (
+              /* W/L badge in the middle for final results */
+              (() => {
+                const outcome: "W" | "L" | "T" = summary.myScore > summary.oppScore ? "W" : summary.myScore < summary.oppScore ? "L" : "T";
+                return (
+                  <span style={{
+                    fontWeight: 800, fontSize: 13, padding: "3px 9px", borderRadius: 6,
+                    color: outcomeColor[outcome],
+                    background: `${outcomeColor[outcome]}18`,
+                  }}>
+                    {outcome}
+                  </span>
+                );
+              })()
+            ) : (
+              <div style={{ fontSize: 13, color: "#475569", fontWeight: 700 }}>vs</div>
+            )}
+
+            <div style={{ textAlign: "right" }}>
+              <div style={{ fontSize: 11, color: "#64748b", marginBottom: 2 }}>{summary.opponentName}</div>
+              <div style={{ fontSize: 28, fontWeight: 900, lineHeight: 1, color: "#64748b" }}>
+                {summary.oppScore.toFixed(1)}
+              </div>
+            </div>
+          </div>
+
+          {/* Win probability bar (active only) */}
+          {isActive && (
+            <div>
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, marginBottom: 4 }}>
+                <span style={{ fontWeight: 700, color: "#a5b4fc" }}>
+                  {Math.round(summary.winProbability * 100)}% win chance
+                </span>
+                <span style={{ color: "#475569" }}>
+                  {Math.round((1 - summary.winProbability) * 100)}% opp
+                </span>
+              </div>
+              <div style={{ height: 5, borderRadius: 3, background: "rgba(255,255,255,0.07)", overflow: "hidden" }}>
+                <div style={{
+                  height: "100%",
+                  width: `${Math.round(summary.winProbability * 100)}%`,
+                  borderRadius: 3,
+                  background: "linear-gradient(90deg, #6366f1, #818cf8)",
+                }} />
+              </div>
+            </div>
+          )}
+        </>
+      ) : (
+        /* Upcoming, or active with no stats yet */
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <span style={{ fontSize: 14, fontWeight: 700, color: "#e2e8f0" }}>{teamName}</span>
+          <span style={{ fontSize: 12, color: "#475569" }}>vs</span>
+          <span style={{ fontSize: 14, color: "#94a3b8" }}>{summary.opponentName}</span>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default async function DashboardPage() {
   const user = await requireAuth("/dashboard");
@@ -30,28 +121,11 @@ export default async function DashboardPage() {
     : [];
 
   const teams = [...ownedTeams, ...extraTeams];
-  const teamIds = teams.map((t) => t.id);
   const hasTeams = teams.length > 0;
 
-  // Fetch live matchup summaries + last results in parallel
-  const [summaries, recentMatchups] = await Promise.all([
-    Promise.all(
-      teams.map((team) =>
-        getMatchupQuickSummary(team.id, team.leagueId, nowMs, prisma)
-      )
-    ),
-    teamIds.length > 0
-      ? prisma.matchup.findMany({
-          where: {
-            OR: [{ homeTeamId: { in: teamIds } }, { awayTeamId: { in: teamIds } }],
-            homeScore: { not: null },
-          },
-          include: { homeTeam: true, awayTeam: true },
-          orderBy: { week: "desc" },
-          take: teamIds.length * 3,
-        })
-      : Promise.resolve([]),
-  ]);
+  const summaries = await Promise.all(
+    teams.map((team) => getMatchupQuickSummary(team.id, team.leagueId, nowMs, prisma))
+  );
 
   const hour = new Date(nowMs).getHours();
   const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
@@ -60,7 +134,6 @@ export default async function DashboardPage() {
   const actions: { label: string; href: string; teamName: string }[] = [];
   teams.forEach((team, i) => {
     const summary = summaries[i];
-    // Draft upcoming (within 7 days, draft not complete)
     if (
       team.league.draftStartsAt &&
       team.league.status === "PRE_DRAFT"
@@ -70,15 +143,12 @@ export default async function DashboardPage() {
       );
       if (daysUntil >= 0 && daysUntil <= 7) {
         actions.push({
-          label: daysUntil === 0
-            ? "Draft is today!"
-            : `Draft in ${daysUntil} day${daysUntil === 1 ? "" : "s"}`,
+          label: daysUntil === 0 ? "Draft is today!" : `Draft in ${daysUntil} day${daysUntil === 1 ? "" : "s"}`,
           href: `/league/${team.leagueId}/admin`,
           teamName: team.league.name,
         });
       }
     }
-    // Active period — remind to check lineup
     if (summary?.status === "active") {
       actions.push({
         label: `Week ${summary.week} is active — check your starters`,
@@ -87,8 +157,6 @@ export default async function DashboardPage() {
       });
     }
   });
-
-  const outcomeColor = { W: "#34d399", L: "#f87171", T: "#94a3b8" } as const;
 
   return (
     <main>
@@ -128,8 +196,8 @@ export default async function DashboardPage() {
             <div style={{ fontSize: 11, fontWeight: 700, color: "#f59e0b", textTransform: "uppercase", letterSpacing: "0.06em" }}>
               Action needed
             </div>
-            {actions.map((a, i) => (
-              <div key={i} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            {actions.map((a, idx) => (
+              <div key={idx} style={{ display: "flex", alignItems: "center", gap: 10 }}>
                 <span style={{ fontSize: 10, color: "#f59e0b" }}>›</span>
                 <Link href={a.href} style={{ fontSize: 13, color: "#e2e8f0", textDecoration: "none" }}>
                   {a.label}
@@ -147,29 +215,8 @@ export default async function DashboardPage() {
             <div className="grid-2" style={{ gap: 16 }}>
               {teams.map((team, i) => {
                 const summary = summaries[i];
-                const lastResult = recentMatchups.find(
-                  (m) => m.homeTeamId === team.id || m.awayTeamId === team.id
-                );
-
-                let lastResultDisplay: {
-                  outcome: "W" | "L" | "T"; myScore: number; oppScore: number; oppName: string;
-                } | null = null;
-                if (lastResult && lastResult.homeScore !== null && lastResult.awayScore !== null) {
-                  const myScore = lastResult.homeTeamId === team.id ? lastResult.homeScore : lastResult.awayScore;
-                  const oppScore = lastResult.homeTeamId === team.id ? lastResult.awayScore : lastResult.homeScore;
-                  const oppName = lastResult.homeTeamId === team.id
-                    ? lastResult.awayTeam.name
-                    : lastResult.homeTeam.name;
-                  lastResultDisplay = {
-                    outcome: myScore > oppScore ? "W" : myScore < oppScore ? "L" : "T",
-                    myScore, oppScore, oppName,
-                  };
-                }
-
                 return (
                   <div key={team.id} className="team-card" style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-
-                    {/* Team identity */}
                     <div>
                       <h3 style={{ margin: 0, fontSize: 17, fontWeight: 700 }}>{team.name}</h3>
                       <p className="team-meta" style={{ marginTop: 2 }}>
@@ -177,97 +224,8 @@ export default async function DashboardPage() {
                       </p>
                     </div>
 
-                    {/* Competition hero: active/upcoming matchup, or last result if season complete */}
                     {summary ? (
-                      <div style={{
-                        padding: "14px 16px", borderRadius: 12,
-                        background: summary.status === "active"
-                          ? "rgba(99,102,241,0.09)"
-                          : "rgba(255,255,255,0.04)",
-                        border: `1px solid ${summary.status === "active"
-                          ? "rgba(99,102,241,0.25)"
-                          : "rgba(148,163,184,0.1)"}`,
-                      }}>
-                        <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 8, color: summary.status === "active" ? "#6366f1" : "#475569" }}>
-                          Week {summary.week} · {summary.status === "active" ? "Active" : "Upcoming"}
-                        </div>
-
-                        {summary.status === "active" && (summary.myScore > 0 || summary.oppScore > 0) ? (
-                          <>
-                            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-                              <div style={{ textAlign: "left" }}>
-                                <div style={{ fontSize: 11, color: "#64748b", marginBottom: 2 }}>You</div>
-                                <div style={{ fontSize: 28, fontWeight: 900, lineHeight: 1, color: "#e2e8f0" }}>
-                                  {summary.myScore.toFixed(1)}
-                                </div>
-                              </div>
-                              <div style={{ fontSize: 13, color: "#475569", fontWeight: 700 }}>vs</div>
-                              <div style={{ textAlign: "right" }}>
-                                <div style={{ fontSize: 11, color: "#64748b", marginBottom: 2 }}>{summary.opponentName}</div>
-                                <div style={{ fontSize: 28, fontWeight: 900, lineHeight: 1, color: "#64748b" }}>
-                                  {summary.oppScore.toFixed(1)}
-                                </div>
-                              </div>
-                            </div>
-                            <div>
-                              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, marginBottom: 4 }}>
-                                <span style={{ fontWeight: 700, color: "#a5b4fc" }}>
-                                  {Math.round(summary.winProbability * 100)}% win chance
-                                </span>
-                                <span style={{ color: "#475569" }}>
-                                  {Math.round((1 - summary.winProbability) * 100)}% opp
-                                </span>
-                              </div>
-                              <div style={{ height: 5, borderRadius: 3, background: "rgba(255,255,255,0.07)", overflow: "hidden" }}>
-                                <div style={{
-                                  height: "100%",
-                                  width: `${Math.round(summary.winProbability * 100)}%`,
-                                  borderRadius: 3,
-                                  background: "linear-gradient(90deg, #6366f1, #818cf8)",
-                                }} />
-                              </div>
-                            </div>
-                          </>
-                        ) : (
-                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                            <span style={{ fontSize: 14, fontWeight: 700, color: "#e2e8f0" }}>{team.name}</span>
-                            <span style={{ fontSize: 12, color: "#475569" }}>vs</span>
-                            <span style={{ fontSize: 14, color: "#94a3b8" }}>{summary.opponentName}</span>
-                          </div>
-                        )}
-                      </div>
-                    ) : lastResultDisplay ? (
-                      /* Season complete — promote last result into the hero slot */
-                      <div style={{
-                        padding: "14px 16px", borderRadius: 12,
-                        background: "rgba(255,255,255,0.03)",
-                        border: "1px solid rgba(148,163,184,0.1)",
-                      }}>
-                        <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 10, color: "#475569" }}>
-                          Week {lastResult!.week} · Final
-                        </div>
-                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                          <div style={{ textAlign: "left" }}>
-                            <div style={{ fontSize: 11, color: "#64748b", marginBottom: 2 }}>You</div>
-                            <div style={{ fontSize: 28, fontWeight: 900, lineHeight: 1, color: "#e2e8f0" }}>
-                              {lastResultDisplay.myScore.toFixed(1)}
-                            </div>
-                          </div>
-                          <span style={{
-                            fontWeight: 800, fontSize: 13, padding: "3px 8px", borderRadius: 6,
-                            color: outcomeColor[lastResultDisplay.outcome],
-                            background: `${outcomeColor[lastResultDisplay.outcome]}18`,
-                          }}>
-                            {lastResultDisplay.outcome}
-                          </span>
-                          <div style={{ textAlign: "right" }}>
-                            <div style={{ fontSize: 11, color: "#64748b", marginBottom: 2 }}>{lastResultDisplay.oppName}</div>
-                            <div style={{ fontSize: 28, fontWeight: 900, lineHeight: 1, color: "#64748b" }}>
-                              {lastResultDisplay.oppScore.toFixed(1)}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
+                      <MatchupHero summary={summary} teamName={team.name} />
                     ) : (
                       <div style={{
                         padding: "12px 14px", borderRadius: 10,
@@ -279,7 +237,6 @@ export default async function DashboardPage() {
                       </div>
                     )}
 
-                    {/* CTAs */}
                     <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                       <Link href={`/team/${team.id}/matchup`} className="button-primary">
                         My Matchup →

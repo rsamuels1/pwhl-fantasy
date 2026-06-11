@@ -1,23 +1,21 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { requireAuth, requireLeagueMember } from "@/lib/auth";
+import { getDevNow } from "@/lib/devTime";
 
-function formatDate(date: Date) {
-  return new Intl.DateTimeFormat("en-US", {
-    month: "short",
-    day: "numeric",
-    hour: "numeric",
-    minute: "numeric",
-  }).format(date);
+function fmtDate(d: Date) {
+  return new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" }).format(d);
 }
 
 export default async function MatchupsPage({ params }: { params: { leagueId: string } }) {
-  const leagueId = params.leagueId;
+  const { leagueId } = params;
   const user = await requireAuth(`/league/${leagueId}/matchups`);
-  await requireLeagueMember(leagueId, user.id);
+  const myTeam = await requireLeagueMember(leagueId, user.id);
 
   const league = await prisma.fantasyLeague.findUnique({ where: { id: leagueId } });
   if (!league) notFound();
+
+  const nowMs = await getDevNow();
 
   const matchups = await prisma.matchup.findMany({
     where: { leagueId },
@@ -25,82 +23,198 @@ export default async function MatchupsPage({ params }: { params: { leagueId: str
     include: { homeTeam: true, awayTeam: true },
   });
 
-  const regularMatchups = matchups.filter((matchup) => !matchup.isPlayoff);
-  const playoffMatchups = matchups.filter((matchup) => matchup.isPlayoff);
+  const regularMatchups = matchups.filter((m) => !m.isPlayoff);
+  const playoffMatchups = matchups.filter((m) => m.isPlayoff);
+
+  // Group regular season by week
+  const byWeek = new Map<number, typeof regularMatchups>();
+  for (const m of regularMatchups) {
+    const arr = byWeek.get(m.week) ?? [];
+    arr.push(m);
+    byWeek.set(m.week, arr);
+  }
+
+  // Find "current" week using sim date
+  const started = regularMatchups.filter((m) => new Date(m.startsAt).getTime() <= nowMs);
+  const currentWeek = started.length > 0
+    ? Math.max(...started.map((m) => m.week))
+    : regularMatchups.length > 0
+    ? Math.min(...regularMatchups.map((m) => m.week))
+    : null;
 
   return (
-    <div style={{ display: "grid", gap: 20 }}>
-      <section style={panelStyle}>
-        <h1 style={{ fontSize: 24, marginBottom: 10 }}>Matchups</h1>
-        <p style={{ color: "#94a3b8", marginBottom: 20 }}>
-          Review the regular season schedule and results for {league.name}.
-        </p>
+    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
 
-        {regularMatchups.length === 0 ? (
-          <p style={{ color: "#94a3b8" }}>No regular season matchups are available yet.</p>
-        ) : (
-          <div style={{ display: "grid", gap: 14 }}>
-            {regularMatchups.map((matchup) => (
-              <div key={matchup.id} style={matchupCardStyle}>
-                <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
-                  <div>
-                    <p style={{ fontWeight: 700 }}>{matchup.homeTeam.name} vs {matchup.awayTeam.name}</p>
-                    <p style={{ color: "#94a3b8", marginTop: 4 }}>Week {matchup.week} · {formatDate(new Date(matchup.startsAt))}</p>
+      <h1 style={{ fontSize: 24, margin: 0 }}>Schedule</h1>
+
+      {/* Regular season */}
+      {byWeek.size === 0 ? (
+        <div style={card}>
+          <p style={{ color: "#64748b", margin: 0 }}>No matchups scheduled yet.</p>
+        </div>
+      ) : (
+        [...byWeek.entries()].map(([week, weekMatchups]) => {
+          const isCurrent = week === currentWeek;
+          const period = weekMatchups[0];
+          const dateRange = `${fmtDate(new Date(period.startsAt))} – ${fmtDate(new Date(period.endsAt))}`;
+
+          return (
+            <section key={week} style={{
+              ...card,
+              border: isCurrent
+                ? "1px solid rgba(99,102,241,0.3)"
+                : "1px solid rgba(148,163,184,0.14)",
+              background: isCurrent
+                ? "rgba(99,102,241,0.04)"
+                : "rgba(255,255,255,0.04)",
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14, flexWrap: "wrap" }}>
+                <span style={{ fontSize: 15, fontWeight: 700, color: "#e2e8f0" }}>Week {week}</span>
+                <span style={{ fontSize: 12, color: "#475569" }}>{dateRange}</span>
+                {isCurrent && (
+                  <span style={{
+                    fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 20,
+                    background: "rgba(99,102,241,0.15)", color: "#a5b4fc",
+                  }}>
+                    Current
+                  </span>
+                )}
+              </div>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                {weekMatchups.map((m) => {
+                  const scored = m.homeScore !== null && m.awayScore !== null;
+                  const homeIsMe = m.homeTeamId === myTeam.id;
+                  const awayIsMe = m.awayTeamId === myTeam.id;
+                  const isMyMatchup = homeIsMe || awayIsMe;
+                  const homeWon = scored && m.homeScore! > m.awayScore!;
+                  const awayWon = scored && m.awayScore! > m.homeScore!;
+
+                  return (
+                    <div key={m.id} style={{
+                      display: "grid",
+                      gridTemplateColumns: "1fr auto 1fr",
+                      alignItems: "center",
+                      gap: "4px 10px",
+                      padding: "10px 14px",
+                      borderRadius: 10,
+                      background: isMyMatchup ? "rgba(99,102,241,0.06)" : "rgba(255,255,255,0.02)",
+                      border: isMyMatchup ? "1px solid rgba(99,102,241,0.2)" : "1px solid rgba(148,163,184,0.06)",
+                    }}>
+                      {/* Home */}
+                      <div style={{ textAlign: "right", minWidth: 0 }}>
+                        <div style={{
+                          fontSize: 13, fontWeight: homeIsMe ? 700 : 500,
+                          color: homeIsMe ? "#e2e8f0" : "#94a3b8",
+                          overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                        }}>
+                          {m.homeTeam.name}
+                        </div>
+                        {scored && (
+                          <div style={{
+                            fontSize: 17, fontWeight: 800,
+                            color: homeWon ? "#e2e8f0" : "#475569",
+                            fontVariantNumeric: "tabular-nums",
+                          }}>
+                            {m.homeScore!.toFixed(1)}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Middle */}
+                      <div style={{ fontSize: 10, fontWeight: 700, color: "#334155", textAlign: "center", letterSpacing: "0.5px", minWidth: 36 }}>
+                        {scored ? "FINAL" : "VS"}
+                      </div>
+
+                      {/* Away */}
+                      <div style={{ textAlign: "left", minWidth: 0 }}>
+                        <div style={{
+                          fontSize: 13, fontWeight: awayIsMe ? 700 : 500,
+                          color: awayIsMe ? "#e2e8f0" : "#94a3b8",
+                          overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                        }}>
+                          {m.awayTeam.name}
+                        </div>
+                        {scored && (
+                          <div style={{
+                            fontSize: 17, fontWeight: 800,
+                            color: awayWon ? "#e2e8f0" : "#475569",
+                            fontVariantNumeric: "tabular-nums",
+                          }}>
+                            {m.awayScore!.toFixed(1)}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+          );
+        })
+      )}
+
+      {/* Playoffs */}
+      {playoffMatchups.length > 0 && (
+        <section style={card}>
+          <h2 style={{ fontSize: 16, fontWeight: 700, margin: "0 0 14px", color: "#e2e8f0" }}>Playoffs</h2>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            {playoffMatchups.map((m) => {
+              const scored = m.homeScore !== null && m.awayScore !== null;
+              const homeWon = scored && m.homeScore! > m.awayScore!;
+              const awayWon = scored && m.awayScore! > m.homeScore!;
+              const roundLabel = m.round != null ? `Round ${m.round}` : "Playoffs";
+
+              return (
+                <div key={m.id} style={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr auto 1fr",
+                  alignItems: "center",
+                  gap: "4px 10px",
+                  padding: "10px 14px",
+                  borderRadius: 10,
+                  background: "rgba(255,255,255,0.02)",
+                  border: "1px solid rgba(148,163,184,0.06)",
+                }}>
+                  <div style={{ textAlign: "right", minWidth: 0 }}>
+                    <div style={{ fontSize: 13, fontWeight: 500, color: "#94a3b8", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {m.homeTeam.name}
+                    </div>
+                    {scored && (
+                      <div style={{ fontSize: 17, fontWeight: 800, color: homeWon ? "#e2e8f0" : "#475569", fontVariantNumeric: "tabular-nums" }}>
+                        {m.homeScore!.toFixed(1)}
+                      </div>
+                    )}
                   </div>
-                  <div style={{ textAlign: "right", minWidth: 120 }}>
-                    {matchup.homeScore === null || matchup.awayScore === null ? (
-                      <span style={{ color: "#22c55e", fontWeight: 700 }}>Upcoming</span>
-                    ) : (
-                      <span style={{ fontWeight: 700 }}>{matchup.homeScore} – {matchup.awayScore}</span>
+                  <div style={{ textAlign: "center", minWidth: 44 }}>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: "#334155", letterSpacing: "0.5px" }}>
+                      {scored ? "FINAL" : "VS"}
+                    </div>
+                    <div style={{ fontSize: 10, color: "#475569", marginTop: 2 }}>{roundLabel} · Wk {m.week}</div>
+                  </div>
+                  <div style={{ textAlign: "left", minWidth: 0 }}>
+                    <div style={{ fontSize: 13, fontWeight: 500, color: "#94a3b8", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {m.awayTeam.name}
+                    </div>
+                    {scored && (
+                      <div style={{ fontSize: 17, fontWeight: 800, color: awayWon ? "#e2e8f0" : "#475569", fontVariantNumeric: "tabular-nums" }}>
+                        {m.awayScore!.toFixed(1)}
+                      </div>
                     )}
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
-        )}
-      </section>
-
-      <section style={panelStyle}>
-        <h2 style={{ fontSize: 20, marginBottom: 12 }}>Playoff matchups</h2>
-        {playoffMatchups.length === 0 ? (
-          <p style={{ color: "#94a3b8" }}>Playoff matchups are not created yet.</p>
-        ) : (
-          <div style={{ display: "grid", gap: 14 }}>
-            {playoffMatchups.map((matchup) => (
-              <div key={matchup.id} style={matchupCardStyle}>
-                <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
-                  <div>
-                    <p style={{ fontWeight: 700 }}>{matchup.homeTeam.name} vs {matchup.awayTeam.name}</p>
-                    <p style={{ color: "#94a3b8", marginTop: 4 }}>Round {matchup.round} · Week {matchup.week}</p>
-                  </div>
-                  <div style={{ textAlign: "right", minWidth: 120 }}>
-                    {matchup.homeScore === null || matchup.awayScore === null ? (
-                      <span style={{ color: "#f59e0b", fontWeight: 700 }}>Pending</span>
-                    ) : (
-                      <span style={{ fontWeight: 700 }}>{matchup.homeScore} – {matchup.awayScore}</span>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
+        </section>
+      )}
     </div>
   );
 }
 
-const panelStyle: React.CSSProperties = {
+const card: React.CSSProperties = {
   background: "rgba(255,255,255,0.04)",
   border: "1px solid rgba(148,163,184,0.14)",
   borderRadius: 20,
   padding: 20,
-};
-
-const matchupCardStyle: React.CSSProperties = {
-  background: "rgba(255,255,255,0.02)",
-  border: "1px solid rgba(148,163,184,0.12)",
-  borderRadius: 18,
-  padding: 18,
 };

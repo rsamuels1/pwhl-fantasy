@@ -12,6 +12,7 @@ export default async function SchedulePage({ params }: Props) {
   const { teamId } = await params;
   const user = await requireAuth(`/team/${teamId}/schedule`);
   const team = await requireTeamOwner(teamId, user.id);
+  if (!team) notFound();
 
   const nowMs = await getDevNow();
   const leagueId = team.league.id;
@@ -87,8 +88,6 @@ export default async function SchedulePage({ params }: Props) {
     arr.push(g);
     byDay.set(key, arr);
   }
-
-  if (!team) notFound();
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
@@ -172,6 +171,7 @@ export default async function SchedulePage({ params }: Props) {
                         name={game.homeTeam.name}
                         myPlayers={myHome}
                         align="right"
+                        isHome
                       />
                       <div style={{ textAlign: "center", minWidth: 48 }}>
                         <div style={{ fontSize: 10, fontWeight: 700, color: played ? "#475569" : "#6366f1", textTransform: "uppercase", letterSpacing: "0.5px" }}>
@@ -188,6 +188,7 @@ export default async function SchedulePage({ params }: Props) {
                         name={game.awayTeam.name}
                         myPlayers={myAway}
                         align="left"
+                        isHome={false}
                       />
                     </div>
 
@@ -226,12 +227,13 @@ export default async function SchedulePage({ params }: Props) {
 }
 
 function TeamSide({
-  abbr, name, myPlayers, align,
+  abbr, name, myPlayers, align, isHome,
 }: {
   abbr: string;
   name: string;
   myPlayers: { name: string }[];
   align: "left" | "right";
+  isHome: boolean;
 }) {
   return (
     <div style={{ textAlign: align, minWidth: 0 }}>
@@ -250,11 +252,19 @@ function TeamSide({
           <PlayerBadge count={myPlayers.length} />
         )}
       </div>
-      <div style={{
-        fontSize: 11, color: "#475569", marginTop: 1,
-        overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-      }}>
-        {name}
+      <div style={{ display: "flex", alignItems: "center", gap: 4, justifyContent: align === "right" ? "flex-end" : "flex-start" }}>
+        <span style={{
+          fontSize: 9, fontWeight: 700, padding: "1px 4px", borderRadius: 3,
+          background: "rgba(148,163,184,0.08)", color: "#334155",
+        }}>
+          {isHome ? "HOME" : "AWAY"}
+        </span>
+        <span style={{
+          fontSize: 11, color: "#475569",
+          overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+        }}>
+          {name}
+        </span>
       </div>
     </div>
   );

@@ -165,9 +165,11 @@ export default function InlineLineupEditor({ leagueId, teamId, active, bench }: 
       })}
 
       {/* Bench */}
-      <div style={{ fontSize: 11, fontWeight: 600, color: "#475569", textTransform: "uppercase", letterSpacing: 0.5, margin: "12px 0 6px" }}>
-        Bench
-      </div>
+      {bench.length > 0 && (
+        <div style={{ fontSize: 11, fontWeight: 600, color: "#475569", textTransform: "uppercase", letterSpacing: 0.5, margin: "12px 0 6px" }}>
+          Bench
+        </div>
+      )}
       {bench.map((p) => {
         const isEligible = selected ? canSwap(selected, p) : false;
         return (
