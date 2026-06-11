@@ -63,7 +63,8 @@ export async function projectTeamRemainingScore(
   earnedSoFar: number,
   period: ScoringPeriod,
   scoringSettings: ScoringSettings = DEFAULT_SCORING,
-  prisma: PrismaClient
+  prisma: PrismaClient,
+  nowMs: number = Date.now()
 ): Promise<number> {
   const entries = await prisma.rosterEntry.findMany({
     where: {
@@ -77,7 +78,7 @@ export async function projectTeamRemainingScore(
 
   if (entries.length === 0) return earnedSoFar;
 
-  const now = new Date();
+  const now = new Date(nowMs);
   const teamIds = [...new Set(entries.map((e) => e.player.teamId).filter(Boolean))] as string[];
 
   if (teamIds.length === 0) return earnedSoFar;
@@ -139,12 +140,14 @@ export interface RemainingPlayer {
 }
 
 // Returns active-roster players whose team has a game today that isn't final yet.
+// nowMs is the simulated or real current time — used so dev sim mode shows correct results.
 export async function getRemainingPlayersTonight(
   fantasyTeamId: string,
   scoringSettings: ScoringSettings = DEFAULT_SCORING,
-  prisma: PrismaClient
+  prisma: PrismaClient,
+  nowMs: number = Date.now()
 ): Promise<RemainingPlayer[]> {
-  const now = new Date();
+  const now = new Date(nowMs);
   const todayStart = new Date(
     Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())
   );

@@ -56,11 +56,18 @@ export interface ActiveMatchup {
   opponentPlayers: PlayerMatchupRow[];
 }
 
+export interface LineupAlert {
+  playerId: string;
+  name: string;
+  reason: "zero_games";
+}
+
 export interface DashboardData {
   activeMatchup: ActiveMatchup | null;
   remainingPlayers: RemainingPlayer[];
   topPerformers: PlayerPerfSummary[];
   disappointments: PlayerPerfSummary[];
+  lineupAlerts: LineupAlert[];
   leagueActivity: ActivityEvent[];
 }
 
@@ -100,6 +107,7 @@ export async function getDashboardData(
       remainingPlayers: [],
       topPerformers: [],
       disappointments: [],
+      lineupAlerts: [],
       leagueActivity,
     };
   }
@@ -124,6 +132,7 @@ export async function getDashboardData(
       remainingPlayers: [],
       topPerformers: [],
       disappointments: [],
+      lineupAlerts: [],
       leagueActivity,
     };
   }
@@ -144,8 +153,8 @@ export async function getDashboardData(
     } as const;
 
     const [myProjected, opponentProjected, myRoster, opponentRoster] = await Promise.all([
-      projectTeamRemainingScore(myTeamId, 0, displayPeriod, scoringSettings, prisma),
-      projectTeamRemainingScore(opponentTeam.id, 0, displayPeriod, scoringSettings, prisma),
+      projectTeamRemainingScore(myTeamId, 0, displayPeriod, scoringSettings, prisma, nowMs),
+      projectTeamRemainingScore(opponentTeam.id, 0, displayPeriod, scoringSettings, prisma, nowMs),
       prisma.rosterEntry.findMany({
         where: { fantasyTeamId: myTeamId, slot: { notIn: ["BENCH", "IR"] } },
         include: activeRosterInclude,
@@ -208,6 +217,7 @@ export async function getDashboardData(
       remainingPlayers: [],
       topPerformers: [],
       disappointments: [],
+      lineupAlerts: [],
       leagueActivity,
     };
   }
@@ -220,8 +230,8 @@ export async function getDashboardData(
 
   // Project totals for both teams in parallel
   const [myProjected, opponentProjected] = await Promise.all([
-    projectTeamRemainingScore(myTeamId, myDetailed.total, displayPeriod, scoringSettings, prisma),
-    projectTeamRemainingScore(opponentTeam.id, opponentDetailed.total, displayPeriod, scoringSettings, prisma),
+    projectTeamRemainingScore(myTeamId, myDetailed.total, displayPeriod, scoringSettings, prisma, nowMs),
+    projectTeamRemainingScore(opponentTeam.id, opponentDetailed.total, displayPeriod, scoringSettings, prisma, nowMs),
   ]);
 
   const winProb = winProbability(myProjected, opponentProjected);
@@ -272,8 +282,13 @@ export async function getDashboardData(
       points: p.points,
     }));
 
-  // Remaining players tonight for my team
-  const remainingPlayers = await getRemainingPlayersTonight(myTeamId, scoringSettings, prisma);
+  // Remaining players tonight for my team (sim-date-aware)
+  const remainingPlayers = await getRemainingPlayersTonight(myTeamId, scoringSettings, prisma, nowMs);
+
+  // Lineup alerts: active starters with 0 games remaining this period
+  const lineupAlerts: LineupAlert[] = withGames(myDetailed.players)
+    .filter((p) => p.gamesThisPeriod === 0 && p.slot !== "BENCH" && p.slot !== "IR")
+    .map((p) => ({ playerId: p.playerId, name: p.name, reason: "zero_games" as const }));
 
   return {
     activeMatchup: {
@@ -291,6 +306,7 @@ export async function getDashboardData(
     remainingPlayers,
     topPerformers,
     disappointments,
+    lineupAlerts,
     leagueActivity,
   };
 }
