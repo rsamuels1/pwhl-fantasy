@@ -394,7 +394,7 @@ function NeedsPanel({
 // Player list + stats + queue management
 // ---------------------------------------------------------------------------
 
-type SortKey = "points" | "goals" | "assists" | "ppp" | "shots" | "hits" | "blocks" | "wins" | "saves" | "savePct" | "shutouts" | "gp";
+type SortKey = "points" | "goals" | "assists" | "ppp" | "shots" | "hits" | "blocks" | "wins" | "saves" | "savePct" | "shutouts" | "gp" | "goalsAgainst";
 
 const SKATER_COLS: { key: SortKey; label: string }[] = [
   { key: "gp", label: "GP" },
@@ -411,7 +411,7 @@ const GOALIE_COLS: { key: SortKey; label: string }[] = [
   { key: "gp", label: "GP" },
   { key: "wins", label: "W" },
   { key: "saves", label: "SV" },
-  { key: "goalsAgainst" as SortKey, label: "GA" },
+  { key: "goalsAgainst", label: "GA" },
   { key: "savePct", label: "SV%" },
   { key: "shutouts", label: "SO" },
 ];
@@ -532,11 +532,11 @@ function PlayerPanel({
     .filter((p) => !posFilter || p.position === posFilter)
     .map((p) => ({ player: p, stats: statsMap[p.id] ?? null }))
     .sort((a, b) => {
-      const av = (a.stats as Record<string, number | null> | null)?.[sortKey] ?? -1;
-      const bv = (b.stats as Record<string, number | null> | null)?.[sortKey] ?? -1;
+      const av = (a.stats?.[sortKey] as number | null | undefined) ?? -1;
+      const bv = (b.stats?.[sortKey] as number | null | undefined) ?? -1;
       // For GA lower is better; for everything else higher is better
-      if (sortKey === ("goalsAgainst" as SortKey)) return (av as number) - (bv as number);
-      return (bv as number) - (av as number);
+      if (sortKey === "goalsAgainst") return av - bv;
+      return bv - av;
     });
 
   const queuedPlayers = queue
@@ -626,7 +626,7 @@ function PlayerPanel({
                         <td style={{ padding: "5px 6px", color: "var(--muted)", fontSize: 11, whiteSpace: "nowrap" }}>{p.team ?? "FA"}</td>
                         <td style={{ padding: "5px 6px", fontSize: 13, whiteSpace: "nowrap" }}>{p.name}</td>
                         {cols.map((c) => {
-                          const val = s ? (s as Record<string, number | null>)[c.key] : null;
+                          const val = s ? (s[c.key] as number | null) : null;
                           const display = val == null ? "—" : c.key === "savePct" ? (val as number).toFixed(3).replace(/^0/, "") : String(val);
                           return (
                             <td key={c.key} style={{ padding: "5px 6px", textAlign: "right", fontSize: 12, fontVariantNumeric: "tabular-nums", color: sortKey === c.key ? "var(--text)" : "var(--muted)" }}>
