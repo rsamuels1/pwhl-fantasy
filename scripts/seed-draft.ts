@@ -9,6 +9,7 @@
 // Prints the leagueId and each team's id + draftOrder so the CLI client can join.
 
 import { PrismaClient } from "@prisma/client";
+import bcrypt from "bcryptjs";
 import { generateSnakeOrder, rostersToRounds } from "../lib/draft/snake";
 import { DEFAULT_SCORING } from "../lib/scoring";
 
@@ -22,6 +23,8 @@ const PICK_TIMER_SECS = 30;
 // IR is not drafted (filled from waivers), so rostersToRounds yields 12 rounds.
 // 4 teams × 12 rounds = 48 picks total.
 const ROSTER_SETTINGS = { forward: 2, defense: 2, goalie: 1, util: 1, bench: 6, ir: 1 };
+
+const DEV_PASSWORD_HASH = bcrypt.hashSync("password", 10);
 
 async function main() {
   // Clean any prior dev league so re-runs start fresh.
@@ -45,8 +48,8 @@ async function main() {
   // draft room's isCommissioner check: myTeam.ownerId === league.commissionerId.
   const commissioner = await prisma.user.upsert({
     where: { email: "commish@dev.local" },
-    update: {},
-    create: { email: "commish@dev.local", displayName: "Commish" },
+    update: { passwordHash: DEV_PASSWORD_HASH },
+    create: { email: "commish@dev.local", displayName: "Commish", passwordHash: DEV_PASSWORD_HASH },
   });
 
   const league = await prisma.fantasyLeague.create({
@@ -68,8 +71,8 @@ async function main() {
         ? commissioner
         : await prisma.user.upsert({
             where: { email: `owner${i}@dev.local` },
-            update: {},
-            create: { email: `owner${i}@dev.local`, displayName: `Owner ${i}` },
+            update: { passwordHash: DEV_PASSWORD_HASH },
+            create: { email: `owner${i}@dev.local`, displayName: `Owner ${i}`, passwordHash: DEV_PASSWORD_HASH },
           });
     const team = await prisma.fantasyTeam.create({
       data: {
@@ -106,6 +109,9 @@ async function main() {
     })),
   });
 
+  console.log("\nDev credentials (password: 'password'):");
+  console.log("  commish@dev.local");
+  for (let i = 2; i <= NUM_TEAMS; i++) console.log(`  owner${i}@dev.local`);
   console.log("\n=== Draft-ready league created ===");
   console.log(`leagueId: ${league.id}`);
   console.log(`rounds: ${rounds}  picks: ${order.length}  timer: ${PICK_TIMER_SECS}s`);

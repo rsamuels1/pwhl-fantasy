@@ -75,6 +75,8 @@ export default async function TeamLineupPage({ params }: Props) {
   const now = new Date(nowMs);
   const todayStart = new Date(now);
   todayStart.setUTCHours(0, 0, 0, 0);
+  const todayEnd = new Date(todayStart);
+  todayEnd.setUTCHours(23, 59, 59, 999);
 
   const [fullTeam, todayGames] = await Promise.all([
     prisma.fantasyTeam.findUnique({
@@ -172,6 +174,25 @@ export default async function TeamLineupPage({ params }: Props) {
     gamesPerTeam.set(g.awayTeamId, (gamesPerTeam.get(g.awayTeamId) ?? 0) + 1);
   }
 
+  // Upcoming games today (not yet started) — for lock countdown
+  const upcomingTodayRows = pwhlTeamIds.length > 0
+    ? await prisma.game.findMany({
+        where: {
+          startsAt: { gt: now, lte: todayEnd },
+          OR: [{ homeTeamId: { in: pwhlTeamIds } }, { awayTeamId: { in: pwhlTeamIds } }],
+        },
+        select: { homeTeamId: true, awayTeamId: true, startsAt: true },
+      })
+    : [];
+  const nextGamePerTeam = new Map<string, Date>();
+  for (const g of upcomingTodayRows) {
+    for (const tid of [g.homeTeamId, g.awayTeamId]) {
+      if (!pwhlTeamIds.includes(tid)) continue;
+      const existing = nextGamePerTeam.get(tid);
+      if (!existing || g.startsAt < existing) nextGamePerTeam.set(tid, g.startsAt);
+    }
+  }
+
   const fmt = (d: Date) =>
     d.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
 
@@ -199,6 +220,7 @@ export default async function TeamLineupPage({ params }: Props) {
       active: entry.player.active,
       slot: entry.slot as RosterEntryRow["slot"],
       lockedAt: locked?.toISOString() ?? null,
+      nextGameStartsAt: pTeamId ? (nextGamePerTeam.get(pTeamId)?.toISOString() ?? null) : null,
       eligibleSlots: eligibleSlots(entry.player.position as "FORWARD" | "DEFENSE" | "GOALIE", entry.player.active) as RosterEntryRow["slot"][],
       gamesThisPeriod: periodForGames ? (gamesPerTeam.get(pTeamId ?? "") ?? 0) : null,
       hasPlayedThisPeriod: (thisWeekStats[entry.playerId]?.gp ?? 0) > 0,

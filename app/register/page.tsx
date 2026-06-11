@@ -4,11 +4,13 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
-export default function LoginPage() {
+export default function RegisterPage() {
   const router = useRouter();
   const [returnTo, setReturnTo] = useState("");
   const [email, setEmail] = useState("");
+  const [displayName, setDisplayName] = useState("");
   const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
   const [status, setStatus] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -20,27 +22,37 @@ export default function LoginPage() {
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setStatus(null);
+
+    if (password !== confirm) {
+      setStatus("Passwords don't match.");
+      return;
+    }
+    if (password.length < 8) {
+      setStatus("Password must be at least 8 characters.");
+      return;
+    }
+
     setLoading(true);
     try {
-      const res = await fetch("/api/auth/login", {
+      const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password, returnTo }),
+        body: JSON.stringify({ email, displayName, password, returnTo }),
       });
       const data = await res.json();
       if (!res.ok) {
-        setStatus(data?.error || "Unable to log in.");
+        setStatus(data?.error || "Unable to create account.");
       } else {
         router.push(data.redirectTo ?? "/dashboard");
       }
     } catch {
-      setStatus("Unable to log in. Try again.");
+      setStatus("Unable to create account. Try again.");
     } finally {
       setLoading(false);
     }
   };
 
-  const registerHref = returnTo ? `/register?returnTo=${encodeURIComponent(returnTo)}` : "/register";
+  const loginHref = returnTo ? `/login?returnTo=${encodeURIComponent(returnTo)}` : "/login";
 
   return (
     <main style={pageStyle}>
@@ -52,49 +64,31 @@ export default function LoginPage() {
       `}</style>
       <div style={layoutStyle} className="login-layout">
 
-        {/* Left — product pitch */}
+        {/* Left — pitch */}
         <div style={pitchStyle} className="login-pitch">
           <div style={{ marginBottom: 24 }}>
             <p style={{ fontSize: 12, fontWeight: 700, color: "#6366f1", textTransform: "uppercase", letterSpacing: "1px", marginBottom: 10 }}>
               PWHL Fantasy
             </p>
             <h1 style={{ fontSize: "clamp(1.6rem, 4vw, 2.4rem)", fontWeight: 800, lineHeight: 1.15, margin: 0, color: "#f1f5f9" }}>
-              Draft real players.<br />Win your league.
+              Join the league.<br />Pick your team.
             </h1>
             <p style={{ marginTop: 14, fontSize: 15, color: "#94a3b8", lineHeight: 1.7 }}>
-              Score points from real PWHL game stats every week. Set your lineup, work the waiver wire, and compete head-to-head all season long.
+              Create your account, join a league before the draft, and pick real PWHL players to build your roster.
             </p>
           </div>
-
-          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            {[
-              { icon: "🏒", label: "Real PWHL players", detail: "Every skater and goalie from all 8 teams" },
-              { icon: "📅", label: "Weekly matchups", detail: "Head-to-head scoring every week of the season" },
-              { icon: "⚡", label: "Live scoring", detail: "Points update from real game stats as they happen" },
-              { icon: "🏆", label: "Playoffs", detail: "Top teams compete in a single-elimination bracket" },
-            ].map(({ icon, label, detail }) => (
-              <div key={label} style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
-                <span style={{ fontSize: 18, flexShrink: 0, marginTop: 1 }}>{icon}</span>
-                <div>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: "#e2e8f0" }}>{label}</div>
-                  <div style={{ fontSize: 12, color: "#64748b" }}>{detail}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div style={{ marginTop: 28, paddingTop: 20, borderTop: "1px solid rgba(255,255,255,0.06)", fontSize: 12, color: "#475569" }}>
+          <div style={{ marginTop: "auto", paddingTop: 20, borderTop: "1px solid rgba(255,255,255,0.06)", fontSize: 12, color: "#475569" }}>
             Season starts November 2026 · Draft week TBD
           </div>
         </div>
 
         {/* Right — form */}
         <div style={formPanelStyle}>
-          <h2 style={{ margin: "0 0 6px", fontSize: 20, fontWeight: 700 }}>Sign in</h2>
-          <p style={{ color: "#64748b", marginTop: 0, marginBottom: 20, fontSize: 13, lineHeight: 1.6 }}>
-            Don&apos;t have an account?{" "}
-            <Link href={registerHref} style={{ color: "#818cf8", textDecoration: "none", fontWeight: 600 }}>
-              Create one →
+          <h2 style={{ margin: "0 0 6px", fontSize: 20, fontWeight: 700 }}>Create account</h2>
+          <p style={{ color: "#64748b", marginTop: 0, marginBottom: 20, fontSize: 13 }}>
+            Already have one?{" "}
+            <Link href={loginHref} style={{ color: "#818cf8", textDecoration: "none", fontWeight: 600 }}>
+              Sign in →
             </Link>
           </p>
 
@@ -114,6 +108,17 @@ export default function LoginPage() {
             </label>
 
             <label style={labelStyle}>
+              Display name <span style={{ color: "#475569", fontWeight: 400 }}>(optional)</span>
+              <input
+                style={inputStyle}
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)}
+                placeholder="Your public name in the league"
+                autoComplete="nickname"
+              />
+            </label>
+
+            <label style={labelStyle}>
               Password
               <input
                 style={inputStyle}
@@ -121,13 +126,30 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                placeholder="Your password"
-                autoComplete="current-password"
+                placeholder="At least 8 characters"
+                autoComplete="new-password"
               />
             </label>
 
-            <button type="submit" style={buttonStyle} disabled={loading || !email || !password}>
-              {loading ? "Signing in…" : "Sign in →"}
+            <label style={labelStyle}>
+              Confirm password
+              <input
+                style={inputStyle}
+                type="password"
+                value={confirm}
+                onChange={(e) => setConfirm(e.target.value)}
+                required
+                placeholder="Same password again"
+                autoComplete="new-password"
+              />
+            </label>
+
+            <button
+              type="submit"
+              style={buttonStyle}
+              disabled={loading || !email || !password || !confirm}
+            >
+              {loading ? "Creating account…" : "Create account →"}
             </button>
           </form>
 

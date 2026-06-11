@@ -6,8 +6,10 @@
  */
 
 import { PrismaClient } from "@prisma/client";
+import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
+const DEV_PASSWORD_HASH = bcrypt.hashSync("password", 10);
 
 async function main() {
   const initPlayoffs = process.argv.includes("--init-playoffs");
@@ -17,10 +19,11 @@ async function main() {
   // Create a test user (commissioner)
   const commissioner = await prisma.user.upsert({
     where: { email: "playoff-commissioner@example.com" },
-    update: {},
+    update: { passwordHash: DEV_PASSWORD_HASH },
     create: {
       email: "playoff-commissioner@example.com",
       displayName: "Playoff Commissioner",
+      passwordHash: DEV_PASSWORD_HASH,
     },
   });
 
@@ -53,10 +56,11 @@ async function main() {
     Array.from({ length: 6 }, async (_, i) => {
       return prisma.user.upsert({
         where: { email: `playoff-team-${i + 1}@example.com` },
-        update: {},
+        update: { passwordHash: DEV_PASSWORD_HASH },
         create: {
           email: `playoff-team-${i + 1}@example.com`,
           displayName: `Team ${i + 1} Owner`,
+          passwordHash: DEV_PASSWORD_HASH,
         },
       });
     })

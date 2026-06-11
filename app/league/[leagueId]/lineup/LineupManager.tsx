@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import type { RosterSettings } from "@/lib/lineup";
+import LockCountdown from "@/components/LockCountdown";
 
 export type SlotType = "FORWARD" | "DEFENSE" | "GOALIE" | "UTIL" | "BENCH" | "IR";
 
@@ -14,6 +15,7 @@ export interface RosterEntryRow {
   active: boolean;
   slot: SlotType;
   lockedAt: string | null;
+  nextGameStartsAt: string | null; // upcoming game today (not yet started) — for lock countdown
   eligibleSlots: SlotType[];
   gamesThisPeriod: number | null;
   hasPlayedThisPeriod: boolean;
@@ -459,6 +461,9 @@ function PlayerInfo({
           <span style={{ fontSize: 10, color: "#ef4444", background: "rgba(239,68,68,0.12)", padding: "1px 5px", borderRadius: 4, flexShrink: 0 }}>
             INJ
           </span>
+        )}
+        {player.nextGameStartsAt && !player.lockedAt && (
+          <LockCountdown startsAt={player.nextGameStartsAt} />
         )}
         {player.lockedAt && (
           <span title={`Locked — game started ${new Date(player.lockedAt).toLocaleTimeString()}`} style={{ fontSize: 11, flexShrink: 0 }}>🔒</span>
