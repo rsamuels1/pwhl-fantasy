@@ -98,7 +98,8 @@ export async function computeTeamScoreDetailed(
   fantasyTeamId: string,
   period: ScoringPeriod,
   scoringSettings: ScoringSettings,
-  prisma: PrismaClient
+  prisma: PrismaClient,
+  nowMs?: number
 ): Promise<{
   total: number;
   players: Array<{
@@ -137,7 +138,7 @@ export async function computeTeamScoreDetailed(
   const lines = await prisma.statLine.findMany({
     where: {
       playerId: { in: playerIds },
-      game: { startsAt: { gte: period.startsAt, lt: period.endsAt } },
+      game: { startsAt: { gte: period.startsAt, lt: nowMs ? new Date(Math.min(nowMs, period.endsAt.getTime())) : period.endsAt } },
     },
     include: { player: { select: { position: true } } },
   });

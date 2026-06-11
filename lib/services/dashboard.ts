@@ -223,8 +223,8 @@ export async function getDashboardData(
 
   // Score both teams in parallel
   const [myDetailed, opponentDetailed] = await Promise.all([
-    computeTeamScoreDetailed(myTeamId, displayPeriod, scoringSettings, prisma),
-    computeTeamScoreDetailed(opponentTeam.id, displayPeriod, scoringSettings, prisma),
+    computeTeamScoreDetailed(myTeamId, displayPeriod, scoringSettings, prisma, nowMs),
+    computeTeamScoreDetailed(opponentTeam.id, displayPeriod, scoringSettings, prisma, nowMs),
   ]);
 
   // Project totals for both teams in parallel
