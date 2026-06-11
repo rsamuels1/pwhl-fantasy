@@ -457,8 +457,9 @@ and `/team/*` routes.
 The primary in-season landing page, now team-scoped. No team picker needed — auth enforces ownership.
 
 **What it shows:**
-- `MatchupHero` — current score, projected final, win probability, progress bar; "Upcoming" variant
-  with projected scores and "Set lineup →" CTA when the period hasn't started
+- `MatchupHero` — win probability bar at the top (above scores), then scores, then lead/trailing
+  label. Bar shows `"My Team 74%"` left and `"26% Opponent"` right with the leading side bolded
+  indigo. "Upcoming" variant hides the bar, shows projected scores and a "Set lineup →" CTA
 - Swing players — active roster players whose remaining games this period could flip the result
 - Remaining players tonight — who's playing today and what they're projected to score
 - Top performers / disappointments for the active period
@@ -561,8 +562,13 @@ Commissioner-only page gated by `requireCommissioner`. Contains:
 - Draft setup / status and team join links
 - Season management (SeasonView with dev controls)
 
-The league overview (`/league/<id>`) no longer shows commissioner tools — it's a read-only
-snapshot for all members with an "Admin panel →" link that only appears for commissioners.
+**`/league/<id>` redirect rules** (`app/league/[leagueId]/page.tsx`):
+- Draft `IN_PROGRESS` → `/draft/<leagueId>?team=<teamId>`
+- League `IN_SEASON` or `COMPLETE` → `/team/<teamId>/matchup`
+- All other states (PRE_DRAFT, DRAFT_COMPLETE, no team yet) → renders the league overview
+
+The league overview page itself is a read-only snapshot for members with no team or pre-draft
+leagues. It has an "Admin panel →" link that only appears for commissioners.
 
 ### League layout nav
 

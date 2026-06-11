@@ -30,10 +30,16 @@ export default async function LeagueOverviewPage({ params }: { params: { leagueI
     notFound();
   }
 
-  // Draft in progress: redirect to draft room
-  if (league.draft?.status === "IN_PROGRESS") {
-    const myTeam = league.teams.find((t) => t.ownerId === user?.id);
-    if (myTeam) redirect(`/draft/${leagueId}?team=${myTeam.id}`);
+  const myTeam = league.teams.find((t) => t.ownerId === user?.id);
+
+  // Draft in progress → draft room
+  if (league.draft?.status === "IN_PROGRESS" && myTeam) {
+    redirect(`/draft/${leagueId}?team=${myTeam.id}`);
+  }
+
+  // Active season or completed season → team matchup page
+  if ((league.status === "IN_SEASON" || league.status === "COMPLETE") && myTeam) {
+    redirect(`/team/${myTeam.id}/matchup`);
   }
 
   const isCommissioner = user?.id === league.commissionerId;

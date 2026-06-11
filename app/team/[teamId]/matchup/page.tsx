@@ -213,6 +213,7 @@ function MatchupHero({ matchup, teamId }: { matchup: ActiveMatchup; teamId: stri
     new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" }).format(new Date(d));
   const periodLabel = `${fmt(matchup.period.startsAt)} – ${fmt(new Date(new Date(matchup.period.endsAt).getTime() - 1))}`;
 
+  const oppPct = 100 - winPct;
   const leadLabel = isUpcoming
     ? `vs ${matchup.opponentTeam.name}`
     : myLead === 0
@@ -232,6 +233,23 @@ function MatchupHero({ matchup, teamId }: { matchup: ActiveMatchup; teamId: stri
         padding: "28px 24px",
       }}
     >
+      {/* Win probability bar — shown above scores when active */}
+      {!isUpcoming && (
+        <div style={{ marginBottom: 20 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "#94a3b8", marginBottom: 6 }}>
+            <span style={{ color: winPct >= 50 ? "#818cf8" : "#94a3b8", fontWeight: winPct >= 50 ? 600 : 400 }}>
+              {matchup.myTeam.name} {winPct}%
+            </span>
+            <span style={{ color: oppPct > winPct ? "#818cf8" : "#94a3b8", fontWeight: oppPct > winPct ? 600 : 400 }}>
+              {oppPct}% {matchup.opponentTeam.name}
+            </span>
+          </div>
+          <div style={{ height: 6, borderRadius: 3, background: "rgba(255,255,255,0.08)", overflow: "hidden" }}>
+            <div style={{ width: `${winPct}%`, height: "100%", background: winPct >= 50 ? "#6366f1" : "#f87171", borderRadius: 3 }} />
+          </div>
+        </div>
+      )}
+
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 16 }}>
         <div>
           <p style={{ color: "#94a3b8", fontSize: 13, marginBottom: 4 }}>
@@ -241,23 +259,23 @@ function MatchupHero({ matchup, teamId }: { matchup: ActiveMatchup; teamId: stri
             )}
           </p>
           <h2 style={{ fontSize: 28, fontWeight: 800, marginBottom: 6 }}>{leadLabel}</h2>
-          <p style={{ color: "#94a3b8", fontSize: 14 }}>
-            {isUpcoming
-              ? `Projected: ${matchup.myProjected.toFixed(1)} – ${matchup.opponentProjected.toFixed(1)}`
-              : `${winPct}% chance to win`}
-          </p>
           {isUpcoming && (
-            <a
-              href={`/team/${teamId}/lineup`}
-              style={{
-                display: "inline-block", marginTop: 12,
-                padding: "8px 18px", borderRadius: 10,
-                background: "rgba(245,158,11,0.2)", border: "1px solid rgba(245,158,11,0.4)",
-                color: "#fbbf24", fontSize: 13, fontWeight: 600, textDecoration: "none",
-              }}
-            >
-              Set lineup →
-            </a>
+            <>
+              <p style={{ color: "#94a3b8", fontSize: 14, marginBottom: 12 }}>
+                Projected: {matchup.myProjected.toFixed(1)} – {matchup.opponentProjected.toFixed(1)}
+              </p>
+              <a
+                href={`/team/${teamId}/lineup`}
+                style={{
+                  display: "inline-block",
+                  padding: "8px 18px", borderRadius: 10,
+                  background: "rgba(245,158,11,0.2)", border: "1px solid rgba(245,158,11,0.4)",
+                  color: "#fbbf24", fontSize: 13, fontWeight: 600, textDecoration: "none",
+                }}
+              >
+                Set lineup →
+              </a>
+            </>
           )}
         </div>
         <div style={{ display: "flex", gap: 24, alignItems: "center" }}>
@@ -278,11 +296,6 @@ function MatchupHero({ matchup, teamId }: { matchup: ActiveMatchup; teamId: stri
           />
         </div>
       </div>
-      {!isUpcoming && (
-        <div style={{ marginTop: 20, height: 6, borderRadius: 3, background: "rgba(255,255,255,0.08)", overflow: "hidden" }}>
-          <div style={{ width: `${winPct}%`, height: "100%", background: winPct >= 50 ? "#6366f1" : "#f87171", borderRadius: 3 }} />
-        </div>
-      )}
     </div>
   );
 }
