@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { getSeasonState } from "@/lib/season";
 import { requireAuth, requireLeagueMember } from "@/lib/auth";
+import { getDevNow } from "@/lib/devTime";
 import SeasonView from "./SeasonView";
 
 interface Props {
@@ -19,7 +20,8 @@ export default async function SeasonPage({ params }: Props) {
   });
   if (!league) notFound();
 
-  const state = await getSeasonState(leagueId, Date.now(), prisma);
+  const nowMs = await getDevNow();
+  const state = await getSeasonState(leagueId, nowMs, prisma);
   const isDev = process.env.NODE_ENV !== "production";
 
   return (

@@ -4,6 +4,7 @@ import type { LineupSlot } from "@prisma/client";
 import { validateSlotMove, lockTime, eligibleSlots } from "@/lib/lineup";
 import type { RosterSettings } from "@/lib/lineup";
 import { apiRequireAuth, apiRequireLeagueMember } from "@/lib/auth";
+import { getDevNowFromRequest } from "@/lib/devTime";
 
 // GET /api/leagues/[leagueId]/lineup?team=<teamId>
 // Returns the team's roster entries with player info and per-player lock status.
@@ -20,6 +21,11 @@ export async function GET(
   const teamId = req.nextUrl.searchParams.get("team");
   if (!teamId) return NextResponse.json({ error: "Missing team" }, { status: 400 });
 
+  const nowMs = getDevNowFromRequest(req);
+  const now = new Date(nowMs);
+  const todayStart = new Date(now);
+  todayStart.setUTCHours(0, 0, 0, 0);
+
   const [team, todayGames] = await Promise.all([
     prisma.fantasyTeam.findFirst({
       where: { id: teamId, leagueId },
@@ -35,14 +41,8 @@ export async function GET(
         league: { select: { rosterSettings: true } },
       },
     }),
-    // Today's games for locking
     prisma.game.findMany({
-      where: {
-        startsAt: {
-          gte: (() => { const d = new Date(); d.setUTCHours(0,0,0,0); return d; })(),
-          lte: new Date(),
-        },
-      },
+      where: { startsAt: { gte: todayStart, lte: now } },
       select: { homeTeamId: true, awayTeamId: true, startsAt: true },
     }),
   ]);
@@ -53,7 +53,7 @@ export async function GET(
 
   const roster = team.roster.map((entry) => {
     const teamId = entry.player.team?.id ?? null;
-    const locked = lockTime(teamId, todayGames);
+    const locked = lockTime(teamId, todayGames, nowMs);
     return {
       id: entry.id,
       playerId: entry.playerId,
@@ -100,6 +100,11 @@ export async function PUT(
     return NextResponse.json({ error: "Invalid slot" }, { status: 400 });
   }
 
+  const nowMsPut = getDevNowFromRequest(req);
+  const nowPut = new Date(nowMsPut);
+  const todayStartPut = new Date(nowPut);
+  todayStartPut.setUTCHours(0, 0, 0, 0);
+
   const [team, todayGames] = await Promise.all([
     prisma.fantasyTeam.findFirst({
       where: { id: body.teamId, leagueId },
@@ -115,12 +120,7 @@ export async function PUT(
       },
     }),
     prisma.game.findMany({
-      where: {
-        startsAt: {
-          gte: (() => { const d = new Date(); d.setUTCHours(0,0,0,0); return d; })(),
-          lte: new Date(),
-        },
-      },
+      where: { startsAt: { gte: todayStartPut, lte: nowPut } },
       select: { homeTeamId: true, awayTeamId: true, startsAt: true },
     }),
   ]);
@@ -132,7 +132,7 @@ export async function PUT(
 
   // Check lock
   const playerTeamId = entry.player.team?.id ?? null;
-  const locked = lockTime(playerTeamId, todayGames);
+  const locked = lockTime(playerTeamId, todayGames, nowMsPut);
   if (locked && entry.slot !== "BENCH" && targetSlot !== entry.slot) {
     // Allow moving to bench even if locked (bench-out = scratch), but disallow active slot changes
     if (targetSlot !== "BENCH") {

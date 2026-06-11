@@ -4,6 +4,7 @@ import { requireAuth, requireTeamOwner } from "@/lib/auth";
 import { getDashboardData, type ActiveMatchup, type PlayerMatchupRow } from "@/lib/services/dashboard";
 import { getSwingPlayers } from "@/lib/matchups/swingPlayers";
 import { parseScoringSettings } from "@/lib/scoring/settings";
+import { getDevNow } from "@/lib/devTime";
 
 export default async function TeamMatchupPage({
   params,
@@ -22,7 +23,8 @@ export default async function TeamMatchupPage({
   if (!league) notFound();
 
   const scoringSettings = parseScoringSettings(league.scoringSettings);
-  const dashboard = await getDashboardData(leagueId, teamId, Date.now(), prisma);
+  const nowMs = await getDevNow();
+  const dashboard = await getDashboardData(leagueId, teamId, nowMs, prisma);
   const { activeMatchup, remainingPlayers, topPerformers, disappointments, leagueActivity } = dashboard;
 
   let swingPlayers: Awaited<ReturnType<typeof getSwingPlayers>> = [];

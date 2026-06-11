@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { requireAuth, requireCommissioner } from "@/lib/auth";
 import { getSeasonState } from "@/lib/season";
+import { getDevNow } from "@/lib/devTime";
 import Link from "next/link";
 import AddTeamForm from "@/components/AddTeamForm";
 import SetupDraftButton from "@/components/SetupDraftButton";
@@ -26,7 +27,8 @@ export default async function AdminPage({ params }: Props) {
 
   if (!league) notFound();
 
-  const state = await getSeasonState(leagueId, Date.now(), prisma);
+  const nowMs = await getDevNow();
+  const state = await getSeasonState(leagueId, nowMs, prisma);
   const isDev = process.env.NODE_ENV !== "production";
 
   return (

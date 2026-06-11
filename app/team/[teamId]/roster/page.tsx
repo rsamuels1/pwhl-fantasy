@@ -115,9 +115,9 @@ export default async function TeamRosterPage({ params }: Props) {
   type AggRow = {
     id: string; firstName: string; lastName: string;
     position: string; abbreviation: string | null;
-    gp: bigint; goals: bigint; assists: bigint; plusMinus: bigint;
+    gp: bigint; goals: bigint; assists: bigint; plusMinus: bigint; penaltyMinutes: bigint;
     ppp: bigint; shots: bigint; hits: bigint; blocks: bigint;
-    saves: bigint; goalsAgainst: bigint; wins: bigint; shutouts: bigint; fp: number;
+    saves: bigint; goalsAgainst: bigint; wins: bigint; shutouts: bigint;
   };
 
   const leagueId = team.league.id;
@@ -132,6 +132,7 @@ export default async function TeamRosterPage({ params }: Props) {
       COALESCE(SUM(sl.goals), 0)                                      AS goals,
       COALESCE(SUM(sl.assists), 0)                                    AS assists,
       COALESCE(SUM(sl."plusMinus"), 0)                                AS "plusMinus",
+      COALESCE(SUM(sl."penaltyMinutes"), 0)                           AS "penaltyMinutes",
       COALESCE(SUM(sl."powerPlayPts"), 0)                             AS ppp,
       COALESCE(SUM(sl.shots), 0)                                      AS shots,
       COALESCE(SUM(sl.hits), 0)                                       AS hits,
@@ -139,12 +140,13 @@ export default async function TeamRosterPage({ params }: Props) {
       COALESCE(SUM(sl.saves), 0)                                      AS saves,
       COALESCE(SUM(sl."goalsAgainst"), 0)                             AS "goalsAgainst",
       COALESCE(SUM(CASE WHEN sl.win THEN 1 ELSE 0 END), 0)           AS wins,
-      COALESCE(SUM(CASE WHEN sl.shutout THEN 1 ELSE 0 END), 0)       AS shutouts,
-      0::float                                                         AS fp
+      COALESCE(SUM(CASE WHEN sl.shutout THEN 1 ELSE 0 END), 0)       AS shutouts
     FROM "Player" p
     LEFT JOIN "Team" t ON t.id = p."teamId"
-    LEFT JOIN "StatLine" sl ON sl."playerId" = p.id
-    LEFT JOIN "Game" g ON g.id = sl."gameId" AND g.season = ${season}
+    LEFT JOIN (
+      SELECT sl.* FROM "StatLine" sl
+      JOIN "Game" g ON g.id = sl."gameId" AND g.season = ${season}
+    ) sl ON sl."playerId" = p.id
     WHERE p.active = true
       AND p.id NOT IN (
         SELECT DISTINCT re."playerId"
@@ -156,26 +158,43 @@ export default async function TeamRosterPage({ params }: Props) {
     ORDER BY (COALESCE(SUM(sl.goals), 0) + COALESCE(SUM(sl.assists), 0)) DESC, p."lastName"
   `;
 
+  const sk = scoring.skater;
+  const gk = scoring.goalie;
+
   const freeAgents: FreeAgentRow[] = faRows.map((r) => {
     const gp = Number(r.gp);
     const position = r.position as FreeAgentRow["position"];
     if (position === "GOALIE") {
       const saves = Number(r.saves);
       const ga = Number(r.goalsAgainst);
+      const wins = Number(r.wins);
+      const shutouts = Number(r.shutouts);
       const totalFaced = saves + ga;
+      const fantasyPoints = Math.round((wins * gk.win + saves * gk.save + ga * gk.goalAgainst + shutouts * gk.shutout) * 100) / 100;
       return {
         playerId: r.id,
         name: `${r.firstName} ${r.lastName}`,
         position,
         teamAbbr: r.abbreviation ?? null,
         stats: gp === 0 ? null : {
-          gp, wins: Number(r.wins), saves, goalsAgainst: ga, shutouts: Number(r.shutouts),
-          savePct: totalFaced > 0 ? saves / totalFaced : null, fantasyPoints: 0,
+          gp, wins, saves, goalsAgainst: ga, shutouts,
+          savePct: totalFaced > 0 ? saves / totalFaced : null, fantasyPoints,
         } as GoalieStats,
       };
     }
     const goals = Number(r.goals);
     const assists = Number(r.assists);
+    const plusMinus = Number(r.plusMinus);
+    const ppp = Number(r.ppp);
+    const penaltyMinutes = Number(r.penaltyMinutes);
+    const shots = Number(r.shots);
+    const hits = Number(r.hits);
+    const blocks = Number(r.blocks);
+    const fantasyPoints = Math.round((
+      goals * sk.goal + assists * sk.assist + shots * sk.shot +
+      plusMinus * sk.plusMinus + penaltyMinutes * sk.penaltyMinute +
+      ppp * sk.powerPlayPoint + hits * sk.hit + blocks * sk.block
+    ) * 100) / 100;
     return {
       playerId: r.id,
       name: `${r.firstName} ${r.lastName}`,
@@ -183,9 +202,7 @@ export default async function TeamRosterPage({ params }: Props) {
       teamAbbr: r.abbreviation ?? null,
       stats: gp === 0 ? null : {
         gp, goals, assists, points: goals + assists,
-        plusMinus: Number(r.plusMinus), ppp: Number(r.ppp),
-        shots: Number(r.shots), hits: Number(r.hits), blocks: Number(r.blocks),
-        fantasyPoints: 0,
+        plusMinus, ppp, shots, hits, blocks, fantasyPoints,
       } as SkaterStats,
     };
   });

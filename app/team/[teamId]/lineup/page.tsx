@@ -6,6 +6,7 @@ import type { RosterSettings } from "@/lib/lineup";
 import { scoreStatLine, DEFAULT_SCORING } from "@/lib/scoring";
 import type { ScoringSettings } from "@/lib/scoring";
 import { getSeasonState } from "@/lib/season";
+import { getDevNow } from "@/lib/devTime";
 import { Position } from "@prisma/client";
 import LineupManager from "@/app/league/[leagueId]/lineup/LineupManager";
 import type { RosterEntryRow, PlayerStatsRow } from "@/app/league/[leagueId]/lineup/LineupManager";
@@ -70,7 +71,9 @@ export default async function TeamLineupPage({ params }: Props) {
   const team = await requireTeamOwner(teamId, user.id);
   const leagueId = team.league.id;
 
-  const todayStart = new Date();
+  const nowMs = await getDevNow();
+  const now = new Date(nowMs);
+  const todayStart = new Date(now);
   todayStart.setUTCHours(0, 0, 0, 0);
 
   const [fullTeam, todayGames] = await Promise.all([
@@ -89,7 +92,7 @@ export default async function TeamLineupPage({ params }: Props) {
       },
     }),
     prisma.game.findMany({
-      where: { startsAt: { gte: todayStart, lte: new Date() } },
+      where: { startsAt: { gte: todayStart, lte: now } },
       select: { homeTeamId: true, awayTeamId: true, startsAt: true },
     }),
   ]);
@@ -107,7 +110,7 @@ export default async function TeamLineupPage({ params }: Props) {
     fullTeam.roster.map((e) => [e.playerId, e.player.position as Position])
   );
 
-  const seasonState = await getSeasonState(leagueId, Date.now(), prisma);
+  const seasonState = await getSeasonState(leagueId, nowMs, prisma);
   const lastCompleted = [...seasonState.periods].reverse().find((p) => p.status === "COMPLETE");
   const activePeriod = seasonState.periods.find((p) => p.status === "ACTIVE")?.period ?? null;
 
@@ -140,7 +143,6 @@ export default async function TeamLineupPage({ params }: Props) {
   const pwhlTeamIds = [...new Set(
     fullTeam.roster.map((e) => e.player.team?.id).filter((id): id is string => !!id)
   )];
-  const now = new Date();
   const remainingGameRows = activePeriod && pwhlTeamIds.length > 0
     ? await prisma.game.findMany({
         where: {
@@ -167,7 +169,7 @@ export default async function TeamLineupPage({ params }: Props) {
 
   const roster: RosterEntryRow[] = fullTeam.roster.map((entry) => {
     const pTeamId = entry.player.team?.id ?? null;
-    const locked = lockTime(pTeamId, todayGames);
+    const locked = lockTime(pTeamId, todayGames, nowMs);
     return {
       id: entry.id,
       playerId: entry.playerId,

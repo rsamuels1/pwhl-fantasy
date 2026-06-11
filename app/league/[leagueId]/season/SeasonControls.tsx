@@ -40,6 +40,7 @@ export default function SeasonControls({ leagueId, periods, onResult }: Props) {
     setLoading(false);
     if (!res.ok || data.error) { setError(data.error ?? "Request failed."); return; }
     if (data.state) {
+      document.cookie = `pwhl_dev_sim_date=${new Date(dateToUse).toISOString()}; path=/; max-age=86400`;
       // Auto-advance the date picker to the next target period so the next click
       // is always ready to go without manual input.
       const newPeriods = (data.state.periods as SeasonState["periods"]).map((p) => ({
@@ -118,7 +119,18 @@ export default function SeasonControls({ leagueId, periods, onResult }: Props) {
           {loading ? "…" : "Advance to date"}
         </button>
       </div>
-      {error && <p style={{ margin: "10px 0 0", fontSize: 12, color: "#f87171" }}>{error}</p>}
+      <div style={{ marginTop: 10, display: "flex", alignItems: "center", gap: 10 }}>
+        <button
+          onClick={() => {
+            document.cookie = "pwhl_dev_sim_date=; path=/; max-age=0";
+            window.location.reload();
+          }}
+          style={btn("#64748b")}
+        >
+          Clear sim date
+        </button>
+        {error && <p style={{ margin: 0, fontSize: 12, color: "#f87171" }}>{error}</p>}
+      </div>
     </div>
   );
 }

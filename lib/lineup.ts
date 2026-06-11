@@ -67,10 +67,11 @@ export function validateSlotMove(
 // Returns the game start time if locked, else null.
 export function lockTime(
   playerTeamId: string | null,
-  games: Array<{ homeTeamId: string; awayTeamId: string; startsAt: Date }>
+  games: Array<{ homeTeamId: string; awayTeamId: string; startsAt: Date }>,
+  nowMs?: number
 ): Date | null {
   if (!playerTeamId) return null;
-  const now = new Date();
+  const now = nowMs ? new Date(nowMs) : new Date();
   const todayStart = new Date(now);
   todayStart.setUTCHours(0, 0, 0, 0);
 

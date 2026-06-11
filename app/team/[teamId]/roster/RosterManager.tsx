@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition, useMemo } from "react";
+import { useRouter } from "next/navigation";
 
 export type Position = "FORWARD" | "DEFENSE" | "GOALIE";
 
@@ -68,6 +69,7 @@ type SortKey = "name" | "pts" | "goals" | "assists" | "ppp" | "shots" | "hits" |
 export default function RosterManager({
   leagueId, teamId, teamName, maxRosterSize, initialRoster, freeAgents,
 }: Props) {
+  const router = useRouter();
   const [tab, setTab] = useState<Tab>("roster");
   const [roster, setRoster] = useState<RosterPlayerRow[]>(initialRoster);
   const [posFilter, setPosFilter] = useState<Position | "ALL">("ALL");
@@ -98,10 +100,10 @@ export default function RosterManager({
         return;
       }
       const addedFa = freeAgents.find((p) => p.playerId === addPlayerId);
-      setRoster(data.roster!);
       setPendingAdd(null);
       setDropForAdd(null);
       setSuccessMsg(`${addedFa?.name ?? "Player"} added to your roster.`);
+      router.refresh();
     });
   }
 
