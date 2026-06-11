@@ -353,3 +353,7 @@ img { max-width: 100%; display: block; }
 @media (max-width: 600px) {
   .matchup-2col { grid-template-columns: 1fr; }
 }
+
+@media (max-width: 640px) {
+  .commissioner-grid { grid-template-columns: 1fr !important; }
+}
