@@ -43,6 +43,10 @@ export default async function LeagueOverviewPage({
 
   const standings = computeStandings(league.teams, matchups);
 
+  // Parse playoff cutoff (default 6 teams)
+  const playoffSettings = (league.playoffSettings ?? {}) as { teamsInPlayoff?: number };
+  const teamsInPlayoff = playoffSettings.teamsInPlayoff ?? 6;
+
   // Activity feed — graceful fallback when LeagueEvent table doesn't exist yet
   let activity: Awaited<ReturnType<typeof getLeagueActivity>> = [];
   try {
@@ -68,6 +72,9 @@ export default async function LeagueOverviewPage({
   const fmt = (d: Date) =>
     new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" }).format(d);
 
+  // Only show playoff race once the season has started (some matchups scored)
+  const hasResults = matchups.some((m) => m.homeScore !== null);
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
 
@@ -80,7 +87,7 @@ export default async function LeagueOverviewPage({
           display: "flex", flexDirection: "column", gap: 6,
         }}>
           <p style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "#34d399" }}>
-            ✓ You're in! {myTeamInLeague.name} is registered.
+            ✓ You&apos;re in! {myTeamInLeague.name} is registered.
           </p>
           {league.draft?.status === "COMPLETE" ? (
             <p style={{ margin: 0, fontSize: 13, color: "#64748b" }}>
@@ -92,7 +99,7 @@ export default async function LeagueOverviewPage({
             </p>
           ) : (
             <p style={{ margin: 0, fontSize: 13, color: "#64748b" }}>
-              The commissioner will share a draft room link when it's time to pick. Watch your email.
+              The commissioner will share a draft room link when it&apos;s time to pick. Watch your email.
             </p>
           )}
         </div>
@@ -141,62 +148,35 @@ export default async function LeagueOverviewPage({
                   background: isMyMatchup ? "rgba(99,102,241,0.07)" : "rgba(255,255,255,0.025)",
                   border: isMyMatchup ? "1px solid rgba(99,102,241,0.25)" : "1px solid rgba(148,163,184,0.07)",
                 }}>
-                  {/* Home team */}
                   <div style={{ textAlign: "right", minWidth: 0 }}>
                     <span style={{
-                      fontSize: 14,
-                      fontWeight: homeIsMe ? 700 : 500,
+                      fontSize: 14, fontWeight: homeIsMe ? 700 : 500,
                       color: homeIsMe ? "#e2e8f0" : "#94a3b8",
-                      display: "block",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      whiteSpace: "nowrap",
+                      display: "block", overflow: "hidden",
+                      textOverflow: "ellipsis", whiteSpace: "nowrap",
                     }}>
                       {m.homeTeam.name}
                     </span>
                     {scored && (
-                      <span style={{
-                        fontSize: 18,
-                        fontWeight: 800,
-                        color: homeWon ? "#e2e8f0" : "#475569",
-                        fontVariantNumeric: "tabular-nums",
-                      }}>
+                      <span style={{ fontSize: 18, fontWeight: 800, color: homeWon ? "#e2e8f0" : "#475569", fontVariantNumeric: "tabular-nums" }}>
                         {m.homeScore!.toFixed(1)}
                       </span>
                     )}
                   </div>
-
-                  {/* Divider */}
-                  <div style={{
-                    fontSize: 11, fontWeight: 700,
-                    color: "#334155",
-                    textAlign: "center",
-                    letterSpacing: "0.5px",
-                    padding: "0 4px",
-                  }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: "#334155", textAlign: "center", letterSpacing: "0.5px", padding: "0 4px" }}>
                     {scored ? "FINAL" : "VS"}
                   </div>
-
-                  {/* Away team */}
                   <div style={{ textAlign: "left", minWidth: 0 }}>
                     <span style={{
-                      fontSize: 14,
-                      fontWeight: awayIsMe ? 700 : 500,
+                      fontSize: 14, fontWeight: awayIsMe ? 700 : 500,
                       color: awayIsMe ? "#e2e8f0" : "#94a3b8",
-                      display: "block",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      whiteSpace: "nowrap",
+                      display: "block", overflow: "hidden",
+                      textOverflow: "ellipsis", whiteSpace: "nowrap",
                     }}>
                       {m.awayTeam.name}
                     </span>
                     {scored && (
-                      <span style={{
-                        fontSize: 18,
-                        fontWeight: 800,
-                        color: awayWon ? "#e2e8f0" : "#475569",
-                        fontVariantNumeric: "tabular-nums",
-                      }}>
+                      <span style={{ fontSize: 18, fontWeight: 800, color: awayWon ? "#e2e8f0" : "#475569", fontVariantNumeric: "tabular-nums" }}>
                         {m.awayScore!.toFixed(1)}
                       </span>
                     )}
@@ -215,35 +195,69 @@ export default async function LeagueOverviewPage({
         )}
       </section>
 
-      {/* ── 2. Standings ── */}
-      <section style={card}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-          <h2 style={sectionTitle}>Standings</h2>
-          <Link href={`/league/${leagueId}/standings`} style={{ fontSize: 12, color: "#64748b", textDecoration: "none" }}>
-            Full standings →
-          </Link>
-        </div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-          {standings.map((s, i) => {
-            const isMe = s.fantasyTeamId === myTeamInLeague?.id;
-            return (
-              <div key={s.fantasyTeamId} style={{
-                display: "grid",
-                gridTemplateColumns: "28px 1fr 60px 60px",
-                gap: 8, padding: "8px 10px", borderRadius: 8, alignItems: "center",
-                background: isMe ? "rgba(99,102,241,0.07)" : "transparent",
-              }}>
-                <span style={{ fontSize: 12, color: "#475569", fontWeight: 700 }}>{i + 1}</span>
-                <span style={{ fontSize: 14, fontWeight: isMe ? 700 : 400, color: isMe ? "#a5b4fc" : "#e2e8f0" }}>
-                  {s.teamName}{isMe && <span style={{ marginLeft: 6, fontSize: 11, color: "#6366f1" }}>You</span>}
-                </span>
-                <span style={{ fontSize: 12, color: "#64748b", textAlign: "right" }}>{s.wins}–{s.losses}{s.ties > 0 ? `–${s.ties}` : ""}</span>
-                <span style={{ fontSize: 13, fontWeight: 600, color: "#94a3b8", textAlign: "right" }}>{s.points.toFixed(1)}</span>
-              </div>
-            );
-          })}
-        </div>
-      </section>
+      {/* ── 2. Playoff race ── */}
+      {hasResults && standings.length > 0 && (
+        <section style={card}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+            <h2 style={sectionTitle}>Playoff race</h2>
+            <Link href={`/league/${leagueId}/standings`} style={{ fontSize: 12, color: "#64748b", textDecoration: "none" }}>
+              Full standings →
+            </Link>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+            {standings.map((s, i) => {
+              const rank = i + 1;
+              const isMe = s.fantasyTeamId === myTeamInLeague?.id;
+              const isIn = rank <= teamsInPlayoff;
+              const isBubble = rank === teamsInPlayoff + 1;
+              const isLastIn = rank === teamsInPlayoff;
+
+              const statusChip = isIn
+                ? { label: "IN", bg: "rgba(52,211,153,0.12)", color: "#34d399", border: "rgba(52,211,153,0.25)" }
+                : isBubble
+                ? { label: "BUBBLE", bg: "rgba(245,158,11,0.12)", color: "#f59e0b", border: "rgba(245,158,11,0.25)" }
+                : { label: "OUT", bg: "rgba(100,116,139,0.1)", color: "#64748b", border: "rgba(100,116,139,0.15)" };
+
+              return (
+                <div key={s.fantasyTeamId}>
+                  {/* Dashed separator after last playoff spot */}
+                  {isLastIn && (
+                    <div style={{
+                      borderBottom: "1px dashed rgba(148,163,184,0.2)",
+                      margin: "6px 0",
+                    }} />
+                  )}
+                  <div style={{
+                    display: "grid",
+                    gridTemplateColumns: "24px 1fr auto 56px",
+                    gap: 8, padding: "8px 10px", borderRadius: 8, alignItems: "center",
+                    background: isMe ? "rgba(99,102,241,0.07)" : "transparent",
+                  }}>
+                    <span style={{ fontSize: 12, color: "#475569", fontWeight: 700 }}>{rank}</span>
+                    <span style={{ fontSize: 14, fontWeight: isMe ? 700 : 400, color: isMe ? "#a5b4fc" : "#e2e8f0", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {s.teamName}
+                      {isMe && <span style={{ marginLeft: 6, fontSize: 11, color: "#6366f1" }}>You</span>}
+                    </span>
+                    <span style={{ fontSize: 12, color: "#64748b", textAlign: "right", whiteSpace: "nowrap" }}>
+                      {s.wins}–{s.losses}{s.ties > 0 ? `–${s.ties}` : ""}
+                    </span>
+                    <span style={{
+                      fontSize: 10, fontWeight: 700, textAlign: "center",
+                      padding: "2px 6px", borderRadius: 6,
+                      background: statusChip.bg,
+                      color: statusChip.color,
+                      border: `1px solid ${statusChip.border}`,
+                      whiteSpace: "nowrap",
+                    }}>
+                      {statusChip.label}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
 
       {/* ── 3. League activity ── */}
       {activity.length > 0 && (
@@ -261,23 +275,6 @@ export default async function LeagueOverviewPage({
           </div>
         </section>
       )}
-
-      {/* ── 4. Teams ── */}
-      <section style={card}>
-        <h2 style={{ ...sectionTitle, marginBottom: 12 }}>Teams</h2>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-          {league.teams.map((t) => (
-            <span key={t.id} style={{
-              fontSize: 13, padding: "5px 12px", borderRadius: 20,
-              background: t.ownerId === user?.id ? "rgba(99,102,241,0.15)" : "rgba(255,255,255,0.05)",
-              color: t.ownerId === user?.id ? "#a5b4fc" : "#94a3b8",
-              border: t.ownerId === user?.id ? "1px solid rgba(99,102,241,0.3)" : "1px solid rgba(148,163,184,0.1)",
-            }}>
-              {t.name}
-            </span>
-          ))}
-        </div>
-      </section>
 
     </div>
   );

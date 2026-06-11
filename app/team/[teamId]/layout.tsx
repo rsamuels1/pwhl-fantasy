@@ -35,7 +35,7 @@ export default async function TeamLayout({ children, params }: TeamLayoutProps) 
         ? currentMatchup.awayTeam.name
         : currentMatchup.homeTeam.name)
     : null;
-  const simDateRaw = process.env.NODE_ENV !== "production"
+  const simDateRaw = (process.env.NODE_ENV !== "production" || process.env.ALLOW_SIM_DATE === "true")
     ? cookieStore.get("pwhl_dev_sim_date")?.value ?? null
     : null;
 

@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/db";
 import { requireAuth } from "@/lib/auth";
 import { getDevNow } from "@/lib/devTime";
-import { getMatchupQuickSummary, type MatchupQuickSummary } from "@/lib/services/matchup-summary";
+import { getMatchupQuickSummary, getTeamTopPerformers, type MatchupQuickSummary } from "@/lib/services/matchup-summary";
 import Link from "next/link";
 
 const outcomeColor = { W: "#34d399", L: "#f87171", T: "#94a3b8" } as const;
@@ -123,9 +123,10 @@ export default async function DashboardPage() {
   const teams = [...ownedTeams, ...extraTeams];
   const hasTeams = teams.length > 0;
 
-  const summaries = await Promise.all(
-    teams.map((team) => getMatchupQuickSummary(team.id, team.leagueId, nowMs, prisma))
-  );
+  const [summaries, topPerformersList] = await Promise.all([
+    Promise.all(teams.map((team) => getMatchupQuickSummary(team.id, team.leagueId, nowMs, prisma))),
+    Promise.all(teams.map((team) => getTeamTopPerformers(team.id, team.leagueId, nowMs, prisma))),
+  ]);
 
   const hour = new Date(nowMs).getHours();
   const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
@@ -267,6 +268,7 @@ export default async function DashboardPage() {
             <div className="grid-2" style={{ gap: 16 }}>
               {teams.map((team, i) => {
                 const summary = summaries[i];
+                const topPerformers = topPerformersList[i];
                 return (
                   <div key={team.id} className="team-card" style={{ display: "flex", flexDirection: "column", gap: 14 }}>
                     <div>
@@ -286,6 +288,20 @@ export default async function DashboardPage() {
                         fontSize: 13, color: "#475569",
                       }}>
                         No matchup scheduled yet
+                      </div>
+                    )}
+
+                    {topPerformers.length > 0 && (
+                      <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                        <span style={{ fontSize: 11, color: "#f59e0b" }}>🔥</span>
+                        {topPerformers.map((p, j) => (
+                          <span key={j} style={{ fontSize: 12, color: "#94a3b8" }}>
+                            <span style={{ color: "#e2e8f0", fontWeight: 600 }}>{p.name}</span>
+                            {" "}
+                            <span style={{ color: "#6366f1", fontWeight: 700 }}>{p.points} pts</span>
+                            {j < topPerformers.length - 1 && <span style={{ color: "#334155", marginLeft: 10 }}>·</span>}
+                          </span>
+                        ))}
                       </div>
                     )}
 

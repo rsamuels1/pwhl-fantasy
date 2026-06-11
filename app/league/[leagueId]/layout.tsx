@@ -16,7 +16,7 @@ export default async function LeagueLayout({ children, params }: LeagueLayoutPro
   const basePath = `/league/${leagueId}`;
 
   const cookieStore = await cookies();
-  const simDateRaw = process.env.NODE_ENV !== "production"
+  const simDateRaw = (process.env.NODE_ENV !== "production" || process.env.ALLOW_SIM_DATE === "true")
     ? cookieStore.get("pwhl_dev_sim_date")?.value ?? null
     : null;
 

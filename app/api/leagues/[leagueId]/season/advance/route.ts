@@ -4,8 +4,9 @@
 // date instead of the real wall clock. No special code path exists — this is a
 // thin wrapper over the exact same functions the real season uses.
 //
-// Gate: NODE_ENV !== "production"  OR  ALLOW_SEASON_ADVANCE=true env var.
-// These controls must NOT be reachable in a real season.
+// Gate: NODE_ENV !== "production"  OR  ALLOW_SIM_DATE=true env var.
+// Set ALLOW_SIM_DATE=true on a staging Vercel deployment to enable simulation.
+// Never set this on the production deployment.
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
@@ -15,7 +16,7 @@ import { apiRequireAuth, apiRequireCommissioner } from "@/lib/auth";
 function isAllowed(): boolean {
   return (
     process.env.NODE_ENV !== "production" ||
-    process.env.ALLOW_SEASON_ADVANCE === "true"
+    process.env.ALLOW_SIM_DATE === "true"
   );
 }
 

@@ -284,7 +284,12 @@ export default async function TeamMatchupPage({
       {/* ── 7. League activity ── */}
       {leagueActivity.length > 0 && (
         <Card>
-          <h2 style={{ ...sectionHead, marginBottom: 14 }}>League activity</h2>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+            <h2 style={{ ...sectionHead, margin: 0 }}>League activity</h2>
+            <Link href={`/league/${leagueId}`} style={{ fontSize: 12, color: "#64748b", textDecoration: "none" }}>
+              See all →
+            </Link>
+          </div>
           <div style={{ display: "grid", gap: 10 }}>
             {leagueActivity.map((event) => (
               <div key={event.id} style={{ display: "flex", justifyContent: "space-between", gap: 12, fontSize: 13 }}>

@@ -96,7 +96,7 @@ export async function getDashboardData(
   const isUpcoming = !activePeriod && !!upcomingPeriod;
 
   // Use real LeagueEvent rows; fall back to draft picks if no events yet
-  const realEvents = await getLeagueActivity(leagueId, 10, prisma);
+  const realEvents = await getLeagueActivity(leagueId, 5, prisma);
   const leagueActivity: ActivityEvent[] =
     realEvents.length > 0 ? realEvents : await getLeagueActivityFallback(leagueId, prisma);
 

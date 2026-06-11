@@ -7,7 +7,13 @@ import type { PrismaClient } from "@prisma/client";
 import { getSeasonState } from "@/lib/season";
 import { computeTeamScore } from "@/lib/scoring/matchups";
 import { parseScoringSettings } from "@/lib/scoring/settings";
+import { scoreStatLine, DEFAULT_SCORING } from "@/lib/scoring";
 import { winProbability } from "@/lib/projections";
+
+export interface TopPerformer {
+  name: string;
+  points: number;
+}
 
 export interface MatchupQuickSummary {
   week: number;
@@ -108,4 +114,60 @@ export async function getMatchupQuickSummary(
     winProbability: winProbability(myScore, oppScore),
     startsAt: matchup.startsAt,
   };
+}
+
+// Returns the top 2 active-slot scorers for a team in the current scoring period.
+// Returns [] when there is no active/scoring-pending period or no stat lines yet.
+export async function getTeamTopPerformers(
+  teamId: string,
+  leagueId: string,
+  nowMs: number,
+  prisma: PrismaClient
+): Promise<TopPerformer[]> {
+  const state = await getSeasonState(leagueId, nowMs, prisma);
+  const current =
+    state.periods.find((p) => p.status === "ACTIVE") ??
+    state.periods.find((p) => p.status === "SCORING_PENDING");
+  if (!current) return [];
+
+  const { period } = current;
+
+  const league = await prisma.fantasyLeague.findUnique({
+    where: { id: leagueId },
+    select: { scoringSettings: true },
+  });
+  const settings = parseScoringSettings(league?.scoringSettings ?? DEFAULT_SCORING);
+
+  const entries = await prisma.rosterEntry.findMany({
+    where: { fantasyTeamId: teamId, slot: { notIn: ["BENCH", "IR"] } },
+    select: { playerId: true, player: { select: { firstName: true, lastName: true, position: true } } },
+  });
+  if (entries.length === 0) return [];
+
+  const playerIds = entries.map((e) => e.playerId);
+  const lines = await prisma.statLine.findMany({
+    where: { playerId: { in: playerIds }, game: { startsAt: { gte: period.startsAt, lt: period.endsAt } } },
+    include: { player: { select: { position: true } } },
+  });
+
+  const byPlayer = new Map<string, number>();
+  for (const line of lines) {
+    const fp = scoreStatLine(
+      { goals: line.goals, assists: line.assists, shots: line.shots, plusMinus: line.plusMinus,
+        penaltyMinutes: line.penaltyMinutes, powerPlayPts: line.powerPlayPts, hits: line.hits,
+        blocks: line.blocks, saves: line.saves, goalsAgainst: line.goalsAgainst,
+        shutout: line.shutout, win: line.win },
+      line.player.position,
+      settings
+    );
+    byPlayer.set(line.playerId, (byPlayer.get(line.playerId) ?? 0) + fp);
+  }
+
+  const nameMap = new Map(entries.map((e) => [e.playerId, `${e.player.firstName} ${e.player.lastName}`]));
+
+  return [...byPlayer.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 2)
+    .filter(([, pts]) => pts > 0)
+    .map(([id, pts]) => ({ name: nameMap.get(id) ?? id, points: Math.round(pts * 10) / 10 }));
 }

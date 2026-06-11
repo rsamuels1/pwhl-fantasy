@@ -22,7 +22,7 @@ export default async function SeasonPage({ params }: Props) {
 
   const nowMs = await getDevNow();
   const state = await getSeasonState(leagueId, nowMs, prisma);
-  const isDev = process.env.NODE_ENV !== "production";
+  const isDev = process.env.NODE_ENV !== "production" || process.env.ALLOW_SIM_DATE === "true";
 
   return (
     <SeasonView
