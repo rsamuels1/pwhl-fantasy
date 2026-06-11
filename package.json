@@ -15,6 +15,7 @@
     "replay-week-vtf": "tsx scripts/replay-week-vtf.ts",
     "export-fixture": "tsx scripts/export-fixture.ts",
     "seed-fixture": "tsx scripts/seed-fixture.ts",
+    "set-lineups": "tsx scripts/set-optimal-lineups.ts",
     "test": "vitest run",
     "test:watch": "vitest"
   },
