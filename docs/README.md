@@ -109,6 +109,7 @@ Long-term platform architecture and system evolution.
 ## Meta
 
 - [Validation Status Dashboard](validation-status-dashboard.md) — Current MVP readiness, document hierarchy, remaining blockers
+- [Commissioner Experience Gap Analysis](commissioner-experience-gap-analysis.md) — What a commissioner can/cannot do today; P0–P3 ranked gaps; pre-beta minimum requirements
 - [Documentation Audit](documentation-audit.md) — Inventory of all files moved during this reorganization
 - [Documentation Standards](documentation-standards.md) — Naming conventions, routing guide, governance
 
