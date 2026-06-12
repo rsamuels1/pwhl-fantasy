@@ -128,7 +128,6 @@ export async function getDashboardData(
 ): Promise<DashboardData> {
   const league = await prisma.fantasyLeague.findUniqueOrThrow({
     where: { id: leagueId },
-    select: { scoringSettings: true, season: true, isReplay: true, replayCurrentDate: true, scoringMode: true },
   });
 
   const nowMs = getReplayNow(league, nowMsArg);

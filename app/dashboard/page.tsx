@@ -1,4 +1,3 @@
-import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { requireAuth } from "@/lib/auth";
 import { getDevNow } from "@/lib/devTime";
@@ -82,13 +81,6 @@ function MatchupHero({ summary, teamName }: { summary: MatchupQuickSummary; team
 
 export default async function DashboardPage() {
   const user = await requireAuth("/dashboard");
-
-  // Single-team users go directly to their team page
-  const ownedTeamCount = await prisma.fantasyTeam.count({ where: { ownerId: user.id } });
-  if (ownedTeamCount === 1) {
-    const singleTeam = await prisma.fantasyTeam.findFirst({ where: { ownerId: user.id }, select: { id: true } });
-    redirect(`/team/${singleTeam!.id}/matchup`);
-  }
 
   const devNow = await getDevNow();
   const nowMs = devNow;
@@ -213,10 +205,16 @@ export default async function DashboardPage() {
         <header style={{ marginTop: 16 }}>
           {hasTeams ? (
             <>
-              <p className="hero-eyebrow">Fantasy Home</p>
-              <h1 style={{ margin: "8px 0 0", fontSize: "clamp(1.4rem, 3vw, 2rem)" }}>
-                {greeting}, {user.displayName}.
-              </h1>
+              <p className="hero-eyebrow">My Leagues</p>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap", margin: "8px 0 0" }}>
+                <h1 style={{ margin: 0, fontSize: "clamp(1.4rem, 3vw, 2rem)" }}>
+                  {greeting}, {user.displayName}.
+                </h1>
+                <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
+                  <Link href="/create-league" className="button-primary">+ New League</Link>
+                  <Link href="/join-league" className="button-secondary">Join League</Link>
+                </div>
+              </div>
             </>
           ) : (
             <>
@@ -267,8 +265,9 @@ export default async function DashboardPage() {
                   <div key={team.id} className="team-card" style={{ display: "flex", flexDirection: "column", gap: 14 }}>
                     <div>
                       <h3 style={{ margin: 0, fontSize: 17, fontWeight: 700 }}>{team.name}</h3>
-                      <p className="team-meta" style={{ marginTop: 2 }}>
-                        {team.league.name} · Season {team.league.season}
+                      <p className="team-meta" style={{ marginTop: 2, display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                        <span>{team.league.name} · Season {team.league.season}</span>
+                        <LeagueStatusChip status={team.league.status} />
                       </p>
                     </div>
 
@@ -313,20 +312,27 @@ export default async function DashboardPage() {
           </section>
         )}
 
-        {/* ── Footer links ── */}
-        {hasTeams && (
-          <p style={{ fontSize: 13, color: "#475569" }}>
-            <Link href="/create-league" style={{ color: "#64748b", textDecoration: "underline" }}>
-              + Create another league
-            </Link>
-            {" · "}
-            <Link href="/join-league" style={{ color: "#64748b", textDecoration: "underline" }}>
-              Join a league
-            </Link>
-          </p>
-        )}
 
       </section>
     </main>
+  );
+}
+
+function LeagueStatusChip({ status }: { status: string }) {
+  const map: Record<string, { label: string; color: string; bg: string }> = {
+    PRE_DRAFT:  { label: "Pre-draft",  color: "#f59e0b", bg: "rgba(245,158,11,0.1)" },
+    IN_SEASON:  { label: "In Season",  color: "#34d399", bg: "rgba(52,211,153,0.1)" },
+    COMPLETE:   { label: "Complete",   color: "#64748b", bg: "rgba(100,116,139,0.1)" },
+  };
+  const chip = map[status];
+  if (!chip) return null;
+  return (
+    <span style={{
+      fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 20,
+      color: chip.color, background: chip.bg,
+      letterSpacing: "0.04em", textTransform: "uppercase",
+    }}>
+      {chip.label}
+    </span>
   );
 }

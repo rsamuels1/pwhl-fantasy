@@ -45,7 +45,6 @@ export async function getSeasonState(
 export async function startSeason(leagueId: string, prisma: PrismaClient): Promise<void> {
   const league = await prisma.fantasyLeague.findUniqueOrThrow({
     where: { id: leagueId },
-    select: { season: true, status: true, scoringMode: true },
   });
 
   // Detect season mismatch before hitting the internal error from generateVtfMatchups.
@@ -88,7 +87,6 @@ export async function advanceSeason(
 ): Promise<{ scoredWeeks: number[] }> {
   const league = await prisma.fantasyLeague.findUniqueOrThrow({
     where: { id: leagueId },
-    select: { scoringMode: true, scoringSettings: true },
   });
   const scoringMode = (league as { scoringMode?: string }).scoringMode ?? "VTF";
   const scoringSettings = parseScoringSettings(league.scoringSettings);

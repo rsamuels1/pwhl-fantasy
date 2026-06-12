@@ -488,9 +488,8 @@ Used by all `/team/[teamId]/` pages. The middleware at `middleware.ts` covers bo
 and `/team/*` routes.
 
 **Entry points after login:**
-- Single-team user → `/team/[teamId]/matchup`
-- Multi-team user → `/dashboard`
-- `app/page.tsx` applies the same redirect for already-logged-in users.
+- All logged-in users → `/dashboard` (the league hub)
+- `app/page.tsx` redirects any logged-in visitor to `/dashboard`. The single-team shortcut to `/team/[teamId]/matchup` was removed — the hub is always the landing page.
 
 ## Matchup page (`app/team/[teamId]/matchup/`)
 
@@ -613,8 +612,10 @@ is unchanged.
 
 ## Dashboard (`/dashboard`)
 
-Multi-team landing page for users with more than one team. Single-team users go directly to
-`/team/[teamId]/matchup` after login. The dashboard uses `getMatchupQuickSummary` (in
+League hub landing page for all authenticated users. Shows owned teams grouped by league, with
+prominent "New League" and "Join League" buttons in the header for users with existing teams.
+Zero-team users see the empty-state Create/Join/Browse buttons. The single-team shortcut to
+`/team/[teamId]/matchup` was removed — all users land here first. The dashboard uses `getMatchupQuickSummary` (in
 `lib/services/matchup-summary.ts`) for lightweight per-team matchup cards.
 
 **Action items** (shown in amber strip at top when non-empty): contextual alerts across all teams.
@@ -720,7 +721,7 @@ leaving the user still logged in.
 (avoids Suspense complexity with `useSearchParams`) and redirects to `data.redirectTo`
 after a successful login.
 
-`app/page.tsx` redirects logged-in users: 1 team → `/team/<teamId>/matchup`, otherwise → `/dashboard`.
+`app/page.tsx` redirects all logged-in users to `/dashboard` (the league hub).
 `app/layout.tsx` is async and shows the user's display name + Logout link when logged in.
 
 ## Dev simulation mode (`lib/devTime.ts`)
