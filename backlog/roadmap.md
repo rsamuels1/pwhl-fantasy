@@ -733,7 +733,7 @@ These provide the highest user value and are the remaining prerequisites for a p
 
 ---
 
-# Bugs or Additional Changes
+# Bugs or Additional User Stories
 
 These are bugs or additional changes that should be investigated and fixes added to the roadmap or within features already on the roadmap:
 
@@ -748,5 +748,7 @@ These are bugs or additional changes that should be investigated and fixes added
 - (6/12) the playoff tab is fine for now, but once playoffs start, I'd like to see a playoff bracket here. we should also consider how the user experience will change during playoffs and what becomes most important to surface for the user.
 
 - (6/12) there should eventually be a way for a player to track their performance/legacy/dynasty across their overall game play (teams, leagues, seasons etc) similar to Madden Coaching Legacy/Dynasty stats for "play as a coach" mode on madden. this should also include a ranking across all users!
+
+- (6/12) during the draft, I want the user to be able to track how many players they've drafted by which teams their on as to balance it out. so they'll know if they have 5 people on Minnesota and 6 on NY, in which case they should diversify
 
 ---
