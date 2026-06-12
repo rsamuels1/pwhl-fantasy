@@ -94,7 +94,7 @@ against code on June 12, 2026). **Confidence to launch today: ~85–90%.**
 | Area | Status | Blocker |
 |---|---|---|
 | League creation | ✅ PASS | — |
-| Draft | ⚠️ PASS WITH RISKS | reconnect / duplicate-tab handling unvalidated |
+| Draft | ⚠️ PASS WITH RISKS | reconnect ✅ · commissioner auth ✅ · auto-pick position-aware ✅ · duplicate-tab unvalidated |
 | Rosters | ✅ PASS | — |
 | Weekly matchups | ✅ PASS | — |
 | VP standings | ✅ PASS | — |
@@ -1163,6 +1163,11 @@ Assumes a solo builder working with Claude (Pro), ~2 weeks per sprint. Tracks: *
 **Exit:** one simulated league completes a full season with zero manual DB edits. ✅
 
 ## Sprint 2 — "Commissioner + Platform Foundation" · ~2 wks · Tracks A+F (P0/P1) ← CURRENT
+
+**Draft reliability track (pre-beta hardening — done):**
+- C1 WebSocket reconnect with exponential backoff (`useDraftSocket.ts`) ✅
+- C2 Commissioner auth enforcement on START/PAUSE/RESUME — server-side (`server.ts`) ✅
+- H1/H3 Position-aware + value-ranked auto-pick — tier (G needed → skater starter → bench) + proxy FP (`server.ts`) ✅
 
 **Commissioner track:**
 - CT-001 Commissioner Control Center (pause/resume draft, replace manager, force move, undo) — closes the #1 Commissioner Dashboard gaps

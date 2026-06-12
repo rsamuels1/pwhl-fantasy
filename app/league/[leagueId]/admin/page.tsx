@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
+import type { EventType } from "@prisma/client";
 import { requireAuth, requireCommissioner } from "@/lib/auth";
 import { getSeasonState } from "@/lib/season";
 import { getDevNow } from "@/lib/devTime";
@@ -9,29 +10,74 @@ import SetupDraftButton from "@/components/SetupDraftButton";
 import AutoDraftButton from "@/components/AutoDraftButton";
 import InviteLinkButton from "@/components/InviteLinkButton";
 import AnnouncementForm from "@/components/AnnouncementForm";
+import { RenewLeagueForm } from "@/components/RenewLeagueForm";
+import { CommissionerRecoveryTools } from "@/components/CommissionerRecoveryTools";
 import SeasonView from "../season/SeasonView";
+
+const COMMISSIONER_EVENT_TYPES = [
+  "COMMISSIONER_FORCE_MOVE",
+  "COMMISSIONER_UNDO_TRANSACTION",
+  "COMMISSIONER_REPLACE_MANAGER",
+  "COMMISSIONER_DRAFT_PAUSED",
+  "COMMISSIONER_DRAFT_RESUMED",
+  "COMMISSIONER_ANNOUNCEMENT",
+  "COMMISSIONER_SETTINGS_CHANGED",
+] as const;
 
 interface Props {
   params: Promise<{ leagueId: string }>;
-  searchParams?: Promise<{ welcome?: string }>;
+  searchParams?: Promise<{ welcome?: string; renewed?: string }>;
 }
 
 export default async function AdminPage({ params, searchParams }: Props) {
   const { leagueId } = await params;
   const sp = searchParams ? await searchParams : {};
   const isWelcome = sp.welcome === "1";
+  const isRenewed = sp.renewed === "1";
   const user = await requireAuth(`/league/${leagueId}/admin`);
   await requireCommissioner(leagueId, user.id);
 
   const league = await prisma.fantasyLeague.findUnique({
     where: { id: leagueId },
     include: {
-      teams: { orderBy: { draftOrder: "asc" } },
+      teams: {
+        orderBy: { draftOrder: "asc" },
+        include: {
+          owner: { select: { email: true } },
+          roster: {
+            include: { player: { select: { id: true, firstName: true, lastName: true } } },
+          },
+        },
+      },
       draft: { select: { id: true, status: true, startedAt: true, completedAt: true, pickTimerSecs: true } },
     },
   });
 
   if (!league) notFound();
+
+  // Fetch audit log for commissioner actions (last 50)
+  const auditLog = await prisma.leagueEvent.findMany({
+    where: {
+      leagueId,
+      type: { in: [...COMMISSIONER_EVENT_TYPES] as unknown as EventType[] },
+    },
+    orderBy: { createdAt: "desc" },
+    take: 50,
+  });
+
+  // Build team rows for CommissionerRecoveryTools
+  const teamRows = league.teams.map((t) => ({
+    id: t.id,
+    name: t.name,
+    ownerEmail: t.owner.email,
+    roster: t.roster.map((r) => ({
+      playerId: r.player.id,
+      playerName: `${r.player.firstName} ${r.player.lastName}`,
+      slot: r.slot,
+    })),
+  }));
+
+  const isDraftPaused = league.draft?.status === "PAUSED";
 
   const devNow = await getDevNow();
   const nowMs = (league.isReplay && league.replayCurrentDate)
@@ -97,6 +143,22 @@ export default async function AdminPage({ params, searchParams }: Props) {
         <p style={{ color: "#94a3b8" }}>{league.name} · Commissioner controls</p>
       </div>
 
+      {/* ── Renewed banner ── */}
+      {isRenewed && (
+        <div style={{
+          padding: "16px 20px", borderRadius: 16,
+          background: "rgba(99,102,241,0.07)",
+          border: "1px solid rgba(99,102,241,0.2)",
+        }}>
+          <p style={{ margin: "0 0 4px", fontSize: 16, fontWeight: 700, color: "#a5b4fc" }}>
+            ✓ New season created!
+          </p>
+          <p style={{ margin: 0, fontSize: 13, color: "#64748b" }}>
+            Set up the draft to get ready for the next season. Invite returning managers to re-join.
+          </p>
+        </div>
+      )}
+
       {/* ── Welcome banner ── */}
       {isWelcome && (
         <div style={{
@@ -110,6 +172,27 @@ export default async function AdminPage({ params, searchParams }: Props) {
           <p style={{ margin: 0, fontSize: 13, color: "#64748b" }}>
             Follow the checklist below to get ready for draft day. Start by inviting your managers.
           </p>
+        </div>
+      )}
+
+      {/* ── Draft paused notice ── */}
+      {isDraftPaused && (
+        <div style={{
+          padding: "14px 20px", borderRadius: 16,
+          background: "rgba(251,191,36,0.07)",
+          border: "1px solid rgba(251,191,36,0.25)",
+          display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap",
+        }}>
+          <p style={{ margin: 0, fontSize: 14, color: "#fbbf24", fontWeight: 600 }}>
+            ⏸ Draft is currently PAUSED
+          </p>
+          <Link href={`/draft/${leagueId}`} style={{
+            color: "#a5b4fc", fontSize: 13, fontWeight: 600,
+            background: "rgba(99,102,241,0.1)", padding: "6px 12px", borderRadius: 8,
+            textDecoration: "none",
+          }}>
+            Go to draft room →
+          </Link>
         </div>
       )}
 
@@ -325,6 +408,63 @@ export default async function AdminPage({ params, searchParams }: Props) {
           </p>
         )}
       </section>
+
+      {/* ── Commissioner recovery tools ── */}
+      {draftDone && (
+        <section style={panelStyle}>
+          <h2 style={{ fontSize: 18, marginBottom: 4 }}>Commissioner tools</h2>
+          <p style={{ color: "#94a3b8", fontSize: 13, marginBottom: 20 }}>
+            Recovery actions for unexpected situations. All actions are logged in the audit trail below.
+          </p>
+          <CommissionerRecoveryTools
+            leagueId={leagueId}
+            teams={teamRows}
+            isDraftPaused={isDraftPaused}
+          />
+        </section>
+      )}
+
+      {/* ── Audit log ── */}
+      {auditLog.length > 0 && (
+        <section style={panelStyle}>
+          <h2 style={{ fontSize: 18, marginBottom: 16 }}>Audit log</h2>
+          <div style={{ display: "grid", gap: 6 }}>
+            {auditLog.map((entry) => {
+              const data = entry.data as Record<string, unknown>;
+              const action = String(data.action ?? entry.type).replace(/^COMMISSIONER_/, "").replace(/_/g, " ");
+              const target = data.target ? ` · ${data.target}` : "";
+              return (
+                <div key={entry.id} style={{
+                  display: "flex", alignItems: "flex-start", gap: 12,
+                  padding: "10px 14px", borderRadius: 10,
+                  background: "rgba(255,255,255,0.02)",
+                  border: "1px solid rgba(148,163,184,0.07)",
+                  fontSize: 13,
+                }}>
+                  <span style={{ color: "#475569", flexShrink: 0, minWidth: 120 }}>
+                    {new Date(entry.createdAt).toLocaleDateString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                  </span>
+                  <span style={{ color: "#a5b4fc", fontWeight: 600, textTransform: "capitalize" }}>
+                    {action.toLowerCase()}{target}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
+      {/* ── Start next season ── */}
+      {league.playoffStatus === "COMPLETE" && (
+        <section style={{ ...panelStyle, border: "1px solid rgba(99,102,241,0.25)" }}>
+          <h2 style={{ fontSize: 18, marginBottom: 8 }}>Start next season</h2>
+          <p style={{ color: "#94a3b8", fontSize: 14, marginBottom: 16 }}>
+            Create a new league for the next season. Your teams, rosters, and matchup history stay
+            in this league. Managers will need to re-join and re-draft for the new season.
+          </p>
+          <RenewLeagueForm leagueId={leagueId} currentSeason={league.season} />
+        </section>
+      )}
 
       {/* ── League settings ── */}
       <section style={{ ...panelStyle, borderColor: "rgba(148,163,184,0.07)" }}>

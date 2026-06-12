@@ -64,4 +64,5 @@ export type DraftErrorCode =
   | "PLAYER_TAKEN"
   | "PLAYER_NOT_FOUND"
   | "DRAFT_NOT_ACTIVE"
-  | "STALE_PICK"; // the overall they sent isn't the current pick anymore
+  | "STALE_PICK"         // the overall they sent isn't the current pick anymore
+  | "NOT_COMMISSIONER";  // action requires commissioner privileges

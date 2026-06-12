@@ -4,6 +4,7 @@ import { computeRace } from "@/lib/playoffs/seeding";
 import { computeVpStandings } from "@/lib/scoring/vp";
 import { requireAuth, requireLeagueMember } from "@/lib/auth";
 import type { Matchup } from "@prisma/client";
+import { VpExplainer } from "@/components/VpExplainer";
 
 function computeStreaks(
   teamIds: string[],
@@ -129,7 +130,7 @@ export default async function StandingsPage({ params }: { params: { leagueId: st
       {/* ── Victory Points standings (always authoritative) ── */}
       <section style={card}>
         <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 4, flexWrap: "wrap", gap: 8 }}>
-          <h1 style={{ fontSize: 24, margin: 0 }}>Standings</h1>
+          <h1 style={{ fontSize: 24, margin: 0, display: "flex", alignItems: "center" }}>Standings<VpExplainer /></h1>
           {playoffCutoff !== null && !playoffsStarted && (
             <span style={{ fontSize: 12, color: "#64748b" }}>
               Top {playoffCutoff} qualify for playoffs

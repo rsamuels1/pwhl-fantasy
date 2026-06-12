@@ -95,3 +95,32 @@ export function pendingWeeks(state: SeasonState): ScoringPeriod[] {
     .filter((s) => s.status === "SCORING_PENDING")
     .map((s) => s.period);
 }
+
+export interface SeasonBoundaryResult {
+  valid: boolean;
+  conflictingPeriod?: ScoringPeriod;
+  message?: string;
+}
+
+// Validates that all fantasy scoring periods end before the PWHL playoff start.
+// Only called when pwhlPlayoffStartMs is known (non-null on the league).
+export function validateSeasonBoundary(
+  periods: ScoringPeriod[],
+  pwhlPlayoffStartMs: number
+): SeasonBoundaryResult {
+  if (periods.length === 0) return { valid: true };
+
+  const conflict = periods.find(
+    (p) => p.endsAt.getTime() > pwhlPlayoffStartMs
+  );
+
+  if (conflict) {
+    return {
+      valid: false,
+      conflictingPeriod: conflict,
+      message: `Scoring period week ${conflict.week} ends after the PWHL playoff start date. Shorten the fantasy season or adjust the PWHL playoff start date.`,
+    };
+  }
+
+  return { valid: true };
+}

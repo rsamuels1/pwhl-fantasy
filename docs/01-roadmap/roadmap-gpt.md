@@ -64,7 +64,7 @@ Prioritization order:
 
 ### Draft Experience
 
-The live draft room is the highest-risk feature. Reconnect, duplicate-tab, and timer-sync edge cases have not been validated under load.
+The live draft room is the highest-risk feature. Three of the top pre-beta risks have been closed: WebSocket reconnection with exponential backoff (C1), server-side commissioner auth enforcement on START/PAUSE/RESUME (C2), and position-aware + value-ranked auto-pick (H1/H3). Remaining: duplicate-tab handling and load testing under concurrent leagues.
 
 ### Commissioner Recovery
 
@@ -141,6 +141,12 @@ Schedule generation must reserve playoff weeks, conclude the championship before
 # Phase 1 — MVP Completion
 
 ## Sprint 2 (Current) — Commissioner + Platform Foundation
+
+### Draft Reliability Track (pre-beta hardening — done)
+
+- **C1** WebSocket reconnect with exponential backoff — `useDraftSocket.ts` ✅
+- **C2** Commissioner auth enforcement on START/PAUSE/RESUME — server-side `DraftRoom.isCommissioner()` ✅
+- **H1/H3** Position-aware + value-ranked auto-pick — tier (G needed → skater starter/UTIL → bench) + proxy FP (goals×2 + assists×1.5 + win×5 + shutout×3); 50-player cap removed ✅
 
 ### Commissioner Track
 
@@ -460,7 +466,7 @@ Not required for MVP or launch.
 | Area | Status | Notes |
 |---|---|---|
 | League creation | ✅ PASS | — |
-| Draft | ⚠️ PASS WITH RISKS | reconnect / duplicate-tab unvalidated |
+| Draft | ⚠️ PASS WITH RISKS | reconnect ✅ · commissioner auth ✅ · auto-pick position-aware ✅ · duplicate-tab unvalidated |
 | Rosters | ✅ PASS | 3F / 2D / 1G / 1UTIL / 6B confirmed |
 | Weekly matchups | ✅ PASS | — |
 | VP standings | ✅ PASS | 28 unit tests |
@@ -484,7 +490,8 @@ A public beta should not launch until:
 - [x] Playoffs function correctly (4-team, no-bye)
 - [x] Weekly lineup lock is period-based
 - [x] End-to-end season simulation completed
-- [ ] Draft edge cases validated (reconnect, duplicate tab, auto-pick)
+- [x] Draft reconnect + commissioner auth + auto-pick position-aware (C1/C2/H1/H3)
+- [ ] Draft duplicate-tab handling validated (load test)
 - [ ] Commissioner recovery tools exist (CT-001/002)
 - [ ] League onboarding exists
 - [ ] Mobile optimization complete

@@ -14,6 +14,8 @@ import { generateSnakeOrder, rostersToRounds } from "./snake";
 import { reduce, toWireState, deriveAutoState, type EngineState, type Effect, type TimerConfig } from "./engine";
 import type { ClientMessage, ServerMessage, CompletedPick } from "./messages";
 import { emitEvent, type LeagueEventType } from "../services/activity";
+import { trackEvent } from "../analytics";
+import { logCommissionerAction, type CommissionerEventType } from "../services/audit-service";
 
 const prisma = new PrismaClient();
 
@@ -25,8 +27,45 @@ class DraftRoom {
   constructor(
     private state: EngineState,
     private readonly timerConfig: TimerConfig,
-    private readonly leagueId: string
+    private readonly leagueId: string,
+    private readonly commissionerTeamId: string | null,
+    private readonly rosterSettings: Record<string, number>,
+    private readonly leagueSeason: string,
   ) {}
+
+  private isCommissioner(ws: WebSocket): boolean {
+    return (
+      this.commissionerTeamId !== null &&
+      this.sockets.get(ws) === this.commissionerTeamId
+    );
+  }
+
+  // Determine which starting slot types still need players, using the same
+  // slot-assignment priority as the NeedsPanel (position → UTIL → BENCH).
+  private computeNeededSlots(
+    teamPickPositions: Array<"FORWARD" | "DEFENSE" | "GOALIE">
+  ): { forward: boolean; defense: boolean; goalie: boolean; util: boolean } {
+    const s = this.rosterSettings;
+    const filled = { forward: 0, defense: 0, goalie: 0, util: 0 };
+    for (const pos of teamPickPositions) {
+      if (pos === "FORWARD" && filled.forward < (s.forward ?? 0)) {
+        filled.forward++;
+      } else if (pos === "DEFENSE" && filled.defense < (s.defense ?? 0)) {
+        filled.defense++;
+      } else if (pos === "GOALIE" && filled.goalie < (s.goalie ?? 0)) {
+        filled.goalie++;
+      } else if (pos !== "GOALIE" && filled.util < (s.util ?? 0)) {
+        filled.util++;
+      }
+      // else: bench — no starting slot affected
+    }
+    return {
+      forward: filled.forward < (s.forward ?? 0),
+      defense: filled.defense < (s.defense ?? 0),
+      goalie: filled.goalie < (s.goalie ?? 0),
+      util: filled.util < (s.util ?? 0),
+    };
+  }
 
   addSocket(ws: WebSocket, fantasyTeamId: string) {
     this.sockets.set(ws, fantasyTeamId);
@@ -50,6 +89,10 @@ class DraftRoom {
     }
 
     if (msg.type === "START") {
+      if (!this.isCommissioner(ws)) {
+        this.send(ws, { type: "ERROR", code: "NOT_COMMISSIONER", message: "Only the commissioner can start the draft" });
+        return;
+      }
       await this.start();
       return;
     }
@@ -101,6 +144,10 @@ class DraftRoom {
     }
 
     if (msg.type === "PAUSE") {
+      if (!this.isCommissioner(ws)) {
+        this.send(ws, { type: "ERROR", code: "NOT_COMMISSIONER", message: "Only the commissioner can pause the draft" });
+        return;
+      }
       const result = reduce(this.state, { kind: "PAUSE" });
       if (result.error) {
         this.send(ws, { type: "ERROR", ...result.error });
@@ -108,9 +155,14 @@ class DraftRoom {
       }
       this.state = result.state;
       await this.runEffects(result.effects);
+      void this.logDraftAction("COMMISSIONER_DRAFT_PAUSED");
     }
 
     if (msg.type === "RESUME") {
+      if (!this.isCommissioner(ws)) {
+        this.send(ws, { type: "ERROR", code: "NOT_COMMISSIONER", message: "Only the commissioner can resume the draft" });
+        return;
+      }
       const result = reduce(this.state, {
         kind: "RESUME",
         nowMs: Date.now(),
@@ -122,12 +174,15 @@ class DraftRoom {
       }
       this.state = result.state;
       await this.runEffects(result.effects);
+      void this.logDraftAction("COMMISSIONER_DRAFT_RESUMED");
     }
   }
 
   // Fired by the server's own timer — the authoritative clock.
   private async onTimeout() {
-    const bestAvailable = await this.bestAvailablePlayerIds();
+    const slot = this.state.order[this.state.currentOverall - 1];
+    const teamId = slot?.fantasyTeamId ?? "";
+    const bestAvailable = await this.bestAvailablePlayerIds(teamId);
     const result = reduce(this.state, {
       kind: "TIMEOUT",
       nowMs: Date.now(),
@@ -146,6 +201,19 @@ class DraftRoom {
     });
     this.state = result.state;
     return this.runEffects(result.effects);
+  }
+
+  private async logDraftAction(action: CommissionerEventType): Promise<void> {
+    try {
+      const league = await prisma.fantasyLeague.findUnique({
+        where: { id: this.leagueId },
+        select: { commissionerId: true },
+      });
+      if (!league) return;
+      await logCommissionerAction(this.leagueId, league.commissionerId, action, {}, prisma);
+    } catch {
+      // fire-and-forget — never block the draft
+    }
   }
 
   private async runEffects(effects: Effect[]) {
@@ -179,12 +247,16 @@ class DraftRoom {
               ...(e.status === "IN_PROGRESS" ? { startedAt: new Date() } : {}),
             },
           });
+          if (e.status === "IN_PROGRESS") {
+            try { trackEvent({ event: "draft_started", leagueId: this.leagueId }); } catch {}
+          }
           break;
         case "COMPLETE":
           await prisma.draft.update({
             where: { id: this.state.draftId },
             data: { status: "COMPLETE", completedAt: new Date() },
           });
+          try { trackEvent({ event: "draft_completed", leagueId: this.leagueId }); } catch {}
           break;
       }
     }
@@ -255,14 +327,73 @@ class DraftRoom {
     );
   }
 
-  // Default auto-pick ranking. Replace with a real projection/ADP source later.
-  private async bestAvailablePlayerIds(): Promise<string[]> {
+  // Position-aware, value-ranked auto-pick list for the given team.
+  // Tier 1: fills an unfilled goalie slot (goalies can't fill UTIL — most constrained).
+  // Tier 2: fills an unfilled skater starter or UTIL slot.
+  // Tier 3: bench only (all starting slots for this position are full).
+  // Within each tier: proxy FP (goals × 2 + assists × 1.5 + win × 5 + shutout × 3) desc.
+  private async bestAvailablePlayerIds(teamId: string): Promise<string[]> {
+    const teamPickIds = this.state.completed
+      .filter((p) => p.fantasyTeamId === teamId)
+      .map((p) => p.playerId);
+
+    let teamPickPositions: Array<"FORWARD" | "DEFENSE" | "GOALIE"> = [];
+    if (teamPickIds.length > 0) {
+      const pickedPlayers = await prisma.player.findMany({
+        where: { id: { in: teamPickIds } },
+        select: { position: true },
+      });
+      teamPickPositions = pickedPlayers.map(
+        (p) => p.position as "FORWARD" | "DEFENSE" | "GOALIE"
+      );
+    }
+
+    const needed = this.computeNeededSlots(teamPickPositions);
+    const draftedIds = [...this.state.draftedPlayerIds];
+
     const players = await prisma.player.findMany({
-      where: { active: true, id: { notIn: [...this.state.draftedPlayerIds] } },
-      select: { id: true },
-      take: 50,
+      where: {
+        active: true,
+        ...(draftedIds.length > 0 ? { id: { notIn: draftedIds } } : {}),
+      },
+      select: {
+        id: true,
+        position: true,
+        statLines: {
+          where: { game: { season: this.leagueSeason } },
+          select: { goals: true, assists: true, win: true, shutout: true },
+        },
+      },
     });
-    return players.map((p) => p.id);
+
+    type Ranked = { id: string; tier: number; fp: number };
+    const ranked: Ranked[] = players.map((p) => {
+      const pos = p.position as "FORWARD" | "DEFENSE" | "GOALIE";
+      const fp = p.statLines.reduce(
+        (sum, sl) =>
+          sum +
+          (sl.goals ?? 0) * 2 +
+          (sl.assists ?? 0) * 1.5 +
+          (sl.win ? 5 : 0) +
+          (sl.shutout ? 3 : 0),
+        0
+      );
+      let tier: number;
+      if (pos === "GOALIE" && needed.goalie) {
+        tier = 1;
+      } else if (
+        (pos === "FORWARD" || pos === "DEFENSE") &&
+        (needed.forward || needed.defense || needed.util)
+      ) {
+        tier = 2;
+      } else {
+        tier = 3;
+      }
+      return { id: p.id, tier, fp };
+    });
+
+    ranked.sort((a, b) => (a.tier !== b.tier ? a.tier - b.tier : b.fp - a.fp));
+    return ranked.map((r) => r.id);
   }
 
   private send(ws: WebSocket, msg: ServerMessage) {
@@ -283,6 +414,9 @@ class DraftRoom {
 export async function buildEngineState(leagueId: string): Promise<{
   state: EngineState;
   timerConfig: TimerConfig;
+  commissionerTeamId: string | null;
+  rosterSettings: Record<string, number>;
+  leagueSeason: string;
 }> {
   const league = await prisma.fantasyLeague.findUniqueOrThrow({
     where: { id: leagueId },
@@ -290,9 +424,8 @@ export async function buildEngineState(leagueId: string): Promise<{
   });
   if (!league.draft) throw new Error("League has no draft");
 
-  const rounds = rostersToRounds(
-    (league.rosterSettings as Record<string, number>) ?? {}
-  );
+  const rosterSettings = (league.rosterSettings as Record<string, number>) ?? {};
+  const rounds = rostersToRounds(rosterSettings);
 
   const ordered = [...league.teams]
     .filter((t) => t.draftOrder != null)
@@ -340,7 +473,13 @@ export async function buildEngineState(leagueId: string): Promise<{
     autoSecs: league.draft.autoPickTimerSecs,
   };
 
-  return { state, timerConfig };
+  const commissionerTeam = league.teams.find(
+    (t) => t.ownerId === league.commissionerId
+  );
+  const commissionerTeamId = commissionerTeam?.id ?? null;
+  const leagueSeason = league.season;
+
+  return { state, timerConfig, commissionerTeamId, rosterSettings, leagueSeason };
 }
 
 // Promise-keyed so concurrent JOINs for the same league share one buildEngineState call.
@@ -350,7 +489,8 @@ export function getRoom(leagueId: string): Promise<DraftRoom> {
   let p = roomPromises.get(leagueId);
   if (!p) {
     p = buildEngineState(leagueId).then(
-      ({ state, timerConfig }) => new DraftRoom(state, timerConfig, leagueId)
+      ({ state, timerConfig, commissionerTeamId, rosterSettings, leagueSeason }) =>
+        new DraftRoom(state, timerConfig, leagueId, commissionerTeamId, rosterSettings, leagueSeason)
     );
     roomPromises.set(leagueId, p);
   }

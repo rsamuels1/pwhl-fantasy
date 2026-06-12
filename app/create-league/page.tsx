@@ -104,8 +104,8 @@ export default function CreateLeaguePage() {
                 required
                 style={{ maxWidth: 100 }}
               />
-              <span style={{ fontSize: 13, color: "#64748b" }}>
-                {maxTeams} spots · most leagues use 8–12
+              <span style={{ fontSize: 13, color: maxTeams === 8 ? "#34d399" : "#64748b" }}>
+                {maxTeams} spots{maxTeams === 8 ? " · Recommended" : " · most leagues use 8–12"}
               </span>
             </div>
           </label>

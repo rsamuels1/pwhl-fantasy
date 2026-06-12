@@ -234,7 +234,7 @@
       <thead><tr><th>Area</th><th>Status</th><th>Blocker</th></tr></thead>
       <tbody>
         <tr><td>League creation</td><td><span class="scst pass">PASS</span></td><td class="blk">—</td></tr>
-        <tr><td>Draft</td><td><span class="scst warn">PASS / RISKS</span></td><td class="blk">reconnect &amp; duplicate-tab handling unvalidated</td></tr>
+        <tr><td>Draft</td><td><span class="scst warn">PASS / RISKS</span></td><td class="blk">reconnect ✅ · commissioner auth ✅ · auto-pick position-aware ✅ · duplicate-tab unvalidated</td></tr>
         <tr><td>Rosters</td><td><span class="scst pass">PASS</span></td><td class="blk">—</td></tr>
         <tr><td>Weekly matchups</td><td><span class="scst pass">PASS</span></td><td class="blk">—</td></tr>
         <tr><td>VP standings</td><td><span class="scst pass">PASS</span></td><td class="blk">—</td></tr>
@@ -686,6 +686,10 @@
         <h4>Sprint 2 — Commissioner + Platform Foundation <span class="trk a">A</span><span class="trk f">F</span> ← current</h4>
         <div class="sp-meta">~2 wks · P0 / P1 · starts now</div>
         <ul>
+          <li><b>Draft reliability track (pre-beta hardening — done):</b></li>
+          <li>C1 WebSocket reconnect with exponential backoff (<code>useDraftSocket.ts</code>) ✅</li>
+          <li>C2 Commissioner auth enforcement on START/PAUSE/RESUME — server-side <code>isCommissioner(ws)</code> ✅</li>
+          <li>H1/H3 Position-aware + value-ranked auto-pick — tier (G needed → skater → bench) + proxy FP ✅</li>
           <li><b>Commissioner track:</b></li>
           <li>CT-001 Commissioner Control Center (pause/resume, replace manager, force move, undo) — closes #1</li>
           <li>CT-002 Audit logging (also the foundation for transaction history)</li>

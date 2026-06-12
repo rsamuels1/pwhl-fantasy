@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { computeSeasonState, pendingWeeks } from "../lib/season/lifecycle";
+import { computeSeasonState, pendingWeeks, validateSeasonBoundary } from "../lib/season/lifecycle";
 import { derivePeriods } from "../lib/scoring/periods";
 
 // Build a minimal set of games spread across two 7-day windows.
@@ -127,5 +127,29 @@ describe("pendingWeeks", () => {
     const state = computeSeasonState(PERIODS, GAMES, new Set(), AFTER_WEEK_2);
     const pending = pendingWeeks(state);
     expect(pending.map((p) => p.week)).toEqual([1, 2]);
+  });
+});
+
+// ── validateSeasonBoundary ────────────────────────────────────────────────
+
+describe("validateSeasonBoundary", () => {
+  it("is valid when last period ends before PWHL playoff start", () => {
+    const pwhlStart = Date.UTC(2027, 3, 1); // Apr 1
+    const result = validateSeasonBoundary(PERIODS, pwhlStart);
+    expect(result.valid).toBe(true);
+    expect(result.conflictingPeriod).toBeUndefined();
+  });
+
+  it("is invalid when a period ends after PWHL playoff start", () => {
+    const pwhlStart = JAN_8; // before week 1 ends
+    const result = validateSeasonBoundary(PERIODS, pwhlStart);
+    expect(result.valid).toBe(false);
+    expect(result.conflictingPeriod).toBeDefined();
+    expect(result.message).toContain("week");
+  });
+
+  it("is valid when no periods exist", () => {
+    const result = validateSeasonBoundary([], Date.UTC(2027, 0, 1));
+    expect(result.valid).toBe(true);
   });
 });

@@ -1,7 +1,3 @@
-// lib/services/activity.ts
-// Activity feed — emitting and querying LeagueEvent rows.
-// Note: LeagueEvent requires `npx prisma db push && npx prisma generate` to activate.
-
 import type { PrismaClient } from "@prisma/client";
 
 export interface ActivityEvent {
@@ -24,16 +20,7 @@ export async function getLeagueActivity(
   limit = 10,
   prisma: PrismaClient
 ): Promise<ActivityEvent[]> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = prisma as any;
-  if (!db.leagueEvent) return [];
-
-  const events: Array<{
-    id: string;
-    type: string;
-    data: unknown;
-    createdAt: Date;
-  }> = await db.leagueEvent.findMany({
+  const events = await prisma.leagueEvent.findMany({
     where: { leagueId },
     orderBy: { createdAt: "desc" },
     take: limit,
@@ -57,8 +44,10 @@ export async function emitEvent(
   },
   prisma: PrismaClient
 ): Promise<void> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = prisma as any;
-  if (!db.leagueEvent) return;
-  await db.leagueEvent.create({ data: event });
+  await prisma.leagueEvent.create({
+    data: {
+      ...event,
+      data: event.data as object,
+    },
+  });
 }

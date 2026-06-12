@@ -8,7 +8,7 @@ import { derivePeriods } from "@/lib/scoring/periods";
 import { generateVtfMatchups, generateMatchups, scoreVtfWeek } from "@/lib/scoring/matchups";
 import { scoreVpWeek } from "@/lib/scoring/vp";
 import { parseScoringSettings } from "@/lib/scoring/settings";
-import { computeSeasonState, pendingWeeks, type SeasonState } from "./lifecycle";
+import { computeSeasonState, pendingWeeks, validateSeasonBoundary, type SeasonState } from "./lifecycle";
 
 // Load everything needed for the lifecycle engine from the DB, then run the pure engine.
 export async function getSeasonState(
@@ -60,6 +60,21 @@ export async function startSeason(leagueId: string, prisma: PrismaClient): Promi
       `Available seasons in DB: ${seasons || "none"}. ` +
       `Load the fixture with: npm run seed-fixture -- --season ${seasons || "<season>"}`
     );
+  }
+
+  // Check season boundary if PWHL playoff start is configured on this league.
+  const pwhlPlayoffStartsAt = (league as { pwhlPlayoffStartsAt?: Date | null }).pwhlPlayoffStartsAt;
+  if (pwhlPlayoffStartsAt) {
+    const { derivePeriods } = await import("@/lib/scoring/periods");
+    const gameDates = await prisma.game.findMany({
+      where: { season: league.season },
+      select: { startsAt: true },
+    });
+    const periods = derivePeriods(gameDates.map((g) => g.startsAt));
+    const boundary = validateSeasonBoundary(periods, pwhlPlayoffStartsAt.getTime());
+    if (!boundary.valid) {
+      throw new Error(boundary.message ?? "Fantasy season overlaps PWHL playoff window.");
+    }
   }
 
   // VP mode uses 1v1 round-robin matchups; VTF uses all-vs-all.

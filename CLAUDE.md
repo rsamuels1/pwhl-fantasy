@@ -165,6 +165,9 @@ and determines if the viewer is the commissioner, then passes that down to `Draf
 Key pieces:
 - `hooks/useDraftSocket.ts` — WebSocket hook; exposes `start`, `makePick`, `listAvailable`,
   `setQueue`, `pause`, `resume`. Connects to `NEXT_PUBLIC_DRAFT_WS_URL` (default `ws://localhost:8080`).
+  Reconnects automatically on `onclose` with exponential backoff (1s → 2s → 4s → … → 30s cap); resets
+  on successful open. `shouldReconnectRef` prevents reconnect loops after intentional unmount or
+  league/team change.
 - **TopBar** — shows clock, on-clock team name, Start/Pause/Resume (commissioner only).
 - **PickBoard** — full snake grid; cells show last-name of drafted player or team initials.
 - **RecentPicks** — last 10 picks with player name, team name, auto flag.
@@ -247,6 +250,8 @@ correct clock and flag status. All logic lives in `engine.ts`; timer dispatch is
 - `getRoom` uses a `Map<string, Promise<DraftRoom>>` (not `Map<string, DraftRoom>`) to prevent a race where concurrent JOINs each call `buildEngineState` and end up in separate rooms, breaking broadcast.
 - START/PAUSE/RESUME emit a `PERSIST_STATUS` effect so draft status survives server restarts. Without it, `buildEngineState` reads `PENDING` from the DB even mid-draft.
 - `DraftPick.auto` is now persisted (was computed-only before). Required for auto-escalation rebuild on restart.
+- `START`, `PAUSE`, `RESUME` are commissioner-only **on the server** — `isCommissioner(ws)` in `DraftRoom.handle()` checks that the sender's registered team id matches the commissioner's team id. The WebSocket protocol is enforced server-side in addition to the UI hiding these buttons for non-commissioners.
+- `bestAvailablePlayerIds(teamId)` is position-aware: runs the same slot-fill simulation as NeedsPanel (position → UTIL → BENCH) to determine unfilled starting slots, then assigns each undrafted player a priority tier (1 = goalie filling a needed G slot, 2 = skater filling a needed F/D/UTIL slot, 3 = bench only) and sorts by proxy FP (goals×2 + assists×1.5 + win×5 + shutout×3) within each tier. The hard 50-player cap was removed. `DraftRoom` stores `rosterSettings` and `leagueSeason` (loaded in `buildEngineState`); `onTimeout` resolves the on-clock team from `this.state.order[currentOverall - 1].fantasyTeamId`.
 
 ## Roster configuration
 
