@@ -1,3 +1,25 @@
+# Implementation Alignment
+
+**Status: RESOLVED** — All P0 items fixed, June 12, 2026. 114/114 tests pass. `tsc --noEmit` clean.
+
+## Contents
+
+- [audit.md](audit.md) — Original alignment backlog: what needed to be fixed to match approved v1 product rules
+- [fix-plan.md](fix-plan.md) — P0 fix specifications with resolution status for each blocker
+- [status.md](status.md) — Sprint-level status audit table with evidence by feature area
+
+## Summary
+
+Four P0 implementation blockers were identified, tracked, and resolved during the MVP Season Validation Sprint:
+- **P0-001** — Roster alignment (3F/2D/1G/1UTIL/6B canonical config)
+- **P0-002** — VP standings as the authoritative source everywhere
+- **P0-003** — 4-team playoff format with no byes
+- **P0-004** — Default lineup lock validation (period-based)
+
+See [fix-plan.md](fix-plan.md) for full resolution details. See `../mvp-readiness-scorecard.md` for the post-sprint confidence scorecard.
+
+---
+
 # Claude Code Prompt: MVP Implementation Alignment Sprint
 
 You are working in the PWHL Fantasy codebase.

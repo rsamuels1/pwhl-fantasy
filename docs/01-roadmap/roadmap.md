@@ -111,7 +111,7 @@ against code on June 12, 2026). **Confidence to launch today: ~85–90%.**
 # Phase 0: Implementation Alignment (Launch Blockers)
 
 Goal: the app must behave exactly as the approved v1 rules describe. No feature work should
-jump ahead of an open P0 here. Full detail: `docs/backlog/implementation-alignment.md`.
+jump ahead of an open P0 here. Full detail: `docs/03-validation/implementation-alignment/audit.md`.
 
 Priority: CRITICAL (P0 items are hard launch blockers)
 
@@ -152,7 +152,7 @@ Priority: P0
 
 ## IA-004. Fantasy Season Ends Before PWHL Playoffs
 
-Status: ⛔ Not built
+Status: ⚠️ Sprint 2
 
 Priority: P0
 
@@ -800,13 +800,13 @@ Priority: MEDIUM
 
 ## 33. Multi-Season League Architecture (`parentLeagueId`)
 
-Phase: 5 (foundation for renewal, history, keeper/dynasty, Hall of Fame)
+Phase: 5 (UX / feature layer; schema foundation is Sprint 2)
 
-Priority: P1 — foundational; post-MVP, but unlocks the entire retention layer
+Priority: P1 — foundational; unlocks the entire retention layer
 
-Status: Spec'd, not built
+Status: Schema building in Sprint 2 (MS-001/002/003); renewal UX + history views are Phase 5 post-MVP
 
-Spec: `docs/implent-parentleagueid.md` (Story MS-001)
+Spec: `docs/06-architecture/implement-parentleagueid.md` (Story MS-001)
 
 Estimated tokens: ~90K (new `ParentLeague` model + schema migration, renewal service/API,
 historical views; touches league creation everywhere)
@@ -1120,10 +1120,10 @@ comfortably. Estimates assume a fresh session starting from the current codebase
 
 8. **League Onboarding (#2)** · ~100K
    Entirely unbuilt — welcome flow, setup wizard, draft guide. Beta prerequisite despite token cost.
-9. **Trade System (#7)** · ~130K
-   New domain: schema tables, API routes, proposal/review/approval UI. Plan a dedicated session.
-10. **Transaction History (#8)** · ~45K after #7
-    Much cheaper once the trade domain exists; primarily a log view reading the new tables.
+9. **Transaction History (#8)** · ~70K standalone
+   Infrastructure first — the audit log from CT-002 gives the skeleton. Adds/drops/trades/waivers in one log. Required before Trade System.
+10. **Trade System (#7)** · ~130K
+    New domain: schema tables, API routes, proposal/review/approval UI. Plan a dedicated session. Built on top of Transaction History.
 11. **Waiver Priority + Processing (#5)** · ~110K
     Waiver priority ordering, batched claim-resolution jobs, commissioner settings.
 
@@ -1162,24 +1162,34 @@ Assumes a solo builder working with Claude (Pro), ~2 weeks per sprint. Tracks: *
 
 **Exit:** one simulated league completes a full season with zero manual DB edits. ✅
 
-## Sprint 2 — "Commissioner + transparency" · ~2 wks · Tracks A+F (P0/P1) ← CURRENT
+## Sprint 2 — "Commissioner + Platform Foundation" · ~2 wks · Tracks A+F (P0/P1) ← CURRENT
 
+**Commissioner track:**
 - CT-001 Commissioner Control Center (pause/resume draft, replace manager, force move, undo) — closes the #1 Commissioner Dashboard gaps
-- CT-002 Audit logging (LeagueEvent-backed)
+- CT-002 Audit logging (LeagueEvent-backed) — also the foundation for transaction history
+- IA-004 Schedule boundary validation — schedule generation refuses a fantasy season that overlaps the PWHL postseason; commissioner sees a clear error at setup time
+
+**Platform foundation track (schema-only, no UI):**
+- MS-001 `parentLeagueId` — add `ParentLeague` model + `League.parentLeagueId` field; every new league auto-creates a parent record. Schema now, renewal UX later.
+- MS-002 `rulesVersion` — add `rulesVersion` field to `FantasyLeague`. Populated at league creation, frozen after draft.
+- MS-003 `scoringVersion` — add `scoringVersion` field to `FantasyLeague`. Same lifecycle as rulesVersion.
+
+**Product track:**
 - IA-006 VP education UI + LC-002 VP standings UI (LC-003 playoff-race chips already shipped)
 - IA-005 Recommend 8-team leagues at creation
 
-**Exit:** a commissioner can recover from any stuck state without engineering help.
+**Exit:** a commissioner can recover from any stuck state without engineering help; schema is multi-season-ready before the first live league runs; the schedule generator cannot produce a fantasy season that overlaps the PWHL postseason.
 
 ## Sprint 3 — "Beta-ready: onboarding, trust, mobile" · ~2–3 wks · Track F (beta prereqs)
 
-- #2 League Onboarding (welcome flow, setup wizard, draft guide) — spec `docs/onboarding-spec.md`
+- #2 League Onboarding (welcome flow, setup wizard, draft guide) — spec `docs/02-engineering/onboarding-spec.md`
 - #4 Error Handling (empty / loading / retry across core pages)
 - #3 Mobile Optimization (draft room, matchup, standings, roster)
-- NT-001 / NT-002 Notification framework + critical notifications (draft starting, on the clock, lineup incomplete) — spec `docs/notification-framework-spec.md`
+- NT-001 / NT-002 Notification framework + critical notifications (draft starting, on the clock, lineup incomplete) — spec `docs/02-engineering/notification-framework-spec.md`
+- AN-001 Core event tracking: Registration · Login · League Created · League Joined · Draft Started · Draft Completed · Lineup Saved — spec `docs/05-growth/analytics-events.md`. A beta without analytics generates opinions, not evidence.
 - IA-011 Hide advanced non-v1 settings
 
-**Exit:** a brand-new user creates and drafts a league on a phone with no docs. **MVP launch gate.**
+**Exit:** a brand-new user creates and drafts a league on a phone with no docs; analytics are collecting before any external user touches the product. **MVP launch gate.**
 
 → **MVP CODE-COMPLETE.** Run a closed beta — a real replay league plus a small live test league.
 
@@ -1187,10 +1197,10 @@ Assumes a solo builder working with Claude (Pro), ~2 weeks per sprint. Tracks: *
 
 Sequenced from "What To Build Next" and the GPT launch phases:
 
-- **Transactions:** #7 Trade System → #8 Transaction History → #5 Waiver priority/processing → #6 FAAB
+- **Transactions (infrastructure-first):** #8 Transaction History (built on CT-002 audit log) → #7 Trade System → #5 Waiver priority/processing → #6 FAAB
 - **Engagement:** #25 Team Analysis & Insights · #29 Weekly Performance Dashboard · #11 league-wide storylines · #30 Playoff Experience UX polish
-- **Multi-season foundation:** MS-001 `parentLeagueId` (#33, spec `docs/implent-parentleagueid.md`) · MS-002 `rulesVersion` · MS-003 `scoringVersion` · MS-004 season renewal (`docs/season-renewal-system.md`) · MS-005 league history
-- **Growth / retention:** GR-001/002 activation + retention analytics · GR-003 referral loop · GR-004 league-fill progress
+- **Multi-season UX layer** (schema laid in Sprint 2 via MS-001/002/003): MS-004 Season Renewal flow (spec `docs/06-architecture/season-renewal-system.md`) · MS-005 League History views · League Hall of Fame (#18) · Player Legacy (#31)
+- **Growth / retention:** GR-001/002 activation + retention analytics (AN-002/003 dashboards) · GR-003 referral loop · GR-004 league-fill progress
 - **Phases 5–7:** rivalries / Hall of Fame / player legacy · keeper → dynasty · real-time push scoring · push notifications · player trends
 
 ---
@@ -1219,13 +1229,8 @@ code-complete before public drafts is early Oct 2026.
 
 ## Beyond MVP
 
-- **Q4 2026 (in-season):** ship Transactions (trades → waivers → FAAB) and engagement surfaces
-  (#25 analysis, #29 performance dashboard, #30 playoff UX) while the first live season runs.
-- **Off-season — winter/spring 2027:** Multi-Season Foundation (`parentLeagueId`, rules/scoring
-  versioning, season renewal, league history) plus growth/retention analytics and the referral
-  loop. Target: 2027-28 leagues renew in-place and keep their history.
-- **2027-28 season:** Advanced formats (keeper, then dynasty), real-time push scoring + push
-  notifications, and player trends. Native apps and AI features (draft assistant, weekly recaps,
-  trade evaluator) remain Phase 5 "future expansion" — revisit once retention metrics justify them.
+- **Q4 2026 (in-season):** Transaction History → Trade System → Waivers → FAAB (infrastructure before features); engagement surfaces (#25 analysis, #29 performance dashboard, #30 playoff UX) while the first live season runs.
+- **Off-season — winter/spring 2027:** Multi-Season UX layer — Season Renewal flow, League History views, Hall of Fame, Player Legacy. The schema foundation (parentLeagueId, rulesVersion, scoringVersion) was laid in Sprint 2, so this is purely the product surface. Growth/retention analytics dashboards (AN-002/003) and referral loop. Target: 2027-28 leagues renew in-place and keep their history.
+- **2027-28 season:** Advanced formats (keeper, then dynasty), real-time push scoring + push notifications, and player trends. Native apps and AI features (draft assistant, weekly recaps, trade evaluator) remain Phase 5 "future expansion" — revisit once retention metrics justify them.
 
 ---

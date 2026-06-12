@@ -253,7 +253,7 @@
       <div class="period-no"><small>P0</small>0</div>
       <div class="meta">
         <h2>Implementation Alignment <span class="pri critical">LAUNCH BLOCKERS</span></h2>
-        <div class="goal">Make the running code match the approved v1 rules. IA-001–003 shipped; IA-004 is the remaining P0.</div>
+        <div class="goal">Make the running code match the approved v1 rules. IA-001–003 shipped; IA-004 is the remaining P0 — assigned to Sprint 2.</div>
       </div>
       <div class="prog">
         <div class="row"><span class="dot-s s"></span><span class="val">3</span>&nbsp;shipped</div>
@@ -280,10 +280,10 @@
         <ul class="feats"><li class="done">4 teams qualify ✓</li><li class="done">No byes ✓</li><li class="done">Bracket bug fixed ✓</li></ul>
       </div>
       <div class="card todo blocker">
-        <div class="card-top"><span class="num">IA-004</span><span class="pri critical">P0</span></div>
+        <div class="card-top"><span class="num">IA-004</span><span class="pri critical">P0</span><span style="margin-left:auto;font-size:11px;font-weight:700;color:var(--st-partial);background:var(--st-partial-bg);padding:4px 9px;border-radius:20px;">→ Sprint 2</span></div>
         <h3>Fantasy Season Ends Before PWHL Playoffs</h3>
-        <p>Schedule generation must reserve playoff weeks, conclude the championship before the PWHL postseason, and reject overlapping schedules with clear messaging.</p>
-        <ul class="feats"><li>Reserve playoff weeks</li><li>Overlap validation</li></ul>
+        <p>Schedule generation must reserve playoff weeks, conclude the championship before the PWHL postseason, and reject overlapping schedules with clear messaging. Commissioner sees a clear error at setup time.</p>
+        <ul class="feats"><li>Reserve playoff weeks</li><li>Overlap validation + error messaging</li></ul>
       </div>
       <div class="card todo">
         <div class="card-top"><span class="num">IA-005–011</span><span class="pri high">P1 · P2</span></div>
@@ -642,8 +642,8 @@
       <li><div><div class="t">Team Analysis &amp; Insights <span style="color:#7fb2e8">· #25</span></div><div class="d">New Analysis tab — position-group trends, FA recommendations, trade suggestions once #7 lands.</div></div><span class="tok">~85K</span></li>
       <li class="tier-head"><span class="tl">Heavy lifts — plan a fresh session (100K+ tokens)</span></li>
       <li><div><div class="t">League Onboarding <span style="color:#7fb2e8">· #2</span></div><div class="d">Entirely unbuilt — welcome flow, setup wizard, draft guide. Beta prerequisite despite token cost.</div></div><span class="tok">~100K</span></li>
-      <li><div><div class="t">Trade System <span style="color:#7fb2e8">· #7</span></div><div class="d">New domain: schema tables, API routes, proposal / review / approval UI. Plan a dedicated session.</div></div><span class="tok">~130K</span></li>
-      <li><div><div class="t">Transaction History <span style="color:#7fb2e8">· #8</span></div><div class="d">~45K after #7 — much cheaper once the trade domain exists. Primarily a log view reading the new tables.</div></div><span class="tok">~45K↓</span></li>
+      <li><div><div class="t">Transaction History <span style="color:#7fb2e8">· #8</span></div><div class="d">Infrastructure first — records every add, drop, waiver, and trade. Built on CT-002 audit log from Sprint 2.</div></div><span class="tok">~55K</span></li>
+      <li><div><div class="t">Trade System <span style="color:#7fb2e8">· #7</span></div><div class="d">New domain: schema tables, API routes, proposal / review / approval UI. Built on top of Transaction History. Plan a dedicated session.</div></div><span class="tok">~130K</span></li>
       <li><div><div class="t">Waiver Priority + Processing <span style="color:#7fb2e8">· #5</span></div><div class="d">Priority ordering, batched claim-resolution jobs, commissioner settings. Schema + service + UI.</div></div><span class="tok">~110K</span></li>
     </ol>
     <div class="stretch"><b>Player Legacy (#31) · ~95K:</b> career dashboard, global leaderboard — deferred until one live season completes. <b>Stretch:</b> league-wide storylines (#11 · ~50K) and the rivalry / Hall-of-Fame layer (#17–#18). Replay (Phase 4) stays out of this list.</div>
@@ -683,15 +683,22 @@
         <div class="exit"><b>Exit achieved:</b> a league completes a full season with zero manual DB edits.</div>
       </div>
       <div class="sprint">
-        <h4>Sprint 2 — Commissioner + transparency <span class="trk a">A</span><span class="trk f">F</span> ← current</h4>
+        <h4>Sprint 2 — Commissioner + Platform Foundation <span class="trk a">A</span><span class="trk f">F</span> ← current</h4>
         <div class="sp-meta">~2 wks · P0 / P1 · starts now</div>
         <ul>
+          <li><b>Commissioner track:</b></li>
           <li>CT-001 Commissioner Control Center (pause/resume, replace manager, force move, undo) — closes #1</li>
-          <li>CT-002 Audit logging</li>
+          <li>CT-002 Audit logging (also the foundation for transaction history)</li>
+          <li>IA-004 Schedule boundary validation — refuse a fantasy season that overlaps PWHL postseason</li>
+          <li><b>Platform foundation track (schema-only, no UI):</b></li>
+          <li>MS-001 <code>parentLeagueId</code> — ParentLeague model; schema now, renewal UX later</li>
+          <li>MS-002 <code>rulesVersion</code> — populated at league creation, frozen after draft</li>
+          <li>MS-003 <code>scoringVersion</code> — same lifecycle as rulesVersion</li>
+          <li><b>Product track:</b></li>
           <li>IA-006 VP education UI + LC-002 VP standings UI</li>
-          <li>IA-005 Recommend 8-team leagues</li>
+          <li>IA-005 Recommend 8-team leagues at creation</li>
         </ul>
-        <div class="exit"><b>Exit:</b> a commissioner can recover any stuck state without engineering.</div>
+        <div class="exit"><b>Exit:</b> a commissioner can recover any stuck state without engineering; schema is multi-season-ready before the first live league runs; schedule generator cannot produce a PWHL-overlapping fantasy season.</div>
       </div>
       <div class="sprint">
         <h4>Sprint 3 — Beta-ready: onboarding, trust, mobile <span class="trk f">F</span></h4>
@@ -701,17 +708,18 @@
           <li>#4 Error Handling (empty / loading / retry)</li>
           <li>#3 Mobile Optimization (draft, matchup, standings, roster)</li>
           <li>NT-001/002 Notifications — draft starting, on the clock, lineup incomplete (<code>docs/notification-framework-spec.md</code>)</li>
+          <li>AN-001 Core event tracking — Registration · Login · League Created · League Joined · Draft Started · Draft Completed · Lineup Saved (<code>docs/analytics-events.md</code>)</li>
           <li>IA-011 Hide advanced non-v1 settings</li>
         </ul>
-        <div class="exit"><b>Exit:</b> a new user drafts a league on a phone with no docs. <b>MVP launch gate.</b></div>
+        <div class="exit"><b>Exit:</b> a new user drafts a league on a phone with no docs; analytics are collecting before any external user touches the product. <b>MVP launch gate.</b></div>
       </div>
       <div class="sprint wide">
         <h4>Sprint 4+ — Post-MVP / Launch features <span class="trk f">F</span></h4>
         <div class="sp-meta">P1 → P2 · sequenced from "What to build next" + GPT launch phases</div>
         <ul>
-          <li><b>Transactions:</b> #7 Trade System → #8 Transaction History → #5 Waiver priority/processing → #6 FAAB</li>
+          <li><b>Transactions (infrastructure-first):</b> #8 Transaction History (built on CT-002 audit log) → #7 Trade System → #5 Waiver priority/processing → #6 FAAB</li>
           <li><b>Engagement:</b> #25 Team Analysis &amp; Insights · #29 Weekly Performance Dashboard · #11 league-wide storylines · #30 Playoff Experience UX</li>
-          <li><b>Multi-season foundation:</b> MS-001 parentLeagueId (#33) · MS-002 rulesVersion · MS-003 scoringVersion · MS-004 renewal · MS-005 history</li>
+          <li><b>Multi-season UX layer</b> (schema laid in Sprint 2 via MS-001/002/003): MS-004 Season Renewal flow · MS-005 League History views · League Hall of Fame (#18) · Player Legacy (#31)</li>
           <li><b>Growth / retention:</b> activation + retention analytics · referral loop · league-fill progress</li>
           <li><b>Phases 5–7:</b> rivalries / Hall of Fame / player legacy · keeper → dynasty · real-time push scoring · push notifications · player trends</li>
         </ul>
