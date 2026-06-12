@@ -4,6 +4,7 @@ import { computeStandings } from "@/lib/playoffs/seeding";
 import { requireAuth, requireLeagueMember } from "@/lib/auth";
 import { getLeagueActivity } from "@/lib/services/activity";
 import { getDevNow } from "@/lib/devTime";
+import { getReplayNow } from "@/lib/replayTime";
 import Link from "next/link";
 
 export default async function LeagueOverviewPage({
@@ -54,7 +55,7 @@ export default async function LeagueOverviewPage({
   } catch {}
 
   // Determine the "current" week using sim date: latest week whose period has started.
-  const nowMs = await getDevNow();
+  const nowMs = getReplayNow(league, await getDevNow());
   const startedMatchups = matchups.filter(
     (m) => new Date(m.startsAt).getTime() <= nowMs
   );

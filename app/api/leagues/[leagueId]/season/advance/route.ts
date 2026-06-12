@@ -13,11 +13,13 @@ import { prisma } from "@/lib/db";
 import { getSeasonState, startSeason, advanceSeason } from "@/lib/season";
 import { apiRequireAuth, apiRequireCommissioner } from "@/lib/auth";
 
-function isAllowed(): boolean {
-  return (
-    process.env.NODE_ENV !== "production" ||
-    process.env.ALLOW_SIM_DATE === "true"
-  );
+async function isAllowed(leagueId: string): Promise<boolean> {
+  if (process.env.NODE_ENV !== "production" || process.env.ALLOW_SIM_DATE === "true") return true;
+  const league = await prisma.fantasyLeague.findUnique({
+    where: { id: leagueId },
+    select: { isReplay: true },
+  });
+  return league?.isReplay === true;
 }
 
 // POST /api/leagues/[leagueId]/season/advance
@@ -26,11 +28,12 @@ export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ leagueId: string }> }
 ) {
-  if (!isAllowed()) {
+  const { leagueId } = await params;
+
+  if (!await isAllowed(leagueId)) {
     return NextResponse.json({ error: "Not available in production." }, { status: 403 });
   }
 
-  const { leagueId } = await params;
   const auth = await apiRequireAuth(req);
   if (auth instanceof NextResponse) return auth;
   const commissioner = await apiRequireCommissioner(leagueId, auth.id);
@@ -49,7 +52,28 @@ export async function POST(
 
   const action = body.action ?? "advance";
 
+  const leagueRow = await prisma.fantasyLeague.findUnique({
+    where: { id: leagueId }, select: { isReplay: true },
+  });
+
   try {
+    // "set-date" just updates replayCurrentDate without scoring — used by "+1 Day" in replay mode.
+    if (action === "set-date") {
+      if (leagueRow?.isReplay) {
+        await prisma.fantasyLeague.update({
+          where: { id: leagueId },
+          data: { replayCurrentDate: new Date(nowMs) },
+        });
+      }
+      const state = await getSeasonState(leagueId, nowMs, prisma);
+      return NextResponse.json({
+        simulatedDate: new Date(nowMs).toISOString(),
+        scoredWeeks: [],
+        message: `Date advanced to ${new Date(nowMs).toISOString()}.`,
+        state,
+      });
+    }
+
     if (action === "start") {
       await startSeason(leagueId, prisma);
     }
@@ -57,12 +81,20 @@ export async function POST(
     const result = await advanceSeason(leagueId, nowMs, prisma);
     const state = await getSeasonState(leagueId, nowMs, prisma);
 
+    // Persist the simulated date for replay leagues so all members see the same "now".
+    if (leagueRow?.isReplay) {
+      await prisma.fantasyLeague.update({
+        where: { id: leagueId },
+        data: { replayCurrentDate: new Date(nowMs) },
+      });
+    }
+
     return NextResponse.json({
       simulatedDate: new Date(nowMs).toISOString(),
       scoredWeeks: result.scoredWeeks,
       message: result.scoredWeeks.length > 0
-        ? `[TEST] Scored week(s) ${result.scoredWeeks.join(", ")} at simulated date ${new Date(nowMs).toISOString()}.`
-        : `[TEST] No periods due at simulated date ${new Date(nowMs).toISOString()}.`,
+        ? `Scored week(s) ${result.scoredWeeks.join(", ")}.`
+        : `No periods due at simulated date ${new Date(nowMs).toISOString()}.`,
       state,
     });
   } catch (err) {

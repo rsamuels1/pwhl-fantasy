@@ -5,6 +5,7 @@ import { validateSlotMove, lockTime, eligibleSlots } from "@/lib/lineup";
 import type { RosterSettings } from "@/lib/lineup";
 import { apiRequireAuth, apiRequireLeagueMember } from "@/lib/auth";
 import { getDevNowFromRequest } from "@/lib/devTime";
+import { getReplayNow } from "@/lib/replayTime";
 import { getSeasonState } from "@/lib/season";
 
 const ACTIVE_SLOTS: LineupSlot[] = ["FORWARD", "DEFENSE", "GOALIE", "UTIL"];
@@ -24,7 +25,13 @@ export async function GET(
   const teamId = req.nextUrl.searchParams.get("team");
   if (!teamId) return NextResponse.json({ error: "Missing team" }, { status: 400 });
 
-  const nowMs = getDevNowFromRequest(req);
+  const leagueInfo = await prisma.fantasyLeague.findUnique({
+    where: { id: leagueId }, select: { isReplay: true, replayCurrentDate: true },
+  });
+  const nowMs = getReplayNow(
+    { isReplay: leagueInfo?.isReplay ?? false, replayCurrentDate: leagueInfo?.replayCurrentDate ?? null },
+    getDevNowFromRequest(req)
+  );
   const now = new Date(nowMs);
   const todayStart = new Date(now);
   todayStart.setUTCHours(0, 0, 0, 0);
@@ -103,7 +110,13 @@ export async function PUT(
     return NextResponse.json({ error: "Invalid slot" }, { status: 400 });
   }
 
-  const nowMsPut = getDevNowFromRequest(req);
+  const leagueInfoPut = await prisma.fantasyLeague.findUnique({
+    where: { id: leagueId }, select: { isReplay: true, replayCurrentDate: true },
+  });
+  const nowMsPut = getReplayNow(
+    { isReplay: leagueInfoPut?.isReplay ?? false, replayCurrentDate: leagueInfoPut?.replayCurrentDate ?? null },
+    getDevNowFromRequest(req)
+  );
   const nowPut = new Date(nowMsPut);
   const todayStartPut = new Date(nowPut);
   todayStartPut.setUTCHours(0, 0, 0, 0);

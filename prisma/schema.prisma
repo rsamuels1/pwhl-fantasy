@@ -111,9 +111,11 @@ model FantasyLeague {
   rosterSettings  Json                @default("{}")
   playoffSettings Json                @default("{\"teamsInPlayoff\": 6, \"topSeedsWithBye\": 2, \"higherSeedWinsTies\": true, \"roundDurationPeriods\": 2}")
   playoffStatus   PlayoffStatus       @default(NOT_STARTED)
-  announcement    String?
-  draftStartsAt   DateTime?
-  createdAt       DateTime            @default(now())
+  announcement      String?
+  draftStartsAt     DateTime?
+  isReplay          Boolean             @default(false)
+  replayCurrentDate DateTime?
+  createdAt         DateTime            @default(now())
   updatedAt       DateTime            @updatedAt
   draft           Draft?
   commissioner    User                @relation("Commissioner", fields: [commissionerId], references: [id])

@@ -7,6 +7,7 @@ import { scoreStatLine, DEFAULT_SCORING } from "@/lib/scoring";
 import type { ScoringSettings } from "@/lib/scoring";
 import { getSeasonState } from "@/lib/season";
 import { getDevNow } from "@/lib/devTime";
+import { getReplayNow } from "@/lib/replayTime";
 import { Position } from "@prisma/client";
 import LineupManager from "@/app/league/[leagueId]/lineup/LineupManager";
 import type { RosterEntryRow, PlayerStatsRow } from "@/app/league/[leagueId]/lineup/LineupManager";
@@ -71,7 +72,17 @@ export default async function TeamLineupPage({ params }: Props) {
   const team = await requireTeamOwner(teamId, user.id);
   const leagueId = team.league.id;
 
-  const nowMs = await getDevNow();
+  // For replay leagues, use the DB-persisted simulated date so all members see the same state.
+  // Pre-fetch league replay flags before computing nowMs so time windows are correct.
+  const leagueReplayInfo = await prisma.fantasyLeague.findUnique({
+    where: { id: leagueId },
+    select: { isReplay: true, replayCurrentDate: true },
+  });
+  const devNow = await getDevNow();
+  const nowMs = getReplayNow(
+    { isReplay: leagueReplayInfo?.isReplay ?? false, replayCurrentDate: leagueReplayInfo?.replayCurrentDate ?? null },
+    devNow
+  );
   const now = new Date(nowMs);
   const todayStart = new Date(now);
   todayStart.setUTCHours(0, 0, 0, 0);
@@ -90,7 +101,7 @@ export default async function TeamLineupPage({ params }: Props) {
           },
           orderBy: { acquired: "asc" },
         },
-        league: { select: { rosterSettings: true, scoringSettings: true, name: true, season: true } },
+        league: { select: { rosterSettings: true, scoringSettings: true, name: true, season: true, isReplay: true } },
       },
     }),
     prisma.game.findMany({
@@ -121,10 +132,18 @@ export default async function TeamLineupPage({ params }: Props) {
   // Period used for games-remaining badge: active if in-week, upcoming if between weeks
   const periodForGames = activePeriod ?? upcomingPeriod;
 
+  const isReplay = fullTeam.league.isReplay;
   const [seasonLines, lastWeekLines, thisWeekLines] = await Promise.all([
     playerIds.length > 0
       ? prisma.statLine.findMany({
-          where: { playerId: { in: playerIds }, game: { season: leagueSeason } },
+          where: {
+            playerId: { in: playerIds },
+            game: {
+              season: leagueSeason,
+              // Replay leagues: hide stats from games not yet "played" per the simulated date.
+              ...(isReplay ? { startsAt: { lt: now } } : {}),
+            },
+          },
           select: STAT_SELECT,
         })
       : Promise.resolve([] as RawStatLine[]),

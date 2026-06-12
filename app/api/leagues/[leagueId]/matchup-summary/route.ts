@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { getDashboardData } from "@/lib/services/dashboard";
 import { apiRequireAuth, apiRequireLeagueMember } from "@/lib/auth";
 import { getDevNowFromRequest } from "@/lib/devTime";
+import { getReplayNow } from "@/lib/replayTime";
 
 export async function GET(
   req: NextRequest,
@@ -16,6 +17,15 @@ export async function GET(
   const { leagueId } = params;
   const teamId = req.nextUrl.searchParams.get("team") ?? member.id;
 
-  const data = await getDashboardData(leagueId, teamId, getDevNowFromRequest(req), prisma);
+  const league = await prisma.fantasyLeague.findUnique({
+    where: { id: leagueId },
+    select: { isReplay: true, replayCurrentDate: true },
+  });
+  const nowMs = getReplayNow(
+    { isReplay: league?.isReplay ?? false, replayCurrentDate: league?.replayCurrentDate ?? null },
+    getDevNowFromRequest(req)
+  );
+
+  const data = await getDashboardData(leagueId, teamId, nowMs, prisma);
   return NextResponse.json(data);
 }

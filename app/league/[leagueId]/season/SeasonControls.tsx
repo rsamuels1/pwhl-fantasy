@@ -1,9 +1,5 @@
 "use client";
 
-// DEV/TEST harness UI — only rendered when isDev=true (passed from server component).
-// Calls /api/leagues/[leagueId]/season/advance with a caller-supplied simulated date.
-// This is a thin wrapper over the production advanceSeason engine — no special code path.
-
 import { useState } from "react";
 import type { SeasonState } from "@/lib/season/lifecycle";
 
@@ -11,13 +7,14 @@ interface Props {
   leagueId: string;
   periods: SeasonState["periods"];
   onResult: (state: SeasonState, message: string) => void;
+  isReplay?: boolean;
+  replayCurrentDate?: string; // ISO string from DB
 }
 
-export default function SeasonControls({ leagueId, periods, onResult }: Props) {
+export default function SeasonControls({ leagueId, periods, onResult, isReplay, replayCurrentDate }: Props) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  // Default to 1 minute past the ACTIVE period end so one click ends the current week.
-  // Fall back to the first SCORING_PENDING period if no active period exists.
+
   const activePeriod = periods.find((p) => p.status === "ACTIVE");
   const firstPending = periods.find((p) => p.status === "SCORING_PENDING");
   const targetPeriod = activePeriod ?? firstPending;
@@ -26,7 +23,7 @@ export default function SeasonControls({ leagueId, periods, onResult }: Props) {
     : new Date().toISOString().slice(0, 16);
   const [simulatedDate, setSimulatedDate] = useState(defaultDate);
 
-  async function call(action: "start" | "advance", overrideDate?: string) {
+  async function call(action: "start" | "advance" | "set-date", overrideDate?: string) {
     setLoading(true);
     setError(null);
     const dateToUse = overrideDate ?? simulatedDate;
@@ -39,8 +36,6 @@ export default function SeasonControls({ leagueId, periods, onResult }: Props) {
     setLoading(false);
     if (!res.ok || data.error) { setError(data.error ?? "Request failed."); return; }
     if (data.state) {
-      // After scoring, land at 9am on the first day of the next period so the
-      // manager can review the upcoming week and set lineups before advancing further.
       const newPeriods = (data.state.periods as SeasonState["periods"]).map((p) => ({
         ...p,
         period: {
@@ -52,43 +47,67 @@ export default function SeasonControls({ leagueId, periods, onResult }: Props) {
       const newActive = newPeriods.find((p) => p.status === "ACTIVE");
       const newPending = newPeriods.find((p) => p.status === "SCORING_PENDING");
       const newTarget = newActive ?? newPending;
-      let cookieDate = new Date(dateToUse).toISOString();
-      if (newTarget) {
-        const d = new Date(newTarget.period.startsAt);
-        d.setHours(9, 0, 0, 0);
-        // If 9am is before period start, use period start + a few seconds
-        const morning = d.getTime() >= newTarget.period.startsAt.getTime()
-          ? d
-          : new Date(newTarget.period.startsAt.getTime() + 5_000);
-        cookieDate = morning.toISOString();
-        setSimulatedDate(morning.toISOString().slice(0, 16));
+
+      if (isReplay) {
+        // Replay leagues: DB is the source of truth — no cookie to set.
+        // Update the date picker to the next period's morning so the next click is pre-filled.
+        if (newTarget) {
+          const d = new Date(newTarget.period.startsAt);
+          d.setHours(9, 0, 0, 0);
+          const morning = d.getTime() >= newTarget.period.startsAt.getTime()
+            ? d : new Date(newTarget.period.startsAt.getTime() + 5_000);
+          setSimulatedDate(morning.toISOString().slice(0, 16));
+        }
+      } else {
+        // Dev mode: set cookie so other pages pick up the simulated time.
+        let cookieDate = new Date(dateToUse).toISOString();
+        if (newTarget) {
+          const d = new Date(newTarget.period.startsAt);
+          d.setHours(9, 0, 0, 0);
+          const morning = d.getTime() >= newTarget.period.startsAt.getTime()
+            ? d : new Date(newTarget.period.startsAt.getTime() + 5_000);
+          cookieDate = morning.toISOString();
+          setSimulatedDate(morning.toISOString().slice(0, 16));
+        }
+        document.cookie = `pwhl_dev_sim_date=${cookieDate}; path=/; max-age=86400`;
       }
-      document.cookie = `pwhl_dev_sim_date=${cookieDate}; path=/; max-age=86400`;
+
       onResult(data.state, data.message ?? "Done.");
     }
   }
 
   function advanceOneDay() {
-    const m = document.cookie.match(/pwhl_dev_sim_date=([^;]+)/);
-    const current = m ? new Date(decodeURIComponent(m[1])) : new Date();
-    current.setDate(current.getDate() + 1);
-    const iso = current.toISOString();
-    document.cookie = `pwhl_dev_sim_date=${iso}; path=/; max-age=86400`;
-    setSimulatedDate(iso.slice(0, 16));
-    window.location.reload();
+    if (isReplay) {
+      // Replay: advance the DB date by 1 day without scoring.
+      const currentIso = replayCurrentDate ?? simulatedDate;
+      const d = new Date(currentIso);
+      d.setDate(d.getDate() + 1);
+      call("set-date", d.toISOString().slice(0, 16));
+    } else {
+      // Dev: update the cookie and reload.
+      const m = document.cookie.match(/pwhl_dev_sim_date=([^;]+)/);
+      const current = m ? new Date(decodeURIComponent(m[1])) : new Date();
+      current.setDate(current.getDate() + 1);
+      const iso = current.toISOString();
+      document.cookie = `pwhl_dev_sim_date=${iso}; path=/; max-age=86400`;
+      setSimulatedDate(iso.slice(0, 16));
+      window.location.reload();
+    }
   }
 
+  const borderColor = isReplay ? "rgba(99,102,241,0.4)" : "rgba(251,191,36,0.4)";
+  const bgColor = isReplay ? "rgba(99,102,241,0.04)" : "rgba(251,191,36,0.04)";
+  const labelColor = isReplay ? "#a5b4fc" : "#fbbf24";
+
   return (
-    <div style={{
-      border: "1px dashed rgba(251,191,36,0.4)",
-      borderRadius: 14, padding: 16,
-      background: "rgba(251,191,36,0.04)",
-    }}>
-      <p style={{ margin: "0 0 10px", fontSize: 12, fontWeight: 700, color: "#fbbf24", textTransform: "uppercase", letterSpacing: 1 }}>
-        ⚠ Dev controls — test harness only
+    <div style={{ border: `1px solid ${borderColor}`, borderRadius: 14, padding: 16, background: bgColor }}>
+      <p style={{ margin: "0 0 4px", fontSize: 12, fontWeight: 700, color: labelColor, textTransform: "uppercase", letterSpacing: 1 }}>
+        {isReplay ? "⏪ Replay controls" : "⚠ Dev controls — test harness only"}
       </p>
       <p style={{ margin: "0 0 12px", fontSize: 12, color: "#94a3b8" }}>
-        Drives the production engine with a simulated date. No special code path.
+        {isReplay
+          ? "Advance weeks manually. Scores use real historical results."
+          : "Drives the production engine with a simulated date. No special code path."}
       </p>
 
       {/* Quick actions row */}
@@ -104,7 +123,7 @@ export default function SeasonControls({ leagueId, periods, onResult }: Props) {
             style={btn("#f59e0b")}
           >
             {loading ? "…" : activePeriod
-              ? `⏭ End week ${targetPeriod.period.week}`
+              ? `⏭ Score week ${targetPeriod.period.week}`
               : `▶ Score week ${targetPeriod.period.week}`}
           </button>
         )}
@@ -114,7 +133,7 @@ export default function SeasonControls({ leagueId, periods, onResult }: Props) {
         {targetPeriod && (
           <span style={{ fontSize: 11, color: "#64748b" }}>
             {activePeriod
-              ? `Scores week ${targetPeriod.period.week}, lands at 9am week ${targetPeriod.period.week + 1}`
+              ? `Scores week ${targetPeriod.period.week}`
               : `Scores week ${targetPeriod.period.week}`}
           </span>
         )}
@@ -122,7 +141,9 @@ export default function SeasonControls({ leagueId, periods, onResult }: Props) {
 
       <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "flex-end" }}>
         <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-          <span style={{ fontSize: 11, color: "#94a3b8" }}>Simulated "now"</span>
+          <span style={{ fontSize: 11, color: "#94a3b8" }}>
+            {isReplay ? `Current date` : `Simulated "now"`}
+          </span>
           <input
             type="datetime-local"
             value={simulatedDate}
@@ -140,18 +161,24 @@ export default function SeasonControls({ leagueId, periods, onResult }: Props) {
           {loading ? "…" : "Advance to date"}
         </button>
       </div>
-      <div style={{ marginTop: 10, display: "flex", alignItems: "center", gap: 10 }}>
-        <button
-          onClick={() => {
-            document.cookie = "pwhl_dev_sim_date=; path=/; max-age=0";
-            window.location.reload();
-          }}
-          style={btn("#64748b")}
-        >
-          Clear sim date
-        </button>
-        {error && <p style={{ margin: 0, fontSize: 12, color: "#f87171" }}>{error}</p>}
-      </div>
+
+      {!isReplay && (
+        <div style={{ marginTop: 10, display: "flex", alignItems: "center", gap: 10 }}>
+          <button
+            onClick={() => {
+              document.cookie = "pwhl_dev_sim_date=; path=/; max-age=0";
+              window.location.reload();
+            }}
+            style={btn("#64748b")}
+          >
+            Clear sim date
+          </button>
+          {error && <p style={{ margin: 0, fontSize: 12, color: "#f87171" }}>{error}</p>}
+        </div>
+      )}
+      {isReplay && error && (
+        <p style={{ margin: "8px 0 0", fontSize: 12, color: "#f87171" }}>{error}</p>
+      )}
     </div>
   );
 }

@@ -27,9 +27,11 @@ interface Props {
   leagueId: string;
   initialState: SeasonState;
   isDev: boolean;
+  isReplay?: boolean;
+  replayCurrentDate?: string;
 }
 
-export default function SeasonView({ leagueId, initialState, isDev }: Props) {
+export default function SeasonView({ leagueId, initialState, isDev, isReplay, replayCurrentDate }: Props) {
   const [state, setState] = useState(initialState);
   const [lastMessage, setLastMessage] = useState<string | null>(null);
 
@@ -138,6 +140,8 @@ export default function SeasonView({ leagueId, initialState, isDev }: Props) {
         <SeasonControls
           leagueId={leagueId}
           periods={periods}
+          isReplay={isReplay}
+          replayCurrentDate={replayCurrentDate}
           onResult={(newState, msg) => {
             setState(newState);
             setLastMessage(msg);

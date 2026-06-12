@@ -32,9 +32,12 @@ export default async function AdminPage({ params, searchParams }: Props) {
 
   if (!league) notFound();
 
-  const nowMs = await getDevNow();
+  const devNow = await getDevNow();
+  const nowMs = (league.isReplay && league.replayCurrentDate)
+    ? league.replayCurrentDate.getTime()
+    : devNow;
   const state = await getSeasonState(leagueId, nowMs, prisma);
-  const isDev = process.env.NODE_ENV !== "production";
+  const isDev = process.env.NODE_ENV !== "production" || league.isReplay;
 
   // Derive setup checklist state
   const hasEnoughTeams = league.teams.length >= 2;
@@ -45,7 +48,7 @@ export default async function AdminPage({ params, searchParams }: Props) {
   const checklistSteps: { label: string; detail: string; done: boolean }[] = [
     {
       label: "League created",
-      detail: `"${league.name}" · Season ${league.season}`,
+      detail: `"${league.name}" · Season ${league.season}${league.isReplay ? " · ⏪ Replay" : ""}`,
       done: true,
     },
     {
@@ -303,7 +306,13 @@ export default async function AdminPage({ params, searchParams }: Props) {
       <section style={panelStyle}>
         <h2 style={{ fontSize: 18, marginBottom: 16 }}>Season management</h2>
         {draftDone ? (
-          <SeasonView leagueId={leagueId} initialState={state} isDev={isDev} />
+          <SeasonView
+            leagueId={leagueId}
+            initialState={state}
+            isDev={isDev}
+            isReplay={league.isReplay}
+            replayCurrentDate={league.replayCurrentDate?.toISOString()}
+          />
         ) : (
           <p style={{ color: "#94a3b8", fontSize: 14 }}>
             Season controls become available after the draft is complete.

@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { requireAuth } from "@/lib/auth";
 import { getDevNow } from "@/lib/devTime";
+import { getReplayNow } from "@/lib/replayTime";
 import { getMatchupQuickSummary, getTeamTopPerformers, type MatchupQuickSummary } from "@/lib/services/matchup-summary";
 import Link from "next/link";
 
@@ -89,7 +90,8 @@ export default async function DashboardPage() {
     redirect(`/team/${singleTeam!.id}/matchup`);
   }
 
-  const nowMs = await getDevNow();
+  const devNow = await getDevNow();
+  const nowMs = devNow;
 
   const ownedTeams = await prisma.fantasyTeam.findMany({
     where: { ownerId: user.id },
@@ -115,9 +117,12 @@ export default async function DashboardPage() {
   const teams = [...ownedTeams, ...extraTeams];
   const hasTeams = teams.length > 0;
 
+  const teamNowMs = (team: (typeof teams)[number]) =>
+    getReplayNow({ isReplay: team.league.isReplay, replayCurrentDate: team.league.replayCurrentDate }, devNow);
+
   const [summaries, topPerformersList] = await Promise.all([
-    Promise.all(teams.map((team) => getMatchupQuickSummary(team.id, team.leagueId, nowMs, prisma))),
-    Promise.all(teams.map((team) => getTeamTopPerformers(team.id, team.leagueId, nowMs, prisma))),
+    Promise.all(teams.map((team) => getMatchupQuickSummary(team.id, team.leagueId, teamNowMs(team), prisma))),
+    Promise.all(teams.map((team) => getTeamTopPerformers(team.id, team.leagueId, teamNowMs(team), prisma))),
   ]);
 
   const hour = new Date(nowMs).getHours();
@@ -128,6 +133,7 @@ export default async function DashboardPage() {
   teams.forEach((team, i) => {
     const summary = summaries[i];
     const league = team.league;
+    const tNowMs = teamNowMs(team);
 
     // Draft live right now — highest priority
     if (league.draft?.status === "IN_PROGRESS") {
@@ -141,7 +147,7 @@ export default async function DashboardPage() {
     // Draft upcoming within 7 days
     if (league.status === "PRE_DRAFT" && league.draftStartsAt) {
       const daysUntil = Math.ceil(
-        (new Date(league.draftStartsAt).getTime() - nowMs) / 86_400_000
+        (new Date(league.draftStartsAt).getTime() - tNowMs) / 86_400_000
       );
       if (daysUntil >= 0 && daysUntil <= 7) {
         actions.push({
@@ -168,7 +174,7 @@ export default async function DashboardPage() {
     // New week just started (within 48 h of period start) — prompt to set lineup
     if (
       summary?.status === "active" &&
-      nowMs - summary.startsAt.getTime() < 48 * 3_600_000
+      tNowMs - summary.startsAt.getTime() < 48 * 3_600_000
     ) {
       actions.push({
         label: `Week ${summary.week} just started — set your lineup`,
@@ -188,7 +194,7 @@ export default async function DashboardPage() {
 
     // Upcoming matchup starting within 24 h
     if (summary?.status === "upcoming") {
-      const hoursUntil = (summary.startsAt.getTime() - nowMs) / 3_600_000;
+      const hoursUntil = (summary.startsAt.getTime() - tNowMs) / 3_600_000;
       if (hoursUntil >= 0 && hoursUntil <= 24) {
         actions.push({
           label: `Week ${summary.week} starts soon — prep your lineup`,

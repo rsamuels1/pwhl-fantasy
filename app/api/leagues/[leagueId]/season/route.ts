@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { getSeasonState, startSeason, advanceSeason } from "@/lib/season";
 import { apiRequireAuth, apiRequireLeagueMember, apiRequireCommissioner } from "@/lib/auth";
 import { getDevNowFromRequest } from "@/lib/devTime";
+import { getReplayNow } from "@/lib/replayTime";
 
 // GET /api/leagues/[leagueId]/season — any league member
 export async function GET(
@@ -16,7 +17,15 @@ export async function GET(
   if (member instanceof NextResponse) return member;
 
   try {
-    const state = await getSeasonState(leagueId, getDevNowFromRequest(req), prisma);
+    const leagueRow = await prisma.fantasyLeague.findUnique({
+      where: { id: leagueId },
+      select: { isReplay: true, replayCurrentDate: true },
+    });
+    const nowMs = getReplayNow(
+      leagueRow ?? { isReplay: false, replayCurrentDate: null },
+      getDevNowFromRequest(req)
+    );
+    const state = await getSeasonState(leagueId, nowMs, prisma);
     return NextResponse.json(state);
   } catch (err) {
     console.error(err);

@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { getSeasonState } from "@/lib/season";
 import { requireAuth, requireLeagueMember } from "@/lib/auth";
 import { getDevNow } from "@/lib/devTime";
+import { getReplayNow } from "@/lib/replayTime";
 import SeasonView from "./SeasonView";
 
 interface Props {
@@ -16,19 +17,21 @@ export default async function SeasonPage({ params }: Props) {
 
   const league = await prisma.fantasyLeague.findUnique({
     where: { id: leagueId },
-    select: { id: true, name: true },
+    select: { id: true, name: true, isReplay: true, replayCurrentDate: true },
   });
   if (!league) notFound();
 
-  const nowMs = await getDevNow();
+  const nowMs = getReplayNow(league, await getDevNow());
   const state = await getSeasonState(leagueId, nowMs, prisma);
-  const isDev = process.env.NODE_ENV !== "production" || process.env.ALLOW_SIM_DATE === "true";
+  const isDev = process.env.NODE_ENV !== "production" || process.env.ALLOW_SIM_DATE === "true" || league.isReplay;
 
   return (
     <SeasonView
       leagueId={leagueId}
       initialState={state}
       isDev={isDev}
+      isReplay={league.isReplay}
+      replayCurrentDate={league.replayCurrentDate?.toISOString()}
     />
   );
 }

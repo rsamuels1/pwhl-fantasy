@@ -16,6 +16,9 @@
     "export-fixture": "tsx scripts/export-fixture.ts",
     "seed-fixture": "tsx scripts/seed-fixture.ts",
     "set-lineups": "tsx scripts/set-optimal-lineups.ts",
+    "seed-replay": "tsx scripts/seed-replay.ts",
+    "auto-draft": "tsx scripts/auto-draft.ts",
+    "advance-replay": "tsx scripts/advance-replay.ts",
     "test": "vitest run",
     "test:watch": "vitest"
   },

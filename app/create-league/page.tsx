@@ -118,9 +118,9 @@ export default function CreateLeaguePage() {
               style={{ width: 18, height: 18, marginTop: 2, flexShrink: 0 }}
             />
             <span style={{ color: "#e2e8f0", lineHeight: 1.5, fontSize: 14 }}>
-              <strong>Use 2025–26 simulation</strong>
+              <strong>⏪ Replay League (2025–26 season)</strong>
               <span style={{ display: "block", color: "#64748b", fontSize: 13, marginTop: 2 }}>
-                Play through last season's real schedule and stats — great for testing.
+                Draft real players, advance weeks manually, and score from historical results. Great for testing or playing a completed season.
               </span>
             </span>
           </label>

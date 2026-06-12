@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { requireAuth, requireLeagueMember } from "@/lib/auth";
 import { getDevNow } from "@/lib/devTime";
+import { getReplayNow } from "@/lib/replayTime";
 
 function fmtDate(d: Date) {
   return new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" }).format(d);
@@ -15,7 +16,7 @@ export default async function MatchupsPage({ params }: { params: { leagueId: str
   const league = await prisma.fantasyLeague.findUnique({ where: { id: leagueId } });
   if (!league) notFound();
 
-  const nowMs = await getDevNow();
+  const nowMs = getReplayNow(league, await getDevNow());
 
   const matchups = await prisma.matchup.findMany({
     where: { leagueId },

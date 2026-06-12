@@ -24,6 +24,8 @@ export async function POST(req: NextRequest) {
 
     let leagueSeason = "2026-27";
     let draftStartsAt = null;
+    let isReplay = false;
+    let replayCurrentDate: Date | null = null;
 
     if (body.useLastSeasonSimulation) {
       const lastSeasonRow = await prisma.game.findMany({
@@ -34,6 +36,8 @@ export async function POST(req: NextRequest) {
       });
       leagueSeason = lastSeasonRow[0]?.season ?? leagueSeason;
       draftStartsAt = new Date();
+      isReplay = true;
+      replayCurrentDate = new Date("2026-10-01T09:00:00Z");
     }
 
     const league = await prisma.fantasyLeague.create({
@@ -53,6 +57,8 @@ export async function POST(req: NextRequest) {
           bench: 4,
         },
         draftStartsAt,
+        isReplay,
+        replayCurrentDate,
       },
     });
 

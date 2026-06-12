@@ -3,7 +3,7 @@
 // VTF format: regular season shows all-vs-all weekly standings, not a single opponent.
 
 import type { PrismaClient } from "@prisma/client";
-import { type ScoringSettings, DEFAULT_SCORING, type ScoringBreakdown } from "../scoring";
+import { type ScoringSettings, DEFAULT_SCORING, type ScoringBreakdown, scoreStatLineDetailed } from "../scoring";
 import { computeTeamScoreDetailed, computeAllTeamScores } from "../scoring/matchups";
 import { getSeasonState } from "../season";
 import {
@@ -14,6 +14,7 @@ import {
 import { getLeagueActivity } from "./activity";
 import type { ScoringPeriod } from "../scoring/periods";
 import { parseScoringSettings } from "../scoring/settings";
+import { getReplayNow } from "../replayTime";
 
 // ── types ─────────────────────────────────────────────────────────────────────
 
@@ -34,6 +35,18 @@ export interface PlayerPerfSummary {
   name: string;
   position: string;
   points: number;
+  statBreakdown: ScoringBreakdown[];
+}
+
+export interface LeaguePerformerRow {
+  playerId: string;
+  name: string;
+  position: string;
+  fantasyTeamId: string;
+  fantasyTeamName: string;
+  points: number;
+  gamesPlayed: number;
+  isMyPlayer: boolean;
 }
 
 export interface ActivityEvent {
@@ -101,6 +114,8 @@ export interface DashboardData {
   lineupAlerts: LineupAlert[];
   lastResult: WeeklyRecap | null;
   leagueActivity: ActivityEvent[];
+  leagueTopPerformers: LeaguePerformerRow[];
+  leagueDisappointments: LeaguePerformerRow[];
 }
 
 // ── main ──────────────────────────────────────────────────────────────────────
@@ -108,14 +123,15 @@ export interface DashboardData {
 export async function getDashboardData(
   leagueId: string,
   myTeamId: string,
-  nowMs: number,
+  nowMsArg: number,
   prisma: PrismaClient
 ): Promise<DashboardData> {
   const league = await prisma.fantasyLeague.findUniqueOrThrow({
     where: { id: leagueId },
-    select: { scoringSettings: true, season: true },
+    select: { scoringSettings: true, season: true, isReplay: true, replayCurrentDate: true },
   });
 
+  const nowMs = getReplayNow(league, nowMsArg);
   const scoringSettings = parseScoringSettings(league.scoringSettings);
 
   const seasonState = await getSeasonState(leagueId, nowMs, prisma);
@@ -140,6 +156,8 @@ export async function getDashboardData(
     lineupAlerts: [],
     lastResult,
     leagueActivity,
+    leagueTopPerformers: [],
+    leagueDisappointments: [],
   };
 
   if (!displayPeriod) return empty;
@@ -271,15 +289,18 @@ export async function getDashboardData(
 
   const sorted = [...myDetailed.players].sort((a, b) => b.points - a.points);
   const topPerformers: PlayerPerfSummary[] = sorted.slice(0, 3).map((p) => ({
-    playerId: p.playerId, name: p.name, position: p.position, points: p.points,
+    playerId: p.playerId, name: p.name, position: p.position, points: p.points, statBreakdown: p.statBreakdown,
   }));
   const disappointments: PlayerPerfSummary[] = [...myDetailed.players]
     .filter((p) => p.gameCount > 0)
     .sort((a, b) => a.points - b.points)
     .slice(0, 3)
-    .map((p) => ({ playerId: p.playerId, name: p.name, position: p.position, points: p.points }));
+    .map((p) => ({ playerId: p.playerId, name: p.name, position: p.position, points: p.points, statBreakdown: p.statBreakdown }));
 
-  const remainingPlayers = await getRemainingPlayersTonight(myTeamId, scoringSettings, prisma, nowMs);
+  const [remainingPlayers, { top: leagueTopPerformers, disappointing: leagueDisappointments }] = await Promise.all([
+    getRemainingPlayersTonight(myTeamId, scoringSettings, prisma, nowMs),
+    getLeaguePerformers(leagueId, myTeamId, displayPeriod, scoringSettings, prisma, nowMs),
+  ]);
 
   const myPlayers = withGames(myDetailed.players);
   const lineupAlerts: LineupAlert[] = myPlayers
@@ -314,6 +335,8 @@ export async function getDashboardData(
     lineupAlerts,
     lastResult,
     leagueActivity,
+    leagueTopPerformers,
+    leagueDisappointments,
   };
 }
 
@@ -421,6 +444,87 @@ async function getLastResult(
     week: last.week, result, myScore, opponentScore, opponentName, myTopPerformer,
     myRank, teamsCount: teamScores.size, closestMatchup, highestScore,
   };
+}
+
+async function getLeaguePerformers(
+  leagueId: string,
+  myTeamId: string,
+  period: ScoringPeriod,
+  scoringSettings: ScoringSettings,
+  prisma: PrismaClient,
+  nowMs: number
+): Promise<{ top: LeaguePerformerRow[]; disappointing: LeaguePerformerRow[] }> {
+  const entries = await prisma.rosterEntry.findMany({
+    where: {
+      fantasyTeam: { leagueId },
+      slot: { notIn: ["BENCH", "IR"] },
+    },
+    select: {
+      playerId: true,
+      fantasyTeamId: true,
+      player: { select: { firstName: true, lastName: true, position: true } },
+      fantasyTeam: { select: { name: true } },
+    },
+  });
+
+  if (entries.length === 0) return { top: [], disappointing: [] };
+
+  const playerIds = entries.map((e) => e.playerId);
+  const upperMs = Math.min(nowMs, period.endsAt.getTime());
+
+  const lines = await prisma.statLine.findMany({
+    where: {
+      playerId: { in: playerIds },
+      game: { startsAt: { gte: period.startsAt, lt: new Date(upperMs) } },
+    },
+    include: { player: { select: { position: true } } },
+  });
+
+  const byPlayer = new Map<string, { pts: number; games: number }>();
+  for (const line of lines) {
+    const { total } = scoreStatLineDetailed(
+      {
+        goals: line.goals,
+        assists: line.assists,
+        shots: line.shots,
+        plusMinus: line.plusMinus,
+        penaltyMinutes: line.penaltyMinutes,
+        powerPlayPts: line.powerPlayPts,
+        hits: line.hits,
+        blocks: line.blocks,
+        saves: line.saves,
+        goalsAgainst: line.goalsAgainst,
+        shutout: line.shutout,
+        win: line.win,
+      },
+      line.player.position,
+      scoringSettings
+    );
+    const prev = byPlayer.get(line.playerId) ?? { pts: 0, games: 0 };
+    byPlayer.set(line.playerId, { pts: Math.round((prev.pts + total) * 100) / 100, games: prev.games + 1 });
+  }
+
+  const rows: LeaguePerformerRow[] = entries.map((e) => {
+    const scored = byPlayer.get(e.playerId);
+    return {
+      playerId: e.playerId,
+      name: `${e.player.firstName} ${e.player.lastName}`,
+      position: e.player.position,
+      fantasyTeamId: e.fantasyTeamId,
+      fantasyTeamName: e.fantasyTeam.name,
+      points: scored?.pts ?? 0,
+      gamesPlayed: scored?.games ?? 0,
+      isMyPlayer: e.fantasyTeamId === myTeamId,
+    };
+  });
+
+  const top = [...rows].sort((a, b) => b.points - a.points).slice(0, 5);
+  const disappointing = [...rows]
+    .filter((r) => r.gamesPlayed > 0)
+    .sort((a, b) => a.points - b.points)
+    .slice(0, 5);
+
+  return { top, disappointing };
 }
 
 async function getLeagueActivityFallback(

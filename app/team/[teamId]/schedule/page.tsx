@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { requireAuth, requireTeamOwner } from "@/lib/auth";
 import { getDevNow } from "@/lib/devTime";
+import { getReplayNow } from "@/lib/replayTime";
 import { getSeasonState } from "@/lib/season";
 
 interface Props {
@@ -14,8 +15,12 @@ export default async function SchedulePage({ params }: Props) {
   const team = await requireTeamOwner(teamId, user.id);
   if (!team) notFound();
 
-  const nowMs = await getDevNow();
   const leagueId = team.league.id;
+  const leagueInfo = await prisma.fantasyLeague.findUniqueOrThrow({
+    where: { id: leagueId },
+    select: { isReplay: true, replayCurrentDate: true },
+  });
+  const nowMs = getReplayNow(leagueInfo, await getDevNow());
 
   const seasonState = await getSeasonState(leagueId, nowMs, prisma);
   const activePeriod = seasonState.periods.find((p) => p.status === "ACTIVE")?.period ?? null;
