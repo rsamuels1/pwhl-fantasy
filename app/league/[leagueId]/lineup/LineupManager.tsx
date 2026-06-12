@@ -58,6 +58,8 @@ interface Props {
   lastWeekLabel: string | null; // e.g. "Week 3 (Jan 20 – Jan 26)"
   thisWeekStats: Record<string, PlayerStatsRow | null>;
   thisWeekLabel: string | null; // e.g. "Week 4 (Dec 12 – Dec 19)"
+  projectedStats?: Record<string, ProjectedStatsRow | null>;
+  nextWeekLabel?: string | null;
 }
 
 const ACTIVE_SLOTS: SlotType[] = ["FORWARD", "DEFENSE", "GOALIE", "UTIL"];
@@ -87,12 +89,15 @@ function buildActiveSeats(settings: RosterSettings): Array<{ slot: SlotType; ind
 export default function LineupManager({
   leagueId, teamId, teamName, initialRoster, rosterSettings,
   seasonStats, lastWeekStats, lastWeekLabel, thisWeekStats, thisWeekLabel,
+  projectedStats, nextWeekLabel,
 }: Props) {
   const [roster, setRoster] = useState<RosterEntryRow[]>(initialRoster);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
-  const [statsView, setStatsView] = useState<StatsView>(thisWeekLabel ? "thisWeek" : "season");
+  const [statsView, setStatsView] = useState<StatsView>(
+    thisWeekLabel ? "thisWeek" : (nextWeekLabel ? "projected" : "season")
+  );
 
   const selected = selectedId ? roster.find((p) => p.playerId === selectedId) ?? null : null;
   const activeSeats = buildActiveSeats(rosterSettings);
@@ -116,6 +121,7 @@ export default function LineupManager({
   })();
 
   function getStats(playerId: string): PlayerStatsRow | null {
+    if (statsView === "projected") return null;
     if (statsView === "season") return seasonStats[playerId] ?? null;
     if (statsView === "lastWeek") return lastWeekStats[playerId] ?? null;
     return thisWeekStats[playerId] ?? null;
@@ -223,9 +229,9 @@ export default function LineupManager({
 
         {/* Stats view toggle */}
         <div style={{ display: "flex", gap: 4, background: "rgba(255,255,255,0.05)", borderRadius: 8, padding: 3 }}>
-          {(["thisWeek", "lastWeek", "season"] as StatsView[]).map((view) => {
-            const label = view === "season" ? "Season" : view === "lastWeek" ? "Last week" : "This week";
-            const disabled = view === "thisWeek" && !thisWeekLabel;
+          {(["projected", "thisWeek", "lastWeek", "season"] as StatsView[]).map((view) => {
+            const label = view === "projected" ? "Projected" : view === "season" ? "Season" : view === "lastWeek" ? "Last week" : "This week";
+            const disabled = (view === "thisWeek" && !thisWeekLabel) || (view === "projected" && !nextWeekLabel);
             return (
               <button
                 key={view}
@@ -245,6 +251,9 @@ export default function LineupManager({
         </div>
       </div>
 
+      {(statsView === "projected" && nextWeekLabel) && (
+        <div style={{ fontSize: 12, color: "#64748b" }}>Projections for {nextWeekLabel} · rolling 5-game avg × scheduled games</div>
+      )}
       {(statsView === "lastWeek" && lastWeekLabel) && (
         <div style={{ fontSize: 12, color: "#64748b" }}>{lastWeekLabel}</div>
       )}
@@ -312,7 +321,7 @@ export default function LineupManager({
                     <SlotBadge slot={slot} />
                   </div>
                   {player ? (
-                    <PlayerInfo player={player} isSelected={isSelected} stats={getStats(player.playerId)} statsView={statsView} />
+                    <PlayerInfo player={player} isSelected={isSelected} stats={getStats(player.playerId)} statsView={statsView} projectedStats={projectedStats} />
                   ) : (
                     <span style={{ color: isTarget ? "#a5b4fc" : "#475569", fontSize: 13, fontStyle: isTarget ? "normal" : "italic" }}>
                       {isTarget ? "Move here" : "Empty"}
@@ -322,6 +331,41 @@ export default function LineupManager({
               );
             })}
           </div>
+          {/* Starter total bar — projected view only */}
+          {statsView === "projected" && projectedStats && (() => {
+            const starterTotal = seatedActive.reduce((sum, { player }) => {
+              if (!player) return sum;
+              return sum + (projectedStats[player.playerId]?.projectedFp ?? 0);
+            }, 0);
+            const worstStarterProj = seatedActive.reduce((min, { player, slot }) => {
+              if (!player || slot === "GOALIE") return min;
+              const fp = projectedStats[player.playerId]?.projectedFp ?? 0;
+              return fp < min.fp ? { name: player.name, fp, slot: player.slot, eligibleSlots: player.eligibleSlots } : min;
+            }, { name: "", fp: Infinity, slot: "FORWARD" as SlotType, eligibleSlots: [] as SlotType[] });
+            const benchUpgrade = benchPlayers.reduce<{ name: string; fp: number } | null>((best, p) => {
+              const fp = projectedStats[p.playerId]?.projectedFp ?? 0;
+              if (fp <= worstStarterProj.fp) return best;
+              // Only suggest if bench player can play the worst starter's slot
+              if (!p.eligibleSlots.includes(worstStarterProj.slot)) return best;
+              if (!best || fp > best.fp) return { name: p.name, fp };
+              return best;
+            }, null);
+            return (
+              <div style={{
+                marginTop: 12, padding: "8px 12px", borderRadius: 8,
+                background: "rgba(99,102,241,0.08)", border: "1px solid rgba(99,102,241,0.15)",
+                display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center",
+              }}>
+                <span style={{ fontSize: 12, color: "#94a3b8" }}>Starters projected:</span>
+                <span style={{ fontSize: 13, fontWeight: 700, color: "#fbbf24" }}>{starterTotal.toFixed(1)} pts</span>
+                {benchUpgrade && (
+                  <span style={{ fontSize: 12, color: "#64748b" }}>
+                    · Consider starting <span style={{ color: "#a5b4fc" }}>{benchUpgrade.name}</span> ({benchUpgrade.fp.toFixed(1)} proj) over {worstStarterProj.name}
+                  </span>
+                )}
+              </div>
+            );
+          })()}
         </div>
 
         {/* RIGHT: Bench + IR */}
@@ -366,7 +410,7 @@ export default function LineupManager({
                     <div style={{ paddingTop: 2 }}>
                       <SlotBadge slot="BENCH" />
                     </div>
-                    <PlayerInfo player={player} isSelected={isSelected} stats={getStats(player.playerId)} statsView={statsView} />
+                    <PlayerInfo player={player} isSelected={isSelected} stats={getStats(player.playerId)} statsView={statsView} projectedStats={projectedStats} />
                   </div>
                 );
               })}
@@ -400,7 +444,7 @@ export default function LineupManager({
                       <div style={{ paddingTop: 2 }}>
                         <SlotBadge slot="IR" />
                       </div>
-                      <PlayerInfo player={player} isSelected={isSelected} stats={getStats(player.playerId)} statsView={statsView} />
+                      <PlayerInfo player={player} isSelected={isSelected} stats={getStats(player.playerId)} statsView={statsView} projectedStats={projectedStats} />
                     </div>
                   );
                 })}
@@ -439,13 +483,15 @@ function SlotBadge({ slot }: { slot: SlotType }) {
 }
 
 function PlayerInfo({
-  player, isSelected, stats, statsView,
+  player, isSelected, stats, statsView, projectedStats,
 }: {
   player: RosterEntryRow;
   isSelected: boolean;
   stats: PlayerStatsRow | null;
   statsView: StatsView;
+  projectedStats?: Record<string, ProjectedStatsRow | null>;
 }) {
+  const proj = statsView === "projected" ? (projectedStats?.[player.playerId] ?? null) : null;
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 3, minWidth: 0 }}>
       {/* Name row */}
@@ -503,7 +549,13 @@ function PlayerInfo({
       </div>
 
       {/* Stats row */}
-      {stats ? (
+      {statsView === "projected" ? (
+        proj ? (
+          <ProjectedStats proj={proj} />
+        ) : (
+          <span style={{ fontSize: 11, color: "#334155", fontStyle: "italic" }}>No recent data</span>
+        )
+      ) : stats ? (
         player.position === "GOALIE" ? (
           <GoalieStats stats={stats} />
         ) : (
@@ -518,6 +570,16 @@ function PlayerInfo({
   );
 }
 
+function ProjectedStats({ proj }: { proj: ProjectedStatsRow }) {
+  return (
+    <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+      <StatCell label="PROJ" value={proj.projectedFp.toFixed(1)} highlight gold />
+      <StatCell label="PPG" value={proj.avgFpPerGame.toFixed(1)} />
+      <StatCell label="GP" value={`×${proj.games}`} />
+    </div>
+  );
+}
+
 function SkaterStats({ stats }: { stats: PlayerStatsRow }) {
   const pts = stats.goals + stats.assists;
   return (
@@ -527,9 +589,9 @@ function SkaterStats({ stats }: { stats: PlayerStatsRow }) {
       <StatCell label="A" value={stats.assists} />
       <StatCell label="PTS" value={pts} highlight />
       <StatCell label="PPP" value={stats.powerPlayPts} />
-      <StatCell label="SOG" value={stats.shots} />
-      <StatCell label="HIT" value={stats.hits} />
-      <StatCell label="BLK" value={stats.blocks} />
+      <StatCell label="SOG" value={stats.shots} className="stat-secondary" />
+      <StatCell label="HIT" value={stats.hits} className="stat-secondary" />
+      <StatCell label="BLK" value={stats.blocks} className="stat-secondary" />
       <StatCell label="FP" value={stats.fantasyPoints.toFixed(1)} highlight gold />
     </div>
   );
@@ -543,20 +605,20 @@ function GoalieStats({ stats }: { stats: PlayerStatsRow }) {
     <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
       <StatCell label="GP" value={stats.gp} />
       <StatCell label="W" value={stats.wins} highlight />
-      <StatCell label="SV" value={stats.saves} />
-      <StatCell label="GA" value={stats.goalsAgainst} />
+      <StatCell label="SV" value={stats.saves} className="stat-secondary" />
+      <StatCell label="GA" value={stats.goalsAgainst} className="stat-secondary" />
       <StatCell label="SV%" value={svPct} />
-      <StatCell label="SO" value={stats.shutouts} />
+      <StatCell label="SO" value={stats.shutouts} className="stat-secondary" />
       <StatCell label="FP" value={stats.fantasyPoints.toFixed(1)} highlight gold />
     </div>
   );
 }
 
-function StatCell({ label, value, highlight = false, gold = false }: {
-  label: string; value: string | number; highlight?: boolean; gold?: boolean;
+function StatCell({ label, value, highlight = false, gold = false, className }: {
+  label: string; value: string | number; highlight?: boolean; gold?: boolean; className?: string;
 }) {
   return (
-    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", minWidth: 26 }}>
+    <div className={className} style={{ display: "flex", flexDirection: "column", alignItems: "center", minWidth: 26 }}>
       <span style={{ fontSize: 9, color: "#475569", textTransform: "uppercase", letterSpacing: 0.5 }}>{label}</span>
       <span style={{
         fontSize: 12, fontWeight: highlight ? 700 : 400,

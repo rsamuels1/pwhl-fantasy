@@ -363,3 +363,7 @@ img { max-width: 100%; display: block; }
   .bottom-nav { display: flex; }
   .bottom-nav-pad { padding-bottom: 68px !important; }
 }
+
+@media (max-width: 480px) {
+  .stat-secondary { display: none; }
+}

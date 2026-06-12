@@ -112,7 +112,33 @@ export default async function TeamMatchupPage({
         </div>
       )}
 
-      {/* ── 1b. Last week recap ── */}
+      {/* ── 1b. Between-weeks lineup nudge ── */}
+      {activeMatchup?.status === "upcoming" && (
+        <div style={{
+          background: "rgba(245,158,11,0.07)",
+          border: "1px solid rgba(245,158,11,0.25)",
+          borderRadius: 14, padding: "12px 16px",
+          display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap",
+        }}>
+          <div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: "#fbbf24" }}>
+              Week {activeMatchup.week} is coming up
+            </div>
+            <div style={{ fontSize: 12, color: "#94a3b8", marginTop: 2 }}>
+              Set your lineup before games begin — check projected scores on the lineup page.
+            </div>
+          </div>
+          <Link href={`/team/${teamId}/lineup`} style={{
+            fontSize: 12, fontWeight: 700, padding: "6px 14px", borderRadius: 8,
+            background: "rgba(245,158,11,0.15)", color: "#fbbf24",
+            border: "1px solid rgba(245,158,11,0.3)", textDecoration: "none", flexShrink: 0,
+          }}>
+            Set lineup →
+          </Link>
+        </div>
+      )}
+
+      {/* ── 1c. Last week recap ── */}
       {lastResult && <RecapCard recap={lastResult} />}
 
       {/* ── 2. Matchup hero ── */}
