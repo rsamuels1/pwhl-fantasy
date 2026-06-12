@@ -284,14 +284,24 @@ export default async function LeagueOverviewPage({
         <section style={card}>
           <h2 style={{ ...sectionTitle, marginBottom: 12 }}>League activity</h2>
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            {activity.map((evt) => (
-              <div key={evt.id} style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "flex-start" }}>
-                <span style={{ fontSize: 13, color: "#cbd5e1", lineHeight: 1.5 }}>{evt.description}</span>
-                <span style={{ fontSize: 11, color: "#475569", flexShrink: 0 }}>
-                  {fmt(new Date(evt.createdAt))}
-                </span>
-              </div>
-            ))}
+            {activity.map((evt) => {
+              const ICONS: Record<string, string> = {
+                PLAYER_ADD: "➕", PLAYER_DROP: "➖", DRAFT_PICK: "🎯",
+                PLAYOFF_QUALIFICATION: "🏒", MAJOR_PERFORMANCE: "⭐",
+              };
+              const icon = ICONS[evt.type] ?? "•";
+              return (
+                <div key={evt.id} style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "flex-start" }}>
+                  <span style={{ fontSize: 13, color: "#cbd5e1", lineHeight: 1.5 }}>
+                    <span style={{ marginRight: 6 }}>{icon}</span>
+                    {evt.description}
+                  </span>
+                  <span style={{ fontSize: 11, color: "#475569", flexShrink: 0 }}>
+                    {fmt(new Date(evt.createdAt))}
+                  </span>
+                </div>
+              );
+            })}
           </div>
         </section>
       )}

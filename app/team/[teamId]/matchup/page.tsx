@@ -138,33 +138,62 @@ export default async function TeamMatchupPage({
             <p style={{ color: "#475569", fontSize: 13, margin: 0 }}>
               No starters playing tonight — check the schedule for upcoming games.
             </p>
-          ) : (
-            <div style={{ display: "grid", gap: 6 }}>
-              {remainingPlayers.map((p) => (
-                <div key={p.playerId} style={{
-                  display: "flex", alignItems: "center", justifyContent: "space-between",
-                  padding: "8px 12px", borderRadius: 8,
-                  background: "rgba(99,102,241,0.05)",
-                  border: "1px solid rgba(99,102,241,0.12)",
-                }}>
-                  <div>
-                    <span style={{ fontWeight: 600, fontSize: 14 }}>{p.name}</span>
-                    <span style={{ marginLeft: 8, fontSize: 11, color: "#64748b" }}>
-                      {p.position[0]} · {p.slot === "BENCH" ? "BN" : p.slot === "FORWARD" ? "F" : p.slot === "DEFENSE" ? "D" : p.slot === "GOALIE" ? "G" : p.slot}
-                    </span>
-                  </div>
-                  <div style={{ textAlign: "right" }}>
-                    <div style={{ fontSize: 12, color: "#818cf8", fontWeight: 600 }}>
-                      {p.projectedPoints.toFixed(1)} proj
+          ) : (() => {
+            // Group players by game (homeAbbr@awayAbbr key)
+            const byGame = new Map<string, typeof remainingPlayers>();
+            for (const p of remainingPlayers) {
+              const key = `${p.homeTeamAbbr}@${p.awayTeamAbbr}`;
+              if (!byGame.has(key)) byGame.set(key, []);
+              byGame.get(key)!.push(p);
+            }
+            return (
+              <div style={{ display: "grid", gap: 12 }}>
+                {[...byGame.entries()].map(([gameKey, players]) => {
+                  const rep = players[0];
+                  const slotLabel = (slot: string) =>
+                    slot === "FORWARD" ? "F" : slot === "DEFENSE" ? "D" : slot === "GOALIE" ? "G" : slot === "UTIL" ? "UTIL" : "BN";
+                  return (
+                    <div key={gameKey}>
+                      {/* Game header */}
+                      <div style={{
+                        display: "flex", alignItems: "center", justifyContent: "space-between",
+                        marginBottom: 6, padding: "4px 0",
+                        borderBottom: "1px solid rgba(148,163,184,0.1)",
+                      }}>
+                        <span style={{ fontSize: 12, fontWeight: 700, color: "#94a3b8", letterSpacing: "0.04em" }}>
+                          {rep.homeTeamAbbr} @ {rep.awayTeamAbbr}
+                        </span>
+                        <span style={{ fontSize: 11, color: "#475569" }}>
+                          {formatTime(rep.gameStartsAt)}
+                        </span>
+                      </div>
+                      {/* Players in this game */}
+                      <div style={{ display: "grid", gap: 4 }}>
+                        {players.map((p) => (
+                          <div key={p.playerId} style={{
+                            display: "flex", alignItems: "center", justifyContent: "space-between",
+                            padding: "7px 10px", borderRadius: 7,
+                            background: "rgba(99,102,241,0.05)",
+                            border: "1px solid rgba(99,102,241,0.1)",
+                          }}>
+                            <div>
+                              <span style={{ fontWeight: 600, fontSize: 14 }}>{p.name}</span>
+                              <span style={{ marginLeft: 8, fontSize: 11, color: "#64748b" }}>
+                                {p.position[0]} · {slotLabel(p.slot)}
+                              </span>
+                            </div>
+                            <span style={{ fontSize: 12, color: "#818cf8", fontWeight: 600 }}>
+                              {p.projectedPoints.toFixed(1)} proj
+                            </span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                    <div style={{ fontSize: 11, color: "#475569" }}>
-                      {formatTime(p.gameStartsAt)}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+                  );
+                })}
+              </div>
+            );
+          })()}
         </Card>
       )}
 
@@ -336,29 +365,58 @@ function RecapCard({ recap }: { recap: WeeklyRecap }) {
   const tie = recap.result === "tie";
   const color = won ? "#34d399" : tie ? "#94a3b8" : "#f87171";
   const bg = won ? "rgba(52,211,153,0.07)" : tie ? "rgba(148,163,184,0.05)" : "rgba(248,113,113,0.07)";
-  const verb = won ? "Won" : tie ? "Tied" : "Lost";
-  const resultLine = tie
-    ? `Week ${recap.week} ended in a ${recap.myScore.toFixed(1)}–${recap.opponentScore.toFixed(1)} tie with ${recap.opponentName}.`
-    : `${verb} Week ${recap.week} ${recap.myScore.toFixed(1)}–${recap.opponentScore.toFixed(1)} vs ${recap.opponentName}.`;
+  const verb = won ? "Won" : "Lost";
+
+  const isHighScore = recap.highestScore?.teamName === recap.opponentName ||
+    recap.myRank === 1;
 
   return (
     <div style={{
       background: bg, border: `1px solid ${color}33`,
-      borderRadius: 14, padding: "12px 16px",
-      display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap",
+      borderRadius: 14, padding: "14px 16px",
+      display: "flex", flexDirection: "column", gap: 8,
     }}>
-      <span style={{
-        fontSize: 11, fontWeight: 800, letterSpacing: "0.05em", textTransform: "uppercase",
-        color, padding: "3px 9px", borderRadius: 20, background: `${color}1f`, flexShrink: 0,
-      }}>
-        Last week
-      </span>
-      <div style={{ fontSize: 13, color: "#cbd5e1" }}>
-        {resultLine}
+      {/* Top row: badge + score summary */}
+      <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+        <span style={{
+          fontSize: 11, fontWeight: 800, letterSpacing: "0.05em", textTransform: "uppercase",
+          color, padding: "3px 9px", borderRadius: 20, background: `${color}1f`, flexShrink: 0,
+        }}>
+          {tie ? "TIE" : verb} · Wk {recap.week}
+        </span>
+        <span style={{ fontSize: 15, fontWeight: 700, color: "#e2e8f0", fontVariantNumeric: "tabular-nums" }}>
+          {recap.myScore.toFixed(1)}
+          <span style={{ fontWeight: 400, color: "#475569", fontSize: 13 }}>
+            {" "}pts
+          </span>
+        </span>
+        {recap.myRank !== null && recap.teamsCount > 0 && (
+          <span style={{ fontSize: 12, color: "#64748b" }}>
+            #{recap.myRank} of {recap.teamsCount} this week
+          </span>
+        )}
+      </div>
+
+      {/* Details row */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
         {recap.myTopPerformer && (
-          <span style={{ color: "#64748b" }}>
-            {" "}{recap.myTopPerformer.name} led you with{" "}
-            <strong style={{ color: "#94a3b8" }}>{recap.myTopPerformer.points.toFixed(1)} pts</strong>.
+          <span style={{ fontSize: 12, color: "#94a3b8" }}>
+            ⭐ {recap.myTopPerformer.name} led with {recap.myTopPerformer.points.toFixed(1)} pts
+          </span>
+        )}
+        {recap.closestMatchup && recap.teamsCount > 2 && (
+          <span style={{ fontSize: 12, color: "#64748b" }}>
+            ⚡ Closest: {recap.closestMatchup.teams[0]} vs {recap.closestMatchup.teams[1]} — {recap.closestMatchup.margin.toFixed(1)} pt margin
+          </span>
+        )}
+        {recap.highestScore && recap.myRank !== 1 && (
+          <span style={{ fontSize: 12, color: "#64748b" }}>
+            🏆 League high: {recap.highestScore.teamName} with {recap.highestScore.score.toFixed(1)} pts
+          </span>
+        )}
+        {recap.highestScore && recap.myRank === 1 && (
+          <span style={{ fontSize: 12, color: "#fbbf24" }}>
+            🏆 You had the league-high score this week!
           </span>
         )}
       </div>

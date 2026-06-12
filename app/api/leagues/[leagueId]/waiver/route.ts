@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { apiRequireAuth } from "@/lib/auth";
 import type { RosterSettings } from "@/lib/lineup";
+import { emitEvent } from "@/lib/services/activity";
 
 function maxRosterSize(settings: RosterSettings): number {
   return (
@@ -72,6 +73,23 @@ export async function POST(
     });
   });
 
+  // Emit activity events (best-effort — never fail the request)
+  const addedPlayer = await prisma.player.findUnique({
+    where: { id: addPlayerId }, select: { firstName: true, lastName: true },
+  }).catch(() => null);
+  const addedName = addedPlayer ? `${addedPlayer.firstName} ${addedPlayer.lastName}` : "a player";
+  emitEvent({ leagueId, teamId, playerId: addPlayerId, type: "PLAYER_ADD",
+    data: { description: `${team.name} added ${addedName}` } }, prisma).catch(() => {});
+
+  if (dropPlayerId) {
+    const droppedPlayer = await prisma.player.findUnique({
+      where: { id: dropPlayerId }, select: { firstName: true, lastName: true },
+    }).catch(() => null);
+    const droppedName = droppedPlayer ? `${droppedPlayer.firstName} ${droppedPlayer.lastName}` : "a player";
+    emitEvent({ leagueId, teamId, playerId: dropPlayerId, type: "PLAYER_DROP",
+      data: { description: `${team.name} dropped ${droppedName}` } }, prisma).catch(() => {});
+  }
+
   // Return updated roster for optimistic UI refresh.
   const updated = await prisma.rosterEntry.findMany({
     where: { fantasyTeamId: teamId },
@@ -120,7 +138,19 @@ export async function DELETE(
   });
   if (!entry) return NextResponse.json({ error: "Player not on your roster." }, { status: 404 });
 
+  const dropTeam = await prisma.fantasyTeam.findUnique({
+    where: { id: teamId }, select: { name: true },
+  }).catch(() => null);
+  const dropPlayer = await prisma.player.findUnique({
+    where: { id: dropPlayerId }, select: { firstName: true, lastName: true },
+  }).catch(() => null);
+
   await prisma.rosterEntry.delete({ where: { id: entry.id } });
+
+  if (dropTeam && dropPlayer) {
+    emitEvent({ leagueId, teamId, playerId: dropPlayerId, type: "PLAYER_DROP",
+      data: { description: `${dropTeam.name} dropped ${dropPlayer.firstName} ${dropPlayer.lastName}` } }, prisma).catch(() => {});
+  }
 
   return NextResponse.json({ dropped: dropPlayerId });
 }

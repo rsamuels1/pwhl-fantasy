@@ -137,6 +137,9 @@ export interface RemainingPlayer {
   slot: string;
   gameStartsAt: Date;
   projectedPoints: number;
+  homeTeamAbbr: string;
+  awayTeamAbbr: string;
+  isHomeTeam: boolean;
 }
 
 // Returns active-roster players whose team has a game today that isn't final yet.
@@ -175,26 +178,41 @@ export async function getRemainingPlayersTonight(
       status: { not: "FINAL" },
       OR: [{ homeTeamId: { in: teamIds } }, { awayTeamId: { in: teamIds } }],
     },
-    select: { homeTeamId: true, awayTeamId: true, startsAt: true },
+    select: {
+      homeTeamId: true, awayTeamId: true, startsAt: true,
+      homeTeam: { select: { abbreviation: true } },
+      awayTeam: { select: { abbreviation: true } },
+    },
     orderBy: { startsAt: "asc" },
   });
 
-  // Map teamId → earliest game start today
-  const teamGameStart = new Map<string, Date>();
+  interface GameCtx {
+    homeTeamId: string;
+    awayTeamId: string;
+    homeTeamAbbr: string;
+    awayTeamAbbr: string;
+    startsAt: Date;
+  }
+  // Map teamId → first game context today
+  const teamGameCtx = new Map<string, GameCtx>();
   for (const game of games) {
-    for (const tid of [game.homeTeamId, game.awayTeamId]) {
-      if (teamIds.includes(tid) && !teamGameStart.has(tid)) {
-        teamGameStart.set(tid, game.startsAt);
-      }
-    }
+    const ctx: GameCtx = {
+      homeTeamId: game.homeTeamId,
+      awayTeamId: game.awayTeamId,
+      homeTeamAbbr: game.homeTeam.abbreviation,
+      awayTeamAbbr: game.awayTeam.abbreviation,
+      startsAt: game.startsAt,
+    };
+    if (!teamGameCtx.has(game.homeTeamId)) teamGameCtx.set(game.homeTeamId, ctx);
+    if (!teamGameCtx.has(game.awayTeamId)) teamGameCtx.set(game.awayTeamId, ctx);
   }
 
   const result: RemainingPlayer[] = [];
   for (const entry of entries) {
     const { teamId } = entry.player;
     if (!teamId) continue;
-    const gameStartsAt = teamGameStart.get(teamId);
-    if (!gameStartsAt) continue;
+    const ctx = teamGameCtx.get(teamId);
+    if (!ctx) continue;
 
     const projected = await projectPlayer(
       entry.playerId,
@@ -207,8 +225,11 @@ export async function getRemainingPlayersTonight(
       name: `${entry.player.firstName} ${entry.player.lastName}`,
       position: entry.player.position,
       slot: entry.slot,
-      gameStartsAt,
+      gameStartsAt: ctx.startsAt,
       projectedPoints: projected,
+      homeTeamAbbr: ctx.homeTeamAbbr,
+      awayTeamAbbr: ctx.awayTeamAbbr,
+      isHomeTeam: ctx.homeTeamId === teamId,
     });
   }
 

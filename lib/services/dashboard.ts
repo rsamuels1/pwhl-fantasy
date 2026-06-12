@@ -87,6 +87,10 @@ export interface WeeklyRecap {
   opponentScore: number;
   opponentName: string;
   myTopPerformer: { name: string; points: number } | null;
+  myRank: number | null;
+  teamsCount: number;
+  closestMatchup: { margin: number; teams: [string, string] } | null;
+  highestScore: { teamName: string; score: number } | null;
 }
 
 export interface DashboardData {
@@ -368,12 +372,55 @@ async function getLastResult(
     myScore > opponentScore ? "win" : myScore < opponentScore ? "loss" : "tie";
 
   const period: ScoringPeriod = { week: last.week, startsAt: last.startsAt, endsAt: last.endsAt };
-  const detailed = await computeTeamScoreDetailed(myTeamId, period, scoringSettings, prisma);
+  const [detailed, weekMatchups] = await Promise.all([
+    computeTeamScoreDetailed(myTeamId, period, scoringSettings, prisma),
+    prisma.matchup.findMany({
+      where: { leagueId, week: last.week, isPlayoff: false, homeScore: { not: null }, awayScore: { not: null } },
+      include: { homeTeam: { select: { name: true } }, awayTeam: { select: { name: true } } },
+    }),
+  ]);
+
   const top = [...detailed.players].sort((a, b) => b.points - a.points)[0];
   const myTopPerformer =
     top && top.points > 0 ? { name: top.name, points: top.points } : null;
 
-  return { week: last.week, result, myScore, opponentScore, opponentName, myTopPerformer };
+  // League-wide stats for this week
+  const teamScores = new Map<string, number>();
+  const teamNames = new Map<string, string>();
+  for (const m of weekMatchups) {
+    if (!teamScores.has(m.homeTeamId)) { teamScores.set(m.homeTeamId, m.homeScore!); teamNames.set(m.homeTeamId, m.homeTeam.name); }
+    if (!teamScores.has(m.awayTeamId)) { teamScores.set(m.awayTeamId, m.awayScore!); teamNames.set(m.awayTeamId, m.awayTeam.name); }
+  }
+
+  // Closest head-to-head matchup (unique pairs only)
+  let closestMatchup: WeeklyRecap["closestMatchup"] = null;
+  const seenPairs = new Set<string>();
+  for (const m of weekMatchups) {
+    const pairKey = [m.homeTeamId, m.awayTeamId].sort().join(":");
+    if (seenPairs.has(pairKey)) continue;
+    seenPairs.add(pairKey);
+    const margin = Math.abs(m.homeScore! - m.awayScore!);
+    if (closestMatchup === null || margin < closestMatchup.margin) {
+      closestMatchup = { margin: Math.round(margin * 10) / 10, teams: [m.homeTeam.name, m.awayTeam.name] };
+    }
+  }
+
+  // Highest score this week
+  let highestScore: WeeklyRecap["highestScore"] = null;
+  for (const [teamId, score] of teamScores) {
+    if (highestScore === null || score > highestScore.score) {
+      highestScore = { teamName: teamNames.get(teamId) ?? teamId, score };
+    }
+  }
+
+  // My rank this week (how many teams scored more than me + 1)
+  const allScores = [...teamScores.values()];
+  const myRank = allScores.filter((s) => s > myScore).length + 1;
+
+  return {
+    week: last.week, result, myScore, opponentScore, opponentName, myTopPerformer,
+    myRank, teamsCount: teamScores.size, closestMatchup, highestScore,
+  };
 }
 
 async function getLeagueActivityFallback(
