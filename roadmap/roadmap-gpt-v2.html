@@ -1,0 +1,124 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>PWHL Fantasy Roadmap GPT v2</title>
+<style>
+body{font-family:Inter,Arial,sans-serif;margin:0;background:#0f172a;color:#e2e8f0}
+header{padding:24px;background:#111827;position:sticky;top:0}
+h1,h2,h3{margin:0 0 10px}
+.container{padding:20px;max-width:1400px;margin:auto}
+.summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:20px}
+.metric{background:#1e293b;padding:16px;border-radius:12px}
+.timeline{display:flex;gap:12px;overflow:auto;margin-bottom:24px}
+.stage{min-width:280px;background:#1e293b;border-radius:12px;padding:16px}
+.stage h3{border-bottom:1px solid #334155;padding-bottom:8px}
+.item{background:#0f172a;margin:8px 0;padding:10px;border-radius:8px}
+.p0{border-left:5px solid #ef4444}
+.p1{border-left:5px solid #f59e0b}
+.p2{border-left:5px solid #3b82f6}
+.p3{border-left:5px solid #22c55e}
+table{width:100%;border-collapse:collapse;background:#1e293b}
+th,td{padding:10px;border:1px solid #334155;text-align:left}
+.progress{height:18px;background:#334155;border-radius:999px;overflow:hidden}
+.bar{height:100%;width:35%;background:#22c55e}
+.section{margin-top:28px}
+code{color:#93c5fd}
+</style>
+</head>
+<body>
+<header>
+<h1>PWHL Fantasy — Roadmap GPT v2</h1>
+<div>Launch-risk prioritized roadmap with dependencies, ownership, and MVP readiness tracking.</div>
+</header>
+
+<div class="container">
+
+<div class="summary">
+<div class="metric"><h3>MVP Progress</h3><div class="progress"><div class="bar"></div></div><small>35% estimated</small></div>
+<div class="metric"><h3>P0 Items</h3><strong>7</strong></div>
+<div class="metric"><h3>P1 Items</h3><strong>12</strong></div>
+<div class="metric"><h3>North Star</h3><strong>League Completion Rate</strong></div>
+</div>
+
+<h2>Now → Next → Later</h2>
+<div class="timeline">
+<div class="stage">
+<h3>NOW (Launch Blockers)</h3>
+<div class="item p0">IA-001 Roster Alignment</div>
+<div class="item p0">IA-002 VP Standings Authority</div>
+<div class="item p0">IA-003 Playoff Simplification</div>
+<div class="item p0">DE-001 Draft UX Flow</div>
+<div class="item p0">DE-002 Draft Edge Cases</div>
+<div class="item p0">DE-003 Draft Reliability Audit</div>
+</div>
+
+<div class="stage">
+<h3>NEXT (MVP Complete)</h3>
+<div class="item p1">Weekly Lineup Lock Validation</div>
+<div class="item p1">VP Standings UI</div>
+<div class="item p1">Commissioner Control Center</div>
+<div class="item p1">Audit Logging</div>
+<div class="item p1">Waivers</div>
+<div class="item p1">Trades</div>
+</div>
+
+<div class="stage">
+<h3>LATER (Growth)</h3>
+<div class="item p2">Notifications</div>
+<div class="item p2">Activity Feed</div>
+<div class="item p2">Activation Dashboard</div>
+<div class="item p2">Referral Loop</div>
+<div class="item p2">Season Renewal</div>
+</div>
+
+<div class="stage">
+<h3>FUTURE</h3>
+<div class="item p3">Keeper Leagues</div>
+<div class="item p3">Dynasty</div>
+<div class="item p3">AI Assistant</div>
+<div class="item p3">Native Mobile Apps</div>
+</div>
+</div>
+
+<div class="section">
+<h2>Dependency Map</h2>
+<table>
+<tr><th>Feature</th><th>Depends On</th><th>Why</th></tr>
+<tr><td>Draft Reliability</td><td>Draft UX + Edge Cases</td><td>Highest-risk system</td></tr>
+<tr><td>Waivers</td><td>Roster Validation</td><td>Transaction integrity</td></tr>
+<tr><td>Playoffs</td><td>VP Standings</td><td>Seeding source of truth</td></tr>
+<tr><td>Season Renewal</td><td><code>parentLeagueId</code></td><td>League lineage</td></tr>
+<tr><td>Keeper/Dynasty</td><td>Season Renewal + Versioning</td><td>Multi-season support</td></tr>
+</table>
+</div>
+
+<div class="section">
+<h2>MVP Launch Checklist</h2>
+<table>
+<tr><th>Area</th><th>Status</th></tr>
+<tr><td>Roster Rules Match Product Spec</td><td>🔶 In Progress</td></tr>
+<tr><td>VP Standings Authoritative</td><td>🔶 In Progress</td></tr>
+<tr><td>Draft Room Stable</td><td>🔶 In Progress</td></tr>
+<tr><td>Weekly Lineup Lock Verified</td><td>⏳ Pending</td></tr>
+<tr><td>Commissioner Recovery Tools</td><td>⏳ Pending</td></tr>
+<tr><td>End-to-End Season Simulation</td><td>⏳ Pending</td></tr>
+</table>
+</div>
+
+<div class="section">
+<h2>Ownership Swimlanes</h2>
+<table>
+<tr><th>Backend</th><th>Frontend</th><th>Product</th></tr>
+<tr>
+<td>VP Engine, Draft Reliability, Waivers, League Versioning</td>
+<td>Draft UX, Standings UI, Notifications, Activity Feed</td>
+<td>Rules Docs, Commissioner Tools, Analytics, Roadmap</td>
+</tr>
+</table>
+</div>
+
+</div>
+</body>
+</html>
