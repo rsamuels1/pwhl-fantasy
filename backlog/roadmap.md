@@ -2,7 +2,7 @@
 
 # PWHL Fantasy Product Roadmap
 
-Last Updated: June 2026
+Last Updated: June 12, 2026
 
 ---
 
@@ -14,8 +14,9 @@ When choosing what to build next:
 
 1. Prioritize unfinished items in the current phase before moving to later phases.
 2. Favor user-facing functionality over technical optimization unless stability is at risk.
-3. Maintain compatibility with both Live Season mode and Historical Replay mode.
-4. Avoid introducing features that only work for live leagues.
+3. Build for the live season first. Historical Replay is a testing/QA tool, not the product —
+   don't let replay requirements shape or slow down live-season features.
+4. New features should not break replay mode, but they do not need to be designed around it.
 
 ---
 
@@ -23,15 +24,19 @@ When choosing what to build next:
 
 PWHL Fantasy is the premier fantasy platform for Professional Women's Hockey League fans.
 
+The flagship experience is the live fantasy season: drafting real players, setting weekly
+lineups, and competing in matchups scored from real PWHL games.
+
 The platform should support:
 
-- Live fantasy leagues
-- Historical replay leagues
+- Live fantasy leagues (the core product)
 - Commissioner customization
 - Deep roster management
 - Long-term league retention
 
-Historical Replay should remain a first-class feature, not an afterthought.
+Historical Replay is an internal/QA tool that lets us exercise the full season loop against
+completed seasons before live data exists. It is valuable for user testing and dev iteration,
+but it is not a user-facing flagship and should not be prioritized as one.
 
 ---
 
@@ -42,19 +47,23 @@ Implemented systems include:
 - Authentication
 - User accounts
 - League creation
-- League management
-- Draft room
-- Draft queue
-- Auto draft
+- League management (commissioner admin panel: team management, draft setup, season controls, announcements)
+- Draft room (live WebSocket draft, queue, auto-draft, auto-escalation)
 - Rosters
-- Lineups
-- Matchups
-- Standings
-- Playoffs
+- Lineups (locking, play-lock rule, games-remaining badges)
+- Matchups (VTF regular season + 1v1 playoffs)
+- Matchup Center / Fantasy Home (hero scores, top performers, swing players, storyline chip, playing-tonight, roster breakdown)
+- Projections & Win Probability engine
+- Standings (with playoff race clinch/eliminate indicators)
+- Playoffs (seeding, bracket, single-elimination)
 - Historical Replay
-- Season advancement
+- Season advancement / lifecycle (scoring periods, dev sim controls)
 - Schedule management
-- Scoring engine
+- Scoring engine (VTF point scoring)
+- Victory Point (VP) scoring model (win/placement bonuses, `homeVP`/`awayVP`)
+- Free-agent add/drop (immediate, no waiver priority yet)
+- Live score polling (client-side refresh during active matchups)
+- Season-long head-to-head (rivalry) records
 
 These systems should be considered core platform functionality.
 
@@ -70,24 +79,25 @@ Priority: CRITICAL
 
 ## 1. Commissioner Dashboard
 
-Status: Needed
+Status: Largely Implemented
 
-Commissioners need a central administration interface.
+The admin panel (`app/league/[leagueId]/admin/`) is the central commissioner interface:
+team management, draft setup + auto-draft, replay-aware season controls (advance/score
+week, sim-date stepping), announcements, and a setup checklist. Permissions are enforced
+via `requireCommissioner`.
 
-Features:
+Remaining gaps:
 
-- Advance replay week
-- Pause replay season
-- Restart replay season
-- Force draft start
-- Lock/unlock lineups
-- Manage league settings
+- Explicit pause / restart replay-season controls
+- Force draft start (currently start happens from the draft room)
+- Lock/unlock lineups override
+- A consolidated league-settings editor (scoring/roster rules post-creation)
 
 Acceptance Criteria:
 
-- Single dashboard for all commissioner actions
-- Permissions enforced
-- Replay controls available
+- Single dashboard for all commissioner actions ✅ (admin panel)
+- Permissions enforced ✅
+- Replay controls available ✅ (advance/score; pause/restart still TODO)
 
 ---
 
@@ -161,19 +171,22 @@ Priority: HIGH
 
 ## 5. Waiver Wire System
 
-Status: Not Implemented
+Status: Partially Implemented
 
-Features:
+Immediate free-agent add/drop ships today (`POST /api/leagues/[leagueId]/waiver` +
+roster page free-agent panel; roster-size enforced; emits a `LeagueEvent`). What's
+missing is the actual *waiver* layer.
 
-- Add/drop players
-- Waiver priority
-- Waiver processing jobs
-- Commissioner settings
+Remaining:
+
+- Waiver priority ordering
+- Waiver processing jobs (batched claim resolution)
+- Commissioner waiver settings
 
 Acceptance Criteria:
 
-- Players can be claimed
-- Claims process correctly
+- Players can be claimed ✅ (immediate add/drop)
+- Claims process correctly (priority/batched resolution still TODO)
 - Replay leagues supported
 
 Dependencies:
@@ -248,60 +261,75 @@ Goal: Increase engagement throughout the season.
 
 Priority: HIGH
 
+Status: Largely Shipped — the team-scoped Matchup page (`/team/[teamId]/matchup`) is now
+the primary in-season destination. The items below are mostly done; remaining polish noted.
+
 ---
 
 ## 9. Live Matchup Center
 
+Status: Implemented
+
 Features:
 
-- Top performers
-- Team comparisons
-- Position battles
-- Remaining players
+- Top performers ✅ (storyline chip + per-player breakdown)
+- Team comparisons ✅ (`DuelHero` / `FieldHero` roster breakdown)
+- Position battles — not built as a dedicated view
+- Remaining players ✅ ("Playing tonight" + swing players)
 
 Acceptance Criteria:
 
-- Matchups become primary user destination
+- Matchups become primary user destination ✅
 
 ---
 
 ## 10. Win Probability Engine
 
+Status: Implemented
+
 Features:
 
-- Projected scores
-- Win percentages
-- Historical comparison
+- Projected scores ✅ (`lib/projections` rolling-average projection)
+- Win percentages ✅ (`winProbability` logistic, shown on hero)
+- Historical comparison ✅ (season-long rivalry record in 1v1 mode)
 
 Acceptance Criteria:
 
-- Matchups display projected outcomes
+- Matchups display projected outcomes ✅
 
 Dependencies:
 
-- Statistical modeling layer
+- Statistical modeling layer (basic rolling-average model; richer modeling is future work)
 
 ---
 
 ## 11. Matchup Storylines
 
+Status: Partially Implemented
+
+Per-team storyline chip ("🔥 X is leading your team…") and a weekly recap card ship today.
+League-wide auto-generated storylines are not yet built.
+
 Features:
 
-- Biggest upset
-- Closest matchup
-- League leader highlights
+- Biggest upset — not built (league-wide)
+- Closest matchup — not built (league-wide)
+- League leader highlights — partial (activity feed)
 
 Acceptance Criteria:
 
-- Automatically generated league insights
+- Automatically generated league insights (per-team done; league-wide TODO)
 
 ---
 
 # Phase 4: Historical Replay Expansion
 
-Goal: Make replay a flagship feature.
+Goal: Strengthen replay only as far as it serves user testing and dev iteration.
 
-Priority: VERY HIGH
+Priority: LOW — replay is a QA/testing tool, not a flagship. Build only the minimum needed
+to test the live-season loop; do not invest in replay as a destination product. Items 14
+(Alternate History Drafts) and 15 (Replay Analytics) are speculative and should stay
+de-prioritized unless they directly unblock testing or a clear user request emerges.
 
 ---
 
@@ -391,15 +419,21 @@ Acceptance Criteria:
 
 ## 17. Rivalries
 
+Status: Partially Implemented
+
+Season-long head-to-head records are already computed (`getHeadToHeadRecord` in
+`lib/playoffs/seeding.ts`) and surfaced on the matchup hero in 1v1 mode. Rival badges and
+a dedicated historical-matchups view are not yet built.
+
 Features:
 
-- Head-to-head records
-- Rival badges
-- Historical matchups
+- Head-to-head records ✅
+- Rival badges — not built
+- Historical matchups — not built (dedicated view)
 
 Acceptance Criteria:
 
-- League history persists
+- League history persists (H2H records done; persistent rivalry UI TODO)
 
 ---
 
@@ -463,14 +497,20 @@ Priority: MEDIUM
 
 ## 21. Live Scoring
 
+Status: Partially Implemented
+
+`components/LiveScoreRefresh.tsx` polls and refreshes active-matchup scores client-side
+(~60s). True real-time push (HockeyTech Firebase RTDB WebSockets, per CLAUDE.md) is not
+yet wired in.
+
 Features:
 
-- Real-time game updates
-- Fantasy score updates
+- Real-time game updates — polling only (no push yet)
+- Fantasy score updates ✅ (recomputed on refresh)
 
 Acceptance Criteria:
 
-- Scores update during games
+- Scores update during games ✅ (via polling; real-time push is the next step)
 
 ---
 
@@ -550,29 +590,32 @@ Candidates:
 
 # Architectural Rules
 
-All new features must support:
+Design for the live season first. Replay is a testing tool, so:
 
-- Live leagues
-- Historical replay leagues
+- New features must work for live leagues.
+- New features should not crash or corrupt replay leagues, but they do not need to be
+  designed around replay, and replay constraints must not block or delay live-season work.
+- Where it's cheap to stay replay-compatible (e.g. reading "now" from a helper rather than
+  the wall clock), do so — it keeps the testing harness usable. Where replay support would
+  add real cost or complexity, prefer the live-season-correct implementation.
 
-Do not build features that assume future games exist.
-
-Always ask:
-
-"How does this behave in replay mode?"
-
-before implementation.
+Replay-compatibility is a nice-to-have that protects our QA loop, not a gate on shipping.
 
 ---
 
 # What To Build Next
 
-Immediate Recommendation:
+Phase 3 (Matchup Experience) is essentially shipped, and the Commissioner Dashboard +
+immediate add/drop already exist. The highest-value gaps for a public beta are now:
 
-1. Commissioner Dashboard
-2. League Onboarding Wizard
-3. Mobile Draft Experience
-4. Waiver Wire System
-5. Trade System
+1. League Onboarding Wizard (#2) — still completely unbuilt; biggest blocker for self-serve signups
+2. Mobile Optimization (#3) — draft room + matchup screens responsive
+3. Error Handling / empty + loading states (#4)
+4. Trade System (#7) + Transaction History (#8) — the missing half of league management
+5. Waiver priority + processing jobs (#5) — upgrade the existing immediate add/drop into a real waiver wire
 
-These features provide the highest user value and are prerequisites for a public beta launch.
+Stretch (differentiators, not beta blockers): league-wide matchup storylines (#11) and the
+rivalry/Hall-of-Fame retention layer (#17–#18). Replay work (Phase 4) stays out of this
+list — invest in it only when it unblocks testing of the above.
+
+These provide the highest user value and are the remaining prerequisites for a public beta launch.
