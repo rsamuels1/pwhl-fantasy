@@ -7,8 +7,11 @@
 // Prints leagueId + team IDs so you can run `npm run auto-draft -- --league <id>`.
 
 import { PrismaClient } from "@prisma/client";
+import bcrypt from "bcryptjs";
 import { DEFAULT_SCORING } from "../lib/scoring";
 import { generateSnakeOrder, rostersToRounds } from "../lib/draft/snake";
+
+const DEV_PASSWORD_HASH = bcrypt.hashSync("password", 10);
 
 const prisma = new PrismaClient();
 
@@ -46,15 +49,18 @@ async function main() {
     await prisma.draft.deleteMany({ where: { leagueId: prior.id } });
     await prisma.matchup.deleteMany({ where: { leagueId: prior.id } });
     await prisma.fantasyTeam.deleteMany({ where: { leagueId: prior.id } });
+    await (prisma as any).leagueEvent.deleteMany({ where: { leagueId: prior.id } });
     await prisma.fantasyLeague.delete({ where: { id: prior.id } });
     console.log("Removed previous replay league.");
   }
 
-  // Upsert dev users (same as seed-draft)
+  // Replay league uses its own users so they don't cross-contaminate
+  // other dev leagues. Log in as replay-commish@dev.local to go straight
+  // to the replay league without hitting the multi-team dashboard.
   const commissioner = await prisma.user.upsert({
-    where: { email: "commish@dev.local" },
-    update: {},
-    create: { email: "commish@dev.local", displayName: "Commish" },
+    where: { email: "replay-commish@dev.local" },
+    update: { passwordHash: DEV_PASSWORD_HASH },
+    create: { email: "replay-commish@dev.local", displayName: "Replay Commish", passwordHash: DEV_PASSWORD_HASH },
   });
 
   const league = await prisma.fantasyLeague.create({
@@ -68,7 +74,9 @@ async function main() {
       rosterSettings: ROSTER_SETTINGS,
       draftStartsAt: new Date(),
       isReplay: true,
-      replayCurrentDate: new Date("2026-10-01T09:00:00Z"),
+      // Day 0: one day before the first game of the 2025-26 season (Nov 22, 2025).
+      // Advance forward one game day at a time from the admin panel.
+      replayCurrentDate: new Date("2025-11-21T00:00:00Z"),
     },
   });
 
@@ -78,9 +86,9 @@ async function main() {
       i === 1
         ? commissioner
         : await prisma.user.upsert({
-            where: { email: `owner${i}@dev.local` },
-            update: {},
-            create: { email: `owner${i}@dev.local`, displayName: `Owner ${i}` },
+            where: { email: `replay-owner${i}@dev.local` },
+            update: { passwordHash: DEV_PASSWORD_HASH },
+            create: { email: `replay-owner${i}@dev.local`, displayName: `Replay Owner ${i}`, passwordHash: DEV_PASSWORD_HASH },
           });
     const team = await prisma.fantasyTeam.create({
       data: {
@@ -117,13 +125,19 @@ async function main() {
   console.log(`season: 2025-26  teams: ${NUM_TEAMS}  rounds: ${rounds}`);
   console.log("\nTeams:");
   for (const t of teams) {
-    console.log(`  draftOrder ${t.draftOrder}  ${t.name}  id=${t.id}`);
+    console.log(`  ${t.draftOrder}.  ${t.name}  (id=${t.id})`);
   }
-  console.log("\nNext steps:");
-  console.log(`  1. Auto-draft:  npm run auto-draft -- --league ${league.id}`);
-  console.log(`  2. Start season via admin panel: http://localhost:3000/league/${league.id}/admin`);
-  console.log(`  3. Advance weeks from the admin panel (⏭ buttons are visible for replay leagues)`);
-  console.log(`     Or via CLI:  npm run advance-replay -- --league ${league.id}\n`);
+  console.log("\n--- Login ---");
+  console.log(`  Email: replay-commish@dev.local  (use this — NOT commish@dev.local)`);
+  console.log("\n--- Next steps ---");
+  console.log(`  1. Auto-draft:  use the "Auto-draft all teams" button in the admin panel`);
+  console.log(`     (or CLI: npm run auto-draft -- --league ${league.id})`);
+  console.log(`  2. Start season: admin panel → Season management → "Start season"`);
+  console.log(`     http://localhost:3000/league/${league.id}/admin`);
+  console.log(`  3. Advance day-by-day from the "Day N → Next day" bar at the top`);
+  console.log(`     of any league page (visible to the commissioner when in-season)`);
+  console.log(`     Or advance multiple weeks via CLI:`);
+  console.log(`     npm run advance-replay -- --league ${league.id} --weeks 4\n`);
 }
 
 main()

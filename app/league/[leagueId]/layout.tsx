@@ -5,6 +5,8 @@ import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import DevTimeClear from "@/components/DevTimeClear";
 import BottomNav from "@/components/BottomNav";
+import ReplayDayBar from "@/components/ReplayDayBar";
+import { getGameDays, currentDayNumber, nextGameDay, prevGameDay } from "@/lib/replay/gameDays";
 
 interface LeagueLayoutProps {
   children: ReactNode;
@@ -24,11 +26,31 @@ export default async function LeagueLayout({ children, params }: LeagueLayoutPro
     getCurrentUser(),
     prisma.fantasyLeague.findUnique({
       where: { id: leagueId },
-      select: { commissionerId: true, name: true },
+      select: { commissionerId: true, name: true, isReplay: true, replayCurrentDate: true, season: true, status: true },
     }),
   ]);
 
   const isCommissioner = !!user && user.id === league?.commissionerId;
+
+  // Replay day navigation — only load game days when needed
+  let replayDayProps: null | {
+    dayNumber: number;
+    totalDays: number;
+    currentDate: string | null;
+    hasNextDay: boolean;
+  } = null;
+  if (league?.isReplay && isCommissioner && (league.status === "IN_SEASON" || league.status === "COMPLETE")) {
+    const gameDays = await getGameDays(league.season, prisma);
+    const replayMs = league.replayCurrentDate?.getTime() ?? gameDays[0]?.getTime() ?? Date.now();
+    const dayNumber = currentDayNumber(replayMs, gameDays);
+    const lastDay = prevGameDay(replayMs, gameDays);
+    replayDayProps = {
+      dayNumber,
+      totalDays: gameDays.length,
+      currentDate: lastDay ? lastDay.toISOString().slice(0, 10) : null,
+      hasNextDay: nextGameDay(replayMs, gameDays) !== null,
+    };
+  }
 
   const myTeam = user
     ? await prisma.fantasyTeam.findFirst({ where: { leagueId, ownerId: user.id }, select: { id: true } })
@@ -76,7 +98,17 @@ export default async function LeagueLayout({ children, params }: LeagueLayoutPro
           </div>
         </header>
 
-        {simDateRaw && (
+        {replayDayProps && (
+          <ReplayDayBar
+            leagueId={leagueId}
+            dayNumber={replayDayProps.dayNumber}
+            totalDays={replayDayProps.totalDays}
+            currentDate={replayDayProps.currentDate}
+            hasNextDay={replayDayProps.hasNextDay}
+          />
+        )}
+
+        {simDateRaw && !league?.isReplay && (
           <div style={{
             fontSize: 12, color: "#fbbf24",
             background: "rgba(251,191,36,0.08)", border: "1px solid rgba(251,191,36,0.2)",

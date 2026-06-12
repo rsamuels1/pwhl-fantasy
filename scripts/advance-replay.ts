@@ -40,7 +40,7 @@ async function main() {
     process.exit(1);
   }
 
-  const baseMs = league.replayCurrentDate?.getTime() ?? new Date("2026-10-01T09:00:00Z").getTime();
+  const baseMs = league.replayCurrentDate?.getTime() ?? new Date("2025-11-21T00:00:00Z").getTime();
   const state = await getSeasonState(leagueId, baseMs, prisma);
 
   // Find the next N pending/upcoming periods to advance past

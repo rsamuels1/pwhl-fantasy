@@ -6,6 +6,7 @@ import { getDevNow } from "@/lib/devTime";
 import Link from "next/link";
 import AddTeamForm from "@/components/AddTeamForm";
 import SetupDraftButton from "@/components/SetupDraftButton";
+import AutoDraftButton from "@/components/AutoDraftButton";
 import InviteLinkButton from "@/components/InviteLinkButton";
 import AnnouncementForm from "@/components/AnnouncementForm";
 import SeasonView from "../season/SeasonView";
@@ -257,9 +258,14 @@ export default async function AdminPage({ params, searchParams }: Props) {
                     </div>
                   ))}
                 </div>
-                <p style={{ marginTop: 12, fontSize: 12, color: "#475569" }}>
-                  You start the draft from inside the draft room once everyone is connected.
-                </p>
+                {isDev && (
+                  <AutoDraftButton leagueId={leagueId} />
+                )}
+                {!isDev && (
+                  <p style={{ marginTop: 12, fontSize: 12, color: "#475569" }}>
+                    You start the draft from inside the draft room once everyone is connected.
+                  </p>
+                )}
               </div>
             )}
 
