@@ -3,16 +3,15 @@ import { prisma } from "@/lib/db";
 import { requireAuth, requireTeamOwner } from "@/lib/auth";
 import { scoreStatLine, DEFAULT_SCORING } from "@/lib/scoring";
 import type { ScoringSettings } from "@/lib/scoring";
-import { Prisma } from "@prisma/client";
 import RosterManager from "./RosterManager";
 import type { RosterPlayerRow, FreeAgentRow, SkaterStats, GoalieStats } from "./RosterManager";
 import type { RosterSettings } from "@/lib/lineup";
 
 interface Props {
   params: Promise<{ teamId: string }>;
+  searchParams?: Promise<{ view?: string }>;
 }
 
-// Total max roster size from rosterSettings.
 function maxRosterSize(settings: RosterSettings): number {
   return (
     (settings.forward ?? 0) + (settings.defense ?? 0) + (settings.goalie ?? 0) +
@@ -20,7 +19,6 @@ function maxRosterSize(settings: RosterSettings): number {
   );
 }
 
-// Aggregate raw stat lines into a typed stats object.
 type RawLine = {
   playerId: string; goals: number; assists: number; shots: number; plusMinus: number;
   penaltyMinutes: number; powerPlayPts: number; hits: number; blocks: number;
@@ -55,8 +53,15 @@ function buildRosterStats(
   return { gp: playerLines.length, goals, assists, points: goals + assists, plusMinus, ppp, shots, hits, blocks, fantasyPoints: Math.round(fp * 100) / 100 };
 }
 
-export default async function TeamRosterPage({ params }: Props) {
+const STAT_LINE_SELECT = {
+  playerId: true, goals: true, assists: true, shots: true, plusMinus: true,
+  penaltyMinutes: true, powerPlayPts: true, hits: true, blocks: true,
+  saves: true, goalsAgainst: true, shutout: true, win: true,
+} as const;
+
+export default async function TeamRosterPage({ params, searchParams }: Props) {
   const { teamId } = await params;
+  const sp = await searchParams;
   const user = await requireAuth(`/team/${teamId}/roster`);
   await requireTeamOwner(teamId, user.id);
 
@@ -65,17 +70,14 @@ export default async function TeamRosterPage({ params }: Props) {
     include: {
       league: { select: { id: true, rosterSettings: true, scoringSettings: true, season: true } },
       roster: {
-        include: {
-          player: {
-            include: { team: { select: { abbreviation: true } } },
-          },
-        },
+        include: { player: { include: { team: { select: { abbreviation: true } } } } },
         orderBy: { slot: "asc" },
       },
     },
   });
   if (!team) notFound();
 
+  const leagueId = team.league.id;
   const settings = (team.league.rosterSettings ?? {}) as RosterSettings;
   const scoring = (
     team.league.scoringSettings && typeof team.league.scoringSettings === "object" &&
@@ -85,20 +87,23 @@ export default async function TeamRosterPage({ params }: Props) {
   ) as ScoringSettings;
   const season = team.league.season;
 
-  // Season stat lines for rostered players.
-  const playerIds = team.roster.map((e) => e.playerId);
-  const rosterLines = playerIds.length > 0
+  // All teams in the league for the selector dropdown
+  const allTeams = await prisma.fantasyTeam.findMany({
+    where: { leagueId },
+    select: { id: true, name: true },
+    orderBy: { name: "asc" },
+  });
+
+  // Own roster stats (always fetched — needed for the FA add/drop tab)
+  const ownPlayerIds = team.roster.map((e) => e.playerId);
+  const ownLines = ownPlayerIds.length > 0
     ? await prisma.statLine.findMany({
-        where: { playerId: { in: playerIds }, game: { season } },
-        select: {
-          playerId: true, goals: true, assists: true, shots: true, plusMinus: true,
-          penaltyMinutes: true, powerPlayPts: true, hits: true, blocks: true,
-          saves: true, goalsAgainst: true, shutout: true, win: true,
-        },
+        where: { playerId: { in: ownPlayerIds }, game: { season } },
+        select: STAT_LINE_SELECT,
       })
     : [];
 
-  const rosterRows: RosterPlayerRow[] = team.roster.map((e) => ({
+  const ownRosterRows: RosterPlayerRow[] = team.roster.map((e) => ({
     entryId: e.id,
     playerId: e.playerId,
     name: `${e.player.firstName} ${e.player.lastName}`,
@@ -107,11 +112,56 @@ export default async function TeamRosterPage({ params }: Props) {
     slot: e.slot,
     active: e.player.active,
     acquired: e.acquired.toISOString(),
-    stats: buildRosterStats(rosterLines as RawLine[], e.playerId, e.player.position, scoring),
+    stats: buildRosterStats(ownLines as RawLine[], e.playerId, e.player.position, scoring),
   }));
 
-  // Free agents: all active players not on any roster in this league.
-  // Reuse the aggregation SQL from draft/players but add a NOT IN filter.
+  // Determine which team is being viewed
+  const viewTeamIdParam = sp?.view;
+  const isOwnRoster = !viewTeamIdParam || viewTeamIdParam === teamId;
+  const viewTeamId = isOwnRoster ? teamId : viewTeamIdParam!;
+
+  // If viewing another team, fetch their roster + stats
+  let viewRoster: RosterPlayerRow[] = ownRosterRows;
+  let viewTeamName = team.name;
+
+  if (!isOwnRoster) {
+    const viewedTeam = await prisma.fantasyTeam.findFirst({
+      where: { id: viewTeamId, leagueId }, // security: must be in same league
+      include: {
+        roster: {
+          include: { player: { include: { team: { select: { abbreviation: true } } } } },
+          orderBy: { slot: "asc" },
+        },
+      },
+    });
+
+    if (!viewedTeam) {
+      // Invalid team param — fall back to own roster
+      viewRoster = ownRosterRows;
+    } else {
+      viewTeamName = viewedTeam.name;
+      const viewedIds = viewedTeam.roster.map((e) => e.playerId);
+      const viewedLines = viewedIds.length > 0
+        ? await prisma.statLine.findMany({
+            where: { playerId: { in: viewedIds }, game: { season } },
+            select: STAT_LINE_SELECT,
+          })
+        : [];
+      viewRoster = viewedTeam.roster.map((e) => ({
+        entryId: e.id,
+        playerId: e.playerId,
+        name: `${e.player.firstName} ${e.player.lastName}`,
+        position: e.player.position as RosterPlayerRow["position"],
+        teamAbbr: e.player.team?.abbreviation ?? null,
+        slot: e.slot,
+        active: e.player.active,
+        acquired: e.acquired.toISOString(),
+        stats: buildRosterStats(viewedLines as RawLine[], e.playerId, e.player.position, scoring),
+      }));
+    }
+  }
+
+  // Free agents (only needed for own-roster add/drop; still fetched so the tab renders instantly)
   type AggRow = {
     id: string; firstName: string; lastName: string;
     position: string; abbreviation: string | null;
@@ -120,7 +170,6 @@ export default async function TeamRosterPage({ params }: Props) {
     saves: bigint; goalsAgainst: bigint; wins: bigint; shutouts: bigint;
   };
 
-  const leagueId = team.league.id;
   const faRows = await prisma.$queryRaw<AggRow[]>`
     SELECT
       p.id,
@@ -176,10 +225,7 @@ export default async function TeamRosterPage({ params }: Props) {
         name: `${r.firstName} ${r.lastName}`,
         position,
         teamAbbr: r.abbreviation ?? null,
-        stats: gp === 0 ? null : {
-          gp, wins, saves, goalsAgainst: ga, shutouts,
-          savePct: totalFaced > 0 ? saves / totalFaced : null, fantasyPoints,
-        } as GoalieStats,
+        stats: gp === 0 ? null : { gp, wins, saves, goalsAgainst: ga, shutouts, savePct: totalFaced > 0 ? saves / totalFaced : null, fantasyPoints } as GoalieStats,
       };
     }
     const goals = Number(r.goals);
@@ -200,10 +246,7 @@ export default async function TeamRosterPage({ params }: Props) {
       name: `${r.firstName} ${r.lastName}`,
       position,
       teamAbbr: r.abbreviation ?? null,
-      stats: gp === 0 ? null : {
-        gp, goals, assists, points: goals + assists,
-        plusMinus, ppp, shots, hits, blocks, fantasyPoints,
-      } as SkaterStats,
+      stats: gp === 0 ? null : { gp, goals, assists, points: goals + assists, plusMinus, ppp, shots, hits, blocks, fantasyPoints } as SkaterStats,
     };
   });
 
@@ -213,8 +256,13 @@ export default async function TeamRosterPage({ params }: Props) {
       teamId={teamId}
       teamName={team.name}
       maxRosterSize={maxRosterSize(settings)}
-      initialRoster={rosterRows}
+      initialRoster={ownRosterRows}
       freeAgents={freeAgents}
+      allTeams={allTeams}
+      viewTeamId={viewTeamId}
+      viewTeamName={viewTeamName}
+      viewRoster={viewRoster}
+      isOwnRoster={isOwnRoster}
     />
   );
 }

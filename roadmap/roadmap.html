@@ -123,6 +123,33 @@
   .pri.med{color:#fff;background:var(--st-med);}
   .pri.low{color:var(--ink-soft);background:var(--ice-deep);}
 
+  /* ---------- PLATFORM SHIPPED ---------- */
+  .platform{
+    margin-top:30px;
+    border:1.5px solid #b6dac7;
+    border-radius:var(--radius);
+    background:linear-gradient(135deg,#f0faf5,#e8f7f0);
+    padding:22px 24px 20px;
+  }
+  .platform-head{display:flex;align-items:flex-start;gap:14px;margin-bottom:16px;}
+  .platform-icon{
+    flex:none;width:36px;height:36px;border-radius:9px;
+    background:var(--st-shipped);color:#fff;
+    font-size:16px;display:grid;place-items:center;
+    box-shadow:0 2px 8px rgba(17,135,91,.25);
+  }
+  .platform-title{font-size:15px;font-weight:800;color:var(--st-shipped);letter-spacing:-.01em;}
+  .platform-sub{font-size:13px;color:#3a7a5c;margin-top:3px;}
+  .platform-grid{display:flex;flex-wrap:wrap;gap:7px;}
+  .ptag{
+    font-size:12px;font-weight:600;
+    color:var(--st-shipped);
+    background:#fff;
+    border:1px solid #b6dac7;
+    padding:4px 10px;border-radius:20px;
+    white-space:nowrap;
+  }
+
   /* ---------- PHASE ---------- */
   .phase{margin-top:46px;}
   .phase-head{
@@ -148,8 +175,13 @@
   .phase-head .meta{flex:1;min-width:0;}
   .phase-head .meta h2{margin:0;font-size:23px;letter-spacing:-.01em;font-weight:800;}
   .phase-head .meta .goal{font-size:14px;color:var(--ink-soft);margin-top:3px;}
-  .phase-head .prog{flex:none;text-align:right;font-size:12.5px;color:var(--ink-faint);font-weight:600;}
-  .phase-head .prog b{display:block;font-size:19px;color:var(--ink);font-weight:800;}
+  .phase-head .prog{flex:none;text-align:right;font-size:12px;color:var(--ink-faint);font-weight:600;line-height:1.5;min-width:96px;}
+  .phase-head .prog .row{display:flex;align-items:center;justify-content:flex-end;gap:6px;margin-bottom:1px;}
+  .phase-head .prog .dot-s{width:8px;height:8px;border-radius:2px;flex:none;}
+  .phase-head .prog .dot-s.s{background:var(--st-shipped);}
+  .phase-head .prog .dot-s.p{background:var(--st-partial);}
+  .phase-head .prog .dot-s.t{background:var(--st-todo);}
+  .phase-head .prog .val{font-size:13px;font-weight:700;color:var(--ink);min-width:14px;text-align:right;}
 
   /* ---------- ITEM GRID ---------- */
   .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:16px;}
@@ -250,15 +282,15 @@
   <div class="wrap">
     <div class="eyebrow"><span class="puck"></span> PWHL Fantasy &nbsp;·&nbsp; Product Roadmap &nbsp;·&nbsp; Updated June 12, 2026</div>
     <h1>The road to a public beta.
-      <span class="thin">Seven phases, thirty-two features, one live fantasy season.</span>
+      <span class="thin">Seven phases, twenty-five features, one live fantasy season.</span>
     </h1>
     <p class="lede">The flagship experience is the live fantasy season — drafting real players, setting weekly lineups, and competing in matchups scored from real PWHL games. Here's everything shipped, in progress, and still ahead.</p>
 
     <div class="stats">
-      <div class="stat"><div class="n green">21+</div><div class="l">Core systems live</div></div>
-      <div class="stat"><div class="n amber">8</div><div class="l">Partially built</div></div>
+      <div class="stat"><div class="n green">19+</div><div class="l">Core systems live</div></div>
+      <div class="stat"><div class="n amber">5</div><div class="l">Partially built</div></div>
       <div class="stat"><div class="n blue">7</div><div class="l">Phases mapped</div></div>
-      <div class="stat"><div class="n white">5</div><div class="l">Beta prerequisites</div></div>
+      <div class="stat"><div class="n white">7</div><div class="l">Beta prerequisites</div></div>
     </div>
   </div>
 </header>
@@ -281,15 +313,53 @@
     </div>
   </div>
 
+  <!-- SHIPPED PLATFORM -->
+  <section class="platform">
+    <div class="platform-head">
+      <span class="platform-icon">✦</span>
+      <div>
+        <div class="platform-title">Core Platform — Already Shipped</div>
+        <div class="platform-sub">These systems are live and considered stable. They underpin every numbered roadmap item below.</div>
+      </div>
+    </div>
+    <div class="platform-grid">
+      <span class="ptag">Authentication</span>
+      <span class="ptag">User accounts</span>
+      <span class="ptag">League creation</span>
+      <span class="ptag">League management</span>
+      <span class="ptag">Draft room (WebSocket, queue, auto-draft, escalation)</span>
+      <span class="ptag">Rosters</span>
+      <span class="ptag">Lineups (locking, play-lock, games-remaining badges)</span>
+      <span class="ptag">Matchups (VTF regular season + 1v1 playoffs)</span>
+      <span class="ptag">Matchup Center / Fantasy Home</span>
+      <span class="ptag">Projections &amp; Win Probability engine</span>
+      <span class="ptag">Standings (with clinch / eliminate indicators)</span>
+      <span class="ptag">Playoffs (seeding, bracket, single-elimination)</span>
+      <span class="ptag">Historical Replay</span>
+      <span class="ptag">Season lifecycle &amp; scoring periods</span>
+      <span class="ptag">Schedule management</span>
+      <span class="ptag">Scoring engine (VTF points)</span>
+      <span class="ptag">Victory Point model</span>
+      <span class="ptag">Free-agent add / drop (immediate)</span>
+      <span class="ptag">Live score polling</span>
+      <span class="ptag">Season-long H2H rivalry records</span>
+      <span class="ptag">Roster Page UX (sortable table, team selector, "Rosters" nav)</span>
+    </div>
+  </section>
+
   <!-- PHASE 1 -->
   <section class="phase">
-    <div class="phase-head" style="--fill:35%">
+    <div class="phase-head" style="--fill:12%">
       <div class="period-no"><small>P1</small>1</div>
       <div class="meta">
         <h2>Beta Completion <span class="pri critical">CRITICAL</span></h2>
         <div class="goal">Make the product stable enough for external users.</div>
       </div>
-      <div class="prog"><b>1 / 8</b>shipped</div>
+      <div class="prog">
+        <div class="row"><span class="dot-s s"></span><span class="val">0</span> <span>shipped</span></div>
+        <div class="row"><span class="dot-s p"></span><span class="val">1</span> <span>in progress</span></div>
+        <div class="row"><span class="dot-s t"></span><span class="val">3</span> <span>not built</span></div>
+      </div>
     </div>
     <div class="grid">
       <div class="card partial">
@@ -304,11 +374,11 @@
         <p>Guide new users to their first league without documentation — welcome flow, setup wizard, draft prep, and a clear replay-mode explanation.</p>
         <ul class="feats"><li>Welcome flow</li><li>Setup wizard</li><li>Draft guide</li></ul>
       </div>
-      <div class="card partial">
-        <div class="card-top"><span class="num">03</span><span class="status-tag partial"><span class="tdot"></span>Partial</span></div>
+      <div class="card todo">
+        <div class="card-top"><span class="num">03</span><span class="status-tag todo"><span class="tdot"></span>Needed</span></div>
         <h3>Mobile Optimization</h3>
-        <p>Lineup page hides secondary stats at ≤480px. Draft room, matchup screens, standings, and roster management still need full responsive work.</p>
-        <ul class="feats"><li class="done">Compact stats ✓</li><li>Responsive draft</li><li>Mobile matchups</li><li>Mobile rosters</li></ul>
+        <p>Most users play on a phone. Make the draft room, matchup screens, standings, and roster management fully responsive — no horizontal scroll.</p>
+        <ul class="feats"><li>Responsive draft</li><li>Mobile matchups</li><li>Mobile rosters</li></ul>
       </div>
       <div class="card todo">
         <div class="card-top"><span class="num">04</span><span class="status-tag todo"><span class="tdot"></span>Needed</span></div>
@@ -316,42 +386,22 @@
         <p>Build user trust with graceful failure — empty states, loading states, retry actions, and plain-language error messages across every screen.</p>
         <ul class="feats"><li>Empty states</li><li>Loading states</li><li>Retry actions</li></ul>
       </div>
-      <div class="card shipped">
-        <div class="card-top"><span class="num">26</span><span class="status-tag shipped"><span class="tdot"></span>Shipped ✓</span></div>
-        <h3>League Overview Redesign</h3>
-        <p>Two-column layout with playoff race as the dominant left-column module — clinch / eliminated / bubble chips via <code>computeRace</code>. Right sidebar: my matchup widget, per-team lineup status, and activity feed. Commissioner action strip surfaces contextual CTAs inline; announcement editing moved from admin panel to the overview.</p>
-        <ul class="feats"><li class="done">Playoff race primary ✓</li><li class="done">Lineup status per team ✓</li><li class="done">Commish action strip ✓</li><li class="done">Inline announcements ✓</li></ul>
-      </div>
-      <div class="card todo">
-        <div class="card-top"><span class="num">27</span><span class="status-tag todo"><span class="tdot"></span>Needed</span></div>
-        <h3>Roster Page UX Overhaul</h3>
-        <p>Sortable table view as the default — click any stat column to sort. A team selector dropdown lets managers browse any other team's roster from the same page. Nav tab renamed to "Rosters".</p>
-        <ul class="feats"><li>Sortable table default</li><li>Team selector dropdown</li><li>Rename nav "Rosters"</li></ul>
-      </div>
-      <div class="card partial">
-        <div class="card-top"><span class="num">28</span><span class="status-tag partial"><span class="tdot"></span>Partial</span></div>
-        <h3>Lineup Stats Tab: "Matchup Proj" Polish</h3>
-        <p>The Projected tab is built. Remaining: rename it "Matchup Proj" to make intent clearer, hide the "This week" tab between weeks when it's always empty, and surface a one-line methodology note on the tab.</p>
-        <ul class="feats"><li class="done">Projected tab ✓</li><li class="done">Between-weeks default ✓</li><li>Rename → "Matchup Proj"</li><li>Hide "This week" between weeks</li></ul>
-      </div>
-      <div class="card todo">
-        <div class="card-top"><span class="num">32</span><span class="status-tag todo"><span class="tdot"></span>Not built</span></div>
-        <h3>Draft Room: Team Distribution Panel</h3>
-        <p>Show managers a live pick-count breakdown by PWHL team during the draft so they can avoid over-concentrating on one team. Derived client-side from existing draft state — no server change needed.</p>
-        <ul class="feats"><li>Picks per PWHL team</li><li>Concentration warnings (3+ = amber, 4+ = red)</li></ul>
-      </div>
     </div>
   </section>
 
   <!-- PHASE 2 -->
   <section class="phase">
-    <div class="phase-head" style="--fill:14%">
+    <div class="phase-head" style="--fill:12%">
       <div class="period-no"><small>P2</small>2</div>
       <div class="meta">
         <h2>Fantasy Essentials <span class="pri high">HIGH</span></h2>
         <div class="goal">Reach feature parity with major fantasy platforms.</div>
       </div>
-      <div class="prog"><b>0 / 4</b>done</div>
+      <div class="prog">
+        <div class="row"><span class="dot-s s"></span><span class="val">0</span> <span>shipped</span></div>
+        <div class="row"><span class="dot-s p"></span><span class="val">1</span> <span>in progress</span></div>
+        <div class="row"><span class="dot-s t"></span><span class="val">3</span> <span>not built</span></div>
+      </div>
     </div>
     <div class="grid">
       <div class="card partial">
@@ -386,13 +436,17 @@
 
   <!-- PHASE 3 -->
   <section class="phase">
-    <div class="phase-head" style="--fill:60%">
+    <div class="phase-head" style="--fill:50%">
       <div class="period-no"><small>P3</small>3</div>
       <div class="meta">
-        <h2>Matchup &amp; Season Experience <span class="pri high">HIGH</span></h2>
+        <h2>Matchup Experience <span class="pri high">HIGH</span></h2>
         <div class="goal">Increase engagement throughout the season — largely shipped.</div>
       </div>
-      <div class="prog"><b>3 / 7</b>fully done</div>
+      <div class="prog">
+        <div class="row"><span class="dot-s s"></span><span class="val">2</span> <span>shipped</span></div>
+        <div class="row"><span class="dot-s p"></span><span class="val">1</span> <span>in progress</span></div>
+        <div class="row"><span class="dot-s t"></span><span class="val">2</span> <span>not built</span></div>
+      </div>
     </div>
     <div class="grid">
       <div class="card shipped">
@@ -413,11 +467,12 @@
         <p>Per-team storyline chip and weekly recap card ship today. League-wide auto-generated insights — biggest upset, closest matchup — are still to come.</p>
         <ul class="feats"><li class="done">Per-team chip ✓</li><li>Biggest upset</li><li>Closest matchup</li></ul>
       </div>
-      <div class="card shipped">
-        <div class="card-top"><span class="num">24</span><span class="status-tag shipped"><span class="tdot"></span>Shipped ✓</span></div>
+      <div class="card todo">
+        <div class="card-top"><span class="num">24</span><span class="status-tag todo"><span class="tdot"></span>Not built</span></div>
         <h3>Lineup Management v2</h3>
-        <p>Faster, forward-looking lineups — a projected FPTS tab ("Matchup Proj") showing rolling avg × scheduled games, a starter-total bar with bench upgrade hints, a between-weeks nudge banner, and mobile compact stats.</p>
-        <ul class="feats"><li class="done">Projected FPTS tab ✓</li><li class="done">Between-weeks banner ✓</li><li class="done">Mobile compact stats ✓</li></ul>
+        <p>Faster, forward-looking lineups — a UX overhaul, a projected-FPTS tab for the upcoming week, and a persistent "set your lineup" flag so no one misses a week.</p>
+        <ul class="feats"><li>UX overhaul</li><li>Projected FPTS</li><li>Upcoming-week flag</li></ul>
+        <div class="dep"><b>Depends on:</b> Projections + lifecycle states (both exist)</div>
       </div>
       <div class="card todo">
         <div class="card-top"><span class="num">25</span><span class="status-tag todo"><span class="tdot"></span>Not built</span></div>
@@ -426,30 +481,22 @@
         <ul class="feats"><li>Trend breakdown</li><li>FA recommendations</li><li>Trade suggestions</li></ul>
         <div class="dep"><b>Depends on:</b> Trade System (#7), suggestion portion only</div>
       </div>
-      <div class="card todo">
-        <div class="card-top"><span class="num">29</span><span class="status-tag todo"><span class="tdot"></span>Not built</span></div>
-        <h3>Weekly Performance Dashboard</h3>
-        <p>Replaces the low-value Schedule tab with a week-over-week team ranking table — rise/fall indicators, a hot/cold callout, and a position-group FP breakdown per team per week. Pageable by week.</p>
-        <ul class="feats"><li>Week-by-week rankings</li><li>Rise / fall indicators</li><li>Hot / cold callout</li><li>Position-group FP by team</li></ul>
-      </div>
-      <div class="card partial">
-        <div class="card-top"><span class="num">30</span><span class="status-tag partial"><span class="tdot"></span>Foundation built</span></div>
-        <h3>Playoff Experience UX</h3>
-        <p>The bracket is built. What's missing is a playoff-mode feel — bracket as primary nav during playoffs, elimination stakes on the matchup hero, champion banner, between-round lineup nudge, and milestone activity-feed events.</p>
-        <ul class="feats"><li class="done">Bracket + seeding ✓</li><li>Bracket as primary nav</li><li>Champion banner</li><li>Elimination stakes hero</li><li>Between-round nudge</li></ul>
-      </div>
     </div>
   </section>
 
   <!-- PHASE 4 -->
   <section class="phase">
-    <div class="phase-head" style="--fill:10%">
+    <div class="phase-head" style="--fill:0%">
       <div class="period-no"><small>P4</small>4</div>
       <div class="meta">
         <h2>Historical Replay Expansion <span class="pri low">LOW</span></h2>
         <div class="goal">A QA / testing tool, not a flagship — build only the minimum to test the live loop.</div>
       </div>
-      <div class="prog"><b>QA</b>only</div>
+      <div class="prog">
+        <div class="row"><span class="dot-s s"></span><span class="val">0</span> <span>shipped</span></div>
+        <div class="row"><span class="dot-s p"></span><span class="val">0</span> <span>in progress</span></div>
+        <div class="row"><span class="dot-s t"></span><span class="val">4</span> <span>not built</span></div>
+      </div>
     </div>
     <div class="grid">
       <div class="card todo">
@@ -479,13 +526,17 @@
 
   <!-- PHASE 5 -->
   <section class="phase">
-    <div class="phase-head" style="--fill:10%">
+    <div class="phase-head" style="--fill:17%">
       <div class="period-no"><small>P5</small>5</div>
       <div class="meta">
         <h2>Retention &amp; Community <span class="pri med">MEDIUM</span></h2>
         <div class="goal">Keep users active between seasons.</div>
       </div>
-      <div class="prog"><b>0 / 4</b>done</div>
+      <div class="prog">
+        <div class="row"><span class="dot-s s"></span><span class="val">0</span> <span>shipped</span></div>
+        <div class="row"><span class="dot-s p"></span><span class="val">1</span> <span>in progress</span></div>
+        <div class="row"><span class="dot-s t"></span><span class="val">2</span> <span>not built</span></div>
+      </div>
     </div>
     <div class="grid">
       <div class="card todo">
@@ -506,24 +557,22 @@
         <p>Preserve league legacy — champions, records, and best-ever seasons.</p>
         <ul class="feats"><li>Champions</li><li>Records</li><li>Best seasons</li></ul>
       </div>
-      <div class="card todo">
-        <div class="card-top"><span class="num">31</span><span class="status-tag todo"><span class="tdot"></span>Not built</span></div>
-        <h3>Player Legacy &amp; Cross-Season Tracking</h3>
-        <p>A persistent career identity spanning every team, league, and season — career FP totals, championship count, best single-week score, and a global leaderboard ranking all users on the platform. Think Madden coaching legacy, but for fantasy hockey.</p>
-        <ul class="feats"><li>Career dashboard /profile</li><li>Cross-season stats</li><li>Global leaderboard</li><li>Season-over-season chart</li></ul>
-      </div>
     </div>
   </section>
 
   <!-- PHASE 6 -->
   <section class="phase">
-    <div class="phase-head" style="--fill:6%">
+    <div class="phase-head" style="--fill:0%">
       <div class="period-no"><small>P6</small>6</div>
       <div class="meta">
         <h2>Advanced League Formats <span class="pri med">MEDIUM</span></h2>
         <div class="goal">Increase long-term retention.</div>
       </div>
-      <div class="prog"><b>0 / 2</b>done</div>
+      <div class="prog">
+        <div class="row"><span class="dot-s s"></span><span class="val">0</span> <span>shipped</span></div>
+        <div class="row"><span class="dot-s p"></span><span class="val">0</span> <span>in progress</span></div>
+        <div class="row"><span class="dot-s t"></span><span class="val">2</span> <span>not built</span></div>
+      </div>
     </div>
     <div class="grid">
       <div class="card todo">
@@ -543,13 +592,17 @@
 
   <!-- PHASE 7 -->
   <section class="phase">
-    <div class="phase-head" style="--fill:33%">
+    <div class="phase-head" style="--fill:17%">
       <div class="period-no"><small>P7</small>7</div>
       <div class="meta">
         <h2>Live Season Enhancements <span class="pri med">MEDIUM</span></h2>
         <div class="goal">Improve real-time engagement.</div>
       </div>
-      <div class="prog"><b>0 / 3</b>fully done</div>
+      <div class="prog">
+        <div class="row"><span class="dot-s s"></span><span class="val">0</span> <span>shipped</span></div>
+        <div class="row"><span class="dot-s p"></span><span class="val">1</span> <span>in progress</span></div>
+        <div class="row"><span class="dot-s t"></span><span class="val">2</span> <span>not built</span></div>
+      </div>
     </div>
     <div class="grid">
       <div class="card partial">
@@ -576,20 +629,19 @@
   <!-- BUILD NEXT -->
   <section class="next">
     <h2>What to build next</h2>
-    <div class="sub">League Overview Redesign (#26) and Lineup Management v2 (#24) are shipped. The highest-value gaps on the path to a public beta, in priority order.</div>
+    <div class="sub">The highest-value gaps on the path to a public beta, in priority order.</div>
     <ol>
-      <li class="top"><div><div class="t">Roster Page UX Overhaul <span style="color:#7fb2e8">· #27</span></div><div class="d">Sortable table as default, team selector dropdown, nav renamed "Rosters". Small scope, high daily-use impact.</div></div></li>
-      <li class="top"><div><div class="t">Draft Team Distribution Panel <span style="color:#7fb2e8">· #32</span></div><div class="d">Client-only addition to the draft room. Shows pick count per PWHL team with concentration warnings. No server changes needed.</div></div></li>
-      <li><div><div class="t">Lineup Stats Tab Polish <span style="color:#7fb2e8">· #28</span></div><div class="d">Rename "Projected" → "Matchup Proj", hide "This week" between weeks when it's always empty. Near-zero scope.</div></div></li>
-      <li><div><div class="t">League Onboarding Wizard <span style="color:#7fb2e8">· #2</span></div><div class="d">Still completely unbuilt — the biggest blocker for self-serve signups.</div></div></li>
-      <li><div><div class="t">Mobile Optimization <span style="color:#7fb2e8">· #3</span></div><div class="d">Responsive draft room + matchup screens across the board.</div></div></li>
-      <li><div><div class="t">Error Handling <span style="color:#7fb2e8">· #4</span></div><div class="d">Empty + loading states for all core pages.</div></div></li>
-      <li><div><div class="t">Weekly Performance Dashboard <span style="color:#7fb2e8">· #29</span></div><div class="d">Replaces the low-value Schedule tab with week-over-week team rankings and position-group breakdowns.</div></div></li>
+      <li class="top"><div><div class="t">Draft Team Distribution Panel <span style="color:#7fb2e8">· #32</span></div><div class="d">Small client-only addition to the draft room; prevents concentration mistakes during the most critical league moment.</div></div></li>
+      <li class="top"><div><div class="t">Lineup Stats Tab Polish <span style="color:#7fb2e8">· #28</span></div><div class="d">Rename "Projected" → "Matchup Proj", hide "This week" between weeks. Near-zero scope; polish before beta.</div></div></li>
+      <li class="top"><div><div class="t">League Onboarding Wizard <span style="color:#7fb2e8">· #2</span></div><div class="d">Completely unbuilt — the biggest blocker for self-serve signups.</div></div></li>
+      <li><div><div class="t">Mobile Optimization <span style="color:#7fb2e8">· #3</span></div><div class="d">Responsive draft room + matchup screens; unblocks broader mobile use.</div></div></li>
+      <li><div><div class="t">Error Handling <span style="color:#7fb2e8">· #4</span></div><div class="d">Empty and loading states across the app.</div></div></li>
+      <li><div><div class="t">Weekly Performance Dashboard <span style="color:#7fb2e8">· #29</span></div><div class="d">Replaces the low-value Schedule tab with a week-over-week team ranking / position-group breakdown.</div></div></li>
       <li><div><div class="t">Trade System + Transaction History <span style="color:#7fb2e8">· #7 · #8</span></div><div class="d">The missing half of league management.</div></div></li>
-      <li><div><div class="t">Playoff Experience UX <span style="color:#7fb2e8">· #30</span></div><div class="d">Bracket as primary nav during playoffs, champion banner, between-round nudge. Activate before first playoff bracket closes.</div></div></li>
-      <li><div><div class="t">Team Analysis &amp; Insights <span style="color:#7fb2e8">· #25</span></div><div class="d">Engagement differentiator — ship analysis + free-agent half first, trade suggestions once #7 lands.</div></div></li>
+      <li><div><div class="t">Playoff Experience UX <span style="color:#7fb2e8">· #30</span></div><div class="d">Bracket prominence, champion banner, between-round nudge; activate before first bracket closes.</div></div></li>
+      <li><div><div class="t">Team Analysis &amp; Insights <span style="color:#7fb2e8">· #25</span></div><div class="d">Engagement differentiator — ship analysis + free-agent half now, trades later.</div></div></li>
       <li><div><div class="t">Waiver Priority + Processing <span style="color:#7fb2e8">· #5</span></div><div class="d">Upgrade immediate add/drop into a real waiver wire.</div></div></li>
-      <li><div><div class="t">Player Legacy &amp; Cross-Season Tracking <span style="color:#7fb2e8">· #31</span></div><div class="d">Career dashboard, global leaderboard — long-term retention driver.</div></div></li>
+      <li><div><div class="t">Player Legacy &amp; Cross-Season Tracking <span style="color:#7fb2e8">· #31</span></div><div class="d">Career dashboard, global leaderboard; retention layer for returning players.</div></div></li>
     </ol>
     <div class="stretch"><b>Stretch (not beta blockers):</b> league-wide matchup storylines (#11) and the rivalry / Hall-of-Fame retention layer (#17–#18). Replay work stays out of this list — invest only when it unblocks testing.</div>
   </section>

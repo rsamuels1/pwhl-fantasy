@@ -181,33 +181,19 @@ admin-panel-only editing UX.
 
 ## 27. Roster Page UX Overhaul
 
-Status: Partially Implemented
+Status: Implemented ✅
 
 Phase: 1
 
 Priority: HIGH
 
-Goal: Make the roster page the go-to tool for evaluating and managing players, not just
-a list.
-
-Features:
-
-- **Sortable table view as default** — replace (or make default over) the current card view.
-  Clickable column headers sort by any stat. Skater columns: GP, G, A, PTS, PPP, SOG, HIT,
-  BLK, FP. Goalie: GP, W, SV%, GA, SO, FP. FP sorts descending by default.
-- **Team selector dropdown** — allow the manager to view any team's roster on their own
-  roster page (currently only a separate `/league/[leagueId]/roster/` page supports this).
-  A dropdown at the top of `app/team/[teamId]/roster/` lets the user switch to viewing
-  another team's players. Read-only when viewing another team.
-- **Rename nav label to "Rosters"** — the tab in `TeamNav.tsx` currently reads "Roster";
-  rename to "Rosters" to reflect that the page covers all rosters.
-
-Acceptance Criteria:
-
-- Default view is the sortable table, not cards.
-- Any stat column is sortable ascending/descending.
-- Manager can browse any other team's roster from the same page.
-- Nav tab reads "Rosters".
+What was built: Sortable table as the default view (FP desc), replacing cards as the
+default. Full column set for skaters (GP G A PTS PPP SOG HIT BLK FP) and goalies
+(GP W SV% GA SO FP) — HIT, BLK, and GA were previously missing. Team selector
+dropdown (`?view=<teamId>`) lets the manager browse any other team's roster read-only
+from the same page, with a "← My Team" escape hatch. Nav tab in `TeamNav.tsx` renamed
+from "Roster" to "Rosters". Both the roster table and the free-agent table are sortable
+by any column.
 
 ---
 
@@ -895,28 +881,26 @@ Replay-compatibility is a nice-to-have that protects our QA loop, not a gate on 
 
 # What To Build Next
 
-League Overview Redesign (#26) and Lineup Management v2 (#24) are shipped. The highest-value
-gaps for a public beta are:
+League Overview Redesign (#26), Roster Page UX Overhaul (#27), and Lineup Management v2 (#24)
+are shipped. The highest-value gaps for a public beta are:
 
-1. **Roster Page UX (#27)** — sortable table as default, team selector dropdown, rename nav.
-   Small scope, high daily-use impact.
-2. **Draft Team Distribution Panel (#32)** — small client-only addition to the draft room;
+1. **Draft Team Distribution Panel (#32)** — small client-only addition to the draft room;
    prevents concentration mistakes during the most critical league moment.
-3. **Lineup Stats Tab Polish (#28)** — rename "Projected" → "Matchup Proj", hide "This week"
+2. **Lineup Stats Tab Polish (#28)** — rename "Projected" → "Matchup Proj", hide "This week"
    between weeks. Near-zero scope; polish before beta.
-4. **League Onboarding (#2)** — still completely unbuilt; biggest blocker for self-serve signups.
-5. **Mobile Optimization (#3)** — draft room + matchup screens responsive; unblocks broader
+3. **League Onboarding (#2)** — still completely unbuilt; biggest blocker for self-serve signups.
+4. **Mobile Optimization (#3)** — draft room + matchup screens responsive; unblocks broader
    mobile use.
-6. **Error Handling (#4)** — empty + loading states for all core pages.
-7. **Weekly Performance Dashboard (#29)** — replaces the low-value Schedule tab with a
+5. **Error Handling (#4)** — empty + loading states for all core pages.
+6. **Weekly Performance Dashboard (#29)** — replaces the low-value Schedule tab with a
    week-over-week team ranking / position-group breakdown table.
-8. **Trade System (#7) + Transaction History (#8)** — the missing half of league management.
-9. **Playoff Experience UX (#30)** — bracket prominence, champion banner, between-round nudge;
+7. **Trade System (#7) + Transaction History (#8)** — the missing half of league management.
+8. **Playoff Experience UX (#30)** — bracket prominence, champion banner, between-round nudge;
    activate before first playoff bracket closes.
-10. **Team Analysis & Insights (#25)** — engagement differentiator; ship the analysis +
-    free-agent half first, add trade suggestions once #7 lands.
-11. **Waiver priority + processing jobs (#5)** — upgrade immediate add/drop into a real waiver wire.
-12. **Player Legacy & Cross-Season Tracking (#31)** — career dashboard, global leaderboard;
+9. **Team Analysis & Insights (#25)** — engagement differentiator; ship the analysis +
+   free-agent half first, add trade suggestions once #7 lands.
+10. **Waiver priority + processing jobs (#5)** — upgrade immediate add/drop into a real waiver wire.
+11. **Player Legacy & Cross-Season Tracking (#31)** — career dashboard, global leaderboard;
     long-term retention driver.
 
 Stretch (differentiators, not beta blockers): league-wide matchup storylines (#11) and the

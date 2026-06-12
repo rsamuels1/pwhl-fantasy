@@ -43,6 +43,11 @@ interface Props {
   maxRosterSize: number;
   initialRoster: RosterPlayerRow[];
   freeAgents: FreeAgentRow[];
+  allTeams: { id: string; name: string }[];
+  viewTeamId: string;
+  viewTeamName: string;
+  viewRoster: RosterPlayerRow[];
+  isOwnRoster: boolean;
 }
 
 // ── constants ─────────────────────────────────────────────────────────────────
@@ -63,23 +68,32 @@ const POS_COLORS: Record<string, string> = {
 
 type Tab = "roster" | "freeAgents";
 type ViewMode = "cards" | "table";
-type SortKey = "name" | "pts" | "goals" | "assists" | "ppp" | "shots" | "hits" | "blocks" | "wins" | "savePct" | "fp";
+type SortKey = "name" | "pts" | "goals" | "assists" | "ppp" | "shots" | "hits" | "blocks" | "wins" | "savePct" | "goalsAgainst" | "fp";
 
 // ── main component ────────────────────────────────────────────────────────────
 
 export default function RosterManager({
-  leagueId, teamId, teamName, maxRosterSize, initialRoster, freeAgents,
+  leagueId, teamId, teamName, maxRosterSize,
+  initialRoster, freeAgents,
+  allTeams, viewTeamId, viewTeamName, viewRoster, isOwnRoster,
 }: Props) {
   const router = useRouter();
   const [tab, setTab] = useState<Tab>("roster");
-  const [viewMode, setViewMode] = useState<ViewMode>("cards");
+  const [viewMode, setViewMode] = useState<ViewMode>("table");
   const [roster, setRoster] = useState<RosterPlayerRow[]>(initialRoster);
   const [posFilter, setPosFilter] = useState<Position | "ALL">("ALL");
   const [search, setSearch] = useState("");
-  const [sortKey, setSortKey] = useState<SortKey>("fp");
-  const [sortAsc, setSortAsc] = useState(false);
-  const [pendingAdd, setPendingAdd] = useState<string | null>(null); // playerId being added
-  const [dropForAdd, setDropForAdd] = useState<string | null>(null); // playerId to drop when roster full
+
+  // FA sort
+  const [faSortKey, setFaSortKey] = useState<SortKey>("fp");
+  const [faSortAsc, setFaSortAsc] = useState(false);
+
+  // Roster sort (applied in table mode)
+  const [rosterSortKey, setRosterSortKey] = useState<SortKey>("fp");
+  const [rosterSortAsc, setRosterSortAsc] = useState(false);
+
+  const [pendingAdd, setPendingAdd] = useState<string | null>(null);
+  const [dropForAdd, setDropForAdd] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
@@ -141,22 +155,42 @@ export default function RosterManager({
       list = list.filter((p) => p.name.toLowerCase().includes(q));
     }
     list = [...list].sort((a, b) => {
-      const av = getSortValue(a, sortKey);
-      const bv = getSortValue(b, sortKey);
-      const diff = bv - av; // default desc
-      return sortAsc ? -diff : diff;
+      const av = getSortValue(a, faSortKey);
+      const bv = getSortValue(b, faSortKey);
+      const diff = bv - av;
+      return faSortAsc ? -diff : diff;
     });
     return list;
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [freeAgents, rosterIds, posFilter, search, sortKey, sortAsc]);
+  }, [freeAgents, rosterIds, posFilter, search, faSortKey, faSortAsc]);
 
-  const sortedRoster = useMemo(() =>
-    [...roster].sort((a, b) => (SLOT_ORDER[a.slot] ?? 99) - (SLOT_ORDER[b.slot] ?? 99)),
-  [roster]);
+  // Displayed roster — when viewing another team use viewRoster, else own
+  const displayRoster = isOwnRoster ? roster : viewRoster;
 
-  function toggleSort(key: SortKey) {
-    if (sortKey === key) setSortAsc((v) => !v);
-    else { setSortKey(key); setSortAsc(false); }
+  const sortedRoster = useMemo(() => {
+    const base = [...displayRoster].sort((a, b) => (SLOT_ORDER[a.slot] ?? 99) - (SLOT_ORDER[b.slot] ?? 99));
+    if (viewMode !== "table") return base;
+    // In table mode, sort within each position group by selected stat
+    const skaters = base.filter((p) => p.position !== "GOALIE");
+    const goalies = base.filter((p) => p.position === "GOALIE");
+    const sortGroup = (group: RosterPlayerRow[]) =>
+      [...group].sort((a, b) => {
+        const av = getRosterSortValue(a, rosterSortKey);
+        const bv = getRosterSortValue(b, rosterSortKey);
+        const diff = bv - av;
+        return rosterSortAsc ? -diff : diff;
+      });
+    return [...sortGroup(skaters), ...sortGroup(goalies)];
+  }, [displayRoster, viewMode, rosterSortKey, rosterSortAsc]);
+
+  function toggleFaSort(key: SortKey) {
+    if (faSortKey === key) setFaSortAsc((v) => !v);
+    else { setFaSortKey(key); setFaSortAsc(false); }
+  }
+
+  function toggleRosterSort(key: SortKey) {
+    if (rosterSortKey === key) setRosterSortAsc((v) => !v);
+    else { setRosterSortKey(key); setRosterSortAsc(false); }
   }
 
   const skaterPositions = sortedRoster.some((p) => p.position !== "GOALIE");
@@ -176,34 +210,78 @@ export default function RosterManager({
         </div>
       )}
 
-      {/* Tab bar */}
-      <div style={{ display: "flex", gap: 4, background: "rgba(255,255,255,0.04)", borderRadius: 10, padding: 3, width: "fit-content" }}>
-        {([["roster", `My Roster (${roster.length}/${maxRosterSize})`], ["freeAgents", `Free Agents (${freeAgents.filter(p => !rosterIds.has(p.playerId)).length})`]] as [Tab, string][]).map(([t, label]) => (
-          <button key={t} onClick={() => setTab(t)} style={{
-            padding: "7px 16px", borderRadius: 8, border: "none", cursor: "pointer",
-            fontSize: 13, fontWeight: 600,
-            background: tab === t ? "rgba(99,102,241,0.3)" : "transparent",
-            color: tab === t ? "#a5b4fc" : "#64748b",
-          }}>
-            {label}
+      {/* ── Team selector ── */}
+      <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+        <label style={{ fontSize: 12, color: "#64748b", fontWeight: 600, flexShrink: 0 }}>
+          Viewing:
+        </label>
+        <select
+          value={viewTeamId}
+          onChange={(e) => router.push(`?view=${e.target.value}`)}
+          style={{
+            background: "rgba(255,255,255,0.06)", border: "1px solid rgba(148,163,184,0.18)",
+            borderRadius: 8, color: "#e2e8f0", padding: "6px 10px", fontSize: 13,
+            cursor: "pointer", outline: "none",
+          }}
+        >
+          {allTeams.map((t) => (
+            <option key={t.id} value={t.id} style={{ background: "#1e293b" }}>
+              {t.name}{t.id === teamId ? " (My Team)" : ""}
+            </option>
+          ))}
+        </select>
+        {!isOwnRoster && (
+          <button
+            onClick={() => router.push("?")}
+            style={{
+              fontSize: 12, fontWeight: 600, padding: "5px 12px", borderRadius: 8,
+              border: "1px solid rgba(99,102,241,0.3)", cursor: "pointer",
+              background: "rgba(99,102,241,0.1)", color: "#a5b4fc",
+            }}
+          >
+            ← My Team
           </button>
-        ))}
+        )}
       </div>
 
-      {/* ── MY ROSTER TAB ──────────────────────────────────────────────────── */}
-      {tab === "roster" && (
+      {/* ── Own-team tabs (hidden when viewing another team) ── */}
+      {isOwnRoster && (
+        <div style={{ display: "flex", gap: 4, background: "rgba(255,255,255,0.04)", borderRadius: 10, padding: 3, width: "fit-content" }}>
+          {([["roster", `${teamName} (${roster.length}/${maxRosterSize})`], ["freeAgents", `Free Agents (${freeAgents.filter(p => !rosterIds.has(p.playerId)).length})`]] as [Tab, string][]).map(([t, label]) => (
+            <button key={t} onClick={() => setTab(t)} style={{
+              padding: "7px 16px", borderRadius: 8, border: "none", cursor: "pointer",
+              fontSize: 13, fontWeight: 600,
+              background: tab === t ? "rgba(99,102,241,0.3)" : "transparent",
+              color: tab === t ? "#a5b4fc" : "#64748b",
+            }}>
+              {label}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* ── ROSTER TAB (own team) or read-only view (other team) ── */}
+      {(isOwnRoster ? tab === "roster" : true) && (
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          {/* View toggle */}
-          <div style={{ display: "flex", justifyContent: "flex-end" }}>
-            <div style={{ display: "flex", gap: 2, background: "rgba(255,255,255,0.04)", borderRadius: 8, padding: 2 }}>
-              {(["cards", "table"] as ViewMode[]).map((m) => (
+          {/* Header row: team info + view toggle */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
+            {!isOwnRoster && (
+              <div style={{ fontSize: 14, fontWeight: 600, color: "#94a3b8" }}>
+                {viewTeamName}
+                <span style={{ marginLeft: 8, fontSize: 12, color: "#475569", fontWeight: 400 }}>
+                  {viewRoster.length} players · read-only
+                </span>
+              </div>
+            )}
+            <div style={{ marginLeft: isOwnRoster ? "auto" : undefined, display: "flex", gap: 2, background: "rgba(255,255,255,0.04)", borderRadius: 8, padding: 2 }}>
+              {(["table", "cards"] as ViewMode[]).map((m) => (
                 <button key={m} onClick={() => setViewMode(m)} style={{
                   padding: "5px 12px", borderRadius: 6, border: "none", cursor: "pointer",
                   fontSize: 12, fontWeight: 600,
                   background: viewMode === m ? "rgba(99,102,241,0.3)" : "transparent",
                   color: viewMode === m ? "#a5b4fc" : "#64748b",
                 }}>
-                  {m === "cards" ? "⊞ Cards" : "≡ Table"}
+                  {m === "table" ? "≡ Table" : "⊞ Cards"}
                 </button>
               ))}
             </div>
@@ -211,42 +289,50 @@ export default function RosterManager({
 
           {sortedRoster.length === 0 ? (
             <div style={panel}>
-              <p style={{ color: "#64748b", margin: 0, fontSize: 13 }}>No players on your roster yet.</p>
+              <p style={{ color: "#64748b", margin: 0, fontSize: 13 }}>No players on this roster yet.</p>
             </div>
           ) : viewMode === "cards" ? (
-            /* ── Card layout ── */
-            <div style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fill, minmax(170px, 1fr))",
-              gap: 12,
-            }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(170px, 1fr))", gap: 12 }}>
               {sortedRoster.map((p) => (
-                <PlayerCard key={p.playerId} player={p}
-                  onDrop={() => handleDrop(p.playerId)} disabled={isPending} />
+                <PlayerCard
+                  key={p.playerId}
+                  player={p}
+                  onDrop={isOwnRoster ? () => handleDrop(p.playerId) : undefined}
+                  disabled={isPending}
+                />
               ))}
             </div>
           ) : (
-            /* ── Table layout (unchanged) ── */
             <div style={panel}>
               <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
                 <>
                   {skaterPositions && (
                     <>
-                      <ColHeader isGoalie={false} />
+                      <ColHeader
+                        isGoalie={false} readonly={!isOwnRoster}
+                        sortKey={rosterSortKey} sortAsc={rosterSortAsc} onSort={toggleRosterSort}
+                      />
                       {sortedRoster.filter((p) => p.position !== "GOALIE").map((p, i) => (
-                        <RosterRow key={p.playerId} player={p} index={i}
-                          onDrop={() => handleDrop(p.playerId)} disabled={isPending} />
+                        <RosterRow
+                          key={p.playerId} player={p} index={i} readonly={!isOwnRoster}
+                          onDrop={() => handleDrop(p.playerId)} disabled={isPending}
+                        />
                       ))}
                     </>
                   )}
                   {hasGoalies && (
                     <>
                       <div style={{ marginTop: skaterPositions ? 16 : 0 }}>
-                        <ColHeader isGoalie />
+                        <ColHeader
+                          isGoalie readonly={!isOwnRoster}
+                          sortKey={rosterSortKey} sortAsc={rosterSortAsc} onSort={toggleRosterSort}
+                        />
                       </div>
                       {sortedRoster.filter((p) => p.position === "GOALIE").map((p, i) => (
-                        <RosterRow key={p.playerId} player={p} index={i}
-                          onDrop={() => handleDrop(p.playerId)} disabled={isPending} />
+                        <RosterRow
+                          key={p.playerId} player={p} index={i} readonly={!isOwnRoster}
+                          onDrop={() => handleDrop(p.playerId)} disabled={isPending}
+                        />
                       ))}
                     </>
                   )}
@@ -257,10 +343,9 @@ export default function RosterManager({
         </div>
       )}
 
-      {/* ── FREE AGENTS TAB ────────────────────────────────────────────────── */}
-      {tab === "freeAgents" && (
+      {/* ── FREE AGENTS TAB (own team only) ── */}
+      {isOwnRoster && tab === "freeAgents" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          {/* Filters */}
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
             <input
               type="text"
@@ -291,15 +376,14 @@ export default function RosterManager({
             )}
           </div>
 
-          {/* Free agent table */}
           <div style={{ ...panel, overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
             <FaColHeader
               isGoalie={posFilter === "GOALIE"}
-              sortKey={sortKey} sortAsc={sortAsc}
-              onSort={toggleSort}
+              sortKey={faSortKey} sortAsc={faSortAsc}
+              onSort={toggleFaSort}
             />
             {filteredFa.length === 0 ? (
-              <p style={{ color: "#64748b", fontSize: 13, margin: "12px 0 0" }}>No players match.</p>
+              <p style={{ color: "#64748b", fontSize: 13, margin: "12px 0 0 14px" }}>No players match.</p>
             ) : (
               filteredFa.map((fa, i) => (
                 <FaRow
@@ -317,9 +401,7 @@ export default function RosterManager({
                     if (!isFull) handleAdd(fa.playerId);
                   }}
                   onSelectDrop={(dropId) => setDropForAdd(dropId)}
-                  onConfirmAddDrop={() => {
-                    if (dropForAdd) handleAdd(fa.playerId, dropForAdd);
-                  }}
+                  onConfirmAddDrop={() => { if (dropForAdd) handleAdd(fa.playerId, dropForAdd); }}
                   onCancel={() => { setPendingAdd(null); setDropForAdd(null); }}
                   disabled={isPending}
                 />
@@ -335,7 +417,7 @@ export default function RosterManager({
 // ── Player card (card view) ───────────────────────────────────────────────────
 
 function PlayerCard({ player, onDrop, disabled }: {
-  player: RosterPlayerRow; onDrop: () => void; disabled: boolean;
+  player: RosterPlayerRow; onDrop?: () => void; disabled: boolean;
 }) {
   const isGoalie = player.position === "GOALIE";
   const s = player.stats;
@@ -355,83 +437,75 @@ function PlayerCard({ player, onDrop, disabled }: {
 
   return (
     <div style={{
-      background: "rgba(255,255,255,0.04)",
-      border: "1px solid rgba(148,163,184,0.12)",
+      background: "rgba(255,255,255,0.04)", border: "1px solid rgba(148,163,184,0.12)",
       borderRadius: 16, padding: "14px 14px 12px",
       display: "flex", flexDirection: "column", gap: 10,
     }}>
-      {/* Badges row */}
       <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-        <span style={{
-          fontSize: 10, fontWeight: 700, padding: "2px 6px", borderRadius: 5,
-          background: `${POS_COLORS[player.position]}20`, color: POS_COLORS[player.position],
-        }}>
+        <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 6px", borderRadius: 5, background: `${POS_COLORS[player.position]}20`, color: POS_COLORS[player.position] }}>
           {player.position[0]}
         </span>
-        {player.teamAbbr && (
-          <span style={{ fontSize: 11, color: "#64748b" }}>{player.teamAbbr}</span>
-        )}
-        <span style={{
-          marginLeft: "auto", fontSize: 9, fontWeight: 700, padding: "2px 6px", borderRadius: 5,
-          background: `${SLOT_COLORS[player.slot] ?? "#64748b"}20`,
-          color: SLOT_COLORS[player.slot] ?? "#64748b",
-        }}>
+        {player.teamAbbr && <span style={{ fontSize: 11, color: "#64748b" }}>{player.teamAbbr}</span>}
+        <span style={{ marginLeft: "auto", fontSize: 9, fontWeight: 700, padding: "2px 6px", borderRadius: 5, background: `${SLOT_COLORS[player.slot] ?? "#64748b"}20`, color: SLOT_COLORS[player.slot] ?? "#64748b" }}>
           {SLOT_LABELS[player.slot] ?? player.slot}
         </span>
       </div>
-
-      {/* Name */}
       <div style={{ fontWeight: 700, fontSize: 14, color: "#e2e8f0", lineHeight: 1.3 }}>
         {player.name}
-        {!player.active && (
-          <span style={{ marginLeft: 6, fontSize: 9, color: "#ef4444", background: "rgba(239,68,68,0.12)", padding: "1px 4px", borderRadius: 3 }}>INJ</span>
-        )}
+        {!player.active && <span style={{ marginLeft: 6, fontSize: 9, color: "#ef4444", background: "rgba(239,68,68,0.12)", padding: "1px 4px", borderRadius: 3 }}>INJ</span>}
       </div>
-
-      {/* Fantasy points */}
       <div>
-        <div style={{ fontSize: 22, fontWeight: 800, color: "#6366f1", lineHeight: 1 }}>
-          {s ? s.fantasyPoints.toFixed(1) : "—"}
-        </div>
+        <div style={{ fontSize: 22, fontWeight: 800, color: "#6366f1", lineHeight: 1 }}>{s ? s.fantasyPoints.toFixed(1) : "—"}</div>
         <div style={{ fontSize: 10, color: "#475569", marginTop: 2 }}>fantasy pts</div>
       </div>
-
-      {/* Stat chips */}
       <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
         {chips.map((c) => (
-          <span key={c.label} style={{
-            fontSize: 11, padding: "3px 7px", borderRadius: 6,
-            background: "rgba(255,255,255,0.05)", color: "#94a3b8",
-          }}>
+          <span key={c.label} style={{ fontSize: 11, padding: "3px 7px", borderRadius: 6, background: "rgba(255,255,255,0.05)", color: "#94a3b8" }}>
             <span style={{ color: "#64748b", fontSize: 10 }}>{c.label} </span>{c.val}
           </span>
         ))}
       </div>
-
-      {/* Drop button */}
-      <button
-        onClick={onDrop}
-        disabled={disabled}
-        style={{
-          fontSize: 11, fontWeight: 600, padding: "5px 0", borderRadius: 8,
-          border: "1px solid rgba(248,113,113,0.3)", cursor: "pointer",
-          background: "rgba(248,113,113,0.06)", color: "#f87171",
-          opacity: disabled ? 0.5 : 1, marginTop: "auto",
-        }}
-      >
-        Drop
-      </button>
+      {onDrop && (
+        <button onClick={onDrop} disabled={disabled} style={{ fontSize: 11, fontWeight: 600, padding: "5px 0", borderRadius: 8, border: "1px solid rgba(248,113,113,0.3)", cursor: "pointer", background: "rgba(248,113,113,0.06)", color: "#f87171", opacity: disabled ? 0.5 : 1, marginTop: "auto" }}>
+          Drop
+        </button>
+      )}
     </div>
   );
 }
 
-// ── Roster row ─────────────────────────────────────────────────────────────────
+// ── Roster table column header ────────────────────────────────────────────────
 
-function ColHeader({ isGoalie }: { isGoalie: boolean }) {
+function ColHeader({ isGoalie, readonly, sortKey, sortAsc, onSort }: {
+  isGoalie: boolean; readonly: boolean;
+  sortKey: SortKey; sortAsc: boolean; onSort: (k: SortKey) => void;
+}) {
+  // Slot(44) | Player(1fr) | GP(36) | stats... | FPts(60) | [Drop(48)]
+  const skaterCols = readonly
+    ? "44px minmax(80px,1fr) 36px 36px 36px 46px 46px 36px 36px 36px 60px"
+    : "44px minmax(80px,1fr) 36px 36px 36px 46px 46px 36px 36px 36px 60px 48px";
+  const goalieCols = readonly
+    ? "44px minmax(80px,1fr) 46px 46px 60px 50px 46px 60px"
+    : "44px minmax(80px,1fr) 46px 46px 60px 50px 46px 60px 48px";
+  const cols = isGoalie ? goalieCols : skaterCols;
+
+  function SortTh({ label, k }: { label: string; k: SortKey }) {
+    const active = sortKey === k;
+    return (
+      <button onClick={() => onSort(k)} style={{
+        background: "none", border: "none", cursor: "pointer", textAlign: "right",
+        fontSize: 10, fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase",
+        color: active ? "#a5b4fc" : "#475569", padding: 0,
+        display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 3,
+      }}>
+        {label}{active ? (sortAsc ? " ↑" : " ↓") : ""}
+      </button>
+    );
+  }
+
   return (
     <div style={{
-      display: "grid",
-      gridTemplateColumns: isGoalie ? "44px minmax(80px,1fr) 80px 50px 50px 50px 60px 48px" : "44px minmax(80px,1fr) 40px 40px 50px 50px 40px 40px 60px 48px",
+      display: "grid", gridTemplateColumns: cols,
       gap: 8, padding: "6px 14px",
       fontSize: 10, fontWeight: 700, letterSpacing: "0.07em",
       textTransform: "uppercase", color: "#475569",
@@ -440,24 +514,46 @@ function ColHeader({ isGoalie }: { isGoalie: boolean }) {
       <span>Slot</span>
       <span>Player</span>
       {isGoalie ? (
-        <><span style={{ textAlign: "right" }}>GP</span><span style={{ textAlign: "right" }}>W</span><span style={{ textAlign: "right" }}>SV%</span><span style={{ textAlign: "right" }}>SO</span><span style={{ textAlign: "right" }}>FPts</span></>
+        <>
+          <SortTh label="GP" k="fp" />
+          <SortTh label="W" k="wins" />
+          <SortTh label="SV%" k="savePct" />
+          <SortTh label="GA" k="goalsAgainst" />
+          <SortTh label="SO" k="fp" />
+          <SortTh label="FPts" k="fp" />
+        </>
       ) : (
-        <><span style={{ textAlign: "right" }}>GP</span><span style={{ textAlign: "right" }}>G</span><span style={{ textAlign: "right" }}>A</span><span style={{ textAlign: "right" }}>PTS</span><span style={{ textAlign: "right" }}>PPP</span><span style={{ textAlign: "right" }}>SOG</span><span style={{ textAlign: "right" }}>FPts</span></>
+        <>
+          <SortTh label="GP" k="fp" />
+          <SortTh label="G" k="goals" />
+          <SortTh label="A" k="assists" />
+          <SortTh label="PTS" k="pts" />
+          <SortTh label="PPP" k="ppp" />
+          <SortTh label="SOG" k="shots" />
+          <SortTh label="HIT" k="hits" />
+          <SortTh label="BLK" k="blocks" />
+          <SortTh label="FPts" k="fp" />
+        </>
       )}
-      <span />
+      {!readonly && <span />}
     </div>
   );
 }
 
-function RosterRow({ player, index, onDrop, disabled }: {
-  player: RosterPlayerRow; index: number; onDrop: () => void; disabled: boolean;
+// ── Roster row ────────────────────────────────────────────────────────────────
+
+function RosterRow({ player, index, readonly, onDrop, disabled }: {
+  player: RosterPlayerRow; index: number; readonly: boolean; onDrop: () => void; disabled: boolean;
 }) {
   const isGoalie = player.position === "GOALIE";
   const s = player.stats;
-  const cols = isGoalie
-    ? "44px minmax(80px,1fr) 80px 50px 50px 50px 60px 48px"
-    : "44px minmax(80px,1fr) 40px 40px 50px 50px 40px 40px 60px 48px";
-
+  const skaterCols = readonly
+    ? "44px minmax(80px,1fr) 36px 36px 36px 46px 46px 36px 36px 36px 60px"
+    : "44px minmax(80px,1fr) 36px 36px 36px 46px 46px 36px 36px 36px 60px 48px";
+  const goalieCols = readonly
+    ? "44px minmax(80px,1fr) 46px 46px 60px 50px 46px 60px"
+    : "44px minmax(80px,1fr) 46px 46px 60px 50px 46px 60px 48px";
+  const cols = isGoalie ? goalieCols : skaterCols;
   const fmtSvPct = (v: number | null) => v != null ? v.toFixed(3).replace(/^0/, "") : "—";
 
   return (
@@ -467,12 +563,7 @@ function RosterRow({ player, index, onDrop, disabled }: {
       borderTop: index === 0 ? "none" : "1px solid rgba(148,163,184,0.05)",
       background: index % 2 === 0 ? "transparent" : "rgba(255,255,255,0.01)",
     }}>
-      <span style={{
-        fontSize: 10, fontWeight: 700, textAlign: "center",
-        padding: "3px 0", borderRadius: 5, width: 36,
-        background: `${SLOT_COLORS[player.slot] ?? "#64748b"}20`,
-        color: SLOT_COLORS[player.slot] ?? "#64748b",
-      }}>
+      <span style={{ fontSize: 10, fontWeight: 700, textAlign: "center", padding: "3px 0", borderRadius: 5, width: 36, background: `${SLOT_COLORS[player.slot] ?? "#64748b"}20`, color: SLOT_COLORS[player.slot] ?? "#64748b" }}>
         {SLOT_LABELS[player.slot] ?? player.slot}
       </span>
 
@@ -483,12 +574,8 @@ function RosterRow({ player, index, onDrop, disabled }: {
         <span style={{ fontSize: 10, fontWeight: 700, color: POS_COLORS[player.position], flexShrink: 0 }}>
           {player.position[0]}
         </span>
-        {player.teamAbbr && (
-          <span style={{ fontSize: 10, color: "#475569", flexShrink: 0 }}>{player.teamAbbr}</span>
-        )}
-        {!player.active && (
-          <span style={{ fontSize: 10, color: "#ef4444", background: "rgba(239,68,68,0.12)", padding: "1px 5px", borderRadius: 4, flexShrink: 0 }}>INJ</span>
-        )}
+        {player.teamAbbr && <span style={{ fontSize: 10, color: "#475569", flexShrink: 0 }}>{player.teamAbbr}</span>}
+        {!player.active && <span style={{ fontSize: 10, color: "#ef4444", background: "rgba(239,68,68,0.12)", padding: "1px 5px", borderRadius: 4, flexShrink: 0 }}>INJ</span>}
       </div>
 
       {isGoalie ? (
@@ -496,6 +583,7 @@ function RosterRow({ player, index, onDrop, disabled }: {
           <Num v={s ? (s as GoalieStats).gp : null} />
           <Num v={s ? (s as GoalieStats).wins : null} />
           <span style={{ textAlign: "right", fontSize: 12, color: "#94a3b8" }}>{s ? fmtSvPct((s as GoalieStats).savePct) : "—"}</span>
+          <Num v={s ? (s as GoalieStats).goalsAgainst : null} />
           <Num v={s ? (s as GoalieStats).shutouts : null} />
           <Num v={s ? s.fantasyPoints : null} highlight />
         </>
@@ -507,23 +595,17 @@ function RosterRow({ player, index, onDrop, disabled }: {
           <Num v={s ? (s as SkaterStats).points : null} highlight />
           <Num v={s ? (s as SkaterStats).ppp : null} />
           <Num v={s ? (s as SkaterStats).shots : null} />
+          <Num v={s ? (s as SkaterStats).hits : null} />
+          <Num v={s ? (s as SkaterStats).blocks : null} />
           <Num v={s ? s.fantasyPoints : null} highlight />
         </>
       )}
 
-      <button
-        onClick={onDrop}
-        disabled={disabled}
-        title="Drop player"
-        style={{
-          fontSize: 11, fontWeight: 600, padding: "4px 8px", borderRadius: 6,
-          border: "1px solid rgba(248,113,113,0.3)", cursor: "pointer",
-          background: "rgba(248,113,113,0.08)", color: "#f87171",
-          opacity: disabled ? 0.5 : 1,
-        }}
-      >
-        Drop
-      </button>
+      {!readonly && (
+        <button onClick={onDrop} disabled={disabled} title="Drop player" style={{ fontSize: 11, fontWeight: 600, padding: "4px 8px", borderRadius: 6, border: "1px solid rgba(248,113,113,0.3)", cursor: "pointer", background: "rgba(248,113,113,0.08)", color: "#f87171", opacity: disabled ? 0.5 : 1 }}>
+          Drop
+        </button>
+      )}
     </div>
   );
 }
@@ -534,8 +616,8 @@ function FaColHeader({ isGoalie, sortKey, sortAsc, onSort }: {
   isGoalie: boolean; sortKey: SortKey; sortAsc: boolean; onSort: (k: SortKey) => void;
 }) {
   const cols = isGoalie
-    ? "minmax(80px,1fr) 70px 70px 70px 70px 60px 80px"
-    : "minmax(80px,1fr) 50px 50px 50px 60px 60px 50px 50px 80px";
+    ? "minmax(80px,1fr) 50px 50px 60px 50px 50px 60px 80px"
+    : "minmax(80px,1fr) 36px 36px 36px 46px 46px 36px 36px 60px 80px";
 
   function SortTh({ label, k }: { label: string; k: SortKey }) {
     const active = sortKey === k;
@@ -559,9 +641,26 @@ function FaColHeader({ isGoalie, sortKey, sortAsc, onSort }: {
     }}>
       <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase", color: "#475569" }}>Player</span>
       {isGoalie ? (
-        <><SortTh label="GP" k="fp" /><SortTh label="W" k="wins" /><SortTh label="SV%" k="savePct" /><SortTh label="SO" k="fp" /><SortTh label="FPts" k="fp" /></>
+        <>
+          <SortTh label="GP" k="fp" />
+          <SortTh label="W" k="wins" />
+          <SortTh label="SV%" k="savePct" />
+          <SortTh label="GA" k="goalsAgainst" />
+          <SortTh label="SO" k="fp" />
+          <SortTh label="FPts" k="fp" />
+        </>
       ) : (
-        <><SortTh label="GP" k="fp" /><SortTh label="G" k="goals" /><SortTh label="A" k="assists" /><SortTh label="PTS" k="pts" /><SortTh label="PPP" k="ppp" /><SortTh label="SOG" k="shots" /><SortTh label="FPts" k="fp" /></>
+        <>
+          <SortTh label="GP" k="fp" />
+          <SortTh label="G" k="goals" />
+          <SortTh label="A" k="assists" />
+          <SortTh label="PTS" k="pts" />
+          <SortTh label="PPP" k="ppp" />
+          <SortTh label="SOG" k="shots" />
+          <SortTh label="HIT" k="hits" />
+          <SortTh label="BLK" k="blocks" />
+          <SortTh label="FPts" k="fp" />
+        </>
       )}
       <span />
     </div>
@@ -581,8 +680,8 @@ function FaRow({ player, index, isFull, rosterPlayers, pendingAdd, dropForAdd,
   const s = player.stats;
   const isThisPending = pendingAdd === player.playerId;
   const cols = isGoalie
-    ? "minmax(80px,1fr) 70px 70px 70px 70px 60px 80px"
-    : "minmax(80px,1fr) 50px 50px 50px 60px 60px 50px 50px 80px";
+    ? "minmax(80px,1fr) 50px 50px 60px 50px 50px 60px 80px"
+    : "minmax(80px,1fr) 36px 36px 36px 46px 46px 36px 36px 60px 80px";
   const fmtSvPct = (v: number | null) => v != null ? v.toFixed(3).replace(/^0/, "") : "—";
 
   return (
@@ -599,9 +698,7 @@ function FaRow({ player, index, isFull, rosterPlayers, pendingAdd, dropForAdd,
           <span style={{ fontSize: 10, fontWeight: 700, color: POS_COLORS[player.position], flexShrink: 0 }}>
             {player.position[0]}
           </span>
-          {player.teamAbbr && (
-            <span style={{ fontSize: 10, color: "#475569", flexShrink: 0 }}>{player.teamAbbr}</span>
-          )}
+          {player.teamAbbr && <span style={{ fontSize: 10, color: "#475569", flexShrink: 0 }}>{player.teamAbbr}</span>}
         </div>
 
         {isGoalie ? (
@@ -609,6 +706,7 @@ function FaRow({ player, index, isFull, rosterPlayers, pendingAdd, dropForAdd,
             <Num v={s ? (s as GoalieStats).gp : null} />
             <Num v={s ? (s as GoalieStats).wins : null} />
             <span style={{ textAlign: "right", fontSize: 12, color: "#94a3b8" }}>{s ? fmtSvPct((s as GoalieStats).savePct) : "—"}</span>
+            <Num v={s ? (s as GoalieStats).goalsAgainst : null} />
             <Num v={s ? (s as GoalieStats).shutouts : null} />
             <Num v={s ? s.fantasyPoints : null} highlight />
           </>
@@ -620,11 +718,12 @@ function FaRow({ player, index, isFull, rosterPlayers, pendingAdd, dropForAdd,
             <Num v={s ? (s as SkaterStats).points : null} highlight />
             <Num v={s ? (s as SkaterStats).ppp : null} />
             <Num v={s ? (s as SkaterStats).shots : null} />
+            <Num v={s ? (s as SkaterStats).hits : null} />
+            <Num v={s ? (s as SkaterStats).blocks : null} />
             <Num v={s ? s.fantasyPoints : null} highlight />
           </>
         )}
 
-        {/* Add button or cancel */}
         {isThisPending && isFull ? (
           <button onClick={onCancel} style={smallBtn("#64748b")}>Cancel</button>
         ) : (
@@ -638,26 +737,15 @@ function FaRow({ player, index, isFull, rosterPlayers, pendingAdd, dropForAdd,
         )}
       </div>
 
-      {/* Drop selector (only shown when roster is full and this row is selected) */}
       {isThisPending && isFull && (
-        <div style={{
-          margin: "0 14px 10px", padding: "12px 14px", borderRadius: 10,
-          background: "rgba(99,102,241,0.08)", border: "1px solid rgba(99,102,241,0.2)",
-        }}>
+        <div style={{ margin: "0 14px 10px", padding: "12px 14px", borderRadius: 10, background: "rgba(99,102,241,0.08)", border: "1px solid rgba(99,102,241,0.2)" }}>
           <p style={{ fontSize: 12, color: "#94a3b8", margin: "0 0 8px" }}>
             Roster is full. Select a player to drop:
           </p>
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             {rosterPlayers.map((rp) => (
               <label key={rp.playerId} style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
-                <input
-                  type="radio"
-                  name={`drop-for-${player.playerId}`}
-                  value={rp.playerId}
-                  checked={dropForAdd === rp.playerId}
-                  onChange={() => onSelectDrop(rp.playerId)}
-                  style={{ accentColor: "#6366f1" }}
-                />
+                <input type="radio" name={`drop-for-${player.playerId}`} value={rp.playerId} checked={dropForAdd === rp.playerId} onChange={() => onSelectDrop(rp.playerId)} style={{ accentColor: "#6366f1" }} />
                 <span style={{ fontSize: 13, color: "#e2e8f0" }}>{rp.name}</span>
                 <span style={{ fontSize: 10, color: POS_COLORS[rp.position] }}>{rp.position[0]}</span>
                 <span style={{ fontSize: 10, color: "#475569" }}>{SLOT_LABELS[rp.slot]}</span>
@@ -665,11 +753,7 @@ function FaRow({ player, index, isFull, rosterPlayers, pendingAdd, dropForAdd,
             ))}
           </div>
           <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
-            <button
-              onClick={onConfirmAddDrop}
-              disabled={!dropForAdd || disabled}
-              style={{ ...smallBtn("#6366f1"), opacity: !dropForAdd ? 0.5 : 1 }}
-            >
+            <button onClick={onConfirmAddDrop} disabled={!dropForAdd || disabled} style={{ ...smallBtn("#6366f1"), opacity: !dropForAdd ? 0.5 : 1 }}>
               Confirm Add / Drop
             </button>
             <button onClick={onCancel} style={smallBtn("#64748b")}>Cancel</button>
@@ -684,11 +768,7 @@ function FaRow({ player, index, isFull, rosterPlayers, pendingAdd, dropForAdd,
 
 function Num({ v, highlight }: { v: number | null | undefined; highlight?: boolean }) {
   return (
-    <span style={{
-      textAlign: "right", fontSize: 12,
-      color: highlight ? "#e2e8f0" : "#94a3b8",
-      fontWeight: highlight ? 600 : 400,
-    }}>
+    <span style={{ textAlign: "right", fontSize: 12, color: highlight ? "#e2e8f0" : "#94a3b8", fontWeight: highlight ? 600 : 400 }}>
       {v == null ? "—" : typeof v === "number" && !Number.isInteger(v) ? v.toFixed(1) : v}
     </span>
   );
@@ -712,8 +792,15 @@ function getSortValue(fa: FreeAgentRow, key: SortKey): number {
     const gk = s as GoalieStats;
     if (key === "wins") return gk.wins;
     if (key === "savePct") return gk.savePct ?? -1;
+    if (key === "goalsAgainst") return gk.goalsAgainst;
   }
   return s.fantasyPoints;
+}
+
+function getRosterSortValue(p: RosterPlayerRow, key: SortKey): number {
+  const s = p.stats;
+  if (!s) return -Infinity;
+  return getSortValue({ playerId: p.playerId, name: p.name, position: p.position, teamAbbr: p.teamAbbr, stats: s }, key);
 }
 
 function smallBtn(bg: string): React.CSSProperties {

@@ -146,6 +146,7 @@ survives DB resets and schema migrations.
    - Dashboard action items ✅ (contextual alerts: draft live, new week, close match, upcoming soon)
    - Sim-date audit ✅ (all pages and API routes respect `pwhl_dev_sim_date` cookie)
    - League Overview Redesign ✅ (playoff race as primary module, per-team lineup status widget, commissioner action strip, inline announcement editing)
+   - Roster Page UX Overhaul ✅ (default table view FP-sorted, `?view=` team selector, sortable roster+FA tables, full HIT/BLK/GA columns, "Rosters" nav)
 5. Playoff bracket and postseason flow — standings, seeding, bracket generation, playoff matchups, and results ✅
 6. Integration + load test the draft room + beta
 7. Public launch ~early Nov, drafts ~1 week before opener
@@ -356,16 +357,28 @@ accounts.
 **`app/league/[leagueId]/roster/`** — "All Rosters" communal view. A row of team-name pills at
 the top filters by team via `?team=<id>`. Server-rendered, no JS needed for switching.
 
-**`app/team/[teamId]/roster/`** — personal roster management. Shows the owner's rostered players
-with season stats and a free-agent panel listing all active players not on any team in the league
-(raw SQL `NOT IN (SELECT playerId FROM RosterEntry WHERE leagueId = ...)`). Both skater and goalie
-stat aggregations are computed server-side and passed to `RosterManager` (client component).
+**`app/team/[teamId]/roster/`** — personal roster management (`RosterManager.tsx`). Both skater
+and goalie stat aggregations are computed server-side and passed as initial props — no client-side
+fetch on load.
+
+- **Default view is the sortable table** (not cards), sorted by FP descending. Cards view is still
+  available via a tab toggle.
+- **Team selector dropdown** — `?view=<teamId>` query param lets the manager view any team's roster
+  on the same page. The server fetches the viewed team's roster + stats; the client navigates via
+  `router.push("?view=<id>")`. Viewing another team is **read-only**: tab bar hidden, Drop buttons
+  hidden, a "← My Team" back button shown. Security: the server verifies the viewed team belongs to
+  the same league (`findFirst({ where: { id, leagueId } })`).
+- **Full column set** — skater: GP G A PTS PPP SOG HIT BLK FP; goalie: GP W SV% GA SO FP. Both the
+  roster table and the free-agent table are sortable by any column (click header to toggle asc/desc).
+  `SortKey` type includes `"goalsAgainst"` for the GA column.
+- **Nav label** in `TeamNav.tsx` is `"Rosters"` (not `"Roster"`).
+- **Free agent panel** lists all active players not on any team in the league (raw SQL `NOT IN`
+  subquery). Stats filtered to the league's season via a LEFT JOIN subquery — prevents cross-season
+  leakage. Sorted by FP desc by default, sortable by any column.
 
 **Free agent fantasy points:** computed server-side from aggregated season totals using the
 league's scoring settings. Valid because all scoring terms are additive — `total FP = sum(goals)*goal
-+ sum(assists)*assist + ...`. Free agent stats are filtered to the league's season via a subquery
-(`JOIN "Game" g ON g.id = sl."gameId" AND g.season = $season` inside the LEFT JOIN, not in a WHERE
-clause), which prevents stat lines from other seasons leaking into the count.
++ sum(assists)*assist + ...`.
 
 **Add/drop refresh:** after a successful add (`handleAdd` in `RosterManager.tsx`), the component
 calls `router.refresh()` to re-run the server component and return complete stats for the new
