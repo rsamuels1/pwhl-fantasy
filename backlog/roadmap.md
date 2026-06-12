@@ -322,6 +322,113 @@ Acceptance Criteria:
 
 ---
 
+## 24. Lineup Management v2 (Usability + Projected FPTS + Upcoming-Week Flag)
+
+Phase: 3 (also a Phase 1 usability priority)
+
+Priority: HIGH
+
+Status: Not Implemented
+
+Goal: make `/team/[teamId]/lineup` faster to operate and forward-looking, and make sure
+managers never miss setting a lineup for the next matchup week.
+
+Features:
+
+- Lineup UX overhaul — fewer clicks to swap/set, clearer slot affordances, mobile-usable
+  (ties into Mobile Optimization #3).
+- Projected FPTS tab — projected fantasy points per rostered player for the *upcoming*
+  matchup week, plus a projected starter total and a bench-vs-starter comparison so managers
+  can optimize before lock.
+- "Set lineup for upcoming week" flag on the matchup dashboard:
+  - Appears once the current matchup week's last game is final and scores are set
+    (period status SCORING_PENDING/COMPLETE).
+  - Persists until the first game of the upcoming matchup week starts.
+  - Deep-links to the lineup page pre-scoped to the upcoming period.
+  - Clears when the user confirms a lineup for the upcoming week, or when that week's first
+    game locks.
+
+Implementation notes:
+
+- Detect the "between weeks" window with `computeSeasonState`: current period
+  COMPLETE/SCORING_PENDING and `nextPeriod` UPCOMING.
+- Projected FPTS = `projectPlayer(...)` per player × that player's PWHL team games scheduled
+  in the upcoming period (reuse the games-per-team batch query already used by the lineup/
+  matchup pages).
+- The flag is derived state — show when `nextPeriod` exists, the current period is done, and
+  `nowMs < nextPeriod` first-game `startsAt`. To let it clear on *confirmation* (not just on
+  first lock), persist a lightweight "lineup confirmed for week N+1" marker (a `LineupConfirmation`
+  row or a `LeagueEvent`).
+- The upcoming-week editor must only set future-period slots; respect existing lock + play-lock
+  rules and never edit the active/locked period.
+- Live-first; read `nowMs` via the dev/replay time helper so it still works under the QA harness.
+
+Acceptance Criteria:
+
+- Lineup page is materially faster to operate and works on mobile.
+- A "Projected" tab shows per-player and team projected FPTS for the upcoming week.
+- A persistent "Set your lineup for Week N+1" flag shows on the matchup dashboard from
+  final-scores-set until the upcoming week's first game, and clears on confirmation.
+
+Dependencies:
+
+- Projections engine (exists)
+- Season lifecycle period states (exists)
+
+---
+
+## 25. Team Analysis & Insights Tab
+
+Phase: 3
+
+Priority: HIGH (trade-suggestion portion gated by Trade System #7)
+
+Status: Not Implemented
+
+Goal: add an "Analysis" tab to the matchup dashboard that turns the team's data into
+actionable advice.
+
+Features:
+
+- What's working / what's not — flag over- and under-performing rostered players vs their
+  projection and vs replacement level.
+- Position-group trend breakdown — week-over-week fantasy output by position group (F / D / G)
+  vs league average, so the manager can see where they keep losing (e.g. "your defense has
+  been bottom-3 for three straight weeks").
+- Free-agent recommendations — rank available free agents by projected FPTS, weighted toward
+  the team's weakest position group ("consider adding X over your benched Y").
+- Trade suggestions — propose mutually beneficial trades by matching this team's surplus/
+  deficit position groups against other teams' rosters.
+
+Implementation notes:
+
+- Trend data: aggregate scored `Matchup` / `StatLine` history per scoring period, bucketed by
+  position group, compared against league per-week averages. Cache per period — it only changes
+  when a week is scored.
+- Free-agent ranking reuses the roster page's free-agent query + season-aggregate FP, scored
+  with the league's scoring settings, then ranked by projected FPTS for the weakest group.
+- "What's working" = actual FP vs the `projectPlayer` baseline per rostered player over recent
+  weeks.
+- Trade suggestions depend on the Trade System (#7) — ship the analysis + free-agent half first;
+  a suggestion can pre-fill a trade proposal once #7 lands.
+- Move heavy aggregation to a background job / cached table as history grows (see Background Jobs).
+- Degrade gracefully early in a season when there's little history yet.
+
+Acceptance Criteria:
+
+- Matchup dashboard has an Analysis tab.
+- Position-group trend view shows weekly output vs league baseline.
+- Free-agent recommendations ranked by fit + projection.
+- Trade suggestions generated (once Trade System exists).
+
+Dependencies:
+
+- Projections engine (exists)
+- Scored matchup / stat history (exists)
+- Trade System (#7) — trade-suggestion portion only
+
+---
+
 # Phase 4: Historical Replay Expansion
 
 Goal: Strengthen replay only as far as it serves user testing and dev iteration.
@@ -608,14 +715,38 @@ Replay-compatibility is a nice-to-have that protects our QA loop, not a gate on 
 Phase 3 (Matchup Experience) is essentially shipped, and the Commissioner Dashboard +
 immediate add/drop already exist. The highest-value gaps for a public beta are now:
 
-1. League Onboarding Wizard (#2) — still completely unbuilt; biggest blocker for self-serve signups
-2. Mobile Optimization (#3) — draft room + matchup screens responsive
-3. Error Handling / empty + loading states (#4)
-4. Trade System (#7) + Transaction History (#8) — the missing half of league management
-5. Waiver priority + processing jobs (#5) — upgrade the existing immediate add/drop into a real waiver wire
+1. Lineup Management v2 (#24) — high-value, near-zero new dependencies; fixes a real
+   engagement/UX gap (easier lineup setting, projected FPTS, upcoming-week lineup flag) before beta
+2. League Onboarding Wizard (#2) — still completely unbuilt; biggest blocker for self-serve signups
+3. Mobile Optimization (#3) — draft room + matchup screens responsive (also unblocks #24's mobile goal)
+4. Error Handling / empty + loading states (#4)
+5. Trade System (#7) + Transaction History (#8) — the missing half of league management
+6. Team Analysis & Insights tab (#25) — engagement differentiator; ship the analysis +
+   free-agent half now, add trade suggestions once #7 lands
+7. Waiver priority + processing jobs (#5) — upgrade the existing immediate add/drop into a real waiver wire
 
 Stretch (differentiators, not beta blockers): league-wide matchup storylines (#11) and the
 rivalry/Hall-of-Fame retention layer (#17–#18). Replay work (Phase 4) stays out of this
 list — invest in it only when it unblocks testing of the above.
 
 These provide the highest user value and are the remaining prerequisites for a public beta launch.
+
+---
+
+# Bugs or Additional Changes
+
+These are bugs or additional changes that should be investigated and fixes added to the roadmap or within features already on the roadmap:
+
+- (6/12) Lineup Page: the filters for "last week" "this week" and "season" should only alter the stats shown for the player, it should not change the lineup. there should also be a toggle for "Matchup Projection" that shows the projected FPTS for the upcoming matchup week. Let's have that instead of "this week"
+
+- (6/12) Roster page: when the roster is in table view, the user should be able to sort by stat. table view should be the default view when someone switches to the Roster page. There should also be a dropdown box to look at other team rosters on this page. change the nav header for this page to "Rosters"
+
+- (6/12) League Overview page: the matchups module should be de-prioritized, it takes up a lot of space and isn't all that helpful. it should at least showcase current matchup scores. I think the playoff race module is more important here. It would also be good to see every team and their lineup status (do they have any lineup errors? how many? is their lineup currently set?) what else do we think is important here that would also help complete Feature #1 on the roadmap?
+
+- (6/12) League Dashboard Schedule page is not very helpful. Something more visual about the way the rankings are changing week to week for each team instead of being matchup focused here. Maybe some insights about which teams are rising in the ranks and who's tanking. I'd rather look through a table that I can click through week to week with teams and their stat breakdowns. It'd be cool to see point breakdowns by position by team over each week.
+
+- (6/12) the playoff tab is fine for now, but once playoffs start, I'd like to see a playoff bracket here. we should also consider how the user experience will change during playoffs and what becomes most important to surface for the user.
+
+- (6/12) there should eventually be a way for a player to track their performance/legacy/dynasty across their overall game play (teams, leagues, seasons etc) similar to Madden Coaching Legacy/Dynasty stats for "play as a coach" mode on madden. this should also include a ranking across all users!
+
+---

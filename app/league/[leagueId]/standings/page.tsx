@@ -3,11 +3,6 @@ import { prisma } from "@/lib/db";
 import { computeStandings } from "@/lib/playoffs/seeding";
 import { computeVpStandings } from "@/lib/scoring/vp";
 import { requireAuth, requireLeagueMember } from "@/lib/auth";
-import { getDevNow } from "@/lib/devTime";
-import { getReplayNow } from "@/lib/replayTime";
-import { getGameDays, prevGameDay } from "@/lib/replay/gameDays";
-import { scoreStatLine, type ScoringSettings } from "@/lib/scoring";
-import { parseScoringSettings } from "@/lib/scoring/settings";
 import type { Matchup } from "@prisma/client";
 
 function computeStreaks(
@@ -142,88 +137,6 @@ export default async function StandingsPage({ params }: { params: { leagueId: st
   ) : null;
   const streaks = computeStreaks(league.teams.map((t) => t.id), matchups);
 
-  // ── Daily FP leaderboard (replay leagues only) ──
-  interface FpRow {
-    teamId: string;
-    teamName: string;
-    isMe: boolean;
-    total: number;
-    today: number; // FP from the most recently completed game day
-  }
-  let fpLeaderboard: FpRow[] = [];
-  if (league.isReplay && (league.status === "IN_SEASON" || league.status === "COMPLETE")) {
-    const nowMs = getReplayNow(league, await getDevNow());
-
-    const [rosters, gameDays] = await Promise.all([
-      prisma.rosterEntry.findMany({
-        where: { fantasyTeam: { leagueId }, slot: { notIn: ["BENCH", "IR"] } },
-        select: {
-          playerId: true,
-          fantasyTeamId: true,
-          player: { select: { position: true } },
-        },
-      }),
-      getGameDays(league.season, prisma),
-    ]);
-
-    const playerIds = rosters.map((r) => r.playerId);
-    const statLines = await prisma.statLine.findMany({
-      where: {
-        playerId: { in: playerIds },
-        game: { season: league.season, startsAt: { lt: new Date(nowMs) } },
-      },
-      select: {
-        playerId: true,
-        goals: true, assists: true, shots: true, plusMinus: true,
-        penaltyMinutes: true, powerPlayPts: true, hits: true, blocks: true,
-        saves: true, goalsAgainst: true, shutout: true, win: true,
-        game: { select: { startsAt: true } },
-      },
-    });
-
-    const scoringSettings: ScoringSettings = parseScoringSettings(league.scoringSettings);
-    const playerToTeam = new Map(rosters.map((r) => [r.playerId, r.fantasyTeamId]));
-    const playerToPos = new Map(rosters.map((r) => [r.playerId, r.player.position]));
-    const prevDay = prevGameDay(nowMs, gameDays);
-    const prevDayMs = prevDay?.getTime() ?? 0;
-
-    const teamTotals = new Map<string, { total: number; today: number }>(
-      league.teams.map((t) => [t.id, { total: 0, today: 0 }])
-    );
-
-    for (const line of statLines) {
-      const teamId = playerToTeam.get(line.playerId);
-      const pos = playerToPos.get(line.playerId);
-      if (!teamId || !pos) continue;
-      const fp = scoreStatLine(
-        {
-          goals: line.goals, assists: line.assists, shots: line.shots,
-          plusMinus: line.plusMinus, penaltyMinutes: line.penaltyMinutes,
-          powerPlayPts: line.powerPlayPts, hits: line.hits, blocks: line.blocks,
-          saves: line.saves, goalsAgainst: line.goalsAgainst,
-          shutout: line.shutout, win: line.win,
-        },
-        pos,
-        scoringSettings
-      );
-      const entry = teamTotals.get(teamId)!;
-      entry.total += fp;
-      if (prevDay && line.game.startsAt.getTime() >= prevDayMs) {
-        entry.today += fp;
-      }
-    }
-
-    fpLeaderboard = league.teams
-      .map((t) => ({
-        teamId: t.id,
-        teamName: t.name,
-        isMe: t.id === myTeam.id,
-        total: teamTotals.get(t.id)?.total ?? 0,
-        today: teamTotals.get(t.id)?.today ?? 0,
-      }))
-      .sort((a, b) => b.total - a.total);
-  }
-
   const playoffSettings = (league.playoffSettings ?? null) as { teamsInPlayoff?: number } | null;
   const playoffCutoff = playoffSettings?.teamsInPlayoff ?? null;
   const playoffsStarted = league.playoffStatus !== "NOT_STARTED";
@@ -314,62 +227,6 @@ export default async function StandingsPage({ params }: { params: { leagueId: st
               </tbody>
             </table>
           </div>
-        </section>
-      )}
-
-      {/* ── Replay: daily FP power rankings ── */}
-      {fpLeaderboard.length > 0 && (
-        <section style={card}>
-          <h2 style={{ fontSize: 18, margin: "0 0 16px", color: "#e2e8f0" }}>
-            Season power rankings
-            <span style={{ fontSize: 12, fontWeight: 400, color: "#64748b", marginLeft: 10 }}>
-              cumulative fantasy points
-            </span>
-          </h2>
-          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-            {fpLeaderboard.map((row, i) => {
-              const rank = i + 1;
-              const medalColor = rank === 1 ? "#fbbf24" : rank === 2 ? "#94a3b8" : rank === 3 ? "#c97d4e" : "#475569";
-              return (
-                <div key={row.teamId} style={{
-                  display: "grid",
-                  gridTemplateColumns: "28px 1fr auto auto",
-                  alignItems: "center",
-                  gap: 10,
-                  padding: "10px 12px",
-                  borderRadius: 10,
-                  background: row.isMe ? "rgba(99,102,241,0.08)" : "rgba(255,255,255,0.02)",
-                  border: row.isMe ? "1px solid rgba(99,102,241,0.2)" : "1px solid rgba(148,163,184,0.06)",
-                }}>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: medalColor, textAlign: "center" }}>
-                    {rank <= 3 ? ["🥇","🥈","🥉"][rank - 1] : rank}
-                  </span>
-                  <span style={{
-                    fontSize: 14, fontWeight: row.isMe ? 700 : 500,
-                    color: row.isMe ? "#a5b4fc" : "#e2e8f0",
-                    overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-                  }}>
-                    {row.teamName}
-                    {row.isMe && <span style={{ marginLeft: 6, fontSize: 10, color: "#6366f1" }}>YOU</span>}
-                  </span>
-                  {row.today > 0 && (
-                    <span style={{ fontSize: 12, color: "#34d399", whiteSpace: "nowrap", fontWeight: 600 }}>
-                      +{row.today.toFixed(1)}
-                    </span>
-                  )}
-                  <span style={{
-                    fontSize: 15, fontWeight: 700, color: "#e2e8f0",
-                    fontVariantNumeric: "tabular-nums", textAlign: "right", whiteSpace: "nowrap",
-                  }}>
-                    {row.total.toFixed(1)}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-          <p style={{ fontSize: 11, color: "#334155", marginTop: 12, marginBottom: 0 }}>
-            +X = points added on the most recent game day · total = cumulative season FP
-          </p>
         </section>
       )}
 

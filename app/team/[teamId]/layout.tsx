@@ -27,14 +27,8 @@ export default async function TeamLayout({ children, params }: TeamLayoutProps) 
       homeScore: null,
       isPlayoff: false,
     },
-    include: { homeTeam: true, awayTeam: true },
     orderBy: { week: "asc" },
   });
-  const matchupOpponent = currentMatchup
-    ? (currentMatchup.homeTeamId === teamId
-        ? currentMatchup.awayTeam.name
-        : currentMatchup.homeTeam.name)
-    : null;
   const simDateRaw = (process.env.NODE_ENV !== "production" || process.env.ALLOW_SIM_DATE === "true")
     ? cookieStore.get("pwhl_dev_sim_date")?.value ?? null
     : null;
@@ -44,7 +38,7 @@ export default async function TeamLayout({ children, params }: TeamLayoutProps) 
       <div style={{ maxWidth: 1200, margin: "0 auto", padding: "20px 16px 0" }}>
         <header style={{ marginBottom: 16, display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
           <h1 style={{ fontSize: 20, fontWeight: 700, margin: 0 }}>{team.name}</h1>
-          {currentMatchup && matchupOpponent && (
+          {currentMatchup && (
             <Link
               href={`/team/${teamId}/matchup`}
               style={{
@@ -55,7 +49,7 @@ export default async function TeamLayout({ children, params }: TeamLayoutProps) 
                 flexShrink: 0,
               }}
             >
-              Wk {currentMatchup.week} vs {matchupOpponent}
+              Wk {currentMatchup.week}
             </Link>
           )}
         </header>

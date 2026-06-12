@@ -132,6 +132,8 @@ export async function getDashboardData(
 
   const nowMs = getReplayNow(league, nowMsArg);
   const scoringSettings = parseScoringSettings(league.scoringSettings);
+  const scoringMode = (league as { scoringMode?: string }).scoringMode ?? "VTF";
+  const isVpMode = scoringMode === "VP";
 
   const seasonState = await getSeasonState(leagueId, nowMs, prisma);
   const activePeriod = seasonState.activePeriod;
@@ -145,7 +147,7 @@ export async function getDashboardData(
   const leagueActivity: ActivityEvent[] =
     realEvents.length > 0 ? realEvents : await getLeagueActivityFallback(leagueId, prisma);
 
-  const lastResult = await getLastResult(leagueId, myTeamId, scoringSettings, prisma);
+  const lastResult = await getLastResult(leagueId, myTeamId, scoringSettings, prisma, isVpMode);
 
   const empty: DashboardData = {
     activeMatchup: null,
@@ -240,9 +242,6 @@ export async function getDashboardData(
       },
     };
   }
-
-  const scoringMode = (league as { scoringMode?: string }).scoringMode ?? "VTF";
-  const isVpMode = scoringMode === "VP";
 
   // In VP mode, find the designated 1v1 opponent for this week
   let opponentTeamId: string | null = null;
@@ -432,7 +431,8 @@ async function getLastResult(
   leagueId: string,
   myTeamId: string,
   scoringSettings: ScoringSettings,
-  prisma: PrismaClient
+  prisma: PrismaClient,
+  isVpMode: boolean
 ): Promise<WeeklyRecap | null> {
   const last = await prisma.matchup.findFirst({
     where: {
@@ -454,8 +454,6 @@ async function getLastResult(
   const myScore = (iAmHome ? last.homeScore : last.awayScore) ?? 0;
   const opponentScore = (iAmHome ? last.awayScore : last.homeScore) ?? 0;
   const opponentName = iAmHome ? last.awayTeam.name : last.homeTeam.name;
-  const result: WeeklyRecap["result"] =
-    myScore > opponentScore ? "win" : myScore < opponentScore ? "loss" : "tie";
 
   const period: ScoringPeriod = { week: last.week, startsAt: last.startsAt, endsAt: last.endsAt };
   const [detailed, weekMatchups] = await Promise.all([
@@ -502,6 +500,9 @@ async function getLastResult(
   // My rank this week (how many teams scored more than me + 1)
   const allScores = [...teamScores.values()];
   const myRank = allScores.filter((s) => s > myScore).length + 1;
+  const result: WeeklyRecap["result"] = isVpMode
+    ? (myScore > opponentScore ? "win" : myScore < opponentScore ? "loss" : "tie")
+    : (myRank === 1 ? "win" : "loss");
 
   return {
     week: last.week, result, myScore, opponentScore, opponentName, myTopPerformer,

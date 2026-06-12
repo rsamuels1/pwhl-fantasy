@@ -131,9 +131,15 @@ export default async function TeamLineupPage({ params }: Props) {
     : null;
   // Period used for games-remaining badge: active if in-week, upcoming if between weeks
   const periodForGames = activePeriod ?? upcomingPeriod;
+  // Next period for projections — always the first UPCOMING period (may be next week even during an active week)
+  const nextPeriod = seasonState.periods.find((p) => p.status === "UPCOMING")?.period ?? null;
+
+  const pwhlTeamIds = [...new Set(
+    fullTeam.roster.map((e) => e.player.team?.id).filter((id): id is string => !!id)
+  )];
 
   const isReplay = fullTeam.league.isReplay;
-  const [seasonLines, lastWeekLines, thisWeekLines] = await Promise.all([
+  const [seasonLines, lastWeekLines, thisWeekLines, projectionLines, nextPeriodGames] = await Promise.all([
     playerIds.length > 0
       ? prisma.statLine.findMany({
           where: {
@@ -166,15 +172,33 @@ export default async function TeamLineupPage({ params }: Props) {
           select: STAT_SELECT,
         })
       : Promise.resolve([] as RawStatLine[]),
+    // Projection: last 90 days of stat lines (batch, single round-trip)
+    nextPeriod && playerIds.length > 0
+      ? prisma.statLine.findMany({
+          where: {
+            playerId: { in: playerIds },
+            game: { startsAt: { gte: new Date(nowMs - 90 * 24 * 60 * 60 * 1000) } },
+          },
+          orderBy: { game: { startsAt: "desc" } },
+          select: STAT_SELECT,
+        })
+      : Promise.resolve([] as RawStatLine[]),
+    // Games scheduled in the next period for PWHL teams on this roster
+    nextPeriod && pwhlTeamIds.length > 0
+      ? prisma.game.findMany({
+          where: {
+            startsAt: { gte: nextPeriod.startsAt, lt: nextPeriod.endsAt },
+            OR: [{ homeTeamId: { in: pwhlTeamIds } }, { awayTeamId: { in: pwhlTeamIds } }],
+          },
+          select: { homeTeamId: true, awayTeamId: true },
+        })
+      : Promise.resolve([] as { homeTeamId: string; awayTeamId: string }[]),
   ]);
 
   const seasonStats = aggregateStats(seasonLines, playerIds, positionMap, scoring);
   const lastWeekStats = aggregateStats(lastWeekLines, playerIds, positionMap, scoring);
   const thisWeekStats = aggregateStats(thisWeekLines, playerIds, positionMap, scoring);
 
-  const pwhlTeamIds = [...new Set(
-    fullTeam.roster.map((e) => e.player.team?.id).filter((id): id is string => !!id)
-  )];
   // Games remaining = scheduled games from now → period end (not yet FINAL)
   // No status filter — historical fixture games are FINAL but still "future" relative to sim date.
   // `startsAt > now` already proves the game hasn't been played yet from the manager's perspective.
@@ -227,6 +251,43 @@ export default async function TeamLineupPage({ params }: Props) {
     thisWeekLabel = `Week ${activePeriod.week} (${fmt(activePeriod.startsAt)} – ${fmt(end)})`;
   }
 
+  let nextWeekLabel: string | null = null;
+  if (nextPeriod) {
+    const end = new Date(nextPeriod.endsAt.getTime() - 1);
+    nextWeekLabel = `Week ${nextPeriod.week} (${fmt(nextPeriod.startsAt)} – ${fmt(end)})`;
+  }
+
+  // Compute projected stats: rolling avg FP/game × games in next period
+  const gamesInNextPeriod = new Map<string, number>();
+  for (const g of nextPeriodGames) {
+    gamesInNextPeriod.set(g.homeTeamId, (gamesInNextPeriod.get(g.homeTeamId) ?? 0) + 1);
+    gamesInNextPeriod.set(g.awayTeamId, (gamesInNextPeriod.get(g.awayTeamId) ?? 0) + 1);
+  }
+  // Group by player, keep only the last 5 (query is DESC)
+  const linesByPlayer: Record<string, RawStatLine[]> = {};
+  for (const l of projectionLines) {
+    linesByPlayer[l.playerId] = linesByPlayer[l.playerId] ?? [];
+    if (linesByPlayer[l.playerId].length < 5) linesByPlayer[l.playerId].push(l);
+  }
+  const projectedStats: Record<string, { projectedFp: number; avgFpPerGame: number; games: number } | null> = {};
+  if (nextPeriod) {
+    for (const entry of fullTeam.roster) {
+      const pTeamId = entry.player.team?.id ?? null;
+      const games = pTeamId ? (gamesInNextPeriod.get(pTeamId) ?? 0) : 0;
+      const lines = linesByPlayer[entry.playerId] ?? [];
+      if (lines.length === 0) { projectedStats[entry.playerId] = null; continue; }
+      const totalFp = lines.reduce(
+        (sum, l) => sum + scoreStatLine(l, entry.player.position as Position, scoring), 0
+      );
+      const avgFpPerGame = Math.round((totalFp / lines.length) * 100) / 100;
+      projectedStats[entry.playerId] = {
+        projectedFp: Math.round(avgFpPerGame * games * 100) / 100,
+        avgFpPerGame,
+        games,
+      };
+    }
+  }
+
   const roster: RosterEntryRow[] = fullTeam.roster.map((entry) => {
     const pTeamId = entry.player.team?.id ?? null;
     const locked = lockTime(pTeamId, todayGames, nowMs);
@@ -259,6 +320,8 @@ export default async function TeamLineupPage({ params }: Props) {
       lastWeekLabel={lastWeekLabel}
       thisWeekStats={thisWeekStats}
       thisWeekLabel={thisWeekLabel}
+      projectedStats={nextPeriod ? projectedStats : undefined}
+      nextWeekLabel={nextWeekLabel}
     />
   );
 }

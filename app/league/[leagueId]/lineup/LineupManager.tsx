@@ -38,7 +38,13 @@ export interface PlayerStatsRow {
   fantasyPoints: number;
 }
 
-type StatsView = "season" | "lastWeek" | "thisWeek";
+export interface ProjectedStatsRow {
+  projectedFp: number;
+  avgFpPerGame: number;
+  games: number;
+}
+
+type StatsView = "projected" | "season" | "lastWeek" | "thisWeek";
 
 interface Props {
   leagueId: string;
