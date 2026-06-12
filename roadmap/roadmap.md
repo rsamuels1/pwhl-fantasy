@@ -165,42 +165,17 @@ Acceptance Criteria:
 
 ## 26. League Overview Redesign
 
-Status: Needed
+Status: Implemented ✅
 
-Phase: 1 (beta blocker — first page many users see after login)
+Phase: 1
 
-Priority: HIGH
-
-Goal: Make the league overview (`/league/[leagueId]/`) useful as the communal hub.
-Currently the matchups module dominates but isn't action-oriented; playoff race and team
-status info are more valuable at a glance.
-
-Features:
-
-- **De-emphasize matchups module** — shrink or collapse the current-week matchup list;
-  surface only scores for the user's own matchup prominently.
-- **Playoff race as primary module** — move `computeRace` standings snapshot (clinch /
-  eliminated / bubble) to the top section; it's the most compelling week-to-week tension.
-- **Team lineup status widget** — show each team's lineup state: "✓ Set", "⚠ Needs attention
-  (N starters with 0 games left)", or "Draft" (pre-season). Gives the commissioner and
-  managers a quick read on who's active. Derived from existing `gamesThisPeriod` data.
-- **Commissioner quick-actions** — when viewing as commissioner, surface the most common
-  admin actions inline (advance week, set announcement) without requiring a full page nav
-  to the admin panel. Completes the commissioner-dashboard (#1) gap.
-- **League activity feed** — recent adds/drops and major performances (already partially
-  built via `LeagueEvent`; promote it on the overview).
-
-Acceptance Criteria:
-
-- Playoff race / standings are the dominant visual on the overview page.
-- Commissioner can take the most common actions from the overview without navigating to admin.
-- Each team's lineup status visible at a glance.
-- Matchup scores visible but not dominant.
-
-Dependencies:
-
-- `computeRace` (exists in standings page, needs extracting to shared helper)
-- `LeagueEvent` / activity feed (exists)
+Two-column `.overview-grid` layout. Left column: playoff race table using the shared
+`computeRace` from `lib/playoffs/seeding.ts` with clinch / eliminated / bubble / games-back
+chips, plus a compact current-week matchup grid below it. Right column: my matchup compact
+widget, per-team lineup status widget (`✓ Set` / `⚠ N issues`), and the league activity feed.
+Commissioner action strip (amber) surfaces contextual CTAs — draft setup / week ready to
+score / regular season complete. Inline `AnnouncementForm` on the overview replaces the
+admin-panel-only editing UX.
 
 ---
 
@@ -920,30 +895,28 @@ Replay-compatibility is a nice-to-have that protects our QA loop, not a gate on 
 
 # What To Build Next
 
-Lineup Management v2 (#24) is shipped. The highest-value gaps for a public beta are:
+League Overview Redesign (#26) and Lineup Management v2 (#24) are shipped. The highest-value
+gaps for a public beta are:
 
-1. **League Overview Redesign (#26)** — first page most users see after login; playoff race
-   as primary module, team lineup status widget, commissioner quick-actions; also closes
-   remaining Commissioner Dashboard (#1) gaps. High visibility, medium scope.
-2. **Roster Page UX (#27)** — sortable table as default, team selector dropdown, rename nav.
+1. **Roster Page UX (#27)** — sortable table as default, team selector dropdown, rename nav.
    Small scope, high daily-use impact.
-3. **Draft Team Distribution Panel (#32)** — small client-only addition to the draft room;
+2. **Draft Team Distribution Panel (#32)** — small client-only addition to the draft room;
    prevents concentration mistakes during the most critical league moment.
-4. **Lineup Stats Tab Polish (#28)** — rename "Projected" → "Matchup Proj", hide "This week"
+3. **Lineup Stats Tab Polish (#28)** — rename "Projected" → "Matchup Proj", hide "This week"
    between weeks. Near-zero scope; polish before beta.
-5. **League Onboarding (#2)** — still completely unbuilt; biggest blocker for self-serve signups.
-6. **Mobile Optimization (#3)** — draft room + matchup screens responsive; unblocks broader
+4. **League Onboarding (#2)** — still completely unbuilt; biggest blocker for self-serve signups.
+5. **Mobile Optimization (#3)** — draft room + matchup screens responsive; unblocks broader
    mobile use.
-7. **Error Handling (#4)** — empty + loading states for all core pages.
-8. **Weekly Performance Dashboard (#29)** — replaces the low-value Schedule tab with a
+6. **Error Handling (#4)** — empty + loading states for all core pages.
+7. **Weekly Performance Dashboard (#29)** — replaces the low-value Schedule tab with a
    week-over-week team ranking / position-group breakdown table.
-9. **Trade System (#7) + Transaction History (#8)** — the missing half of league management.
-10. **Playoff Experience UX (#30)** — bracket prominence, champion banner, between-round nudge;
-    activate before first playoff bracket closes.
-11. **Team Analysis & Insights (#25)** — engagement differentiator; ship the analysis +
+8. **Trade System (#7) + Transaction History (#8)** — the missing half of league management.
+9. **Playoff Experience UX (#30)** — bracket prominence, champion banner, between-round nudge;
+   activate before first playoff bracket closes.
+10. **Team Analysis & Insights (#25)** — engagement differentiator; ship the analysis +
     free-agent half first, add trade suggestions once #7 lands.
-12. **Waiver priority + processing jobs (#5)** — upgrade immediate add/drop into a real waiver wire.
-13. **Player Legacy & Cross-Season Tracking (#31)** — career dashboard, global leaderboard;
+11. **Waiver priority + processing jobs (#5)** — upgrade immediate add/drop into a real waiver wire.
+12. **Player Legacy & Cross-Season Tracking (#31)** — career dashboard, global leaderboard;
     long-term retention driver.
 
 Stretch (differentiators, not beta blockers): league-wide matchup storylines (#11) and the

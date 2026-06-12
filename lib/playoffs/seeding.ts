@@ -161,6 +161,69 @@ export function getHeadToHeadRecord(
 }
 
 /**
+ * Playoff race math.
+ * Each H2H win = 1 pt, tie = 0.5. A team's max remaining = games left × 1.
+ * Derives clinch/eliminate status relative to the playoff line.
+ */
+export interface RaceInfo {
+  status: "clinched" | "eliminated" | "in" | "bubble" | "out";
+  gamesBack: number | null;  // points behind playoff line (teams out only)
+  cushion: number | null;    // points ahead of bubble (teams in only)
+}
+
+export function computeRace(
+  standings: Pick<Standing, "fantasyTeamId" | "points" | "wins" | "losses" | "ties">[],
+  matchups: Matchup[],
+  cutoff: number
+): Map<string, RaceInfo> {
+  const map = new Map<string, RaceInfo>();
+  if (standings.length === 0 || cutoff <= 0 || cutoff >= standings.length) {
+    standings.forEach((s) =>
+      map.set(s.fantasyTeamId, { status: "in", gamesBack: null, cushion: null })
+    );
+    return map;
+  }
+
+  const totalWeeks = matchups
+    .filter((m) => !m.isPlayoff)
+    .reduce((max, m) => Math.max(max, m.week), 0);
+
+  const remainingFor = (teamId: string) => {
+    const played = matchups.filter(
+      (m) => !m.isPlayoff && m.homeScore !== null &&
+        (m.homeTeamId === teamId || m.awayTeamId === teamId)
+    ).length;
+    return Math.max(0, totalWeeks - played);
+  };
+
+  const lineTeam = standings[cutoff - 1];   // last team in
+  const bubbleTeam = standings[cutoff];     // first team out
+
+  standings.forEach((s, i) => {
+    const rank = i + 1;
+    const inSpot = rank <= cutoff;
+    const remaining = remainingFor(s.fantasyTeamId);
+    const maxPoints = s.points + remaining;
+
+    let status: RaceInfo["status"];
+    if (inSpot) {
+      const bubbleCeiling = bubbleTeam.points + remainingFor(bubbleTeam.fantasyTeamId);
+      status = bubbleCeiling < s.points ? "clinched" : rank === cutoff ? "bubble" : "in";
+    } else {
+      status = maxPoints < lineTeam.points ? "eliminated" : "out";
+    }
+
+    map.set(s.fantasyTeamId, {
+      status,
+      gamesBack: inSpot ? null : Math.round((lineTeam.points - s.points) * 10) / 10,
+      cushion: inSpot ? Math.round((s.points - bubbleTeam.points) * 10) / 10 : null,
+    });
+  });
+
+  return map;
+}
+
+/**
  * Get playoff standings (top N teams sorted by seed).
  * Called after regular season completes.
  */

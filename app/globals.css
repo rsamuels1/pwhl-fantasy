@@ -367,3 +367,13 @@ img { max-width: 100%; display: block; }
 @media (max-width: 480px) {
   .stat-secondary { display: none; }
 }
+
+.overview-grid {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 20px;
+  align-items: start;
+}
+@media (max-width: 900px) {
+  .overview-grid { grid-template-columns: 1fr; }
+}

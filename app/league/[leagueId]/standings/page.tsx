@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
-import { computeStandings } from "@/lib/playoffs/seeding";
+import { computeStandings, computeRace } from "@/lib/playoffs/seeding";
 import { computeVpStandings } from "@/lib/scoring/vp";
 import { requireAuth, requireLeagueMember } from "@/lib/auth";
 import type { Matchup } from "@prisma/client";
@@ -38,69 +38,6 @@ function computeStreaks(
 
     map.set(teamId, { type: firstType, count });
   }
-  return map;
-}
-
-// Playoff-race math. Each H2H win = 1 pt, tie = 0.5. A team's max remaining points
-// = games left * 1. With that we derive clinch/eliminate relative to the playoff line.
-interface RaceInfo {
-  status: "clinched" | "eliminated" | "in" | "bubble" | "out";
-  gamesBack: number | null; // points behind the playoff line (for teams out)
-  cushion: number | null;   // points ahead of the bubble (for teams in)
-}
-
-function computeRace(
-  standings: { fantasyTeamId: string; points: number; wins: number; losses: number; ties: number }[],
-  matchups: Matchup[],
-  cutoff: number
-): Map<string, RaceInfo> {
-  const map = new Map<string, RaceInfo>();
-  if (standings.length === 0 || cutoff <= 0 || cutoff >= standings.length) {
-    standings.forEach((s) =>
-      map.set(s.fantasyTeamId, { status: "in", gamesBack: null, cushion: null })
-    );
-    return map;
-  }
-
-  const totalWeeks = matchups
-    .filter((m) => !m.isPlayoff)
-    .reduce((max, m) => Math.max(max, m.week), 0);
-
-  const remainingFor = (teamId: string) => {
-    const played = matchups.filter(
-      (m) => !m.isPlayoff && m.homeScore !== null &&
-        (m.homeTeamId === teamId || m.awayTeamId === teamId)
-    ).length;
-    return Math.max(0, totalWeeks - played);
-  };
-
-  // Playoff line = points of the team currently in the last qualifying spot.
-  const lineTeam = standings[cutoff - 1];
-  const bubbleTeam = standings[cutoff]; // first team out
-
-  standings.forEach((s, i) => {
-    const rank = i + 1;
-    const inSpot = rank <= cutoff;
-    const remaining = remainingFor(s.fantasyTeamId);
-    const maxPoints = s.points + remaining;
-
-    let status: RaceInfo["status"];
-    if (inSpot) {
-      // Clinched if even at our floor, the bubble team's ceiling can't pass us.
-      const bubbleCeiling = bubbleTeam.points + remainingFor(bubbleTeam.fantasyTeamId);
-      status = bubbleCeiling < s.points ? "clinched" : rank === cutoff ? "bubble" : "in";
-    } else {
-      // Eliminated if our ceiling can't reach the current line team's points.
-      status = maxPoints < lineTeam.points ? "eliminated" : "out";
-    }
-
-    map.set(s.fantasyTeamId, {
-      status,
-      gamesBack: inSpot ? null : Math.round((lineTeam.points - s.points) * 10) / 10,
-      cushion: inSpot ? Math.round((s.points - bubbleTeam.points) * 10) / 10 : null,
-    });
-  });
-
   return map;
 }
 

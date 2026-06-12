@@ -1,21 +1,25 @@
 import { notFound, redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
-import { computeStandings } from "@/lib/playoffs/seeding";
+import { computeStandings, computeRace } from "@/lib/playoffs/seeding";
 import { requireAuth, requireLeagueMember } from "@/lib/auth";
 import { getLeagueActivity } from "@/lib/services/activity";
+import { getSeasonState } from "@/lib/season";
 import { getDevNow } from "@/lib/devTime";
 import { getReplayNow } from "@/lib/replayTime";
 import Link from "next/link";
+import AnnouncementForm from "@/components/AnnouncementForm";
 
 export default async function LeagueOverviewPage({
   params,
   searchParams,
 }: {
-  params: { leagueId: string };
-  searchParams?: { welcome?: string };
+  params: Promise<{ leagueId: string }>;
+  searchParams?: Promise<{ welcome?: string }>;
 }) {
-  const leagueId = params.leagueId;
-  const isWelcome = searchParams?.welcome === "1";
+  const { leagueId } = await params;
+  const sp = await searchParams;
+  const isWelcome = sp?.welcome === "1";
+
   const user = await requireAuth(`/league/${leagueId}`);
   const myTeam = await requireLeagueMember(leagueId, user.id);
 
@@ -30,61 +34,128 @@ export default async function LeagueOverviewPage({
   if (!league) notFound();
 
   const myTeamInLeague = league.teams.find((t) => t.ownerId === user?.id);
+  const isCommissioner = user.id === league.commissionerId;
 
   // Draft in progress → draft room
   if (league.draft?.status === "IN_PROGRESS" && myTeamInLeague) {
     redirect(`/draft/${leagueId}?team=${myTeamInLeague.id}`);
   }
 
-  const matchups = await prisma.matchup.findMany({
-    where: { leagueId },
-    orderBy: [{ week: "asc" }, { startsAt: "asc" }],
-    include: { homeTeam: true, awayTeam: true },
-  });
+  const nowMs = getReplayNow(league, await getDevNow());
+  const now = new Date(nowMs);
+
+  const [matchups, seasonState, activity] = await Promise.all([
+    prisma.matchup.findMany({
+      where: { leagueId },
+      orderBy: [{ week: "asc" }, { startsAt: "asc" }],
+      include: { homeTeam: true, awayTeam: true },
+    }),
+    getSeasonState(leagueId, nowMs, prisma),
+    getLeagueActivity(leagueId, 6, prisma).catch(() => []),
+  ]);
 
   const standings = computeStandings(league.teams, matchups);
-
-  // Parse playoff cutoff (default 6 teams)
   const playoffSettings = (league.playoffSettings ?? {}) as { teamsInPlayoff?: number };
   const teamsInPlayoff = playoffSettings.teamsInPlayoff ?? 6;
+  const hasResults = matchups.some((m) => m.homeScore !== null);
+  const playoffsStarted = league.playoffStatus !== "NOT_STARTED";
 
-  // Activity feed — graceful fallback when LeagueEvent table doesn't exist yet
-  let activity: Awaited<ReturnType<typeof getLeagueActivity>> = [];
-  try {
-    activity = await getLeagueActivity(leagueId, 5, prisma);
-  } catch {}
-
-  // Determine the "current" week using sim date: latest week whose period has started.
-  const nowMs = getReplayNow(league, await getDevNow());
-  const startedMatchups = matchups.filter(
-    (m) => new Date(m.startsAt).getTime() <= nowMs
-  );
+  // Current week derivation
+  const startedMatchups = matchups.filter((m) => new Date(m.startsAt).getTime() <= nowMs);
   const currentWeek =
     startedMatchups.length > 0
       ? Math.max(...startedMatchups.map((m) => m.week))
       : matchups.length > 0
       ? Math.min(...matchups.map((m) => m.week))
       : null;
-
   const thisWeekMatchups = currentWeek !== null
     ? matchups.filter((m) => m.week === currentWeek)
     : [];
 
+  // Race info (only when results exist and playoffs haven't started)
+  const raceMap = hasResults && !playoffsStarted && standings.length > 1
+    ? computeRace(standings, matchups, teamsInPlayoff)
+    : null;
+
+  // ── Season state for lineup status + commissioner strip ──
+  const activePeriod = seasonState.periods.find((p) => p.status === "ACTIVE")?.period ?? null;
+  const upcomingPeriod = seasonState.periods.find((p) => p.status === "UPCOMING")?.period ?? null;
+  const periodForGames = activePeriod ?? upcomingPeriod;
+
+  // Team lineup status widget — batch query for all active-slot entries
+  let alertsByTeam = new Map<string, number>(); // fantasyTeamId → count of 0-game starters
+  if (league.status === "IN_SEASON" && periodForGames) {
+    const activeEntries = await prisma.rosterEntry.findMany({
+      where: { fantasyTeam: { leagueId }, slot: { notIn: ["BENCH", "IR"] } },
+      select: { fantasyTeamId: true, player: { select: { team: { select: { id: true } } } } },
+    });
+    const pwhlTeamIds = [...new Set(
+      activeEntries.map((e) => e.player.team?.id).filter((id): id is string => !!id)
+    )];
+    const remainingGames = pwhlTeamIds.length > 0
+      ? await prisma.game.findMany({
+          where: {
+            startsAt: { gt: now, lt: periodForGames.endsAt },
+            OR: [{ homeTeamId: { in: pwhlTeamIds } }, { awayTeamId: { in: pwhlTeamIds } }],
+          },
+          select: { homeTeamId: true, awayTeamId: true },
+        })
+      : [];
+    const gamesPerPwhl = new Map<string, number>();
+    for (const g of remainingGames) {
+      gamesPerPwhl.set(g.homeTeamId, (gamesPerPwhl.get(g.homeTeamId) ?? 0) + 1);
+      gamesPerPwhl.set(g.awayTeamId, (gamesPerPwhl.get(g.awayTeamId) ?? 0) + 1);
+    }
+    for (const e of activeEntries) {
+      const pId = e.player.team?.id ?? null;
+      if (pId && (gamesPerPwhl.get(pId) ?? 0) === 0) {
+        alertsByTeam.set(e.fantasyTeamId, (alertsByTeam.get(e.fantasyTeamId) ?? 0) + 1);
+      }
+    }
+  }
+
+  // Commissioner action strip
+  let commishAction: { label: string; sublabel: string; href: string } | null = null;
+  if (isCommissioner) {
+    const hasPendingWeek = seasonState.periods.some((p) => p.status === "SCORING_PENDING");
+    const pendingPeriod = seasonState.periods.find((p) => p.status === "SCORING_PENDING");
+    const allDone = seasonState.periods.length > 0 &&
+      seasonState.periods.every((p) => p.status === "COMPLETE" || p.status === "SCORING_PENDING");
+    const regularSeasonDone = league.status === "IN_SEASON" && allDone && !playoffsStarted;
+
+    if (league.status === "PRE_DRAFT" && (!league.draft || league.draft.status === "PENDING")) {
+      commishAction = {
+        label: "Draft setup needed",
+        sublabel: "Configure roster settings and generate team join links before the draft.",
+        href: `/league/${leagueId}/admin`,
+      };
+    } else if (hasPendingWeek && pendingPeriod) {
+      const period = pendingPeriod.period;
+      commishAction = {
+        label: `Week ${period.week} is ready to score`,
+        sublabel: "Games are final — advance the season to lock in results and start the next week.",
+        href: `/league/${leagueId}/season`,
+      };
+    } else if (regularSeasonDone) {
+      commishAction = {
+        label: "Regular season complete",
+        sublabel: "All weeks are scored. Head to the admin panel to seed and start the playoffs.",
+        href: `/league/${leagueId}/admin`,
+      };
+    }
+  }
+
   const fmt = (d: Date) =>
     new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" }).format(d);
-
-  // Only show playoff race once the season has started (some matchups scored)
-  const hasResults = matchups.some((m) => m.homeScore !== null);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
 
-      {/* ── Welcome banner (shown once after joining) ── */}
+      {/* ── Welcome banner ── */}
       {isWelcome && myTeamInLeague && (
         <div style={{
           padding: "16px 20px", borderRadius: 16,
-          background: "rgba(52,211,153,0.07)",
-          border: "1px solid rgba(52,211,153,0.2)",
+          background: "rgba(52,211,153,0.07)", border: "1px solid rgba(52,211,153,0.2)",
           display: "flex", flexDirection: "column", gap: 6,
         }}>
           <p style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "#34d399" }}>
@@ -100,29 +171,59 @@ export default async function LeagueOverviewPage({
             </p>
           ) : (
             <p style={{ margin: 0, fontSize: 13, color: "#64748b" }}>
-              The commissioner will share a draft room link when it&apos;s time to pick. Watch your email.
+              The commissioner will share a draft room link when it&apos;s time to pick.
             </p>
           )}
         </div>
       )}
 
-      {/* ── Commissioner announcement ── */}
-      {league.announcement && (
+      {/* ── Commissioner announcement — display + inline edit for commissioner ── */}
+      {(league.announcement || isCommissioner) && (
         <div style={{
           padding: "14px 18px", borderRadius: 14,
-          background: "rgba(99,102,241,0.08)",
-          border: "1px solid rgba(99,102,241,0.25)",
-          display: "flex", gap: 12, alignItems: "flex-start",
+          background: "rgba(99,102,241,0.06)", border: "1px solid rgba(99,102,241,0.2)",
         }}>
-          <span style={{ fontSize: 16, flexShrink: 0 }}>📣</span>
-          <div>
-            <div style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "#818cf8", marginBottom: 4 }}>
-              Commissioner note
+          <div style={{ display: "flex", gap: 10, alignItems: "flex-start", marginBottom: isCommissioner ? 12 : 0 }}>
+            <span style={{ fontSize: 16, flexShrink: 0 }}>📣</span>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "#818cf8", marginBottom: 4 }}>
+                Commissioner note
+              </div>
+              {league.announcement ? (
+                <p style={{ margin: 0, fontSize: 14, color: "#e2e8f0", whiteSpace: "pre-wrap", lineHeight: 1.5 }}>
+                  {league.announcement}
+                </p>
+              ) : (
+                <p style={{ margin: 0, fontSize: 13, color: "#475569", fontStyle: "italic" }}>No announcement posted yet.</p>
+              )}
             </div>
-            <p style={{ margin: 0, fontSize: 14, color: "#e2e8f0", whiteSpace: "pre-wrap", lineHeight: 1.5 }}>
-              {league.announcement}
-            </p>
           </div>
+          {isCommissioner && (
+            <div style={{ borderTop: "1px solid rgba(99,102,241,0.15)", paddingTop: 12, marginTop: 4 }}>
+              <AnnouncementForm leagueId={leagueId} initial={league.announcement ?? null} />
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── Commissioner action strip ── */}
+      {commishAction && (
+        <div style={{
+          padding: "12px 16px", borderRadius: 12,
+          background: "rgba(245,158,11,0.07)", border: "1px solid rgba(245,158,11,0.22)",
+          display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap",
+        }}>
+          <div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: "#fbbf24" }}>{commishAction.label}</div>
+            <div style={{ fontSize: 12, color: "#94a3b8", marginTop: 2 }}>{commishAction.sublabel}</div>
+          </div>
+          <Link href={commishAction.href} style={{
+            fontSize: 12, fontWeight: 700, padding: "6px 14px", borderRadius: 8, flexShrink: 0,
+            background: "rgba(245,158,11,0.15)", color: "#fbbf24",
+            border: "1px solid rgba(245,158,11,0.3)", textDecoration: "none",
+          }}>
+            Take action →
+          </Link>
         </div>
       )}
 
@@ -142,171 +243,302 @@ export default async function LeagueOverviewPage({
         )}
       </div>
 
-      {/* ── 1. This week's matchups ── */}
-      <section style={card}>
-        <h2 style={sectionTitle}>
-          {currentWeek !== null ? `Week ${currentWeek} Matchups` : "Matchups"}
-        </h2>
-        {thisWeekMatchups.length === 0 ? (
-          <p style={{ color: "#64748b", margin: 0, fontSize: 14 }}>No matchups scheduled yet.</p>
-        ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 14 }}>
-            {thisWeekMatchups.map((m) => {
-              const scored = m.homeScore !== null && m.awayScore !== null;
-              const homeIsMe = m.homeTeamId === myTeamInLeague?.id;
-              const awayIsMe = m.awayTeamId === myTeamInLeague?.id;
-              const isMyMatchup = homeIsMe || awayIsMe;
-              const homeWon = scored && m.homeScore! > m.awayScore!;
-              const awayWon = scored && m.awayScore! > m.homeScore!;
-              return (
-                <div key={m.id} style={{
-                  display: "grid",
-                  gridTemplateColumns: "1fr auto 1fr",
-                  alignItems: "center",
-                  gap: "8px 12px",
-                  padding: "12px 16px",
-                  borderRadius: 12,
-                  background: isMyMatchup ? "rgba(99,102,241,0.07)" : "rgba(255,255,255,0.025)",
-                  border: isMyMatchup ? "1px solid rgba(99,102,241,0.25)" : "1px solid rgba(148,163,184,0.07)",
-                }}>
-                  <div style={{ textAlign: "right", minWidth: 0 }}>
-                    <span style={{
-                      fontSize: 14, fontWeight: homeIsMe ? 700 : 500,
-                      color: homeIsMe ? "#e2e8f0" : "#94a3b8",
-                      display: "block", overflow: "hidden",
-                      textOverflow: "ellipsis", whiteSpace: "nowrap",
-                    }}>
-                      {m.homeTeam.name}
-                    </span>
-                    {scored && (
-                      <span style={{ fontSize: 18, fontWeight: 800, color: homeWon ? "#e2e8f0" : "#475569", fontVariantNumeric: "tabular-nums" }}>
-                        {m.homeScore!.toFixed(1)}
-                      </span>
-                    )}
-                  </div>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: "#334155", textAlign: "center", letterSpacing: "0.5px", padding: "0 4px" }}>
-                    {scored ? "FINAL" : "VS"}
-                  </div>
-                  <div style={{ textAlign: "left", minWidth: 0 }}>
-                    <span style={{
-                      fontSize: 14, fontWeight: awayIsMe ? 700 : 500,
-                      color: awayIsMe ? "#e2e8f0" : "#94a3b8",
-                      display: "block", overflow: "hidden",
-                      textOverflow: "ellipsis", whiteSpace: "nowrap",
-                    }}>
-                      {m.awayTeam.name}
-                    </span>
-                    {scored && (
-                      <span style={{ fontSize: 18, fontWeight: 800, color: awayWon ? "#e2e8f0" : "#475569", fontVariantNumeric: "tabular-nums" }}>
-                        {m.awayScore!.toFixed(1)}
-                      </span>
-                    )}
-                  </div>
+      {/* ── Two-column grid ── */}
+      <div className="overview-grid">
+
+        {/* LEFT: Playoff race (primary) */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+
+          {/* Playoffs underway — link to bracket */}
+          {playoffsStarted && (
+            <section style={card}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+                <h2 style={sectionTitle}>🏒 Playoffs underway</h2>
+                <Link href={`/league/${leagueId}/bracket`} style={ctaLink}>View bracket →</Link>
+              </div>
+              <p style={{ color: "#64748b", margin: 0, fontSize: 13 }}>
+                The regular season is over. Check the bracket for current matchups and results.
+              </p>
+            </section>
+          )}
+
+          {/* Playoff race / standings — primary module */}
+          {hasResults && !playoffsStarted && standings.length > 0 && (
+            <section style={card}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+                <div>
+                  <h2 style={{ ...sectionTitle, marginBottom: 2 }}>Playoff race</h2>
+                  <div style={{ fontSize: 12, color: "#475569" }}>Top {teamsInPlayoff} advance</div>
                 </div>
-              );
-            })}
-          </div>
-        )}
-        {myTeamInLeague && (
-          <div style={{ marginTop: 14 }}>
-            <Link href={`/team/${myTeamInLeague.id}/matchup`} style={ctaLink}>
-              My Matchup →
-            </Link>
-          </div>
-        )}
-      </section>
+                <Link href={`/league/${leagueId}/standings`} style={{ fontSize: 12, color: "#64748b", textDecoration: "none" }}>
+                  Full standings →
+                </Link>
+              </div>
 
-      {/* ── 2. Playoff race ── */}
-      {hasResults && standings.length > 0 && (
-        <section style={card}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-            <h2 style={sectionTitle}>Playoff race</h2>
-            <Link href={`/league/${leagueId}/standings`} style={{ fontSize: 12, color: "#64748b", textDecoration: "none" }}>
-              Full standings →
-            </Link>
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-            {standings.map((s, i) => {
-              const rank = i + 1;
-              const isMe = s.fantasyTeamId === myTeamInLeague?.id;
-              const isIn = rank <= teamsInPlayoff;
-              const isBubble = rank === teamsInPlayoff + 1;
-              const isLastIn = rank === teamsInPlayoff;
+              <div style={{ display: "flex", flexDirection: "column", gap: 1 }}>
+                {standings.map((s, i) => {
+                  const rank = i + 1;
+                  const isMe = s.fantasyTeamId === myTeamInLeague?.id;
+                  const race = raceMap?.get(s.fantasyTeamId);
+                  const isLastIn = rank === teamsInPlayoff;
 
-              const statusChip = isIn
-                ? { label: "IN", bg: "rgba(52,211,153,0.12)", color: "#34d399", border: "rgba(52,211,153,0.25)" }
-                : isBubble
-                ? { label: "BUBBLE", bg: "rgba(245,158,11,0.12)", color: "#f59e0b", border: "rgba(245,158,11,0.25)" }
-                : { label: "OUT", bg: "rgba(100,116,139,0.1)", color: "#64748b", border: "rgba(100,116,139,0.15)" };
+                  const chipStyle = (() => {
+                    if (!race) {
+                      const inNow = rank <= teamsInPlayoff;
+                      return inNow
+                        ? { label: "IN", bg: "rgba(52,211,153,0.12)", color: "#34d399", border: "rgba(52,211,153,0.2)" }
+                        : rank === teamsInPlayoff + 1
+                        ? { label: "BUBBLE", bg: "rgba(245,158,11,0.12)", color: "#f59e0b", border: "rgba(245,158,11,0.2)" }
+                        : { label: "OUT", bg: "rgba(100,116,139,0.1)", color: "#64748b", border: "rgba(100,116,139,0.15)" };
+                    }
+                    switch (race.status) {
+                      case "clinched":   return { label: "✓ CLINCHED", bg: "rgba(52,211,153,0.12)", color: "#34d399", border: "rgba(52,211,153,0.2)" };
+                      case "in":         return { label: "IN", bg: "rgba(52,211,153,0.08)", color: "#4ade80", border: "rgba(52,211,153,0.15)" };
+                      case "bubble":     return { label: "BUBBLE", bg: "rgba(245,158,11,0.12)", color: "#f59e0b", border: "rgba(245,158,11,0.2)" };
+                      case "eliminated": return { label: "✗ ELIM", bg: "rgba(239,68,68,0.1)", color: "#f87171", border: "rgba(239,68,68,0.2)" };
+                      case "out":        return { label: `${race.gamesBack} GB`, bg: "rgba(100,116,139,0.1)", color: "#64748b", border: "rgba(100,116,139,0.15)" };
+                    }
+                  })();
 
-              return (
-                <div key={s.fantasyTeamId}>
-                  {/* Dashed separator after last playoff spot */}
-                  {isLastIn && (
-                    <div style={{
-                      borderBottom: "1px dashed rgba(148,163,184,0.2)",
-                      margin: "6px 0",
-                    }} />
+                  return (
+                    <div key={s.fantasyTeamId}>
+                      {isLastIn && (
+                        <div style={{ borderBottom: "1px dashed rgba(148,163,184,0.18)", margin: "5px 0" }} />
+                      )}
+                      <div style={{
+                        display: "grid",
+                        gridTemplateColumns: "22px 1fr auto 70px",
+                        gap: 8, padding: "9px 10px", borderRadius: 8, alignItems: "center",
+                        background: isMe ? "rgba(99,102,241,0.07)" : "transparent",
+                      }}>
+                        <span style={{ fontSize: 12, color: "#475569", fontWeight: 700 }}>{rank}</span>
+                        <span style={{
+                          fontSize: 14, fontWeight: isMe ? 700 : 400,
+                          color: isMe ? "#a5b4fc" : "#e2e8f0",
+                          overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                        }}>
+                          {s.teamName}
+                          {isMe && <span style={{ marginLeft: 6, fontSize: 10, color: "#6366f1" }}>You</span>}
+                        </span>
+                        <span style={{ fontSize: 12, color: "#64748b", textAlign: "right", whiteSpace: "nowrap" }}>
+                          {s.wins}–{s.losses}{s.ties > 0 ? `–${s.ties}` : ""}
+                        </span>
+                        <span style={{
+                          fontSize: 10, fontWeight: 700, textAlign: "center",
+                          padding: "2px 6px", borderRadius: 6, whiteSpace: "nowrap",
+                          background: chipStyle.bg, color: chipStyle.color,
+                          border: `1px solid ${chipStyle.border}`,
+                        }}>
+                          {chipStyle.label}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+          )}
+
+          {/* Pre-season / no results yet */}
+          {!hasResults && league.status !== "IN_SEASON" && (
+            <section style={card}>
+              <h2 style={sectionTitle}>Standings</h2>
+              <p style={{ color: "#475569", fontSize: 13, margin: "10px 0 0" }}>
+                Standings will appear once the season starts.
+              </p>
+            </section>
+          )}
+
+          {/* ── All matchups this week — compact / secondary ── */}
+          {thisWeekMatchups.length > 0 && (
+            <section style={card}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+                <h2 style={{ ...sectionTitle, fontSize: 14, color: "#64748b" }}>
+                  {currentWeek !== null ? `Week ${currentWeek} matchups` : "Matchups"}
+                </h2>
+                <Link href={`/league/${leagueId}/matchups`} style={{ fontSize: 12, color: "#475569", textDecoration: "none" }}>
+                  Full schedule →
+                </Link>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                {thisWeekMatchups.map((m) => {
+                  const scored = m.homeScore !== null && m.awayScore !== null;
+                  const isMyMatchup = m.homeTeamId === myTeamInLeague?.id || m.awayTeamId === myTeamInLeague?.id;
+                  return (
+                    <div key={m.id} style={{
+                      display: "grid", gridTemplateColumns: "1fr auto 1fr",
+                      gap: "4px 8px", padding: "6px 8px", borderRadius: 8, alignItems: "center",
+                      background: isMyMatchup ? "rgba(99,102,241,0.05)" : "transparent",
+                      border: isMyMatchup ? "1px solid rgba(99,102,241,0.15)" : "1px solid transparent",
+                    }}>
+                      <span style={{
+                        fontSize: 13, textAlign: "right", overflow: "hidden",
+                        textOverflow: "ellipsis", whiteSpace: "nowrap",
+                        color: m.homeTeamId === myTeamInLeague?.id ? "#e2e8f0" : "#94a3b8",
+                        fontWeight: m.homeTeamId === myTeamInLeague?.id ? 600 : 400,
+                      }}>
+                        {m.homeTeam.name}
+                        {scored && <span style={{ marginLeft: 6, fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>{m.homeScore!.toFixed(1)}</span>}
+                      </span>
+                      <span style={{ fontSize: 10, color: "#334155", fontWeight: 700, letterSpacing: "0.5px" }}>
+                        {scored ? "·" : "VS"}
+                      </span>
+                      <span style={{
+                        fontSize: 13, overflow: "hidden",
+                        textOverflow: "ellipsis", whiteSpace: "nowrap",
+                        color: m.awayTeamId === myTeamInLeague?.id ? "#e2e8f0" : "#94a3b8",
+                        fontWeight: m.awayTeamId === myTeamInLeague?.id ? 600 : 400,
+                      }}>
+                        {scored && <span style={{ marginRight: 6, fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>{m.awayScore!.toFixed(1)}</span>}
+                        {m.awayTeam.name}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+          )}
+        </div>
+
+        {/* RIGHT: My matchup + lineup status + activity */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+
+          {/* My matchup compact widget */}
+          {myTeamInLeague && (() => {
+            const myMatchups = thisWeekMatchups.filter(
+              (m) => m.homeTeamId === myTeamInLeague.id || m.awayTeamId === myTeamInLeague.id
+            );
+            const myScore = myMatchups.length > 0
+              ? (() => {
+                  const first = myMatchups[0];
+                  const scored = first.homeScore !== null;
+                  if (!scored) return null;
+                  return first.homeTeamId === myTeamInLeague.id ? first.homeScore : first.awayScore;
+                })()
+              : null;
+            const scoredCount = myMatchups.filter((m) => m.homeScore !== null).length;
+            const wins = myMatchups.filter((m) => {
+              if (m.homeScore === null) return false;
+              const mine = m.homeTeamId === myTeamInLeague.id ? m.homeScore : m.awayScore!;
+              const theirs = m.homeTeamId === myTeamInLeague.id ? m.awayScore! : m.homeScore;
+              return mine > theirs;
+            }).length;
+            const losses = myMatchups.filter((m) => {
+              if (m.homeScore === null) return false;
+              const mine = m.homeTeamId === myTeamInLeague.id ? m.homeScore : m.awayScore!;
+              const theirs = m.homeTeamId === myTeamInLeague.id ? m.awayScore! : m.homeScore;
+              return mine < theirs;
+            }).length;
+
+            return (
+              <section style={card}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+                  <h2 style={sectionTitle}>My matchup</h2>
+                  {currentWeek !== null && (
+                    <span style={{ fontSize: 11, color: "#475569" }}>Wk {currentWeek}</span>
                   )}
-                  <div style={{
-                    display: "grid",
-                    gridTemplateColumns: "24px 1fr auto 56px",
-                    gap: 8, padding: "8px 10px", borderRadius: 8, alignItems: "center",
-                    background: isMe ? "rgba(99,102,241,0.07)" : "transparent",
-                  }}>
-                    <span style={{ fontSize: 12, color: "#475569", fontWeight: 700 }}>{rank}</span>
-                    <span style={{ fontSize: 14, fontWeight: isMe ? 700 : 400, color: isMe ? "#a5b4fc" : "#e2e8f0", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                      {s.teamName}
-                      {isMe && <span style={{ marginLeft: 6, fontSize: 11, color: "#6366f1" }}>You</span>}
+                </div>
+                <div style={{ display: "flex", alignItems: "baseline", gap: 12, marginBottom: 8 }}>
+                  {myScore !== null ? (
+                    <span style={{ fontSize: 32, fontWeight: 800, color: "#e2e8f0", fontVariantNumeric: "tabular-nums" }}>
+                      {myScore.toFixed(1)}
                     </span>
-                    <span style={{ fontSize: 12, color: "#64748b", textAlign: "right", whiteSpace: "nowrap" }}>
-                      {s.wins}–{s.losses}{s.ties > 0 ? `–${s.ties}` : ""}
+                  ) : (
+                    <span style={{ fontSize: 20, fontWeight: 700, color: "#475569" }}>—</span>
+                  )}
+                  {scoredCount > 0 && (
+                    <span style={{ fontSize: 13, color: "#64748b" }}>
+                      {wins}–{losses} vs field
                     </span>
-                    <span style={{
-                      fontSize: 10, fontWeight: 700, textAlign: "center",
-                      padding: "2px 6px", borderRadius: 6,
-                      background: statusChip.bg,
-                      color: statusChip.color,
-                      border: `1px solid ${statusChip.border}`,
-                      whiteSpace: "nowrap",
+                  )}
+                  {scoredCount === 0 && myMatchups.length > 0 && (
+                    <span style={{ fontSize: 13, color: "#64748b" }}>
+                      {currentWeek !== null
+                        ? new Date(myMatchups[0].startsAt).getTime() > nowMs ? "Upcoming" : "In progress"
+                        : ""}
+                    </span>
+                  )}
+                </div>
+                <Link href={`/team/${myTeamInLeague.id}/matchup`} style={ctaLink}>
+                  My Matchup →
+                </Link>
+              </section>
+            );
+          })()}
+
+          {/* Team lineup status widget */}
+          {league.status === "IN_SEASON" && league.teams.length > 0 && (
+            <section style={card}>
+              <h2 style={{ ...sectionTitle, marginBottom: 12 }}>Lineup status</h2>
+              <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                {league.teams.map((t) => {
+                  const alerts = alertsByTeam.get(t.id) ?? 0;
+                  const isMe = t.id === myTeamInLeague?.id;
+                  const chip = !periodForGames
+                    ? { label: "—", bg: "rgba(100,116,139,0.08)", color: "#475569" }
+                    : alerts > 0
+                    ? { label: `⚠ ${alerts} ${alerts === 1 ? "issue" : "issues"}`, bg: "rgba(245,158,11,0.1)", color: "#f59e0b" }
+                    : { label: "✓ Set", bg: "rgba(52,211,153,0.1)", color: "#34d399" };
+                  return (
+                    <div key={t.id} style={{
+                      display: "flex", alignItems: "center", justifyContent: "space-between",
+                      padding: "6px 8px", borderRadius: 8,
+                      background: isMe ? "rgba(99,102,241,0.06)" : "transparent",
                     }}>
-                      {statusChip.label}
-                    </span>
-                  </div>
+                      <span style={{
+                        fontSize: 13, fontWeight: isMe ? 600 : 400,
+                        color: isMe ? "#a5b4fc" : "#94a3b8",
+                        overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1,
+                      }}>
+                        {t.name}
+                        {isMe && <span style={{ marginLeft: 5, fontSize: 10, color: "#6366f1" }}>You</span>}
+                      </span>
+                      <span style={{
+                        fontSize: 11, fontWeight: 700, padding: "2px 7px", borderRadius: 6,
+                        background: chip.bg, color: chip.color, flexShrink: 0, marginLeft: 8,
+                      }}>
+                        {chip.label}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+              {periodForGames && (
+                <div style={{ fontSize: 11, color: "#334155", marginTop: 10 }}>
+                  Games remaining through {fmt(new Date(periodForGames.endsAt.getTime() - 1))}
                 </div>
-              );
-            })}
-          </div>
-        </section>
-      )}
+              )}
+            </section>
+          )}
 
-      {/* ── 3. League activity ── */}
-      {activity.length > 0 && (
-        <section style={card}>
-          <h2 style={{ ...sectionTitle, marginBottom: 12 }}>League activity</h2>
-          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            {activity.map((evt) => {
-              const ICONS: Record<string, string> = {
-                PLAYER_ADD: "➕", PLAYER_DROP: "➖", DRAFT_PICK: "🎯",
-                PLAYOFF_QUALIFICATION: "🏒", MAJOR_PERFORMANCE: "⭐",
-              };
-              const icon = ICONS[evt.type] ?? "•";
-              return (
-                <div key={evt.id} style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "flex-start" }}>
-                  <span style={{ fontSize: 13, color: "#cbd5e1", lineHeight: 1.5 }}>
-                    <span style={{ marginRight: 6 }}>{icon}</span>
-                    {evt.description}
-                  </span>
-                  <span style={{ fontSize: 11, color: "#475569", flexShrink: 0 }}>
-                    {fmt(new Date(evt.createdAt))}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-        </section>
-      )}
+          {/* League activity */}
+          <section style={card}>
+            <h2 style={{ ...sectionTitle, marginBottom: 12 }}>League activity</h2>
+            {activity.length === 0 ? (
+              <p style={{ color: "#334155", fontSize: 13, margin: 0, fontStyle: "italic" }}>No activity yet.</p>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                {activity.map((evt) => {
+                  const ICONS: Record<string, string> = {
+                    PLAYER_ADD: "➕", PLAYER_DROP: "➖", DRAFT_PICK: "🎯",
+                    PLAYOFF_QUALIFICATION: "🏒", MAJOR_PERFORMANCE: "⭐",
+                  };
+                  return (
+                    <div key={evt.id} style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "flex-start" }}>
+                      <span style={{ fontSize: 13, color: "#cbd5e1", lineHeight: 1.5 }}>
+                        <span style={{ marginRight: 6 }}>{ICONS[evt.type] ?? "•"}</span>
+                        {evt.description}
+                      </span>
+                      <span style={{ fontSize: 11, color: "#475569", flexShrink: 0 }}>{fmt(new Date(evt.createdAt))}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </section>
 
+        </div>
+      </div>
     </div>
   );
 }

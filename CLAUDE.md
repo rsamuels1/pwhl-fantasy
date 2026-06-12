@@ -145,6 +145,7 @@ survives DB resets and schema migrations.
    - Schedule page ✅ (`/team/[teamId]/schedule` — PWHL games this period, progress bar, player counts)
    - Dashboard action items ✅ (contextual alerts: draft live, new week, close match, upcoming soon)
    - Sim-date audit ✅ (all pages and API routes respect `pwhl_dev_sim_date` cookie)
+   - League Overview Redesign ✅ (playoff race as primary module, per-team lineup status widget, commissioner action strip, inline announcement editing)
 5. Playoff bracket and postseason flow — standings, seeding, bracket generation, playoff matchups, and results ✅
 6. Integration + load test the draft room + beta
 7. Public launch ~early Nov, drafts ~1 week before opener
@@ -583,13 +584,39 @@ manual reload.
   when set. The overview's `findUnique` returns all scalar fields, so `league.announcement` is available.
 - Run `npx prisma db push` after pulling — the column was added to the schema.
 
-## Playoff race indicators (standings)
+## Playoff race indicators (standings + overview)
 
-`app/league/[leagueId]/standings/page.tsx` computes clinch/eliminate/games-back via `computeRace`
-(local helper) when results exist and playoffs haven't started. Each H2H win = 1 pt, tie = 0.5;
-max remaining points = games left. A team is **clinched** when the bubble team's ceiling can't pass
-it, **eliminated** when its own ceiling can't reach the current playoff line. Surfaces as: a banner
-summarizing the viewer's own status, and per-row chips (`✓ CLINCHED` / `✗ ELIM` / `BUBBLE` / `IN`).
+`computeRace(standings, matchups, cutoff)` is exported from `lib/playoffs/seeding.ts`. Each H2H
+win = 1 pt, tie = 0.5; max remaining points = games left. A team is **clinched** when the bubble
+team's ceiling can't pass it, **eliminated** when its own ceiling can't reach the current playoff
+line. Returns `Map<teamId, RaceInfo>` with `status: "clinched" | "eliminated" | "in" | "bubble" |
+"out"`, `gamesBack`, and `cushion`.
+
+Used in two places:
+- `app/league/[leagueId]/standings/page.tsx` — per-row chips + viewer status banner
+- `app/league/[leagueId]/page.tsx` — the primary playoff-race module on the overview
+
+## League Overview (`app/league/[leagueId]/`)
+
+Two-column `.overview-grid` layout (collapses to single column at ≤900px). Left column is primary,
+right column is sidebar.
+
+**Left (primary):**
+- Playoffs-underway notice (links to bracket) when `playoffStatus !== "NOT_STARTED"`
+- Playoff race table using `computeRace` — rank, name, W–L, status chip (CLINCHED / ELIM / BUBBLE / IN / X.X GB); dashed separator at playoff line
+- Compact current-week matchup grid (secondary, de-emphasized below the race table)
+
+**Right (sidebar):**
+- My matchup compact widget — my score + W–L vs field for the week + "My Matchup →" link
+- Team lineup status widget — per-team `✓ Set` / `⚠ N issues` / `—` chips; shown only during `IN_SEASON`; uses the same batch `gamesPerPwhl` query pattern as the lineup page (no `status != FINAL` filter)
+- League activity feed (from `getLeagueActivity`)
+
+**Commissioner features (shown only when `isCommissioner`):**
+- Inline announcement editing via `AnnouncementForm` — replaces the admin-panel-only UX
+- Commissioner action strip (amber banner) — contextual CTA: draft setup needed / week ready to score / regular season complete
+
+`nowMs` comes from `getReplayNow(league, await getDevNow())` — respects both replay mode and
+sim-date cookie.
 
 **Inline lineup editor (upcoming matchups):** when `status === "upcoming"`, the matchup page
 shows `InlineLineupEditor` (client component) instead of the read-only `RosterTable` for the

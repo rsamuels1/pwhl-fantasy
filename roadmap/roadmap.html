@@ -255,7 +255,7 @@
     <p class="lede">The flagship experience is the live fantasy season — drafting real players, setting weekly lineups, and competing in matchups scored from real PWHL games. Here's everything shipped, in progress, and still ahead.</p>
 
     <div class="stats">
-      <div class="stat"><div class="n green">20+</div><div class="l">Core systems live</div></div>
+      <div class="stat"><div class="n green">21+</div><div class="l">Core systems live</div></div>
       <div class="stat"><div class="n amber">8</div><div class="l">Partially built</div></div>
       <div class="stat"><div class="n blue">7</div><div class="l">Phases mapped</div></div>
       <div class="stat"><div class="n white">5</div><div class="l">Beta prerequisites</div></div>
@@ -283,13 +283,13 @@
 
   <!-- PHASE 1 -->
   <section class="phase">
-    <div class="phase-head" style="--fill:30%">
+    <div class="phase-head" style="--fill:35%">
       <div class="period-no"><small>P1</small>1</div>
       <div class="meta">
         <h2>Beta Completion <span class="pri critical">CRITICAL</span></h2>
         <div class="goal">Make the product stable enough for external users.</div>
       </div>
-      <div class="prog"><b>2 / 8</b>started</div>
+      <div class="prog"><b>1 / 8</b>shipped</div>
     </div>
     <div class="grid">
       <div class="card partial">
@@ -316,11 +316,11 @@
         <p>Build user trust with graceful failure — empty states, loading states, retry actions, and plain-language error messages across every screen.</p>
         <ul class="feats"><li>Empty states</li><li>Loading states</li><li>Retry actions</li></ul>
       </div>
-      <div class="card todo">
-        <div class="card-top"><span class="num">26</span><span class="status-tag todo"><span class="tdot"></span>Needed</span></div>
+      <div class="card shipped">
+        <div class="card-top"><span class="num">26</span><span class="status-tag shipped"><span class="tdot"></span>Shipped ✓</span></div>
         <h3>League Overview Redesign</h3>
-        <p>Make the league hub actually useful — playoff race as the dominant module, per-team lineup status widget, commissioner quick-actions inline, and a promoted activity feed. De-emphasizes the current matchup list that takes up space without helping anyone act.</p>
-        <ul class="feats"><li>Playoff race module</li><li>Lineup status per team</li><li>Commish quick-actions</li><li>Activity feed</li></ul>
+        <p>Two-column layout with playoff race as the dominant left-column module — clinch / eliminated / bubble chips via <code>computeRace</code>. Right sidebar: my matchup widget, per-team lineup status, and activity feed. Commissioner action strip surfaces contextual CTAs inline; announcement editing moved from admin panel to the overview.</p>
+        <ul class="feats"><li class="done">Playoff race primary ✓</li><li class="done">Lineup status per team ✓</li><li class="done">Commish action strip ✓</li><li class="done">Inline announcements ✓</li></ul>
       </div>
       <div class="card todo">
         <div class="card-top"><span class="num">27</span><span class="status-tag todo"><span class="tdot"></span>Needed</span></div>
@@ -576,9 +576,8 @@
   <!-- BUILD NEXT -->
   <section class="next">
     <h2>What to build next</h2>
-    <div class="sub">Lineup Management v2 is shipped. The highest-value gaps on the path to a public beta, in priority order.</div>
+    <div class="sub">League Overview Redesign (#26) and Lineup Management v2 (#24) are shipped. The highest-value gaps on the path to a public beta, in priority order.</div>
     <ol>
-      <li class="top"><div><div class="t">League Overview Redesign <span style="color:#7fb2e8">· #26</span></div><div class="d">First page most users see after login. Playoff race as primary module, team lineup status widget, commissioner quick-actions. Also closes remaining Commissioner Dashboard gaps.</div></div></li>
       <li class="top"><div><div class="t">Roster Page UX Overhaul <span style="color:#7fb2e8">· #27</span></div><div class="d">Sortable table as default, team selector dropdown, nav renamed "Rosters". Small scope, high daily-use impact.</div></div></li>
       <li class="top"><div><div class="t">Draft Team Distribution Panel <span style="color:#7fb2e8">· #32</span></div><div class="d">Client-only addition to the draft room. Shows pick count per PWHL team with concentration warnings. No server changes needed.</div></div></li>
       <li><div><div class="t">Lineup Stats Tab Polish <span style="color:#7fb2e8">· #28</span></div><div class="d">Rename "Projected" → "Matchup Proj", hide "This week" between weeks when it's always empty. Near-zero scope.</div></div></li>
