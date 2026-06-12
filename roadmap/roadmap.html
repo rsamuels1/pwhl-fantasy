@@ -6,171 +6,63 @@
 <title>PWHL Fantasy — Product Roadmap</title>
 <style>
   :root{
-    /* Ice-rink palette */
-    --ice:        #eef4fa;   /* rink white-blue */
-    --ice-deep:   #dce8f4;
-    --boards:     #0b1f33;   /* dark boards / ink */
-    --boards-2:   #112c47;
-    --line-blue:  #1f6fd6;   /* rink blue line */
-    --line-red:   #d8233a;   /* rink red line / center */
-    --crease:     #7fb2e8;
-    --paper:      #ffffff;
-    --ink:        #0b1f33;
-    --ink-soft:   #51677d;
-    --ink-faint:  #8499ab;
-
-    /* Status colors */
-    --st-shipped:   #11875b;  --st-shipped-bg:#e3f5ec;
-    --st-partial:   #c98a12;  --st-partial-bg:#fbf0d8;
-    --st-todo:      #6b7a8c;  --st-todo-bg:   #eef2f6;
-    --st-critical:  #d8233a;
-    --st-high:      #1f6fd6;
-    --st-med:       #6b7a8c;
-
-    --radius: 14px;
-    --shadow: 0 1px 2px rgba(11,31,51,.06), 0 8px 24px rgba(11,31,51,.07);
-    --shadow-lg:0 2px 4px rgba(11,31,51,.08), 0 18px 50px rgba(11,31,51,.12);
+    --ice:#eef4fa; --ice-deep:#dce8f4;
+    --boards:#0b1f33; --boards-2:#112c47;
+    --line-blue:#1f6fd6; --line-red:#d8233a;
+    --paper:#ffffff; --ink:#0b1f33;
+    --ink-soft:#51677d; --ink-faint:#8499ab;
+    --st-shipped:#11875b; --st-shipped-bg:#e3f5ec;
+    --st-partial:#c98a12;  --st-partial-bg:#fbf0d8;
+    --st-todo:#6b7a8c;     --st-todo-bg:#eef2f6;
+    --st-critical:#d8233a; --st-high:#1f6fd6; --st-med:#6b7a8c;
+    --radius:14px;
+    --shadow:0 1px 2px rgba(11,31,51,.06),0 8px 24px rgba(11,31,51,.07);
+    --shadow-lg:0 2px 4px rgba(11,31,51,.08),0 18px 50px rgba(11,31,51,.12);
   }
-
   *{box-sizing:border-box;}
   html{scroll-behavior:smooth;}
-  body{
-    margin:0;
-    font-family:"Inter","Segoe UI",system-ui,-apple-system,sans-serif;
-    color:var(--ink);
-    background:
-      linear-gradient(180deg,var(--ice) 0%, #f6fafe 38%, #ffffff 100%);
-    -webkit-font-smoothing:antialiased;
-    line-height:1.5;
-  }
-
+  body{margin:0;font-family:"Inter","Segoe UI",system-ui,-apple-system,sans-serif;color:var(--ink);background:linear-gradient(180deg,var(--ice) 0%,#f6fafe 38%,#fff 100%);-webkit-font-smoothing:antialiased;line-height:1.5;}
   .wrap{max-width:1120px;margin:0 auto;padding:0 24px;}
 
-  /* ---------- HERO ---------- */
-  .hero{
-    position:relative;
-    overflow:hidden;
-    background:
-      radial-gradient(1200px 380px at 50% -120px, rgba(31,111,214,.22), transparent 60%),
-      linear-gradient(165deg,var(--boards) 0%, var(--boards-2) 60%, #0d2742 100%);
-    color:#fff;
-    padding:64px 0 0;
-  }
-  /* rink center-ice motif lines */
-  .hero::before{
-    content:"";position:absolute;inset:0;
-    background:
-      linear-gradient(90deg,transparent calc(50% - 2px),rgba(216,35,58,.55) 50%,transparent calc(50% + 2px)),
-      linear-gradient(90deg,transparent calc(33% - 1px),rgba(31,111,214,.30) 33%,transparent calc(33% + 1px)),
-      linear-gradient(90deg,transparent calc(67% - 1px),rgba(31,111,214,.30) 67%,transparent calc(67% + 1px));
-    opacity:.6;
-    pointer-events:none;
-    mask-image:linear-gradient(180deg,transparent,#000 30%,#000 70%,transparent);
-  }
+  /* HERO */
+  .hero{position:relative;overflow:hidden;background:radial-gradient(1200px 380px at 50% -120px,rgba(31,111,214,.22),transparent 60%),linear-gradient(165deg,var(--boards) 0%,var(--boards-2) 60%,#0d2742 100%);color:#fff;padding:64px 0 0;}
+  .hero::before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent calc(50% - 2px),rgba(216,35,58,.55) 50%,transparent calc(50% + 2px)),linear-gradient(90deg,transparent calc(33% - 1px),rgba(31,111,214,.30) 33%,transparent calc(33% + 1px)),linear-gradient(90deg,transparent calc(67% - 1px),rgba(31,111,214,.30) 67%,transparent calc(67% + 1px));opacity:.6;pointer-events:none;mask-image:linear-gradient(180deg,transparent,#000 30%,#000 70%,transparent);}
   .hero .wrap{position:relative;z-index:2;}
-  .eyebrow{
-    display:inline-flex;align-items:center;gap:10px;
-    font-size:12px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;
-    color:#9ec6f4;
-    margin-bottom:22px;
-  }
+  .eyebrow{display:inline-flex;align-items:center;gap:10px;font-size:12px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:#9ec6f4;margin-bottom:22px;}
   .eyebrow .puck{width:10px;height:10px;border-radius:50%;background:var(--line-red);box-shadow:0 0 0 4px rgba(216,35,58,.2);}
-  .hero h1{
-    font-size:clamp(34px,6vw,60px);
-    line-height:1.02;
-    letter-spacing:-.02em;
-    font-weight:800;
-    margin:0 0 18px;
-  }
+  .hero h1{font-size:clamp(34px,6vw,60px);line-height:1.02;letter-spacing:-.02em;font-weight:800;margin:0 0 18px;}
   .hero h1 .thin{font-weight:300;color:#bcd6f3;display:block;font-size:.52em;letter-spacing:.01em;margin-top:10px;}
-  .hero p.lede{
-    max-width:620px;font-size:17px;color:#c7dcf0;margin:0 0 36px;
-  }
-
-  /* hero stat strip */
-  .stats{
-    display:grid;grid-template-columns:repeat(4,1fr);gap:1px;
-    background:rgba(255,255,255,.10);
-    border:1px solid rgba(255,255,255,.12);
-    border-radius:var(--radius);
-    overflow:hidden;
-    transform:translateY(34px);
-    box-shadow:var(--shadow-lg);
-  }
+  .hero p.lede{max-width:620px;font-size:17px;color:#c7dcf0;margin:0 0 36px;}
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.12);border-radius:var(--radius);overflow:hidden;transform:translateY(34px);box-shadow:var(--shadow-lg);}
   .stat{background:linear-gradient(180deg,#0e2641,#0b1f33);padding:22px 22px 20px;}
   .stat .n{font-size:34px;font-weight:800;letter-spacing:-.02em;line-height:1;}
-  .stat .n.green{color:#34d399;} .stat .n.amber{color:#f0b24a;} .stat .n.blue{color:#6fb0f5;} .stat .n.white{color:#fff;}
+  .stat .n.green{color:#34d399;}.stat .n.amber{color:#f0b24a;}.stat .n.blue{color:#6fb0f5;}.stat .n.white{color:#fff;}
   .stat .l{font-size:12.5px;color:#9fb6cc;margin-top:9px;letter-spacing:.02em;}
 
-  /* ---------- LEGEND ---------- */
-  .legend{
-    display:flex;flex-wrap:wrap;gap:10px 22px;align-items:center;
-    margin:72px 0 8px;padding:16px 20px;
-    background:var(--paper);border:1px solid var(--ice-deep);
-    border-radius:var(--radius);box-shadow:var(--shadow);
-    position:sticky;top:12px;z-index:20;
-  }
+  /* LEGEND */
+  .legend{display:flex;flex-wrap:wrap;gap:10px 22px;align-items:center;margin:72px 0 8px;padding:16px 20px;background:var(--paper);border:1px solid var(--ice-deep);border-radius:var(--radius);box-shadow:var(--shadow);position:sticky;top:12px;z-index:20;}
   .legend .grp{display:flex;gap:14px;flex-wrap:wrap;align-items:center;}
   .legend .sep{width:1px;height:22px;background:var(--ice-deep);}
   .chip{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--ink-soft);}
   .dot{width:11px;height:11px;border-radius:3px;}
-  .dot.shipped{background:var(--st-shipped);}
-  .dot.partial{background:var(--st-partial);}
-  .dot.todo{background:var(--st-todo);}
+  .dot.shipped{background:var(--st-shipped);}.dot.partial{background:var(--st-partial);}.dot.todo{background:var(--st-todo);}
   .pri{font-size:11px;font-weight:700;letter-spacing:.04em;padding:3px 8px;border-radius:6px;}
-  .pri.critical{color:#fff;background:var(--st-critical);}
-  .pri.high{color:#fff;background:var(--st-high);}
-  .pri.med{color:#fff;background:var(--st-med);}
-  .pri.low{color:var(--ink-soft);background:var(--ice-deep);}
+  .pri.critical{color:#fff;background:var(--st-critical);}.pri.high{color:#fff;background:var(--st-high);}.pri.med{color:#fff;background:var(--st-med);}.pri.low{color:var(--ink-soft);background:var(--ice-deep);}
 
-  /* ---------- PLATFORM SHIPPED ---------- */
-  .platform{
-    margin-top:30px;
-    border:1.5px solid #b6dac7;
-    border-radius:var(--radius);
-    background:linear-gradient(135deg,#f0faf5,#e8f7f0);
-    padding:22px 24px 20px;
-  }
+  /* PLATFORM SHIPPED */
+  .platform{margin-top:30px;border:1.5px solid #b6dac7;border-radius:var(--radius);background:linear-gradient(135deg,#f0faf5,#e8f7f0);padding:22px 24px 20px;}
   .platform-head{display:flex;align-items:flex-start;gap:14px;margin-bottom:16px;}
-  .platform-icon{
-    flex:none;width:36px;height:36px;border-radius:9px;
-    background:var(--st-shipped);color:#fff;
-    font-size:16px;display:grid;place-items:center;
-    box-shadow:0 2px 8px rgba(17,135,91,.25);
-  }
+  .platform-icon{flex:none;width:36px;height:36px;border-radius:9px;background:var(--st-shipped);color:#fff;font-size:16px;display:grid;place-items:center;box-shadow:0 2px 8px rgba(17,135,91,.25);}
   .platform-title{font-size:15px;font-weight:800;color:var(--st-shipped);letter-spacing:-.01em;}
   .platform-sub{font-size:13px;color:#3a7a5c;margin-top:3px;}
   .platform-grid{display:flex;flex-wrap:wrap;gap:7px;}
-  .ptag{
-    font-size:12px;font-weight:600;
-    color:var(--st-shipped);
-    background:#fff;
-    border:1px solid #b6dac7;
-    padding:4px 10px;border-radius:20px;
-    white-space:nowrap;
-  }
+  .ptag{font-size:12px;font-weight:600;color:var(--st-shipped);background:#fff;border:1px solid #b6dac7;padding:4px 10px;border-radius:20px;white-space:nowrap;}
 
-  /* ---------- PHASE ---------- */
+  /* PHASE */
   .phase{margin-top:46px;}
-  .phase-head{
-    display:flex;align-items:flex-end;gap:18px;
-    padding-bottom:14px;margin-bottom:22px;
-    border-bottom:2px solid var(--ice-deep);
-    position:relative;
-  }
-  .phase-head::after{
-    content:"";position:absolute;left:0;bottom:-2px;height:2px;width:var(--fill,0%);
-    background:linear-gradient(90deg,var(--line-blue),var(--line-red));
-    border-radius:2px;transition:width .8s ease;
-  }
-  .period-no{
-    flex:none;width:54px;height:54px;border-radius:12px;
-    display:grid;place-items:center;
-    background:linear-gradient(165deg,var(--boards),var(--boards-2));
-    color:#fff;font-weight:800;font-size:20px;
-    box-shadow:var(--shadow);
-    position:relative;
-  }
+  .phase-head{display:flex;align-items:flex-end;gap:18px;padding-bottom:14px;margin-bottom:22px;border-bottom:2px solid var(--ice-deep);position:relative;}
+  .phase-head::after{content:"";position:absolute;left:0;bottom:-2px;height:2px;width:var(--fill,0%);background:linear-gradient(90deg,var(--line-blue),var(--line-red));border-radius:2px;}
+  .period-no{flex:none;width:54px;height:54px;border-radius:12px;display:grid;place-items:center;background:linear-gradient(165deg,var(--boards),var(--boards-2));color:#fff;font-weight:800;font-size:20px;box-shadow:var(--shadow);position:relative;}
   .period-no small{position:absolute;top:5px;right:7px;font-size:8px;font-weight:700;letter-spacing:.1em;color:#7fb2e8;}
   .phase-head .meta{flex:1;min-width:0;}
   .phase-head .meta h2{margin:0;font-size:23px;letter-spacing:-.01em;font-weight:800;}
@@ -178,102 +70,47 @@
   .phase-head .prog{flex:none;text-align:right;font-size:12px;color:var(--ink-faint);font-weight:600;line-height:1.5;min-width:96px;}
   .phase-head .prog .row{display:flex;align-items:center;justify-content:flex-end;gap:6px;margin-bottom:1px;}
   .phase-head .prog .dot-s{width:8px;height:8px;border-radius:2px;flex:none;}
-  .phase-head .prog .dot-s.s{background:var(--st-shipped);}
-  .phase-head .prog .dot-s.p{background:var(--st-partial);}
-  .phase-head .prog .dot-s.t{background:var(--st-todo);}
+  .phase-head .prog .dot-s.s{background:var(--st-shipped);}.phase-head .prog .dot-s.p{background:var(--st-partial);}.phase-head .prog .dot-s.t{background:var(--st-todo);}
   .phase-head .prog .val{font-size:13px;font-weight:700;color:var(--ink);min-width:14px;text-align:right;}
 
-  /* ---------- ITEM GRID ---------- */
+  /* CARDS */
   .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:16px;}
-  .card{
-    position:relative;
-    background:var(--paper);
-    border:1px solid var(--ice-deep);
-    border-left:4px solid var(--accent,var(--st-todo));
-    border-radius:12px;
-    padding:18px 18px 16px;
-    box-shadow:var(--shadow);
-    transition:transform .16s ease, box-shadow .16s ease;
-  }
+  .card{position:relative;background:var(--paper);border:1px solid var(--ice-deep);border-left:4px solid var(--accent,var(--st-todo));border-radius:12px;padding:18px 18px 16px;box-shadow:var(--shadow);transition:transform .16s ease,box-shadow .16s ease;}
   .card:hover{transform:translateY(-3px);box-shadow:var(--shadow-lg);}
-  .card.shipped{--accent:var(--st-shipped);}
-  .card.partial{--accent:var(--st-partial);}
-  .card.todo{--accent:var(--st-todo);}
+  .card.shipped{--accent:var(--st-shipped);}.card.partial{--accent:var(--st-partial);}.card.todo{--accent:var(--st-todo);}
   .card-top{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
-  .num{
-    font-size:11px;font-weight:800;color:var(--ink-faint);
-    font-variant-numeric:tabular-nums;letter-spacing:.02em;
-    background:var(--ice);padding:3px 7px;border-radius:6px;flex:none;
-  }
-  .status-tag{
-    margin-left:auto;font-size:11px;font-weight:700;letter-spacing:.02em;
-    padding:4px 9px;border-radius:20px;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;
-  }
-  .status-tag.shipped{color:var(--st-shipped);background:var(--st-shipped-bg);}
-  .status-tag.partial{color:var(--st-partial);background:var(--st-partial-bg);}
-  .status-tag.todo{color:var(--st-todo);background:var(--st-todo-bg);}
+  .num{font-size:11px;font-weight:800;color:var(--ink-faint);font-variant-numeric:tabular-nums;letter-spacing:.02em;background:var(--ice);padding:3px 7px;border-radius:6px;flex:none;}
+  .status-tag{margin-left:auto;font-size:11px;font-weight:700;letter-spacing:.02em;padding:4px 9px;border-radius:20px;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;}
+  .status-tag.shipped{color:var(--st-shipped);background:var(--st-shipped-bg);}.status-tag.partial{color:var(--st-partial);background:var(--st-partial-bg);}.status-tag.todo{color:var(--st-todo);background:var(--st-todo-bg);}
   .status-tag .tdot{width:7px;height:7px;border-radius:50%;background:currentColor;}
   .card h3{margin:0 0 7px;font-size:16px;font-weight:700;letter-spacing:-.01em;line-height:1.25;}
   .card p{margin:0;font-size:13.5px;color:var(--ink-soft);line-height:1.5;}
   .card .feats{margin:11px 0 0;padding:0;list-style:none;display:flex;flex-wrap:wrap;gap:6px;}
-  .card .feats li{
-    font-size:11.5px;color:var(--ink-soft);background:var(--ice);
-    padding:3px 8px;border-radius:6px;font-weight:500;
-  }
+  .card .feats li{font-size:11.5px;color:var(--ink-soft);background:var(--ice);padding:3px 8px;border-radius:6px;font-weight:500;}
   .card .feats li.done{color:var(--st-shipped);background:var(--st-shipped-bg);}
   .card .dep{margin-top:11px;font-size:11.5px;color:var(--ink-faint);}
   .card .dep b{color:var(--ink-soft);font-weight:600;}
 
-  /* ---------- BUILD NEXT ---------- */
-  .next{
-    margin:64px 0 0;
-    background:linear-gradient(165deg,var(--boards),#0d2742);
-    color:#fff;border-radius:20px;padding:38px 34px;
-    box-shadow:var(--shadow-lg);position:relative;overflow:hidden;
-  }
-  .next::before{
-    content:"";position:absolute;top:0;right:0;width:240px;height:240px;
-    background:radial-gradient(circle at 70% 30%,rgba(31,111,214,.4),transparent 65%);
-  }
+  /* BUILD NEXT */
+  .next{margin:64px 0 0;background:linear-gradient(165deg,var(--boards),#0d2742);color:#fff;border-radius:20px;padding:38px 34px;box-shadow:var(--shadow-lg);position:relative;overflow:hidden;}
+  .next::before{content:"";position:absolute;top:0;right:0;width:240px;height:240px;background:radial-gradient(circle at 70% 30%,rgba(31,111,214,.4),transparent 65%);}
   .next h2{margin:0 0 4px;font-size:24px;font-weight:800;letter-spacing:-.01em;position:relative;}
   .next .sub{color:#9fb6cc;font-size:14px;margin-bottom:26px;position:relative;}
   .next ol{margin:0;padding:0;list-style:none;counter-reset:rank;position:relative;display:grid;gap:11px;}
-  .next li{
-    counter-increment:rank;
-    display:flex;gap:15px;align-items:flex-start;
-    background:rgba(255,255,255,.045);
-    border:1px solid rgba(255,255,255,.09);
-    border-radius:12px;padding:14px 16px;
-    transition:background .16s ease;
-  }
+  .next li{counter-increment:rank;display:flex;gap:15px;align-items:flex-start;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.09);border-radius:12px;padding:14px 16px;transition:background .16s ease;}
   .next li:hover{background:rgba(255,255,255,.085);}
-  .next li::before{
-    content:counter(rank);flex:none;
-    width:30px;height:30px;border-radius:8px;
-    background:linear-gradient(165deg,var(--line-blue),#1559b0);
-    color:#fff;font-weight:800;font-size:14px;
-    display:grid;place-items:center;
-  }
+  .next li::before{content:counter(rank);flex:none;width:30px;height:30px;border-radius:8px;background:linear-gradient(165deg,var(--line-blue),#1559b0);color:#fff;font-weight:800;font-size:14px;display:grid;place-items:center;}
   .next li.top::before{background:linear-gradient(165deg,var(--line-red),#a8182c);}
   .next li .t{font-weight:700;font-size:14.5px;}
   .next li .d{color:#a7bdd2;font-size:13px;margin-top:2px;}
-  .next .stretch{
-    margin-top:20px;font-size:13px;color:#9fb6cc;position:relative;
-    border-top:1px solid rgba(255,255,255,.1);padding-top:16px;
-  }
+  .next .stretch{margin-top:20px;font-size:13px;color:#9fb6cc;position:relative;border-top:1px solid rgba(255,255,255,.1);padding-top:16px;}
   .next .stretch b{color:#cfe0f2;font-weight:600;}
 
   footer{padding:50px 0 60px;text-align:center;color:var(--ink-faint);font-size:12.5px;}
   footer .puck{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--line-red);margin:0 7px;vertical-align:middle;}
 
-  @media (max-width:640px){
-    .stats{grid-template-columns:repeat(2,1fr);}
-    .legend{position:static;}
-    .phase-head{flex-wrap:wrap;}
-    .phase-head .prog{width:100%;text-align:left;}
-    .next{padding:28px 20px;}
-  }
-  @media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto;}}
+  @media(max-width:640px){.stats{grid-template-columns:repeat(2,1fr);}.legend{position:static;}.phase-head{flex-wrap:wrap;}.phase-head .prog{width:100%;text-align:left;}.next{padding:28px 20px;}}
+  @media(prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto;}}
 </style>
 </head>
 <body>
@@ -282,26 +119,24 @@
   <div class="wrap">
     <div class="eyebrow"><span class="puck"></span> PWHL Fantasy &nbsp;·&nbsp; Product Roadmap &nbsp;·&nbsp; Updated June 12, 2026</div>
     <h1>The road to a public beta.
-      <span class="thin">Seven phases, twenty-five features, one live fantasy season.</span>
+      <span class="thin">Seven phases, thirty-two features, one live fantasy season.</span>
     </h1>
     <p class="lede">The flagship experience is the live fantasy season — drafting real players, setting weekly lineups, and competing in matchups scored from real PWHL games. Here's everything shipped, in progress, and still ahead.</p>
-
     <div class="stats">
-      <div class="stat"><div class="n green">19+</div><div class="l">Core systems live</div></div>
-      <div class="stat"><div class="n amber">5</div><div class="l">Partially built</div></div>
+      <div class="stat"><div class="n green">7</div><div class="l">Features shipped</div></div>
+      <div class="stat"><div class="n amber">7</div><div class="l">In progress</div></div>
       <div class="stat"><div class="n blue">7</div><div class="l">Phases mapped</div></div>
-      <div class="stat"><div class="n white">7</div><div class="l">Beta prerequisites</div></div>
+      <div class="stat"><div class="n white">11</div><div class="l">Beta priorities</div></div>
     </div>
   </div>
 </header>
 
 <div class="wrap">
 
-  <!-- LEGEND -->
   <div class="legend">
     <div class="grp">
       <span class="chip"><span class="dot shipped"></span>Shipped</span>
-      <span class="chip"><span class="dot partial"></span>Partial</span>
+      <span class="chip"><span class="dot partial"></span>In progress</span>
       <span class="chip"><span class="dot todo"></span>Not built</span>
     </div>
     <span class="sep"></span>
@@ -313,13 +148,13 @@
     </div>
   </div>
 
-  <!-- SHIPPED PLATFORM -->
+  <!-- PLATFORM -->
   <section class="platform">
     <div class="platform-head">
       <span class="platform-icon">✦</span>
       <div>
         <div class="platform-title">Core Platform — Already Shipped</div>
-        <div class="platform-sub">These systems are live and considered stable. They underpin every numbered roadmap item below.</div>
+        <div class="platform-sub">Live and stable. These underpin every numbered roadmap item below.</div>
       </div>
     </div>
     <div class="platform-grid">
@@ -330,61 +165,84 @@
       <span class="ptag">Draft room (WebSocket, queue, auto-draft, escalation)</span>
       <span class="ptag">Rosters</span>
       <span class="ptag">Lineups (locking, play-lock, games-remaining badges)</span>
+      <span class="ptag">Lineup Management v2 (projected FPTS, between-weeks nudge, mobile stats)</span>
       <span class="ptag">Matchups (VTF regular season + 1v1 playoffs)</span>
       <span class="ptag">Matchup Center / Fantasy Home</span>
       <span class="ptag">Projections &amp; Win Probability engine</span>
-      <span class="ptag">Standings (with clinch / eliminate indicators)</span>
+      <span class="ptag">Standings (clinch / eliminate indicators)</span>
       <span class="ptag">Playoffs (seeding, bracket, single-elimination)</span>
       <span class="ptag">Historical Replay</span>
       <span class="ptag">Season lifecycle &amp; scoring periods</span>
       <span class="ptag">Schedule management</span>
-      <span class="ptag">Scoring engine (VTF points)</span>
-      <span class="ptag">Victory Point model</span>
+      <span class="ptag">Scoring engine (VTF points + Victory Point model)</span>
       <span class="ptag">Free-agent add / drop (immediate)</span>
       <span class="ptag">Live score polling</span>
       <span class="ptag">Season-long H2H rivalry records</span>
-      <span class="ptag">Roster Page UX (sortable table, team selector, "Rosters" nav)</span>
     </div>
   </section>
 
   <!-- PHASE 1 -->
   <section class="phase">
-    <div class="phase-head" style="--fill:12%">
+    <div class="phase-head" style="--fill:38%">
       <div class="period-no"><small>P1</small>1</div>
       <div class="meta">
         <h2>Beta Completion <span class="pri critical">CRITICAL</span></h2>
         <div class="goal">Make the product stable enough for external users.</div>
       </div>
       <div class="prog">
-        <div class="row"><span class="dot-s s"></span><span class="val">0</span> <span>shipped</span></div>
-        <div class="row"><span class="dot-s p"></span><span class="val">1</span> <span>in progress</span></div>
-        <div class="row"><span class="dot-s t"></span><span class="val">3</span> <span>not built</span></div>
+        <div class="row"><span class="dot-s s"></span><span class="val">2</span>&nbsp;shipped</div>
+        <div class="row"><span class="dot-s p"></span><span class="val">3</span>&nbsp;in progress</div>
+        <div class="row"><span class="dot-s t"></span><span class="val">3</span>&nbsp;not built</div>
       </div>
     </div>
     <div class="grid">
+      <div class="card shipped">
+        <div class="card-top"><span class="num">26</span><span class="status-tag shipped"><span class="tdot"></span>Shipped</span></div>
+        <h3>League Overview Redesign</h3>
+        <p>Two-column layout with playoff race table, current-week matchup grid, my matchup widget, lineup status, activity feed, and contextual commissioner CTA strip.</p>
+        <ul class="feats"><li class="done">Race table ✓</li><li class="done">Matchup grid ✓</li><li class="done">Commish CTAs ✓</li></ul>
+      </div>
+      <div class="card shipped">
+        <div class="card-top"><span class="num">27</span><span class="status-tag shipped"><span class="tdot"></span>Shipped</span></div>
+        <h3>Roster Page UX Overhaul</h3>
+        <p>Sortable table with full stat columns (GP G A PTS PPP SOG HIT BLK FP for skaters; GP W SV% GA SO FP for goalies), per-team filter dropdown, and sortable free-agent table.</p>
+        <ul class="feats"><li class="done">Sortable table ✓</li><li class="done">Full stat cols ✓</li><li class="done">Team filter ✓</li></ul>
+      </div>
       <div class="card partial">
-        <div class="card-top"><span class="num">01</span><span class="status-tag partial"><span class="tdot"></span>Largely built</span></div>
+        <div class="card-top"><span class="num">01</span><span class="status-tag partial"><span class="tdot"></span>In progress</span></div>
         <h3>Commissioner Dashboard</h3>
-        <p>Central admin panel — team management, draft setup, replay-aware season controls, announcements, setup checklist. Permissions enforced.</p>
-        <ul class="feats"><li>Pause / restart controls</li><li>Force draft start</li><li>Lineup lock override</li><li>Settings editor</li></ul>
+        <p>Admin panel covers team management, draft setup, season controls, announcements, and permissions. Four gaps remain before it's complete.</p>
+        <ul class="feats"><li>Pause / restart replay</li><li>Force draft start</li><li>Lineup lock override</li><li>Settings editor</li></ul>
+      </div>
+      <div class="card partial">
+        <div class="card-top"><span class="num">03</span><span class="status-tag partial"><span class="tdot"></span>In progress</span></div>
+        <h3>Mobile Optimization</h3>
+        <p>Compact stats on the lineup page now hide at ≤480px. Broader responsive work — draft room, matchup screens, standings — remains.</p>
+        <ul class="feats"><li class="done">Lineup compact stats ✓</li><li>Responsive draft</li><li>Mobile matchups</li><li>Mobile standings</li></ul>
+      </div>
+      <div class="card partial">
+        <div class="card-top"><span class="num">28</span><span class="status-tag partial"><span class="tdot"></span>In progress</span></div>
+        <h3>Lineup Stats Tab Polish</h3>
+        <p>Rename "Projected" → "Matchup Proj", default to it between weeks, and disable the "This week" tab when no active period exists.</p>
+        <ul class="feats"><li>Rename tab label</li><li>Between-weeks default</li><li>Hide stale tab</li></ul>
       </div>
       <div class="card todo">
-        <div class="card-top"><span class="num">02</span><span class="status-tag todo"><span class="tdot"></span>Needed</span></div>
+        <div class="card-top"><span class="num">02</span><span class="status-tag todo"><span class="tdot"></span>Not built</span></div>
         <h3>League Onboarding</h3>
-        <p>Guide new users to their first league without documentation — welcome flow, setup wizard, draft prep, and a clear replay-mode explanation.</p>
+        <p>Guide new users from signup to first draft without needing documentation — welcome flow, setup wizard, draft prep, and replay-mode explanation.</p>
         <ul class="feats"><li>Welcome flow</li><li>Setup wizard</li><li>Draft guide</li></ul>
       </div>
       <div class="card todo">
-        <div class="card-top"><span class="num">03</span><span class="status-tag todo"><span class="tdot"></span>Needed</span></div>
-        <h3>Mobile Optimization</h3>
-        <p>Most users play on a phone. Make the draft room, matchup screens, standings, and roster management fully responsive — no horizontal scroll.</p>
-        <ul class="feats"><li>Responsive draft</li><li>Mobile matchups</li><li>Mobile rosters</li></ul>
-      </div>
-      <div class="card todo">
-        <div class="card-top"><span class="num">04</span><span class="status-tag todo"><span class="tdot"></span>Needed</span></div>
+        <div class="card-top"><span class="num">04</span><span class="status-tag todo"><span class="tdot"></span>Not built</span></div>
         <h3>Error Handling</h3>
         <p>Build user trust with graceful failure — empty states, loading states, retry actions, and plain-language error messages across every screen.</p>
         <ul class="feats"><li>Empty states</li><li>Loading states</li><li>Retry actions</li></ul>
+      </div>
+      <div class="card todo">
+        <div class="card-top"><span class="num">32</span><span class="status-tag todo"><span class="tdot"></span>Not built</span></div>
+        <h3>Draft Room: Team Distribution Panel</h3>
+        <p>Live panel showing the current manager's pick count by PWHL team, color-coded by concentration (3 = amber, 4+ = red). Pure client-side — no server changes needed.</p>
+        <ul class="feats"><li>Per-team pick count</li><li>Concentration coloring</li><li>Live updates</li></ul>
       </div>
     </div>
   </section>
@@ -398,17 +256,17 @@
         <div class="goal">Reach feature parity with major fantasy platforms.</div>
       </div>
       <div class="prog">
-        <div class="row"><span class="dot-s s"></span><span class="val">0</span> <span>shipped</span></div>
-        <div class="row"><span class="dot-s p"></span><span class="val">1</span> <span>in progress</span></div>
-        <div class="row"><span class="dot-s t"></span><span class="val">3</span> <span>not built</span></div>
+        <div class="row"><span class="dot-s s"></span><span class="val">0</span>&nbsp;shipped</div>
+        <div class="row"><span class="dot-s p"></span><span class="val">1</span>&nbsp;in progress</div>
+        <div class="row"><span class="dot-s t"></span><span class="val">3</span>&nbsp;not built</div>
       </div>
     </div>
     <div class="grid">
       <div class="card partial">
-        <div class="card-top"><span class="num">05</span><span class="status-tag partial"><span class="tdot"></span>Partial</span></div>
+        <div class="card-top"><span class="num">05</span><span class="status-tag partial"><span class="tdot"></span>In progress</span></div>
         <h3>Waiver Wire System</h3>
-        <p>Immediate free-agent add/drop ships today, roster-size enforced. The actual waiver layer — priority and batched resolution — is the missing half.</p>
-        <ul class="feats"><li class="done">Add / drop ✓</li><li>Priority order</li><li>Processing jobs</li><li>Commish settings</li></ul>
+        <p>Immediate free-agent add/drop is live. The actual waiver layer — priority ordering and batched claim resolution — is the missing half.</p>
+        <ul class="feats"><li class="done">Add / drop ✓</li><li>Priority ordering</li><li>Processing jobs</li><li>Commish settings</li></ul>
         <div class="dep"><b>Depends on:</b> Transaction system</div>
       </div>
       <div class="card todo">
@@ -436,50 +294,61 @@
 
   <!-- PHASE 3 -->
   <section class="phase">
-    <div class="phase-head" style="--fill:50%">
+    <div class="phase-head" style="--fill:55%">
       <div class="period-no"><small>P3</small>3</div>
       <div class="meta">
-        <h2>Matchup Experience <span class="pri high">HIGH</span></h2>
+        <h2>Matchup &amp; Season Experience <span class="pri high">HIGH</span></h2>
         <div class="goal">Increase engagement throughout the season — largely shipped.</div>
       </div>
       <div class="prog">
-        <div class="row"><span class="dot-s s"></span><span class="val">2</span> <span>shipped</span></div>
-        <div class="row"><span class="dot-s p"></span><span class="val">1</span> <span>in progress</span></div>
-        <div class="row"><span class="dot-s t"></span><span class="val">2</span> <span>not built</span></div>
+        <div class="row"><span class="dot-s s"></span><span class="val">3</span>&nbsp;shipped</div>
+        <div class="row"><span class="dot-s p"></span><span class="val">2</span>&nbsp;in progress</div>
+        <div class="row"><span class="dot-s t"></span><span class="val">2</span>&nbsp;not built</div>
       </div>
     </div>
     <div class="grid">
       <div class="card shipped">
         <div class="card-top"><span class="num">09</span><span class="status-tag shipped"><span class="tdot"></span>Shipped</span></div>
         <h3>Live Matchup Center</h3>
-        <p>Now the primary in-season destination — top performers, team comparisons, and swing players. Dedicated position-battles view is the one gap.</p>
-        <ul class="feats"><li class="done">Top performers ✓</li><li class="done">Comparisons ✓</li><li class="done">Remaining ✓</li></ul>
+        <p>Primary in-season destination — top performers, team comparisons, swing players, and playing-tonight. Position-battles dedicated view is the one remaining gap.</p>
+        <ul class="feats"><li class="done">Top performers ✓</li><li class="done">Comparisons ✓</li><li class="done">Playing tonight ✓</li></ul>
       </div>
       <div class="card shipped">
         <div class="card-top"><span class="num">10</span><span class="status-tag shipped"><span class="tdot"></span>Shipped</span></div>
         <h3>Win Probability Engine</h3>
-        <p>Projected scores via rolling-average model, logistic win percentages on the hero, and season-long rivalry comparison in 1v1 mode.</p>
-        <ul class="feats"><li class="done">Projections ✓</li><li class="done">Win % ✓</li><li class="done">Historical ✓</li></ul>
+        <p>Projected scores via rolling-average model, logistic win percentages on the matchup hero, and season-long rivalry comparison in 1v1 mode.</p>
+        <ul class="feats"><li class="done">Projections ✓</li><li class="done">Win % ✓</li><li class="done">Rivalry record ✓</li></ul>
+      </div>
+      <div class="card shipped">
+        <div class="card-top"><span class="num">24</span><span class="status-tag shipped"><span class="tdot"></span>Shipped</span></div>
+        <h3>Lineup Management v2</h3>
+        <p>Projected FPTS tab ("Matchup Proj"), between-weeks amber nudge banner on the matchup page, and mobile compact stats at ≤480px.</p>
+        <ul class="feats"><li class="done">Matchup Proj tab ✓</li><li class="done">Between-weeks nudge ✓</li><li class="done">Mobile compact stats ✓</li></ul>
       </div>
       <div class="card partial">
-        <div class="card-top"><span class="num">11</span><span class="status-tag partial"><span class="tdot"></span>Partial</span></div>
+        <div class="card-top"><span class="num">11</span><span class="status-tag partial"><span class="tdot"></span>In progress</span></div>
         <h3>Matchup Storylines</h3>
-        <p>Per-team storyline chip and weekly recap card ship today. League-wide auto-generated insights — biggest upset, closest matchup — are still to come.</p>
+        <p>Per-team storyline chip and weekly recap card are live. League-wide auto-generated insights — biggest upset, closest matchup — are still ahead.</p>
         <ul class="feats"><li class="done">Per-team chip ✓</li><li>Biggest upset</li><li>Closest matchup</li></ul>
       </div>
-      <div class="card todo">
-        <div class="card-top"><span class="num">24</span><span class="status-tag todo"><span class="tdot"></span>Not built</span></div>
-        <h3>Lineup Management v2</h3>
-        <p>Faster, forward-looking lineups — a UX overhaul, a projected-FPTS tab for the upcoming week, and a persistent "set your lineup" flag so no one misses a week.</p>
-        <ul class="feats"><li>UX overhaul</li><li>Projected FPTS</li><li>Upcoming-week flag</li></ul>
-        <div class="dep"><b>Depends on:</b> Projections + lifecycle states (both exist)</div>
+      <div class="card partial">
+        <div class="card-top"><span class="num">30</span><span class="status-tag partial"><span class="tdot"></span>In progress</span></div>
+        <h3>Playoff Experience UX</h3>
+        <p>Bracket is built. Still needed: bracket as primary nav during playoffs, series score in matchup hero, elimination notifications, champion banner, between-round lineup nudge.</p>
+        <ul class="feats"><li>Bracket prominence</li><li>Champion banner</li><li>Elimination alerts</li><li>Between-round nudge</li></ul>
       </div>
       <div class="card todo">
         <div class="card-top"><span class="num">25</span><span class="status-tag todo"><span class="tdot"></span>Not built</span></div>
         <h3>Team Analysis &amp; Insights</h3>
-        <p>An Analysis tab that turns data into advice — what's working, position-group trends vs league, free-agent recs, and trade suggestions once trades land.</p>
+        <p>An Analysis tab with position-group trend breakdown vs league average, free-agent recs ranked by fit, and trade suggestions once the trade system lands.</p>
         <ul class="feats"><li>Trend breakdown</li><li>FA recommendations</li><li>Trade suggestions</li></ul>
-        <div class="dep"><b>Depends on:</b> Trade System (#7), suggestion portion only</div>
+        <div class="dep"><b>Depends on:</b> Trade system (#7) for suggestions only</div>
+      </div>
+      <div class="card todo">
+        <div class="card-top"><span class="num">29</span><span class="status-tag todo"><span class="tdot"></span>Not built</span></div>
+        <h3>Weekly Performance Dashboard</h3>
+        <p>Replaces the Schedule tab with week-over-week team rankings (rise/fall indicators), a position-group FP breakdown per team, and week navigation.</p>
+        <ul class="feats"><li>Week-by-week rankings</li><li>Rise / fall indicators</li><li>Position-group FP</li></ul>
       </div>
     </div>
   </section>
@@ -493,28 +362,28 @@
         <div class="goal">A QA / testing tool, not a flagship — build only the minimum to test the live loop.</div>
       </div>
       <div class="prog">
-        <div class="row"><span class="dot-s s"></span><span class="val">0</span> <span>shipped</span></div>
-        <div class="row"><span class="dot-s p"></span><span class="val">0</span> <span>in progress</span></div>
-        <div class="row"><span class="dot-s t"></span><span class="val">4</span> <span>not built</span></div>
+        <div class="row"><span class="dot-s s"></span><span class="val">0</span>&nbsp;shipped</div>
+        <div class="row"><span class="dot-s p"></span><span class="val">0</span>&nbsp;in progress</div>
+        <div class="row"><span class="dot-s t"></span><span class="val">4</span>&nbsp;not built</div>
       </div>
     </div>
     <div class="grid">
       <div class="card todo">
         <div class="card-top"><span class="num">12</span><span class="status-tag todo"><span class="tdot"></span>Desired</span></div>
-        <h3>Multi-Season Library</h3>
+        <h3>Multi-Season Historical Library</h3>
         <p>Let a league creator pick a season to replay — 2024 inaugural, 2024-25, 2025-26, and future archives.</p>
         <ul class="feats"><li>Season select</li></ul>
       </div>
       <div class="card todo">
-        <div class="card-top"><span class="num">13</span><span class="status-tag todo"><span class="tdot"></span>Desired</span></div>
+        <div class="card-top"><span class="num">13</span><span class="status-tag todo"><span class="tdot"></span>Not built</span></div>
         <h3>Replay Speed Controls</h3>
-        <p>Advance a day, a week, or simulate a whole season, so commissioners control replay pace.</p>
+        <p>Advance a day, a week, or simulate a whole season so commissioners control replay pace.</p>
         <ul class="feats"><li>Advance day / week</li><li>Sim season</li></ul>
       </div>
       <div class="card todo" style="opacity:.72">
         <div class="card-top"><span class="num">14</span><span class="status-tag todo"><span class="tdot"></span>Speculative</span></div>
         <h3>Alternate History Drafts</h3>
-        <p>Historical player pools and fantasy redrafts — "what if Sarah Fillier went 5th overall?" De-prioritized unless it unblocks testing.</p>
+        <p>Historical player pools and fantasy redrafts. "What if Sarah Fillier went 5th overall?" De-prioritized unless it unblocks testing.</p>
       </div>
       <div class="card todo" style="opacity:.72">
         <div class="card-top"><span class="num">15</span><span class="status-tag todo"><span class="tdot"></span>Speculative</span></div>
@@ -526,36 +395,42 @@
 
   <!-- PHASE 5 -->
   <section class="phase">
-    <div class="phase-head" style="--fill:17%">
+    <div class="phase-head" style="--fill:12%">
       <div class="period-no"><small>P5</small>5</div>
       <div class="meta">
         <h2>Retention &amp; Community <span class="pri med">MEDIUM</span></h2>
         <div class="goal">Keep users active between seasons.</div>
       </div>
       <div class="prog">
-        <div class="row"><span class="dot-s s"></span><span class="val">0</span> <span>shipped</span></div>
-        <div class="row"><span class="dot-s p"></span><span class="val">1</span> <span>in progress</span></div>
-        <div class="row"><span class="dot-s t"></span><span class="val">2</span> <span>not built</span></div>
+        <div class="row"><span class="dot-s s"></span><span class="val">0</span>&nbsp;shipped</div>
+        <div class="row"><span class="dot-s p"></span><span class="val">1</span>&nbsp;in progress</div>
+        <div class="row"><span class="dot-s t"></span><span class="val">3</span>&nbsp;not built</div>
       </div>
     </div>
     <div class="grid">
+      <div class="card partial">
+        <div class="card-top"><span class="num">17</span><span class="status-tag partial"><span class="tdot"></span>In progress</span></div>
+        <h3>Rivalries</h3>
+        <p>Season-long H2H records are computed and shown on the matchup hero in 1v1 mode. Rival badges and a dedicated historical-matchups view are still to build.</p>
+        <ul class="feats"><li class="done">H2H records ✓</li><li>Rival badges</li><li>Historical view</li></ul>
+      </div>
       <div class="card todo">
         <div class="card-top"><span class="num">16</span><span class="status-tag todo"><span class="tdot"></span>Not built</span></div>
         <h3>League Chat</h3>
         <p>Real-time messaging — commissioner announcements, team discussion, and trade negotiations in one place.</p>
         <ul class="feats"><li>Announcements</li><li>Discussion</li><li>Trade talk</li></ul>
       </div>
-      <div class="card partial">
-        <div class="card-top"><span class="num">17</span><span class="status-tag partial"><span class="tdot"></span>Partial</span></div>
-        <h3>Rivalries</h3>
-        <p>Season-long head-to-head records are computed and shown on the matchup hero. Rival badges and a dedicated historical-matchups view are still to build.</p>
-        <ul class="feats"><li class="done">H2H records ✓</li><li>Rival badges</li><li>Historical view</li></ul>
-      </div>
       <div class="card todo">
         <div class="card-top"><span class="num">18</span><span class="status-tag todo"><span class="tdot"></span>Not built</span></div>
         <h3>League Hall of Fame</h3>
-        <p>Preserve league legacy — champions, records, and best-ever seasons.</p>
+        <p>Preserve league legacy — champions, records, and best-ever seasons visible to all members.</p>
         <ul class="feats"><li>Champions</li><li>Records</li><li>Best seasons</li></ul>
+      </div>
+      <div class="card todo">
+        <div class="card-top"><span class="num">31</span><span class="status-tag todo"><span class="tdot"></span>Not built</span></div>
+        <h3>Player Legacy &amp; Cross-Season Tracking</h3>
+        <p>Career dashboard at /profile showing every league, final standings, and aggregate FP across seasons. Global leaderboard ranks all users by career metrics.</p>
+        <ul class="feats"><li>Career dashboard</li><li>Global leaderboard</li><li>Season-over-season chart</li></ul>
       </div>
     </div>
   </section>
@@ -569,16 +444,16 @@
         <div class="goal">Increase long-term retention.</div>
       </div>
       <div class="prog">
-        <div class="row"><span class="dot-s s"></span><span class="val">0</span> <span>shipped</span></div>
-        <div class="row"><span class="dot-s p"></span><span class="val">0</span> <span>in progress</span></div>
-        <div class="row"><span class="dot-s t"></span><span class="val">2</span> <span>not built</span></div>
+        <div class="row"><span class="dot-s s"></span><span class="val">0</span>&nbsp;shipped</div>
+        <div class="row"><span class="dot-s p"></span><span class="val">0</span>&nbsp;in progress</div>
+        <div class="row"><span class="dot-s t"></span><span class="val">2</span>&nbsp;not built</div>
       </div>
     </div>
     <div class="grid">
       <div class="card todo">
         <div class="card-top"><span class="num">19</span><span class="status-tag todo"><span class="tdot"></span>Not built</span></div>
         <h3>Keeper Leagues</h3>
-        <p>Carry protected players between seasons, with draft penalties and commissioner controls.</p>
+        <p>Carry protected players between seasons with draft penalties and commissioner controls.</p>
         <ul class="feats"><li>Protected players</li><li>Draft penalties</li></ul>
       </div>
       <div class="card todo">
@@ -599,17 +474,17 @@
         <div class="goal">Improve real-time engagement.</div>
       </div>
       <div class="prog">
-        <div class="row"><span class="dot-s s"></span><span class="val">0</span> <span>shipped</span></div>
-        <div class="row"><span class="dot-s p"></span><span class="val">1</span> <span>in progress</span></div>
-        <div class="row"><span class="dot-s t"></span><span class="val">2</span> <span>not built</span></div>
+        <div class="row"><span class="dot-s s"></span><span class="val">0</span>&nbsp;shipped</div>
+        <div class="row"><span class="dot-s p"></span><span class="val">1</span>&nbsp;in progress</div>
+        <div class="row"><span class="dot-s t"></span><span class="val">2</span>&nbsp;not built</div>
       </div>
     </div>
     <div class="grid">
       <div class="card partial">
-        <div class="card-top"><span class="num">21</span><span class="status-tag partial"><span class="tdot"></span>Partial</span></div>
+        <div class="card-top"><span class="num">21</span><span class="status-tag partial"><span class="tdot"></span>In progress</span></div>
         <h3>Live Scoring</h3>
-        <p>Client-side polling refreshes active-matchup scores every ~60s and recomputes fantasy totals. True real-time push via HockeyTech Firebase is the next step.</p>
-        <ul class="feats"><li class="done">Score updates ✓</li><li>Real-time push</li></ul>
+        <p>Client-side polling refreshes active-matchup scores every ~60s. True real-time push via HockeyTech Firebase RTDB WebSockets is the next step.</p>
+        <ul class="feats"><li class="done">Score polling ✓</li><li>Real-time push</li></ul>
       </div>
       <div class="card todo">
         <div class="card-top"><span class="num">22</span><span class="status-tag todo"><span class="tdot"></span>Not built</span></div>
@@ -621,7 +496,7 @@
         <div class="card-top"><span class="num">23</span><span class="status-tag todo"><span class="tdot"></span>Not built</span></div>
         <h3>Player Trends</h3>
         <p>Hot streaks, cold streaks, and breakout candidates surfaced on player pages.</p>
-        <ul class="feats"><li>Hot / cold</li><li>Breakouts</li></ul>
+        <ul class="feats"><li>Hot / cold streaks</li><li>Breakout candidates</li></ul>
       </div>
     </div>
   </section>
@@ -629,21 +504,21 @@
   <!-- BUILD NEXT -->
   <section class="next">
     <h2>What to build next</h2>
-    <div class="sub">The highest-value gaps on the path to a public beta, in priority order.</div>
+    <div class="sub">Highest-value gaps on the path to a public beta, in priority order. #26, #27, and #24 are shipped.</div>
     <ol>
-      <li class="top"><div><div class="t">Draft Team Distribution Panel <span style="color:#7fb2e8">· #32</span></div><div class="d">Small client-only addition to the draft room; prevents concentration mistakes during the most critical league moment.</div></div></li>
-      <li class="top"><div><div class="t">Lineup Stats Tab Polish <span style="color:#7fb2e8">· #28</span></div><div class="d">Rename "Projected" → "Matchup Proj", hide "This week" between weeks. Near-zero scope; polish before beta.</div></div></li>
-      <li class="top"><div><div class="t">League Onboarding Wizard <span style="color:#7fb2e8">· #2</span></div><div class="d">Completely unbuilt — the biggest blocker for self-serve signups.</div></div></li>
+      <li class="top"><div><div class="t">Draft Team Distribution Panel <span style="color:#7fb2e8">· #32</span></div><div class="d">Small client-only addition; prevents concentration mistakes during the most critical league moment.</div></div></li>
+      <li class="top"><div><div class="t">Lineup Stats Tab Polish <span style="color:#7fb2e8">· #28</span></div><div class="d">Rename "Projected" → "Matchup Proj", hide "This week" between weeks. Near-zero scope.</div></div></li>
+      <li class="top"><div><div class="t">League Onboarding <span style="color:#7fb2e8">· #2</span></div><div class="d">Completely unbuilt — biggest blocker for self-serve signups.</div></div></li>
       <li><div><div class="t">Mobile Optimization <span style="color:#7fb2e8">· #3</span></div><div class="d">Responsive draft room + matchup screens; unblocks broader mobile use.</div></div></li>
-      <li><div><div class="t">Error Handling <span style="color:#7fb2e8">· #4</span></div><div class="d">Empty and loading states across the app.</div></div></li>
-      <li><div><div class="t">Weekly Performance Dashboard <span style="color:#7fb2e8">· #29</span></div><div class="d">Replaces the low-value Schedule tab with a week-over-week team ranking / position-group breakdown.</div></div></li>
+      <li><div><div class="t">Error Handling <span style="color:#7fb2e8">· #4</span></div><div class="d">Empty and loading states for all core pages.</div></div></li>
+      <li><div><div class="t">Weekly Performance Dashboard <span style="color:#7fb2e8">· #29</span></div><div class="d">Replaces the low-value Schedule tab with week-over-week rankings and position-group breakdown.</div></div></li>
       <li><div><div class="t">Trade System + Transaction History <span style="color:#7fb2e8">· #7 · #8</span></div><div class="d">The missing half of league management.</div></div></li>
-      <li><div><div class="t">Playoff Experience UX <span style="color:#7fb2e8">· #30</span></div><div class="d">Bracket prominence, champion banner, between-round nudge; activate before first bracket closes.</div></div></li>
-      <li><div><div class="t">Team Analysis &amp; Insights <span style="color:#7fb2e8">· #25</span></div><div class="d">Engagement differentiator — ship analysis + free-agent half now, trades later.</div></div></li>
+      <li><div><div class="t">Playoff Experience UX <span style="color:#7fb2e8">· #30</span></div><div class="d">Bracket prominence, champion banner, between-round nudge — activate before first playoffs close.</div></div></li>
+      <li><div><div class="t">Team Analysis &amp; Insights <span style="color:#7fb2e8">· #25</span></div><div class="d">Engagement differentiator — ship analysis + free-agent half now, trade suggestions once #7 lands.</div></div></li>
       <li><div><div class="t">Waiver Priority + Processing <span style="color:#7fb2e8">· #5</span></div><div class="d">Upgrade immediate add/drop into a real waiver wire.</div></div></li>
-      <li><div><div class="t">Player Legacy &amp; Cross-Season Tracking <span style="color:#7fb2e8">· #31</span></div><div class="d">Career dashboard, global leaderboard; retention layer for returning players.</div></div></li>
+      <li><div><div class="t">Player Legacy &amp; Cross-Season Tracking <span style="color:#7fb2e8">· #31</span></div><div class="d">Career dashboard, global leaderboard — long-term retention driver.</div></div></li>
     </ol>
-    <div class="stretch"><b>Stretch (not beta blockers):</b> league-wide matchup storylines (#11) and the rivalry / Hall-of-Fame retention layer (#17–#18). Replay work stays out of this list — invest only when it unblocks testing.</div>
+    <div class="stretch"><b>Stretch (not beta blockers):</b> league-wide matchup storylines (#11) and the rivalry / Hall-of-Fame retention layer (#17–#18). Replay work (Phase 4) stays out of this list.</div>
   </section>
 
 </div>

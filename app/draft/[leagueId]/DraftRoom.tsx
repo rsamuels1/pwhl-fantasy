@@ -332,6 +332,43 @@ function simulateSlotFill(
   return filled;
 }
 
+function TeamSpreadPanel({
+  draft,
+  myTeamId,
+  playerTeams,
+}: {
+  draft: DraftState;
+  myTeamId: string;
+  playerTeams: Record<string, string | null>;
+}) {
+  const myPicks = draft.completed.filter((p) => p.fantasyTeamId === myTeamId);
+  const counts: Record<string, number> = {};
+  for (const pick of myPicks) {
+    const team = playerTeams[pick.playerId] ?? "—";
+    counts[team] = (counts[team] ?? 0) + 1;
+  }
+  const rows = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+
+  return (
+    <div style={styles.card}>
+      <div style={styles.cardTitle}>Team Spread</div>
+      {rows.length === 0 ? (
+        <div style={{ fontSize: 12, color: "var(--muted)" }}>No picks yet</div>
+      ) : (
+        rows.map(([team, count]) => {
+          const color = count >= 4 ? "var(--clock-warn)" : count === 3 ? "#f59e0b" : "var(--text)";
+          return (
+            <div key={team} style={{ display: "flex", alignItems: "center", gap: 8, padding: "4px 0", borderBottom: "1px solid var(--border)", fontSize: 12 }}>
+              <span style={{ flex: 1, color: "var(--text)" }}>{team}</span>
+              <span style={{ fontWeight: 700, fontVariantNumeric: "tabular-nums", color }}>{count}</span>
+            </div>
+          );
+        })
+      )}
+    </div>
+  );
+}
+
 function NeedsPanel({
   draft,
   myTeamId,
@@ -759,10 +796,14 @@ export default function DraftRoom({
   const playerPositions = useRef<Record<string, string>>(
     Object.fromEntries(initialStats.map((s) => [s.id, s.position]))
   );
+  const playerTeams = useRef<Record<string, string | null>>(
+    Object.fromEntries(initialStats.map((s) => [s.id, s.team ?? null]))
+  );
   useEffect(() => {
     for (const p of available) {
       playerNames.current[p.id] = p.name;
       playerPositions.current[p.id] = p.position;
+      playerTeams.current[p.id] = p.team ?? null;
     }
   }, [available]);
 
@@ -873,6 +914,13 @@ export default function DraftRoom({
               rosterSettings={rosterSettings}
               playerPositions={playerPositions.current}
             />
+            <div style={{ marginTop: 12 }}>
+              <TeamSpreadPanel
+                draft={draft}
+                myTeamId={teamId}
+                playerTeams={playerTeams.current}
+              />
+            </div>
             <div style={{ marginTop: 12 }}>
               <MyPicks
                 draft={draft}
