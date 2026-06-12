@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { requireAuth } from "@/lib/auth";
 import { getDevNow } from "@/lib/devTime";
@@ -80,6 +81,14 @@ function MatchupHero({ summary, teamName }: { summary: MatchupQuickSummary; team
 
 export default async function DashboardPage() {
   const user = await requireAuth("/dashboard");
+
+  // Single-team users go directly to their team page
+  const ownedTeamCount = await prisma.fantasyTeam.count({ where: { ownerId: user.id } });
+  if (ownedTeamCount === 1) {
+    const singleTeam = await prisma.fantasyTeam.findFirst({ where: { ownerId: user.id }, select: { id: true } });
+    redirect(`/team/${singleTeam!.id}/matchup`);
+  }
+
   const nowMs = await getDevNow();
 
   const ownedTeams = await prisma.fantasyTeam.findMany({

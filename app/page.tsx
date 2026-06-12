@@ -8,6 +8,8 @@ export default async function Home() {
   const user = await getCurrentUser();
 
   if (user) {
+    const teams = await prisma.fantasyTeam.findMany({ where: { ownerId: user.id }, select: { id: true } });
+    if (teams.length === 1) redirect(`/team/${teams[0].id}/matchup`);
     redirect("/dashboard");
   }
 
@@ -194,7 +196,7 @@ export default async function Home() {
           Ready to build your team?
         </h2>
         <p style={{ color: "#64748b", marginBottom: 32 }}>
-          Free to play. No account setup required to join.
+          Free to play.
         </p>
         <div className="hero-actions" style={{ justifyContent: "center" }}>
           <Link href="/create-league" className="button-primary">Create League</Link>

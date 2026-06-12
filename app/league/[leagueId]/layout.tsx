@@ -38,7 +38,7 @@ export default async function LeagueLayout({ children, params }: LeagueLayoutPro
     { label: "Overview", href: `${basePath}` },
     { label: "Standings", href: `${basePath}/standings` },
     { label: "Schedule", href: `${basePath}/matchups` },
-    { label: "Bracket", href: `${basePath}/bracket` },
+    { label: "Playoffs", href: `${basePath}/bracket` },
     { label: "Rosters", href: `${basePath}/roster` },
   ];
   const adminItem = isCommissioner
