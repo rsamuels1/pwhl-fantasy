@@ -106,6 +106,8 @@ Acceptance Criteria:
 
 Status: Needed
 
+Estimated tokens: ~100K (new routes, wizard UI, multiple components — nothing to build on)
+
 New users need guidance.
 
 Features:
@@ -125,6 +127,8 @@ Acceptance Criteria:
 ## 3. Mobile Optimization
 
 Status: Partially Implemented
+
+Estimated tokens: ~75K (CSS changes across many files; some component restructuring)
 
 Most users will interact on mobile. Compact stats on the lineup page are now hidden at
 ≤480px via `.stat-secondary`. Broader responsive work remains.
@@ -146,6 +150,8 @@ Acceptance Criteria:
 ## 4. Error Handling
 
 Status: Needed
+
+Estimated tokens: ~65K (many small localized touches across all core pages)
 
 Improve user trust.
 
@@ -205,6 +211,8 @@ Phase: 1
 
 Priority: MEDIUM
 
+Estimated tokens: ~25K (single component edit — label rename + conditional tab hiding)
+
 Goal: Clean up the stats toggle on the lineup page. We have a "Projected" tab (showing
 upcoming-week projected FP) but the label and default behavior can be improved.
 
@@ -228,11 +236,19 @@ Acceptance Criteria:
 
 ## 32. Draft Room: Team Distribution Panel
 
-Status: Not Implemented
+Status: Implemented ✅
 
 Phase: 1 (draft room feature)
 
 Priority: MEDIUM
+
+Estimated tokens: ~30K (client-only panel; derived from existing state, no server changes)
+
+What was built: Inline `TeamSpreadPanel` component in `DraftRoom.tsx`. Shows pick count per
+PWHL team for the current manager, color-coded neutral (1–2), amber (3), red (4+). The
+`playerTeams` ref was added following the `playerNames`/`playerPositions` pattern, seeded
+from `initialStats` and updated on each `available` WebSocket broadcast. Panel sits between
+NeedsPanel and MyPicks in the right column.
 
 Goal: During the draft, show each manager a live breakdown of how many players they've
 drafted per PWHL team, so they can avoid over-concentrating on one team.
@@ -270,6 +286,8 @@ Priority: HIGH
 
 Status: Partially Implemented
 
+Estimated tokens: ~110K (new schema columns, waiver service, processing job, commissioner UI)
+
 Immediate free-agent add/drop ships today (`POST /api/leagues/[leagueId]/waiver` +
 roster page free-agent panel; roster-size enforced; emits a `LeagueEvent`). What's
 missing is the actual *waiver* layer.
@@ -296,6 +314,8 @@ Dependencies:
 
 Status: Not Implemented
 
+Estimated tokens: ~80K (depends on #5; bidding logic + UI + budget tracking)
+
 Features:
 
 - Blind bidding
@@ -316,6 +336,8 @@ Dependencies:
 ## 7. Trade System
 
 Status: Not Implemented
+
+Estimated tokens: ~130K (new domain — schema tables, API routes, proposal/review/approval UI; plan a dedicated session)
 
 Features:
 
@@ -338,6 +360,8 @@ Dependencies:
 ## 8. Transaction History
 
 Status: Not Implemented
+
+Estimated tokens: ~70K standalone · ~45K after #7 (cheaper once trade schema exists; mainly reads + log view)
 
 Features:
 
@@ -442,6 +466,8 @@ Priority: HIGH (trade-suggestion portion gated by Trade System #7)
 
 Status: Not Implemented
 
+Estimated tokens: ~85K (new page, per-position-group aggregation queries; all reads on existing data)
+
 Goal: add an "Analysis" tab to the matchup dashboard that turns the team's data into
 actionable advice.
 
@@ -492,6 +518,8 @@ Phase: 3
 
 Priority: MEDIUM
 
+Estimated tokens: ~65K (new page + server-side aggregation; all data exists, no schema changes)
+
 Goal: Replace the current Schedule tab (`/team/[teamId]/schedule`) with a richer
 week-over-week performance table — less about upcoming games, more about how teams
 and players are trending across the season.
@@ -533,6 +561,8 @@ Phase: 3
 Priority: HIGH (once playoffs start)
 
 Status: Foundation built; UX polish needed
+
+Estimated tokens: ~40K (polish on existing bracket/matchup/overview pages; minimal new logic)
 
 Goal: Make the playoff period feel distinct and exciting. The bracket is built; what's
 missing is a coherent playoff-mode UI experience.
@@ -695,6 +725,8 @@ Acceptance Criteria:
 Phase: 5
 
 Priority: MEDIUM
+
+Estimated tokens: ~95K (new /profile page, career aggregation queries, leaderboard; may need cached stats table)
 
 Goal: Give managers a persistent identity and historical record that spans teams, leagues,
 and seasons — similar to how Madden tracks coaching legacy across careers.
@@ -882,29 +914,50 @@ Replay-compatibility is a nice-to-have that protects our QA loop, not a gate on 
 # What To Build Next
 
 League Overview Redesign (#26), Roster Page UX Overhaul (#27), and Lineup Management v2 (#24)
-are shipped. The highest-value gaps for a public beta are:
+are shipped. The list below is sequenced by **token efficiency** — each feature's estimated
+Claude Pro context cost is shown so sessions can be batched optimally.
 
-1. **Draft Team Distribution Panel (#32)** — small client-only addition to the draft room;
-   prevents concentration mistakes during the most critical league moment.
-2. **Lineup Stats Tab Polish (#28)** — rename "Projected" → "Matchup Proj", hide "This week"
-   between weeks. Near-zero scope; polish before beta.
-3. **League Onboarding (#2)** — still completely unbuilt; biggest blocker for self-serve signups.
-4. **Mobile Optimization (#3)** — draft room + matchup screens responsive; unblocks broader
-   mobile use.
-5. **Error Handling (#4)** — empty + loading states for all core pages.
-6. **Weekly Performance Dashboard (#29)** — replaces the low-value Schedule tab with a
-   week-over-week team ranking / position-group breakdown table.
-7. **Trade System (#7) + Transaction History (#8)** — the missing half of league management.
-8. **Playoff Experience UX (#30)** — bracket prominence, champion banner, between-round nudge;
-   activate before first playoff bracket closes.
-9. **Team Analysis & Insights (#25)** — engagement differentiator; ship the analysis +
-   free-agent half first, add trade suggestions once #7 lands.
-10. **Waiver priority + processing jobs (#5)** — upgrade immediate add/drop into a real waiver wire.
-11. **Player Legacy & Cross-Season Tracking (#31)** — career dashboard, global leaderboard;
-    long-term retention driver.
+**Token sizing:** CLAUDE.md + system overhead uses ~15K tokens of fixed cost per session.
+Claude Pro's 200K context window fits 2–3 quick-win features or one heavy lift per session
+comfortably. Estimates assume a fresh session starting from the current codebase state.
 
-Stretch (differentiators, not beta blockers): league-wide matchup storylines (#11) and the
-rivalry/Hall-of-Fame retention layer (#17–#18). Replay work (Phase 4) stays out of this
-list — invest in it only when it unblocks testing of the above.
+### Quick wins (< 45K tokens — batch 2–3 per session)
+
+1. **Lineup Stats Tab Polish (#28)** · ~25K
+   Rename "Projected" → "Matchup Proj", hide "This week" between weeks. Single-component edit.
+2. **Draft Team Distribution Panel (#32)** · ~30K ✅ Just shipped
+   Client-only panel in the draft room. No schema changes, derives from existing state.
+3. **Playoff Experience UX (#30)** · ~40K
+   Bracket prominence, champion banner, between-round nudge. Polish on existing pages; no schema
+   changes.
+
+### Standard sessions (60–90K tokens — one feature per session)
+
+4. **Error Handling (#4)** · ~65K
+   Empty + loading states across all core pages. Beta prerequisite; many files but each change
+   is small and localized.
+5. **Weekly Performance Dashboard (#29)** · ~65K
+   New page replacing the Schedule tab. Aggregates existing `Matchup` + `StatLine` rows; no
+   schema changes.
+6. **Mobile Optimization (#3)** · ~75K
+   Responsive CSS across draft room, matchup, and roster screens. Beta prerequisite.
+7. **Team Analysis & Insights (#25)** · ~85K
+   New Analysis tab on the matchup page. Complex aggregation but all reads on existing data;
+   trade suggestions deferred until #7.
+
+### Heavy lifts (100K+ tokens — plan a fresh session)
+
+8. **League Onboarding (#2)** · ~100K
+   Entirely unbuilt — welcome flow, setup wizard, draft guide. Beta prerequisite despite token cost.
+9. **Trade System (#7)** · ~130K
+   New domain: schema tables, API routes, proposal/review/approval UI. Plan a dedicated session.
+10. **Transaction History (#8)** · ~45K after #7
+    Much cheaper once the trade domain exists; primarily a log view reading the new tables.
+11. **Waiver Priority + Processing (#5)** · ~110K
+    Waiver priority ordering, batched claim-resolution jobs, commissioner settings.
+
+Stretch (differentiators, not beta blockers): league-wide matchup storylines (#11 · ~50K) and
+the rivalry/Hall-of-Fame retention layer (#17–#18). Player Legacy (#31 · ~95K) deferred until
+at least one live season completes. Replay work (Phase 4) stays out of this list.
 
 ---

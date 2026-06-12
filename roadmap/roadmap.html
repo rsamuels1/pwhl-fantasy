@@ -105,6 +105,10 @@
   .next li .d{color:#a7bdd2;font-size:13px;margin-top:2px;}
   .next .stretch{margin-top:20px;font-size:13px;color:#9fb6cc;position:relative;border-top:1px solid rgba(255,255,255,.1);padding-top:16px;}
   .next .stretch b{color:#cfe0f2;font-weight:600;}
+  .next .tok{flex:none;margin-left:auto;font-size:11px;font-weight:700;letter-spacing:.04em;color:#6fb0f5;background:rgba(31,111,214,.18);border:1px solid rgba(31,111,214,.30);padding:3px 9px;border-radius:20px;white-space:nowrap;align-self:center;}
+  .next li.tier-head{counter-increment:none;background:transparent;border:none;padding:14px 0 2px;display:block;}
+  .next li.tier-head::before{content:none;}
+  .next li.tier-head .tl{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#6fb0f5;border-bottom:1px solid rgba(255,255,255,.10);padding-bottom:8px;display:block;}
 
   footer{padding:50px 0 60px;text-align:center;color:var(--ink-faint);font-size:12.5px;}
   footer .puck{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--line-red);margin:0 7px;vertical-align:middle;}
@@ -183,16 +187,16 @@
 
   <!-- PHASE 1 -->
   <section class="phase">
-    <div class="phase-head" style="--fill:38%">
+    <div class="phase-head" style="--fill:45%">
       <div class="period-no"><small>P1</small>1</div>
       <div class="meta">
         <h2>Beta Completion <span class="pri critical">CRITICAL</span></h2>
         <div class="goal">Make the product stable enough for external users.</div>
       </div>
       <div class="prog">
-        <div class="row"><span class="dot-s s"></span><span class="val">2</span>&nbsp;shipped</div>
+        <div class="row"><span class="dot-s s"></span><span class="val">3</span>&nbsp;shipped</div>
         <div class="row"><span class="dot-s p"></span><span class="val">3</span>&nbsp;in progress</div>
-        <div class="row"><span class="dot-s t"></span><span class="val">3</span>&nbsp;not built</div>
+        <div class="row"><span class="dot-s t"></span><span class="val">2</span>&nbsp;not built</div>
       </div>
     </div>
     <div class="grid">
@@ -238,11 +242,11 @@
         <p>Build user trust with graceful failure — empty states, loading states, retry actions, and plain-language error messages across every screen.</p>
         <ul class="feats"><li>Empty states</li><li>Loading states</li><li>Retry actions</li></ul>
       </div>
-      <div class="card todo">
-        <div class="card-top"><span class="num">32</span><span class="status-tag todo"><span class="tdot"></span>Not built</span></div>
+      <div class="card shipped">
+        <div class="card-top"><span class="num">32</span><span class="status-tag shipped"><span class="tdot"></span>Shipped</span></div>
         <h3>Draft Room: Team Distribution Panel</h3>
-        <p>Live panel showing the current manager's pick count by PWHL team, color-coded by concentration (3 = amber, 4+ = red). Pure client-side — no server changes needed.</p>
-        <ul class="feats"><li>Per-team pick count</li><li>Concentration coloring</li><li>Live updates</li></ul>
+        <p>Live "Team Spread" panel in the right column shows the current manager's pick count by PWHL team, color-coded neutral / amber (3) / red (4+). Pure client-side — no server changes.</p>
+        <ul class="feats"><li class="done">Per-team pick count ✓</li><li class="done">Concentration coloring ✓</li><li class="done">Live updates ✓</li></ul>
       </div>
     </div>
   </section>
@@ -504,21 +508,23 @@
   <!-- BUILD NEXT -->
   <section class="next">
     <h2>What to build next</h2>
-    <div class="sub">Highest-value gaps on the path to a public beta, in priority order. #26, #27, and #24 are shipped.</div>
+    <div class="sub">Sequenced by token efficiency — each item shows its estimated Claude Pro context cost. Fixed overhead (CLAUDE.md + history) is ~15K per session; the 200K window fits 2–3 quick wins or one heavy lift.</div>
     <ol>
-      <li class="top"><div><div class="t">Draft Team Distribution Panel <span style="color:#7fb2e8">· #32</span></div><div class="d">Small client-only addition; prevents concentration mistakes during the most critical league moment.</div></div></li>
-      <li class="top"><div><div class="t">Lineup Stats Tab Polish <span style="color:#7fb2e8">· #28</span></div><div class="d">Rename "Projected" → "Matchup Proj", hide "This week" between weeks. Near-zero scope.</div></div></li>
-      <li class="top"><div><div class="t">League Onboarding <span style="color:#7fb2e8">· #2</span></div><div class="d">Completely unbuilt — biggest blocker for self-serve signups.</div></div></li>
-      <li><div><div class="t">Mobile Optimization <span style="color:#7fb2e8">· #3</span></div><div class="d">Responsive draft room + matchup screens; unblocks broader mobile use.</div></div></li>
-      <li><div><div class="t">Error Handling <span style="color:#7fb2e8">· #4</span></div><div class="d">Empty and loading states for all core pages.</div></div></li>
-      <li><div><div class="t">Weekly Performance Dashboard <span style="color:#7fb2e8">· #29</span></div><div class="d">Replaces the low-value Schedule tab with week-over-week rankings and position-group breakdown.</div></div></li>
-      <li><div><div class="t">Trade System + Transaction History <span style="color:#7fb2e8">· #7 · #8</span></div><div class="d">The missing half of league management.</div></div></li>
-      <li><div><div class="t">Playoff Experience UX <span style="color:#7fb2e8">· #30</span></div><div class="d">Bracket prominence, champion banner, between-round nudge — activate before first playoffs close.</div></div></li>
-      <li><div><div class="t">Team Analysis &amp; Insights <span style="color:#7fb2e8">· #25</span></div><div class="d">Engagement differentiator — ship analysis + free-agent half now, trade suggestions once #7 lands.</div></div></li>
-      <li><div><div class="t">Waiver Priority + Processing <span style="color:#7fb2e8">· #5</span></div><div class="d">Upgrade immediate add/drop into a real waiver wire.</div></div></li>
-      <li><div><div class="t">Player Legacy &amp; Cross-Season Tracking <span style="color:#7fb2e8">· #31</span></div><div class="d">Career dashboard, global leaderboard — long-term retention driver.</div></div></li>
+      <li class="tier-head"><span class="tl">Quick wins — batch 2–3 per session (&lt; 45K tokens each)</span></li>
+      <li class="top"><div><div class="t">Lineup Stats Tab Polish <span style="color:#7fb2e8">· #28</span></div><div class="d">Rename "Projected" → "Matchup Proj", hide "This week" between weeks. Single-component edit.</div></div><span class="tok">~25K</span></li>
+      <li class="top"><div><div class="t">Playoff Experience UX <span style="color:#7fb2e8">· #30</span></div><div class="d">Bracket prominence, champion banner, between-round nudge. Polish on existing pages; no schema changes.</div></div><span class="tok">~40K</span></li>
+      <li class="tier-head"><span class="tl">Standard — one feature per session (60–90K tokens)</span></li>
+      <li><div><div class="t">Error Handling <span style="color:#7fb2e8">· #4</span></div><div class="d">Empty + loading states across all core pages. Many files, but each change is small and localized. Beta prerequisite.</div></div><span class="tok">~65K</span></li>
+      <li><div><div class="t">Weekly Performance Dashboard <span style="color:#7fb2e8">· #29</span></div><div class="d">New page replacing the Schedule tab — week-by-week rankings + position-group breakdown. No schema changes.</div></div><span class="tok">~65K</span></li>
+      <li><div><div class="t">Mobile Optimization <span style="color:#7fb2e8">· #3</span></div><div class="d">Responsive CSS across draft room, matchup, and roster screens. Beta prerequisite.</div></div><span class="tok">~75K</span></li>
+      <li><div><div class="t">Team Analysis &amp; Insights <span style="color:#7fb2e8">· #25</span></div><div class="d">New Analysis tab — position-group trends, FA recommendations, trade suggestions once #7 lands.</div></div><span class="tok">~85K</span></li>
+      <li class="tier-head"><span class="tl">Heavy lifts — plan a fresh session (100K+ tokens)</span></li>
+      <li><div><div class="t">League Onboarding <span style="color:#7fb2e8">· #2</span></div><div class="d">Entirely unbuilt — welcome flow, setup wizard, draft guide. Beta prerequisite despite token cost.</div></div><span class="tok">~100K</span></li>
+      <li><div><div class="t">Trade System <span style="color:#7fb2e8">· #7</span></div><div class="d">New domain: schema tables, API routes, proposal / review / approval UI. Plan a dedicated session.</div></div><span class="tok">~130K</span></li>
+      <li><div><div class="t">Transaction History <span style="color:#7fb2e8">· #8</span></div><div class="d">~45K after #7 — much cheaper once the trade domain exists. Primarily a log view reading the new tables.</div></div><span class="tok">~45K↓</span></li>
+      <li><div><div class="t">Waiver Priority + Processing <span style="color:#7fb2e8">· #5</span></div><div class="d">Priority ordering, batched claim-resolution jobs, commissioner settings. Schema + service + UI.</div></div><span class="tok">~110K</span></li>
     </ol>
-    <div class="stretch"><b>Stretch (not beta blockers):</b> league-wide matchup storylines (#11) and the rivalry / Hall-of-Fame retention layer (#17–#18). Replay work (Phase 4) stays out of this list.</div>
+    <div class="stretch"><b>Player Legacy (#31) · ~95K:</b> career dashboard, global leaderboard — deferred until one live season completes. <b>Stretch:</b> league-wide storylines (#11 · ~50K) and the rivalry / Hall-of-Fame layer (#17–#18). Replay (Phase 4) stays out of this list.</div>
   </section>
 
 </div>
