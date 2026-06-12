@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { computeStandings } from "@/lib/playoffs/seeding";
+import { computeVpStandings } from "@/lib/scoring/vp";
 import { requireAuth, requireLeagueMember } from "@/lib/auth";
 import { getDevNow } from "@/lib/devTime";
 import { getReplayNow } from "@/lib/replayTime";
@@ -120,12 +121,25 @@ export default async function StandingsPage({ params }: { params: { leagueId: st
 
   if (!league) notFound();
 
+  const scoringMode = (league as { scoringMode?: string }).scoringMode ?? "VTF";
+  const isVpMode = scoringMode === "VP";
+
   const matchups = await prisma.matchup.findMany({
     where: { leagueId },
     include: { homeTeam: true, awayTeam: true },
   });
 
   const standings = computeStandings(league.teams, matchups);
+  const vpStandings = isVpMode ? computeVpStandings(
+    league.teams,
+    matchups.map((m) => ({
+      homeTeamId: m.homeTeamId, awayTeamId: m.awayTeamId,
+      homeScore: m.homeScore, awayScore: m.awayScore,
+      homeVP: (m as { homeVP?: number | null }).homeVP ?? null,
+      awayVP: (m as { awayVP?: number | null }).awayVP ?? null,
+      isPlayoff: m.isPlayoff,
+    }))
+  ) : null;
   const streaks = computeStreaks(league.teams.map((t) => t.id), matchups);
 
   // ── Daily FP leaderboard (replay leagues only) ──
@@ -252,6 +266,55 @@ export default async function StandingsPage({ params }: { params: { leagueId: st
         }}>
           {myBanner.text}
         </div>
+      )}
+
+      {/* ── VP mode: Victory Points standings ── */}
+      {vpStandings && vpStandings.some((s) => s.totalVP > 0) && (
+        <section style={card}>
+          <h2 style={{ fontSize: 18, margin: "0 0 4px", color: "#e2e8f0" }}>Victory Points</h2>
+          <p style={{ margin: "0 0 16px", fontSize: 12, color: "#475569" }}>
+            Win matchup +2 VP · 1st place score +2 VP · 2nd place score +1 VP
+          </p>
+          <div style={{ overflowX: "auto" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 480 }}>
+              <thead>
+                <tr style={{ color: "#64748b", textAlign: "left", borderBottom: "1px solid rgba(148,163,184,0.2)" }}>
+                  <th style={thStyle}>#</th>
+                  <th style={thStyle}>Team</th>
+                  <th style={thStyle} title="Total VP">VP</th>
+                  <th style={thStyle} title="Matchup VP">W-L-T</th>
+                  <th style={thStyle} title="Matchup VP earned">Mtch VP</th>
+                  <th style={thStyle} title="Rank bonus VP earned">Rnk VP</th>
+                  <th style={thStyle}>PF</th>
+                </tr>
+              </thead>
+              <tbody>
+                {vpStandings.map((s, i) => {
+                  const isMe = s.fantasyTeamId === myTeam.id;
+                  return (
+                    <tr key={s.fantasyTeamId} style={{
+                      background: isMe ? "rgba(99,102,241,0.08)" : "transparent",
+                      borderBottom: "1px solid rgba(148,163,184,0.08)",
+                    }}>
+                      <td style={{ ...tdStyle, color: "#475569", fontWeight: 700 }}>{i + 1}</td>
+                      <td style={{ ...tdStyle, fontWeight: isMe ? 700 : undefined, color: isMe ? "#a5b4fc" : "#e2e8f0" }}>
+                        {s.teamName}
+                        {isMe && <span style={{ fontSize: 10, color: "#6366f1", marginLeft: 6 }}>YOU</span>}
+                      </td>
+                      <td style={{ ...tdStyle, fontWeight: 800, color: "#e2e8f0", fontVariantNumeric: "tabular-nums" }}>{s.totalVP}</td>
+                      <td style={{ ...tdStyle, color: "#94a3b8", fontVariantNumeric: "tabular-nums" }}>
+                        {s.wins}–{s.losses}{s.ties > 0 ? `–${s.ties}` : ""}
+                      </td>
+                      <td style={{ ...tdStyle, color: "#818cf8", fontVariantNumeric: "tabular-nums" }}>{s.matchupVP}</td>
+                      <td style={{ ...tdStyle, color: "#34d399", fontVariantNumeric: "tabular-nums" }}>{s.rankVP}</td>
+                      <td style={{ ...tdStyle, color: "#64748b", fontVariantNumeric: "tabular-nums" }}>{s.pointsFor.toFixed(1)}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </section>
       )}
 
       {/* ── Replay: daily FP power rankings ── */}

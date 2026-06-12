@@ -16,6 +16,8 @@ export default async function MatchupsPage({ params }: { params: { leagueId: str
   const league = await prisma.fantasyLeague.findUnique({ where: { id: leagueId } });
   if (!league) notFound();
 
+  const isVpMode = (league as { scoringMode?: string }).scoringMode === "VP";
+
   const nowMs = getReplayNow(league, await getDevNow());
 
   const matchups = await prisma.matchup.findMany({
@@ -90,6 +92,8 @@ export default async function MatchupsPage({ params }: { params: { leagueId: str
                   const isMyMatchup = homeIsMe || awayIsMe;
                   const homeWon = scored && m.homeScore! > m.awayScore!;
                   const awayWon = scored && m.awayScore! > m.homeScore!;
+                  const homeVP = (m as { homeVP?: number | null }).homeVP;
+                  const awayVP = (m as { awayVP?: number | null }).awayVP;
 
                   return (
                     <div key={m.id} style={{
@@ -112,12 +116,13 @@ export default async function MatchupsPage({ params }: { params: { leagueId: str
                           {m.homeTeam.name}
                         </div>
                         {scored && (
-                          <div style={{
-                            fontSize: 17, fontWeight: 800,
-                            color: homeWon ? "#e2e8f0" : "#475569",
-                            fontVariantNumeric: "tabular-nums",
-                          }}>
-                            {m.homeScore!.toFixed(1)}
+                          <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "baseline", gap: 6 }}>
+                            <span style={{ fontSize: 17, fontWeight: 800, color: homeWon ? "#e2e8f0" : "#475569", fontVariantNumeric: "tabular-nums" }}>
+                              {m.homeScore!.toFixed(1)}
+                            </span>
+                            {isVpMode && homeVP != null && (
+                              <span style={{ fontSize: 11, fontWeight: 700, color: "#818cf8" }}>{homeVP} VP</span>
+                            )}
                           </div>
                         )}
                       </div>
@@ -137,12 +142,13 @@ export default async function MatchupsPage({ params }: { params: { leagueId: str
                           {m.awayTeam.name}
                         </div>
                         {scored && (
-                          <div style={{
-                            fontSize: 17, fontWeight: 800,
-                            color: awayWon ? "#e2e8f0" : "#475569",
-                            fontVariantNumeric: "tabular-nums",
-                          }}>
-                            {m.awayScore!.toFixed(1)}
+                          <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
+                            <span style={{ fontSize: 17, fontWeight: 800, color: awayWon ? "#e2e8f0" : "#475569", fontVariantNumeric: "tabular-nums" }}>
+                              {m.awayScore!.toFixed(1)}
+                            </span>
+                            {isVpMode && awayVP != null && (
+                              <span style={{ fontSize: 11, fontWeight: 700, color: "#818cf8" }}>{awayVP} VP</span>
+                            )}
                           </div>
                         )}
                       </div>

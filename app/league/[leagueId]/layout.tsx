@@ -22,33 +22,44 @@ export default async function LeagueLayout({ children, params }: LeagueLayoutPro
     ? cookieStore.get("pwhl_dev_sim_date")?.value ?? null
     : null;
 
-  const [user, league] = await Promise.all([
+  const [user, leagueAndDraft] = await Promise.all([
     getCurrentUser(),
     prisma.fantasyLeague.findUnique({
       where: { id: leagueId },
-      select: { commissionerId: true, name: true, isReplay: true, replayCurrentDate: true, season: true, status: true },
+      select: {
+        commissionerId: true, name: true, isReplay: true,
+        replayCurrentDate: true, season: true, status: true,
+        draft: { select: { status: true } },
+      },
     }),
   ]);
 
+  const league = leagueAndDraft;
   const isCommissioner = !!user && user.id === league?.commissionerId;
 
-  // Replay day navigation — only load game days when needed
+  // Replay day navigation — show for any replay league state after draft completes
   let replayDayProps: null | {
     dayNumber: number;
     totalDays: number;
     currentDate: string | null;
     hasNextDay: boolean;
+    canStartSeason: boolean;
   } = null;
-  if (league?.isReplay && isCommissioner && (league.status === "IN_SEASON" || league.status === "COMPLETE")) {
-    const gameDays = await getGameDays(league.season, prisma);
-    const replayMs = league.replayCurrentDate?.getTime() ?? gameDays[0]?.getTime() ?? Date.now();
-    const dayNumber = currentDayNumber(replayMs, gameDays);
-    const lastDay = prevGameDay(replayMs, gameDays);
+  const isDraftComplete = league?.draft?.status === "COMPLETE";
+  const isReplayVisible = league?.isReplay && isCommissioner &&
+    (isDraftComplete || league?.status === "IN_SEASON" || league?.status === "COMPLETE");
+  if (isReplayVisible) {
+    const inSeason = league!.status === "IN_SEASON" || league!.status === "COMPLETE";
+    const gameDays = inSeason ? await getGameDays(league!.season, prisma) : [];
+    const replayMs = league!.replayCurrentDate?.getTime() ?? gameDays[0]?.getTime() ?? Date.now();
+    const dayNumber = inSeason ? currentDayNumber(replayMs, gameDays) : 0;
+    const lastDay = inSeason ? prevGameDay(replayMs, gameDays) : null;
     replayDayProps = {
       dayNumber,
       totalDays: gameDays.length,
       currentDate: lastDay ? lastDay.toISOString().slice(0, 10) : null,
-      hasNextDay: nextGameDay(replayMs, gameDays) !== null,
+      hasNextDay: inSeason ? nextGameDay(replayMs, gameDays) !== null : false,
+      canStartSeason: isDraftComplete && league!.status !== "IN_SEASON" && league!.status !== "COMPLETE",
     };
   }
 
@@ -105,6 +116,7 @@ export default async function LeagueLayout({ children, params }: LeagueLayoutPro
             totalDays={replayDayProps.totalDays}
             currentDate={replayDayProps.currentDate}
             hasNextDay={replayDayProps.hasNextDay}
+            canStartSeason={replayDayProps.canStartSeason}
           />
         )}
 

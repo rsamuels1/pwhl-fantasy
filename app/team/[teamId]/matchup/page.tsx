@@ -52,11 +52,13 @@ export default async function TeamMatchupPage({
       include: { player: { select: { id: true, firstName: true, lastName: true, position: true, team: { select: { id: true, abbreviation: true } } } } },
     });
     const benchTeamIds = [...new Set(benchEntries.map((e) => e.player.team?.id).filter((id): id is string => !!id))];
+    // No status filter — historical fixture has all games as FINAL.
+    // For upcoming periods, startsAt >= period.startsAt proves games haven't been played.
+    const nowForBench = new Date(nowMs);
     const benchGames = benchTeamIds.length > 0
       ? await prisma.game.findMany({
           where: {
-            startsAt: { gte: period.startsAt, lt: period.endsAt },
-            status: { not: "FINAL" },
+            startsAt: { gte: nowForBench, lt: period.endsAt },
             OR: [{ homeTeamId: { in: benchTeamIds } }, { awayTeamId: { in: benchTeamIds } }],
           },
           select: { homeTeamId: true, awayTeamId: true },

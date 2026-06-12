@@ -44,7 +44,8 @@ export async function computeTeamScore(
   fantasyTeamId: string,
   period: ScoringPeriod,
   scoringSettings: ScoringSettings,
-  prisma: PrismaClient
+  prisma: PrismaClient,
+  nowMs?: number
 ): Promise<number> {
   const entries = await prisma.rosterEntry.findMany({
     where: {
@@ -57,11 +58,15 @@ export async function computeTeamScore(
   if (entries.length === 0) return 0;
   const playerIds = entries.map((e) => e.playerId);
 
+  const upperBound = nowMs
+    ? new Date(Math.min(nowMs, period.endsAt.getTime()))
+    : period.endsAt;
+
   const lines = await prisma.statLine.findMany({
     where: {
       playerId: { in: playerIds },
       game: {
-        startsAt: { gte: period.startsAt, lt: period.endsAt },
+        startsAt: { gte: period.startsAt, lt: upperBound },
       },
     },
     include: { player: { select: { position: true } } },
@@ -364,7 +369,8 @@ export async function computeAllTeamScores(
   leagueId: string,
   period: ScoringPeriod,
   scoringSettings: ScoringSettings,
-  prisma: PrismaClient
+  prisma: PrismaClient,
+  nowMs?: number
 ): Promise<Map<string, number>> {
   const teams = await prisma.fantasyTeam.findMany({
     where: { leagueId },
@@ -372,7 +378,7 @@ export async function computeAllTeamScores(
   });
   const scores = new Map<string, number>();
   for (const { id } of teams) {
-    scores.set(id, await computeTeamScore(id, period, scoringSettings, prisma));
+    scores.set(id, await computeTeamScore(id, period, scoringSettings, prisma, nowMs));
   }
   return scores;
 }

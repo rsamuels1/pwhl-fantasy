@@ -77,6 +77,7 @@ async function main() {
       // Day 0: one day before the first game of the 2025-26 season (Nov 22, 2025).
       // Advance forward one game day at a time from the admin panel.
       replayCurrentDate: new Date("2025-11-21T00:00:00Z"),
+      scoringMode: "VP",
     },
   });
 

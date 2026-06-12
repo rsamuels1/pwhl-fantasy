@@ -9,6 +9,7 @@ interface Props {
   totalDays: number;
   currentDate: string | null; // "YYYY-MM-DD" of the last completed game day
   hasNextDay: boolean;
+  canStartSeason: boolean;
 }
 
 export default function ReplayDayBar({
@@ -17,6 +18,7 @@ export default function ReplayDayBar({
   totalDays,
   currentDate,
   hasNextDay,
+  canStartSeason,
 }: Props) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -32,6 +34,28 @@ export default function ReplayDayBar({
       const data = await res.json();
       if (!res.ok) {
         setError(data.error ?? "Failed to advance.");
+      } else {
+        router.refresh();
+      }
+    } catch {
+      setError("Network error.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleStartSeason = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/leagues/${leagueId}/season`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "start" }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error ?? "Failed to start season.");
       } else {
         router.refresh();
       }
@@ -64,19 +88,42 @@ export default function ReplayDayBar({
         ⏪ Replay
       </span>
 
-      <div style={{ display: "flex", alignItems: "center", gap: 8, flex: 1, minWidth: 0 }}>
-        <span style={{ fontSize: 14, fontWeight: 700, color: "#e2e8f0", whiteSpace: "nowrap" }}>
-          Day {dayNumber}
-          <span style={{ color: "#475569", fontWeight: 400 }}> / {totalDays}</span>
+      {canStartSeason ? (
+        <span style={{ fontSize: 13, color: "#94a3b8", flex: 1 }}>
+          Draft complete — ready to start the season
         </span>
-        <span style={{ fontSize: 12, color: "#64748b", whiteSpace: "nowrap" }}>{dateLabel}</span>
-        {/* Progress bar */}
-        <div style={{ flex: 1, height: 4, borderRadius: 2, background: "rgba(255,255,255,0.06)", overflow: "hidden", minWidth: 40 }}>
-          <div style={{ height: "100%", borderRadius: 2, width: `${pct}%`, background: "linear-gradient(90deg, #6366f1, #818cf8)" }} />
+      ) : (
+        <div style={{ display: "flex", alignItems: "center", gap: 8, flex: 1, minWidth: 0 }}>
+          <span style={{ fontSize: 14, fontWeight: 700, color: "#e2e8f0", whiteSpace: "nowrap" }}>
+            Day {dayNumber}
+            <span style={{ color: "#475569", fontWeight: 400 }}> / {totalDays}</span>
+          </span>
+          <span style={{ fontSize: 12, color: "#64748b", whiteSpace: "nowrap" }}>{dateLabel}</span>
+          <div style={{ flex: 1, height: 4, borderRadius: 2, background: "rgba(255,255,255,0.06)", overflow: "hidden", minWidth: 40 }}>
+            <div style={{ height: "100%", borderRadius: 2, width: `${pct}%`, background: "linear-gradient(90deg, #6366f1, #818cf8)" }} />
+          </div>
         </div>
-      </div>
+      )}
 
-      {hasNextDay ? (
+      {canStartSeason ? (
+        <button
+          onClick={handleStartSeason}
+          disabled={loading}
+          style={{
+            flexShrink: 0,
+            background: loading ? "rgba(52,211,153,0.2)" : "#059669",
+            border: "none",
+            borderRadius: 8,
+            color: "#fff",
+            padding: "6px 14px",
+            fontSize: 13,
+            fontWeight: 600,
+            cursor: loading ? "default" : "pointer",
+          }}
+        >
+          {loading ? "…" : "Start season →"}
+        </button>
+      ) : hasNextDay ? (
         <button
           onClick={handleNextDay}
           disabled={loading}

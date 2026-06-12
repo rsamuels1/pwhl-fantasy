@@ -115,6 +115,7 @@ model FantasyLeague {
   draftStartsAt     DateTime?
   isReplay          Boolean             @default(false)
   replayCurrentDate DateTime?
+  scoringMode       String              @default("VTF")
   createdAt         DateTime            @default(now())
   updatedAt       DateTime            @updatedAt
   draft           Draft?
@@ -200,6 +201,8 @@ model Matchup {
   awayTeamId String
   homeScore  Float?
   awayScore  Float?
+  homeVP     Int?
+  awayVP     Int?
   isPlayoff  Boolean       @default(false)
   round      Int?
   createdAt  DateTime      @default(now())

@@ -128,7 +128,7 @@ export async function getDashboardData(
 ): Promise<DashboardData> {
   const league = await prisma.fantasyLeague.findUniqueOrThrow({
     where: { id: leagueId },
-    select: { scoringSettings: true, season: true, isReplay: true, replayCurrentDate: true },
+    select: { scoringSettings: true, season: true, isReplay: true, replayCurrentDate: true, scoringMode: true },
   });
 
   const nowMs = getReplayNow(league, nowMsArg);
@@ -242,10 +242,26 @@ export async function getDashboardData(
     };
   }
 
-  // Active period: my detailed breakdown + all team scores in parallel
+  const scoringMode = (league as { scoringMode?: string }).scoringMode ?? "VTF";
+  const isVpMode = scoringMode === "VP";
+
+  // In VP mode, find the designated 1v1 opponent for this week
+  let opponentTeamId: string | null = null;
+  if (isVpMode) {
+    const myMatchup = await prisma.matchup.findFirst({
+      where: { leagueId, week: displayPeriod.week, isPlayoff: false, OR: [{ homeTeamId: myTeamId }, { awayTeamId: myTeamId }] },
+      select: { homeTeamId: true, awayTeamId: true },
+    });
+    if (myMatchup) {
+      opponentTeamId = myMatchup.homeTeamId === myTeamId ? myMatchup.awayTeamId : myMatchup.homeTeamId;
+    }
+  }
+
+  // Active period: my detailed breakdown + all team scores in parallel.
+  // Pass nowMs to both so mid-period scores only count games up to the current time.
   const [myDetailed, allScores] = await Promise.all([
     computeTeamScoreDetailed(myTeamId, displayPeriod, scoringSettings, prisma, nowMs),
-    computeAllTeamScores(leagueId, displayPeriod, scoringSettings, prisma),
+    computeAllTeamScores(leagueId, displayPeriod, scoringSettings, prisma, nowMs),
   ]);
 
   const myScore = allScores.get(myTeamId) ?? 0;
@@ -266,9 +282,34 @@ export async function getDashboardData(
     myTeamId, myScore, displayPeriod, scoringSettings, prisma, nowMs
   );
 
-  const allTeamIds = [...new Set(
-    myDetailed.players.map((p) => p.teamId).filter((id): id is string => !!id)
-  )];
+  // Load opponent roster for VP mode
+  const opponentTeamName = opponentTeamId ? (allTeams.find((t) => t.id === opponentTeamId)?.name ?? "") : null;
+  const opponentScore = opponentTeamId ? (allScores.get(opponentTeamId) ?? 0) : 0;
+
+  const activeRosterInclude2 = {
+    player: {
+      select: {
+        id: true, firstName: true, lastName: true, position: true,
+        team: { select: { id: true, abbreviation: true } },
+      },
+    },
+  } as const;
+
+  const [opponentRosterRaw, opponentProjected] = opponentTeamId
+    ? await Promise.all([
+        prisma.rosterEntry.findMany({
+          where: { fantasyTeamId: opponentTeamId, slot: { notIn: ["BENCH", "IR"] } },
+          include: activeRosterInclude2,
+        }),
+        projectTeamRemainingScore(opponentTeamId, opponentScore, displayPeriod, scoringSettings, prisma, nowMs),
+      ])
+    : [[], 0] as const;
+
+  const allTeamIds = [...new Set([
+    ...myDetailed.players.map((p) => p.teamId),
+    ...(opponentRosterRaw as Array<{ player: { team: { id: string } | null } }>).map((e) => e.player.team?.id ?? null),
+  ].filter((id): id is string => !!id))];
+
   const gamesPerTeam = await gamesPerTeamInWindow(
     allTeamIds, new Date(nowMs), displayPeriod.endsAt, prisma, { exclusiveStart: true }
   );
@@ -312,6 +353,27 @@ export async function getDashboardData(
     )
     .map((p) => ({ playerId: p.playerId, name: p.name, reason: "zero_games" as const }));
 
+  // VP mode: resolve opponent roster rows
+  const opponentPlayers: PlayerMatchupRow[] = opponentTeamId
+    ? (opponentRosterRaw as Array<{ playerId: string; slot: string; player: { id: string; firstName: string; lastName: string; position: string; team: { id: string; abbreviation: string } | null } }>).map((e) => ({
+        playerId: e.playerId,
+        name: `${e.player.firstName} ${e.player.lastName}`,
+        position: e.player.position,
+        slot: e.slot,
+        teamAbbr: e.player.team?.abbreviation ?? null,
+        gamesThisPeriod: e.player.team?.id ? (gamesPerTeam.get(e.player.team.id) ?? 0) : null,
+        points: 0,
+        gameCount: 0,
+        statBreakdown: [],
+      }))
+    : [];
+
+  // Win probability for VP 1v1 mode
+  const { winProbability } = await import("../projections");
+  const myProj = myProjected;
+  const oppProj = opponentProjected as number;
+  const winProb = isVpMode && opponentTeamId ? winProbability(myProj, oppProj) : 0;
+
   return {
     activeMatchup: {
       week: displayPeriod.week,
@@ -323,10 +385,12 @@ export async function getDashboardData(
       myPlayers,
       weeklyStandings,
       myRecord: { wins, losses, ties },
-      opponentTeam: null,
-      opponentPlayers: [],
-      opponentProjected: 0,
-      winProbability: 0,
+      opponentTeam: isVpMode && opponentTeamId && opponentTeamName
+        ? { id: opponentTeamId, name: opponentTeamName, score: opponentScore }
+        : null,
+      opponentPlayers,
+      opponentProjected: oppProj,
+      winProbability: winProb,
       rivalry: { wins: 0, losses: 0, ties: 0 },
     },
     remainingPlayers,

@@ -62,11 +62,11 @@ export async function getSwingPlayers(
 
   if (allTeamIds.length === 0) return [];
 
-  // Count remaining period games per real team
+  // Count remaining period games per real team.
+  // No status filter — historical fixture has all games as FINAL; startsAt >= now proves "future".
   const remainingGames = await prisma.game.findMany({
     where: {
       startsAt: { gte: now, lt: period.endsAt },
-      status: { not: "FINAL" },
       OR: [{ homeTeamId: { in: allTeamIds } }, { awayTeamId: { in: allTeamIds } }],
     },
     select: { homeTeamId: true, awayTeamId: true },

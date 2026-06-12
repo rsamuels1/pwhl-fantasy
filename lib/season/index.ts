@@ -5,7 +5,9 @@
 
 import type { PrismaClient } from "@prisma/client";
 import { derivePeriods } from "@/lib/scoring/periods";
-import { generateVtfMatchups, scoreVtfWeek } from "@/lib/scoring/matchups";
+import { generateVtfMatchups, generateMatchups, scoreVtfWeek } from "@/lib/scoring/matchups";
+import { scoreVpWeek } from "@/lib/scoring/vp";
+import { parseScoringSettings } from "@/lib/scoring/settings";
 import { computeSeasonState, pendingWeeks, type SeasonState } from "./lifecycle";
 
 // Load everything needed for the lifecycle engine from the DB, then run the pure engine.
@@ -43,7 +45,7 @@ export async function getSeasonState(
 export async function startSeason(leagueId: string, prisma: PrismaClient): Promise<void> {
   const league = await prisma.fantasyLeague.findUniqueOrThrow({
     where: { id: leagueId },
-    select: { season: true, status: true },
+    select: { season: true, status: true, scoringMode: true },
   });
 
   // Detect season mismatch before hitting the internal error from generateVtfMatchups.
@@ -61,7 +63,13 @@ export async function startSeason(leagueId: string, prisma: PrismaClient): Promi
     );
   }
 
-  await generateVtfMatchups(leagueId, league.season, prisma);
+  // VP mode uses 1v1 round-robin matchups; VTF uses all-vs-all.
+  const scoringMode = (league as { scoringMode?: string }).scoringMode ?? "VTF";
+  if (scoringMode === "VP") {
+    await generateMatchups(leagueId, league.season, prisma);
+  } else {
+    await generateVtfMatchups(leagueId, league.season, prisma);
+  }
 
   await prisma.fantasyLeague.update({
     where: { id: leagueId },
@@ -78,12 +86,23 @@ export async function advanceSeason(
   nowMs: number,
   prisma: PrismaClient
 ): Promise<{ scoredWeeks: number[] }> {
+  const league = await prisma.fantasyLeague.findUniqueOrThrow({
+    where: { id: leagueId },
+    select: { scoringMode: true, scoringSettings: true },
+  });
+  const scoringMode = (league as { scoringMode?: string }).scoringMode ?? "VTF";
+  const scoringSettings = parseScoringSettings(league.scoringSettings);
+
   const state = await getSeasonState(leagueId, nowMs, prisma);
   const due = pendingWeeks(state);
 
   const scoredWeeks: number[] = [];
   for (const period of due) {
-    await scoreVtfWeek(leagueId, period.week, period, prisma);
+    if (scoringMode === "VP") {
+      await scoreVpWeek(leagueId, period.week, period, scoringSettings, prisma);
+    } else {
+      await scoreVtfWeek(leagueId, period.week, period, prisma);
+    }
     scoredWeeks.push(period.week);
   }
 

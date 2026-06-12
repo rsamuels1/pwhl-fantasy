@@ -83,11 +83,12 @@ export async function projectTeamRemainingScore(
 
   if (teamIds.length === 0) return earnedSoFar;
 
-  // Find upcoming (not final) games within the period window for those teams
+  // Games not yet started within the period window for those teams.
+  // No status filter — the historical fixture has all games as FINAL.
+  // startsAt >= now already proves the game hasn't been played yet.
   const remainingGames = await prisma.game.findMany({
     where: {
       startsAt: { gte: now, lt: period.endsAt },
-      status: { not: "FINAL" },
       OR: [{ homeTeamId: { in: teamIds } }, { awayTeamId: { in: teamIds } }],
     },
     select: { homeTeamId: true, awayTeamId: true },
@@ -172,10 +173,11 @@ export async function getRemainingPlayersTonight(
 
   if (teamIds.length === 0) return [];
 
+  // No status filter — the historical fixture has all games as FINAL.
+  // startsAt >= now already proves the game is in the future from the manager's perspective.
   const games = await prisma.game.findMany({
     where: {
       startsAt: { gte: now, lt: todayEnd },
-      status: { not: "FINAL" },
       OR: [{ homeTeamId: { in: teamIds } }, { awayTeamId: { in: teamIds } }],
     },
     select: {
