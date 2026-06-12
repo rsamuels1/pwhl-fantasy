@@ -138,6 +138,7 @@ survives DB resets and schema migrations.
 3. **Draft room** — server logic ✅, React UI ✅
 4. Live scoring loop: matchups, standings, waivers, trades
    - Lineup management ✅ (set active/bench slots, per-player game-time locking, play-lock rule)
+   - Lineup management v2 ✅ (projected FPTS tab, between-weeks lineup nudge banner, mobile compact stats)
    - Season matchup lifecycle ✅ (period generation, VTF scoring, status progression)
    - Matchup-first product ✅ (fantasy home, projections, win probability, lineup alerts, storyline chip)
    - Auth & authorization ✅ (middleware, membership guards, commissioner admin panel)
@@ -309,9 +310,17 @@ handlers use `getDevNowFromRequest(req)` so they respect the dev simulation cook
 occupied slot (bench→active or active→bench). This is the only safe path when a slot is full —
 the single-player move path would fail capacity validation even if the net result is neutral.
 
-**Player stats toggle:** the lineup page shows per-player stats inline, with a three-way toggle:
-"This week / Last week / Season" (toggle order in UI). Tab is disabled when no data exists for
-that view.
+**Player stats toggle:** the lineup page shows per-player stats inline, with a four-way toggle:
+"Projected / This week / Last week / Season". Default: "This week" when an active period exists,
+"Projected" when between weeks (no active period but a next period exists), otherwise "Season".
+Each tab is disabled when no data exists for that view.
+- **Projected** — rolling 5-game avg FP/game × number of PWHL games the player's team has
+  scheduled in the next scoring period. Disabled when no upcoming period exists. Label shows
+  "Projections for Week N (Mon – Sun) · rolling 5-game avg × scheduled games". Empty state:
+  "No recent data". Data: `projectedStats` map from server (`projectedFp`, `avgFpPerGame`, `games`).
+  A starter-total summary bar shows below the active-slots panel with the summed projected FP
+  and a bench-upgrade hint if a bench player projects higher than the lowest active starter
+  at the same eligible position.
 - **This week** — stats from games played so far in the active scoring period (i.e., `startsAt >=
   activePeriod.startsAt AND startsAt <= now`). Only available when a period is ACTIVE. Label shows
   "Week N (Mon – Sun)". Empty state: "No games yet this week".
@@ -319,10 +328,12 @@ that view.
   Empty state: "No games last week".
 - **Season** — aggregate of all `StatLine` rows for the player in the league's season (e.g. `2025-26`).
   Empty state: "No prior-season data" for rookies/expansion players.
-- All three views are aggregated server-side in `lineup/page.tsx` using `scoreStatLine` from
-  `lib/scoring` and passed to `LineupManager` as `seasonStats`, `lastWeekStats`, and `thisWeekStats`
-  maps alongside `lastWeekLabel` and `thisWeekLabel` strings.
+- All views are aggregated server-side in `lineup/page.tsx` using `scoreStatLine` from `lib/scoring`
+  and passed to `LineupManager` as `seasonStats`, `lastWeekStats`, `thisWeekStats`, and `projectedStats`
+  maps alongside `lastWeekLabel`, `thisWeekLabel`, and `nextWeekLabel` strings.
 - Skater display: GP, G, A, PTS, PPP, SOG, HIT, BLK, FP. Goalie: GP, W, SV, GA, SV%, SO, FP.
+  `SOG`, `HIT`, `BLK` (skaters) and `SV`, `GA`, `SO` (goalies) carry `className="stat-secondary"`
+  and are hidden via `@media (max-width: 480px) { .stat-secondary { display: none; } }` in `globals.css`.
 
 **Games remaining this period:** each player card shows a small badge indicating how many games their PWHL team has remaining in the current scoring period. Uses `periodForGames = activePeriod ?? upcomingPeriod` so the badge is correct both mid-week (ACTIVE) and between weeks (UPCOMING). Query: `startsAt > now AND startsAt < periodForGames.endsAt` — **no** `status != FINAL` filter; the historical fixture has all games as `FINAL`, so filtering by status would zero out all badges when simulating. `startsAt > now` alone is sufficient to establish "not yet played." Three distinct states:
 - `N` (e.g. "2G left") — indigo badge; confirmed games still to play.
@@ -497,6 +508,7 @@ The primary in-season landing page ("Fantasy Home"), team-scoped. No team picker
 
 **What it shows:**
 - **Lineup alert strip** — red banner at very top when active starters have `gamesThisPeriod === 0 AND gameCount === 0` (never played, no scheduled games left). Does NOT flag players who already scored.
+- **Between-weeks lineup nudge** — amber banner shown when `activeMatchup.status === "upcoming"`, between the lineup-alert strip and the recap card. Prompts manager to set their lineup for the coming week and links to the lineup page with projected scores. Auto-disappears when the period goes ACTIVE.
 - **`MatchupHero`** — 52px/900-weight scores color-coded (indigo=winning, red=trailing, amber=upcoming), win probability bar below scores, lead gap in accent color, "Set lineup →" CTA when upcoming.
 - **Storyline chip** — "🔥 [Player] is leading your team with X.X pts this week" when `topPerformers[0].points > 0`.
 - **Playing tonight** — always rendered during active periods (empty state: "No starters playing tonight"). Uses `getRemainingPlayersTonight(nowMs)`.
