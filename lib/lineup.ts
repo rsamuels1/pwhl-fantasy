@@ -63,21 +63,25 @@ export function validateSlotMove(
   return null;
 }
 
-// A player is locked once their team's game has started today (UTC day).
-// Returns the game start time if locked, else null.
+// A player is locked once their team has played any game in the current scoring period.
+// When periodStartMs is provided, checks games in [periodStart, now] (weekly lock).
+// Without periodStartMs, falls back to today-only lock for backward compat.
+// Returns the first matching game start time if locked, else null.
 export function lockTime(
   playerTeamId: string | null,
   games: Array<{ homeTeamId: string; awayTeamId: string; startsAt: Date }>,
-  nowMs?: number
+  nowMs?: number,
+  periodStartMs?: number
 ): Date | null {
   if (!playerTeamId) return null;
   const now = nowMs ? new Date(nowMs) : new Date();
-  const todayStart = new Date(now);
-  todayStart.setUTCHours(0, 0, 0, 0);
+  const windowStart = periodStartMs
+    ? new Date(periodStartMs)
+    : (() => { const d = new Date(now); d.setUTCHours(0, 0, 0, 0); return d; })();
 
   for (const g of games) {
     if (g.homeTeamId !== playerTeamId && g.awayTeamId !== playerTeamId) continue;
-    if (g.startsAt >= todayStart && g.startsAt <= now) return g.startsAt;
+    if (g.startsAt >= windowStart && g.startsAt <= now) return g.startsAt;
   }
   return null;
 }

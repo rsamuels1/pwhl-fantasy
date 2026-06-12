@@ -6,18 +6,17 @@
 // lib/playoffs/seeding.ts and lib/playoffs/lifecycle.ts.
 
 import type { PrismaClient } from "@prisma/client";
-import { computeStandings } from "@/lib/playoffs/seeding";
 import { getPlayoffSettings } from "@/lib/playoffs/lifecycle";
+import { computeVpStandings } from "@/lib/scoring/vp";
 
 export interface StandingRow {
   fantasyTeamId: string;
   teamName: string;
-  points: number;
+  totalVP: number;
   wins: number;
   losses: number;
   ties: number;
   pointsFor: number;
-  pointsAgainst: number;
   rank: number;
   isPlayoffEligible: boolean;
   seed: number | null;
@@ -48,11 +47,28 @@ export async function getStandings(
 
   const matchups = await prisma.matchup.findMany({ where: { leagueId } });
 
-  const raw = computeStandings(league.teams, matchups);
+  const raw = computeVpStandings(
+    league.teams,
+    matchups.map((m) => ({
+      homeTeamId: m.homeTeamId,
+      awayTeamId: m.awayTeamId,
+      homeScore: m.homeScore,
+      awayScore: m.awayScore,
+      homeVP: (m as { homeVP?: number | null }).homeVP ?? null,
+      awayVP: (m as { awayVP?: number | null }).awayVP ?? null,
+      isPlayoff: m.isPlayoff,
+    }))
+  );
   const playoffSettings = getPlayoffSettings(league.playoffSettings as Parameters<typeof getPlayoffSettings>[0]);
 
   const standings: StandingRow[] = raw.map((s, index) => ({
-    ...s,
+    fantasyTeamId: s.fantasyTeamId,
+    teamName: s.teamName,
+    totalVP: s.totalVP,
+    wins: s.wins,
+    losses: s.losses,
+    ties: s.ties,
+    pointsFor: s.pointsFor,
     rank: index + 1,
     isPlayoffEligible: index < playoffSettings.teamsInPlayoff,
     seed: index < playoffSettings.teamsInPlayoff ? index + 1 : null,

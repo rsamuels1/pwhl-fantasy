@@ -39,10 +39,10 @@ async function main() {
       season: "2025-26",
       commissionerId: commissioner.id,
       maxTeams: 6,
-      rosterSettings: { forward: 2, defense: 2, goalie: 1, util: 1, bench: 6, ir: 1 },
+      rosterSettings: { forward: 3, defense: 2, goalie: 1, util: 1, bench: 6 },
       playoffSettings: {
-        teamsInPlayoff: 6,
-        topSeedsWithBye: 2,
+        teamsInPlayoff: 4,
+        topSeedsWithBye: 0,
         roundDurationPeriods: 2,
         higherSeedWinsTies: true,
       },

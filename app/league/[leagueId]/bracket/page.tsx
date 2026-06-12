@@ -13,7 +13,7 @@ interface RaceInfo {
 }
 
 function computeRace(
-  standings: { fantasyTeamId: string; points: number }[],
+  standings: { fantasyTeamId: string; totalVP: number }[],
   matchups: Matchup[],
   cutoff: number
 ): Map<string, RaceInfo> {
@@ -43,20 +43,20 @@ function computeRace(
   standings.forEach((s, i) => {
     const rank = i + 1;
     const inSpot = rank <= cutoff;
-    const maxPoints = s.points + remainingFor(s.fantasyTeamId);
+    const maxPoints = s.totalVP + remainingFor(s.fantasyTeamId);
 
     let status: RaceInfo["status"];
     if (inSpot) {
-      const bubbleCeiling = bubbleTeam.points + remainingFor(bubbleTeam.fantasyTeamId);
-      status = bubbleCeiling < s.points ? "clinched" : rank === cutoff ? "bubble" : "in";
+      const bubbleCeiling = bubbleTeam.totalVP + remainingFor(bubbleTeam.fantasyTeamId);
+      status = bubbleCeiling < s.totalVP ? "clinched" : rank === cutoff ? "bubble" : "in";
     } else {
-      status = maxPoints < lineTeam.points ? "eliminated" : "out";
+      status = maxPoints < lineTeam.totalVP ? "eliminated" : "out";
     }
 
     map.set(s.fantasyTeamId, {
       status,
-      gamesBack: inSpot ? null : Math.round((lineTeam.points - s.points) * 10) / 10,
-      cushion: inSpot ? Math.round((s.points - bubbleTeam.points) * 10) / 10 : null,
+      gamesBack: inSpot ? null : Math.round((lineTeam.totalVP - s.totalVP) * 10) / 10,
+      cushion: inSpot ? Math.round((s.totalVP - bubbleTeam.totalVP) * 10) / 10 : null,
     });
   });
 

@@ -42,6 +42,9 @@ npm run seed           # load mock teams/players/games for development
 npm run seed-draft     # create a throwaway 4-team draft-ready league (commissioner owns team 1)
 npm run draft-server   # start the WebSocket draft server on :8080
 npm run draft-cli -- --league <id> --team <id> [--start]  # terminal client for one team
+npx tsx scripts/simulate-season.ts              # end-to-end season sim (Create→Draft→Score→Playoffs→Champion)
+npx tsx scripts/simulate-season.ts --league <id>  # reuse an existing league
+npx tsx scripts/simulate-season.ts --dry-run    # print plan without DB writes
 npm run ingest -- --season 2025-26          # pull real data from HockeyTech (slow, needs network)
 npm run ingest -- --season 2025-26 --no-stats  # teams/players/games only, skip stat lines
 npm run ingest -- --season 2025-26 --resume    # skip games that already have stat lines (resume interrupted run)
@@ -137,6 +140,8 @@ survives DB resets and schema migrations.
 2. Roster ingestion pipeline (against mock source) + scoring engine ✅ (scoring done)
 3. **Draft room** — server logic ✅, React UI ✅
 4. Live scoring loop: matchups, standings, waivers, trades
+   - VP standings authority ✅ (`computeVpStandings` is the single source everywhere; `scoringMode @default("VP")`)
+   - Period-based lineup lock ✅ (`lockTime` locks for the full week once team played any period game)
    - Lineup management ✅ (set active/bench slots, per-player game-time locking, play-lock rule)
    - Lineup management v2 ✅ (projected FPTS tab, between-weeks lineup nudge banner, mobile compact stats)
    - Season matchup lifecycle ✅ (period generation, VTF scoring, status progression)
@@ -147,7 +152,7 @@ survives DB resets and schema migrations.
    - Sim-date audit ✅ (all pages and API routes respect `pwhl_dev_sim_date` cookie)
    - League Overview Redesign ✅ (playoff race as primary module, per-team lineup status widget, commissioner action strip, inline announcement editing)
    - Roster Page UX Overhaul ✅ (default table view FP-sorted, `?view=` team selector, sortable roster+FA tables, full HIT/BLK/GA columns, "Rosters" nav)
-5. Playoff bracket and postseason flow — standings, seeding, bracket generation, playoff matchups, and results ✅
+5. Playoff bracket and postseason flow — standings, seeding, bracket generation, playoff matchups, and results ✅ (4-team/no-bye bracket, bracket bug fixed, `scripts/simulate-season.ts` validates full flow)
 6. Integration + load test the draft room + beta
 7. Public launch ~early Nov, drafts ~1 week before opener
 
@@ -209,7 +214,7 @@ A new playoff layer is integrated into the existing fantasy flow without changin
   - `GET /api/leagues/[leagueId]/bracket` returns the generated playoff bracket
   - `POST /api/leagues/[leagueId]/start-playoffs` initializes playoffs from regular season standings
 - New UI route: `app/league/[leagueId]/bracket` renders standings and the playoff bracket view.
-- The format is single-elimination for the top 6 teams, with the top 2 seeds receiving byes and higher seeds winning ties.
+- The format is single-elimination for the **top 4 teams, with no byes** (1v4, 2v3 in round 1) and higher seeds winning ties. Schema default: `teamsInPlayoff: 4, topSeedsWithBye: 0`.
 
 ## Draft module (`lib/draft/`)
 
@@ -248,14 +253,15 @@ correct clock and flag status. All logic lives in `engine.ts`; timer dispatch is
 The canonical 13-slot roster (used everywhere — seed scripts, tests, draft, scoring):
 
 ```
-{ forward: 2, defense: 2, goalie: 1, util: 1, bench: 6, ir: 1 }
+{ forward: 3, defense: 2, goalie: 1, util: 1, bench: 6 }
 ```
 
-- **13 total slots**, but only **12 draft rounds** — IR is filled from the waiver wire
-  post-draft, never drafted. `rostersToRounds` intentionally excludes `ir` from its sum.
+- **13 total slots**, all drafted — **13 draft rounds** total.
 - UTIL accepts any skater (F or D), not goalies — same convention as Yahoo.
 - Slot-assignment priority when filling a roster from picks: natural position → UTIL
   (skaters only) → BENCH.
+- IR slot (`ir: 1`) is supported by the code for backward compat but is **not** included
+  in the default rosterSettings. IR players come from the waiver wire post-draft.
 
 Any time you add a new seed script or test that creates a `FantasyLeague`, use this
 `rosterSettings` value. Never hardcode a different one without a comment explaining why.
@@ -275,18 +281,19 @@ fetch on load.
 - Valid destination slots light up with an indigo border. Click one to move the player.
 - Clicking an occupied slot with a selected player swaps them if both moves are valid.
 - Click the selected player again, or "✕ Cancel selection", to deselect.
-- Locked players (🔒) cannot be moved — their team's game has already started today.
+- Locked players (🔒) cannot be moved — their team has played a game in the current scoring period.
 
 **Validation (`lib/lineup.ts` — pure, no IO):**
 - Position eligibility: F/D can play their slot or UTIL; G can only play GOALIE; any can play BENCH.
 - IR: inactive players only (`player.active = false`).
 - Slot capacity checked against `rosterSettings` on both client (highlight) and server (API).
-- All validation logic lives in `lib/lineup.ts`; tested in `tests/lineup.test.ts` (17 tests).
+- All validation logic lives in `lib/lineup.ts`; tested in `tests/lineup.test.ts` (19 tests).
 
-**Locking:** a player is locked once their real team's game has started today (UTC day). Determined
-server-side in both the page loader and the API — `lockTime(playerTeamId, games, nowMs?)` in
-`lib/lineup.ts`. `nowMs` is optional; omit for real time, pass `getDevNow()` in dev mode. Lock is
-per-player, not whole-lineup.
+**Locking:** a player is locked for the **entire scoring period** once their real team has played any game in the current scoring period. Determined server-side in both the page loader and the API — `lockTime(playerTeamId, games, nowMs?, periodStartMs?)` in `lib/lineup.ts`.
+- When `periodStartMs` is provided: locks if the team played any game in `[periodStart, nowMs]` (weekly lock — the default for in-season use).
+- Without `periodStartMs`: falls back to locking on today's games only (backward compat for non-season contexts).
+- Both the lineup page (`app/team/[teamId]/lineup/page.tsx`) and the lineup API (`app/api/leagues/[leagueId]/lineup/route.ts`) pass `activePeriod.startsAt.getTime()` as `periodStartMs` when an active period exists.
+Lock is per-player, not whole-lineup.
 
 **Play-lock rule (active→bench/IR restriction):** a player who has played any game in the current
 active scoring period (`StatLine` count > 0 for games with `startsAt <= nowMs`) cannot be moved

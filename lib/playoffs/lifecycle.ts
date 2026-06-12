@@ -54,8 +54,8 @@ export function getPlayoffSettings(
   leaguePlayoffSettings: Record<string, any> | undefined
 ): PlayoffSettings {
   const defaults: PlayoffSettings = {
-    teamsInPlayoff: 6,
-    topSeedsWithBye: 2,
+    teamsInPlayoff: 4,
+    topSeedsWithBye: 0,
     roundDurationPeriods: 2,
     higherSeedWinsTies: true,
   };

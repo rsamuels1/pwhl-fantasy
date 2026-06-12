@@ -103,17 +103,17 @@ export function generateBracket(
   const byeTeams = seededTeams.slice(0, topSeedsWithBye);
   const playingTeams = seededTeams.slice(topSeedsWithBye);
 
-  // Pair playing teams: lowest seed vs highest, next lowest vs next highest
-  for (let i = 0; i < playingTeams.length; i += 2) {
-    const homeTeam = playingTeams[i]; // lower seed (higher seed number)
-    const awayTeam = playingTeams[i + 1]; // higher seed (lower seed number)
+  // Pair best remaining seed vs worst remaining seed (1v4, 2v3, etc.)
+  for (let i = 0; i < playingTeams.length / 2; i++) {
+    const betterTeam = playingTeams[i]; // higher seed (lower number = better team)
+    const worseTeam = playingTeams[playingTeams.length - 1 - i]; // lower seed (worse team)
 
-    // Standard bracket: higher seed (lower number) is "home"
+    // Convention: lower-ranked (worse) team is home, higher-ranked (better) is away.
     round1Matchups.push({
       round: 1,
       matchupNumber: matchupNumber++,
-      homeTeam: awayTeam ? { ...awayTeam } : null,
-      awayTeam: homeTeam ? { ...homeTeam } : null,
+      homeTeam: { ...worseTeam },
+      awayTeam: { ...betterTeam },
     });
   }
 

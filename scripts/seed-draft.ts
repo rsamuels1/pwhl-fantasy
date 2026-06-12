@@ -19,10 +19,9 @@ const LEAGUE_NAME = "Dev Draft League";
 const NUM_TEAMS = 4; // small, so a full draft finishes fast in the terminal
 const PICK_TIMER_SECS = 30;
 
-// 13-slot roster: 2F + 2D + 1G + 1 UTIL + 6 BENCH + 1 IR = 13 total.
-// IR is not drafted (filled from waivers), so rostersToRounds yields 12 rounds.
-// 4 teams × 12 rounds = 48 picks total.
-const ROSTER_SETTINGS = { forward: 2, defense: 2, goalie: 1, util: 1, bench: 6, ir: 1 };
+// 13-slot roster: 3F + 2D + 1G + 1 UTIL + 6 BENCH = 13 total.
+// 4 teams × 13 rounds = 52 picks total.
+const ROSTER_SETTINGS = { forward: 3, defense: 2, goalie: 1, util: 1, bench: 6 };
 
 const DEV_PASSWORD_HASH = bcrypt.hashSync("password", 10);
 

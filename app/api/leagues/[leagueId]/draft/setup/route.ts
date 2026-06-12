@@ -4,11 +4,11 @@ import { generateSnakeOrder, rostersToRounds } from "@/lib/draft/snake";
 import { apiRequireAuth, apiRequireCommissioner } from "@/lib/auth";
 
 const DEFAULT_ROSTER_SETTINGS = {
-  forward: 2,
+  forward: 3,
   defense: 2,
   goalie: 1,
   util: 1,
-  bench: 4,
+  bench: 6,
 };
 
 export async function POST(

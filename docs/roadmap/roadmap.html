@@ -113,7 +113,45 @@
   footer{padding:50px 0 60px;text-align:center;color:var(--ink-faint);font-size:12.5px;}
   footer .puck{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--line-red);margin:0 7px;vertical-align:middle;}
 
-  @media(max-width:640px){.stats{grid-template-columns:repeat(2,1fr);}.legend{position:static;}.phase-head{flex-wrap:wrap;}.phase-head .prog{width:100%;text-align:left;}.next{padding:28px 20px;}}
+  /* SCORECARD */
+  .scorecard{margin:30px 0 0;border:1px solid var(--ice-deep);border-radius:var(--radius);background:var(--paper);box-shadow:var(--shadow);overflow:hidden;}
+  .scorecard .sc-head{padding:18px 22px 15px;border-bottom:1px solid var(--ice-deep);}
+  .scorecard .sc-head h3{margin:0;font-size:16px;font-weight:800;letter-spacing:-.01em;}
+  .scorecard .sc-head p{margin:5px 0 0;font-size:13px;color:var(--ink-soft);}
+  .scorecard .conf{display:inline-block;margin-top:9px;font-size:12px;font-weight:700;color:var(--st-partial);background:var(--st-partial-bg);padding:4px 11px;border-radius:20px;}
+  table.sc{width:100%;border-collapse:collapse;font-size:13.5px;}
+  table.sc th,table.sc td{text-align:left;padding:11px 22px;border-bottom:1px solid var(--ice);}
+  table.sc th{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-faint);font-weight:700;}
+  table.sc tr:last-child td{border-bottom:none;}
+  table.sc td.blk{color:var(--ink-soft);}
+  .scst{font-weight:700;font-size:12px;padding:2px 9px;border-radius:6px;white-space:nowrap;}
+  .scst.pass{color:var(--st-shipped);background:var(--st-shipped-bg);}
+  .scst.warn{color:var(--st-partial);background:var(--st-partial-bg);}
+  .scst.fail{color:var(--st-critical);background:#fde8eb;}
+  .card.blocker{border-left:3px solid var(--line-red);}
+
+  /* SPRINTS */
+  .sprints{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-top:24px;}
+  .sprint{border:1px solid var(--ice-deep);border-radius:var(--radius);background:var(--paper);box-shadow:var(--shadow);padding:18px 20px;}
+  .sprint h4{margin:0 0 3px;font-size:15px;font-weight:800;letter-spacing:-.01em;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+  .sprint .sp-meta{font-size:12px;color:var(--ink-faint);margin-bottom:12px;}
+  .sprint ul{margin:0;padding-left:18px;font-size:13px;color:var(--ink-soft);line-height:1.55;}
+  .sprint .exit{margin-top:12px;font-size:12.5px;color:var(--ink);border-top:1px dashed var(--ice-deep);padding-top:10px;}
+  .sprint .exit b{color:var(--st-shipped);}
+  .sprint.wide{grid-column:1 / -1;}
+  .trk{font-size:10px;font-weight:800;letter-spacing:.05em;padding:2px 7px;border-radius:5px;color:#fff;}
+  .trk.a{background:var(--line-red);}.trk.v{background:var(--line-blue);}.trk.f{background:var(--st-shipped);}
+
+  /* TIMELINE */
+  .timeline{margin:26px 0 0;}
+  .tl-row{display:grid;grid-template-columns:185px 1fr;gap:18px;padding:14px 4px;border-bottom:1px solid rgba(255,255,255,.10);align-items:baseline;}
+  .tl-row:last-child{border-bottom:none;}
+  .tl-when{font-size:13px;font-weight:700;color:#6fb0f5;}
+  .tl-what{font-size:14px;color:#cfe0f2;}
+  .tl-row.key .tl-when{color:#f2a8b2;}
+  .tl-row.key .tl-what{font-weight:700;color:#fff;}
+
+  @media(max-width:640px){.stats{grid-template-columns:repeat(2,1fr);}.legend{position:static;}.phase-head{flex-wrap:wrap;}.phase-head .prog{width:100%;text-align:left;}.next{padding:28px 20px;}.sprints{grid-template-columns:1fr;}.tl-row{grid-template-columns:1fr;gap:2px;}table.sc th,table.sc td{padding:9px 12px;}}
   @media(prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto;}}
 </style>
 </head>
@@ -123,14 +161,14 @@
   <div class="wrap">
     <div class="eyebrow"><span class="puck"></span> PWHL Fantasy &nbsp;·&nbsp; Product Roadmap &nbsp;·&nbsp; Updated June 12, 2026</div>
     <h1>The road to a public beta.
-      <span class="thin">Seven phases, thirty-two features, one live fantasy season.</span>
+      <span class="thin">Alignment, then features — eight phases, thirty-three features, MVP by late October 2026.</span>
     </h1>
-    <p class="lede">The flagship experience is the live fantasy season — drafting real players, setting weekly lineups, and competing in matchups scored from real PWHL games. Here's everything shipped, in progress, and still ahead.</p>
+    <p class="lede">The flagship experience is the live fantasy season — drafting real players, setting weekly lineups, and competing in matchups scored from real PWHL games. This roadmap merges two tracks: aligning the code to the approved v1 rules (Phase 0, launch blockers) and the feature builds (Phases 1–7). Below: the readiness scorecard, every feature, the sprint plan, and a projected launch date.</p>
     <div class="stats">
-      <div class="stat"><div class="n green">7</div><div class="l">Features shipped</div></div>
-      <div class="stat"><div class="n amber">7</div><div class="l">In progress</div></div>
-      <div class="stat"><div class="n blue">7</div><div class="l">Phases mapped</div></div>
-      <div class="stat"><div class="n white">11</div><div class="l">Beta priorities</div></div>
+      <div class="stat"><div class="n green">~88%</div><div class="l">MVP launch confidence today</div></div>
+      <div class="stat"><div class="n amber">1</div><div class="l">P0 alignment blockers</div></div>
+      <div class="stat"><div class="n blue">4</div><div class="l">Sprints to code-complete</div></div>
+      <div class="stat"><div class="n white">Oct '26</div><div class="l">Target public launch</div></div>
     </div>
   </div>
 </header>
@@ -185,6 +223,83 @@
     </div>
   </section>
 
+  <!-- MVP READINESS SCORECARD -->
+  <section class="scorecard">
+    <div class="sc-head">
+      <h3>MVP Readiness Scorecard</h3>
+      <p>Launch-blocking areas, re-verified against code on June&nbsp;12, 2026. Source: <code>docs/mvp-readiness-scorecard.md</code>.</p>
+      <span class="conf">Confidence to launch today: ~85–90%</span>
+    </div>
+    <table class="sc">
+      <thead><tr><th>Area</th><th>Status</th><th>Blocker</th></tr></thead>
+      <tbody>
+        <tr><td>League creation</td><td><span class="scst pass">PASS</span></td><td class="blk">—</td></tr>
+        <tr><td>Draft</td><td><span class="scst warn">PASS / RISKS</span></td><td class="blk">reconnect &amp; duplicate-tab handling unvalidated</td></tr>
+        <tr><td>Rosters</td><td><span class="scst pass">PASS</span></td><td class="blk">—</td></tr>
+        <tr><td>Weekly matchups</td><td><span class="scst pass">PASS</span></td><td class="blk">—</td></tr>
+        <tr><td>VP standings</td><td><span class="scst pass">PASS</span></td><td class="blk">—</td></tr>
+        <tr><td>Weekly lineup lock</td><td><span class="scst pass">PASS</span></td><td class="blk">—</td></tr>
+        <tr><td>Playoffs</td><td><span class="scst pass">PASS</span></td><td class="blk">—</td></tr>
+        <tr><td>Commissioner tools</td><td><span class="scst warn">PARTIAL</span></td><td class="blk">recovery tools + audit log unverified (CT-001/002)</td></tr>
+        <tr><td>Analytics</td><td><span class="scst fail">FAIL</span></td><td class="blk">post-launch, not a hard blocker</td></tr>
+        <tr><td>End-to-end season sim</td><td><span class="scst pass">PASS</span></td><td class="blk">—</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- PHASE 0 — IMPLEMENTATION ALIGNMENT -->
+  <section class="phase">
+    <div class="phase-head" style="--fill:80%">
+      <div class="period-no"><small>P0</small>0</div>
+      <div class="meta">
+        <h2>Implementation Alignment <span class="pri critical">LAUNCH BLOCKERS</span></h2>
+        <div class="goal">Make the running code match the approved v1 rules. IA-001–003 shipped; IA-004 is the remaining P0.</div>
+      </div>
+      <div class="prog">
+        <div class="row"><span class="dot-s s"></span><span class="val">3</span>&nbsp;shipped</div>
+        <div class="row"><span class="dot-s t"></span><span class="val">1</span>&nbsp;remaining P0</div>
+      </div>
+    </div>
+    <div class="grid">
+      <div class="card shipped">
+        <div class="card-top"><span class="num">IA-001</span><span class="status-tag shipped"><span class="tdot"></span>Shipped</span></div>
+        <h3>Roster Defaults → 3F / 2D / 1UTIL / 1G / 6&nbsp;Bench</h3>
+        <p>Canonical roster is <code>{ forward: 3, defense: 2, goalie: 1, util: 1, bench: 6 }</code> = 13 slots, all drafted, no IR default. Updated across all seed scripts, the league create API, auto-draft, and CLAUDE.md.</p>
+        <ul class="feats"><li class="done">Seed scripts ✓</li><li class="done">Validation enforces 3F ✓</li><li class="done">CLAUDE.md updated ✓</li></ul>
+      </div>
+      <div class="card shipped">
+        <div class="card-top"><span class="num">IA-002</span><span class="status-tag shipped"><span class="tdot"></span>Shipped</span></div>
+        <h3>Victory Points = Authoritative Standings</h3>
+        <p><code>computeVpStandings</code> is now the single source in all standings surfaces. <code>scoringMode @default("VP")</code> in schema. All <code>isVpMode</code> branching removed. 28 VP unit tests in <code>tests/vp.test.ts</code>.</p>
+        <ul class="feats"><li class="done">VP engine ✓</li><li class="done">VP standings sort ✓</li><li class="done">VP qualification + seeding ✓</li></ul>
+      </div>
+      <div class="card shipped">
+        <div class="card-top"><span class="num">IA-003</span><span class="status-tag shipped"><span class="tdot"></span>Shipped</span></div>
+        <h3>Simplify Playoff Defaults</h3>
+        <p>Defaults updated to 4 teams / no byes. Bracket generation bug fixed (was pairing 1v2; now correctly pairs 1v4, 2v3). 18 playoff tests verify format. <code>scripts/simulate-season.ts</code> confirms full flow.</p>
+        <ul class="feats"><li class="done">4 teams qualify ✓</li><li class="done">No byes ✓</li><li class="done">Bracket bug fixed ✓</li></ul>
+      </div>
+      <div class="card todo blocker">
+        <div class="card-top"><span class="num">IA-004</span><span class="pri critical">P0</span></div>
+        <h3>Fantasy Season Ends Before PWHL Playoffs</h3>
+        <p>Schedule generation must reserve playoff weeks, conclude the championship before the PWHL postseason, and reject overlapping schedules with clear messaging.</p>
+        <ul class="feats"><li>Reserve playoff weeks</li><li>Overlap validation</li></ul>
+      </div>
+      <div class="card todo">
+        <div class="card-top"><span class="num">IA-005–011</span><span class="pri high">P1 · P2</span></div>
+        <h3>Consistency, Education &amp; Scope Control</h3>
+        <p>Recommend 8-team leagues (005) · VP education UI (006) · auto-draft rebalance (007) · waiver spec (008) · VP tiebreakers (009) · stat-correction policy (010) · hide non-v1 features (011).</p>
+        <ul class="feats"><li>8-team default</li><li>VP help UI</li><li>Tiebreakers + scope control</li></ul>
+      </div>
+      <div class="card todo">
+        <div class="card-top"><span class="num">MVP</span><span class="pri high">GATES</span></div>
+        <h3>Launch Gates</h3>
+        <p>All must pass before public beta: rules match implementation · draft reliability validated · VP standings validated · playoff qualification validated · end-to-end season simulation completed · commissioner recovery tools available.</p>
+        <ul class="feats"><li>See <code>docs/mvp-definition.md</code></li></ul>
+      </div>
+    </div>
+  </section>
+
   <!-- PHASE 1 -->
   <section class="phase">
     <div class="phase-head" style="--fill:45%">
@@ -233,7 +348,7 @@
       <div class="card todo">
         <div class="card-top"><span class="num">02</span><span class="status-tag todo"><span class="tdot"></span>Not built</span></div>
         <h3>League Onboarding</h3>
-        <p>Guide new users from signup to first draft without needing documentation — welcome flow, setup wizard, draft prep, and replay-mode explanation.</p>
+        <p>Guide new users from signup to first draft without needing documentation — welcome flow, setup wizard, draft prep, and replay-mode explanation. Spec: <code>docs/onboarding-spec.md</code>.</p>
         <ul class="feats"><li>Welcome flow</li><li>Setup wizard</li><li>Draft guide</li></ul>
       </div>
       <div class="card todo">
@@ -408,10 +523,17 @@
       <div class="prog">
         <div class="row"><span class="dot-s s"></span><span class="val">0</span>&nbsp;shipped</div>
         <div class="row"><span class="dot-s p"></span><span class="val">1</span>&nbsp;in progress</div>
-        <div class="row"><span class="dot-s t"></span><span class="val">3</span>&nbsp;not built</div>
+        <div class="row"><span class="dot-s t"></span><span class="val">4</span>&nbsp;not built</div>
       </div>
     </div>
     <div class="grid">
+      <div class="card todo blocker">
+        <div class="card-top"><span class="num">33</span><span class="pri high">P1 · FOUNDATION</span></div>
+        <h3>Multi-Season League Architecture <span style="font-weight:600;color:var(--ink-faint)">(parentLeagueId)</span></h3>
+        <p>Separate league <i>identity</i> from league <i>season</i>. A <code>ParentLeague</code> persists; renewing creates a linked new season via <code>parentLeagueId</code> instead of a fresh league. Carries name / members / commissioner / rules; resets standings, VP, results. Spec: <code>docs/implent-parentleagueid.md</code>.</p>
+        <ul class="feats"><li>ParentLeague + parentLeagueId</li><li>One-click renewal flow</li><li>Champions / seasons history</li></ul>
+        <div class="dep"><b>Unlocks:</b> renewal (MS-004), history (MS-005), Hall of Fame (#18), keeper / dynasty (#19/20)</div>
+      </div>
       <div class="card partial">
         <div class="card-top"><span class="num">17</span><span class="status-tag partial"><span class="tdot"></span>In progress</span></div>
         <h3>Rivalries</h3>
@@ -527,10 +649,97 @@
     <div class="stretch"><b>Player Legacy (#31) · ~95K:</b> career dashboard, global leaderboard — deferred until one live season completes. <b>Stretch:</b> league-wide storylines (#11 · ~50K) and the rivalry / Hall-of-Fame layer (#17–#18). Replay (Phase 4) stays out of this list.</div>
   </section>
 
+  <!-- SPRINT PLAN -->
+  <section class="phase">
+    <div class="phase-head" style="--fill:0%">
+      <div class="period-no"><small>PLAN</small>★</div>
+      <div class="meta">
+        <h2>Sprint Plan <span class="pri high">ALIGNMENT + VALIDATION + FEATURES</span></h2>
+        <div class="goal">The calendar view — interleaving Phase 0 alignment, MVP validation, and feature builds. ~2 weeks per sprint, solo + Claude. Tracks: <span class="trk a">A</span>&nbsp;Alignment&nbsp; <span class="trk v">V</span>&nbsp;Validation&nbsp; <span class="trk f">F</span>&nbsp;Feature.</div>
+      </div>
+    </div>
+    <div class="sprints">
+      <div class="sprint">
+        <h4>Sprint 0 — Make it match the rules <span class="trk a">A</span> ✅</h4>
+        <div class="sp-meta">COMPLETE · Jun 12, 2026 · P0 alignment</div>
+        <ul>
+          <li>IA-001 Roster defaults 3F (validation + CLAUDE.md) ✓</li>
+          <li>IA-002 VP authoritative (standings, qualification, seeding) ✓</li>
+          <li>IA-003 Playoffs → 4 teams / no byes / single-week ✓</li>
+          <li>IA-007 Auto-draft rebalance for 3F ✓</li>
+        </ul>
+        <div class="exit"><b>Exit achieved:</b> Rosters / VP / Playoffs flipped FAIL → PASS.</div>
+      </div>
+      <div class="sprint">
+        <h4>Sprint 1 — Prove a season completes <span class="trk v">V</span> ✅</h4>
+        <div class="sp-meta">COMPLETE · Jun 12, 2026 · P0 validation</div>
+        <ul>
+          <li>End-to-end season simulation (<code>scripts/simulate-season.ts</code>) ✓</li>
+          <li>VP standings validation suite — 28 tests ✓</li>
+          <li>Playoff qualification &amp; seeding suite — 18 tests ✓</li>
+          <li>Period-based lineup lock (LC-001) ✓</li>
+          <li>MVP readiness scorecard — confidence 85–90% ✓</li>
+        </ul>
+        <div class="exit"><b>Exit achieved:</b> a league completes a full season with zero manual DB edits.</div>
+      </div>
+      <div class="sprint">
+        <h4>Sprint 2 — Commissioner + transparency <span class="trk a">A</span><span class="trk f">F</span> ← current</h4>
+        <div class="sp-meta">~2 wks · P0 / P1 · starts now</div>
+        <ul>
+          <li>CT-001 Commissioner Control Center (pause/resume, replace manager, force move, undo) — closes #1</li>
+          <li>CT-002 Audit logging</li>
+          <li>IA-006 VP education UI + LC-002 VP standings UI</li>
+          <li>IA-005 Recommend 8-team leagues</li>
+        </ul>
+        <div class="exit"><b>Exit:</b> a commissioner can recover any stuck state without engineering.</div>
+      </div>
+      <div class="sprint">
+        <h4>Sprint 3 — Beta-ready: onboarding, trust, mobile <span class="trk f">F</span></h4>
+        <div class="sp-meta">~2–3 wks · beta prerequisites</div>
+        <ul>
+          <li>#2 League Onboarding (welcome, setup wizard, draft guide)</li>
+          <li>#4 Error Handling (empty / loading / retry)</li>
+          <li>#3 Mobile Optimization (draft, matchup, standings, roster)</li>
+          <li>NT-001/002 Notifications — draft starting, on the clock, lineup incomplete (<code>docs/notification-framework-spec.md</code>)</li>
+          <li>IA-011 Hide advanced non-v1 settings</li>
+        </ul>
+        <div class="exit"><b>Exit:</b> a new user drafts a league on a phone with no docs. <b>MVP launch gate.</b></div>
+      </div>
+      <div class="sprint wide">
+        <h4>Sprint 4+ — Post-MVP / Launch features <span class="trk f">F</span></h4>
+        <div class="sp-meta">P1 → P2 · sequenced from "What to build next" + GPT launch phases</div>
+        <ul>
+          <li><b>Transactions:</b> #7 Trade System → #8 Transaction History → #5 Waiver priority/processing → #6 FAAB</li>
+          <li><b>Engagement:</b> #25 Team Analysis &amp; Insights · #29 Weekly Performance Dashboard · #11 league-wide storylines · #30 Playoff Experience UX</li>
+          <li><b>Multi-season foundation:</b> MS-001 parentLeagueId (#33) · MS-002 rulesVersion · MS-003 scoringVersion · MS-004 renewal · MS-005 history</li>
+          <li><b>Growth / retention:</b> activation + retention analytics · referral loop · league-fill progress</li>
+          <li><b>Phases 5–7:</b> rivalries / Hall of Fame / player legacy · keeper → dynasty · real-time push scoring · push notifications · player trends</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- TIMELINE -->
+  <section class="next">
+    <h2>MVP launch timeline &amp; beyond</h2>
+    <div class="sub"><b>Anchor:</b> today is June 12, 2026. The PWHL 2026-27 opener is ~Nov 2026 with fantasy drafts ~1 week prior (~late Oct) — the natural public-launch target. ~2-week sprints, solo + Claude. Estimates, not commitments.</div>
+    <div class="timeline">
+      <div class="tl-row"><div class="tl-when">Jun 12, 2026 ✅</div><div class="tl-what">Sprint 0 — alignment P0s closed (roster / VP / playoffs match rules)</div></div>
+      <div class="tl-row"><div class="tl-when">Jun 12, 2026 ✅</div><div class="tl-what">Sprint 1 — season simulation + validation suites green (85–90% confidence)</div></div>
+      <div class="tl-row"><div class="tl-when">Late Jul 2026</div><div class="tl-what">Sprint 2 — commissioner recovery + VP education ← current</div></div>
+      <div class="tl-row"><div class="tl-when">Aug 2026</div><div class="tl-what">Sprint 3 — onboarding, error handling, mobile, notifications</div></div>
+      <div class="tl-row key"><div class="tl-when">Late Aug / early Sep 2026</div><div class="tl-what">MVP code-complete — all launch gates pass</div></div>
+      <div class="tl-row"><div class="tl-when">Sep – mid Oct 2026</div><div class="tl-what">Closed beta — run replay + small live test leagues end-to-end; fix findings</div></div>
+      <div class="tl-row key"><div class="tl-when">Late Oct 2026</div><div class="tl-what">PUBLIC LAUNCH — real leagues draft ~1 week before the opener</div></div>
+      <div class="tl-row"><div class="tl-when">Nov 2026</div><div class="tl-what">First live regular season on the platform</div></div>
+    </div>
+    <div class="stretch"><b>Risk buffer:</b> if a sprint slips, the Sep–Oct beta window absorbs ~3–4 weeks before the hard late-Oct draft date. Earliest credible code-complete ~early Sept; latest safe ~early Oct. <b>Beyond MVP —</b> Q4 2026 (in-season): transactions + engagement surfaces. Off-season winter/spring 2027: multi-season foundation, renewal, growth analytics. 2027-28: keeper → dynasty, real-time push scoring, push notifications; native apps &amp; AI features stay future-expansion until retention justifies them.</div>
+  </section>
+
 </div>
 
 <footer>
-  PWHL Fantasy Product Roadmap <span class="puck"></span> Source of truth for development priorities <span class="puck"></span> Build for the live season first
+  PWHL Fantasy Product Roadmap <span class="puck"></span> Implementation alignment + feature builds <span class="puck"></span> MVP target: late October 2026 <span class="puck"></span> Build for the live season first
 </footer>
 
 </body>

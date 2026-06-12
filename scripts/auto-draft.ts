@@ -18,7 +18,7 @@ function arg(flag: string): string | undefined {
 }
 
 const SLOT_CAPS_DEFAULT: Record<LineupSlot, number> = {
-  FORWARD: 2, DEFENSE: 2, GOALIE: 1, UTIL: 1, BENCH: 6, IR: 1,
+  FORWARD: 3, DEFENSE: 2, GOALIE: 1, UTIL: 1, BENCH: 6, IR: 0,
 };
 
 function pickSlot(

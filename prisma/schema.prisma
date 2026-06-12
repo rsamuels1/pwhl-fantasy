@@ -105,17 +105,17 @@ model FantasyLeague {
   season          String              @default("2026-27")
   draftType       DraftType           @default(SNAKE)
   status          FantasyLeagueStatus @default(PRE_DRAFT)
-  maxTeams        Int                 @default(10)
+  maxTeams        Int                 @default(8)
   commissionerId  String
   scoringSettings Json                @default("{}")
   rosterSettings  Json                @default("{}")
-  playoffSettings Json                @default("{\"teamsInPlayoff\": 6, \"topSeedsWithBye\": 2, \"higherSeedWinsTies\": true, \"roundDurationPeriods\": 2}")
+  playoffSettings Json                @default("{\"teamsInPlayoff\": 4, \"topSeedsWithBye\": 0, \"higherSeedWinsTies\": true, \"roundDurationPeriods\": 2}")
   playoffStatus   PlayoffStatus       @default(NOT_STARTED)
   announcement      String?
   draftStartsAt     DateTime?
   isReplay          Boolean             @default(false)
   replayCurrentDate DateTime?
-  scoringMode       String              @default("VTF")
+  scoringMode       String              @default("VP")
   createdAt         DateTime            @default(now())
   updatedAt       DateTime            @updatedAt
   draft           Draft?

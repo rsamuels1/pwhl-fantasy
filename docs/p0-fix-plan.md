@@ -4,9 +4,13 @@
 
 Resolve all MVP launch-blocking implementation inconsistencies identified during the implementation alignment audit.
 
+**Status: ALL P0 ITEMS RESOLVED — June 12, 2026** ✅
+
+All four P0 blockers were implemented, tested, and documented in the MVP Season Validation Sprint. 114/114 tests pass. `tsc --noEmit` clean. See `docs/mvp-readiness-scorecard.md` for current scorecard (confidence: 85–90%).
+
 ---
 
-# P0-001 — Roster Alignment
+# P0-001 — Roster Alignment — ✅ RESOLVED
 
 ## Problem
 
@@ -67,17 +71,13 @@ bench: 6
 
 ---
 
-## Validation
+## Resolution
 
-- Create new league
-- Verify roster configuration
-- Verify lineup validation
-- Verify draft roster generation
-- Verify roster display UI
+Updated all default roster configuration sources to `{ forward: 3, defense: 2, goalie: 1, util: 1, bench: 6 }` across: `app/api/leagues/create/route.ts`, `scripts/seed-draft.ts`, `scripts/seed-replay.ts`, `scripts/seed-playoff.ts`, `scripts/auto-draft.ts`, `scripts/set-optimal-lineups.ts`, `scripts/replay-week.ts`, CLAUDE.md, and `prisma/schema.prisma`. All validation passes. 19 lineup tests pass.
 
 ---
 
-# P0-002 — VP Standings Authority
+# P0-002 — VP Standings Authority — ✅ RESOLVED
 
 ## Problem
 
@@ -128,16 +128,13 @@ Qualify by VP
 
 ---
 
-## Validation
+## Resolution
 
-- Simulate standings
-- Verify VP ordering
-- Verify playoff qualification
-- Verify playoff seeding
+`computeVpStandings` is now the single authoritative source everywhere. Removed all `isVpMode` / `scoringMode` branching from `app/league/[leagueId]/standings/page.tsx`, `lib/services/standings-service.ts`, and `lib/services/playoff-service.ts`. Schema default changed to `scoringMode @default("VP")`. 28 VP tests in `tests/vp.test.ts` verify correctness.
 
 ---
 
-# P0-003 — Playoff Alignment
+# P0-003 — Playoff Alignment — ✅ RESOLVED
 
 ## Problem
 
@@ -194,22 +191,13 @@ Update:
 
 ---
 
-## Validation
+## Resolution
 
-Verify:
-
-```text
-Top 4 qualify
-
-Seed 1 vs 4
-Seed 2 vs 3
-
-Championship generated
-```
+Schema default updated to `teamsInPlayoff: 4, topSeedsWithBye: 0`. `lib/playoffs/lifecycle.ts` defaults updated. Critical bracket generation bug fixed in `lib/playoffs/brackets.ts` — was pairing consecutive seeds (1v2, 3v4); now correctly pairs best-vs-worst (1v4, 2v3). 18 playoff tests in `tests/playoffs.test.ts` verify all cases including VP-based seeding. `scripts/simulate-season.ts` confirms full end-to-end flow.
 
 ---
 
-# P0-004 — Weekly Lineup Lock Alignment
+# P0-004 — Weekly Lineup Lock Alignment — ✅ RESOLVED
 
 ## Problem
 
@@ -256,22 +244,12 @@ Evaluation should consider:
 
 ---
 
-## Validation
+## Resolution
 
-Verify:
-
-- pre-game moves allowed
-- post-game moves blocked
-- untouched players remain movable
+`lockTime` signature updated to `lockTime(playerTeamId, games, nowMs?, periodStartMs?)`. When `periodStartMs` is provided, locks if the team played any game in `[periodStart, nowMs]` (full-week lock). Both `app/team/[teamId]/lineup/page.tsx` and `app/api/leagues/[leagueId]/lineup/route.ts` pass `activePeriod.startsAt.getTime()` as `periodStartMs` when an active period exists. 6 lock tests in `tests/lineup.test.ts` cover period-based, today-only fallback, and before-period cases.
 
 ---
 
 # Definition of Done
 
-All four P0 items:
-
-- implemented
-- tested
-- documented
-
-before beginning any new feature development.
+All four P0 items were implemented, tested, and documented in the MVP Season Validation Sprint (June 12, 2026). 114/114 tests pass. `tsc --noEmit` clean. Launch confidence: 85–90%.

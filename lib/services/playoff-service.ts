@@ -6,7 +6,7 @@
 // they do not contain business logic themselves.
 
 import type { PrismaClient } from "@prisma/client";
-import { computeStandings } from "@/lib/playoffs/seeding";
+import { computeVpStandings } from "@/lib/scoring/vp";
 import { seedTeams, generateBracket } from "@/lib/playoffs/brackets";
 import type { PlayoffBracket, SeededTeam } from "@/lib/playoffs/brackets";
 import {
@@ -55,14 +55,23 @@ export async function getBracket(
     }),
   ]);
 
-  const standings = computeStandings(league.teams, matchups);
+  const vpStandings = computeVpStandings(
+    league.teams,
+    matchups.map((m) => ({
+      homeTeamId: m.homeTeamId, awayTeamId: m.awayTeamId,
+      homeScore: m.homeScore, awayScore: m.awayScore,
+      homeVP: (m as { homeVP?: number | null }).homeVP ?? null,
+      awayVP: (m as { awayVP?: number | null }).awayVP ?? null,
+      isPlayoff: m.isPlayoff,
+    }))
+  );
   const playoffSettings = getPlayoffSettings(league.playoffSettings as Parameters<typeof getPlayoffSettings>[0]);
 
   const seededTeams = seedTeams(
-    standings.map((s) => ({
+    vpStandings.map((s) => ({
       fantasyTeamId: s.fantasyTeamId,
       teamName: s.teamName,
-      points: s.points,
+      points: s.totalVP,
     })),
     playoffSettings
   );
@@ -128,20 +137,29 @@ export async function startPlayoffs(
   }
 
   const matchups = await prisma.matchup.findMany({ where: { leagueId } });
-  const standings = computeStandings(league.teams, matchups);
+  const vpStandings = computeVpStandings(
+    league.teams,
+    matchups.map((m) => ({
+      homeTeamId: m.homeTeamId, awayTeamId: m.awayTeamId,
+      homeScore: m.homeScore, awayScore: m.awayScore,
+      homeVP: (m as { homeVP?: number | null }).homeVP ?? null,
+      awayVP: (m as { awayVP?: number | null }).awayVP ?? null,
+      isPlayoff: m.isPlayoff,
+    }))
+  );
   const playoffSettings = getPlayoffSettings(league.playoffSettings as Parameters<typeof getPlayoffSettings>[0]);
 
-  if (standings.length < playoffSettings.topSeedsWithBye) {
+  if (vpStandings.length < playoffSettings.topSeedsWithBye) {
     throw new Error(
       `Not enough teams for playoffs. Need at least ${playoffSettings.topSeedsWithBye} teams.`
     );
   }
 
   const seededTeams = seedTeams(
-    standings.map((s) => ({
+    vpStandings.map((s) => ({
       fantasyTeamId: s.fantasyTeamId,
       teamName: s.teamName,
-      points: s.points,
+      points: s.totalVP,
     })),
     playoffSettings
   );

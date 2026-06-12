@@ -1,6 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
-import { computeStandings, computeRace } from "@/lib/playoffs/seeding";
+import { computeRace } from "@/lib/playoffs/seeding";
+import { computeVpStandings } from "@/lib/scoring/vp";
 import { requireAuth, requireLeagueMember } from "@/lib/auth";
 import { getLeagueActivity } from "@/lib/services/activity";
 import { getSeasonState } from "@/lib/season";
@@ -54,9 +55,24 @@ export default async function LeagueOverviewPage({
     getLeagueActivity(leagueId, 6, prisma).catch(() => []),
   ]);
 
-  const standings = computeStandings(league.teams, matchups);
+  const vpStandings = computeVpStandings(
+    league.teams,
+    matchups.map((m) => ({
+      homeTeamId: m.homeTeamId, awayTeamId: m.awayTeamId,
+      homeScore: m.homeScore, awayScore: m.awayScore,
+      homeVP: (m as { homeVP?: number | null }).homeVP ?? null,
+      awayVP: (m as { awayVP?: number | null }).awayVP ?? null,
+      isPlayoff: m.isPlayoff,
+    }))
+  );
+  // Map to Standing shape (points = totalVP) so computeRace works.
+  const standings = vpStandings.map((s) => ({
+    ...s,
+    points: s.totalVP,
+    pointsAgainst: 0,
+  }));
   const playoffSettings = (league.playoffSettings ?? {}) as { teamsInPlayoff?: number };
-  const teamsInPlayoff = playoffSettings.teamsInPlayoff ?? 6;
+  const teamsInPlayoff = playoffSettings.teamsInPlayoff ?? 4;
   const hasResults = matchups.some((m) => m.homeScore !== null);
   const playoffsStarted = league.playoffStatus !== "NOT_STARTED";
 

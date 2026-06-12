@@ -33,10 +33,8 @@ export async function GET(
     getDevNowFromRequest(req)
   );
   const now = new Date(nowMs);
-  const todayStart = new Date(now);
-  todayStart.setUTCHours(0, 0, 0, 0);
 
-  const [team, todayGames] = await Promise.all([
+  const [team, seasonStateGet] = await Promise.all([
     prisma.fantasyTeam.findFirst({
       where: { id: teamId, leagueId },
       include: {
@@ -51,19 +49,31 @@ export async function GET(
         league: { select: { rosterSettings: true } },
       },
     }),
-    prisma.game.findMany({
-      where: { startsAt: { gte: todayStart, lte: now } },
-      select: { homeTeamId: true, awayTeamId: true, startsAt: true },
-    }),
+    getSeasonState(leagueId, nowMs, prisma),
   ]);
 
   if (!team) return NextResponse.json({ error: "Team not found" }, { status: 404 });
+
+  const activePeriodGet = seasonStateGet.periods.find((p) => p.status === "ACTIVE")?.period ?? null;
+  const pwhlTeamIdsGet = [...new Set(
+    team.roster.map((e) => e.player.team?.id).filter((id): id is string => !!id)
+  )];
+
+  const periodGamesGet = activePeriodGet && pwhlTeamIdsGet.length > 0
+    ? await prisma.game.findMany({
+        where: {
+          startsAt: { gte: activePeriodGet.startsAt, lte: now },
+          OR: [{ homeTeamId: { in: pwhlTeamIdsGet } }, { awayTeamId: { in: pwhlTeamIdsGet } }],
+        },
+        select: { homeTeamId: true, awayTeamId: true, startsAt: true },
+      })
+    : [];
 
   const settings = (team.league.rosterSettings ?? {}) as RosterSettings;
 
   const roster = team.roster.map((entry) => {
     const teamId = entry.player.team?.id ?? null;
-    const locked = lockTime(teamId, todayGames, nowMs);
+    const locked = lockTime(teamId, periodGamesGet, nowMs, activePeriodGet?.startsAt.getTime());
     return {
       id: entry.id,
       playerId: entry.playerId,
@@ -118,10 +128,8 @@ export async function PUT(
     getDevNowFromRequest(req)
   );
   const nowPut = new Date(nowMsPut);
-  const todayStartPut = new Date(nowPut);
-  todayStartPut.setUTCHours(0, 0, 0, 0);
 
-  const [team, todayGames] = await Promise.all([
+  const [team, seasonStatePut] = await Promise.all([
     prisma.fantasyTeam.findFirst({
       where: { id: body.teamId, leagueId },
       include: {
@@ -135,27 +143,36 @@ export async function PUT(
         league: { select: { rosterSettings: true } },
       },
     }),
-    prisma.game.findMany({
-      where: { startsAt: { gte: todayStartPut, lte: nowPut } },
-      select: { homeTeamId: true, awayTeamId: true, startsAt: true },
-    }),
+    getSeasonState(leagueId, nowMsPut, prisma),
   ]);
 
   if (!team) return NextResponse.json({ error: "Team not found" }, { status: 404 });
 
+  const activePeriodPut = seasonStatePut.periods.find((p) => p.status === "ACTIVE")?.period ?? null;
+  const pwhlTeamIdsPut = [...new Set(
+    team.roster.map((e) => e.player.team?.id).filter((id): id is string => !!id)
+  )];
+
+  const periodGamesPut = activePeriodPut && pwhlTeamIdsPut.length > 0
+    ? await prisma.game.findMany({
+        where: {
+          startsAt: { gte: activePeriodPut.startsAt, lte: nowPut },
+          OR: [{ homeTeamId: { in: pwhlTeamIdsPut } }, { awayTeamId: { in: pwhlTeamIdsPut } }],
+        },
+        select: { homeTeamId: true, awayTeamId: true, startsAt: true },
+      })
+    : [];
+
   const entry = team.roster.find((e) => e.playerId === body.playerId);
   if (!entry) return NextResponse.json({ error: "Player not on roster" }, { status: 404 });
 
-  // Check lock
+  // Check lock: locked if team has played any game this scoring period.
   const playerTeamId = entry.player.team?.id ?? null;
-  const locked = lockTime(playerTeamId, todayGames, nowMsPut);
-  if (locked && entry.slot !== "BENCH" && targetSlot !== entry.slot) {
-    // Allow moving to bench even if locked (bench-out = scratch), but disallow active slot changes
-    if (targetSlot !== "BENCH") {
-      return NextResponse.json({
-        error: `${entry.player.firstName} ${entry.player.lastName} is locked — their game started at ${locked.toISOString()}.`,
-      }, { status: 409 });
-    }
+  const locked = lockTime(playerTeamId, periodGamesPut, nowMsPut, activePeriodPut?.startsAt.getTime());
+  if (locked) {
+    return NextResponse.json({
+      error: `${entry.player.firstName} ${entry.player.lastName} is locked — they played on ${locked.toISOString().slice(0, 10)} this week.`,
+    }, { status: 409 });
   }
 
   const settings = (team.league.rosterSettings ?? {}) as RosterSettings;
@@ -163,13 +180,11 @@ export async function PUT(
   // Helper: check if a player has played any games in the current active scoring period.
   // Used to block demoting an active player who has already accumulated points.
   async function hasPlayedThisPeriod(playerId: string): Promise<boolean> {
-    const seasonState = await getSeasonState(leagueId, nowMsPut, prisma);
-    const activePeriod = seasonState.activePeriod;
-    if (!activePeriod) return false;
+    if (!activePeriodPut) return false;
     const count = await prisma.statLine.count({
       where: {
         playerId,
-        game: { startsAt: { gte: activePeriod.startsAt, lte: new Date(nowMsPut) } },
+        game: { startsAt: { gte: activePeriodPut.startsAt, lte: nowPut } },
       },
     });
     return count > 0;

@@ -18,10 +18,10 @@ import { rostersToRounds } from "../lib/draft/snake";
 const prisma = new PrismaClient();
 
 const LEAGUE_NAME = "Dev Draft League";
-const ROSTER_SETTINGS = { forward: 2, defense: 2, goalie: 1, util: 1, bench: 6, ir: 1 };
+const ROSTER_SETTINGS = { forward: 3, defense: 2, goalie: 1, util: 1, bench: 6 };
 
 // Slots that count as "active" (not bench/IR), in fill-priority order.
-const ACTIVE_SLOTS: LineupSlot[] = ["FORWARD", "FORWARD", "DEFENSE", "DEFENSE", "GOALIE", "UTIL"];
+const ACTIVE_SLOTS: LineupSlot[] = ["FORWARD", "FORWARD", "FORWARD", "DEFENSE", "DEFENSE", "GOALIE", "UTIL"];
 
 // Which positions can fill each active slot (mirrors eligibleSlots in lib/lineup.ts).
 const SLOT_ELIGIBLE: Record<string, Position[]> = {

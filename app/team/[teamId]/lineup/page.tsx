@@ -139,7 +139,7 @@ export default async function TeamLineupPage({ params }: Props) {
   )];
 
   const isReplay = fullTeam.league.isReplay;
-  const [seasonLines, lastWeekLines, thisWeekLines, projectionLines, nextPeriodGames] = await Promise.all([
+  const [seasonLines, lastWeekLines, thisWeekLines, projectionLines, nextPeriodGames, periodGames] = await Promise.all([
     playerIds.length > 0
       ? prisma.statLine.findMany({
           where: {
@@ -193,6 +193,16 @@ export default async function TeamLineupPage({ params }: Props) {
           select: { homeTeamId: true, awayTeamId: true },
         })
       : Promise.resolve([] as { homeTeamId: string; awayTeamId: string }[]),
+    // Games that have already started in the current scoring period — used for weekly lock.
+    activePeriod && pwhlTeamIds.length > 0
+      ? prisma.game.findMany({
+          where: {
+            startsAt: { gte: activePeriod.startsAt, lte: now },
+            OR: [{ homeTeamId: { in: pwhlTeamIds } }, { awayTeamId: { in: pwhlTeamIds } }],
+          },
+          select: { homeTeamId: true, awayTeamId: true, startsAt: true },
+        })
+      : Promise.resolve([] as { homeTeamId: string; awayTeamId: string; startsAt: Date }[]),
   ]);
 
   const seasonStats = aggregateStats(seasonLines, playerIds, positionMap, scoring);
@@ -290,7 +300,7 @@ export default async function TeamLineupPage({ params }: Props) {
 
   const roster: RosterEntryRow[] = fullTeam.roster.map((entry) => {
     const pTeamId = entry.player.team?.id ?? null;
-    const locked = lockTime(pTeamId, todayGames, nowMs);
+    const locked = lockTime(pTeamId, periodGames, nowMs, activePeriod?.startsAt.getTime());
     return {
       id: entry.id,
       playerId: entry.playerId,

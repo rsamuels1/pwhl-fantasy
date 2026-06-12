@@ -17,7 +17,7 @@ const prisma = new PrismaClient();
 
 const LEAGUE_NAME = "Replay League 2025-26";
 const NUM_TEAMS = 8;
-const ROSTER_SETTINGS = { forward: 2, defense: 2, goalie: 1, util: 1, bench: 6, ir: 1 };
+const ROSTER_SETTINGS = { forward: 3, defense: 2, goalie: 1, util: 1, bench: 6 };
 
 const TEAM_NAMES = [
   "Northern Lights",
