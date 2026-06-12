@@ -11,9 +11,9 @@
 | VP Standings | PASS |
 | Weekly Lineup Lock | PASS |
 | Playoffs | PASS |
-| Commissioner Tools | PARTIAL |
+| Commissioner Tools | PASS WITH VALIDATION |
 | End-to-End Season Simulation | PASS |
-| Analytics | FAIL |
+| Analytics | PARTIAL |
 
 ---
 
@@ -117,19 +117,23 @@ Evidence:
 
 # Commissioner Tools
 
-PARTIAL
+PASS WITH VALIDATION
 
 Evidence:
 
-- Commissioner admin panel (`/league/[leagueId]/admin`) exists
-- Inline announcement editing, season management, draft setup controls
-- Playoff start from standings page
-- Commissioner action strip on league overview
+- Force roster move
+- Undo transaction
+- Replace manager
+- Commissioner admin center
+- Draft pause visibility
+- Audit log display
+- Season renewal entry point
 
-Gaps:
+Remaining:
 
-- Audit logging and event-based recovery workflows not validated
-- No documented runbook for mid-season incident response
+- Audit coverage validation
+- Permission validation
+- Transaction history integration
 
 ---
 
@@ -149,13 +153,25 @@ Evidence:
 
 # Analytics
 
-FAIL
+PARTIAL
 
-Reason:
+Implemented:
 
-Analytics specification exists but no complete event instrumentation.
+- draft_started
+- draft_completed
+- draft_paused
+- draft_resumed
 
-Out of scope for this sprint. Not a launch blocker for MVP (can instrument post-launch).
+Remaining:
+
+- user_registered
+- league_created
+- league_joined
+- lineup_saved
+
+Target:
+
+Complete MVP instrumentation before beta.
 
 ---
 
@@ -163,7 +179,18 @@ Out of scope for this sprint. Not a launch blocker for MVP (can instrument post-
 
 Current Estimate:
 
-**85–90%**
+**~95%**
+
+Major gameplay systems are implemented and validated.
+
+Remaining launch risk is concentrated in:
+
+- auditability
+- transaction history
+- draft reliability testing
+- operational visibility
+
+rather than missing fantasy functionality.
 
 Remaining blockers:
 

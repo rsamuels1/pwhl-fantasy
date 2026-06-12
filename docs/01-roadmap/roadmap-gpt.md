@@ -59,6 +59,10 @@ Prioritization order:
 - Projections & win probability engine
 - Free-agent add/drop
 - End-to-end season simulation (`scripts/simulate-season.ts`)
+- Commissioner Admin Center
+- Commissioner Recovery Tools
+- League Renewal Flow
+- Audit Event Surfacing
 
 ## Remaining Risks
 
@@ -68,11 +72,23 @@ The live draft room is the highest-risk feature. Three of the top pre-beta risks
 
 ### Commissioner Recovery
 
-No tools yet to pause the draft, replace a manager, or force-move a player without DB access. Sprint 2 closes this.
+Core recovery tools are implemented.
+
+Remaining work focuses on:
+
+- auditability
+- permissions validation
+- transaction history
 
 ### Multi-Season Foundation
 
-Schema fields for `parentLeagueId`, `rulesVersion`, and `scoringVersion` are not yet present. Adding these after live seasons run creates migration risk. Sprint 2 adds the schema layer.
+Renewal infrastructure exists and references:
+
+- parentLeagueId
+- rulesVersion
+- scoringVersion
+
+Sprint 2 focuses on verification, migration validation, and historical integrity rather than initial implementation.
 
 ---
 
