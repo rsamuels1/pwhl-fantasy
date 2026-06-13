@@ -10,18 +10,18 @@
 
 ---
 
-## Epic 1 — Onboarding
+## Epic 1 — Onboarding ✅ Shipped
 
-Priority: P0
+Priority: P0 · Status: Complete
 
 Spec: `docs/02-engineering/onboarding-spec.md`
 
-No user should need documentation to create their first league or understand what to do after the draft. This epic covers:
+No user should need documentation to create their first league or understand what to do after the draft. All four surfaces shipped:
 
-- League creation wizard — step-by-step (name → teams → settings → invite link)
-- Draft preparation walkthrough — what to expect, how the clock works, how auto-pick behaves
-- Post-draft "what now?" screen — link to lineup, schedule, when the season starts
-- Contextual help tooltips at friction points (draft order, scoring settings, roster slots)
+- **Welcome flow** (`components/WelcomeFlow.tsx`) — 3-card orientation on dashboard for 0-team users; dismissed via `POST /api/user/onboarding` which sets `User.onboardingCompletedAt`
+- **League setup wizard** (`app/create-league/CreateLeagueWizard.tsx`) — 6-step client wizard (name → size → schedule+mode → rules → invite → done); creates league at step 4→5 transition; live and replay paths
+- **Manager draft prep guide** — checklist shown on league overview (`app/league/[leagueId]/page.tsx`) for non-commissioner members during `PRE_DRAFT`; inline VP explainer, queue link, draft countdown
+- **Replay inline explanation** — shown in wizard step 3 when user selects Replay mode; one-click replay league creation path
 
 ---
 
@@ -84,7 +84,7 @@ Hide or disable features that are not part of the Year 1 product to reduce commi
 
 ## Sprint Exit Criteria
 
-- Brand-new user creates and drafts a league on a phone without reading any documentation
+- ✅ Brand-new user creates and drafts a league on a phone without reading any documentation (onboarding shipped)
 - All 5 core pages have empty states and error states
 - Draft room is usable on iOS Safari and Android Chrome without horizontal scrolling
 - Draft Starting Soon, On The Clock, and Lineup Incomplete notifications fire correctly

@@ -4,6 +4,7 @@ import { getDevNow } from "@/lib/devTime";
 import { getReplayNow } from "@/lib/replayTime";
 import { getMatchupQuickSummary, getTeamTopPerformers, type MatchupQuickSummary } from "@/lib/services/matchup-summary";
 import Link from "next/link";
+import WelcomeFlow from "@/components/WelcomeFlow";
 
 function MatchupHero({ summary, teamName }: { summary: MatchupQuickSummary; teamName: string }) {
   const isActive   = summary.status === "active";
@@ -229,6 +230,11 @@ export default async function DashboardPage() {
             </>
           )}
         </header>
+
+        {/* ── Welcome flow (first-time, zero teams) ── */}
+        {!hasTeams && !user.onboardingCompletedAt && (
+          <WelcomeFlow />
+        )}
 
         {/* ── Action items ── */}
         {actions.length > 0 && (

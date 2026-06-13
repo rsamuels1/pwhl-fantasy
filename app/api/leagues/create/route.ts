@@ -3,27 +3,41 @@ import { prisma } from "@/lib/db";
 import { DEFAULT_SCORING } from "@/lib/scoring";
 import { generateShortId } from "@/lib/id";
 import { setAuthCookie } from "@/lib/auth";
+import { trackEvent } from "@/lib/analytics";
+
+const SESSION_COOKIE = "pwhl_user_email";
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const leagueName = String(body.leagueName || "").trim();
-    const commissionerEmail = String(body.commissionerEmail || "").trim();
-    const commissionerName = String(body.commissionerName || "").trim();
-    const maxTeams = Number(body.maxTeams || 10);
+    const maxTeams = Number(body.maxTeams || 8);
 
-    if (!leagueName || !commissionerEmail) {
-      return NextResponse.json({ error: "League name and commissioner email are required." }, { status: 400 });
+    if (!leagueName) {
+      return NextResponse.json({ error: "League name is required." }, { status: 400 });
     }
 
-    const commissioner = await prisma.user.upsert({
-      where: { email: commissionerEmail },
-      update: { displayName: commissionerName || commissionerEmail.split("@")[0] },
-      create: { email: commissionerEmail, displayName: commissionerName || commissionerEmail.split("@")[0] },
-    });
+    // Prefer authenticated session; fall back to email-based creation for backward compat.
+    const sessionEmail = req.cookies.get(SESSION_COOKIE)?.value;
+    let commissioner = sessionEmail
+      ? await prisma.user.findUnique({ where: { email: sessionEmail } })
+      : null;
+
+    if (!commissioner) {
+      const commissionerEmail = String(body.commissionerEmail || "").trim();
+      const commissionerName = String(body.commissionerName || "").trim();
+      if (!commissionerEmail) {
+        return NextResponse.json({ error: "Commissioner email is required." }, { status: 400 });
+      }
+      commissioner = await prisma.user.upsert({
+        where: { email: commissionerEmail },
+        update: { displayName: commissionerName || commissionerEmail.split("@")[0] },
+        create: { email: commissionerEmail, displayName: commissionerName || commissionerEmail.split("@")[0] },
+      });
+    }
 
     let leagueSeason = "2026-27";
-    let draftStartsAt = null;
+    let draftStartsAt: Date | null = null;
     let isReplay = false;
     let replayCurrentDate: Date | null = null;
 
@@ -38,6 +52,8 @@ export async function POST(req: NextRequest) {
       draftStartsAt = new Date();
       isReplay = true;
       replayCurrentDate = new Date("2026-10-01T09:00:00Z");
+    } else if (body.draftStartsAt) {
+      draftStartsAt = new Date(body.draftStartsAt);
     }
 
     const league = await prisma.fantasyLeague.create({
@@ -63,13 +79,21 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    try {
+      trackEvent({ event: "league_created", userId: commissioner.id, leagueId: league.id,
+        properties: { maxTeams, isReplay, source: sessionEmail ? "wizard" : "form" } });
+    } catch {}
+
     const response = NextResponse.json({
       leagueId: league.id,
       commissionerId: commissioner.id,
       redirectTo: `/league/${league.id}/admin?welcome=1`,
       message: "League created.",
     });
-    setAuthCookie(response, commissioner.email);
+    // Set cookie so unauthenticated creators are logged in after creation
+    if (!sessionEmail) {
+      setAuthCookie(response, commissioner.email);
+    }
     return response;
   } catch (error) {
     console.error("Error creating league:", error);

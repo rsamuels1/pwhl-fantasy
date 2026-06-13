@@ -1,3 +1,4 @@
+import React from "react";
 import { notFound, redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { computeRace } from "@/lib/playoffs/seeding";
@@ -9,6 +10,7 @@ import { getDevNow } from "@/lib/devTime";
 import { getReplayNow } from "@/lib/replayTime";
 import Link from "next/link";
 import AnnouncementForm from "@/components/AnnouncementForm";
+import { VpExplainer } from "@/components/VpExplainer";
 
 export default async function LeagueOverviewPage({
   params,
@@ -357,12 +359,59 @@ export default async function LeagueOverviewPage({
 
           {/* Pre-season / no results yet */}
           {!hasResults && league.status !== "IN_SEASON" && (
-            <section style={card}>
-              <h2 style={sectionTitle}>Standings</h2>
-              <p style={{ color: "#475569", fontSize: 13, margin: "10px 0 0" }}>
-                Standings will appear once the season starts.
-              </p>
-            </section>
+            <>
+              {/* Manager draft prep guide — shown to non-commissioners in PRE_DRAFT */}
+              {league.status === "PRE_DRAFT" && !isCommissioner && myTeamInLeague && (
+                <section style={card}>
+                  <h2 style={{ ...sectionTitle, marginBottom: 14 }}>Get ready to draft</h2>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 16 }}>
+                    <DraftPrepItem done label="Joined league" detail={`You're in as ${myTeamInLeague.name}`} />
+                    <DraftPrepItem done={false} label="Learn how scoring works" detail="Victory Points: win your matchup AND be a top scorer each week.">
+                      <VpExplainer />
+                    </DraftPrepItem>
+                    <DraftPrepItem
+                      done={false}
+                      label="Build a draft queue"
+                      detail="Queue up players you want before the draft starts — you'll be on the clock!"
+                      linkHref={league.draft?.id ? `/draft/${leagueId}?team=${myTeamInLeague.id}` : undefined}
+                      linkLabel="Open draft room →"
+                    />
+                    {league.draftStartsAt && (() => {
+                      const ms = new Date(league.draftStartsAt).getTime() - nowMs;
+                      const days = Math.ceil(ms / 86_400_000);
+                      return ms > 0 ? (
+                        <DraftPrepItem
+                          done={false}
+                          label="Draft day is coming"
+                          detail={days <= 1 ? "Draft is today or tomorrow!" : `Draft in ${days} day${days === 1 ? "" : "s"} — make sure you're available`}
+                        />
+                      ) : null;
+                    })()}
+                  </div>
+
+                  {isCommissioner === false && (
+                    <p style={{ fontSize: 12, color: "#334155", margin: 0 }}>
+                      The commissioner will share the draft room link when it&apos;s time to pick.
+                    </p>
+                  )}
+                </section>
+              )}
+
+              {/* Commissioner sees the admin panel checklist, not this */}
+              {(isCommissioner || !myTeamInLeague) && (
+                <section style={card}>
+                  <h2 style={sectionTitle}>Standings</h2>
+                  <p style={{ color: "#475569", fontSize: 13, margin: "10px 0 0" }}>
+                    Standings will appear once the season starts.
+                  </p>
+                  {isCommissioner && league.status === "PRE_DRAFT" && (
+                    <Link href={`/league/${leagueId}/admin`} style={{ ...ctaLink, marginTop: 14, display: "inline-block" }}>
+                      Go to admin panel →
+                    </Link>
+                  )}
+                </section>
+              )}
+            </>
           )}
 
           {/* ── All matchups this week — compact / secondary ── */}
@@ -554,6 +603,54 @@ export default async function LeagueOverviewPage({
           </section>
 
         </div>
+      </div>
+    </div>
+  );
+}
+
+function DraftPrepItem({
+  done,
+  label,
+  detail,
+  linkHref,
+  linkLabel,
+  children,
+}: {
+  done: boolean;
+  label: string;
+  detail: string;
+  linkHref?: string;
+  linkLabel?: string;
+  children?: React.ReactNode;
+}) {
+  return (
+    <div style={{
+      display: "flex", alignItems: "flex-start", gap: 10,
+      padding: "10px 12px", borderRadius: 10,
+      background: done ? "rgba(52,211,153,0.04)" : "rgba(255,255,255,0.02)",
+      border: `1px solid ${done ? "rgba(52,211,153,0.15)" : "rgba(148,163,184,0.08)"}`,
+    }}>
+      <div style={{
+        width: 20, height: 20, borderRadius: "50%", flexShrink: 0,
+        display: "flex", alignItems: "center", justifyContent: "center",
+        fontSize: 10, fontWeight: 700, marginTop: 1,
+        background: done ? "rgba(52,211,153,0.15)" : "rgba(99,102,241,0.1)",
+        color: done ? "#34d399" : "#818cf8",
+        border: `1.5px solid ${done ? "#34d399" : "rgba(99,102,241,0.3)"}`,
+      }}>
+        {done ? "✓" : "·"}
+      </div>
+      <div style={{ flex: 1 }}>
+        <div style={{ fontSize: 13, fontWeight: 600, color: done ? "#64748b" : "#e2e8f0", textDecoration: done ? "line-through" : "none" }}>
+          {label}
+          {linkHref && linkLabel && (
+            <Link href={linkHref} style={{ marginLeft: 8, fontSize: 12, color: "#a5b4fc", fontWeight: 400, textDecoration: "none" }}>
+              {linkLabel}
+            </Link>
+          )}
+        </div>
+        <div style={{ fontSize: 12, color: "#475569", marginTop: 2 }}>{detail}</div>
+        {children && <div style={{ marginTop: 8 }}>{children}</div>}
       </div>
     </div>
   );

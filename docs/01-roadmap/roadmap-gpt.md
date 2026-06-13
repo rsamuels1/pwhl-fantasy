@@ -69,6 +69,7 @@ Prioritization order:
 - Analytics Instrumentation (6 events: user_registered, league_created, league_joined, draft_started, draft_completed, lineup_saved)
 - VP Education UX (VpExplainer on standings, 8-team recommendation at creation)
 - Notification Framework (in-app bell, draft notifications; email deferred)
+- League Onboarding (welcome flow `WelcomeFlow.tsx`, 6-step wizard `CreateLeagueWizard.tsx`, manager draft prep guide on league overview, replay explanation inline, `User.onboardingCompletedAt` schema)
 
 ## Remaining Risks
 
@@ -225,11 +226,19 @@ All commissioner actions tracked via `LeagueEvent` using `logCommissionerAction(
 
 ## Sprint 3 — Beta Readiness
 
-### Onboarding
+### Onboarding ✅ DONE
 
 Welcome flow, league setup wizard, and draft preparation guide. No user should need documentation to create their first league.
 
-Spec: `docs/02-engineering/onboarding-spec.md` · Priority: P1
+**Shipped:**
+- `User.onboardingCompletedAt DateTime?` schema field (pushed to DB)
+- `POST /api/user/onboarding` — idempotent; sets `onboardingCompletedAt`
+- `components/WelcomeFlow.tsx` — 3-card orientation shown on dashboard for 0-team users without `onboardingCompletedAt`; dismiss calls the API
+- `app/create-league/CreateLeagueWizard.tsx` — full 6-step client wizard (name → size → schedule+mode → rules → invite → done); creates league at step 4→5 transition
+- Manager draft prep checklist on `app/league/[leagueId]/page.tsx` — shown to non-commissioner members during `PRE_DRAFT`; inline `VpExplainer`, queue link, countdown
+- Replay inline explanation in wizard step 3 with one-click replay league creation path
+
+Spec: `docs/02-engineering/onboarding-spec.md` · Priority: P1 · Status: Shipped
 
 ---
 
@@ -510,7 +519,7 @@ A public beta should not launch until:
 - [x] Draft reconnect + commissioner auth + auto-pick position-aware (C1/C2/H1/H3)
 - [ ] Draft duplicate-tab handling validated (load test)
 - [x] Commissioner recovery tools exist (CT-001/002)
-- [ ] League onboarding exists
+- [x] League onboarding exists (WelcomeFlow, 6-step wizard, manager draft prep guide)
 - [ ] Mobile optimization complete
 - [ ] Error handling complete
 - [ ] Analytics wired to external provider (PostHog/Plausible) before beta users
@@ -524,7 +533,7 @@ A public beta should not launch until:
 | Sprint 0 — Implementation Alignment | ✅ COMPLETE (Jun 12, 2026) | Rosters / VP / Playoffs flipped FAIL → PASS |
 | Sprint 1 — Season Validation | ✅ COMPLETE (Jun 12, 2026) | Full season simulates, 114 tests pass, confidence 85-90% |
 | Sprint 2 — Commissioner + Platform Foundation | ✅ COMPLETE (Jun 2026) | CT-001/002, MS-001/002/003/004, AN-001, VP education — 130 tests |
-| Sprint 3 — Beta Readiness | 🔄 CURRENT | Onboarding, error handling, mobile, notifications, IA-011, transaction history ✅ |
+| Sprint 3 — Beta Readiness | 🔄 CURRENT | Onboarding ✅, error handling, mobile, notifications, IA-011, transaction history ✅ |
 | Sprint 4 — Product Polish | ⏳ PARTIALLY DONE | #28 lineup tab polish ✅, #01 commissioner dashboard gaps, #17 rivalries |
 | Sprint 5 — Validation + Beta Operations | ⏳ PLANNED | Draft cert, founder dashboard, beta feedback infra |
 

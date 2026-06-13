@@ -245,25 +245,24 @@ Acceptance Criteria:
 
 ## 2. League Onboarding
 
-Status: Needed
+Status: Implemented ✅
 
 Spec: `docs/onboarding-spec.md`
 
-Estimated tokens: ~100K (new routes, wizard UI, multiple components — nothing to build on)
+Four surfaces guide a new user from first login to a drafted league.
 
-New users need guidance.
-
-Features:
-
-- Welcome flow
-- League setup wizard
-- Draft preparation guide
-- Replay explanation
+- **Welcome flow** — `components/WelcomeFlow.tsx`; shown on `/dashboard` for users with zero teams and no `onboardingCompletedAt`; 3 orientation cards + dismiss.
+- **League setup wizard** — `app/create-league/CreateLeagueWizard.tsx`; 6 steps (name → size → schedule/mode → rules confirmation → invite → done); session-auth–aware API; draft date picker; replay shortcut.
+- **Manager draft prep guide** — checklist on `app/league/[leagueId]/page.tsx` when `status === 'PRE_DRAFT'` and viewer is not commissioner; VP explainer inline, draft queue link, countdown.
+- **Replay explanation** — inline in wizard step 3 when "Replay" is selected.
+- **Schema:** `User.onboardingCompletedAt DateTime?`; `POST /api/user/onboarding` sets it (idempotent).
 
 Acceptance Criteria:
 
-- User can create first league without documentation
-- Replay mode clearly explained
+- ✅ User can create first league without documentation
+- ✅ Replay mode clearly explained
+- ✅ 8-team default recommended in wizard
+- ✅ Manager checklist visible on league overview before draft
 
 ---
 
@@ -1135,8 +1134,8 @@ comfortably. Estimates assume a fresh session starting from the current codebase
 
 ### Heavy lifts (100K+ tokens — plan a fresh session)
 
-8. **League Onboarding (#2)** · ~100K
-   Entirely unbuilt — welcome flow, setup wizard, draft guide. Beta prerequisite despite token cost.
+8. **League Onboarding (#2)** · ~100K ✅
+   Shipped — welcome flow (WelcomeFlow.tsx), 6-step wizard (CreateLeagueWizard.tsx), manager draft prep guide on league overview, replay explanation inline, User.onboardingCompletedAt schema field.
 9. **Transaction History (#8)** · ~55K ✅
    Shipped — paginated API + transaction page with type/team filters, replay guard, infinite scroll. No schema changes.
 10. **Trade System (#7)** · ~130K
@@ -1209,7 +1208,7 @@ Assumes a solo builder working with Claude (Pro), ~2 weeks per sprint. Tracks: *
 
 ## Sprint 3 — "Beta-ready: onboarding, trust, mobile" · ~2–3 wks · Track F (beta prereqs) ← CURRENT
 
-- #2 League Onboarding (welcome flow, setup wizard, draft guide) — spec `docs/02-engineering/onboarding-spec.md`
+- #2 League Onboarding ✅ (welcome flow, setup wizard, draft prep guide, replay explanation; `User.onboardingCompletedAt`; `components/WelcomeFlow.tsx`; `app/create-league/CreateLeagueWizard.tsx`; manager checklist on league overview)
 - #4 Error Handling (empty / loading / retry across all core pages — draft room, matchup, lineup, standings, roster)
 - #3 Mobile Optimization (draft room is hardest; matchup, standings, roster; no horizontal scrolling; no broken touch targets)
 - NT-001 / NT-002 Notification framework + critical notifications (draft starting soon, on the clock, lineup incomplete) — spec `docs/02-engineering/notification-framework-spec.md`
@@ -1258,7 +1257,7 @@ Sequenced from "What To Build Next" and the GPT launch phases:
 | Sprint 0 — Implementation Alignment | ✅ COMPLETE (Jun 12, 2026) | Rosters / VP / Playoffs flipped FAIL → PASS |
 | Sprint 1 — Season Validation | ✅ COMPLETE (Jun 12, 2026) | Full season simulates, 114 tests pass, confidence 85–90% |
 | Sprint 2 — Commissioner + Platform Foundation | ✅ COMPLETE (Jun 2026) | Commissioner recovery tools, multi-season schema, analytics (6 events), VP education; 130 tests pass |
-| Sprint 3 — Beta Readiness | ← CURRENT | Onboarding, error handling, mobile, notifications, transaction history ✅ |
+| Sprint 3 — Beta Readiness | ← CURRENT | Onboarding ✅, error handling, mobile, notifications, transaction history ✅ |
 | Sprint 4 — Product Polish | ⏳ PARTIALLY DONE | #28 lineup tab polish ✅, #01 commissioner dashboard gaps, #17 rivalries |
 | Sprint 5 — Validation + Beta Operations | ⏳ PLANNED | Draft cert, founder dashboard, beta feedback infra |
 | Sprint 6+ — Launch Features | ⏳ PLANNED | Transactions, trade, waivers, growth |
@@ -1277,7 +1276,7 @@ estimates, not commitments.
 | **Jun 12, 2026** | Sprint 0 — alignment P0s closed (roster / VP / playoffs match rules) ✅ |
 | **Jun 12, 2026** | Sprint 1 — season simulation + validation suites green ✅ |
 | **Jun–Jul 2026** | Sprint 2 — commissioner recovery + platform foundation + analytics ✅ |
-| **Late Jul 2026** | Sprint 3 — onboarding, error handling, mobile, notifications ← current |
+| **Late Jul 2026** | Sprint 3 — onboarding ✅, error handling, mobile, notifications ← current |
 | **Aug 2026** | Sprint 4 — lineup tab polish ✅, commissioner dashboard gaps, rivalries |
 | **Late Aug 2026** | Sprint 5 — draft cert, founder dashboard, beta feedback infra |
 | **Early Sep 2026** | **MVP code-complete — all launch gates pass** |

@@ -161,6 +161,7 @@ survives DB resets and schema migrations.
    - Analytics instrumentation ✅ (`trackEvent` in `lib/analytics/index.ts`; 6 events: `user_registered`, `league_created`, `league_joined`, `draft_started`, `draft_completed`, `lineup_saved`)
    - VP education ✅ (`components/VpExplainer.tsx` on standings page; 8-team "Recommended" label on league creation form; IA-005/006)
    - Notification framework 🔄 (`lib/services/notification-service.ts`; `Notification`/`NotificationPreference` models; in-app bell in league layout; draft server call sites; email deferred)
+   - Onboarding ✅ (welcome flow, 6-step league setup wizard, manager draft prep guide, replay explanation; `User.onboardingCompletedAt`; `components/WelcomeFlow.tsx`; `app/create-league/CreateLeagueWizard.tsx`; `app/api/user/onboarding/route.ts`)
 6. Integration + load test the draft room + beta
 7. Public launch ~early Nov, drafts ~1 week before opener
 
@@ -290,6 +291,33 @@ Called by: all three commissioner API routes, and `lib/draft/server.ts` after PA
 **UI:** `components/NotificationBell.tsx` — client component. Server-fetches unread count in `app/league/[leagueId]/layout.tsx` and passes as `initialCount`. On click: fetches notification list, marks all read, shows dropdown. Unread badge turns red when count > 0.
 
 **V1 is in-app only.** Email and push channels are deferred post-beta.
+
+## Onboarding (`app/create-league/`, `components/WelcomeFlow.tsx`)
+
+Four surfaces guide a new user from first login to a drafted, ready-to-play league.
+
+**Schema:** `User.onboardingCompletedAt DateTime?` — set on first wizard visit; prevents the welcome flow from re-appearing.
+
+**Surface 1 — Welcome flow** (`components/WelcomeFlow.tsx`):
+Shown on `/dashboard` when `!user.onboardingCompletedAt && teams.length === 0`. Three orientation cards ("What this is", "How you win", "Two ways to start") plus CTAs to create a league, join one, or try a replay. Dismiss button calls `POST /api/user/onboarding` (sets `onboardingCompletedAt`) then `router.refresh()`.
+
+**Surface 2 — League setup wizard** (`app/create-league/`):
+`page.tsx` is a server component that calls `requireAuth` and passes the user to `CreateLeagueWizard.tsx` (client). Six steps:
+1. League name (≤50 chars)
+2. Size (6/8/10/12 — 8 highlighted as "Recommended")
+3. Season mode (Live vs ⏪ Replay) + optional draft date; replay path creates the league immediately
+4. Rules confirmation (read-only: 3F·2D·1UTIL·1G·6B, VP standings, 4-team playoffs)
+5. Invite link (`InviteLinkButton`) — league is created at the step-4→5 transition
+6. Done → draft prep summary
+
+The wizard calls `POST /api/leagues/create` using the session cookie (no email field needed for authenticated users). The API supports both session-based (wizard) and email-based (legacy form) creation via cookie-first fallback.
+
+**New API:** `POST /api/user/onboarding` — sets `onboardingCompletedAt` on the authenticated user (idempotent).
+
+**Surface 3 — Manager draft prep guide** (`app/league/[leagueId]/page.tsx`):
+Shown in the left column of the league overview when `league.status === 'PRE_DRAFT' && !isCommissioner`. Four checklist items: Joined ✅ · Learn VP scoring (inline `VpExplainer` toggle) · Build draft queue (link to draft room) · Draft countdown (if `draftStartsAt` is set). Disappears once results exist or season starts. Commissioners see the admin panel checklist instead (already robust in `app/league/[leagueId]/admin/page.tsx`).
+
+**Surface 4 — Replay explanation**: inline in wizard step 3 when the user selects "Replay" mode.
 
 ## Draft module (`lib/draft/`)
 

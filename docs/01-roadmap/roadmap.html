@@ -352,11 +352,11 @@
         <p>Rename "Projected" → "Matchup Proj", default to it between weeks, and hide the "This week" tab when no active period exists. Single-component edit (~25K tokens).</p>
         <ul class="feats"><li class="done">Rename tab label ✓</li><li class="done">Between-weeks default ✓</li><li class="done">Hide stale tab ✓</li></ul>
       </div>
-      <div class="card todo">
-        <div class="card-top"><span class="num">02</span><span class="status-tag todo"><span class="tdot"></span>Not built</span></div>
+      <div class="card shipped">
+        <div class="card-top"><span class="num">02</span><span class="status-tag shipped"><span class="tdot"></span>Shipped</span></div>
         <h3>League Onboarding</h3>
         <p>Guide new users from signup to first draft without needing documentation — welcome flow, setup wizard, draft prep, and replay-mode explanation. Spec: <code>docs/onboarding-spec.md</code>.</p>
-        <ul class="feats"><li>Welcome flow</li><li>Setup wizard</li><li>Draft guide</li></ul>
+        <ul class="feats"><li>Welcome flow (<code>WelcomeFlow.tsx</code>)</li><li>6-step setup wizard (<code>CreateLeagueWizard.tsx</code>)</li><li>Manager draft prep guide on league overview</li><li>Replay explanation inline in wizard</li><li><code>User.onboardingCompletedAt</code> schema field</li></ul>
       </div>
       <div class="card todo">
         <div class="card-top"><span class="num">04</span><span class="status-tag todo"><span class="tdot"></span>Not built</span></div>
@@ -649,7 +649,7 @@
       <li><div><div class="t">Mobile Optimization <span style="color:#7fb2e8">· #3</span></div><div class="d">Responsive CSS across draft room, matchup, and roster screens. Beta prerequisite.</div></div><span class="tok">~75K</span></li>
       <li><div><div class="t">Team Analysis &amp; Insights <span style="color:#7fb2e8">· #25</span></div><div class="d">New Analysis tab — position-group trends, FA recommendations, trade suggestions once #7 lands.</div></div><span class="tok">~85K</span></li>
       <li class="tier-head"><span class="tl">Heavy lifts — plan a fresh session (100K+ tokens)</span></li>
-      <li><div><div class="t">League Onboarding <span style="color:#7fb2e8">· #2</span></div><div class="d">Entirely unbuilt — welcome flow, setup wizard, draft guide. Beta prerequisite despite token cost.</div></div><span class="tok">~100K</span></li>
+      <li><div><div class="t">League Onboarding <span style="color:#7fb2e8">· #2 ✅</span></div><div class="d">Shipped — welcome flow, 6-step wizard, manager draft prep guide, replay explanation, <code>User.onboardingCompletedAt</code>.</div></div></li>
       <li><div><div class="t">Transaction History <span style="color:#7fb2e8">· #8 ✅</span></div><div class="d">Shipped — paginated API + transaction page with type/team filters, replay guard, infinite scroll.</div></div></li>
       <li><div><div class="t">Trade System <span style="color:#7fb2e8">· #7</span></div><div class="d">New domain: schema tables, API routes, proposal / review / approval UI. Built on top of Transaction History. Plan a dedicated session.</div></div><span class="tok">~130K</span></li>
       <li><div><div class="t">Waiver Priority + Processing <span style="color:#7fb2e8">· #5</span></div><div class="d">Priority ordering, batched claim-resolution jobs, commissioner settings. Schema + service + UI.</div></div><span class="tok">~110K</span></li>
@@ -709,7 +709,7 @@
         <h4>Sprint 3 — Beta Readiness <span class="trk f">F</span> ← current</h4>
         <div class="sp-meta">~2–3 wks · MVP launch gate · beta prerequisites</div>
         <ul>
-          <li>#2 League Onboarding (welcome, setup wizard, draft guide)</li>
+          <li>#2 League Onboarding ✅ (welcome flow, 6-step wizard, manager draft prep guide, replay explanation, <code>User.onboardingCompletedAt</code>)</li>
           <li>#8 Transaction History ✅ (paginated API + page with type/team filters, replay guard)</li>
           <li>#4 Error Handling (empty / loading / retry)</li>
           <li>#3 Mobile Optimization (draft, matchup, standings, roster)</li>
@@ -762,7 +762,7 @@
       <div class="tl-row"><div class="tl-when">Jun 12, 2026 ✅</div><div class="tl-what">Sprint 0 — alignment P0s closed (roster / VP / playoffs match rules)</div></div>
       <div class="tl-row"><div class="tl-when">Jun 12, 2026 ✅</div><div class="tl-what">Sprint 1 — season simulation + validation suites green (85–90% confidence)</div></div>
       <div class="tl-row"><div class="tl-when">Jun 2026 ✅</div><div class="tl-what">Sprint 2 — commissioner recovery, multi-season schema, analytics, VP education (95% confidence)</div></div>
-      <div class="tl-row"><div class="tl-when">Jul–Aug 2026 ← current</div><div class="tl-what">Sprint 3 — onboarding, error handling, mobile, notifications (MVP launch gate)</div></div>
+      <div class="tl-row"><div class="tl-when">Jul–Aug 2026 ← current</div><div class="tl-what">Sprint 3 — onboarding ✅, error handling, mobile, notifications (MVP launch gate)</div></div>
       <div class="tl-row"><div class="tl-when">Aug 2026</div><div class="tl-what">Sprint 4 — lineup tab polish ✅, commissioner dashboard gaps, rivalries</div></div>
       <div class="tl-row"><div class="tl-when">Late Aug 2026</div><div class="tl-what">Sprint 5 — draft cert, founder dashboard, beta feedback infra</div></div>
       <div class="tl-row key"><div class="tl-when">Early Sep 2026</div><div class="tl-what">MVP code-complete — all launch gates pass</div></div>
