@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="en" class="bg-slate-950">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PWHL Fantasy Roadmap</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            pwhl: {
+              purple: '#4c1d95',
+              accent: '#2dd4bf',
+              dark: '#020617',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@latest"></script>
+  <style>
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #0f172a;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 3px;
+    }
+    .status-done { @apply bg-emerald-500/10 text-emerald-400 border-emerald-500/20; }
+    .status-partial { @apply bg-amber-500/10 text-amber-400 border-amber-500/20; }
+    .status-todo { @apply bg-slate-500/10 text-slate-400 border-slate-500/20; }
+    .status-risk { @apply bg-rose-500/10 text-rose-400 border-rose-500/20; }
+    .gradient-text {
+      background: linear-gradient(135deg, #2dd4bf 0%, #4c1d95 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .ping-circle {
+      animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+    }
+    @keyframes ping {
+      75%, 100% {
+        transform: scale(2);
+        opacity: 0;
+      }
+    }
+  </style>
+</head>
+<body class="text-slate-100 bg-slate-950 custom-scrollbar">
+  <!-- Header -->
+  <header class="sticky top-0 z-50 bg-slate-950/95 backdrop-blur border-b border-slate-800 p-6">
+    <div class="max-w-7xl mx-auto flex justify-between items-center">
+      <div>
+        <h1 class="text-3xl font-black gradient-text">PWHL Fantasy</h1>
+        <p class="text-sm text-slate-400">Product Roadmap</p>
+      </div>
+      <div class="text-right">
+        <div class="text-2xl font-mono font-bold text-pwhl-accent" id="countdown">
+          Loading...
+        </div>
+        <p class="text-xs text-slate-500">until public launch</p>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto p-6 space-y-8">
+    <!-- KPI Row -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-sm font-mono text-slate-400">Launch Confidence</h3>
+          <div class="w-12 h-12 relative">
+            <canvas id="readinessChart" width="48" height="48"></canvas>
+            <div class="absolute inset-0 flex items-center justify-center">
+              <span class="font-mono text-xs font-bold text-pwhl-accent">100%</span>
+            </div>
+          </div>
+        </div>
+        <p class="text-xs text-slate-500">areas PASS</p>
+      </div>
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+        <p class="text-4xl font-mono font-bold text-pwhl-accent">12</p>
+        <p class="text-xs text-slate-500 mt-2">launch gates</p>
+        <div class="w-full bg-slate-800 h-1.5 rounded-full mt-3"></div>
+      </div>
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+        <p class="text-4xl font-mono font-bold text-emerald-400">0</p>
+        <p class="text-xs text-slate-500 mt-2">features shipped</p>
+        <div class="w-full bg-slate-800 h-1.5 rounded-full mt-3"></div>
+      </div>
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+        <p class="text-sm font-mono text-pwhl-accent font-bold">Sprint 4</p>
+        <p class="text-xs text-slate-500 mt-2">IN FLIGHT</p>
+        <div class="flex gap-1 mt-3">
+          <div class="w-2 h-2 bg-pwhl-accent rounded-full ping-circle"></div>
+          <div class="w-2 h-2 bg-slate-700 rounded-full"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MVP Readiness Scorecard -->
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+      <h2 class="text-lg font-mono font-bold mb-4">MVP Readiness Scorecard</h2>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b border-slate-800">
+              <th class="text-left py-2 px-2 text-slate-400 font-mono">Area</th>
+              <th class="text-left py-2 px-2 text-slate-400 font-mono">Status</th>
+              <th class="text-left py-2 px-2 text-slate-400 font-mono">Blocker</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-800">
+            
+              <tr class="hover:bg-slate-800/50">
+                <td class="py-3 px-2">---</td>
+                <td class="py-3 px-2">
+                  <span class="px-2 py-1 rounded-full text-xs font-mono border status-pass">
+                    ✅ PASS
+                  </span>
+                </td>
+                <td class="py-3 px-2 text-slate-400">---</td>
+              </tr>
+            
+              <tr class="hover:bg-slate-800/50">
+                <td class="py-3 px-2">League creation</td>
+                <td class="py-3 px-2">
+                  <span class="px-2 py-1 rounded-full text-xs font-mono border status-pass">
+                    ✅ PASS
+                  </span>
+                </td>
+                <td class="py-3 px-2 text-slate-400">—</td>
+              </tr>
+            
+              <tr class="hover:bg-slate-800/50">
+                <td class="py-3 px-2">Draft</td>
+                <td class="py-3 px-2">
+                  <span class="px-2 py-1 rounded-full text-xs font-mono border status-pass">
+                    ⚠️ PASS WITH RISKS
+                  </span>
+                </td>
+                <td class="py-3 px-2 text-slate-400">reconnect ✅ · commissioner auth ✅ · auto-pick position-aware ✅ · duplicate-tab unvalidated</td>
+              </tr>
+            
+              <tr class="hover:bg-slate-800/50">
+                <td class="py-3 px-2">Rosters</td>
+                <td class="py-3 px-2">
+                  <span class="px-2 py-1 rounded-full text-xs font-mono border status-pass">
+                    ✅ PASS
+                  </span>
+                </td>
+                <td class="py-3 px-2 text-slate-400">—</td>
+              </tr>
+            
+              <tr class="hover:bg-slate-800/50">
+                <td class="py-3 px-2">Weekly matchups</td>
+                <td class="py-3 px-2">
+                  <span class="px-2 py-1 rounded-full text-xs font-mono border status-pass">
+                    ✅ PASS
+                  </span>
+                </td>
+                <td class="py-3 px-2 text-slate-400">—</td>
+              </tr>
+            
+              <tr class="hover:bg-slate-800/50">
+                <td class="py-3 px-2">VP standings</td>
+                <td class="py-3 px-2">
+                  <span class="px-2 py-1 rounded-full text-xs font-mono border status-pass">
+                    ✅ PASS
+                  </span>
+                </td>
+                <td class="py-3 px-2 text-slate-400">—</td>
+              </tr>
+            
+              <tr class="hover:bg-slate-800/50">
+                <td class="py-3 px-2">Weekly lineup lock</td>
+                <td class="py-3 px-2">
+                  <span class="px-2 py-1 rounded-full text-xs font-mono border status-pass">
+                    ✅ PASS
+                  </span>
+                </td>
+                <td class="py-3 px-2 text-slate-400">—</td>
+              </tr>
+            
+              <tr class="hover:bg-slate-800/50">
+                <td class="py-3 px-2">Playoffs</td>
+                <td class="py-3 px-2">
+                  <span class="px-2 py-1 rounded-full text-xs font-mono border status-pass">
+                    ✅ PASS
+                  </span>
+                </td>
+                <td class="py-3 px-2 text-slate-400">—</td>
+              </tr>
+            
+              <tr class="hover:bg-slate-800/50">
+                <td class="py-3 px-2">Commissioner tools</td>
+                <td class="py-3 px-2">
+                  <span class="px-2 py-1 rounded-full text-xs font-mono border status-pass">
+                    ✅ PASS
+                  </span>
+                </td>
+                <td class="py-3 px-2 text-slate-400">force move, undo transaction, replace manager, audit log all shipped</td>
+              </tr>
+            
+              <tr class="hover:bg-slate-800/50">
+                <td class="py-3 px-2">Notifications</td>
+                <td class="py-3 px-2">
+                  <span class="px-2 py-1 rounded-full text-xs font-mono border status-pass">
+                    ✅ PASS
+                  </span>
+                </td>
+                <td class="py-3 px-2 text-slate-400">all 3 MVP-critical types shipped (draft starting, on the clock, lineup incomplete)</td>
+              </tr>
+            
+              <tr class="hover:bg-slate-800/50">
+                <td class="py-3 px-2">Analytics</td>
+                <td class="py-3 px-2">
+                  <span class="px-2 py-1 rounded-full text-xs font-mono border status-pass">
+                    ✅ PASS
+                  </span>
+                </td>
+                <td class="py-3 px-2 text-slate-400">6 events instrumented</td>
+              </tr>
+            
+              <tr class="hover:bg-slate-800/50">
+                <td class="py-3 px-2">End-to-end season sim</td>
+                <td class="py-3 px-2">
+                  <span class="px-2 py-1 rounded-full text-xs font-mono border status-pass">
+                    ✅ PASS
+                  </span>
+                </td>
+                <td class="py-3 px-2 text-slate-400">—</td>
+              </tr>
+            
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Current State (Shipped) -->
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+      <h2 class="text-lg font-mono font-bold mb-4">✅ Shipped Platform Capabilities</h2>
+      <div class="flex flex-wrap gap-2">
+        <span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full px-3 py-1 text-xs font-mono">Authentication & user accounts</span><span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full px-3 py-1 text-xs font-mono">League creation & management (commissioner admin panel: team management, draft setup, season controls, announcements)</span><span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full px-3 py-1 text-xs font-mono">Draft room (live WebSocket draft, queue, auto-draft, auto-escalation)</span><span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full px-3 py-1 text-xs font-mono">Rosters & lineups (locking, play-lock rule, games-remaining badges, projected FPTS)</span><span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full px-3 py-1 text-xs font-mono">Matchups (VTF regular season + 1v1 playoffs) & Matchup Center / Fantasy Home (hero scores, top performers, swing players, storyline chip, playing-tonight, roster breakdown)</span><span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full px-3 py-1 text-xs font-mono">Projections & Win Probability engine</span><span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full px-3 py-1 text-xs font-mono">Standings (with playoff race clinch/eliminate indicators)</span><span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full px-3 py-1 text-xs font-mono">Playoffs (seeding, bracket, single-elimination)</span><span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full px-3 py-1 text-xs font-mono">Historical Replay & Season advancement / lifecycle</span><span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full px-3 py-1 text-xs font-mono">Schedule management & scoring engine (VTF point scoring)</span><span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full px-3 py-1 text-xs font-mono">Victory Point (VP) scoring model (win/placement bonuses, `homeVP`/`awayVP`)</span><span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full px-3 py-1 text-xs font-mono">Free-agent add/drop (immediate)</span><span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full px-3 py-1 text-xs font-mono">Live score polling (client-side refresh during active matchups)</span><span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full px-3 py-1 text-xs font-mono">Season-long head-to-head (rivalry) records</span><span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full px-3 py-1 text-xs font-mono">Commissioner Recovery Tools (force roster move, undo transaction, replace inactive manager)</span><span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full px-3 py-1 text-xs font-mono">Commissioner Admin Center (audit log visibility, draft pause visibility, season renewal entry point)</span><span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full px-3 py-1 text-xs font-mono">Draft Analytics (6 events instrumented)</span><span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full px-3 py-1 text-xs font-mono">League Creation UX (8-team recommendation)</span><span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full px-3 py-1 text-xs font-mono">In-app notifications (all three MVP-critical types)</span>
+      </div>
+    </div>
+
+    <!-- What To Build Next (Token Planner) -->
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+      <h2 class="text-lg font-mono font-bold mb-4">⚡ Session Planner (Tokens)</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="space-y-3">
+          
+        </div>
+        <div class="space-y-4">
+          <div>
+            <label class="text-xs text-slate-400 font-mono">Total Session Cost</label>
+            <div class="text-4xl font-mono font-bold text-pwhl-accent" id="tokenSum">15K</div>
+            <div class="text-xs text-slate-500">base (CLAUDE.md + overhead)</div>
+          </div>
+          <div>
+            <label class="text-xs text-slate-400 font-mono">Status</label>
+            <div class="flex gap-2 mt-2">
+              <div class="flex-1 bg-slate-800 h-2 rounded-full overflow-hidden">
+                <div id="tokenBar" class="h-full bg-indigo-500 transition-all duration-300" style="width: 0%"></div>
+              </div>
+            </div>
+            <div id="tokenBadge" class="mt-2 inline-block px-2 py-1 rounded-full text-xs font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">✓ Optimal</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Phases -->
+    
+      <div id="phase-0">
+        <div class="flex items-center gap-3 mb-4">
+          <h2 class="text-xl font-mono font-bold">Phase 0: Implementation Alignment (Launch Blockers)</h2>
+          <span class="px-2 py-1 rounded text-xs font-mono font-bold bg-slate-500/10 text-slate-400">CRITICAL (P0 items are hard launch blockers)</span>
+        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          
+        </div>
+      </div>
+    
+      <div id="phase-1">
+        <div class="flex items-center gap-3 mb-4">
+          <h2 class="text-xl font-mono font-bold">Phase 1: Beta Completion</h2>
+          <span class="px-2 py-1 rounded text-xs font-mono font-bold bg-rose-500/10 text-rose-400">CRITICAL</span>
+        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+              <div class="flex items-start justify-between mb-3">
+                <h3 class="font-mono font-bold text-sm">#1 C</h3>
+                <span class="px-2 py-1 rounded text-xs font-mono border status-partial">
+                  ⚠️ PARTIAL
+                </span>
+              </div>
+              
+              <p class="text-sm text-slate-300">The admin panel (`app/league/[leagueId]/admin/`) is the central commissioner interface:</p>
+            </div>
+          
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+              <div class="flex items-start justify-between mb-3">
+                <h3 class="font-mono font-bold text-sm">#2 L</h3>
+                <span class="px-2 py-1 rounded text-xs font-mono border status-todo">
+                  TODO
+                </span>
+              </div>
+              
+              <p class="text-sm text-slate-300">Spec: `docs/onboarding-spec.md`</p>
+            </div>
+          
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+              <div class="flex items-start justify-between mb-3">
+                <h3 class="font-mono font-bold text-sm">#3 M</h3>
+                <span class="px-2 py-1 rounded text-xs font-mono border status-todo">
+                  TODO
+                </span>
+              </div>
+              <div class="text-xs text-slate-400 mb-2">~75K tokens</div>
+              <p class="text-sm text-slate-300">Estimated tokens: ~75K</p>
+            </div>
+          
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+              <div class="flex items-start justify-between mb-3">
+                <h3 class="font-mono font-bold text-sm">#4 E</h3>
+                <span class="px-2 py-1 rounded text-xs font-mono border status-todo">
+                  TODO
+                </span>
+              </div>
+              <div class="text-xs text-slate-400 mb-2">~65K tokens</div>
+              <p class="text-sm text-slate-300">Estimated tokens: ~65K (many small localized touches across all core pages)</p>
+            </div>
+          
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+              <div class="flex items-start justify-between mb-3">
+                <h3 class="font-mono font-bold text-sm">#26 L</h3>
+                <span class="px-2 py-1 rounded text-xs font-mono border status-todo">
+                  TODO
+                </span>
+              </div>
+              
+              <p class="text-sm text-slate-300">Phase: 1</p>
+            </div>
+          
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+              <div class="flex items-start justify-between mb-3">
+                <h3 class="font-mono font-bold text-sm">#27 R</h3>
+                <span class="px-2 py-1 rounded text-xs font-mono border status-todo">
+                  TODO
+                </span>
+              </div>
+              
+              <p class="text-sm text-slate-300">Phase: 1</p>
+            </div>
+          
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+              <div class="flex items-start justify-between mb-3">
+                <h3 class="font-mono font-bold text-sm">#28 L</h3>
+                <span class="px-2 py-1 rounded text-xs font-mono border status-todo">
+                  TODO
+                </span>
+              </div>
+              <div class="text-xs text-slate-400 mb-2">~25K tokens</div>
+              <p class="text-sm text-slate-300">Phase: 1</p>
+            </div>
+          
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+              <div class="flex items-start justify-between mb-3">
+                <h3 class="font-mono font-bold text-sm">#32 D</h3>
+                <span class="px-2 py-1 rounded text-xs font-mono border status-todo">
+                  TODO
+                </span>
+              </div>
+              <div class="text-xs text-slate-400 mb-2">~30K tokens</div>
+              <p class="text-sm text-slate-300">Phase: 1 (draft room feature)</p>
+            </div>
+          
+        </div>
+      </div>
+    
+      <div id="phase-2">
+        <div class="flex items-center gap-3 mb-4">
+          <h2 class="text-xl font-mono font-bold">Phase 2: Fantasy Essentials</h2>
+          <span class="px-2 py-1 rounded text-xs font-mono font-bold bg-amber-500/10 text-amber-400">HIGH</span>
+        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+              <div class="flex items-start justify-between mb-3">
+                <h3 class="font-mono font-bold text-sm">#5 W</h3>
+                <span class="px-2 py-1 rounded text-xs font-mono border status-partial">
+                  ⚠️ PARTIAL
+                </span>
+              </div>
+              <div class="text-xs text-slate-400 mb-2">~110K tokens</div>
+              <p class="text-sm text-slate-300">Estimated tokens: ~110K (new schema columns, waiver service, processing job, commissioner UI)</p>
+            </div>
+          
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+              <div class="flex items-start justify-between mb-3">
+                <h3 class="font-mono font-bold text-sm">#6 F</h3>
+                <span class="px-2 py-1 rounded text-xs font-mono border status-todo">
+                  TODO
+                </span>
+              </div>
+              <div class="text-xs text-slate-400 mb-2">~80K tokens</div>
+              <p class="text-sm text-slate-300">Estimated tokens: ~80K (depends on #5; bidding logic + UI + budget tracking)</p>
+            </div>
+          
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+              <div class="flex items-start justify-between mb-3">
+                <h3 class="font-mono font-bold text-sm">#7 T</h3>
+                <span class="px-2 py-1 rounded text-xs font-mono border status-todo">
+                  TODO
+                </span>
+              </div>
+              <div class="text-xs text-slate-400 mb-2">~130K tokens</div>
+              <p class="text-sm text-slate-300">Estimated tokens: ~130K (new domain — schema tables, API routes, proposal/review/approval UI; plan a dedicated session)</p>
+            </div>
+          
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+              <div class="flex items-start justify-between mb-3">
+                <h3 class="font-mono font-bold text-sm">#8 T</h3>
+                <span class="px-2 py-1 rounded text-xs font-mono border status-todo">
+                  TODO
+                </span>
+              </div>
+              <div class="text-xs text-slate-400 mb-2">~55K tokens</div>
+              <p class="text-sm text-slate-300">Estimated tokens: ~55K (standalone; built on existing CT-002 audit log foundation — no schema changes)</p>
+            </div>
+          
+        </div>
+      </div>
+    
+      <div id="phase-3">
+        <div class="flex items-center gap-3 mb-4">
+          <h2 class="text-xl font-mono font-bold">Phase 3: Matchup & Season Experience</h2>
+          <span class="px-2 py-1 rounded text-xs font-mono font-bold bg-amber-500/10 text-amber-400">HIGH</span>
+        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+              <div class="flex items-start justify-between mb-3">
+                <h3 class="font-mono font-bold text-sm">#9 L</h3>
+                <span class="px-2 py-1 rounded text-xs font-mono border status-todo">
+                  TODO
+                </span>
+              </div>
+              
+              <p class="text-sm text-slate-300">Features:</p>
+            </div>
+          
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+              <div class="flex items-start justify-between mb-3">
+                <h3 class="font-mono font-bold text-sm">#10 W</h3>
+                <span class="px-2 py-1 rounded text-xs font-mono border status-todo">
+                  TODO
+                </span>
+              </div>
+              
+              <p class="text-sm text-slate-300">Features:</p>
+            </div>
+          
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+              <div class="flex items-start justify-between mb-3">
+                <h3 class="font-mono font-bold text-sm">#11 M</h3>
+                <span class="px-2 py-1 rounded text-xs font-mono border status-partial">
+                  ⚠️ PARTIAL
+                </span>
+              </div>
+              
+              <p class="text-sm text-slate-300">Per-team storyline chip ("🔥 X is leading your team…") and a weekly recap card ship today.</p>
+            </div>
+          
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+              <div class="flex items-start justify-between mb-3">
+                <h3 class="font-mono font-bold text-sm">#24 L</h3>
+                <span class="px-2 py-1 rounded text-xs font-mono border status-todo">
+                  TODO
+                </span>
+              </div>
+              
+              <p class="text-sm text-slate-300">Features implemented:</p>
+            </div>
+          
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+              <div class="flex items-start justify-between mb-3">
+                <h3 class="font-mono font-bold text-sm">#25 T</h3>
+                <span class="px-2 py-1 rounded text-xs font-mono border status-todo">
+                  TODO
+                </span>
+              </div>
+              <div class="text-xs text-slate-400 mb-2">~85K tokens</div>
+              <p class="text-sm text-slate-300">Estimated tokens: ~85K (new page, per-position-group aggregation queries; all reads on existing data)</p>
+            </div>
+          
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+              <div class="flex items-start justify-between mb-3">
+                <h3 class="font-mono font-bold text-sm">#29 W</h3>
+                <span class="px-2 py-1 rounded text-xs font-mono border status-todo">
+                  TODO
+                </span>
+              </div>
+              <div class="text-xs text-slate-400 mb-2">~65K tokens</div>
+              <p class="text-sm text-slate-300"></p>
+            </div>
+          
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+              <div class="flex items-start justify-between mb-3">
+                <h3 class="font-mono font-bold text-sm">#30 P</h3>
+                <span class="px-2 py-1 rounded text-xs font-mono border status-todo">
+                  TODO
+                </span>
+              </div>
+              <div class="text-xs text-slate-400 mb-2">~40K tokens</div>
+              <p class="text-sm text-slate-300">Estimated tokens: ~40K (polish on existing bracket/matchup/overview pages; minimal new logic)</p>
+            </div>
+          
+        </div>
+      </div>
+    
+      <div id="phase-4">
+        <div class="flex items-center gap-3 mb-4">
+          <h2 class="text-xl font-mono font-bold">Phase 4: Historical Replay Expansion</h2>
+          <span class="px-2 py-1 rounded text-xs font-mono font-bold bg-slate-500/10 text-slate-400">LOW — replay is a QA/testing tool, not a flagship. Build only the minimum needed</span>
+        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+              <div class="flex items-start justify-between mb-3">
+                <h3 class="font-mono font-bold text-sm">#12 M</h3>
+                <span class="px-2 py-1 rounded text-xs font-mono border status-todo">
+                  TODO
+                </span>
+              </div>
+              
+              <p class="text-sm text-slate-300">Support:</p>
+            </div>
+          
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+              <div class="flex items-start justify-between mb-3">
+                <h3 class="font-mono font-bold text-sm">#13 R</h3>
+                <span class="px-2 py-1 rounded text-xs font-mono border status-todo">
+                  TODO
+                </span>
+              </div>
+              
+              <p class="text-sm text-slate-300"></p>
+            </div>
+          
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+              <div class="flex items-start justify-between mb-3">
+                <h3 class="font-mono font-bold text-sm">#14 A</h3>
+                <span class="px-2 py-1 rounded text-xs font-mono border status-todo">
+                  TODO
+                </span>
+              </div>
+              
+              <p class="text-sm text-slate-300"></p>
+            </div>
+          
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+              <div class="flex items-start justify-between mb-3">
+                <h3 class="font-mono font-bold text-sm">#15 R</h3>
+                <span class="px-2 py-1 rounded text-xs font-mono border status-todo">
+                  TODO
+                </span>
+              </div>
+              
+              <p class="text-sm text-slate-300"></p>
+            </div>
+          
+        </div>
+      </div>
+    
+      <div id="phase-5">
+        <div class="flex items-center gap-3 mb-4">
+          <h2 class="text-xl font-mono font-bold">Phase 5: Retention & Community</h2>
+          <span class="px-2 py-1 rounded text-xs font-mono font-bold bg-slate-500/10 text-slate-400">MEDIUM</span>
+        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+              <div class="flex items-start justify-between mb-3">
+                <h3 class="font-mono font-bold text-sm">#33 M</h3>
+                <span class="px-2 py-1 rounded text-xs font-mono border status-todo">
+                  TODO
+                </span>
+              </div>
+              <div class="text-xs text-slate-400 mb-2">~90K tokens</div>
+              <p class="text-sm text-slate-300">Spec: `docs/06-architecture/implement-parentleagueid.md` (Story MS-001)</p>
+            </div>
+          
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+              <div class="flex items-start justify-between mb-3">
+                <h3 class="font-mono font-bold text-sm">#16 L</h3>
+                <span class="px-2 py-1 rounded text-xs font-mono border status-todo">
+                  TODO
+                </span>
+              </div>
+              
+              <p class="text-sm text-slate-300"></p>
+            </div>
+          
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+              <div class="flex items-start justify-between mb-3">
+                <h3 class="font-mono font-bold text-sm">#17 R</h3>
+                <span class="px-2 py-1 rounded text-xs font-mono border status-partial">
+                  ⚠️ PARTIAL
+                </span>
+              </div>
+              
+              <p class="text-sm text-slate-300">Season-long head-to-head records are already computed (`getHeadToHeadRecord` in</p>
+            </div>
+          
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+              <div class="flex items-start justify-between mb-3">
+                <h3 class="font-mono font-bold text-sm">#18 L</h3>
+                <span class="px-2 py-1 rounded text-xs font-mono border status-todo">
+                  TODO
+                </span>
+              </div>
+              
+              <p class="text-sm text-slate-300"></p>
+            </div>
+          
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+              <div class="flex items-start justify-between mb-3">
+                <h3 class="font-mono font-bold text-sm">#31 P</h3>
+                <span class="px-2 py-1 rounded text-xs font-mono border status-todo">
+                  TODO
+                </span>
+              </div>
+              <div class="text-xs text-slate-400 mb-2">~95K tokens</div>
+              <p class="text-sm text-slate-300"></p>
+            </div>
+          
+        </div>
+      </div>
+    
+      <div id="phase-6">
+        <div class="flex items-center gap-3 mb-4">
+          <h2 class="text-xl font-mono font-bold">Phase 6: Advanced League Formats</h2>
+          <span class="px-2 py-1 rounded text-xs font-mono font-bold bg-slate-500/10 text-slate-400">MEDIUM</span>
+        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+              <div class="flex items-start justify-between mb-3">
+                <h3 class="font-mono font-bold text-sm">#19 K</h3>
+                <span class="px-2 py-1 rounded text-xs font-mono border status-todo">
+                  TODO
+                </span>
+              </div>
+              
+              <p class="text-sm text-slate-300"></p>
+            </div>
+          
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+              <div class="flex items-start justify-between mb-3">
+                <h3 class="font-mono font-bold text-sm">#20 D</h3>
+                <span class="px-2 py-1 rounded text-xs font-mono border status-todo">
+                  TODO
+                </span>
+              </div>
+              
+              <p class="text-sm text-slate-300"></p>
+            </div>
+          
+        </div>
+      </div>
+    
+      <div id="phase-7">
+        <div class="flex items-center gap-3 mb-4">
+          <h2 class="text-xl font-mono font-bold">Phase 7: Live Season Enhancements</h2>
+          <span class="px-2 py-1 rounded text-xs font-mono font-bold bg-slate-500/10 text-slate-400">MEDIUM</span>
+        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+              <div class="flex items-start justify-between mb-3">
+                <h3 class="font-mono font-bold text-sm">#21 L</h3>
+                <span class="px-2 py-1 rounded text-xs font-mono border status-partial">
+                  ⚠️ PARTIAL
+                </span>
+              </div>
+              
+              <p class="text-sm text-slate-300">`components/LiveScoreRefresh.tsx` polls and refreshes active-matchup scores client-side</p>
+            </div>
+          
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+              <div class="flex items-start justify-between mb-3">
+                <h3 class="font-mono font-bold text-sm">#22 P</h3>
+                <span class="px-2 py-1 rounded text-xs font-mono border status-todo">
+                  TODO
+                </span>
+              </div>
+              
+              <p class="text-sm text-slate-300"></p>
+            </div>
+          
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+              <div class="flex items-start justify-between mb-3">
+                <h3 class="font-mono font-bold text-sm">#23 P</h3>
+                <span class="px-2 py-1 rounded text-xs font-mono border status-todo">
+                  TODO
+                </span>
+              </div>
+              
+              <p class="text-sm text-slate-300"></p>
+            </div>
+          
+        </div>
+      </div>
+    
+
+    <!-- Sprint Timeline -->
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+      <h2 class="text-lg font-mono font-bold mb-6">Sprint Timeline</h2>
+      <div class="space-y-4">
+        
+          <div class="flex gap-4">
+            <div class="flex flex-col items-center">
+              <div class="w-10 h-10 rounded-full flex items-center justify-center border-2 border-pwhl-accent bg-pwhl-accent/10 relative">
+                ✓
+              </div>
+              <div class="w-0.5 h-12 bg-slate-800"></div>
+            </div>
+            <div class="flex-1 py-1">
+              <div class="font-mono font-bold">Sprint 0 — Make it match the rules</div>
+              <div class="text-xs text-slate-400 mt-1">
+                ✅ COMPLETE
+              </div>
+              
+            </div>
+          </div>
+        
+          <div class="flex gap-4">
+            <div class="flex flex-col items-center">
+              <div class="w-10 h-10 rounded-full flex items-center justify-center border-2 border-pwhl-accent bg-pwhl-accent/10 relative">
+                ✓
+              </div>
+              <div class="w-0.5 h-12 bg-slate-800"></div>
+            </div>
+            <div class="flex-1 py-1">
+              <div class="font-mono font-bold">Sprint 1 — Prove a season completes</div>
+              <div class="text-xs text-slate-400 mt-1">
+                ✅ COMPLETE
+              </div>
+              
+            </div>
+          </div>
+        
+          <div class="flex gap-4">
+            <div class="flex flex-col items-center">
+              <div class="w-10 h-10 rounded-full flex items-center justify-center border-2 border-pwhl-accent bg-pwhl-accent/10 relative">
+                ✓
+              </div>
+              <div class="w-0.5 h-12 bg-slate-800"></div>
+            </div>
+            <div class="flex-1 py-1">
+              <div class="font-mono font-bold">Sprint 2 — Commissioner + Platform Foundation</div>
+              <div class="text-xs text-slate-400 mt-1">
+                ✅ COMPLETE
+              </div>
+              
+            </div>
+          </div>
+        
+          <div class="flex gap-4">
+            <div class="flex flex-col items-center">
+              <div class="w-10 h-10 rounded-full flex items-center justify-center border-2 border-pwhl-accent bg-pwhl-accent/10 relative">
+                ✓
+              </div>
+              
+            </div>
+            <div class="flex-1 py-1">
+              <div class="font-mono font-bold">Sprint 3 — Beta-ready: onboarding, trust, mobile</div>
+              <div class="text-xs text-slate-400 mt-1">
+                ✅ COMPLETE
+              </div>
+              
+            </div>
+          </div>
+        
+      </div>
+    </div>
+
+    <!-- Timeline -->
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+      <h2 class="text-lg font-mono font-bold mb-4">MVP Launch Timeline</h2>
+      <div class="space-y-2">
+        
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-slate-800 mt-12 py-6 text-center text-xs text-slate-500">
+    <p>Generated: 6/13/2026 · Run <code class="bg-slate-800 px-2 py-1 rounded">npm run build-roadmap</code> to regenerate</p>
+  </footer>
+
+  <script>
+    // Countdown timer
+    function updateCountdown() {
+      const target = new Date('2026-10-24').getTime();
+      const now = new Date().getTime();
+      const diff = target - now;
+
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+
+      document.getElementById('countdown').textContent = `${days}D : ${hours}H : ${mins}M`;
+    }
+    updateCountdown();
+    setInterval(updateCountdown, 1000);
+
+    // Readiness chart
+    const ctx = document.getElementById('readinessChart')?.getContext('2d');
+    if (ctx) {
+      new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          datasets: [{
+            data: [100, 100 - 100],
+            backgroundColor: ['#2dd4bf', '#0f172a'],
+            borderColor: ['#2dd4bf', '#0f172a'],
+            borderWidth: 1,
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          cutout: '80%',
+          plugins: {
+            legend: { display: false },
+            tooltip: { enabled: false }
+          }
+        }
+      });
+    }
+
+    // Token planner
+    const items = document.querySelectorAll('.token-item');
+    items.forEach(item => {
+      item.addEventListener('change', updateTokens);
+    });
+
+    function updateTokens() {
+      let total = 15000; // base
+      items.forEach(item => {
+        if (item.checked) total += parseInt(item.dataset.tokens) * 1000;
+      });
+
+      const display = total >= 1000000 ? (total / 1000000).toFixed(1) + 'M' : (total / 1000).toFixed(0) + 'K';
+      document.getElementById('tokenSum').textContent = display;
+
+      const pct = Math.min(100, (total / 200000) * 100);
+      document.getElementById('tokenBar').style.width = pct + '%';
+
+      let badge, badgeClass;
+      if (total <= 120000) {
+        badge = '✓ Optimal';
+        badgeClass = 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
+      } else if (total <= 180000) {
+        badge = '⚠ Caution';
+        badgeClass = 'bg-amber-500/10 text-amber-400 border-amber-500/20';
+      } else {
+        badge = '✗ Exceeds window';
+        badgeClass = 'bg-rose-500/10 text-rose-400 border-rose-500/20';
+      }
+
+      const badgeEl = document.getElementById('tokenBadge');
+      badgeEl.textContent = badge;
+      badgeEl.className = `mt-2 inline-block px-2 py-1 rounded-full text-xs font-mono border ${badgeClass}`;
+    }
+
+    // Lucide icons
+    lucide.createIcons();
+  </script>
+</body>
+</html>

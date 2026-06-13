@@ -96,17 +96,13 @@ Close the in-progress feature gaps and carry-forwards before beta.
 **Remaining sprint 4 items:**
 - **#28 Lineup Stats Tab Polish** ✅ — shipped during Sprint 3; no further work needed
 - **#01 Commissioner Dashboard (remaining gaps)** ✅ — pause/restart replay shortcut; force-draft-start CTA; lineup lock override (`POST .../commissioner/unlock-player`); settings editor (gated on pre-draft); all actions write to audit log (shipped June 13, 2026; commit eb65449)
-- **#17 Rivalries (remaining gaps)** — rival badge on team cards (most-played opponent, notable W/L diff); H2H history view on matchup page (per-week scores, built on existing `Matchup` rows + `getHeadToHeadRecord`)
-  - **Spec gap:** rival badge placement and trigger logic are not defined. Questions: which page surfaces the badge (dashboard team cards? league overview?), what qualifies as a "rival" (most matchups played, or significant W/L diff threshold?), and what does the H2H history view look like on mobile. These must be answered before implementation starts.
-
-**Dependencies within Sprint 4:**
-- #17 rivalries requires the "rival" definition spec before the badge work begins; H2H history view can be built independently from existing data once the page placement is decided.
+- **#17 Rivalries (remaining gaps)** ✅ — rival badge + H2H history view on matchup page (shipped June 13, 2026; commit cbe8374); rival = most-played opponent (tie-break W/L); H2H shows last 5 matchups with dates, scores, outcomes
 
 **Exit:**
 - NT-002: ✅ ACHIEVED — manager with a starter whose PWHL team has no games remaining this period receives a LINEUP_INCOMPLETE in-app notification on dashboard load; second load in the same period does not duplicate it.
 - IA-011: ✅ ACHIEVED (Sprint 3) — bracket shows no "bye" text on default 4-team format; admin settings render as readable tables.
 - #01: ✅ ACHIEVED — all four commissioner recovery actions are reachable from the admin panel, write a `LeagueEvent`, and are reflected in the audit log table. Specifically: pause/restart replay, force draft start, unlock player (period-lock only, respects play-lock), and pre-draft settings editor.
-- #17: team cards or the matchup page surface a rival badge; the H2H history view shows per-week scores for the two teams' head-to-head matchups.
+- #17: ✅ ACHIEVED — rival badge shows most-played opponent with season series W-L-T record; H2H history on matchup page displays last 5 matchups with dates, scores, and outcomes. Rival = opponent with highest number of completed matchups (tie-break by W-L record). Data computed from existing `Matchup` rows; no schema changes.
 - No Phase 1 or Phase 5 feature card enters beta in "partial" state when the remaining work is small and well-specified. Any item not shipped must be explicitly deferred with a documented reason.
 
 ## Sprint 5 — "Validation + Beta Operations" · ~2 wks · Track V
@@ -138,7 +134,7 @@ Sequenced from "What To Build Next" and the GPT launch phases:
 | Sprint 1 — Season Validation | ✅ COMPLETE (Jun 12, 2026) | Full season simulates, 114 tests pass, confidence 85–90% |
 | Sprint 2 — Commissioner + Platform Foundation | ✅ COMPLETE (Jun 2026) | Commissioner recovery tools, multi-season schema, analytics (6 events), VP education; 130 tests pass |
 | Sprint 3 — Beta Readiness | ✅ COMPLETE (Jun 13, 2026) | Onboarding ✅, error handling ✅, mobile ✅, NT-001 ✅, draft notifications ✅, transaction history ✅, IA-011 ✅ |
-| Sprint 4 — Product Polish | ← CURRENT | NT-002 LINEUP_INCOMPLETE ✅ (Jun 13), #01 commissioner dashboard gaps ✅ (Jun 13, eb65449), #17 rivalries (needs rival-definition spec) |
+| Sprint 4 — Product Polish | ✅ COMPLETE (Jun 13, 2026) | NT-002 LINEUP_INCOMPLETE ✅, #01 commissioner dashboard ✅, #17 rivalries ✅ |
 | Sprint 5 — Validation + Beta Operations | ⏳ PLANNED | Draft cert, founder dashboard, beta feedback infra |
 | Sprint 6+ — Launch Features | ⏳ PLANNED | Transactions, trade, waivers, growth |
 
@@ -158,8 +154,8 @@ estimates, not commitments.
 | **Jun–Jul 2026** | Sprint 2 — commissioner recovery + platform foundation + analytics ✅ |
 | **Jun–Jul 2026** | Sprint 3 — onboarding ✅, error handling ✅, mobile ✅, notifications (draft ✅), IA-011 ✅ COMPLETE |
 | **Jun 13, 2026** | NT-002 LINEUP_INCOMPLETE notification shipped (`checkAndEmitScheduledNotifications` on dashboard load) ✅ |
-| **Aug 2026** | Sprint 4 — commissioner dashboard gaps, rivalries ← current |
-| **Late Aug 2026** | Sprint 5 — draft cert, founder dashboard, beta feedback infra |
+| **Jun 13, 2026** | Sprint 4 — commissioner dashboard gaps ✅, rivalries ✅ **COMPLETE** |
+| **Late Aug 2026** | Sprint 5 — draft cert, founder dashboard, beta feedback infra ← next |
 | **Early Sep 2026** | **MVP code-complete — all launch gates pass** |
 | **Sep – mid Oct 2026** | Closed beta: founding commissioners run replay + small live test leagues; fix findings |
 | **Late Oct 2026** | **PUBLIC LAUNCH** — real leagues draft ~1 week before the opener |
