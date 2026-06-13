@@ -60,8 +60,7 @@ export async function getBracket(
     matchups.map((m) => ({
       homeTeamId: m.homeTeamId, awayTeamId: m.awayTeamId,
       homeScore: m.homeScore, awayScore: m.awayScore,
-      homeVP: (m as { homeVP?: number | null }).homeVP ?? null,
-      awayVP: (m as { awayVP?: number | null }).awayVP ?? null,
+      homeVP: m.homeVP, awayVP: m.awayVP,
       isPlayoff: m.isPlayoff,
     }))
   );
@@ -142,8 +141,7 @@ export async function startPlayoffs(
     matchups.map((m) => ({
       homeTeamId: m.homeTeamId, awayTeamId: m.awayTeamId,
       homeScore: m.homeScore, awayScore: m.awayScore,
-      homeVP: (m as { homeVP?: number | null }).homeVP ?? null,
-      awayVP: (m as { awayVP?: number | null }).awayVP ?? null,
+      homeVP: m.homeVP, awayVP: m.awayVP,
       isPlayoff: m.isPlayoff,
     }))
   );

@@ -68,6 +68,12 @@ export interface WeeklyStanding {
   score: number;
 }
 
+export interface MatchupSlateRow {
+  homeTeam: { id: string; name: string; score: number; projected: number };
+  awayTeam: { id: string; name: string; score: number; projected: number };
+  isMyMatchup: boolean;
+}
+
 export interface ActiveMatchup {
   week: number;
   period: ScoringPeriod;
@@ -85,6 +91,8 @@ export interface ActiveMatchup {
   opponentProjected: number;
   winProbability: number;
   rivalry: RivalryRecord;
+  // VP mode only: all matchups this week with projected scores
+  leagueMatchupSlate: MatchupSlateRow[];
 }
 
 export interface LineupAlert {
@@ -132,7 +140,7 @@ export async function getDashboardData(
 
   const nowMs = getReplayNow(league, nowMsArg);
   const scoringSettings = parseScoringSettings(league.scoringSettings);
-  const scoringMode = (league as { scoringMode?: string }).scoringMode ?? "VTF";
+  const scoringMode = league.scoringMode ?? "VTF";
   const isVpMode = scoringMode === "VP";
 
   const seasonState = await getSeasonState(leagueId, nowMs, prisma);
@@ -239,6 +247,7 @@ export async function getDashboardData(
         opponentProjected: 0,
         winProbability: 0,
         rivalry: { wins: 0, losses: 0, ties: 0 },
+        leagueMatchupSlate: [],
       },
     };
   }
@@ -372,6 +381,39 @@ export async function getDashboardData(
   const oppProj = opponentProjected as number;
   const winProb = isVpMode && opponentTeamId ? winProbability(myProj, oppProj) : 0;
 
+  // VP mode: build full matchup slate with projected scores
+  let leagueMatchupSlate: MatchupSlateRow[] = [];
+  if (isVpMode) {
+    const weekPairings = await prisma.matchup.findMany({
+      where: { leagueId, week: displayPeriod.week, isPlayoff: false },
+      select: { homeTeamId: true, awayTeamId: true },
+    });
+    if (weekPairings.length > 0) {
+      const teamIds = allTeams.map((t) => t.id);
+      const projectedResults = await Promise.all(
+        teamIds.map((id) =>
+          projectTeamRemainingScore(id, allScores.get(id) ?? 0, displayPeriod, scoringSettings, prisma, nowMs)
+        )
+      );
+      const projectedByTeam = new Map(teamIds.map((id, i) => [id, projectedResults[i]]));
+      leagueMatchupSlate = weekPairings.map((p) => ({
+        homeTeam: {
+          id: p.homeTeamId,
+          name: allTeams.find((t) => t.id === p.homeTeamId)?.name ?? "",
+          score: allScores.get(p.homeTeamId) ?? 0,
+          projected: projectedByTeam.get(p.homeTeamId) ?? 0,
+        },
+        awayTeam: {
+          id: p.awayTeamId,
+          name: allTeams.find((t) => t.id === p.awayTeamId)?.name ?? "",
+          score: allScores.get(p.awayTeamId) ?? 0,
+          projected: projectedByTeam.get(p.awayTeamId) ?? 0,
+        },
+        isMyMatchup: p.homeTeamId === myTeamId || p.awayTeamId === myTeamId,
+      }));
+    }
+  }
+
   return {
     activeMatchup: {
       week: displayPeriod.week,
@@ -390,6 +432,7 @@ export async function getDashboardData(
       opponentProjected: oppProj,
       winProbability: winProb,
       rivalry: { wins: 0, losses: 0, ties: 0 },
+      leagueMatchupSlate,
     },
     remainingPlayers,
     topPerformers,

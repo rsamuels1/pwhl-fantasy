@@ -92,8 +92,8 @@ export default async function MatchupsPage({ params }: { params: { leagueId: str
                   const isMyMatchup = homeIsMe || awayIsMe;
                   const homeWon = scored && m.homeScore! > m.awayScore!;
                   const awayWon = scored && m.awayScore! > m.homeScore!;
-                  const homeVP = (m as { homeVP?: number | null }).homeVP;
-                  const awayVP = (m as { awayVP?: number | null }).awayVP;
+                  const homeVP = m.homeVP;
+                  const awayVP = m.awayVP;
 
                   return (
                     <div key={m.id} style={{

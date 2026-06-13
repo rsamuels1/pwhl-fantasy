@@ -54,8 +54,8 @@ export async function getStandings(
       awayTeamId: m.awayTeamId,
       homeScore: m.homeScore,
       awayScore: m.awayScore,
-      homeVP: (m as { homeVP?: number | null }).homeVP ?? null,
-      awayVP: (m as { awayVP?: number | null }).awayVP ?? null,
+      homeVP: m.homeVP,
+      awayVP: m.awayVP,
       isPlayoff: m.isPlayoff,
     }))
   );

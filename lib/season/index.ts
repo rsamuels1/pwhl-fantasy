@@ -79,7 +79,7 @@ export async function startSeason(leagueId: string, prisma: PrismaClient): Promi
   }
 
   // VP mode uses 1v1 round-robin matchups; VTF uses all-vs-all.
-  const scoringMode = (league as { scoringMode?: string }).scoringMode ?? "VTF";
+  const scoringMode = league.scoringMode ?? "VTF";
   if (scoringMode === "VP") {
     await generateMatchups(leagueId, league.season, prisma);
   } else {
@@ -104,7 +104,7 @@ export async function advanceSeason(
   const league = await prisma.fantasyLeague.findUniqueOrThrow({
     where: { id: leagueId },
   });
-  const scoringMode = (league as { scoringMode?: string }).scoringMode ?? "VTF";
+  const scoringMode = league.scoringMode ?? "VTF";
   const scoringSettings = parseScoringSettings(league.scoringSettings);
 
   const state = await getSeasonState(leagueId, nowMs, prisma);
