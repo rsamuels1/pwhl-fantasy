@@ -187,6 +187,7 @@ opt-in until the official date is known for 2026-27. 3 tests in `tests/season-li
 - **IA-009** · Finalize VP tiebreakers: VP → matchup wins → H2H → total FP → random draw — P2
 - **IA-010** · Stat-correction policy (cutoff window, playoff/championship handling) — P2
 - **IA-011** · Hide advanced non-v1 features (byes, multi-round config, experimental scoring) — P2
+  Acceptance checklist: `docs/02-engineering/ia-011-checklist.md` (6 AC items; bracket page, admin panel settings, JSON → human-readable)
 
 ---
 
@@ -268,24 +269,18 @@ Acceptance Criteria:
 
 ## 3. Mobile Optimization
 
-Status: Partially Implemented
+Status: Implemented ✅
 
-Estimated tokens: ~75K (CSS changes across many files; some component restructuring)
+Estimated tokens: ~75K
 
-Most users will interact on mobile. Compact stats on the lineup page are now hidden at
-≤480px via `.stat-secondary`. Broader responsive work remains.
+All core pages are now usable on a 390px phone without horizontal scrolling. Touch targets meet 44px minimum. Spec: `docs/02-engineering/mobile-optimization-spec.md`.
 
-Features:
-
-- Responsive draft room
-- Responsive matchup screens
-- Mobile standings
-- Mobile roster management
-
-Acceptance Criteria:
-
-- No horizontal scrolling on core pages
-- Draft room usable on phones
+**Shipped:**
+- **Draft room** — `useIsMobile(900)` hook collapses three-column layout into tabbed Pick/Board/Needs view at ≤900px; secondary stat columns (PPP/SOG/HIT/BLK, SV/GA/SO) hidden at ≤480px via `stat-secondary` class, reducing player table from 560px → 340px; user-friendly connection error (removes raw WS URL)
+- **Touch targets** — `minHeight: 44px` on all Drop/Add (RosterManager), Pick/star/queue/position-filter (DraftRoom), slot cards + Cancel (LineupManager); stats tab toggles `minHeight: 36px`
+- **BottomNav** — `env(safe-area-inset-bottom)` for iPhone 15 home indicator; `.bottom-nav-pad` uses `calc()`
+- **Standings** — `minWidth: 520` → `380` (existing `overflowX: auto` wrapper intact)
+- **Matchup** — swing player names get ellipsis truncation; hero score font uses `clamp()` instead of fixed `32|52px`
 
 ---
 
@@ -1126,8 +1121,8 @@ comfortably. Estimates assume a fresh session starting from the current codebase
 5. **Weekly Performance Dashboard (#29)** · ~65K
    New page replacing the Schedule tab. Aggregates existing `Matchup` + `StatLine` rows; no
    schema changes.
-6. **Mobile Optimization (#3)** · ~75K
-   Responsive CSS across draft room, matchup, and roster screens. Beta prerequisite.
+6. **Mobile Optimization (#3)** · ~75K ✅
+   Shipped — draft room tabbed layout (≤900px), 44px touch targets, BottomNav safe-area, standings minWidth fix, matchup score clamp(), swing player truncation.
 7. **Team Analysis & Insights (#25)** · ~85K
    New Analysis tab on the matchup page. Complex aggregation but all reads on existing data;
    trade suggestions deferred until #7.
@@ -1208,11 +1203,17 @@ Assumes a solo builder working with Claude (Pro), ~2 weeks per sprint. Tracks: *
 
 ## Sprint 3 — "Beta-ready: onboarding, trust, mobile" · ~2–3 wks · Track F (beta prereqs) ← CURRENT
 
+**Progress report:** `docs/01-roadmap/sprint-3-progress.md` (updated June 13, 2026)
+
 - #2 League Onboarding ✅ (welcome flow, setup wizard, draft prep guide, replay explanation; `User.onboardingCompletedAt`; `components/WelcomeFlow.tsx`; `app/create-league/CreateLeagueWizard.tsx`; manager checklist on league overview)
-- #4 Error Handling (empty / loading / retry across all core pages — draft room, matchup, lineup, standings, roster)
-- #3 Mobile Optimization (draft room is hardest; matchup, standings, roster; no horizontal scrolling; no broken touch targets)
+- #4 Error Handling 🔄 (empty / loading / retry across all core pages — draft room, matchup, lineup, standings, roster)
+- #3 Mobile Optimization ✅ (draft room tabbed layout at ≤900px, 44px touch targets everywhere, BottomNav safe-area, standings minWidth, matchup score clamp())
 - NT-001 / NT-002 Notification framework + critical notifications (draft starting soon, on the clock, lineup incomplete) — spec `docs/02-engineering/notification-framework-spec.md`
-- IA-011 Hide advanced non-v1 settings (multi-round playoff config, experimental scoring)
+  - NT-001 in-app infrastructure ✅ (`lib/services/notification-service.ts`, bell UI, draft server call sites for DRAFT_STARTING + ON_THE_CLOCK)
+  - NT-002 LINEUP_INCOMPLETE notification ❌ not yet wired (depends on schema delta below)
+  - NT-003 Scheduled trigger decision ✅ resolved June 13, 2026: check-on-dashboard-load + DB-level dedupeKey — see notification spec "NT-003" section
+  - Schema delta 🔄 `Notification` model missing `title`, `body`, `actionUrl`, `teamId`, `dedupeKey` + `@@unique([userId, type, dedupeKey])` — documented in notification spec "Schema Delta" section; `npx prisma db push` + `createNotification` caller updates required
+- IA-011 Hide advanced non-v1 settings (multi-round playoff config, experimental scoring) — checklist: `docs/02-engineering/ia-011-checklist.md` — ❌ not yet implemented (6 AC items; all frontend-only)
 - #8 Transaction History ✅ (paginated API + page with type/team filters, replay guard, infinite scroll)
 
 **Exit:** a brand-new user creates and drafts a league on a phone with no docs. **MVP launch gate.**
@@ -1257,7 +1258,7 @@ Sequenced from "What To Build Next" and the GPT launch phases:
 | Sprint 0 — Implementation Alignment | ✅ COMPLETE (Jun 12, 2026) | Rosters / VP / Playoffs flipped FAIL → PASS |
 | Sprint 1 — Season Validation | ✅ COMPLETE (Jun 12, 2026) | Full season simulates, 114 tests pass, confidence 85–90% |
 | Sprint 2 — Commissioner + Platform Foundation | ✅ COMPLETE (Jun 2026) | Commissioner recovery tools, multi-season schema, analytics (6 events), VP education; 130 tests pass |
-| Sprint 3 — Beta Readiness | ← CURRENT | Onboarding ✅, error handling, mobile, notifications, transaction history ✅ |
+| Sprint 3 — Beta Readiness | ← CURRENT | Onboarding ✅, error handling, mobile ✅, notifications, transaction history ✅ |
 | Sprint 4 — Product Polish | ⏳ PARTIALLY DONE | #28 lineup tab polish ✅, #01 commissioner dashboard gaps, #17 rivalries |
 | Sprint 5 — Validation + Beta Operations | ⏳ PLANNED | Draft cert, founder dashboard, beta feedback infra |
 | Sprint 6+ — Launch Features | ⏳ PLANNED | Transactions, trade, waivers, growth |
@@ -1276,7 +1277,7 @@ estimates, not commitments.
 | **Jun 12, 2026** | Sprint 0 — alignment P0s closed (roster / VP / playoffs match rules) ✅ |
 | **Jun 12, 2026** | Sprint 1 — season simulation + validation suites green ✅ |
 | **Jun–Jul 2026** | Sprint 2 — commissioner recovery + platform foundation + analytics ✅ |
-| **Late Jul 2026** | Sprint 3 — onboarding ✅, error handling, mobile, notifications ← current |
+| **Late Jul 2026** | Sprint 3 — onboarding ✅, error handling, mobile ✅, notifications ← current |
 | **Aug 2026** | Sprint 4 — lineup tab polish ✅, commissioner dashboard gaps, rivalries |
 | **Late Aug 2026** | Sprint 5 — draft cert, founder dashboard, beta feedback infra |
 | **Early Sep 2026** | **MVP code-complete — all launch gates pass** |

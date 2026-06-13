@@ -243,13 +243,19 @@ model Notification {
   id        String           @id @default(cuid())
   userId    String
   leagueId  String?
+  teamId    String?
   type      NotificationType
+  title     String
+  body      String?
+  actionUrl String?
+  dedupeKey String?
   data      Json             @default("{}")
   readAt    DateTime?
   createdAt DateTime         @default(now())
   user      User             @relation(fields: [userId], references: [id])
   league    FantasyLeague?   @relation(fields: [leagueId], references: [id])
 
+  @@unique([userId, type, dedupeKey])
   @@index([userId, leagueId, readAt])
   @@index([leagueId])
 }

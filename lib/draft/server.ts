@@ -208,11 +208,15 @@ class DraftRoom {
     try {
       const teams = await prisma.fantasyTeam.findMany({
         where: { leagueId: this.leagueId },
-        select: { ownerId: true },
+        select: { id: true, ownerId: true },
       });
       await Promise.all(
         teams.map((t) =>
-          createNotification(t.ownerId, "DRAFT_STARTING", { leagueId: this.leagueId }, prisma, this.leagueId)
+          createNotification(t.ownerId, "DRAFT_STARTING", { leagueId: this.leagueId }, prisma, this.leagueId, {
+            title: "Draft is starting!",
+            teamId: t.id,
+            actionUrl: `/draft/${this.leagueId}?team=${t.id}`,
+          })
         )
       );
     } catch {
@@ -234,7 +238,13 @@ class DraftRoom {
         "ON_THE_CLOCK",
         { leagueId: this.leagueId, teamName: team.name, overall: this.state.currentOverall },
         prisma,
-        this.leagueId
+        this.leagueId,
+        {
+          title: "You're on the clock",
+          body: `Pick ${this.state.currentOverall} of ${this.state.order.length}`,
+          teamId: slot.fantasyTeamId,
+          actionUrl: `/draft/${this.leagueId}?team=${slot.fantasyTeamId}`,
+        }
       );
     } catch {
       // fire-and-forget — never block the draft

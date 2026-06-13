@@ -7,16 +7,33 @@ export async function createNotification(
   type: NotificationType,
   data: Record<string, unknown>,
   prisma: PrismaClient,
-  leagueId?: string
+  leagueId?: string,
+  opts?: {
+    title?: string;
+    teamId?: string;
+    body?: string;
+    actionUrl?: string;
+    dedupeKey?: string;
+  }
 ): Promise<void> {
-  await prisma.notification.create({
-    data: {
-      userId,
-      leagueId: leagueId ?? null,
-      type,
-      data: data as Prisma.InputJsonValue,
-    },
-  });
+  try {
+    await prisma.notification.create({
+      data: {
+        userId,
+        leagueId: leagueId ?? null,
+        teamId: opts?.teamId ?? null,
+        type,
+        title: opts?.title ?? "",
+        body: opts?.body ?? null,
+        actionUrl: opts?.actionUrl ?? null,
+        dedupeKey: opts?.dedupeKey ?? null,
+        data: data as Prisma.InputJsonValue,
+      },
+    });
+  } catch (e: unknown) {
+    if ((e as { code?: string })?.code === "P2002") return; // duplicate dedupeKey — silent no-op
+    throw e;
+  }
 }
 
 export async function markAllRead(

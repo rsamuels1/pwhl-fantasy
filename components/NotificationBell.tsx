@@ -5,6 +5,9 @@ import { useState, useCallback } from "react";
 type Notification = {
   id: string;
   type: string;
+  title?: string;
+  body?: string;
+  actionUrl?: string;
   data: Record<string, unknown>;
   readAt: string | null;
   createdAt: string;
@@ -114,7 +117,7 @@ export default function NotificationBell({
             </div>
           ) : notifications.length === 0 ? (
             <div style={{ padding: "12px 14px", fontSize: "13px", color: "var(--text-muted, #888)" }}>
-              No notifications
+              You&apos;re all caught up.
             </div>
           ) : (
             <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
@@ -129,11 +132,24 @@ export default function NotificationBell({
                     background: n.readAt ? "transparent" : "rgba(99,102,241,0.06)",
                   }}
                 >
-                  <div style={{ fontWeight: 600 }}>{TYPE_LABEL[n.type] ?? n.type}</div>
-                  {typeof n.data.teamName === "string" && (
-                    <div style={{ marginTop: "2px", color: "var(--text-muted, #888)" }}>
-                      {n.data.teamName}
-                    </div>
+                  {n.actionUrl ? (
+                    <a href={n.actionUrl} style={{ textDecoration: "none", color: "inherit" }}>
+                      <div style={{ fontWeight: 600 }}>{n.title ?? TYPE_LABEL[n.type] ?? n.type}</div>
+                      {(n.body ?? (typeof n.data.teamName === "string" ? n.data.teamName : undefined)) && (
+                        <div style={{ marginTop: "2px", color: "var(--text-muted, #888)" }}>
+                          {n.body ?? (n.data.teamName as string)}
+                        </div>
+                      )}
+                    </a>
+                  ) : (
+                    <>
+                      <div style={{ fontWeight: 600 }}>{n.title ?? TYPE_LABEL[n.type] ?? n.type}</div>
+                      {(n.body ?? (typeof n.data.teamName === "string" ? n.data.teamName : undefined)) && (
+                        <div style={{ marginTop: "2px", color: "var(--text-muted, #888)" }}>
+                          {n.body ?? (n.data.teamName as string)}
+                        </div>
+                      )}
+                    </>
                   )}
                 </li>
               ))}

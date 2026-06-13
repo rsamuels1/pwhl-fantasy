@@ -254,3 +254,90 @@ click-through, and lineup-incomplete → lineup-set conversion.
   provider-agnostic behind the channel layer).
 - Real-time push transport (#21 / #22).
 - Digest/batched notifications (future optimization once volume justifies it).
+
+---
+
+# NT-003: Scheduled Trigger Decision
+
+**Decision recorded:** June 13, 2026
+
+## Chosen mechanism: check-on-dashboard-load with server-side dedupe (option c)
+
+The app runs on Next.js App Router with no persistent background worker infrastructure and no Redis or message queue. The draft server (`npm run draft-server`) is a separate, optional process that may not be running between drafts — relying on it as a cron host would silently drop notifications whenever it is offline. A platform-level cron (Vercel Cron Jobs or similar) is viable in production but requires the target endpoint to be publicly reachable, adds an operational dependency that doesn't exist today, and cannot be tested locally without a tunnel. A background process running alongside the draft server inherits the same uptime coupling problem and makes notification correctness contingent on an already highest-risk component.
+
+The architecturally cleanest option for this stack is to piggyback on an existing high-frequency, user-initiated request: the dashboard load. When `app/dashboard/page.tsx` server-renders, it already calls `getMatchupQuickSummary` and computes action items for every team the user owns. Adding a `checkAndEmitScheduledNotifications(userId, nowMs, prisma)` call in that same server render costs one extra DB read (active periods + roster slots) and writes a `Notification` row only when the condition is newly true. Deduplification is enforced at the DB layer via a `@@unique([userId, type, dedupeKey])` constraint — a second dashboard load within the same period silently no-ops on the `create` because the dedupeKey already exists. The `dedupeKey` for `LINEUP_INCOMPLETE` is `{leaguePeriodStartsAt}-{teamId}`; for `DRAFT_STARTING` reminders it is `{draftId}-{windowLabel}` (e.g. `abc123-1h`). This approach is replay-safe because `nowMs` comes from `getDevNow()`, matching the rest of the app.
+
+The tradeoff is that a user who never visits the dashboard before a period lock does not receive a lineup-incomplete notification. For MVP this is acceptable: the dashboard is already the primary entry point and the matchup-page lineup alert strip provides in-context coverage. If engagement data from the beta shows meaningful miss rates, a Vercel Cron webhook (one endpoint, no new infrastructure) can be layered in post-MVP without changing the deduplication logic.
+
+---
+
+# Schema Delta: Notification Model
+
+**Status as of June 13, 2026:** The live `Notification` model in `prisma/schema.prisma` is missing the fields the spec requires for rendering, deduplication, and deep-linking. This delta documents exactly what must be added before NT-002 notification content can be displayed in the bell dropdown.
+
+## Current live schema (confirmed by reading `prisma/schema.prisma`)
+
+```prisma
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  leagueId  String?
+  type      NotificationType
+  data      Json             @default("{}")
+  readAt    DateTime?
+  createdAt DateTime         @default(now())
+  user      User             @relation(fields: [userId], references: [id])
+  league    FantasyLeague?   @relation(fields: [leagueId], references: [id])
+
+  @@index([userId, leagueId, readAt])
+  @@index([leagueId])
+}
+```
+
+## Fields to add and rationale
+
+| Field | Type | Required? | Reason |
+|---|---|---|---|
+| `teamId` | `String?` | Optional | Scopes on-the-clock and lineup-incomplete notifications to a specific fantasy team; enables deep-link construction without re-querying. |
+| `title` | `String` | Required | Short summary line rendered in the bell dropdown (e.g. "Draft is starting!"). Without it the UI must reconstruct display text from `type` + `data`, coupling the rendering layer to notification internals. |
+| `body` | `String?` | Optional | Secondary detail line (e.g. "You're on the clock — pick 7 of 13"). Optional because some types (ON_THE_CLOCK) are self-explanatory from the title alone. |
+| `actionUrl` | `String?` | Optional | Pre-computed deep link (e.g. `/draft/<leagueId>?team=<teamId>`). Without it the bell dropdown cannot navigate the user to the right page without server-side re-derivation on every click. |
+| `dedupeKey` | `String?` | Optional (but indexed) | The idempotency token that prevents duplicate delivery. A null `dedupeKey` means the notification has no deduplication guarantee; all scheduled triggers must supply one. |
+
+## Prisma migration snippet
+
+Add these fields inside the `Notification` model and add the unique constraint:
+
+```prisma
+model Notification {
+  id         String           @id @default(cuid())
+  userId     String
+  leagueId   String?
+  teamId     String?                          // NEW — scopes to a fantasy team
+  type       NotificationType
+  title      String                           // NEW — display title for bell dropdown
+  body       String?                          // NEW — optional secondary detail line
+  actionUrl  String?                          // NEW — pre-computed deep link
+  dedupeKey  String?                          // NEW — idempotency token for scheduled triggers
+  data       Json             @default("{}")
+  readAt     DateTime?
+  createdAt  DateTime         @default(now())
+  user       User             @relation(fields: [userId], references: [id])
+  league     FantasyLeague?   @relation(fields: [leagueId], references: [id])
+
+  @@unique([userId, type, dedupeKey])          // NEW — deduplication constraint
+  @@index([userId, leagueId, readAt])
+  @@index([leagueId])
+}
+```
+
+## Migration notes
+
+- `title` is `String` (required, not nullable). The migration will fail on any existing `Notification` rows that have no `title` value. In dev, drop all notification rows before pushing (`DELETE FROM "Notification";`) or make `title` temporarily optional during the migration and backfill.
+- `dedupeKey` is nullable intentionally: event-driven notifications (e.g. `ON_THE_CLOCK` from the draft engine) already emit exactly once and do not need a dedupeKey. Only scheduled-trigger notifications require one.
+- The `@@unique([userId, type, dedupeKey])` constraint uses a nullable column. In PostgreSQL, `NULL` values are not considered equal in unique constraints, meaning two rows with `dedupeKey = NULL` for the same user and type will not conflict. This is correct: event-driven notifications with no dedupeKey can accumulate (one per pick), while scheduled notifications with a dedupeKey are deduplicated.
+- Run `npx prisma db push` (dev) or generate and apply a migration file (production) after editing the schema. Also run `npx prisma generate` to update the Prisma client.
+
+## Impact on `lib/services/notification-service.ts`
+
+The current `createNotification` function signature must be extended to accept `title`, `body`, `actionUrl`, `teamId`, and `dedupeKey`. Callers in `lib/draft/server.ts` (DRAFT_STARTING, ON_THE_CLOCK) need to be updated to pass these fields. The dashboard-load trigger (NT-003 decision above) will also need to pass them. No other files in the live codebase currently call `createNotification`.
