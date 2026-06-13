@@ -234,19 +234,19 @@ export default async function TeamMatchupPage({
             {swingPlayers.map((p) => (
               <div key={p.playerId} style={{
                 display: "flex", alignItems: "center", justifyContent: "space-between",
-                padding: "8px 10px", borderRadius: 8,
+                gap: 8, padding: "8px 10px", borderRadius: 8,
                 background: "rgba(255,255,255,0.02)",
               }}>
-                <div>
-                  <span style={{ fontWeight: 600, fontSize: 14 }}>{p.name}</span>
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <span style={{ fontWeight: 600, fontSize: 14, display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.name}</span>
                   <span style={{
-                    marginLeft: 8, fontSize: 11,
+                    fontSize: 11,
                     color: p.team === "mine" ? "#818cf8" : "#f59e0b",
                   }}>
                     {p.team === "mine" ? "Your player" : "Opponent"}
                   </span>
                 </div>
-                <span style={{ fontSize: 12, color: "#94a3b8" }}>
+                <span style={{ fontSize: 12, color: "#94a3b8", flexShrink: 0 }}>
                   {p.projectedImpact.toFixed(1)} pts · {p.gamesRemaining}G left
                 </span>
               </div>
@@ -615,7 +615,7 @@ function FieldHero({ matchup, teamId }: { matchup: ActiveMatchup; teamId: string
           <div style={{ fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>
             {matchup.myTeam.name}
           </div>
-          <div style={{ fontSize: isUpcoming ? 32 : 52, fontWeight: 900, lineHeight: 1, color: isUpcoming ? "#475569" : "#e2e8f0", fontVariantNumeric: "tabular-nums" }}>
+          <div style={{ fontSize: isUpcoming ? "clamp(24px, 6vw, 32px)" : "clamp(28px, 8vw, 52px)", fontWeight: 900, lineHeight: 1, color: isUpcoming ? "#475569" : "#e2e8f0", fontVariantNumeric: "tabular-nums" }}>
             {isUpcoming ? "—" : matchup.myTeam.score.toFixed(1)}
           </div>
           <div style={{ fontSize: 12, color: "#475569", marginTop: 4 }}>proj {matchup.myProjected.toFixed(1)}</div>
@@ -720,7 +720,7 @@ function DuelHero({
       <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", alignItems: "center", gap: 12, marginBottom: 20 }}>
         <div>
           <div style={{ fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>{matchup.myTeam.name}</div>
-          <div style={{ fontSize: isUpcoming ? 32 : 52, fontWeight: 900, lineHeight: 1, color: isUpcoming ? "#475569" : "#e2e8f0", fontVariantNumeric: "tabular-nums" }}>
+          <div style={{ fontSize: isUpcoming ? "clamp(24px, 6vw, 32px)" : "clamp(28px, 8vw, 52px)", fontWeight: 900, lineHeight: 1, color: isUpcoming ? "#475569" : "#e2e8f0", fontVariantNumeric: "tabular-nums" }}>
             {isUpcoming ? "—" : matchup.myTeam.score.toFixed(1)}
           </div>
           <div style={{ fontSize: 12, color: "#475569", marginTop: 4 }}>proj {matchup.myProjected.toFixed(1)}</div>
@@ -739,7 +739,7 @@ function DuelHero({
         </div>
         <div style={{ textAlign: "right" }}>
           <div style={{ fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>{opponent.name}</div>
-          <div style={{ fontSize: isUpcoming ? 32 : 52, fontWeight: 900, lineHeight: 1, color: isUpcoming ? "#475569" : "#94a3b8", fontVariantNumeric: "tabular-nums" }}>
+          <div style={{ fontSize: isUpcoming ? "clamp(24px, 6vw, 32px)" : "clamp(28px, 8vw, 52px)", fontWeight: 900, lineHeight: 1, color: isUpcoming ? "#475569" : "#94a3b8", fontVariantNumeric: "tabular-nums" }}>
             {isUpcoming ? "—" : opponent.score.toFixed(1)}
           </div>
           <div style={{ fontSize: 12, color: "#475569", marginTop: 4 }}>proj {matchup.opponentProjected.toFixed(1)}</div>

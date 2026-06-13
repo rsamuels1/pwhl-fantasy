@@ -239,7 +239,7 @@ export default function LineupManager({
                 onClick={() => !disabled && setStatsView(view)}
                 disabled={disabled}
                 style={{
-                  padding: "5px 12px", borderRadius: 6, border: "none", cursor: disabled ? "default" : "pointer", fontSize: 12, fontWeight: 600,
+                  minHeight: 36, padding: "0 12px", borderRadius: 6, border: "none", cursor: disabled ? "default" : "pointer", fontSize: 12, fontWeight: 600,
                   background: statsView === view ? "rgba(99,102,241,0.3)" : "transparent",
                   color: disabled ? "#334155" : statsView === view ? "#a5b4fc" : "#64748b",
                   transition: "background 0.1s, color 0.1s",
@@ -306,7 +306,7 @@ export default function LineupManager({
                   style={{
                     display: "grid", gridTemplateColumns: "36px 1fr",
                     gap: 10, alignItems: "start",
-                    padding: "9px 12px", borderRadius: 10,
+                    minHeight: 44, padding: "9px 12px", borderRadius: 10,
                     border: `1px solid ${isTarget ? "rgba(99,102,241,0.5)" : isSelected ? "rgba(99,102,241,0.4)" : "rgba(148,163,184,0.1)"}`,
                     background: isTarget
                       ? "rgba(99,102,241,0.12)"
@@ -397,7 +397,7 @@ export default function LineupManager({
                     style={{
                       display: "grid", gridTemplateColumns: "36px 1fr",
                       gap: 10, alignItems: "start",
-                      padding: "9px 12px", borderRadius: 10,
+                      minHeight: 44, padding: "9px 12px", borderRadius: 10,
                       border: `1px solid ${isTarget ? "rgba(99,102,241,0.5)" : isSelected ? "rgba(99,102,241,0.4)" : "rgba(148,163,184,0.08)"}`,
                       background: isTarget
                         ? "rgba(99,102,241,0.1)"
@@ -458,7 +458,7 @@ export default function LineupManager({
       {selected && (
         <button
           onClick={() => setSelectedId(null)}
-          style={{ alignSelf: "flex-start", background: "none", border: "none", color: "#64748b", fontSize: 13, cursor: "pointer", padding: 0 }}
+          style={{ alignSelf: "flex-start", background: "none", border: "none", color: "#64748b", fontSize: 13, cursor: "pointer", minHeight: 44, padding: "0 12px" }}
         >
           ✕ Cancel selection
         </button>

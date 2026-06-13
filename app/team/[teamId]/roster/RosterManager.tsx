@@ -466,7 +466,7 @@ function PlayerCard({ player, onDrop, disabled }: {
         ))}
       </div>
       {onDrop && (
-        <button onClick={onDrop} disabled={disabled} style={{ fontSize: 11, fontWeight: 600, padding: "5px 0", borderRadius: 8, border: "1px solid rgba(248,113,113,0.3)", cursor: "pointer", background: "rgba(248,113,113,0.06)", color: "#f87171", opacity: disabled ? 0.5 : 1, marginTop: "auto" }}>
+        <button onClick={onDrop} disabled={disabled} style={{ fontSize: 11, fontWeight: 600, minHeight: 44, padding: "0 12px", borderRadius: 8, border: "1px solid rgba(248,113,113,0.3)", cursor: "pointer", background: "rgba(248,113,113,0.06)", color: "#f87171", opacity: disabled ? 0.5 : 1, marginTop: "auto" }}>
           Drop
         </button>
       )}
@@ -602,7 +602,7 @@ function RosterRow({ player, index, readonly, onDrop, disabled }: {
       )}
 
       {!readonly && (
-        <button onClick={onDrop} disabled={disabled} title="Drop player" style={{ fontSize: 11, fontWeight: 600, padding: "4px 8px", borderRadius: 6, border: "1px solid rgba(248,113,113,0.3)", cursor: "pointer", background: "rgba(248,113,113,0.08)", color: "#f87171", opacity: disabled ? 0.5 : 1 }}>
+        <button onClick={onDrop} disabled={disabled} title="Drop player" style={{ fontSize: 11, fontWeight: 600, minHeight: 44, padding: "0 12px", borderRadius: 6, border: "1px solid rgba(248,113,113,0.3)", cursor: "pointer", background: "rgba(248,113,113,0.08)", color: "#f87171", opacity: disabled ? 0.5 : 1 }}>
           Drop
         </button>
       )}
@@ -805,7 +805,7 @@ function getRosterSortValue(p: RosterPlayerRow, key: SortKey): number {
 
 function smallBtn(bg: string): React.CSSProperties {
   return {
-    fontSize: 11, fontWeight: 600, padding: "4px 10px", borderRadius: 6,
+    fontSize: 11, fontWeight: 600, minHeight: 44, padding: "0 12px", borderRadius: 6,
     border: "none", cursor: "pointer", background: `${bg}30`,
     color: bg === "#64748b" ? "#94a3b8" : "#a5b4fc",
     outline: `1px solid ${bg}50`, whiteSpace: "nowrap",

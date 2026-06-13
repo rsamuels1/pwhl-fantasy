@@ -361,7 +361,7 @@ img { max-width: 100%; display: block; }
 .bottom-nav { display: none; }
 @media (max-width: 640px) {
   .bottom-nav { display: flex; }
-  .bottom-nav-pad { padding-bottom: 68px !important; }
+  .bottom-nav-pad { padding-bottom: calc(68px + env(safe-area-inset-bottom, 0px)) !important; }
 }
 
 @media (max-width: 480px) {

@@ -1,6 +1,19 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
+import React from "react";
+
+function useIsMobile(breakpoint = 900) {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia(`(max-width: ${breakpoint}px)`);
+    setIsMobile(mq.matches);
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, [breakpoint]);
+  return isMobile;
+}
 import { useDraftSocket } from "@/hooks/useDraftSocket";
 import type { DraftState, PlayerSummary } from "@/lib/draft/messages";
 import type { PickSlot } from "@/lib/draft/snake";
@@ -433,24 +446,24 @@ function NeedsPanel({
 
 type SortKey = "points" | "goals" | "assists" | "ppp" | "shots" | "hits" | "blocks" | "wins" | "saves" | "savePct" | "shutouts" | "gp" | "goalsAgainst";
 
-const SKATER_COLS: { key: SortKey; label: string }[] = [
+const SKATER_COLS: { key: SortKey; label: string; mobile?: boolean }[] = [
   { key: "gp", label: "GP" },
   { key: "goals", label: "G" },
   { key: "assists", label: "A" },
   { key: "points", label: "PTS" },
-  { key: "ppp", label: "PPP" },
-  { key: "shots", label: "SOG" },
-  { key: "hits", label: "HIT" },
-  { key: "blocks", label: "BLK" },
+  { key: "ppp", label: "PPP", mobile: true },
+  { key: "shots", label: "SOG", mobile: true },
+  { key: "hits", label: "HIT", mobile: true },
+  { key: "blocks", label: "BLK", mobile: true },
 ];
 
-const GOALIE_COLS: { key: SortKey; label: string }[] = [
+const GOALIE_COLS: { key: SortKey; label: string; mobile?: boolean }[] = [
   { key: "gp", label: "GP" },
   { key: "wins", label: "W" },
-  { key: "saves", label: "SV" },
-  { key: "goalsAgainst", label: "GA" },
+  { key: "saves", label: "SV", mobile: true },
+  { key: "goalsAgainst", label: "GA", mobile: true },
   { key: "savePct", label: "SV%" },
-  { key: "shutouts", label: "SO" },
+  { key: "shutouts", label: "SO", mobile: true },
 ];
 
 function PlayerPanel({
@@ -616,7 +629,7 @@ function PlayerPanel({
                 {(["", "FORWARD", "DEFENSE", "GOALIE"] as const).map((pos) => (
                   <button
                     key={pos || "all"}
-                    style={{ ...styles.tab, padding: "4px 10px", background: posFilter === pos ? "var(--accent)" : "transparent", color: posFilter === pos ? "#fff" : "var(--muted)" }}
+                    style={{ ...styles.tab, minHeight: 44, padding: "0 12px", background: posFilter === pos ? "var(--accent)" : "transparent", color: posFilter === pos ? "#fff" : "var(--muted)" }}
                     onClick={() => handlePosFilter(pos)}
                   >
                     {pos === "" ? "All" : pos === "FORWARD" ? "F" : pos === "DEFENSE" ? "D" : "G"}
@@ -646,6 +659,7 @@ function PlayerPanel({
                       {cols.map((c) => (
                         <th
                           key={c.key}
+                          className={c.mobile ? "stat-secondary" : undefined}
                           style={{ ...styles.th, textAlign: "right", cursor: "pointer", color: sortKey === c.key ? "var(--accent-strong)" : "var(--muted)", userSelect: "none" }}
                           onClick={() => setSortKey(c.key)}
                           title={`Sort by ${c.label}`}
@@ -666,7 +680,7 @@ function PlayerPanel({
                           const val = s ? (s[c.key] as number | null) : null;
                           const display = val == null ? "—" : c.key === "savePct" ? (val as number).toFixed(3).replace(/^0/, "") : String(val);
                           return (
-                            <td key={c.key} style={{ padding: "5px 6px", textAlign: "right", fontSize: 12, fontVariantNumeric: "tabular-nums", color: sortKey === c.key ? "var(--text)" : "var(--muted)" }}>
+                            <td key={c.key} className={c.mobile ? "stat-secondary" : undefined} style={{ padding: "5px 6px", textAlign: "right", fontSize: 12, fontVariantNumeric: "tabular-nums", color: sortKey === c.key ? "var(--text)" : "var(--muted)" }}>
                               {display}
                             </td>
                           );
@@ -786,6 +800,8 @@ export default function DraftRoom({
   const { connStatus, draft, available, lastError, start, makePick, listAvailable, setQueue, pause, resume } =
     useDraftSocket(leagueId, teamId);
 
+  const isMobile = useIsMobile(900);
+  const [mobileTab, setMobileTab] = useState<"pick" | "board" | "needs">("pick");
   const [queue, setQueueLocal] = useState<string[]>([]);
 
   // Seed name + position lookup from SSR stats so all players are known immediately,
@@ -867,13 +883,97 @@ export default function DraftRoom({
       )}
 
       {!draft && connStatus === "error" && (
-        <div style={{ padding: "2rem", color: "var(--red)" }}>
-          Could not connect to the draft server. Make sure it is running on{" "}
-          <code>{process.env.NEXT_PUBLIC_DRAFT_WS_URL ?? "ws://localhost:8080"}</code>.
+        <div style={{ padding: "2rem", textAlign: "center" }}>
+          <p style={{ fontSize: 16, fontWeight: 600, color: "var(--red)" }}>Could not connect to draft</p>
+          <p style={{ fontSize: 14, color: "var(--muted)", marginTop: 8 }}>
+            Check your internet connection and refresh. If the problem continues, contact your commissioner.
+          </p>
         </div>
       )}
 
-      {draft && (
+      {draft && isMobile && (
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+          {/* Mobile tab bar */}
+          <div style={{ display: "flex", borderBottom: "1px solid var(--border)", flexShrink: 0 }}>
+            {(["pick", "board", "needs"] as const).map((tab) => (
+              <button
+                key={tab}
+                style={{
+                  flex: 1, minHeight: 44, border: "none", background: "transparent",
+                  borderBottom: mobileTab === tab ? "2px solid var(--accent)" : "2px solid transparent",
+                  color: mobileTab === tab ? "var(--text)" : "var(--muted)",
+                  fontWeight: mobileTab === tab ? 700 : 500, fontSize: 13, cursor: "pointer",
+                }}
+                onClick={() => setMobileTab(tab)}
+              >
+                {tab === "pick" ? "Pick" : tab === "board" ? "Board" : "Needs"}
+              </button>
+            ))}
+          </div>
+
+          {/* Active panel */}
+          <div style={{ flex: 1, overflowY: "auto", padding: 14 }}>
+            {mobileTab === "pick" && (
+              <PlayerPanel
+                draft={draft}
+                teamId={teamId}
+                leagueId={leagueId}
+                available={available}
+                queue={queue}
+                initialStats={initialStats}
+                initialStatSeason={statSeason}
+                onPick={makePick}
+                onSearch={listAvailable}
+                onSetQueue={handleSetQueue}
+              />
+            )}
+            {mobileTab === "board" && (
+              <>
+                <PickBoard
+                  draft={draft}
+                  myTeamId={teamId}
+                  teamNames={teamNames}
+                  playerNames={playerNames.current}
+                />
+                <div style={{ marginTop: 12 }}>
+                  <RecentPicks
+                    draft={draft}
+                    teamNames={teamNames}
+                    playerNames={playerNames.current}
+                  />
+                </div>
+              </>
+            )}
+            {mobileTab === "needs" && (
+              <>
+                <NeedsPanel
+                  draft={draft}
+                  myTeamId={teamId}
+                  rosterSettings={rosterSettings}
+                  playerPositions={playerPositions.current}
+                />
+                <div style={{ marginTop: 12 }}>
+                  <TeamSpreadPanel
+                    draft={draft}
+                    myTeamId={teamId}
+                    playerTeams={playerTeams.current}
+                  />
+                </div>
+                <div style={{ marginTop: 12 }}>
+                  <MyPicks
+                    draft={draft}
+                    myTeamId={teamId}
+                    playerNames={playerNames.current}
+                    playerPositions={playerPositions.current}
+                  />
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
+      {draft && !isMobile && (
         <div style={styles.body}>
           {/* Left column: pick board + recent picks */}
           <div style={styles.leftCol}>
@@ -990,23 +1090,30 @@ const styles = {
     color: "#000",
     border: "none",
     borderRadius: 5,
-    padding: "4px 10px",
+    minHeight: 44,
+    padding: "0 14px",
     fontWeight: 700,
     fontSize: 12,
+    cursor: "pointer" as const,
   },
   queueBtn: {
     background: "transparent",
     color: "var(--muted)",
     border: "1px solid var(--border)",
     borderRadius: 4,
-    padding: "2px 6px",
+    minHeight: 44,
+    minWidth: 44,
     fontSize: 11,
     cursor: "pointer" as const,
   },
   starBtn: {
     background: "transparent",
     border: "none",
-    padding: "2px 4px",
+    minHeight: 44,
+    minWidth: 44,
+    display: "flex" as const,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
     fontSize: 15,
     lineHeight: 1,
     color: "var(--accent-strong)",

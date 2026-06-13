@@ -30,7 +30,8 @@ export default function BottomNav({ teamId, leagueId }: Props) {
       position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 100,
       background: "#090d16",
       borderTop: "1px solid rgba(148,163,184,0.12)",
-      height: 60,
+      minHeight: 60,
+      paddingBottom: "env(safe-area-inset-bottom, 0px)",
       justifyContent: "stretch",
       alignItems: "stretch",
     }}>
@@ -47,6 +48,7 @@ export default function BottomNav({ teamId, leagueId }: Props) {
               alignItems: "center",
               justifyContent: "center",
               gap: 2,
+              minHeight: 60,
               textDecoration: "none",
               color: active ? "#a5b4fc" : "#475569",
               fontSize: 10,

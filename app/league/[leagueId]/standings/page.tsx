@@ -142,7 +142,7 @@ export default async function StandingsPage({ params }: { params: { leagueId: st
         </p>
 
         <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 520 }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 380 }}>
             <thead>
               <tr style={{ color: "#64748b", textAlign: "left", borderBottom: "1px solid rgba(148,163,184,0.2)" }}>
                 <th style={thStyle}>#</th>
