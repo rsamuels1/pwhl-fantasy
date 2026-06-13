@@ -625,15 +625,19 @@ Acceptance Criteria:
 
 ## 13. Replay Simulation Speed Controls
 
+Status: Partially Implemented ✅ (core controls shipped; see Sprint 5 fixes)
+
 Features:
 
-- Advance day
-- Advance week
-- Simulate season
+- Advance day ✅ ("+1 Day →" button in `SeasonControls.tsx`)
+- Advance week ✅ ("▶ Score week N" button in `SeasonControls.tsx`)
+- Simulate season ✅ ("⏩ Sim to playoffs" button — scores all remaining regular-season weeks in one click; `advanceSeason` already handles multi-week scoring, no API changes needed)
+- Gap-week handling ✅ (fixed in Sprint 5: `targetPeriod` now falls back to UPCOMING when no ACTIVE or SCORING_PENDING period exists, so mid-season breaks like the Jan 31→Feb 21 all-star break no longer hide the "Score week N" button)
 
 Acceptance Criteria:
 
-- Commissioners can control pace
+- Commissioners can control pace ✅
+- Sim correctly bridges multi-week calendar gaps ✅
 
 ---
 

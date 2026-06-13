@@ -113,7 +113,12 @@ Closed all in-progress feature gaps and carry-forwards before beta.
 
 ## Sprint 5 — "Validation + Beta Operations" · ~2 wks · Track V ← CURRENT
 
-**Recommended starting order:**
+**Shipped (Sprint 5):**
+
+- **Replay gap bug fix** ✅ — After scoring Week 10 of the 2025-26 season the 21-day all-star break gap (Jan 31 → Feb 21) caused the "Score week N" button to disappear because `targetPeriod` only checked for ACTIVE or SCORING_PENDING periods. Added UPCOMING as a third fallback so the button correctly shows "Score week 11" and bridges the gap in one click. Fixed in `app/league/[leagueId]/season/SeasonControls.tsx`.
+- **"Sim to playoffs" button** ✅ — Added a purple "⏩ Sim to playoffs" button in the replay/dev season controls. Scores all remaining regular-season weeks in a single click by calling `advanceSeason` with the simulated date set past the final week's end. After completion, the "▶ Start Playoffs" button appears. No API changes — `advanceSeason` already supports multi-week scoring. Implemented in `app/league/[leagueId]/season/SeasonControls.tsx`.
+
+**Recommended starting order (remaining):**
 
 1. **Draft Reliability Certification** — duplicate-tab handling, load test concurrent leagues, reconnect stress test; findings documented in `commissioner-runbook.md`. (Unblocks beta invites; last remaining ⚠️ on MVP scorecard)
 2. **Playoff Experience UX Polish (#30)** — champion banner, between-round nudge, bracket prominence (quick win ~40K tokens, high visibility for first beta commissioners)
@@ -144,7 +149,7 @@ Sequenced from "What To Build Next" and the GPT launch phases:
 | Sprint 2 — Commissioner + Platform Foundation | ✅ COMPLETE (Jun 2026) | Commissioner recovery tools, multi-season schema, analytics (6 events), VP education; 130 tests pass |
 | Sprint 3 — Beta Readiness | ✅ COMPLETE (Jun 13, 2026) | Onboarding ✅, error handling ✅, mobile ✅, NT-001 ✅, draft notifications ✅, transaction history ✅, IA-011 ✅ |
 | Sprint 4 — Product Polish | ✅ COMPLETE (Jun 13, 2026) | NT-002 LINEUP_INCOMPLETE ✅ · #01 commissioner dashboard ✅ · #17 rivalries ✅ · VP standings fix ✅ · playoff mode + replay support ✅ |
-| Sprint 5 — Validation + Beta Operations | ⏳ CURRENT | Draft cert, founder dashboard, beta feedback infra |
+| Sprint 5 — Validation + Beta Operations | ⏳ CURRENT | Replay gap fix ✅ · sim-to-playoffs button ✅ · draft cert, founder dashboard, beta feedback infra pending |
 | Sprint 6+ — Launch Features | ⏳ PLANNED | Transactions, trade, waivers, growth |
 
 ---

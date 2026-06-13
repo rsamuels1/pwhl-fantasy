@@ -19,8 +19,11 @@ export default function SeasonControls({ leagueId, periods, onResult, isReplay, 
   const showStartPlayoffs = lifecycleStatus === "COMPLETE" && playoffStatus === "NOT_STARTED";
 
   const activePeriod = periods.find((p) => p.status === "ACTIVE");
-  const firstPending = periods.find((p) => p.status === "SCORING_PENDING");
-  const targetPeriod = activePeriod ?? firstPending;
+  const firstPending  = periods.find((p) => p.status === "SCORING_PENDING");
+  const firstUpcoming = periods.find((p) => p.status === "UPCOMING");
+  const targetPeriod  = activePeriod ?? firstPending ?? firstUpcoming;
+  const lastPeriod    = periods[periods.length - 1];
+  const hasRemaining  = periods.some((p) => p.status !== "COMPLETE");
   const defaultDate = targetPeriod
     ? new Date(targetPeriod.period.endsAt.getTime() + 60_000).toISOString().slice(0, 16)
     : new Date().toISOString().slice(0, 16);
@@ -47,9 +50,10 @@ export default function SeasonControls({ leagueId, periods, onResult, isReplay, 
           endsAt: new Date(p.period.endsAt),
         },
       }));
-      const newActive = newPeriods.find((p) => p.status === "ACTIVE");
-      const newPending = newPeriods.find((p) => p.status === "SCORING_PENDING");
-      const newTarget = newActive ?? newPending;
+      const newActive   = newPeriods.find((p) => p.status === "ACTIVE");
+      const newPending  = newPeriods.find((p) => p.status === "SCORING_PENDING");
+      const newUpcoming = newPeriods.find((p) => p.status === "UPCOMING");
+      const newTarget   = newActive ?? newPending ?? newUpcoming;
 
       if (isReplay) {
         // Replay leagues: DB is the source of truth — no cookie to set.
@@ -141,6 +145,19 @@ export default function SeasonControls({ leagueId, periods, onResult, isReplay, 
             {loading ? "…" : activePeriod
               ? `⏭ Score week ${targetPeriod.period.week}`
               : `▶ Score week ${targetPeriod.period.week}`}
+          </button>
+        )}
+        {hasRemaining && lastPeriod && (
+          <button
+            onClick={() => {
+              const endDate = new Date(lastPeriod.period.endsAt.getTime() + 60_000).toISOString().slice(0, 16);
+              setSimulatedDate(endDate);
+              call("advance", endDate);
+            }}
+            disabled={loading}
+            style={btn("#8b5cf6")}
+          >
+            {loading ? "…" : "⏩ Sim to playoffs"}
           </button>
         )}
         <button onClick={advanceOneDay} disabled={loading} style={btn("#10b981")}>

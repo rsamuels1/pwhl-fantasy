@@ -46,7 +46,7 @@ Implemented systems include:
 - Projections & Win Probability engine
 - Standings (with playoff race clinch/eliminate indicators)
 - Playoffs (seeding, bracket, single-elimination)
-- Historical Replay & Season advancement / lifecycle
+- Historical Replay & Season advancement / lifecycle (gap-week handling fixed; "⏩ Sim to playoffs" button scores all remaining regular-season weeks in one click)
 - Schedule management & scoring engine (VTF point scoring)
 - Victory Point (VP) scoring model (win/placement bonuses, `homeVP`/`awayVP`)
 - Free-agent add/drop (immediate)

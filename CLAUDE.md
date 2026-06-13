@@ -573,6 +573,14 @@ once `nowMs` passes its end date.
 final counts, and status badge. In dev mode a yellow-bordered panel shows:
 - **"⏭ End week N now"** — scores the active (or first pending) week. After scoring, the cookie
   lands at **9am UTC on the first day of the next period** — the next week is immediately ACTIVE.
+  `targetPeriod` checks ACTIVE → SCORING_PENDING → UPCOMING (in that order), so the button
+  correctly bridges mid-season calendar gaps (e.g. the 21-day all-star break in the 2025-26
+  season) without disappearing.
+- **"⏩ Sim to playoffs"** — scores all remaining regular-season weeks in a single click by
+  calling `advanceSeason` with the simulated date set past the final week's `endsAt`.
+  After completion, the "▶ Start Playoffs" button appears. No API changes needed —
+  `advanceSeason` already handles multi-week scoring. Only shown when unscored regular-season
+  weeks remain.
 - **"+1 Day →"** — advances the sim date by 24 hours without scoring anything. Lets you step
   through a week day-by-day to observe how games-remaining badges and lock state change.
 - **Simulated "now" date picker** — manual override; defaults to 1 minute past the target period's end.

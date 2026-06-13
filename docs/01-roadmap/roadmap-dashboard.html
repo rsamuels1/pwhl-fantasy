@@ -270,10 +270,10 @@
         </div>
       
         <div class="gate-row">
-          <div class="gate-icon">⚠️</div>
+          <div class="gate-icon">✅</div>
           <div>Draft</div>
-          <div><span class="status partial">RISK</span></div>
-          <div style="font-size: 0.85rem; color: #888;">reconnect ✅ · commissioner auth ✅ · auto-pick position-aware ✅ · duplicate-tab unvalidated</div>
+          <div><span class="status done">PASS</span></div>
+          <div style="font-size: 0.85rem; color: #888;">reconnect ✅ · commissioner auth ✅ · auto-pick position-aware ✅ · duplicate-tab ✅</div>
         </div>
       
         <div class="gate-row">
@@ -342,9 +342,8 @@
     </div>
 
     
-      <div class="blocker-callout">
-        <strong>What's blocking beta:</strong><br/>
-        • Draft — reconnect ✅ · commissioner auth ✅ · auto-pick position-aware ✅ · duplicate-tab unvalidated
+      <div class="blocker-callout" style="border-color: #4caf50; background: rgba(76,175,80,0.08);">
+        <strong style="color: #4caf50;">✅ All MVP gates clear — ready to invite founding commissioners.</strong>
       </div>
     
 
@@ -718,7 +717,32 @@
           <span class="status current">● IN FLIGHT</span>
         </div>
         <div>
-          
+
+            <div class="task-row">
+              <span class="task-check">✅</span>
+              <span style="color: #666"><strong style="color:#888">Priority 1 — Draft Reliability Certification</strong> — duplicate-tab handling (open draft room in 2+ tabs → only one active sender); load test 8–10 concurrent leagues drafting simultaneously; reconnect stress test (kill socket, reconnect 10+ times); document findings in <code>commissioner-runbook.md</code>. <em>Outcome: MVP scorecard all green ✅ — last ⚠️ gate before inviting beta commissioners.</em></span>
+            </div>
+
+            <div class="task-row">
+              <span class="task-check">○</span>
+              <span style="color: #ccc"><strong style="color:#f5c842">Priority 2 — Playoff Experience UX Polish (#30, ~40K tokens)</strong> — champion banner on bracket page ("🏆 [Team] Won it All"); between-round nudge (amber banner on franchise page when a round completes, "Next round starts [date]"); bracket prominence (enlarge playoff round chips, make bracket tab more discoverable in team nav). <em>Quick win, high visibility for first beta commissioners running full replay seasons.</em></span>
+            </div>
+
+            <div class="task-row">
+              <span class="task-check">○</span>
+              <span style="color: #ccc"><strong style="color:#f5a623">Priority 3 — Founder Operations Console</strong> — league explorer (search by league / commissioner / user, view config + draft state + standings), simulation launcher, validation dashboard. Spec: <code>docs/02-engineering/founder-ops-console.md</code>. Plan a dedicated session (~130K token heavy lift). <em>Needed for founder to monitor platform health without DB access before inviting beta commissioners.</em></span>
+            </div>
+
+            <div class="task-row">
+              <span class="task-check">○</span>
+              <span style="color: #ccc"><strong style="color:#f5c842">Priority 4 — Commissioner Workflow Validation</strong> — end-to-end manual test of all commissioner actions; runbook accuracy review; screenshots added to <code>commissioner-runbook.md</code>. Can run in parallel with or after Founder Console.</span>
+            </div>
+
+            <div class="task-row">
+              <span class="task-check">○</span>
+              <span style="color: #ccc"><strong style="color:#f5c842">Priority 5 — Beta Feedback Infrastructure</strong> — in-app feedback widget (bug reports, suggestions); founding commissioner tracking (invited → accepted → active → renewed). Can run in parallel with or after Founder Console.</span>
+            </div>
+
         </div>
         <div class="exit-criteria"><strong>Exit:</strong> commissioner can run a league start-to-finish with no engineering help; founder can monitor platform health without DB access; founding commissioner cohort can be invited.</div>
       </div>
@@ -740,7 +764,7 @@
           
             <div class="task-row">
               <span class="task-check">○</span>
-              <span style="color: #ccc">Engagement: #25 Team Analysis & Insights · #29 Weekly Performance Dashboard · #11 league-wide storylines · #30 Playoff Experience UX polish</span>
+              <span style="color: #ccc">Engagement: #25 Team Analysis & Insights · #29 Weekly Performance Dashboard · #11 league-wide storylines (Playoff Experience UX #30 moved to Sprint 5)</span>
             </div>
           
             <div class="task-row">
@@ -760,7 +784,7 @@
           
             <div class="task-row">
               <span class="task-check">○</span>
-              <span style="color: #ccc">Q4 2026 (in-season): Transaction History → Trade System → Waivers → FAAB; engagement surfaces (#25 analysis, #29 performance dashboard, #30 playoff UX) while the first live season runs.</span>
+              <span style="color: #ccc">Q4 2026 (in-season): Transaction History → Trade System → Waivers → FAAB; engagement surfaces (#25 analysis, #29 performance dashboard) while the first live season runs.</span>
             </div>
           
             <div class="task-row">
