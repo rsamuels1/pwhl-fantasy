@@ -80,6 +80,9 @@ Implemented systems include:
   - draft_resumed
 - League Creation UX
   - 8-team recommendation
+- In-app notifications (all three MVP-critical types)
+  - Draft starting, on the clock (`lib/draft/server.ts`)
+  - Lineup incomplete (`checkAndEmitScheduledNotifications` on dashboard load)
 
 These systems should be considered core platform functionality.
 
@@ -104,7 +107,7 @@ tracks into sprints and project a launch date against the real PWHL 2026-27 cale
 # MVP Readiness Scorecard
 
 Snapshot of launch-blocking areas (from `docs/mvp-readiness-scorecard.md`, re-verified
-against code on June 12, 2026). **Confidence to launch today: ~95%.**
+against code on June 13, 2026). **Confidence to launch today: ~95%.**
 
 | Area | Status | Blocker |
 |---|---|---|
@@ -116,10 +119,11 @@ against code on June 12, 2026). **Confidence to launch today: ~95%.**
 | Weekly lineup lock | ✅ PASS | — |
 | Playoffs | ✅ PASS | — |
 | Commissioner tools | ✅ PASS | force move, undo transaction, replace manager, audit log all shipped |
+| Notifications | ✅ PASS | all 3 MVP-critical types shipped (draft starting, on the clock, lineup incomplete) |
 | Analytics | ✅ PASS | 6 events instrumented (user_registered, league_created, league_joined, draft_started, draft_completed, lineup_saved) |
 | End-to-end season sim | ✅ PASS | — |
 
-**Remaining soft blockers:** draft duplicate-tab handling (unvalidated) · onboarding (Sprint 3).
+**Remaining soft blockers:** draft duplicate-tab handling (unvalidated).
 
 ---
 
@@ -1217,8 +1221,8 @@ Assumes a solo builder working with Claude (Pro), ~2 weeks per sprint. Tracks: *
 - #32 Draft Room Team Distribution Panel ✅ (unplanned positive addition — `TeamSpreadPanel` in `DraftRoom.tsx`, concentration color-coding)
 
 **Carry-forwards to Sprint 4:**
-- NT-002 LINEUP_INCOMPLETE ❌ — schema and dedup logic ready; wire `checkAndEmitScheduledNotifications` into `app/dashboard/page.tsx` with `dedupeKey = "{periodStartsAt}-{teamId}"`
-- IA-011 Hide advanced non-v1 settings ❌ — 6 AC items, all frontend-only; spec at `docs/02-engineering/ia-011-checklist.md`
+- NT-002 LINEUP_INCOMPLETE — shipped early Sprint 4 (June 13, 2026); see Sprint 4 shipped items
+- IA-011 Hide advanced non-v1 settings — shipped during Sprint 3 (`ae9246d`)
 
 **Exit:** a brand-new user creates and drafts a league on a phone with no docs. ✅ ACHIEVED
 
@@ -1226,11 +1230,10 @@ Assumes a solo builder working with Claude (Pro), ~2 weeks per sprint. Tracks: *
 
 Close the in-progress feature gaps and carry-forwards before beta.
 
-**Carry-forwards from Sprint 3 (highest priority — ship first):**
-- **NT-002 LINEUP_INCOMPLETE notification** — wire `checkAndEmitScheduledNotifications(userId, nowMs, prisma)` into `app/dashboard/page.tsx`; `dedupeKey = "{periodStartsAt}-{teamId}"`; schema is ready. Logic: for each team the user owns, check if any active roster player has `gamesThisPeriod === 0` in the upcoming/active period and emit `LINEUP_INCOMPLETE`. This is one of three MVP-critical notifications.
-- **IA-011 Hide advanced non-v1 settings** — 6 AC items, all frontend-only (see `docs/02-engineering/ia-011-checklist.md`): suppress "bye" text on bracket page when `topSeedsWithBye === 0` (AC-IA011-001/002); hide multi-round config inputs in admin panel for default format (AC-IA011-003); render `scoringSettings` as human-readable table not raw JSON (AC-IA011-004); render `rosterSettings` in plain English (AC-IA011-005); confirm active format still stated when config inputs are hidden (AC-IA011-006). Files: `app/league/[leagueId]/bracket/` and `app/league/[leagueId]/admin/page.tsx`.
+**Shipped early Sprint 4 (June 13, 2026):**
+- **NT-002 LINEUP_INCOMPLETE notification** ✅ — `checkAndEmitScheduledNotifications(userId, nowMs, prisma)` in `lib/services/notification-service.ts`; wired into `app/dashboard/page.tsx` on load; `dedupeKey = "{periodStartsAt}-{teamId}"`; fires when any active starter's PWHL team has no games remaining in the active period; idempotent via DB unique constraint (commits `cb3a5d1`, `1a63871`)
 
-**Planned sprint 4 items:**
+**Remaining sprint 4 items:**
 - **#28 Lineup Stats Tab Polish** ✅ — shipped during Sprint 3; no further work needed
 - **#01 Commissioner Dashboard (remaining gaps)** — pause/restart replay shortcut; force-draft-start CTA; lineup lock override (`POST .../commissioner/unlock-player`); settings editor (gated on pre-draft); all actions write to audit log
   - **Spec gap:** `POST .../commissioner/unlock-player` route has no spec. Needs: which slot states it clears, whether it bypasses play-lock or only period-lock, and how it interacts with the audit log schema (`CommissionerEventType`). Estimate: S backend work once spec is written.
@@ -1238,14 +1241,12 @@ Close the in-progress feature gaps and carry-forwards before beta.
   - **Spec gap:** rival badge placement and trigger logic are not defined. Questions: which page surfaces the badge (dashboard team cards? league overview?), what qualifies as a "rival" (most matchups played, or significant W/L diff threshold?), and what does the H2H history view look like on mobile. These must be answered before implementation starts.
 
 **Dependencies within Sprint 4:**
-- NT-002 has no dependencies on other Sprint 4 items; can start immediately.
-- IA-011 has no dependencies; can start immediately.
-- #01 commissioner unlock-player route requires a spec before implementation; can block on that while NT-002 and IA-011 ship.
+- #01 commissioner unlock-player route requires a spec before implementation.
 - #17 rivalries requires the "rival" definition spec before the badge work begins; H2H history view can be built independently from existing data once the page placement is decided.
 
 **Exit:**
-- NT-002: a manager who has a starter with zero scheduled games receives a LINEUP_INCOMPLETE in-app notification on their next dashboard load; a second load within the same period does not duplicate it.
-- IA-011: opening `/league/[leagueId]/bracket` on a default 4-team no-bye league shows no "bye" text (AC-IA011-001); the admin panel settings section displays `scoringSettings` and `rosterSettings` as readable tables, not raw JSON (AC-IA011-004/005); a human-readable playoff format line is visible even when config inputs are hidden (AC-IA011-006).
+- NT-002: ✅ ACHIEVED — manager with a starter whose PWHL team has no games remaining this period receives a LINEUP_INCOMPLETE in-app notification on dashboard load; second load in the same period does not duplicate it.
+- IA-011: ✅ ACHIEVED (Sprint 3) — bracket shows no "bye" text on default 4-team format; admin settings render as readable tables.
 - #01: each commissioner recovery action listed above is reachable from the admin panel, writes a `LeagueEvent`, and is reflected in the audit log table.
 - #17: team cards or the matchup page surface a rival badge; the H2H history view shows per-week scores for the two teams' head-to-head matchups.
 - No Phase 1 or Phase 5 feature card enters beta in "partial" state when the remaining work is small and well-specified. Any item not shipped must be explicitly deferred with a documented reason.
@@ -1278,8 +1279,8 @@ Sequenced from "What To Build Next" and the GPT launch phases:
 | Sprint 0 — Implementation Alignment | ✅ COMPLETE (Jun 12, 2026) | Rosters / VP / Playoffs flipped FAIL → PASS |
 | Sprint 1 — Season Validation | ✅ COMPLETE (Jun 12, 2026) | Full season simulates, 114 tests pass, confidence 85–90% |
 | Sprint 2 — Commissioner + Platform Foundation | ✅ COMPLETE (Jun 2026) | Commissioner recovery tools, multi-season schema, analytics (6 events), VP education; 130 tests pass |
-| Sprint 3 — Beta Readiness | ✅ COMPLETE (Jun 13, 2026) | Onboarding ✅, error handling ✅, mobile ✅, NT-001 ✅, draft notifications ✅, transaction history ✅, IA-011 ✅; NT-002 LINEUP_INCOMPLETE carry forward |
-| Sprint 4 — Product Polish | ← CURRENT | NT-002 LINEUP_INCOMPLETE (carry-forward), #01 commissioner dashboard gaps (needs unlock-player spec), #17 rivalries (needs rival-definition spec) |
+| Sprint 3 — Beta Readiness | ✅ COMPLETE (Jun 13, 2026) | Onboarding ✅, error handling ✅, mobile ✅, NT-001 ✅, draft notifications ✅, transaction history ✅, IA-011 ✅ |
+| Sprint 4 — Product Polish | ← CURRENT | NT-002 LINEUP_INCOMPLETE ✅ (Jun 13), #01 commissioner dashboard gaps (needs unlock-player spec), #17 rivalries (needs rival-definition spec) |
 | Sprint 5 — Validation + Beta Operations | ⏳ PLANNED | Draft cert, founder dashboard, beta feedback infra |
 | Sprint 6+ — Launch Features | ⏳ PLANNED | Transactions, trade, waivers, growth |
 
@@ -1297,8 +1298,9 @@ estimates, not commitments.
 | **Jun 12, 2026** | Sprint 0 — alignment P0s closed (roster / VP / playoffs match rules) ✅ |
 | **Jun 12, 2026** | Sprint 1 — season simulation + validation suites green ✅ |
 | **Jun–Jul 2026** | Sprint 2 — commissioner recovery + platform foundation + analytics ✅ |
-| **Jun–Jul 2026** | Sprint 3 — onboarding ✅, error handling ✅, mobile ✅, notifications (draft ✅, LINEUP_INCOMPLETE carry-forward), IA-011 ✅ COMPLETE |
-| **Aug 2026** | Sprint 4 — NT-002 LINEUP_INCOMPLETE, commissioner dashboard gaps, rivalries ← current |
+| **Jun–Jul 2026** | Sprint 3 — onboarding ✅, error handling ✅, mobile ✅, notifications (draft ✅), IA-011 ✅ COMPLETE |
+| **Jun 13, 2026** | NT-002 LINEUP_INCOMPLETE notification shipped (`checkAndEmitScheduledNotifications` on dashboard load) ✅ |
+| **Aug 2026** | Sprint 4 — commissioner dashboard gaps, rivalries ← current |
 | **Late Aug 2026** | Sprint 5 — draft cert, founder dashboard, beta feedback infra |
 | **Early Sep 2026** | **MVP code-complete — all launch gates pass** |
 | **Sep – mid Oct 2026** | Closed beta: founding commissioners run replay + small live test leagues; fix findings |
