@@ -78,28 +78,35 @@ function parseScorecard(md: string): ScorecardRow[] {
 
 function parseSprints(md: string): Sprint[] {
   const sprints: Sprint[] = [];
-  const sprintMatches = md.matchAll(
-    /^## Sprint (\d+)\s*—\s*"([^"]+)"\s*·\s*(✅\s*COMPLETE|←\s*CURRENT|⏳\s*PLANNED)(?:\s*·\s*(.+?))?$/gm
-  );
+  // Match sprints: handles both "5" and "6+" formats; name can be quoted or unquoted
+  const lines = md.split("\n");
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const sprintMatch = line.match(/^## Sprint (\d+\+?)\s*—\s*"?([^"·]+)"?/);
+    if (!sprintMatch) continue;
 
-  for (const match of sprintMatches) {
-    const [fullMatch, numStr, name, statusText, track] = match;
-    const number = parseInt(numStr);
+    const [, numStr, name] = sprintMatch;
+    const number = numStr === "6+" ? 6 : parseInt(numStr);
 
     let status: "complete" | "current" | "planned" = "planned";
-    if (statusText.includes("✅")) status = "complete";
-    if (statusText.includes("←")) status = "current";
+    if (line.includes("✅ COMPLETE")) status = "complete";
+    if (line.includes("← CURRENT")) status = "current";
 
-    const sprintStartIdx = md.indexOf(fullMatch);
+    // Extract track from the line
+    const trackMatch = line.match(/Track\s+(\w+)/);
+    const track = trackMatch ? trackMatch[1] : undefined;
+
+    // Find sprint block (from this line until next ## Sprint)
+    const sprintStartIdx = md.indexOf(line, i > 0 ? md.indexOf(lines[i - 1]) : 0);
     const nextSprintIdx = md.indexOf("\n## Sprint", sprintStartIdx + 1);
     const sprintBlock = md.slice(
       sprintStartIdx,
       nextSprintIdx > 0 ? nextSprintIdx : undefined
     );
 
-    // Parse tasks with done status
+    // Parse tasks with done status (only for non-planned sprints, or for planned with listed tasks)
     const tasks: SprintTask[] = [];
-    const taskLines = sprintBlock.split("\n").filter((l) => l.match(/^-\s+/));
+    const taskLines = sprintBlock.split("\n").filter((l) => l.match(/^-\s+\*?\*?[A-Z#]/));
     for (const line of taskLines) {
       const done = line.includes("✅");
       const text = line
@@ -107,11 +114,11 @@ function parseSprints(md: string): Sprint[] {
         .replace(/✅\s*/g, "")
         .replace(/\*\*([^*]+)\*\*/g, "$1")
         .trim();
-      if (text) tasks.push({ text, done });
+      if (text && text.length > 5) tasks.push({ text, done }); // Filter out cruft
     }
 
-    // Parse exit criteria
-    const exitMatch = sprintBlock.match(/\*\*Exit:\*\*([\s\S]*?)(?:\n## Sprint|\n\n##|$)/);
+    // Parse exit criteria (only for completed/current sprints)
+    const exitMatch = sprintBlock.match(/\*\*Exit:\*\*\s*([\s\S]*?)(?:\n## Sprint|\n\n##|$)/);
     const exitCriteria = exitMatch
       ? exitMatch[1]
           .split("\n")[0]
@@ -123,7 +130,7 @@ function parseSprints(md: string): Sprint[] {
       number,
       name: name.trim(),
       status,
-      track: track?.trim(),
+      track,
       tasks,
       exitCriteria,
     });

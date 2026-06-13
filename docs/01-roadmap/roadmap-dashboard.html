@@ -226,7 +226,7 @@
     <div class="header-right">
       <div class="stat">
         <span class="label">Current:</span>
-        <span class="value">No active sprint</span>
+        <span class="value">Sprint 4</span>
       </div>
       <div class="stat">
         <span class="label">To Beta:</span>
@@ -234,7 +234,7 @@
       </div>
       <div class="stat">
         <span class="label">Sprints:</span>
-        <span class="value">4/4</span>
+        <span class="value">4/7</span>
       </div>
       <div class="stat">
         <span class="label">Gates:</span>
@@ -375,6 +375,24 @@
           <span class="status complete">✅ DONE</span>
         </div>
       
+        <div class="sprint-card current" onclick="switchTab('sprints'); setTimeout(() => document.getElementById('sprint-4').scrollIntoView({behavior: 'smooth'}), 100)">
+          <div class="name">Sprint 4</div>
+          <div class="progress">8/9</div>
+          <span class="status current">● LIVE</span>
+        </div>
+      
+        <div class="sprint-card planned" onclick="switchTab('sprints'); setTimeout(() => document.getElementById('sprint-5').scrollIntoView({behavior: 'smooth'}), 100)">
+          <div class="name">Sprint 5</div>
+          <div class="progress">0/4</div>
+          <span class="status planned">○ PLAN</span>
+        </div>
+      
+        <div class="sprint-card planned" onclick="switchTab('sprints'); setTimeout(() => document.getElementById('sprint-6').scrollIntoView({behavior: 'smooth'}), 100)">
+          <div class="name">Sprint 6</div>
+          <div class="progress">0/7</div>
+          <span class="status planned">○ PLAN</span>
+        </div>
+      
     </div>
   </div>
 
@@ -385,7 +403,7 @@
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
           <div>
             <div style="font-weight: 700; font-size: 1rem;">Sprint 0 · "Make it match the rules"</div>
-            <div style="font-size: 0.8rem; color: #888;">Track: Track A (P0)</div>
+            <div style="font-size: 0.8rem; color: #888;">Track: A</div>
           </div>
           <span class="status complete">✅ COMPLETE</span>
         </div>
@@ -419,7 +437,7 @@
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
           <div>
             <div style="font-weight: 700; font-size: 1rem;">Sprint 1 · "Prove a season completes"</div>
-            <div style="font-size: 0.8rem; color: #888;">Track: Track V (P0)</div>
+            <div style="font-size: 0.8rem; color: #888;">Track: V</div>
           </div>
           <span class="status complete">✅ COMPLETE</span>
         </div>
@@ -542,7 +560,7 @@
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
           <div>
             <div style="font-weight: 700; font-size: 1rem;">Sprint 3 · "Beta-ready: onboarding, trust, mobile"</div>
-            <div style="font-size: 0.8rem; color: #888;">Track: June 13, 2026 · Track F</div>
+            <div style="font-size: 0.8rem; color: #888;">Track: F</div>
           </div>
           <span class="status complete">✅ COMPLETE</span>
         </div>
@@ -610,6 +628,148 @@
           
         </div>
         <div class="exit-criteria"><strong>Exit:</strong> a brand-new user creates and drafts a league on a phone with no docs. ✅ ACHIEVED</div>
+      </div>
+    
+      <div id="sprint-4" class="card current">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+          <div>
+            <div style="font-weight: 700; font-size: 1rem;">Sprint 4 · "Product polish: lineup, commissioner UX, rivalries"</div>
+            <div style="font-size: 0.8rem; color: #888;">Track: F</div>
+          </div>
+          <span class="status current">● IN FLIGHT</span>
+        </div>
+        <div>
+          
+            <div class="task-row">
+              <span class="task-check">✅</span>
+              <span style="color: #666">NT-002 LINEUP_INCOMPLETE notification — `checkAndEmitScheduledNotifications(userId, nowMs, prisma)` in `lib/services/notification-service.ts`; wired into `app/dashboard/page.tsx` on load; `dedupeKey = "{periodStartsAt}-{teamId}"`; fires when any active starter's PWHL team has no games remaining in the active period; idempotent via DB unique constraint (commits `cb3a5d1`, `1a63871`)</span>
+            </div>
+          
+            <div class="task-row">
+              <span class="task-check">✅</span>
+              <span style="color: #666">#28 Lineup Stats Tab Polish — shipped during Sprint 3; no further work needed</span>
+            </div>
+          
+            <div class="task-row">
+              <span class="task-check">✅</span>
+              <span style="color: #666">#01 Commissioner Dashboard (remaining gaps) — pause/restart replay shortcut; force-draft-start CTA; lineup lock override (`POST .../commissioner/unlock-player`); settings editor (gated on pre-draft); all actions write to audit log (shipped June 13, 2026; commit eb65449)</span>
+            </div>
+          
+            <div class="task-row">
+              <span class="task-check">✅</span>
+              <span style="color: #666">#17 Rivalries (remaining gaps) — rival badge + H2H history view on matchup page (shipped June 13, 2026; commit cbe8374); rival = most-played opponent (tie-break W/L); H2H shows last 5 matchups with dates, scores, outcomes</span>
+            </div>
+          
+            <div class="task-row">
+              <span class="task-check">✅</span>
+              <span style="color: #666">NT-002: ACHIEVED — manager with a starter whose PWHL team has no games remaining this period receives a LINEUP_INCOMPLETE in-app notification on dashboard load; second load in the same period does not duplicate it.</span>
+            </div>
+          
+            <div class="task-row">
+              <span class="task-check">✅</span>
+              <span style="color: #666">IA-011: ACHIEVED (Sprint 3) — bracket shows no "bye" text on default 4-team format; admin settings render as readable tables.</span>
+            </div>
+          
+            <div class="task-row">
+              <span class="task-check">✅</span>
+              <span style="color: #666">#01: ACHIEVED — all four commissioner recovery actions are reachable from the admin panel, write a `LeagueEvent`, and are reflected in the audit log table. Specifically: pause/restart replay, force draft start, unlock player (period-lock only, respects play-lock), and pre-draft settings editor.</span>
+            </div>
+          
+            <div class="task-row">
+              <span class="task-check">✅</span>
+              <span style="color: #666">#17: ACHIEVED — rival badge shows most-played opponent with season series W-L-T record; H2H history on matchup page displays last 5 matchups with dates, scores, and outcomes. Rival = opponent with highest number of completed matchups (tie-break by W-L record). Data computed from existing `Matchup` rows; no schema changes.</span>
+            </div>
+          
+            <div class="task-row">
+              <span class="task-check">○</span>
+              <span style="color: #ccc">No Phase 1 or Phase 5 feature card enters beta in "partial" state when the remaining work is small and well-specified. Any item not shipped must be explicitly deferred with a documented reason.</span>
+            </div>
+          
+        </div>
+        <div class="exit-criteria"><strong>Exit:</strong> - NT-002: ✅ ACHIEVED — manager with a starter whose PWHL team has no games remaining this period receives a LINEUP_INCOMPLETE in-app notification on dashboard load; second load in the same period does not duplicate it.</div>
+      </div>
+    
+      <div id="sprint-5" class="card planned">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+          <div>
+            <div style="font-weight: 700; font-size: 1rem;">Sprint 5 · "Validation + Beta Operations"</div>
+            <div style="font-size: 0.8rem; color: #888;">Track: V</div>
+          </div>
+          <span class="status planned">○ PLANNED</span>
+        </div>
+        <div>
+          
+            <div class="task-row">
+              <span class="task-check">○</span>
+              <span style="color: #ccc">Draft reliability certification — duplicate-tab handling, load test concurrent leagues, reconnect stress test; findings documented in `commissioner-runbook.md`</span>
+            </div>
+          
+            <div class="task-row">
+              <span class="task-check">○</span>
+              <span style="color: #ccc">Founder Operations Console — league explorer (search by league/commissioner/user, view config + draft state + standings), simulation launcher, validation dashboard — spec `docs/02-engineering/founder-ops-console.md`</span>
+            </div>
+          
+            <div class="task-row">
+              <span class="task-check">○</span>
+              <span style="color: #ccc">Beta Feedback Infrastructure — in-app feedback widget (bug reports, suggestions), founding commissioner tracking (invited → accepted → active → renewed)</span>
+            </div>
+          
+            <div class="task-row">
+              <span class="task-check">○</span>
+              <span style="color: #ccc">Commissioner workflow validation — end-to-end manual test of all commissioner actions; runbook accuracy review; screenshots added</span>
+            </div>
+          
+        </div>
+        <div class="exit-criteria"><strong>Exit:</strong> commissioner can run a league start-to-finish with no engineering help; founder can monitor platform health without DB access; founding commissioner cohort can be invited.</div>
+      </div>
+    
+      <div id="sprint-6" class="card planned">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+          <div>
+            <div style="font-weight: 700; font-size: 1rem;">Sprint 6 · "Post-MVP / Launch features"</div>
+            
+          </div>
+          <span class="status planned">○ PLANNED</span>
+        </div>
+        <div>
+          
+            <div class="task-row">
+              <span class="task-check">○</span>
+              <span style="color: #ccc">Transactions: #7 Trade System → #5 Waiver priority/processing → #6 FAAB (Transaction History #8 now in Sprint 3)</span>
+            </div>
+          
+            <div class="task-row">
+              <span class="task-check">○</span>
+              <span style="color: #ccc">Engagement: #25 Team Analysis & Insights · #29 Weekly Performance Dashboard · #11 league-wide storylines · #30 Playoff Experience UX polish</span>
+            </div>
+          
+            <div class="task-row">
+              <span class="task-check">○</span>
+              <span style="color: #ccc">Multi-season UX layer (schema laid in Sprint 2 via MS-001/002/003/004): MS-005 League History views · League Hall of Fame (#18) · Player Legacy (#31)</span>
+            </div>
+          
+            <div class="task-row">
+              <span class="task-check">○</span>
+              <span style="color: #ccc">Growth / retention: GR-001/002 activation + retention analytics (AN-002/003 dashboards) · GR-003 referral loop · GR-004 league-fill progress</span>
+            </div>
+          
+            <div class="task-row">
+              <span class="task-check">○</span>
+              <span style="color: #ccc">Phases 5–7: rivalries H2H history · Hall of Fame · player legacy · keeper → dynasty · real-time push scoring · push notifications · player trends</span>
+            </div>
+          
+            <div class="task-row">
+              <span class="task-check">○</span>
+              <span style="color: #ccc">Q4 2026 (in-season): Transaction History → Trade System → Waivers → FAAB; engagement surfaces (#25 analysis, #29 performance dashboard, #30 playoff UX) while the first live season runs.</span>
+            </div>
+          
+            <div class="task-row">
+              <span class="task-check">○</span>
+              <span style="color: #ccc">Off-season — winter/spring 2027: Multi-Season UX layer — League History views, Hall of Fame, Player Legacy. The schema foundation (parentLeagueId, rulesVersion, scoringVersion) was laid in Sprint 2, so this is purely the product surface. Growth/retention analytics dashboards (AN-002/003) and referral loop. Target: 2027-28 leagues renew in-place and keep their history.</span>
+            </div>
+          
+        </div>
+        
       </div>
     
   </div>
