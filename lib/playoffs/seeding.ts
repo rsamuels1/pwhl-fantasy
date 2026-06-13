@@ -160,6 +160,57 @@ export function getHeadToHeadRecord(
   return h2h;
 }
 
+// Find a team's most-played opponent (their "rival").
+// Rival = opponent with most completed matchups; tie-break by W/L record.
+export function getRival(
+  teamId: string,
+  teams: Array<{ id: string; name: string }>,
+  matchups: Matchup[]
+): { teamId: string; teamName: string; matchupCount: number; record: { wins: number; losses: number; ties: number } } | null {
+  const opponentCounts = new Map<string, number>();
+  const regularSeasonMatchups = matchups.filter(
+    (m) => !m.isPlayoff && m.homeScore !== null && m.awayScore !== null
+  );
+
+  regularSeasonMatchups.forEach((matchup) => {
+    if (matchup.homeTeamId === teamId) {
+      const opponent = matchup.awayTeamId;
+      opponentCounts.set(opponent, (opponentCounts.get(opponent) ?? 0) + 1);
+    } else if (matchup.awayTeamId === teamId) {
+      const opponent = matchup.homeTeamId;
+      opponentCounts.set(opponent, (opponentCounts.get(opponent) ?? 0) + 1);
+    }
+  });
+
+  if (opponentCounts.size === 0) return null;
+
+  // Find opponent with most matchups; tie-break by best W/L record
+  let rival: string | null = null;
+  let maxCount = 0;
+  let bestRecord = { wins: 0, losses: 0, ties: 0 };
+
+  opponentCounts.forEach((count, opponentId) => {
+    const record = getHeadToHeadRecord(teamId, opponentId, regularSeasonMatchups);
+    if (count > maxCount || (count === maxCount && record.wins > bestRecord.wins)) {
+      rival = opponentId;
+      maxCount = count;
+      bestRecord = record;
+    }
+  });
+
+  if (!rival) return null;
+
+  const rivalTeam = teams.find((t) => t.id === rival);
+  return rivalTeam
+    ? {
+        teamId: rival,
+        teamName: rivalTeam.name,
+        matchupCount: maxCount,
+        record: bestRecord,
+      }
+    : null;
+}
+
 /**
  * Playoff race math.
  * Each H2H win = 1 pt, tie = 0.5. A team's max remaining = games left × 1.

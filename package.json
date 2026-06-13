@@ -19,6 +19,7 @@
     "seed-replay": "tsx scripts/seed-replay.ts",
     "auto-draft": "tsx scripts/auto-draft.ts",
     "advance-replay": "tsx scripts/advance-replay.ts",
+    "build-roadmap": "tsx scripts/build-roadmap-dashboard.ts",
     "test": "vitest run",
     "test:watch": "vitest"
   },

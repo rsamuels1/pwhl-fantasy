@@ -9,6 +9,9 @@ import { getSwingPlayers } from "@/lib/matchups/swingPlayers";
 import { parseScoringSettings } from "@/lib/scoring/settings";
 import { getDevNow } from "@/lib/devTime";
 import { getReplayNow } from "@/lib/replayTime";
+import { getRival } from "@/lib/playoffs/seeding";
+import { RivalBadge } from "@/components/RivalBadge";
+import { HeadToHeadHistory } from "@/components/HeadToHeadHistory";
 
 export default async function TeamMatchupPage({
   params,
@@ -30,6 +33,18 @@ export default async function TeamMatchupPage({
   const nowMs = getReplayNow(league, await getDevNow());
   const dashboard = await getDashboardData(leagueId, teamId, nowMs, prisma);
   const { activeMatchup, remainingPlayers, topPerformers, disappointments, lineupAlerts, lastResult, leagueActivity, leagueTopPerformers, leagueDisappointments } = dashboard;
+
+  // Fetch teams and matchups for rival badge
+  const [allTeams, allMatchups] = await Promise.all([
+    prisma.fantasyTeam.findMany({
+      where: { leagueId },
+      select: { id: true, name: true },
+    }),
+    prisma.matchup.findMany({
+      where: { leagueId },
+    }),
+  ]);
+  const rival = getRival(teamId, allTeams, allMatchups);
 
   // Swing players are a 1v1 concept — only meaningful in playoff (single-opponent) matchups.
   let swingPlayers: Awaited<ReturnType<typeof getSwingPlayers>> = [];
@@ -149,6 +164,22 @@ export default async function TeamMatchupPage({
           <p style={{ color: "#94a3b8", margin: 0, fontSize: 14 }}>
             No scoring period is active or upcoming. Check back when the season is underway.
           </p>
+        </Card>
+      )}
+
+      {/* ── 2b. Rival badge and H2H history ── */}
+      {rival && (
+        <Card>
+          <RivalBadge rival={rival} compact={false} />
+          <div style={{ marginTop: 14 }}>
+            <HeadToHeadHistory
+              myTeamId={teamId}
+              opponentTeamId={rival.teamId}
+              opponentName={rival.teamName}
+              matchups={allMatchups}
+              limit={5}
+            />
+          </div>
         </Card>
       )}
 
