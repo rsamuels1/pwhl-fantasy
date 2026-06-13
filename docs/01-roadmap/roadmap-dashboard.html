@@ -382,7 +382,7 @@
       
         <div class="sprint-card current" onclick="switchTab('sprints'); setTimeout(() => document.getElementById('sprint-5').scrollIntoView({behavior: 'smooth'}), 100)">
           <div class="name">Sprint 5</div>
-          <div class="progress">0/0</div>
+          <div class="progress">3/7</div>
           <span class="status current">● LIVE</span>
         </div>
       
@@ -717,6 +717,16 @@
           <span class="status current">● IN FLIGHT</span>
         </div>
         <div>
+
+            <div class="task-row">
+              <span class="task-check">✅</span>
+              <span style="color: #666"><strong style="color:#888">Replay gap bug fix</strong> — <code>SeasonControls.tsx</code> now falls back to the first UPCOMING period when no ACTIVE/SCORING_PENDING period exists, fixing the 21-day all-star break gap between Week 10 and Week 11 where "End week now" was a no-op.</span>
+            </div>
+
+            <div class="task-row">
+              <span class="task-check">✅</span>
+              <span style="color: #666"><strong style="color:#888">"Sim to playoffs" button</strong> — single-click button in the replay/dev season controls that scores all remaining regular-season weeks at once and advances the sim date to the start of playoffs. Eliminates the need to manually click "End week" 10+ times in replay mode.</span>
+            </div>
 
             <div class="task-row">
               <span class="task-check">✅</span>
