@@ -70,6 +70,7 @@ Prioritization order:
 - VP Education UX (VpExplainer on standings, 8-team recommendation at creation)
 - Notification Framework (in-app bell, draft notifications; email deferred)
 - League Onboarding (welcome flow `WelcomeFlow.tsx`, 6-step wizard `CreateLeagueWizard.tsx`, manager draft prep guide on league overview, replay explanation inline, `User.onboardingCompletedAt` schema)
+- Mobile Optimization (draft room tabbed layout at ≤900px via `useIsMobile`; 44px touch targets; BottomNav safe-area inset; standings `minWidth` fix; matchup score `clamp()`; swing player truncation)
 
 ## Remaining Risks
 
@@ -250,34 +251,42 @@ Priority: P1
 
 ---
 
-### Mobile Optimization
+### Mobile Optimization ✅ DONE
 
 Responsive layout across draft room, matchup screens, standings, and roster management. No horizontal scrolling on core pages.
 
-Priority: P1
+**Shipped:**
+- Draft room: `useIsMobile(900)` hook collapses 3-column layout into tabbed Pick/Board/Needs view; secondary stat columns hidden at ≤480px via `stat-secondary`; user-friendly connection error copy
+- Touch targets: `minHeight: 44px` on all interactive buttons across DraftRoom, RosterManager, LineupManager
+- BottomNav: `env(safe-area-inset-bottom)` padding for iPhone 15 home indicator
+- Standings: `minWidth` reduced to 380 (existing overflow wrapper handles the rest)
+- Matchup: swing player name truncation; hero score font uses `clamp()`
+
+Spec: `docs/02-engineering/mobile-optimization-spec.md` · Priority: P1 · Status: Shipped
 
 ---
 
 ### Notifications
 
-#### NT-001 — Notification Framework 🔄 (In Progress)
+#### NT-001 — Notification Framework ✅
 
 In-app channel complete. Email deferred post-beta.
 
 - `Notification` + `NotificationPreference` schema models ✅
-- `lib/services/notification-service.ts` — `createNotification`, `markAllRead` ✅
+- Schema delta ✅ shipped June 13, 2026: `title`, `body`, `actionUrl`, `teamId`, `dedupeKey` + `@@unique([userId,type,dedupeKey])`
+- `lib/services/notification-service.ts` — `createNotification(opts?)` with P2002 dedup, `markAllRead` ✅
 - `GET/POST /api/leagues/[leagueId]/notifications` ✅
-- `components/NotificationBell.tsx` — bell + unread badge in league layout ✅
+- `components/NotificationBell.tsx` — bell + unread badge; renders `title`/`body`; navigates to `actionUrl` ✅
 - Email delivery — deferred
 
 #### NT-002 — Critical Notifications 🔄 (Partial)
 
 Shipped (in-app):
-- Draft Starting — fired at `PERSIST_STATUS IN_PROGRESS` in `lib/draft/server.ts` ✅
-- On The Clock — fired after each `BROADCAST_PICK` in `lib/draft/server.ts` ✅
+- Draft Starting — fired at `PERSIST_STATUS IN_PROGRESS`; title "Draft is starting!"; actionUrl `/draft/<id>?team=<id>` ✅
+- On The Clock — fired after each `BROADCAST_PICK`; title "You're on the clock"; body "Pick N of M"; actionUrl ✅
 
-Deferred (post-beta):
-- Lineup Incomplete (requires a scheduled sweep job)
+Still needed:
+- Lineup Incomplete — wire `checkAndEmitScheduledNotifications` into `app/dashboard/page.tsx`; `dedupeKey = "{periodStartsAt}-{teamId}"` ❌
 - Trade Received, Waiver Result, Playoff Clinched (features not yet built)
 
 Spec: `docs/02-engineering/notification-framework-spec.md` · Priority: P1
@@ -520,7 +529,7 @@ A public beta should not launch until:
 - [ ] Draft duplicate-tab handling validated (load test)
 - [x] Commissioner recovery tools exist (CT-001/002)
 - [x] League onboarding exists (WelcomeFlow, 6-step wizard, manager draft prep guide)
-- [ ] Mobile optimization complete
+- [x] Mobile optimization complete (tabbed draft room, 44px targets, safe-area, no horizontal scroll)
 - [ ] Error handling complete
 - [ ] Analytics wired to external provider (PostHog/Plausible) before beta users
 
@@ -533,7 +542,7 @@ A public beta should not launch until:
 | Sprint 0 — Implementation Alignment | ✅ COMPLETE (Jun 12, 2026) | Rosters / VP / Playoffs flipped FAIL → PASS |
 | Sprint 1 — Season Validation | ✅ COMPLETE (Jun 12, 2026) | Full season simulates, 114 tests pass, confidence 85-90% |
 | Sprint 2 — Commissioner + Platform Foundation | ✅ COMPLETE (Jun 2026) | CT-001/002, MS-001/002/003/004, AN-001, VP education — 130 tests |
-| Sprint 3 — Beta Readiness | 🔄 CURRENT | Onboarding ✅, error handling, mobile, notifications, IA-011, transaction history ✅ |
+| Sprint 3 — Beta Readiness | 🔄 CURRENT | Onboarding ✅, error handling, mobile ✅, notifications, IA-011, transaction history ✅ |
 | Sprint 4 — Product Polish | ⏳ PARTIALLY DONE | #28 lineup tab polish ✅, #01 commissioner dashboard gaps, #17 rivalries |
 | Sprint 5 — Validation + Beta Operations | ⏳ PLANNED | Draft cert, founder dashboard, beta feedback infra |
 

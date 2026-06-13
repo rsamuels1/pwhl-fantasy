@@ -340,11 +340,11 @@
         <p>Admin panel covers team management, draft setup, season controls, announcements, and permissions. Four gaps remain: pause/restart replay shortcut, force-draft-start CTA, lineup lock override, and settings editor (pre-draft only).</p>
         <ul class="feats"><li>Pause / restart replay</li><li>Force draft start</li><li>Lineup lock override</li><li>Settings editor</li></ul>
       </div>
-      <div class="card partial">
-        <div class="card-top"><span class="num">03</span><span class="status-tag partial"><span class="tdot"></span>In progress</span></div>
+      <div class="card shipped">
+        <div class="card-top"><span class="num">03</span><span class="status-tag shipped"><span class="tdot"></span>Shipped</span></div>
         <h3>Mobile Optimization</h3>
-        <p>Compact stats on the lineup page now hide at ≤480px. Broader responsive work — draft room, matchup screens, standings — remains.</p>
-        <ul class="feats"><li class="done">Lineup compact stats ✓</li><li>Responsive draft</li><li>Mobile matchups</li><li>Mobile standings</li></ul>
+        <p>All core pages usable on a 390px phone without horizontal scrolling. Touch targets ≥44px. Draft room becomes a tabbed layout at ≤900px.</p>
+        <ul class="feats"><li class="done">Draft room tabbed layout (Pick/Board/Needs) ✓</li><li class="done">44px touch targets everywhere ✓</li><li class="done">BottomNav safe-area inset ✓</li><li class="done">Standings minWidth fix ✓</li><li class="done">Matchup score clamp() + swing player truncation ✓</li></ul>
       </div>
       <div class="card shipped">
         <div class="card-top"><span class="num">28</span><span class="status-tag shipped"><span class="tdot"></span>Shipped</span></div>
@@ -646,7 +646,7 @@
       <li class="tier-head"><span class="tl">Standard — one feature per session (60–90K tokens)</span></li>
       <li><div><div class="t">Error Handling <span style="color:#7fb2e8">· #4</span></div><div class="d">Empty + loading states across all core pages. Many files, but each change is small and localized. Beta prerequisite.</div></div><span class="tok">~65K</span></li>
       <li><div><div class="t">Weekly Performance Dashboard <span style="color:#7fb2e8">· #29</span></div><div class="d">New page replacing the Schedule tab — week-by-week rankings + position-group breakdown. No schema changes.</div></div><span class="tok">~65K</span></li>
-      <li><div><div class="t">Mobile Optimization <span style="color:#7fb2e8">· #3</span></div><div class="d">Responsive CSS across draft room, matchup, and roster screens. Beta prerequisite.</div></div><span class="tok">~75K</span></li>
+      <li><div><div class="t">Mobile Optimization <span style="color:#7fb2e8">· #3 ✅</span></div><div class="d">Shipped — draft room tabbed layout, 44px touch targets, BottomNav safe-area, standings minWidth, matchup score clamp().</div></div></li>
       <li><div><div class="t">Team Analysis &amp; Insights <span style="color:#7fb2e8">· #25</span></div><div class="d">New Analysis tab — position-group trends, FA recommendations, trade suggestions once #7 lands.</div></div><span class="tok">~85K</span></li>
       <li class="tier-head"><span class="tl">Heavy lifts — plan a fresh session (100K+ tokens)</span></li>
       <li><div><div class="t">League Onboarding <span style="color:#7fb2e8">· #2 ✅</span></div><div class="d">Shipped — welcome flow, 6-step wizard, manager draft prep guide, replay explanation, <code>User.onboardingCompletedAt</code>.</div></div></li>
@@ -712,8 +712,9 @@
           <li>#2 League Onboarding ✅ (welcome flow, 6-step wizard, manager draft prep guide, replay explanation, <code>User.onboardingCompletedAt</code>)</li>
           <li>#8 Transaction History ✅ (paginated API + page with type/team filters, replay guard)</li>
           <li>#4 Error Handling (empty / loading / retry)</li>
-          <li>#3 Mobile Optimization (draft, matchup, standings, roster)</li>
-          <li>NT-001/002 Notifications — draft starting, on the clock, lineup incomplete</li>
+          <li>#3 Mobile Optimization ✅ (draft room tabbed layout, 44px touch targets, BottomNav safe-area, standings minWidth, matchup score clamp())</li>
+          <li>NT-001 Notification infrastructure ✅ (schema delta shipped: title/body/actionUrl/teamId/dedupeKey + dedup constraint; bell renders stored fields)</li>
+          <li>NT-002 Critical notifications 🔄 (draft starting ✅, on the clock ✅; lineup incomplete ❌ not yet wired)</li>
           <li>IA-011 Hide advanced non-v1 settings</li>
         </ul>
         <div class="exit"><b>Exit:</b> a new user drafts a league on a phone with no docs. <b>MVP launch gate.</b></div>
@@ -762,7 +763,7 @@
       <div class="tl-row"><div class="tl-when">Jun 12, 2026 ✅</div><div class="tl-what">Sprint 0 — alignment P0s closed (roster / VP / playoffs match rules)</div></div>
       <div class="tl-row"><div class="tl-when">Jun 12, 2026 ✅</div><div class="tl-what">Sprint 1 — season simulation + validation suites green (85–90% confidence)</div></div>
       <div class="tl-row"><div class="tl-when">Jun 2026 ✅</div><div class="tl-what">Sprint 2 — commissioner recovery, multi-season schema, analytics, VP education (95% confidence)</div></div>
-      <div class="tl-row"><div class="tl-when">Jul–Aug 2026 ← current</div><div class="tl-what">Sprint 3 — onboarding ✅, error handling, mobile, notifications (MVP launch gate)</div></div>
+      <div class="tl-row"><div class="tl-when">Jul–Aug 2026 ← current</div><div class="tl-what">Sprint 3 — onboarding ✅, error handling, mobile ✅, notifications (MVP launch gate)</div></div>
       <div class="tl-row"><div class="tl-when">Aug 2026</div><div class="tl-what">Sprint 4 — lineup tab polish ✅, commissioner dashboard gaps, rivalries</div></div>
       <div class="tl-row"><div class="tl-when">Late Aug 2026</div><div class="tl-what">Sprint 5 — draft cert, founder dashboard, beta feedback infra</div></div>
       <div class="tl-row key"><div class="tl-when">Early Sep 2026</div><div class="tl-what">MVP code-complete — all launch gates pass</div></div>

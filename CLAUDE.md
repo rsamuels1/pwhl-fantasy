@@ -160,8 +160,9 @@ survives DB resets and schema migrations.
    - Season boundary enforcement ✅ (`validateSeasonBoundary()` in `lib/season/lifecycle.ts`; `startSeason()` blocks overlap when `pwhlPlayoffStartsAt` is set on the league)
    - Analytics instrumentation ✅ (`trackEvent` in `lib/analytics/index.ts`; 6 events: `user_registered`, `league_created`, `league_joined`, `draft_started`, `draft_completed`, `lineup_saved`)
    - VP education ✅ (`components/VpExplainer.tsx` on standings page; 8-team "Recommended" label on league creation form; IA-005/006)
-   - Notification framework 🔄 (`lib/services/notification-service.ts`; `Notification`/`NotificationPreference` models; in-app bell in league layout; draft server call sites; email deferred)
+   - Notification framework ✅ (`lib/services/notification-service.ts`; `Notification`/`NotificationPreference` models; in-app bell in league layout; draft server call sites; schema delta shipped: `title`, `body`, `actionUrl`, `teamId`, `dedupeKey` + `@@unique([userId,type,dedupeKey])`; email deferred)
    - Onboarding ✅ (welcome flow, 6-step league setup wizard, manager draft prep guide, replay explanation; `User.onboardingCompletedAt`; `components/WelcomeFlow.tsx`; `app/create-league/CreateLeagueWizard.tsx`; `app/api/user/onboarding/route.ts`)
+   - Mobile Optimization ✅ (draft room tabbed layout at ≤900px via `useIsMobile`; 44px touch targets on all interactive buttons; BottomNav `env(safe-area-inset-bottom)`; standings `minWidth` reduced; matchup score `clamp()`; swing player ellipsis truncation; spec: `docs/02-engineering/mobile-optimization-spec.md`)
 6. Integration + load test the draft room + beta
 7. Public launch ~early Nov, drafts ~1 week before opener
 
@@ -276,19 +277,21 @@ Called by: all three commissioner API routes, and `lib/draft/server.ts` after PA
 
 ## Notification framework (`lib/services/notification-service.ts`)
 
-`createNotification(userId, type, data, prisma, leagueId?)` — writes a `Notification` row. Fire-and-forget — all call sites use `void` and catch internally. `markAllRead(userId, leagueId, prisma)` — sets `readAt = now` on all unread notifications for that user in the league.
+`createNotification(userId, type, data, prisma, leagueId?, opts?)` — writes a `Notification` row; silently no-ops on Prisma P2002 (duplicate `dedupeKey`). Fire-and-forget — all call sites use `void` and catch internally. `markAllRead(userId, leagueId, prisma)` — sets `readAt = now` on all unread notifications for that user in the league.
+
+**`opts` fields:** `{ title?: string, teamId?: string, body?: string, actionUrl?: string, dedupeKey?: string }`. `title` defaults to `""` when omitted. Scheduled triggers must supply a `dedupeKey` for idempotent delivery.
 
 **`NotificationType` enum:** `DRAFT_STARTING` | `ON_THE_CLOCK` | `LINEUP_INCOMPLETE`
 
-**Schema models:** `Notification` (id, userId, leagueId?, type, data Json, readAt DateTime?, createdAt) and `NotificationPreference` (userId, leagueId, type, enabled — `@@unique([userId, leagueId, type])`).
+**Schema models:** `Notification` (id, userId, leagueId?, teamId?, type, title String, body?, actionUrl?, dedupeKey?, data Json, readAt DateTime?, createdAt — `@@unique([userId,type,dedupeKey])`) and `NotificationPreference` (userId, leagueId, type, enabled — `@@unique([userId, leagueId, type])`).
 
 **Call sites in `lib/draft/server.ts`:**
-- `PERSIST_STATUS IN_PROGRESS` effect → `void this.notifyDraftStarting()` (one notification per team owner) and `void this.notifyOnClock()` (the first team on the clock)
-- `BROADCAST_PICK` effect → `void this.notifyOnClock()` for the next team on the clock (skips after final pick)
+- `PERSIST_STATUS IN_PROGRESS` effect → `void this.notifyDraftStarting()` (one notification per team owner, title "Draft is starting!", actionUrl `/draft/<id>?team=<id>`) and `void this.notifyOnClock()` (the first team on the clock)
+- `BROADCAST_PICK` effect → `void this.notifyOnClock()` for the next team on the clock (title "You're on the clock", body "Pick N of M", actionUrl `/draft/<id>?team=<id>`; skips after final pick)
 
 **API:** `GET /api/leagues/[leagueId]/notifications` returns last 20 for the current user in this league. `POST` with `{ action: "markAllRead" }` marks all as read.
 
-**UI:** `components/NotificationBell.tsx` — client component. Server-fetches unread count in `app/league/[leagueId]/layout.tsx` and passes as `initialCount`. On click: fetches notification list, marks all read, shows dropdown. Unread badge turns red when count > 0.
+**UI:** `components/NotificationBell.tsx` — client component. Server-fetches unread count in `app/league/[leagueId]/layout.tsx` and passes as `initialCount`. On click: fetches notification list, marks all read, shows dropdown. Items render `n.title` (fallback to `TYPE_LABEL[n.type]`), `n.body` as secondary line, and wrap in `<a href={n.actionUrl}>` when present. Unread badge turns red when count > 0.
 
 **V1 is in-app only.** Email and push channels are deferred post-beta.
 

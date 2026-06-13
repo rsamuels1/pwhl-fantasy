@@ -1210,9 +1210,9 @@ Assumes a solo builder working with Claude (Pro), ~2 weeks per sprint. Tracks: *
 - #3 Mobile Optimization ✅ (draft room tabbed layout at ≤900px, 44px touch targets everywhere, BottomNav safe-area, standings minWidth, matchup score clamp())
 - NT-001 / NT-002 Notification framework + critical notifications (draft starting soon, on the clock, lineup incomplete) — spec `docs/02-engineering/notification-framework-spec.md`
   - NT-001 in-app infrastructure ✅ (`lib/services/notification-service.ts`, bell UI, draft server call sites for DRAFT_STARTING + ON_THE_CLOCK)
-  - NT-002 LINEUP_INCOMPLETE notification ❌ not yet wired (depends on schema delta below)
+  - NT-002 LINEUP_INCOMPLETE notification ❌ not yet wired (schema delta complete; wire `checkAndEmitScheduledNotifications` into `app/dashboard/page.tsx` with `dedupeKey = "{periodStartsAt}-{teamId}"`)
   - NT-003 Scheduled trigger decision ✅ resolved June 13, 2026: check-on-dashboard-load + DB-level dedupeKey — see notification spec "NT-003" section
-  - Schema delta 🔄 `Notification` model missing `title`, `body`, `actionUrl`, `teamId`, `dedupeKey` + `@@unique([userId, type, dedupeKey])` — documented in notification spec "Schema Delta" section; `npx prisma db push` + `createNotification` caller updates required
+  - Schema delta ✅ shipped June 13, 2026: `title`, `body`, `actionUrl`, `teamId`, `dedupeKey` added to `Notification`; `@@unique([userId,type,dedupeKey])` live; `createNotification` opts param + P2002 dedup; bell renders stored title/body/actionUrl
 - IA-011 Hide advanced non-v1 settings (multi-round playoff config, experimental scoring) — checklist: `docs/02-engineering/ia-011-checklist.md` — ❌ not yet implemented (6 AC items; all frontend-only)
 - #8 Transaction History ✅ (paginated API + page with type/team filters, replay guard, infinite scroll)
 
