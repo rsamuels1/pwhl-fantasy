@@ -524,7 +524,7 @@ A public beta should not launch until:
 | Sprint 0 — Implementation Alignment | ✅ COMPLETE (Jun 12, 2026) | Rosters / VP / Playoffs flipped FAIL → PASS |
 | Sprint 1 — Season Validation | ✅ COMPLETE (Jun 12, 2026) | Full season simulates, 114 tests pass, confidence 85-90% |
 | Sprint 2 — Commissioner + Platform Foundation | ✅ COMPLETE (Jun 2026) | CT-001/002, MS-001/002/003/004, AN-001, VP education — 130 tests |
-| Sprint 3 — Beta Readiness | 🔄 CURRENT | Onboarding, error handling, mobile, notifications, IA-011 |
+| Sprint 3 — Beta Readiness | 🔄 CURRENT | Onboarding, error handling, mobile, notifications, IA-011, transaction history ✅ |
 | Sprint 4 — Product Polish | ⏳ PARTIALLY DONE | #28 lineup tab polish ✅, #01 commissioner dashboard gaps, #17 rivalries |
 | Sprint 5 — Validation + Beta Operations | ⏳ PLANNED | Draft cert, founder dashboard, beta feedback infra |
 

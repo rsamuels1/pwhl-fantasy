@@ -149,6 +149,7 @@ survives DB resets and schema migrations.
    - Auth & authorization ✅ (middleware, membership guards, commissioner admin panel)
    - Schedule page ✅ (`/team/[teamId]/schedule` — PWHL games this period, progress bar, player counts)
    - Dashboard action items ✅ (contextual alerts: draft live, new week, close match, upcoming soon)
+   - Transaction History ✅ (paginated league transaction log at `/league/[leagueId]/transactions` with type filters, team filter, scroll pagination, replay guard)
    - Sim-date audit ✅ (all pages and API routes respect `pwhl_dev_sim_date` cookie)
    - League Overview Redesign ✅ (playoff race as primary module, per-team lineup status widget, commissioner action strip, inline announcement editing)
    - Roster Page UX Overhaul ✅ (default table view FP-sorted, `?view=` team selector, sortable roster+FA tables, full HIT/BLK/GA columns, "Rosters" nav)

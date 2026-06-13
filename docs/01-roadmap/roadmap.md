@@ -1137,8 +1137,8 @@ comfortably. Estimates assume a fresh session starting from the current codebase
 
 8. **League Onboarding (#2)** · ~100K
    Entirely unbuilt — welcome flow, setup wizard, draft guide. Beta prerequisite despite token cost.
-9. **Transaction History (#8)** · ~55K
-   Infrastructure first — build on the CT-002 audit log foundation. Adds/drops/trades/waivers in one log with a dedicated UI. Required before Trade System.
+9. **Transaction History (#8)** · ~55K ✅
+   Shipped — paginated API + transaction page with type/team filters, replay guard, infinite scroll. No schema changes.
 10. **Trade System (#7)** · ~130K
     New domain: schema tables, API routes, proposal/review/approval UI. Plan a dedicated session. Built on top of Transaction History.
 11. **Waiver Priority + Processing (#5)** · ~110K
@@ -1214,7 +1214,7 @@ Assumes a solo builder working with Claude (Pro), ~2 weeks per sprint. Tracks: *
 - #3 Mobile Optimization (draft room is hardest; matchup, standings, roster; no horizontal scrolling; no broken touch targets)
 - NT-001 / NT-002 Notification framework + critical notifications (draft starting soon, on the clock, lineup incomplete) — spec `docs/02-engineering/notification-framework-spec.md`
 - IA-011 Hide advanced non-v1 settings (multi-round playoff config, experimental scoring)
-- #8 Transaction History (build on CT-002 audit log; required before Trade System)
+- #8 Transaction History ✅ (paginated API + page with type/team filters, replay guard, infinite scroll)
 
 **Exit:** a brand-new user creates and drafts a league on a phone with no docs. **MVP launch gate.**
 
@@ -1258,7 +1258,7 @@ Sequenced from "What To Build Next" and the GPT launch phases:
 | Sprint 0 — Implementation Alignment | ✅ COMPLETE (Jun 12, 2026) | Rosters / VP / Playoffs flipped FAIL → PASS |
 | Sprint 1 — Season Validation | ✅ COMPLETE (Jun 12, 2026) | Full season simulates, 114 tests pass, confidence 85–90% |
 | Sprint 2 — Commissioner + Platform Foundation | ✅ COMPLETE (Jun 2026) | Commissioner recovery tools, multi-season schema, analytics (6 events), VP education; 130 tests pass |
-| Sprint 3 — Beta Readiness | ← CURRENT | Onboarding, error handling, mobile, notifications |
+| Sprint 3 — Beta Readiness | ← CURRENT | Onboarding, error handling, mobile, notifications, transaction history ✅ |
 | Sprint 4 — Product Polish | ⏳ PARTIALLY DONE | #28 lineup tab polish ✅, #01 commissioner dashboard gaps, #17 rivalries |
 | Sprint 5 — Validation + Beta Operations | ⏳ PLANNED | Draft cert, founder dashboard, beta feedback infra |
 | Sprint 6+ — Launch Features | ⏳ PLANNED | Transactions, trade, waivers, growth |

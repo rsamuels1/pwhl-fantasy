@@ -114,9 +114,14 @@ export default function TransactionFeed({
   }, [loadMore]);
 
   function updateFilter(key: string, value: string | null) {
-    const params = new URLSearchParams();
-    if (value) params.set(key, value);
-    router.push(`/league/${leagueId}/transactions?${params.toString()}`);
+    const url = new URL(window.location.href);
+    if (value) {
+      url.searchParams.set(key, value);
+    } else {
+      url.searchParams.delete(key);
+    }
+    const search = url.searchParams.toString();
+    router.push(`/league/${leagueId}/transactions${search ? `?${search}` : ""}`);
   }
 
   const icon = (type: string): string => {
@@ -235,10 +240,15 @@ export default function TransactionFeed({
             <div style={{ flex: 1, minWidth: 0 }}>
               <span style={{ fontSize: 13, color: "#cbd5e1" }}>
                 {evt.description}
-                {evt.teamName && (
-                  <span style={{ color: "#818cf8", marginLeft: 6 }}>{evt.teamName}</span>
-                )}
               </span>
+              {evt.playerName && (
+                <span style={{ fontSize: 12, color: "#e2e8f0", fontWeight: 600, marginLeft: 6 }}>
+                  {evt.playerName}
+                </span>
+              )}
+              {evt.teamName && (
+                <span style={{ fontSize: 11, color: "#818cf8", marginLeft: 6 }}>{evt.teamName}</span>
+              )}
             </div>
             <span style={{ fontSize: 11, color: "#475569", flexShrink: 0, whiteSpace: "nowrap" }}>
               {timeAgo(evt.createdAt)}

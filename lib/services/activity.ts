@@ -82,10 +82,15 @@ export async function getTransactions(
   if (teamId) where.teamId = teamId;
   if (type) where.type = { in: type.split(",") };
 
-  const createdAtFilters: Record<string, unknown> = {};
-  if (before) createdAtFilters.lt = new Date(before);
-  if (isReplay && nowMs) createdAtFilters.lt = new Date(nowMs);
-  if (Object.keys(createdAtFilters).length > 0) where.createdAt = createdAtFilters;
+  let ltBound: Date | null = null;
+  if (before) ltBound = new Date(before);
+  if (isReplay && nowMs) {
+    const replayBound = new Date(nowMs);
+    ltBound = ltBound
+      ? new Date(Math.min(ltBound.getTime(), replayBound.getTime()))
+      : replayBound;
+  }
+  if (ltBound) where.createdAt = { lt: ltBound };
 
   const raw = await prisma.leagueEvent.findMany({
     where,
