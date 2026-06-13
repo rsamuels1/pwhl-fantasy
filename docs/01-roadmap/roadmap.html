@@ -346,11 +346,11 @@
         <p>Compact stats on the lineup page now hide at ≤480px. Broader responsive work — draft room, matchup screens, standings — remains.</p>
         <ul class="feats"><li class="done">Lineup compact stats ✓</li><li>Responsive draft</li><li>Mobile matchups</li><li>Mobile standings</li></ul>
       </div>
-      <div class="card partial">
-        <div class="card-top"><span class="num">28</span><span class="status-tag partial"><span class="tdot"></span>In progress</span><span style="margin-left:auto;font-size:11px;font-weight:700;color:var(--st-partial);background:var(--st-partial-bg);padding:4px 9px;border-radius:20px;">→ Sprint 4</span></div>
+      <div class="card shipped">
+        <div class="card-top"><span class="num">28</span><span class="status-tag shipped"><span class="tdot"></span>Shipped</span></div>
         <h3>Lineup Stats Tab Polish</h3>
-        <p>Rename "Projected" → "Matchup Proj", default to it between weeks, and disable the "This week" tab when no active period exists. Single-component edit (~25K tokens).</p>
-        <ul class="feats"><li>Rename tab label</li><li>Between-weeks default</li><li>Disable stale tab</li></ul>
+        <p>Rename "Projected" → "Matchup Proj", default to it between weeks, and hide the "This week" tab when no active period exists. Single-component edit (~25K tokens).</p>
+        <ul class="feats"><li class="done">Rename tab label ✓</li><li class="done">Between-weeks default ✓</li><li class="done">Hide stale tab ✓</li></ul>
       </div>
       <div class="card todo">
         <div class="card-top"><span class="num">02</span><span class="status-tag todo"><span class="tdot"></span>Not built</span></div>
@@ -542,7 +542,7 @@
         <div class="dep"><b>Unlocks next:</b> MS-005 League History views · Hall of Fame (#18) · keeper / dynasty (#19/20)</div>
       </div>
       <div class="card partial">
-        <div class="card-top"><span class="num">17</span><span class="status-tag partial"><span class="tdot"></span>In progress</span><span style="margin-left:auto;font-size:11px;font-weight:700;color:var(--st-partial);background:var(--st-partial-bg);padding:4px 9px;border-radius:20px;">→ Sprint 4</span></div>
+        <div class="card-top"><span class="num">17</span><span class="status-tag partial"><span class="tdot"></span>In progress</span></div>
         <h3>Rivalries</h3>
         <p>Season-long H2H records are computed and shown on the matchup hero in 1v1 mode. Rival badges and the H2H history view complete the feature in Sprint 4.</p>
         <ul class="feats"><li class="done">H2H records ✓</li><li>Rival badges → Sprint 4</li><li>H2H history view → Sprint 4</li></ul>
@@ -640,7 +640,8 @@
     <div class="sub">Sequenced by token efficiency — each item shows its estimated Claude Pro context cost. Fixed overhead (CLAUDE.md + history) is ~15K per session; the 200K window fits 2–3 quick wins or one heavy lift.</div>
     <ol>
       <li class="tier-head"><span class="tl">Quick wins — batch 2–3 per session (&lt; 45K tokens each)</span></li>
-      <li class="top"><div><div class="t">Lineup Stats Tab Polish <span style="color:#7fb2e8">· #28</span></div><div class="d">Rename "Projected" → "Matchup Proj", hide "This week" between weeks. Single-component edit.</div></div><span class="tok">~25K</span></li>
+      <li class="top"><div><div class="t">Lineup Stats Tab Polish <span style="color:#7fb2e8">· #28 ✅</span></div><div class="d">Rename "Projected" → "Matchup Proj", hide "This week" between weeks. Single-component edit.</div></div><span class="tok">~25K</span></li>
+      <li class="top"><div><div class="t">Draft Team Distribution Panel <span style="color:#7fb2e8">· #32 ✅</span></div><div class="d">Client-only panel in the draft room. No schema changes, derives from existing state.</div></div><span class="tok">~30K</span></li>
       <li class="top"><div><div class="t">Playoff Experience UX <span style="color:#7fb2e8">· #30</span></div><div class="d">Bracket prominence, champion banner, between-round nudge. Polish on existing pages; no schema changes.</div></div><span class="tok">~40K</span></li>
       <li class="tier-head"><span class="tl">Standard — one feature per session (60–90K tokens)</span></li>
       <li><div><div class="t">Error Handling <span style="color:#7fb2e8">· #4</span></div><div class="d">Empty + loading states across all core pages. Many files, but each change is small and localized. Beta prerequisite.</div></div><span class="tok">~65K</span></li>
@@ -709,6 +710,7 @@
         <div class="sp-meta">~2–3 wks · MVP launch gate · beta prerequisites</div>
         <ul>
           <li>#2 League Onboarding (welcome, setup wizard, draft guide)</li>
+          <li>#8 Transaction History (build on CT-002 audit log; required before Trade System)</li>
           <li>#4 Error Handling (empty / loading / retry)</li>
           <li>#3 Mobile Optimization (draft, matchup, standings, roster)</li>
           <li>NT-001/002 Notifications — draft starting, on the clock, lineup incomplete</li>
@@ -720,7 +722,7 @@
         <h4>Sprint 4 — Product Polish <span class="trk f">F</span></h4>
         <div class="sp-meta">~1–2 wks · close partial-feature gaps before beta</div>
         <ul>
-          <li>#28 Lineup Stats Tab Polish — rename "Projected" → "Matchup Proj"; default between weeks; disable "This week" tab when no active period</li>
+          <li>#28 Lineup Stats Tab Polish ✅ — rename "Projected" → "Matchup Proj"; default between weeks; hide "This week" tab when no active period</li>
           <li>#01 Commissioner Dashboard (remaining gaps) — pause/restart replay shortcut; force-draft-start CTA; lineup lock override (<code>unlock-player</code> route); settings editor (pre-draft only); all audit-logged</li>
           <li>#17 Rivalries (remaining gaps) — rival badge on team cards; H2H history view on matchup page; built on existing <code>Matchup</code> rows + <code>getHeadToHeadRecord</code>; no schema changes</li>
         </ul>
@@ -742,7 +744,7 @@
         <h4>Sprint 6+ — Launch Features <span class="trk f">F</span></h4>
         <div class="sp-meta">P1 → P2 · sequenced from "What to build next" + GPT launch phases</div>
         <ul>
-          <li><b>Transactions (infrastructure-first):</b> #8 Transaction History (built on CT-002 audit log) → #7 Trade System → #5 Waiver priority/processing → #6 FAAB</li>
+          <li><b>Transactions:</b> #7 Trade System → #5 Waiver priority/processing → #6 FAAB (Transaction History #8 now in Sprint 3)</li>
           <li><b>Engagement:</b> #25 Team Analysis &amp; Insights · #29 Weekly Performance Dashboard · #11 league-wide storylines · #30 Playoff Experience UX</li>
           <li><b>Multi-season UX layer</b> (schema laid in Sprint 2): MS-005 League History views · League Hall of Fame (#18) · Player Legacy (#31)</li>
           <li><b>Growth / retention:</b> activation + retention analytics · referral loop · league-fill progress</li>
@@ -761,7 +763,7 @@
       <div class="tl-row"><div class="tl-when">Jun 12, 2026 ✅</div><div class="tl-what">Sprint 1 — season simulation + validation suites green (85–90% confidence)</div></div>
       <div class="tl-row"><div class="tl-when">Jun 2026 ✅</div><div class="tl-what">Sprint 2 — commissioner recovery, multi-season schema, analytics, VP education (95% confidence)</div></div>
       <div class="tl-row"><div class="tl-when">Jul–Aug 2026 ← current</div><div class="tl-what">Sprint 3 — onboarding, error handling, mobile, notifications (MVP launch gate)</div></div>
-      <div class="tl-row"><div class="tl-when">Aug 2026</div><div class="tl-what">Sprint 4 — lineup tab polish, commissioner dashboard gaps, rivalries</div></div>
+      <div class="tl-row"><div class="tl-when">Aug 2026</div><div class="tl-what">Sprint 4 — lineup tab polish ✅, commissioner dashboard gaps, rivalries</div></div>
       <div class="tl-row"><div class="tl-when">Late Aug 2026</div><div class="tl-what">Sprint 5 — draft cert, founder dashboard, beta feedback infra</div></div>
       <div class="tl-row key"><div class="tl-when">Early Sep 2026</div><div class="tl-what">MVP code-complete — all launch gates pass</div></div>
       <div class="tl-row"><div class="tl-when">Sep – mid Oct 2026</div><div class="tl-what">Closed beta — run replay + small live test leagues end-to-end; fix findings</div></div>

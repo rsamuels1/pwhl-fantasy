@@ -346,9 +346,9 @@ by any column.
 
 ---
 
-## 28. Lineup Stats Tab: "Matchup Proj" Rename & Default Polish
+## 28. Lineup Stats Tab: "Matchup Proj" Rename & Default Polish ✅
 
-Status: Partially Implemented
+Status: Implemented ✅
 
 Phase: 1
 
@@ -369,11 +369,11 @@ Changes:
   partially with projected and its value drops once a week starts. For now keep it, but
   consider hiding it when between weeks (no active period) since it will always be empty.
 
-Acceptance Criteria:
+Acceptance Criteria ✅:
 
-- "Projected" tab is labelled "Matchup Proj".
-- Between-weeks: "Matchup Proj" is default and "This week" is disabled (no active period).
-- Label clarity: users understand what the projection represents.
+- ✅ "Projected" tab is labelled "Matchup Proj".
+- ✅ Between-weeks: "Matchup Proj" is default and "This week" is hidden (no active period).
+- ✅ Label clarity: users understand what the projection represents.
 
 ---
 
@@ -504,7 +504,7 @@ Dependencies:
 
 Status: Not Implemented
 
-Estimated tokens: ~70K standalone · ~45K after #7 (cheaper once trade schema exists; mainly reads + log view)
+Estimated tokens: ~55K (standalone; built on existing CT-002 audit log foundation — no schema changes)
 
 Features:
 
@@ -1111,9 +1111,9 @@ comfortably. Estimates assume a fresh session starting from the current codebase
 
 ### Quick wins (< 45K tokens — batch 2–3 per session)
 
-1. **Lineup Stats Tab Polish (#28)** · ~25K
+1. **Lineup Stats Tab Polish (#28)** · ~25K ✅
    Rename "Projected" → "Matchup Proj", hide "This week" between weeks. Single-component edit.
-2. **Draft Team Distribution Panel (#32)** · ~30K ✅ Just shipped
+2. **Draft Team Distribution Panel (#32)** · ~30K ✅
    Client-only panel in the draft room. No schema changes, derives from existing state.
 3. **Playoff Experience UX (#30)** · ~40K
    Bracket prominence, champion banner, between-round nudge. Polish on existing pages; no schema
@@ -1137,8 +1137,8 @@ comfortably. Estimates assume a fresh session starting from the current codebase
 
 8. **League Onboarding (#2)** · ~100K
    Entirely unbuilt — welcome flow, setup wizard, draft guide. Beta prerequisite despite token cost.
-9. **Transaction History (#8)** · ~70K standalone
-   Infrastructure first — the audit log from CT-002 gives the skeleton. Adds/drops/trades/waivers in one log. Required before Trade System.
+9. **Transaction History (#8)** · ~55K
+   Infrastructure first — build on the CT-002 audit log foundation. Adds/drops/trades/waivers in one log with a dedicated UI. Required before Trade System.
 10. **Trade System (#7)** · ~130K
     New domain: schema tables, API routes, proposal/review/approval UI. Plan a dedicated session. Built on top of Transaction History.
 11. **Waiver Priority + Processing (#5)** · ~110K
@@ -1214,6 +1214,7 @@ Assumes a solo builder working with Claude (Pro), ~2 weeks per sprint. Tracks: *
 - #3 Mobile Optimization (draft room is hardest; matchup, standings, roster; no horizontal scrolling; no broken touch targets)
 - NT-001 / NT-002 Notification framework + critical notifications (draft starting soon, on the clock, lineup incomplete) — spec `docs/02-engineering/notification-framework-spec.md`
 - IA-011 Hide advanced non-v1 settings (multi-round playoff config, experimental scoring)
+- #8 Transaction History (build on CT-002 audit log; required before Trade System)
 
 **Exit:** a brand-new user creates and drafts a league on a phone with no docs. **MVP launch gate.**
 
@@ -1223,7 +1224,7 @@ Assumes a solo builder working with Claude (Pro), ~2 weeks per sprint. Tracks: *
 
 Close the in-progress feature gaps before beta. Three features are partially built with no sprint home.
 
-- **#28 Lineup Stats Tab Polish** — rename "Projected" → "Matchup Proj"; default to it between weeks; disable "This week" tab when no active period; single-component edit
+- **#28 Lineup Stats Tab Polish** ✅ — rename "Projected" → "Matchup Proj"; default to it between weeks; hide "This week" tab when no active period; single-component edit
 - **#01 Commissioner Dashboard (remaining gaps)** — pause/restart replay shortcut; force-draft-start CTA; lineup lock override (`POST .../commissioner/unlock-player`); settings editor (gated on pre-draft); all actions write to audit log
 - **#17 Rivalries (remaining gaps)** — rival badge on team cards (most-played opponent, notable W/L diff); H2H history view on matchup page (per-week scores, built on existing `Matchup` rows + `getHeadToHeadRecord`)
 
@@ -1242,7 +1243,7 @@ Close the in-progress feature gaps before beta. Three features are partially bui
 
 Sequenced from "What To Build Next" and the GPT launch phases:
 
-- **Transactions (infrastructure-first):** #8 Transaction History (built on CT-002 audit log) → #7 Trade System → #5 Waiver priority/processing → #6 FAAB
+- **Transactions:** #7 Trade System → #5 Waiver priority/processing → #6 FAAB (Transaction History #8 now in Sprint 3)
 - **Engagement:** #25 Team Analysis & Insights · #29 Weekly Performance Dashboard · #11 league-wide storylines · #30 Playoff Experience UX polish
 - **Multi-season UX layer** (schema laid in Sprint 2 via MS-001/002/003/004): MS-005 League History views · League Hall of Fame (#18) · Player Legacy (#31)
 - **Growth / retention:** GR-001/002 activation + retention analytics (AN-002/003 dashboards) · GR-003 referral loop · GR-004 league-fill progress
@@ -1258,7 +1259,7 @@ Sequenced from "What To Build Next" and the GPT launch phases:
 | Sprint 1 — Season Validation | ✅ COMPLETE (Jun 12, 2026) | Full season simulates, 114 tests pass, confidence 85–90% |
 | Sprint 2 — Commissioner + Platform Foundation | ✅ COMPLETE (Jun 2026) | Commissioner recovery tools, multi-season schema, analytics (6 events), VP education; 130 tests pass |
 | Sprint 3 — Beta Readiness | ← CURRENT | Onboarding, error handling, mobile, notifications |
-| Sprint 4 — Product Polish | ⏳ PLANNED | #28 lineup tab polish, #01 commissioner dashboard gaps, #17 rivalries |
+| Sprint 4 — Product Polish | ⏳ PARTIALLY DONE | #28 lineup tab polish ✅, #01 commissioner dashboard gaps, #17 rivalries |
 | Sprint 5 — Validation + Beta Operations | ⏳ PLANNED | Draft cert, founder dashboard, beta feedback infra |
 | Sprint 6+ — Launch Features | ⏳ PLANNED | Transactions, trade, waivers, growth |
 
@@ -1277,7 +1278,7 @@ estimates, not commitments.
 | **Jun 12, 2026** | Sprint 1 — season simulation + validation suites green ✅ |
 | **Jun–Jul 2026** | Sprint 2 — commissioner recovery + platform foundation + analytics ✅ |
 | **Late Jul 2026** | Sprint 3 — onboarding, error handling, mobile, notifications ← current |
-| **Aug 2026** | Sprint 4 — lineup tab polish, commissioner dashboard gaps, rivalries |
+| **Aug 2026** | Sprint 4 — lineup tab polish ✅, commissioner dashboard gaps, rivalries |
 | **Late Aug 2026** | Sprint 5 — draft cert, founder dashboard, beta feedback infra |
 | **Early Sep 2026** | **MVP code-complete — all launch gates pass** |
 | **Sep – mid Oct 2026** | Closed beta: founding commissioners run replay + small live test leagues; fix findings |

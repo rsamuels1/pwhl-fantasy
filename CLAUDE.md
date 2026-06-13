@@ -143,7 +143,7 @@ survives DB resets and schema migrations.
    - VP standings authority ✅ (`computeVpStandings` is the single source everywhere; `scoringMode @default("VP")`)
    - Period-based lineup lock ✅ (`lockTime` locks for the full week once team played any period game)
    - Lineup management ✅ (set active/bench slots, per-player game-time locking, play-lock rule)
-   - Lineup management v2 ✅ (projected FPTS tab, between-weeks lineup nudge banner, mobile compact stats)
+   - Lineup management v2 ✅ ("Matchup Proj" tab, between-weeks lineup nudge banner, mobile compact stats)
    - Season matchup lifecycle ✅ (period generation, VTF scoring, status progression)
    - Matchup-first product ✅ (fantasy home, projections, win probability, lineup alerts, storyline chip)
    - Auth & authorization ✅ (middleware, membership guards, commissioner admin panel)

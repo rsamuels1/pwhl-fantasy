@@ -56,6 +56,7 @@ Prioritization order:
 - Draft room (WebSocket, queue, auto-draft, escalation)
 - Standings (VP-authoritative, race indicators)
 - Lineup management (period-based lock, play-lock, games-remaining)
+- Lineup Stats Tab Polish — "Matchup Proj" rename, between-weeks default, hide stale tab ✅
 - Projections & win probability engine
 - Free-agent add/drop
 - End-to-end season simulation (`scripts/simulate-season.ts`)
@@ -290,11 +291,11 @@ A brand-new user creates and drafts a league on a phone with no docs. **MVP laun
 
 ## Sprint 4 — Product Polish
 
-### #28 — Lineup Stats Tab Polish
+### #28 — Lineup Stats Tab Polish ✅
 
-Rename "Projected" → "Matchup Proj". Default to it between weeks. Disable "This week" when no active period. Single-component edit.
+Rename "Projected" → "Matchup Proj". Default to it between weeks. Hide "This week" when no active period. Single-component edit.
 
-Priority: P1
+Priority: P1 · Status: Shipped
 
 ---
 
@@ -347,6 +348,12 @@ FAAB (#6)
 ```
 
 Transaction history is infrastructure. Trades are a feature. Infrastructure precedes features.
+
+### TR-000 — Transaction History (#8)
+
+Record of all adds, drops, trades, and waiver claims. Built on the CT-002 audit log foundation.
+
+Priority: P1 · Status: Planned for Sprint 3
 
 ---
 
@@ -518,7 +525,7 @@ A public beta should not launch until:
 | Sprint 1 — Season Validation | ✅ COMPLETE (Jun 12, 2026) | Full season simulates, 114 tests pass, confidence 85-90% |
 | Sprint 2 — Commissioner + Platform Foundation | ✅ COMPLETE (Jun 2026) | CT-001/002, MS-001/002/003/004, AN-001, VP education — 130 tests |
 | Sprint 3 — Beta Readiness | 🔄 CURRENT | Onboarding, error handling, mobile, notifications, IA-011 |
-| Sprint 4 — Product Polish | ⏳ PLANNED | #28 lineup tab polish, #01 commissioner dashboard gaps, #17 rivalries |
+| Sprint 4 — Product Polish | ⏳ PARTIALLY DONE | #28 lineup tab polish ✅, #01 commissioner dashboard gaps, #17 rivalries |
 | Sprint 5 — Validation + Beta Operations | ⏳ PLANNED | Draft cert, founder dashboard, beta feedback infra |
 
 ---
@@ -531,7 +538,7 @@ A public beta should not launch until:
 | **Jun 12, 2026** ✅ | Sprint 1 — season simulation + validation green |
 | **Jun 2026** ✅ | Sprint 2 — commissioner tools, multi-season schema, analytics, VP education |
 | **Jul–Aug 2026** ← current | Sprint 3 — beta readiness (MVP launch gate) |
-| **Aug 2026** | Sprint 4 — lineup tab polish, commissioner dashboard gaps, rivalries |
+| **Aug 2026** | Sprint 4 — lineup tab polish ✅, commissioner dashboard gaps, rivalries |
 | **Late Aug 2026** | Sprint 5 — validation + beta operations |
 | **Late Aug / early Sep 2026** | MVP code-complete — all launch gates pass |
 | **Sep – mid Oct 2026** | Closed beta |
