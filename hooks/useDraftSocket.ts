@@ -87,6 +87,7 @@ export function useDraftSocket(leagueId: string, teamId: string): DraftSocket {
             setAvailable(msg.players);
             break;
           case "ERROR":
+            console.error("Draft server error:", msg.code, msg.message);
             setLastError({ code: msg.code, message: msg.message });
             break;
         }

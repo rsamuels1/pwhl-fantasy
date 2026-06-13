@@ -859,7 +859,7 @@ export default function DraftRoom({
 
       {lastError && (
         <div style={styles.errorBanner}>
-          {lastError.code}: {lastError.message}
+          We couldn&apos;t complete that draft action. Please try again.
         </div>
       )}
 

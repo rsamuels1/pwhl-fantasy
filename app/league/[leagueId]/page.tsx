@@ -212,7 +212,7 @@ export default async function LeagueOverviewPage({
                   {league.announcement}
                 </p>
               ) : (
-                <p style={{ margin: 0, fontSize: 13, color: "#475569", fontStyle: "italic" }}>No announcement posted yet.</p>
+                <p style={{ margin: 0, fontSize: 13, color: "#475569", fontStyle: "italic" }}>No league announcements yet.</p>
               )}
             </div>
           </div>
@@ -580,7 +580,7 @@ export default async function LeagueOverviewPage({
           <section style={card}>
             <h2 style={{ ...sectionTitle, marginBottom: 12 }}>League activity</h2>
             {activity.length === 0 ? (
-              <p style={{ color: "#334155", fontSize: 13, margin: 0, fontStyle: "italic" }}>No activity yet.</p>
+              <p style={{ color: "#334155", fontSize: 13, margin: 0, fontStyle: "italic" }}>League activity will appear here.</p>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {activity.map((evt) => {

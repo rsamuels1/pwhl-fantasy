@@ -5,6 +5,7 @@ import { computeVpStandings } from "@/lib/scoring/vp";
 import { requireAuth, requireLeagueMember } from "@/lib/auth";
 import type { Matchup } from "@prisma/client";
 import { VpExplainer } from "@/components/VpExplainer";
+import EmptyState from "@/components/EmptyState";
 
 function computeStreaks(
   teamIds: string[],
@@ -141,6 +142,9 @@ export default async function StandingsPage({ params }: { params: { leagueId: st
           Win matchup +2 VP · 1st place weekly score +2 VP · 2nd place score +1 VP
         </p>
 
+        {!hasResults ? (
+          <EmptyState message="Standings will appear once games begin." />
+        ) : (
         <div style={{ overflowX: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 380 }}>
             <thead>
@@ -234,8 +238,9 @@ export default async function StandingsPage({ params }: { params: { leagueId: st
             </tbody>
           </table>
         </div>
+        )}
 
-        {!playoffsStarted && playoffCutoff !== null && (
+        {!hasResults ? null : !playoffsStarted && playoffCutoff !== null && (
           <p style={{ fontSize: 12, color: "#475569", marginTop: 14, marginBottom: 0 }}>
             Dashed line separates the top {playoffCutoff} (playoff qualifiers) from the rest
           </p>
