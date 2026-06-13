@@ -40,17 +40,18 @@ Pages that need this treatment:
 
 ---
 
-## Epic 3 — Mobile Optimization
+## Epic 3 — Mobile Optimization ✅ Shipped
 
-Priority: P0
+Priority: P0 · Status: Complete
 
-Most beta managers will access the platform on their phones.
+Spec: `docs/02-engineering/mobile-optimization-spec.md`
 
-- **Draft room** — hardest and highest stakes; pick timer, player list, and queue must be touch-friendly with no horizontal scrolling
-- **Matchup page** — hero scores, roster breakdown, playing-tonight all need to collapse cleanly
-- **Standings page** — VP table must not overflow on small screens
-- **Lineup page** — click-to-swap interaction must work reliably on touch devices
-- **Roster / FA page** — add/drop buttons must be tap-sized
+**Shipped:**
+- **Draft room** — `useIsMobile(900)` hook; tabbed Pick/Board/Needs layout at ≤900px; secondary stat columns hidden at ≤480px; user-friendly connection error
+- **Touch targets** — `minHeight: 44px` on all Drop/Add (RosterManager), Pick/star/queue/pos-filter (DraftRoom), slot cards + Cancel (LineupManager); stats toggles `minHeight: 36px`
+- **BottomNav** — `env(safe-area-inset-bottom)` for iPhone 15 home indicator; `calc()` in `.bottom-nav-pad`
+- **Standings** — `minWidth: 520` → `380`
+- **Matchup** — swing player ellipsis truncation; hero score `clamp()` font sizes
 
 ---
 
@@ -85,6 +86,7 @@ Hide or disable features that are not part of the Year 1 product to reduce commi
 ## Sprint Exit Criteria
 
 - ✅ Brand-new user creates and drafts a league on a phone without reading any documentation (onboarding shipped)
+- ✅ Draft room is usable on iOS Safari and Android Chrome without horizontal scrolling (mobile optimization shipped)
 - All 5 core pages have empty states and error states
 - Draft room is usable on iOS Safari and Android Chrome without horizontal scrolling
 - Draft Starting Soon, On The Clock, and Lineup Incomplete notifications fire correctly
