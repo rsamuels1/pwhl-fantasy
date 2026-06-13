@@ -1,407 +1,84 @@
-Sprint 4 — User & Operations Readiness
+# Sprint 4 — Product Polish: Lineup, Commissioner UX, Rivalries
 
-Status: Planned
+**Status:** Planned
 
-Theme:
+**Theme:** Close the in-progress feature gaps before beta. Three features have been partially built and have no sprint home. Ship them cleanly.
 
-Prepare the platform for real commissioners and managers.
+**Goal:** No feature card enters the closed beta in "partial" state when the remaining work is small. Exit Sprint 4 with all Phase 1 and Phase 5 "in progress" features either shipped or explicitly deferred.
 
-Goal:
+---
 
-Transition from internal validation to beta readiness by ensuring:
+## Feature #28 — Lineup Stats Tab Polish
 
-* Commissioners can independently run leagues.
-* Founders can operate and monitor the platform.
-* Managers understand core gameplay concepts.
-* Feedback loops exist.
-* Critical notifications are operational.
+**Phase 1 · in progress · estimated ~25K tokens**
 
-This sprint intentionally prioritizes operational readiness over new fantasy gameplay features.
+The lineup page stats toggle has four views (Projected / This week / Last week / Season) but the tab labels and default selection are not yet fully polished.
 
-⸻
+### Work items
 
-Epic 1 — Commissioner Experience Hardening
+- Rename the "Projected" tab label to "Matchup Proj" to clarify it shows projected points for the upcoming matchup period, not just a generic projection
+- Default the selected tab to "Matchup Proj" when between weeks (no active period, but an upcoming period exists), instead of falling through to "Season"
+- Disable the "This week" tab (not just visually) when no active period exists — currently it may render with empty state rather than being unavailable
 
-Priority: P0
+### Deliverable
 
-Purpose:
+`components/LineupManager.tsx` tab logic updated. No schema changes. Single-component edit.
 
-Validate that commissioners can successfully operate leagues without developer intervention.
+---
 
-⸻
+## Feature #01 — Commissioner Dashboard (remaining gaps)
 
-CT-VALIDATION-001
+**Phase 1 · partial · estimated ~60K tokens**
 
-Commissioner Workflow Validation
+The admin panel (`app/league/[leagueId]/admin/page.tsx`) was updated in Sprint 2 to include recovery tools, audit log, and season renewal. Four gaps from the original card remain unaddressed:
 
-Test:
+### Work items
 
-* League creation
-* League configuration
-* Manager invitations
-* Draft execution
-* Draft pause/resume
-* Force roster moves
-* Undo transactions
-* Replace manager
-* Season renewal
+- **Pause / restart replay** — admin panel should surface a one-click "Pause season" or "Restart season" action for replay leagues (currently only available via the season controls page, which requires navigating away)
+- **Force draft start** — button to force-start the draft without waiting for `draftStartsAt`; currently the commissioner must manually navigate to the draft room and click Start. A direct admin-panel CTA reduces friction.
+- **Lineup lock override** — commissioner ability to unlock a specific player who was incorrectly locked (e.g., game cancelled, data error). Calls a new `POST /api/leagues/[leagueId]/commissioner/unlock-player` route.
+- **Settings editor** — inline form to edit `maxTeams`, `draftType`, `scoringSettings`, and `rosterSettings` before the draft starts. Post-draft changes are blocked. Uses `apiRequireCommissioner`.
 
-Deliverable:
+### Deliverable
 
-commissioner-experience-review.md
+Admin panel has direct controls for all common mid-league commissioner actions. New unlock-player API route. Settings editor gated on `draft.status !== "COMPLETE"`. All actions write to audit log via `logCommissionerAction`.
 
-⸻
+---
 
-CT-VALIDATION-002
+## Feature #17 — Rivalries (remaining gaps)
 
-Commissioner Runbook Validation
+**Phase 5 · partial · estimated ~45K tokens**
 
-Review:
+Season-long H2H records are computed and displayed on the matchup hero in 1v1 mode. Two UX layers remain:
 
-docs/operations/commissioner-runbook.md
+### Work items
 
-Verify:
+- **Rival badge** — a `RIVAL` chip shown on a manager's team card (dashboard, league overview) when they have a 2+ game H2H history with another team. Computed from `getHeadToHeadRecord` in `lib/playoffs/seeding.ts`. The badge identifies the most-played opponent with a notable win/loss differential.
+- **H2H history view** — a small expandable section on the matchup page (or a `/team/[teamId]/rivalry` sub-route) showing the full H2H record with a specific opponent: each matchup week, final scores, and who won. Backed by a query over `Matchup` rows filtered to the two team IDs.
 
-* Accuracy
-* Missing workflows
-* Screenshots
-* Recovery procedures
+### Deliverable
 
-Deliverable:
+Rival badge renders on team cards. H2H history view accessible from the matchup page. No schema changes — built entirely on existing `Matchup` rows and `getHeadToHeadRecord`.
 
-Updated commissioner-runbook.md
+---
 
-⸻
+## Sprint Exit Criteria
 
-Epic 2 — Founder Operations Console
+- Lineup tab labels and defaults match the spec above
+- Commissioner admin panel has controls for all four previously-missing actions
+- Rival badge renders correctly for teams with ≥2 shared matchups
+- H2H history view shows correct results against the 2025-26 fixture
+- `npm test` passes (130+ tests)
+- `npx tsc --noEmit` clean
 
-Priority: P0
+---
 
-Purpose:
+## What Comes After Sprint 4
 
-Provide operational visibility without requiring direct database access.
+**Sprint 5 — Validation + Beta Operations:** draft reliability certification, founder ops console, beta feedback infrastructure, commissioner workflow validation. See `docs/04-operations/commissioner-runbook.md`.
 
-⸻
-
-FOC-001
-
-Simulation Launcher
-
-Capabilities:
-
-* Run draft simulation
-* Run season simulation
-* Run playoff simulation
-
-Reference:
-
-season-simulation-plan.md
-
-⸻
-
-FOC-002
-
-League Explorer
-
-Search:
-
-* League
-* Commissioner
-* User
-
-Display:
-
-* League configuration
-* Draft state
-* Standings
-* Playoff state
-
-⸻
-
-FOC-003
-
-Validation Dashboard
-
-Display:
-
-* MVP readiness score
-* Draft health
-* League health
-* Validation suite status
-* Open blockers
-
-Reference:
-
-founder-dashboard.md
-
-⸻
-
-Epic 3 — Beta Feedback Infrastructure
-
-Priority: P1
-
-Purpose:
-
-Capture structured feedback from early users.
-
-⸻
-
-BETA-001
-
-In-App Feedback Widget
-
-Allow submission of:
-
-* Bug reports
-* Suggestions
-* Confusing behavior
-
-Store:
-
-* User
-* League
-* Context
-* Timestamp
-
-⸻
-
-BETA-002
-
-Survey Framework
-
-Support:
-
-* Commissioner survey
-* Manager survey
-
-Reference:
-
-beta-program-plan.md
-
-⸻
-
-BETA-003
-
-Founding Commissioner Tracking
-
-Track:
-
-* Invited
-* Accepted
-* Active
-* Renewed
-
-Purpose:
-
-Measure beta health and retention.
-
-⸻
-
-Epic 4 — Notification Framework
-
-Priority: P1
-
-Purpose:
-
-Deliver critical MVP notifications.
-
-⸻
-
-NOTIF-001
-
-Draft Starting Soon
-
-Trigger:
-
-* 24 hours before draft
-* 1 hour before draft
-
-⸻
-
-NOTIF-002
-
-You’re On The Clock
-
-Trigger:
-
-* Active draft pick timer
-
-⸻
-
-NOTIF-003
-
-Lineup Incomplete
-
-Trigger:
-
-* Missing required starters before lineup lock
-
-⸻
-
-NOTIF-004
-
-Week Starts Tomorrow
-
-Trigger:
-
-* Weekly matchup reminder
-
-⸻
-
-Deferred:
-
-* Trade notifications
-* Referral notifications
-* Advanced lifecycle notifications
-
-⸻
-
-Epic 5 — League Homepage
-
-Priority: P1
-
-Purpose:
-
-Create a central destination for managers.
-
-Reference:
-
-league-homepage-spec.md
-
-⸻
-
-LEAGUE-001
-
-League Dashboard
-
-Display:
-
-* Standings
-* Upcoming matchup
-* League activity
-* Draft status
-
-⸻
-
-LEAGUE-002
-
-League Activity Feed
-
-Sources:
-
-* Transactions
-* Draft actions
-* Commissioner actions
-
-⸻
-
-LEAGUE-003
-
-Commissioner Announcements
-
-Support:
-
-* League-wide messages
-* Important updates
-* Draft reminders
-
-⸻
-
-Epic 6 — User Education
-
-Priority: P1
-
-Purpose:
-
-Reduce onboarding friction and gameplay confusion.
-
-⸻
-
-EDU-001
-
-VP Education
-
-Explain:
-
-* Weekly matchup points
-* Weekly ranking points
-* Total VP calculation
-* Standings logic
-
-Reference:
-
-league-rules-v1.md
-
-⸻
-
-EDU-002
-
-Lineup Lock Education
-
-Explain:
-
-* Weekly lineup lock
-* Future-game swaps
-* Bench behavior
-
-⸻
-
-EDU-003
-
-Rules Integration
-
-Add contextual access to:
-
-league-rules-v1.md
-
-Locations:
-
-* League settings
-* Standings page
-* Matchups page
-
-⸻
-
-Sprint Success Criteria
-
-Commissioners can:
-
-* Run leagues independently
-* Resolve common issues
-* Renew leagues
-
-Managers can:
-
-* Understand VP standings
-* Set lineups correctly
-* Participate without confusion
-
-Founders can:
-
-* Monitor platform health
-* Run simulations
-* Investigate league state
-
-Platform can:
-
-* Collect structured feedback
-* Send critical notifications
-* Support beta operations
-
-⸻
-
-Sprint Exit Criteria
-
-Before Sprint 4 is considered complete:
-
-* Commissioner workflow validation completed
-* Draft reliability certification completed
-* Season simulation suite passing
-* Founder dashboard operational
-* MVP notifications live
-* VP education shipped
-* Feedback collection operational
-
-Result:
-
-Platform is ready for Founding Commissioner Alpha and Private Beta testing.
+**Sprint 6+ (post-beta launch features):**
+- Transaction History → Trade System → Waiver priority → FAAB
+- Engagement surfaces (team analysis, performance dashboard, playoff UX polish)
+- Multi-season UX (league history, hall of fame, player legacy)
+- Growth / retention analytics

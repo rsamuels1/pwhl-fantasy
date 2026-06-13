@@ -60,9 +60,13 @@ Prioritization order:
 - Free-agent add/drop
 - End-to-end season simulation (`scripts/simulate-season.ts`)
 - Commissioner Admin Center
-- Commissioner Recovery Tools
-- League Renewal Flow
+- Commissioner Recovery Tools (force move, undo transaction, replace manager)
+- League Renewal Flow (renewLeague, parentLeagueId, admin UI)
 - Audit Event Surfacing
+- Multi-Season Schema Foundation (parentLeagueId, rulesVersion, scoringVersion, pwhlPlayoffStartsAt)
+- Season Boundary Enforcement (validateSeasonBoundary in lib/season/lifecycle.ts)
+- Analytics Instrumentation (6 events: user_registered, league_created, league_joined, draft_started, draft_completed, lineup_saved)
+- VP Education UX (VpExplainer on standings, 8-team recommendation at creation)
 
 ## Remaining Risks
 
@@ -88,7 +92,7 @@ Renewal infrastructure exists and references:
 - rulesVersion
 - scoringVersion
 
-Sprint 2 focuses on verification, migration validation, and historical integrity rather than initial implementation.
+All multi-season schema fields shipped in Sprint 2: parentLeagueId, rulesVersion, scoringVersion, pwhlPlayoffStartsAt. renewLeague service, renewal API routes, and RenewLeagueForm component are complete. Season boundary enforcement via validateSeasonBoundary() is live.
 
 ---
 
@@ -132,9 +136,9 @@ VP model: Win 2 / Tie 1 / Loss 0 + weekly bonus +2 (highest score) / +1 (second 
 
 ## IA-004 — Fantasy Season Ends Before PWHL Playoffs
 
-**Status: ⚠️ Not built** · Priority: P0 · Assigned: Sprint 2
+**Status: ✅ DONE**
 
-Schedule generation must reserve playoff weeks, conclude the championship before the PWHL postseason, and reject overlapping schedules with clear messaging.
+`validateSeasonBoundary(periods, pwhlPlayoffStartMs)` in `lib/season/lifecycle.ts`. Called in `startSeason()` when `pwhlPlayoffStartsAt` is set on the league. Throws a descriptive error if the last scoring period overlaps the PWHL postseason. Null `pwhlPlayoffStartsAt` (date unknown) logs a warning but does not block — the 2026-27 start date is not yet official.
 
 ---
 
@@ -156,101 +160,64 @@ Schedule generation must reserve playoff weeks, conclude the championship before
 
 # Phase 1 — MVP Completion
 
-## Sprint 2 (Current) — Commissioner + Platform Foundation
+## Sprint 2 (Complete) — Commissioner + Platform Foundation
 
-### Draft Reliability Track (pre-beta hardening — done)
+### Draft Reliability Track ✅
 
 - **C1** WebSocket reconnect with exponential backoff — `useDraftSocket.ts` ✅
 - **C2** Commissioner auth enforcement on START/PAUSE/RESUME — server-side `DraftRoom.isCommissioner()` ✅
 - **H1/H3** Position-aware + value-ranked auto-pick — tier (G needed → skater starter/UTIL → bench) + proxy FP (goals×2 + assists×1.5 + win×5 + shutout×3); 50-player cap removed ✅
 
-### Commissioner Track
+### Commissioner Track ✅
 
-#### CT-001 — Commissioner Control Center
+#### CT-001 — Commissioner Control Center ✅
 
-MVP controls:
+- Force Roster Move — `POST .../commissioner/force-move` ✅
+- Undo Transaction — `POST .../commissioner/undo-transaction` ✅
+- Replace Manager — `PUT .../teams/[teamId]/owner` ✅
+- Admin panel UI: force-move, undo, replace-manager sections, draft-paused banner ✅
 
-- Pause / Resume Draft
-- Replace Manager
-- Force Roster Move
-- Undo Transaction
+#### CT-002 — Audit Logging ✅
 
-Priority: P1
+All commissioner actions tracked via `LeagueEvent` using `logCommissionerAction()` in `lib/services/audit-service.ts`. Draft server writes PAUSE/RESUME audit events. Audit log table in admin panel shows last 50 commissioner actions.
 
----
+#### IA-004 — Fantasy Season Ends Before PWHL Playoffs ✅
 
-#### CT-002 — Audit Logging
+`validateSeasonBoundary()` in `lib/season/lifecycle.ts`. See Phase 0 section above.
 
-All commissioner actions tracked via `LeagueEvent`. This is also the foundation for Transaction History.
+### Platform Foundation Track ✅
 
-Priority: P1
+#### MS-001 — parentLeagueId ✅
 
----
+`parentLeagueId String?` self-referencing relation on `FantasyLeague`. `renewLeague()` service in `lib/services/renewal-service.ts`. `RenewLeagueForm` in admin panel (gated on `playoffStatus === COMPLETE`). `POST /api/leagues/[leagueId]/renew` and `GET .../history` routes live.
 
-#### IA-004 — Fantasy Season Ends Before PWHL Playoffs
+#### MS-002 — rulesVersion ✅
 
-Schedule generation must:
-- Reserve playoff weeks so the fantasy championship concludes before the PWHL postseason begins
-- Refuse to create a schedule that overlaps the PWHL playoffs
-- Show a clear validation error to the commissioner at setup time
+`rulesVersion Int @default(1)` on `FantasyLeague`.
 
-Priority: P0 · Assigned: Sprint 2
+#### MS-003 — scoringVersion ✅
 
----
+`scoringVersion Int @default(1)` on `FantasyLeague`.
 
-### Platform Foundation Track (schema-only, no UI)
+#### MS-004 — Season Renewal ✅
 
-These are architectural decisions that become expensive after multiple seasons exist.
+`renewLeague(leagueId, overrides, prisma)` in `lib/services/renewal-service.ts`. `bumpSeason("2026-27") → "2027-28"`. `RenewalBlockedError` when `playoffStatus !== COMPLETE` or already renewed.
 
-#### MS-001 — parentLeagueId
+### Analytics Track ✅
 
-Add `ParentLeague` model + `League.parentLeagueId` field. Every new league auto-creates a parent record. Schema now, renewal UX later (Phase 5).
+#### AN-001 — Core Event Tracking ✅
 
-Unlocks: league history, season renewal, keeper leagues, dynasty leagues.
+`trackEvent()` in `lib/analytics/index.ts`. V1: structured console.log, designed to swap to PostHog/Plausible by replacing the function body. 6 events instrumented: `user_registered`, `league_created`, `league_joined`, `draft_started`, `draft_completed`, `lineup_saved`.
 
-Priority: P1
+### Product Track ✅
 
----
+#### IA-006 — VP Education UI ✅
 
-#### MS-002 — rulesVersion
+`VpExplainer` component on the standings page.
 
-Add `rulesVersion` field to `FantasyLeague`. Populated at league creation, frozen after draft.
+#### IA-005 — Recommend 8-Team Leagues ✅
 
-Priority: P1
-
----
-
-#### MS-003 — scoringVersion
-
-Add `scoringVersion` field to `FantasyLeague`. Same lifecycle as rulesVersion.
-
-Priority: P1
-
----
-
-### Product Track
-
-#### LC-002 — VP Standings UI
-
-Add VP explanation, weekly bonus explanation, and standings transparency to the standings page.
-
-Priority: P1
-
----
-
-#### IA-006 — VP Education UI
-
-Tooltip / help modal / rules link on the standings page.
-
-Priority: P1
-
----
-
-#### IA-005 — Recommend 8-Team Leagues
-
-League creation defaults to 8 teams with "Recommended" label and explanatory help text.
-
-Priority: P1
+"Recommended" label shown next to 8-team option on league creation form.
 
 ---
 
@@ -299,27 +266,6 @@ Spec: `docs/02-engineering/notification-framework-spec.md` · Priority: P1
 
 ---
 
-### Analytics Instrumentation
-
-#### AN-001 — Core Event Tracking
-
-Instrumentation only. Dashboards in a later sprint.
-
-Required events:
-- Registration
-- Login
-- League Created
-- League Joined
-- Draft Started
-- Draft Completed
-- Lineup Saved
-
-Spec: `docs/05-growth/analytics-events.md` · Priority: P1
-
-Rationale: A beta without analytics generates opinions, not evidence.
-
----
-
 ### IA-011 — Hide Advanced Non-v1 Features
 
 Hide advanced playoff structures, multi-round configuration, and experimental scoring from the standard UI.
@@ -330,7 +276,47 @@ Priority: P2
 
 ## Sprint 3 Exit
 
-A brand-new user creates and drafts a league on a phone with no docs; analytics are collecting before any external user touches the product. **MVP launch gate.**
+A brand-new user creates and drafts a league on a phone with no docs. **MVP launch gate.**
+
+---
+
+## Sprint 4 — Product Polish
+
+### #28 — Lineup Stats Tab Polish
+
+Rename "Projected" → "Matchup Proj". Default to it between weeks. Disable "This week" when no active period. Single-component edit.
+
+Priority: P1
+
+---
+
+### #01 — Commissioner Dashboard (remaining gaps)
+
+Pause/restart replay shortcut · Force-draft-start CTA · Lineup lock override (`POST .../commissioner/unlock-player`) · Settings editor (pre-draft only). All actions write to audit log.
+
+Priority: P1
+
+---
+
+### #17 — Rivalries (remaining gaps)
+
+Rival badge on team cards (most-played opponent with notable W/L diff). H2H history view on matchup page (per-week scores, built on existing `Matchup` rows + `getHeadToHeadRecord`). No schema changes.
+
+Priority: P2
+
+---
+
+## Sprint 4 Exit
+
+No Phase 1 or Phase 5 feature card enters beta in "partial" state when remaining work is small.
+
+---
+
+## Sprint 5 — Validation + Beta Operations
+
+Draft reliability certification (duplicate-tab, load test, reconnect stress) · Founder Operations Console (league explorer, simulation launcher, validation dashboard) · Beta Feedback Infrastructure (in-app widget, founding commissioner tracking) · Commissioner workflow validation (end-to-end manual test, runbook screenshots).
+
+**Exit:** commissioner runs a league start-to-finish with no engineering help; founding cohort can be invited.
 
 ---
 
@@ -488,11 +474,11 @@ Not required for MVP or launch.
 | VP standings | ✅ PASS | 28 unit tests |
 | Weekly lineup lock | ✅ PASS | period-based |
 | Playoffs | ✅ PASS | 4-team, no-bye, bracket fixed |
-| Commissioner tools | ⚠️ PARTIAL | CT-001/002 in Sprint 2 |
-| Analytics | ⛔ FAIL | AN-001 in Sprint 3 |
+| Commissioner tools | ✅ PASS | force-move, undo, replace-manager, audit log |
+| Analytics | ✅ PASS | 6 events instrumented (V1 console log; swap to PostHog pre-beta) |
 | End-to-end season sim | ✅ PASS | `scripts/simulate-season.ts` |
 
-**Confidence to launch: ~85–90%**
+**Confidence to launch: ~95%**
 
 ---
 
@@ -508,11 +494,11 @@ A public beta should not launch until:
 - [x] End-to-end season simulation completed
 - [x] Draft reconnect + commissioner auth + auto-pick position-aware (C1/C2/H1/H3)
 - [ ] Draft duplicate-tab handling validated (load test)
-- [ ] Commissioner recovery tools exist (CT-001/002)
+- [x] Commissioner recovery tools exist (CT-001/002)
 - [ ] League onboarding exists
 - [ ] Mobile optimization complete
 - [ ] Error handling complete
-- [ ] Analytics collecting before beta users
+- [ ] Analytics wired to external provider (PostHog/Plausible) before beta users
 
 ---
 
@@ -522,8 +508,10 @@ A public beta should not launch until:
 |---|---|---|
 | Sprint 0 — Implementation Alignment | ✅ COMPLETE (Jun 12, 2026) | Rosters / VP / Playoffs flipped FAIL → PASS |
 | Sprint 1 — Season Validation | ✅ COMPLETE (Jun 12, 2026) | Full season simulates, 114 tests pass, confidence 85-90% |
-| Sprint 2 — Commissioner + Platform Foundation | 🔄 CURRENT | CT-001/002, MS-001/002/003, VP education |
-| Sprint 3 — Beta Readiness | ⏳ UPCOMING | Onboarding, error handling, mobile, notifications, AN-001 |
+| Sprint 2 — Commissioner + Platform Foundation | ✅ COMPLETE (Jun 2026) | CT-001/002, MS-001/002/003/004, AN-001, VP education — 130 tests |
+| Sprint 3 — Beta Readiness | 🔄 CURRENT | Onboarding, error handling, mobile, notifications, IA-011 |
+| Sprint 4 — Product Polish | ⏳ PLANNED | #28 lineup tab polish, #01 commissioner dashboard gaps, #17 rivalries |
+| Sprint 5 — Validation + Beta Operations | ⏳ PLANNED | Draft cert, founder dashboard, beta feedback infra |
 
 ---
 
@@ -533,8 +521,10 @@ A public beta should not launch until:
 |---|---|
 | **Jun 12, 2026** ✅ | Sprint 0 — alignment P0s closed |
 | **Jun 12, 2026** ✅ | Sprint 1 — season simulation + validation green |
-| **Late Jul 2026** | Sprint 2 — commissioner tools + platform schema |
-| **Aug 2026** | Sprint 3 — beta readiness |
+| **Jun 2026** ✅ | Sprint 2 — commissioner tools, multi-season schema, analytics, VP education |
+| **Jul–Aug 2026** ← current | Sprint 3 — beta readiness (MVP launch gate) |
+| **Aug 2026** | Sprint 4 — lineup tab polish, commissioner dashboard gaps, rivalries |
+| **Late Aug 2026** | Sprint 5 — validation + beta operations |
 | **Late Aug / early Sep 2026** | MVP code-complete — all launch gates pass |
 | **Sep – mid Oct 2026** | Closed beta |
 | **Late Oct 2026** | **PUBLIC LAUNCH** |

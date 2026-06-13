@@ -9,11 +9,14 @@ interface Props {
   onResult: (state: SeasonState, message: string) => void;
   isReplay?: boolean;
   replayCurrentDate?: string; // ISO string from DB
+  playoffStatus?: string;
+  lifecycleStatus?: string;
 }
 
-export default function SeasonControls({ leagueId, periods, onResult, isReplay, replayCurrentDate }: Props) {
+export default function SeasonControls({ leagueId, periods, onResult, isReplay, replayCurrentDate, playoffStatus, lifecycleStatus }: Props) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const showStartPlayoffs = lifecycleStatus === "COMPLETE" && playoffStatus === "NOT_STARTED";
 
   const activePeriod = periods.find((p) => p.status === "ACTIVE");
   const firstPending = periods.find((p) => p.status === "SCORING_PENDING");
@@ -76,6 +79,19 @@ export default function SeasonControls({ leagueId, periods, onResult, isReplay, 
     }
   }
 
+  async function handleStartPlayoffs() {
+    setLoading(true);
+    setError(null);
+    const res = await fetch(`/api/leagues/${leagueId}/start-playoffs`, {
+      method: "POST",
+    });
+    const data = await res.json() as { message?: string; error?: string };
+    setLoading(false);
+    if (!res.ok || data.error) { setError(data.error ?? "Failed to start playoffs."); return; }
+    // Reload the page so bracket + playoffStatus refresh from the server.
+    window.location.reload();
+  }
+
   function advanceOneDay() {
     if (isReplay) {
       // Replay: advance the DB date by 1 day without scoring.
@@ -130,6 +146,11 @@ export default function SeasonControls({ leagueId, periods, onResult, isReplay, 
         <button onClick={advanceOneDay} disabled={loading} style={btn("#10b981")}>
           +1 Day →
         </button>
+        {showStartPlayoffs && (
+          <button onClick={handleStartPlayoffs} disabled={loading} style={btn("#a855f7")}>
+            {loading ? "…" : "▶ Start Playoffs"}
+          </button>
+        )}
         {targetPeriod && (
           <span style={{ fontSize: 11, color: "#64748b" }}>
             {activePeriod

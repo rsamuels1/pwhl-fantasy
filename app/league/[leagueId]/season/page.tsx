@@ -17,7 +17,7 @@ export default async function SeasonPage({ params }: Props) {
 
   const league = await prisma.fantasyLeague.findUnique({
     where: { id: leagueId },
-    select: { id: true, name: true, isReplay: true, replayCurrentDate: true },
+    select: { id: true, name: true, isReplay: true, replayCurrentDate: true, playoffStatus: true },
   });
   if (!league) notFound();
 
@@ -32,6 +32,7 @@ export default async function SeasonPage({ params }: Props) {
       isDev={isDev}
       isReplay={league.isReplay}
       replayCurrentDate={league.replayCurrentDate?.toISOString()}
+      playoffStatus={league.playoffStatus}
     />
   );
 }

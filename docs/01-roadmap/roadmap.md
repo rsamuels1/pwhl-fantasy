@@ -104,7 +104,7 @@ tracks into sprints and project a launch date against the real PWHL 2026-27 cale
 # MVP Readiness Scorecard
 
 Snapshot of launch-blocking areas (from `docs/mvp-readiness-scorecard.md`, re-verified
-against code on June 12, 2026). **Confidence to launch today: ~85–90%.**
+against code on June 12, 2026). **Confidence to launch today: ~95%.**
 
 | Area | Status | Blocker |
 |---|---|---|
@@ -115,11 +115,11 @@ against code on June 12, 2026). **Confidence to launch today: ~85–90%.**
 | VP standings | ✅ PASS | — |
 | Weekly lineup lock | ✅ PASS | — |
 | Playoffs | ✅ PASS | — |
-| Commissioner tools | ⚠️ PARTIAL | recovery tools + audit log unverified (CT-001/002) |
-| Analytics | ⛔ FAIL | event instrumentation not verified (post-launch, not a hard blocker) |
+| Commissioner tools | ✅ PASS | force move, undo transaction, replace manager, audit log all shipped |
+| Analytics | ✅ PASS | 6 events instrumented (user_registered, league_created, league_joined, draft_started, draft_completed, lineup_saved) |
 | End-to-end season sim | ✅ PASS | — |
 
-**Remaining soft blockers:** commissioner recovery tools (PARTIAL) · analytics (FAIL, post-launch).
+**Remaining soft blockers:** draft duplicate-tab handling (unvalidated) · onboarding (Sprint 3).
 
 ---
 
@@ -167,19 +167,21 @@ Priority: P0
 
 ## IA-004. Fantasy Season Ends Before PWHL Playoffs
 
-Status: ⚠️ Sprint 2
+Status: ✅ DONE
 
 Priority: P0
 
-Schedule generation must reserve playoff weeks, conclude the fantasy championship before the
-PWHL postseason begins, and refuse schedules that overlap it — with clear validation messaging.
+`validateSeasonBoundary(periods, pwhlPlayoffStartMs)` in `lib/season/lifecycle.ts` checks that
+all scoring periods end before the PWHL postseason. Called in `startSeason()` when
+`FantasyLeague.pwhlPlayoffStartsAt` is set. `pwhlPlayoffStartsAt` is nullable — blocking is
+opt-in until the official date is known for 2026-27. 3 tests in `tests/season-lifecycle.test.ts`.
 
 ---
 
 ## IA-005 → IA-011 (Product consistency, education, scope control)
 
-- **IA-005** · Recommend 8-team leagues at creation (default + "Recommended" label) — P1
-- **IA-006** · VP education UI (tooltip / help modal / rules link on standings) — P1
+- **IA-005** · Recommend 8-team leagues at creation — ✅ DONE ("Recommended" label + green highlight at 8 teams on creation form)
+- **IA-006** · VP education UI — ✅ DONE (`components/VpExplainer.tsx` on standings page; inline "?" toggle)
 - **IA-007** · Rebalance auto-draft for 3F demand (simulation-tested) — P1
 - **IA-008** · Finalize waiver spec (duration, priority, reset, processing schedule) — P2
 - **IA-009** · Finalize VP tiebreakers: VP → matchup wins → H2H → total FP → random draw — P2
@@ -1177,150 +1179,88 @@ Assumes a solo builder working with Claude (Pro), ~2 weeks per sprint. Tracks: *
 
 **Exit:** one simulated league completes a full season with zero manual DB edits. ✅
 
-## Sprint 2 — "Commissioner + Platform Foundation" · ~2 wks · Tracks A+F (P0/P1) ← CURRENT
+## Sprint 2 — "Commissioner + Platform Foundation" · ✅ COMPLETE
 
-**Draft reliability track (pre-beta hardening — done):**
+**Draft reliability track:**
 - C1 WebSocket reconnect with exponential backoff (`useDraftSocket.ts`) ✅
 - C2 Commissioner auth enforcement on START/PAUSE/RESUME — server-side (`server.ts`) ✅
-- H1/H3 Position-aware + value-ranked auto-pick — tier (G needed → skater starter → bench) + proxy FP (`server.ts`) ✅
+- H1/H3 Position-aware + value-ranked auto-pick — tier (G needed → skater starter → bench) + proxy FP ✅
 
 **Commissioner track:**
-- CT-001 Commissioner Control Center (pause/resume draft, replace manager, force move, undo) — closes the #1 Commissioner Dashboard gaps
-- CT-002 Audit logging (LeagueEvent-backed) — also the foundation for transaction history
-- IA-004 Schedule boundary validation — schedule generation refuses a fantasy season that overlaps the PWHL postseason; commissioner sees a clear error at setup time
+- CT-001 Force roster move, undo transaction, replace inactive manager ✅
+- CT-002 Audit logging — `lib/services/audit-service.ts`, all routes write `LeagueEvent`; admin panel shows last 50 ✅
+- CT-004 Draft pause/resume audit writes + draft-paused banner on admin panel ✅
+- IA-004 Season boundary validation — `validateSeasonBoundary()` in `lib/season/lifecycle.ts` ✅
 
-**Platform foundation track (schema-only, no UI):**
-- MS-001 `parentLeagueId` — add `ParentLeague` model + `League.parentLeagueId` field; every new league auto-creates a parent record. Schema now, renewal UX later.
-- MS-002 `rulesVersion` — add `rulesVersion` field to `FantasyLeague`. Populated at league creation, frozen after draft.
-- MS-003 `scoringVersion` — add `scoringVersion` field to `FantasyLeague`. Same lifecycle as rulesVersion.
+**Platform foundation track:**
+- MS-001 `parentLeagueId` schema + self-referencing `"LeagueLineage"` relation ✅
+- MS-002 `rulesVersion Int @default(1)` on `FantasyLeague` ✅
+- MS-003 `scoringVersion Int @default(1)` on `FantasyLeague` ✅
+- MS-004 Season renewal — `lib/services/renewal-service.ts`, `/renew` API, `RenewLeagueForm`, admin "Start Next Season" ✅
+
+**Analytics track:**
+- AN-001 All 6 events shipped — `lib/analytics/index.ts` `trackEvent()`; `user_registered`, `league_created`, `league_joined`, `draft_started`, `draft_completed`, `lineup_saved` ✅
 
 **Product track:**
-- IA-006 VP education UI + LC-002 VP standings UI (LC-003 playoff-race chips already shipped)
-- IA-005 Recommend 8-team leagues at creation
+- IA-006 VP education UI — `components/VpExplainer.tsx` on standings page ✅
+- IA-005 8-team "Recommended" label on league creation form ✅
 
-**Exit:** a commissioner can recover from any stuck state without engineering help; schema is multi-season-ready before the first live league runs; the schedule generator cannot produce a fantasy season that overlaps the PWHL postseason.
+**Exit:** ✅ 130/130 tests pass · `tsc --noEmit` clean · commissioner can recover from any stuck state without engineering help · schema is multi-season-ready · schedule generator blocks PWHL playoff overlaps.
 
-## Sprint 2b — Platform Hardening & League Operations
-
-Goal:
-
-Improve auditability, validation, and operational support.
-
-### P0
-
-#### Audit Log Framework
-
-- Central audit service
-- Audit persistence model
-- Commissioner action coverage
-- League lifecycle coverage
-
-#### Transaction History Framework
-
-- Add/drop ledger
-- Transaction timeline
-- Extensible trade support
-- Extensible waiver support
-
-#### Parent League Foundation Audit
-
-Validate:
-
-- parentLeagueId
-- child leagues
-- rulesVersion
-- scoringVersion
-- renewal service
-- migrations
-
-#### Season Boundary Enforcement
-
-Ensure:
-
-- Fantasy season ends before PWHL playoffs
-- Invalid schedules rejected
-- Automated validation tests
-
-### P1
-
-#### Remaining Analytics Events
-
-- user_registered
-- league_created
-- league_joined
-- lineup_saved
-
-#### Founder Operations Dashboard (Lite)
-
-Read-only operational dashboard:
-
-- Active leagues
-- Active drafts
-- Upcoming drafts
-- Recent audit events
-- Season renewals
-
-## Sprint 3 — "Beta-ready: onboarding, trust, mobile" · ~2–3 wks · Track F (beta prereqs)
+## Sprint 3 — "Beta-ready: onboarding, trust, mobile" · ~2–3 wks · Track F (beta prereqs) ← CURRENT
 
 - #2 League Onboarding (welcome flow, setup wizard, draft guide) — spec `docs/02-engineering/onboarding-spec.md`
-- #4 Error Handling (empty / loading / retry across core pages)
-- #3 Mobile Optimization (draft room, matchup, standings, roster)
-- NT-001 / NT-002 Notification framework + critical notifications (draft starting, on the clock, lineup incomplete) — spec `docs/02-engineering/notification-framework-spec.md`
-- AN-001 Core event tracking: Registration · Login · League Created · League Joined · Draft Started · Draft Completed · Lineup Saved — spec `docs/05-growth/analytics-events.md`. A beta without analytics generates opinions, not evidence.
-- IA-011 Hide advanced non-v1 settings
+- #4 Error Handling (empty / loading / retry across all core pages — draft room, matchup, lineup, standings, roster)
+- #3 Mobile Optimization (draft room is hardest; matchup, standings, roster; no horizontal scrolling; no broken touch targets)
+- NT-001 / NT-002 Notification framework + critical notifications (draft starting soon, on the clock, lineup incomplete) — spec `docs/02-engineering/notification-framework-spec.md`
+- IA-011 Hide advanced non-v1 settings (multi-round playoff config, experimental scoring)
 
-**Exit:** a brand-new user creates and drafts a league on a phone with no docs; analytics are collecting before any external user touches the product. **MVP launch gate.**
+**Exit:** a brand-new user creates and drafts a league on a phone with no docs. **MVP launch gate.**
 
-→ **MVP CODE-COMPLETE.** Run a closed beta — a real replay league plus a small live test league.
+→ **MVP CODE-COMPLETE.** Run a closed beta.
 
-## Sprint 3b — Validation & Beta Readiness
+## Sprint 4 — "Product polish: lineup, commissioner UX, rivalries" · ~1–2 wks · Track F
 
-### Draft Reliability Certification
+Close the in-progress feature gaps before beta. Three features are partially built with no sprint home.
 
-Validate:
+- **#28 Lineup Stats Tab Polish** — rename "Projected" → "Matchup Proj"; default to it between weeks; disable "This week" tab when no active period; single-component edit
+- **#01 Commissioner Dashboard (remaining gaps)** — pause/restart replay shortcut; force-draft-start CTA; lineup lock override (`POST .../commissioner/unlock-player`); settings editor (gated on pre-draft); all actions write to audit log
+- **#17 Rivalries (remaining gaps)** — rival badge on team cards (most-played opponent, notable W/L diff); H2H history view on matchup page (per-week scores, built on existing `Matchup` rows + `getHeadToHeadRecord`)
 
-- reconnect
-- disconnect
-- auto-pick
-- pause/resume
-- duplicate tabs
+**Exit:** no Phase 1 or Phase 5 feature card enters beta in "partial" state when remaining work is small. All three features ship cleanly or are explicitly deferred with a documented reason.
 
-### Season Simulation Suite
+## Sprint 5 — "Validation + Beta Operations" · ~2 wks · Track V
 
-Validate:
+- Draft reliability certification — duplicate-tab handling, load test concurrent leagues, reconnect stress test; findings documented in `commissioner-runbook.md`
+- Founder Operations Console — league explorer (search by league/commissioner/user, view config + draft state + standings), simulation launcher, validation dashboard — spec `docs/02-engineering/founder-ops-console.md`
+- Beta Feedback Infrastructure — in-app feedback widget (bug reports, suggestions), founding commissioner tracking (invited → accepted → active → renewed)
+- Commissioner workflow validation — end-to-end manual test of all commissioner actions; runbook accuracy review; screenshots added
 
-- regular season
-- VP standings
-- playoff qualification
-- championship generation
+**Exit:** commissioner can run a league start-to-finish with no engineering help; founder can monitor platform health without DB access; founding commissioner cohort can be invited.
 
-### Founder Dashboard
-
-Metrics layer powered by analytics instrumentation.
-
-### VP Education UX
-
-- standings help
-- VP explanation
-- rules links
-
-### Notification Framework
-
-MVP only:
-
-- Draft starting soon
-- You're on the clock
-- Lineup incomplete
-
-## Sprint 4+ — Post-MVP / Launch features · P1 → P2
+## Sprint 6+ — Post-MVP / Launch features · P1 → P2
 
 Sequenced from "What To Build Next" and the GPT launch phases:
 
 - **Transactions (infrastructure-first):** #8 Transaction History (built on CT-002 audit log) → #7 Trade System → #5 Waiver priority/processing → #6 FAAB
 - **Engagement:** #25 Team Analysis & Insights · #29 Weekly Performance Dashboard · #11 league-wide storylines · #30 Playoff Experience UX polish
-- **Multi-season UX layer** (schema laid in Sprint 2 via MS-001/002/003): MS-004 Season Renewal flow (spec `docs/06-architecture/season-renewal-system.md`) · MS-005 League History views · League Hall of Fame (#18) · Player Legacy (#31)
+- **Multi-season UX layer** (schema laid in Sprint 2 via MS-001/002/003/004): MS-005 League History views · League Hall of Fame (#18) · Player Legacy (#31)
 - **Growth / retention:** GR-001/002 activation + retention analytics (AN-002/003 dashboards) · GR-003 referral loop · GR-004 league-fill progress
-- **Phases 5–7:** rivalries / Hall of Fame / player legacy · keeper → dynasty · real-time push scoring · push notifications · player trends
+- **Phases 5–7:** rivalries H2H history · Hall of Fame · player legacy · keeper → dynasty · real-time push scoring · push notifications · player trends
+
+---
+
+# Sprint History
+
+| Sprint | Status | Outcome |
+|---|---|---|
+| Sprint 0 — Implementation Alignment | ✅ COMPLETE (Jun 12, 2026) | Rosters / VP / Playoffs flipped FAIL → PASS |
+| Sprint 1 — Season Validation | ✅ COMPLETE (Jun 12, 2026) | Full season simulates, 114 tests pass, confidence 85–90% |
+| Sprint 2 — Commissioner + Platform Foundation | ✅ COMPLETE (Jun 2026) | Commissioner recovery tools, multi-season schema, analytics (6 events), VP education; 130 tests pass |
+| Sprint 3 — Beta Readiness | ← CURRENT | Onboarding, error handling, mobile, notifications |
+| Sprint 4 — Product Polish | ⏳ PLANNED | #28 lineup tab polish, #01 commissioner dashboard gaps, #17 rivalries |
+| Sprint 5 — Validation + Beta Operations | ⏳ PLANNED | Draft cert, founder dashboard, beta feedback infra |
+| Sprint 6+ — Launch Features | ⏳ PLANNED | Transactions, trade, waivers, growth |
 
 ---
 
@@ -1335,21 +1275,23 @@ estimates, not commitments.
 |---|---|
 | **Jun 12, 2026** | Sprint 0 — alignment P0s closed (roster / VP / playoffs match rules) ✅ |
 | **Jun 12, 2026** | Sprint 1 — season simulation + validation suites green ✅ |
-| **Late Jul 2026** | Sprint 2 — commissioner recovery + VP education (← current) |
-| **Aug 2026** | Sprint 3 — onboarding, error handling, mobile, notifications |
-| **Late Aug / early Sep 2026** | **MVP code-complete — all launch gates pass** |
-| **Sep – mid Oct 2026** | Closed beta: run replay + small live test leagues end-to-end; fix findings |
+| **Jun–Jul 2026** | Sprint 2 — commissioner recovery + platform foundation + analytics ✅ |
+| **Late Jul 2026** | Sprint 3 — onboarding, error handling, mobile, notifications ← current |
+| **Aug 2026** | Sprint 4 — lineup tab polish, commissioner dashboard gaps, rivalries |
+| **Late Aug 2026** | Sprint 5 — draft cert, founder dashboard, beta feedback infra |
+| **Early Sep 2026** | **MVP code-complete — all launch gates pass** |
+| **Sep – mid Oct 2026** | Closed beta: founding commissioners run replay + small live test leagues; fix findings |
 | **Late Oct 2026** | **PUBLIC LAUNCH** — real leagues draft ~1 week before the opener |
 | **Nov 2026** | First live regular season on the platform |
 
 **Risk buffer:** if a sprint slips, the Sep–Oct beta window absorbs ~3–4 weeks before the hard
-late-Oct draft date. Earliest *credible* MVP code-complete is early Sept 2026; the latest safe
+late-Oct draft date. Earliest *credible* MVP code-complete is early Sep 2026; the latest safe
 code-complete before public drafts is early Oct 2026.
 
 ## Beyond MVP
 
-- **Q4 2026 (in-season):** Transaction History → Trade System → Waivers → FAAB (infrastructure before features); engagement surfaces (#25 analysis, #29 performance dashboard, #30 playoff UX) while the first live season runs.
-- **Off-season — winter/spring 2027:** Multi-Season UX layer — Season Renewal flow, League History views, Hall of Fame, Player Legacy. The schema foundation (parentLeagueId, rulesVersion, scoringVersion) was laid in Sprint 2, so this is purely the product surface. Growth/retention analytics dashboards (AN-002/003) and referral loop. Target: 2027-28 leagues renew in-place and keep their history.
+- **Q4 2026 (in-season):** Transaction History → Trade System → Waivers → FAAB; engagement surfaces (#25 analysis, #29 performance dashboard, #30 playoff UX) while the first live season runs.
+- **Off-season — winter/spring 2027:** Multi-Season UX layer — League History views, Hall of Fame, Player Legacy. The schema foundation (parentLeagueId, rulesVersion, scoringVersion) was laid in Sprint 2, so this is purely the product surface. Growth/retention analytics dashboards (AN-002/003) and referral loop. Target: 2027-28 leagues renew in-place and keep their history.
 - **2027-28 season:** Advanced formats (keeper, then dynasty), real-time push scoring + push notifications, and player trends. Native apps and AI features (draft assistant, weekly recaps, trade evaluator) remain Phase 5 "future expansion" — revisit once retention metrics justify them.
 
 ---

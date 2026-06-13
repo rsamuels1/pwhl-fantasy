@@ -9,6 +9,7 @@ import { generateVtfMatchups, generateMatchups, scoreVtfWeek } from "@/lib/scori
 import { scoreVpWeek } from "@/lib/scoring/vp";
 import { parseScoringSettings } from "@/lib/scoring/settings";
 import { computeSeasonState, pendingWeeks, validateSeasonBoundary, type SeasonState } from "./lifecycle";
+import { startPlayoffs } from "@/lib/services/playoff-service";
 
 // Load everything needed for the lifecycle engine from the DB, then run the pure engine.
 export async function getSeasonState(
@@ -126,6 +127,11 @@ export async function advanceSeason(
       await prisma.fantasyLeague.update({
         where: { id: leagueId },
         data: { status: "COMPLETE" },
+      });
+      // Auto-initialize playoffs. startPlayoffs() is a no-op when
+      // playoffStatus !== "NOT_STARTED", so this is safe to call unconditionally.
+      await startPlayoffs(leagueId, prisma).catch((err: Error) => {
+        console.error("[advanceSeason] auto-startPlayoffs failed:", err.message);
       });
     } else if (updated.lifecycleStatus === "IN_PROGRESS") {
       await prisma.fantasyLeague.update({

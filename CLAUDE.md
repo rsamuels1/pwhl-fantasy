@@ -153,6 +153,12 @@ survives DB resets and schema migrations.
    - League Overview Redesign ✅ (playoff race as primary module, per-team lineup status widget, commissioner action strip, inline announcement editing)
    - Roster Page UX Overhaul ✅ (default table view FP-sorted, `?view=` team selector, sortable roster+FA tables, full HIT/BLK/GA columns, "Rosters" nav)
 5. Playoff bracket and postseason flow — standings, seeding, bracket generation, playoff matchups, and results ✅ (4-team/no-bye bracket, bracket bug fixed, `scripts/simulate-season.ts` validates full flow)
+   - Commissioner recovery tools ✅ (CT-001/002: force-move, undo-transaction, replace-manager; `lib/services/audit-service.ts`; audit log in admin panel; draft-paused banner)
+   - Season renewal ✅ (`lib/services/renewal-service.ts` `renewLeague`; `POST /api/leagues/[leagueId]/renew`; `components/RenewLeagueForm.tsx`; admin "Start Next Season" gated on `playoffStatus === COMPLETE`)
+   - Multi-season schema ✅ (`parentLeagueId`, `rulesVersion`, `scoringVersion`, `pwhlPlayoffStartsAt` on `FantasyLeague`; self-referencing `"LeagueLineage"` relation)
+   - Season boundary enforcement ✅ (`validateSeasonBoundary()` in `lib/season/lifecycle.ts`; `startSeason()` blocks overlap when `pwhlPlayoffStartsAt` is set on the league)
+   - Analytics instrumentation ✅ (`trackEvent` in `lib/analytics/index.ts`; 6 events: `user_registered`, `league_created`, `league_joined`, `draft_started`, `draft_completed`, `lineup_saved`)
+   - VP education ✅ (`components/VpExplainer.tsx` on standings page; 8-team "Recommended" label on league creation form; IA-005/006)
 6. Integration + load test the draft room + beta
 7. Public launch ~early Nov, drafts ~1 week before opener
 
@@ -218,6 +224,52 @@ A new playoff layer is integrated into the existing fantasy flow without changin
   - `POST /api/leagues/[leagueId]/start-playoffs` initializes playoffs from regular season standings
 - New UI route: `app/league/[leagueId]/bracket` renders standings and the playoff bracket view.
 - The format is single-elimination for the **top 4 teams, with no byes** (1v4, 2v3 in round 1) and higher seeds winning ties. Schema default: `teamsInPlayoff: 4, topSeedsWithBye: 0`.
+
+## Commissioner recovery tools
+
+Three commissioner-only API routes, all requiring `apiRequireCommissioner`, all writing to the audit log:
+
+- **`POST /api/leagues/[leagueId]/commissioner/force-move`** — moves a player on any team. Reuses `validateSlotMove`, `eligibleSlots`, `lockTime` from `lib/lineup.ts` without the ownership check. Supports swap via `swapWithPlayerId`. Does NOT bypass slot eligibility or play-lock rules.
+- **`POST /api/leagues/[leagueId]/commissioner/undo-transaction`** — body `{ type: "waiver" | "draft-pick", teamId? }`. Waiver: reverses the last `PLAYER_ADD/DROP` `LeagueEvent` for a team; requires player not on another team. Draft-pick: requires `draft.status === "PAUSED"`; nulls out the last pick, removes its `RosterEntry`, decrements `Draft.currentPick`.
+- **`PUT /api/leagues/[leagueId]/teams/[teamId]/owner`** — body `{ newOwnerEmail }`. Upserts new `User` by email; validates they don't already own a different team in the league; updates `fantasyTeam.ownerId`. Roster/standings preserved.
+
+All three write a `LeagueEvent` via `logCommissionerAction` from `lib/services/audit-service.ts`.
+
+**Admin panel** (`app/league/[leagueId]/admin/page.tsx`) shows: `CommissionerRecoveryTools` component (replace owner, undo transaction, force move), audit log table (last 50 commissioner `LeagueEvent` rows), draft-paused banner, and "Start Next Season" section gated on `playoffStatus === "COMPLETE"` using `RenewLeagueForm`.
+
+## Audit service (`lib/services/audit-service.ts`)
+
+`logCommissionerAction(leagueId, commissionerId, action, data, prisma)` creates a `LeagueEvent` row using commissioner event types. `CommissionerEventType` covers 7 values: `COMMISSIONER_FORCE_MOVE`, `COMMISSIONER_UNDO_TRANSACTION`, `COMMISSIONER_REPLACE_MANAGER`, `COMMISSIONER_DRAFT_PAUSED`, `COMMISSIONER_DRAFT_RESUMED`, `COMMISSIONER_ANNOUNCEMENT`, `COMMISSIONER_SETTINGS_CHANGED`. The `data` JSON always includes `{ timestamp, commissionerId, action, ...details }`.
+
+Called by: all three commissioner API routes, and `lib/draft/server.ts` after PAUSE/RESUME effects via a private `logDraftAction()` helper (fire-and-forget, catches all errors).
+
+## Renewal service (`lib/services/renewal-service.ts`)
+
+`renewLeague(leagueId, overrides, prisma)` — copies `scoringSettings`, `rosterSettings`, `playoffSettings`, `draftType`, `maxTeams`; sets `parentLeagueId` pointing to the current league; bumps season with `bumpSeason("2026-27") → "2027-28"`. Returns `{ newLeagueId }`. Throws `RenewalBlockedError` when `playoffStatus !== "COMPLETE"` or `childLeagues.length > 0` (idempotent: returns the existing child ID if already renewed).
+
+**Routes:** `POST /api/leagues/[leagueId]/renew` (commissioner-only, returns `{ newLeagueId, redirectTo: "/league/.../admin?renewed=1" }`, 409 on `RenewalBlockedError`). `GET /api/leagues/[leagueId]/history` (member-accessible, walks the parentLeagueId chain depth-10, returns seasons ordered oldest-first with champion).
+
+**Schema additions** (`prisma/schema.prisma`):
+- `parentLeagueId String?` — self-referencing with named relation `"LeagueLineage"`
+- `rulesVersion Int @default(1)` — frozen after draft; increment when v1 rules change between seasons
+- `scoringVersion Int @default(1)` — same lifecycle as rulesVersion
+- `pwhlPlayoffStartsAt DateTime?` — when set, `startSeason()` calls `validateSeasonBoundary()` and throws if any period ends after this date
+- 7 new `EventType` enum values (see audit service above)
+
+## Analytics (`lib/analytics/index.ts`)
+
+`trackEvent(e: AnalyticsEvent): void` — V1 writes `console.log("[ANALYTICS]", ...)`. Designed to swap to PostHog/Plausible by replacing the function body only; call sites are unchanged. All callers wrap in `try { } catch {}` — fire-and-forget, never blocks responses.
+
+**6 instrumented events:**
+
+| Event | File |
+|---|---|
+| `user_registered` | `app/api/leagues/create/route.ts` and `join/route.ts` (when user is new) |
+| `league_created` | `app/api/leagues/create/route.ts` |
+| `league_joined` | `app/api/leagues/join/route.ts` |
+| `draft_started` | `lib/draft/server.ts` — after `PERSIST_STATUS` lands `IN_PROGRESS` |
+| `draft_completed` | `lib/draft/server.ts` — after `COMPLETE` effect |
+| `lineup_saved` | `app/api/leagues/[leagueId]/lineup/route.ts` PUT handler |
 
 ## Draft module (`lib/draft/`)
 

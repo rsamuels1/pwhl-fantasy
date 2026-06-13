@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>PWHL Fantasy Roadmap Dashboard v7</title>
+<title>PWHL Fantasy Roadmap Dashboard v8</title>
 
 <style>
 :root{
@@ -141,6 +141,54 @@ summary{
 
 .story{
   padding:6px 0;
+  display:flex;
+  align-items:baseline;
+  gap:6px;
+}
+
+.story-text{
+  flex:1;
+}
+
+/* Effort badges */
+.effort{
+  display:inline-block;
+  padding:2px 8px;
+  border-radius:4px;
+  font-size:11px;
+  font-weight:700;
+  white-space:nowrap;
+  flex-shrink:0;
+}
+
+.ef-s{
+  background:#dbeafe;
+  color:#1e40af;
+}
+
+.ef-m{
+  background:#fef9c3;
+  color:#854d0e;
+}
+
+.ef-l{
+  background:#fce7f3;
+  color:#9d174d;
+}
+
+.ef-xl{
+  background:#ede9fe;
+  color:#5b21b6;
+}
+
+.effort-legend{
+  display:flex;
+  gap:12px;
+  font-size:12px;
+  color:var(--muted);
+  margin-bottom:16px;
+  align-items:center;
+  flex-wrap:wrap;
 }
 
 .timeline{
@@ -155,6 +203,16 @@ summary{
   border-radius:12px;
   background:white;
   padding:16px;
+}
+
+.phase.done{
+  border-color:#16a34a;
+  background:#f0fdf4;
+}
+
+.phase.current{
+  border-color:#2563eb;
+  background:#eff6ff;
 }
 
 .gate{
@@ -188,11 +246,22 @@ th,td{
 .big{
   font-size:64px;
   font-weight:800;
-  color:var(--green);
+  color:var(--blue);
 }
 
 .small{
   color:var(--muted);
+}
+
+.sprint-done{
+  opacity:0.7;
+  border-left:4px solid #16a34a;
+  padding-left:12px;
+}
+
+.sprint-current{
+  border-left:4px solid #2563eb;
+  padding-left:12px;
 }
 
 </style>
@@ -201,8 +270,8 @@ th,td{
 <body>
 
 <div class="header">
-<h1>PWHL Fantasy Launch Readiness Dashboard v7</h1>
-<p>Single source of truth for roadmap execution, MVP readiness, validation, and launch planning.</p>
+<h1>PWHL Fantasy Launch Readiness Dashboard v8</h1>
+<p>Updated June 12, 2026 — Sprint 2 complete. Sprint 3 now current. Playoff lifecycle gap closed.</p>
 </div>
 
 <div class="container">
@@ -219,18 +288,18 @@ th,td{
 <h1>95%</h1>
 
 <p>
-Major gameplay systems are complete.
-Remaining work is concentrated in:
-auditability, validation, reliability, operational visibility, and beta readiness.
+All gameplay systems, commissioner tools, and platform foundation are complete.
+Remaining work is in beta readiness: onboarding, error handling, mobile optimization,
+notifications, and draft load testing.
 </p>
 </div>
 
 <div class="card readiness-ring">
-<div class="big">S2</div>
+<div class="big">S3</div>
 <div class="small">Current Sprint</div>
 <hr>
-<h2>80%</h2>
-<p>Sprint 2 Completion</p>
+<h2>Sprint 2 ✅</h2>
+<p>All Sprint 2 items shipped. Sprint 3 (beta readiness) is now underway.</p>
 </div>
 
 </div>
@@ -238,12 +307,12 @@ auditability, validation, reliability, operational visibility, and beta readines
 <div class="metric-grid">
 
 <div class="metric">
-<div class="metric-value">4</div>
-P0 Stories Remaining
+<div class="metric-value" style="color:#16a34a">0</div>
+P0 Sprint 2 Blockers Remaining
 </div>
 
 <div class="metric">
-<div class="metric-value">6</div>
+<div class="metric-value">3</div>
 Launch Gates Remaining
 </div>
 
@@ -253,7 +322,7 @@ MVP Complete
 </div>
 
 <div class="metric">
-<div class="metric-value">3</div>
+<div class="metric-value">2</div>
 Launch Phases Remaining
 </div>
 
@@ -268,19 +337,22 @@ Launch Phases Remaining
 <tr>
 <th>Area</th>
 <th>Status</th>
+<th>Notes</th>
 </tr>
 
-<tr><td>Core Fantasy Gameplay</td><td><span class="status complete">Complete</span></td></tr>
-<tr><td>Draft System</td><td><span class="status complete">Complete</span></td></tr>
-<tr><td>Commissioner Tools</td><td><span class="status complete">Complete</span></td></tr>
-<tr><td>League Renewal</td><td><span class="status complete">Complete</span></td></tr>
-<tr><td>Multi-Season Foundation</td><td><span class="status progressing">Verify</span></td></tr>
-<tr><td>Auditability</td><td><span class="status progressing">In Progress</span></td></tr>
-<tr><td>Transaction History</td><td><span class="status progressing">In Progress</span></td></tr>
-<tr><td>Analytics</td><td><span class="status progressing">Partial</span></td></tr>
-<tr><td>Reliability Validation</td><td><span class="status planned">Planned</span></td></tr>
-<tr><td>User Education</td><td><span class="status planned">Planned</span></td></tr>
-<tr><td>Notifications</td><td><span class="status planned">Planned</span></td></tr>
+<tr><td>Core Fantasy Gameplay</td><td><span class="status complete">Complete</span></td><td>VTF + VP scoring, matchups, standings, projections</td></tr>
+<tr><td>Draft System</td><td><span class="status complete">Complete</span></td><td>Reconnect ✅ · commissioner auth ✅ · position-aware auto-pick ✅ · duplicate-tab: unvalidated</td></tr>
+<tr><td>Commissioner Tools</td><td><span class="status complete">Complete</span></td><td>Force move, undo transaction, replace manager, audit log</td></tr>
+<tr><td>League Renewal</td><td><span class="status complete">Complete</span></td><td>renewLeague(), RenewLeagueForm, parentLeagueId lineage</td></tr>
+<tr><td>Multi-Season Foundation</td><td><span class="status complete">Complete</span></td><td>parentLeagueId, rulesVersion, scoringVersion in schema + renewal service</td></tr>
+<tr><td>Auditability</td><td><span class="status complete">Complete</span></td><td>audit-service.ts, 7 commissioner event types, admin panel audit log</td></tr>
+<tr><td>Playoff Lifecycle</td><td><span class="status complete">Complete</span></td><td>advanceSeason() auto-calls startPlayoffs(); manual fallback button in SeasonControls</td></tr>
+<tr><td>Analytics</td><td><span class="status complete">Complete</span></td><td>6 events: user_registered, league_created, league_joined, draft_started, draft_completed, lineup_saved</td></tr>
+<tr><td>User Education</td><td><span class="status complete">Complete</span></td><td>VpExplainer on standings page; 8-team "Recommended" label on create form</td></tr>
+<tr><td>Transaction History</td><td><span class="status planned">Post-MVP</span></td><td>Waiver ledger, trade history — Sprint 4+</td></tr>
+<tr><td>Reliability Validation</td><td><span class="status planned">Sprint 3</span></td><td>Draft load test, duplicate-tab handling, season sim cert</td></tr>
+<tr><td>Notifications</td><td><span class="status planned">Sprint 3</span></td><td>Draft starting, on the clock, lineup incomplete</td></tr>
+<tr><td>Onboarding</td><td><span class="status planned">Sprint 3</span></td><td>Welcome flow, setup wizard, draft guide</td></tr>
 
 </table>
 
@@ -288,99 +360,145 @@ Launch Phases Remaining
 
 <h2 class="section-title">Sprint Dashboard</h2>
 
+<div class="effort-legend">
+  Effort sizing:
+  <span class="effort ef-s">S</span> &lt;1 day ·
+  <span class="effort ef-m">M</span> 2–4 days ·
+  <span class="effort ef-l">L</span> 1–2 weeks ·
+  <span class="effort ef-xl">XL</span> 2+ weeks
+</div>
+
 <div class="dashboard-grid">
 
-<div class="card">
+<div class="card sprint-done">
 
-<h2>Sprint 2 — Platform Hardening</h2>
+<h2>Sprint 2 — Platform Hardening ✅ <span class="status complete">Complete</span></h2>
+
+<details>
+<summary>✅ Draft Reliability (pre-beta hardening)</summary>
+<div class="story-list">
+  <div class="story"><span class="story-text">✅ C1 WebSocket reconnect with exponential backoff (<code>useDraftSocket.ts</code>)</span><span class="effort ef-s">S</span></div>
+  <div class="story"><span class="story-text">✅ C2 Commissioner auth enforcement on START/PAUSE/RESUME — server-side <code>isCommissioner(ws)</code></span><span class="effort ef-s">S</span></div>
+  <div class="story"><span class="story-text">✅ H1/H3 Position-aware + value-ranked auto-pick — tier (G→skater/UTIL→bench) + proxy FP</span><span class="effort ef-m">M</span></div>
+</div>
+</details>
+
+<details>
+<summary>✅ Commissioner Tools (CT-001/002)</summary>
+<div class="story-list">
+  <div class="story"><span class="story-text">✅ Force roster move — commissioner override, bypasses ownership, respects eligibility</span><span class="effort ef-m">M</span></div>
+  <div class="story"><span class="story-text">✅ Undo transaction — last waiver add/drop or draft pick when PAUSED</span><span class="effort ef-m">M</span></div>
+  <div class="story"><span class="story-text">✅ Replace inactive manager — upsert new User by email, transfer team ownership</span><span class="effort ef-m">M</span></div>
+  <div class="story"><span class="story-text">✅ Audit logging — audit-service.ts, 7 commissioner event types, admin panel visibility</span><span class="effort ef-m">M</span></div>
+</div>
+</details>
+
+<details>
+<summary>✅ Multi-Season Foundation (MS-001/002/003)</summary>
+<div class="story-list">
+  <div class="story"><span class="story-text">✅ MS-001 <code>parentLeagueId</code> — self-referencing LeagueLineage relation in schema</span><span class="effort ef-s">S</span></div>
+  <div class="story"><span class="story-text">✅ MS-002 <code>rulesVersion</code> — on FantasyLeague, frozen after draft</span><span class="effort ef-s">S</span></div>
+  <div class="story"><span class="story-text">✅ MS-003 <code>scoringVersion</code> — same lifecycle as rulesVersion</span><span class="effort ef-s">S</span></div>
+  <div class="story"><span class="story-text">✅ Renewal service — renewLeague(), POST /api/leagues/[leagueId]/renew, RenewLeagueForm</span><span class="effort ef-l">L</span></div>
+</div>
+</details>
+
+<details>
+<summary>✅ Season Boundary Enforcement (IA-004)</summary>
+<div class="story-list">
+  <div class="story"><span class="story-text">✅ validateSeasonBoundary() in lib/season/lifecycle.ts</span><span class="effort ef-s">S</span></div>
+  <div class="story"><span class="story-text">✅ startSeason() blocks overlap when pwhlPlayoffStartsAt is set</span><span class="effort ef-s">S</span></div>
+</div>
+</details>
+
+<details>
+<summary>✅ Playoff Lifecycle Auto-Start</summary>
+<div class="story-list">
+  <div class="story"><span class="story-text">✅ advanceSeason() auto-calls startPlayoffs() when regular season ends (fire-and-forget catch)</span><span class="effort ef-s">S</span></div>
+  <div class="story"><span class="story-text">✅ "▶ Start Playoffs" manual fallback button in SeasonControls (lifecycle=COMPLETE + playoffStatus=NOT_STARTED)</span><span class="effort ef-s">S</span></div>
+</div>
+</details>
+
+<details>
+<summary>✅ Analytics Completion</summary>
+<div class="story-list">
+  <div class="story"><span class="story-text">✅ user_registered (create + join routes)</span><span class="effort ef-s">S</span></div>
+  <div class="story"><span class="story-text">✅ league_created / league_joined</span><span class="effort ef-s">S</span></div>
+  <div class="story"><span class="story-text">✅ lineup_saved</span><span class="effort ef-s">S</span></div>
+  <div class="story"><span class="story-text">✅ draft_started / draft_completed (lib/draft/server.ts)</span><span class="effort ef-s">S</span></div>
+</div>
+</details>
+
+<details>
+<summary>✅ VP Education (IA-005/006)</summary>
+<div class="story-list">
+  <div class="story"><span class="story-text">✅ VpExplainer component on standings page with inline "?" toggle</span><span class="effort ef-m">M</span></div>
+  <div class="story"><span class="story-text">✅ 8-team "Recommended" label + green highlight on league creation form</span><span class="effort ef-s">S</span></div>
+</div>
+</details>
+
+</div>
+
+<div class="card sprint-current">
+
+<h2>Sprint 3 — Beta Readiness ← Current</h2>
 
 <details open>
-<summary>P0 — Audit Log Framework</summary>
+<summary>Onboarding</summary>
 <div class="story-list">
-<div class="story">OPS-001 Central Audit Service</div>
-<div class="story">OPS-002 Audit Coverage Review</div>
+  <div class="story"><span class="story-text">Welcome flow</span><span class="effort ef-l">L</span></div>
+  <div class="story"><span class="story-text">League setup wizard</span><span class="effort ef-l">L</span></div>
+  <div class="story"><span class="story-text">Draft preparation guide</span><span class="effort ef-m">M</span></div>
+  <div class="story"><span class="story-text">Replay mode explanation</span><span class="effort ef-s">S</span></div>
 </div>
 </details>
 
 <details open>
-<summary>P0 — Transaction History Framework</summary>
+<summary>Error Handling</summary>
 <div class="story-list">
-<div class="story">TH-001 Transaction Ledger</div>
-<div class="story">TH-002 Timeline View</div>
-<div class="story">TH-003 Trade Extensibility</div>
-<div class="story">TH-004 Waiver Extensibility</div>
+  <div class="story"><span class="story-text">Empty states across all core pages</span><span class="effort ef-m">M</span></div>
+  <div class="story"><span class="story-text">Loading states</span><span class="effort ef-m">M</span></div>
+  <div class="story"><span class="story-text">Retry actions on API failure</span><span class="effort ef-m">M</span></div>
+  <div class="story"><span class="story-text">Plain-language error messages</span><span class="effort ef-m">M</span></div>
 </div>
 </details>
 
 <details>
-<summary>P0 — Parent League Foundation Audit</summary>
+<summary>Mobile Optimization</summary>
 <div class="story-list">
-<div class="story">MS-001 Verify parentLeagueId</div>
-<div class="story">MS-002 Verify rulesVersion</div>
-<div class="story">MS-003 Verify scoringVersion</div>
-<div class="story">MS-004 Verify renewal flow</div>
+  <div class="story"><span class="story-text">Draft room responsive layout</span><span class="effort ef-l">L</span></div>
+  <div class="story"><span class="story-text">Matchup screens responsive</span><span class="effort ef-m">M</span></div>
+  <div class="story"><span class="story-text">Standings + roster responsive</span><span class="effort ef-m">M</span></div>
 </div>
 </details>
 
 <details>
-<summary>P0 — Season Boundary Enforcement</summary>
+<summary>Notifications (NT-001/002)</summary>
 <div class="story-list">
-<div class="story">IA-004 Fantasy Season Boundary Validation</div>
+  <div class="story"><span class="story-text">Notification framework (channel + delivery abstraction)</span><span class="effort ef-l">L</span></div>
+  <div class="story"><span class="story-text">Draft starting soon</span><span class="effort ef-m">M</span></div>
+  <div class="story"><span class="story-text">You're on the clock</span><span class="effort ef-m">M</span></div>
+  <div class="story"><span class="story-text">Lineup incomplete</span><span class="effort ef-m">M</span></div>
 </div>
 </details>
-
-<details>
-<summary>P1 — Analytics Completion</summary>
-<div class="story-list">
-<div class="story">user_registered</div>
-<div class="story">league_created</div>
-<div class="story">league_joined</div>
-<div class="story">lineup_saved</div>
-</div>
-</details>
-
-</div>
-
-<div class="card">
-
-<h2>Sprint 3 — Validation & Beta Readiness</h2>
 
 <details>
 <summary>Draft Reliability Certification</summary>
 <div class="story-list">
-Disconnects<br>
-Reconnects<br>
-Duplicate Tabs<br>
-Auto Pick<br>
-Pause / Resume
+  <div class="story"><span class="story-text">Disconnects / reconnects (backoff confirmed ✅)</span><span class="effort ef-s">S</span></div>
+  <div class="story"><span class="story-text"><b>Duplicate-tab handling — unvalidated ⚠</b></span><span class="effort ef-m">M</span></div>
+  <div class="story"><span class="story-text">Auto-pick under concurrent load</span><span class="effort ef-s">S</span></div>
+  <div class="story"><span class="story-text">Pause / resume under concurrent load</span><span class="effort ef-s">S</span></div>
 </div>
 </details>
 
 <details>
-<summary>Season Simulation Suite</summary>
+<summary>Season Simulation Certification</summary>
 <div class="story-list">
-Full Lifecycle Simulation<br>
-VP Validation<br>
-Playoff Validation<br>
-Championship Validation
-</div>
-</details>
-
-<details>
-<summary>Founder Dashboard</summary>
-<div class="story-list">
-League Metrics<br>
-Draft Metrics<br>
-Retention Metrics
-</div>
-</details>
-
-<details>
-<summary>VP Education UX</summary>
-<div class="story-list">
-VP Explanation<br>
-Standings Help<br>
-Rules Integration
+  <div class="story"><span class="story-text">Full lifecycle simulation (simulate-season.ts passes ✅)</span><span class="effort ef-s">S</span></div>
+  <div class="story"><span class="story-text">VP standings validation (28 tests ✅)</span><span class="effort ef-s">S</span></div>
+  <div class="story"><span class="story-text">Playoff qualification validation (18 tests ✅)</span><span class="effort ef-s">S</span></div>
+  <div class="story"><span class="story-text">Championship generation ✅</span><span class="effort ef-s">S</span></div>
 </div>
 </details>
 
@@ -388,40 +506,43 @@ Rules Integration
 
 <div class="card">
 
-<h2>Sprint 4 — User & Operations Readiness</h2>
+<h2>Sprint 4 — Post-MVP Features</h2>
 
 <details>
-<summary>Commissioner Experience Hardening</summary>
+<summary>Transaction History (moved from S2 — post-MVP)</summary>
 <div class="story-list">
-Workflow Validation<br>
-Runbook Validation
+  <div class="story"><span class="story-text">Add/drop ledger (built on CT-002 audit log)</span><span class="effort ef-l">L</span></div>
+  <div class="story"><span class="story-text">Transaction timeline UI</span><span class="effort ef-m">M</span></div>
+  <div class="story"><span class="story-text">Trade extensibility</span><span class="effort ef-xl">XL</span></div>
+  <div class="story"><span class="story-text">Waiver priority + processing</span><span class="effort ef-l">L</span></div>
 </div>
 </details>
 
 <details>
 <summary>Founder Operations Console</summary>
 <div class="story-list">
-Simulation Launcher<br>
-League Explorer<br>
-Validation Dashboard
+  <div class="story"><span class="story-text">Simulation launcher</span><span class="effort ef-m">M</span></div>
+  <div class="story"><span class="story-text">League explorer (active leagues, drafts, renewals)</span><span class="effort ef-m">M</span></div>
+  <div class="story"><span class="story-text">Validation dashboard</span><span class="effort ef-m">M</span></div>
 </div>
 </details>
 
 <details>
 <summary>Beta Feedback Infrastructure</summary>
 <div class="story-list">
-Feedback Widget<br>
-Survey Framework<br>
-Commissioner Tracking
+  <div class="story"><span class="story-text">Feedback widget</span><span class="effort ef-s">S</span></div>
+  <div class="story"><span class="story-text">Survey framework</span><span class="effort ef-m">M</span></div>
+  <div class="story"><span class="story-text">Commissioner tracking</span><span class="effort ef-m">M</span></div>
 </div>
 </details>
 
 <details>
-<summary>League Homepage</summary>
+<summary>Multi-Season UX Layer (Phase 5)</summary>
 <div class="story-list">
-Dashboard<br>
-Activity Feed<br>
-Announcements
+  <div class="story"><span class="story-text">MS-004 Season Renewal UX (schema done in S2)</span><span class="effort ef-l">L</span></div>
+  <div class="story"><span class="story-text">MS-005 League History views</span><span class="effort ef-l">L</span></div>
+  <div class="story"><span class="story-text">League Hall of Fame</span><span class="effort ef-l">L</span></div>
+  <div class="story"><span class="story-text">Player Legacy</span><span class="effort ef-m">M</span></div>
 </div>
 </details>
 
@@ -432,21 +553,23 @@ Announcements
 <h2 class="section-title">Dependency Graph</h2>
 
 <div class="dep">
-Audit Log Framework
+✅ Audit Log Framework (CT-002)
         ↓
-Transaction History
+☐ Transaction History (Sprint 4+)
         ↓
-Draft Reliability Certification
+✅ Season Simulation Suite (simulate-season.ts)
         ↓
-Season Simulation Suite
+☐ Draft Reliability Certification (duplicate-tab load test)
         ↓
-Founder Dashboard
+☐ Onboarding + Error Handling + Mobile (Sprint 3)
         ↓
-Founding Commissioner Alpha
+☐ Notifications (Sprint 3)
         ↓
-Private Beta
+☐ Founding Commissioner Alpha
         ↓
-Public Launch
+☐ Private Beta
+        ↓
+☐ Public Launch
 </div>
 
 <h2 class="section-title">Launch Gates</h2>
@@ -456,22 +579,22 @@ Public Launch
 <div class="card">
 <h3>Alpha Launch Gate</h3>
 
-<div class="gate">☐ Audit Logging Complete</div>
-<div class="gate">☐ Transaction History Complete</div>
-<div class="gate">☐ Parent League Audit Complete</div>
-<div class="gate">☐ Season Boundary Enforcement Complete</div>
-<div class="gate">☐ Draft Certification Complete</div>
-<div class="gate">☐ Season Simulation Complete</div>
+<div class="gate">☑ Audit Logging Complete</div>
+<div class="gate">☑ Parent League / Multi-Season Schema Complete</div>
+<div class="gate">☑ Season Boundary Enforcement Complete</div>
+<div class="gate">☑ Season Simulation Complete (simulate-season.ts)</div>
+<div class="gate">☐ Draft Certification Complete (duplicate-tab unvalidated)</div>
+<div class="gate">☐ Onboarding Exists</div>
 </div>
 
 <div class="card">
 <h3>Private Beta Gate</h3>
 
-<div class="gate">☐ VP Education Shipped</div>
-<div class="gate">☐ Founder Dashboard Operational</div>
-<div class="gate">☐ Feedback Collection Operational</div>
-<div class="gate">☐ Commissioner Runbook Validated</div>
+<div class="gate">☑ VP Education Shipped</div>
+<div class="gate">☑ Commissioner Recovery Tools Available</div>
+<div class="gate">☐ Mobile Optimization Complete</div>
 <div class="gate">☐ Notifications Live</div>
+<div class="gate">☐ Error Handling Complete</div>
 </div>
 
 </div>
@@ -480,19 +603,24 @@ Public Launch
 
 <div class="timeline">
 
-<div class="phase">
-<h3>Sprint 2</h3>
-<p>Platform Hardening</p>
+<div class="phase done">
+<h3>✅ Sprint 0–1</h3>
+<p>Alignment + Validation — Rules match code. Season simulates end-to-end.</p>
+</div>
+
+<div class="phase done">
+<h3>✅ Sprint 2</h3>
+<p>Platform Hardening — Commissioner tools, multi-season schema, playoff lifecycle, analytics, VP education. All items shipped.</p>
+</div>
+
+<div class="phase current">
+<h3>← Sprint 3</h3>
+<p>Beta Readiness — Onboarding, error handling, mobile, notifications, draft load test.</p>
 </div>
 
 <div class="phase">
-<h3>Sprint 3</h3>
-<p>Validation & Beta Readiness</p>
-</div>
-
-<div class="phase">
-<h3>Sprint 4</h3>
-<p>User & Operations Readiness</p>
+<h3>Sprint 4+</h3>
+<p>Post-MVP — Transaction history, trade system, waivers, FAAB, growth loops.</p>
 </div>
 
 <div class="phase">
@@ -507,7 +635,7 @@ Public Launch
 
 <div class="phase">
 <h3>Public Launch</h3>
-<p>Open Registration</p>
+<p>Open Registration — Late Oct 2026</p>
 </div>
 
 </div>
