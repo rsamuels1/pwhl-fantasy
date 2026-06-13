@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { requireAuth, requireTeamOwner } from "@/lib/auth";
-import { getDashboardData, type ActiveMatchup, type PlayerMatchupRow, type WeeklyRecap, type LeaguePerformerRow } from "@/lib/services/dashboard";
+import { getDashboardData, type ActiveMatchup, type PlayerMatchupRow, type WeeklyRecap, type LeaguePerformerRow, type ChampionInfo } from "@/lib/services/dashboard";
 import InlineLineupEditor, { type LineupPlayer } from "./InlineLineupEditor";
 import LiveScoreRefresh from "@/components/LiveScoreRefresh";
 import { getSwingPlayers } from "@/lib/matchups/swingPlayers";
@@ -32,7 +32,7 @@ export default async function TeamMatchupPage({
   const scoringSettings = parseScoringSettings(league.scoringSettings);
   const nowMs = getReplayNow(league, await getDevNow());
   const dashboard = await getDashboardData(leagueId, teamId, nowMs, prisma);
-  const { activeMatchup, remainingPlayers, topPerformers, disappointments, lineupAlerts, lastResult, leagueActivity, leagueTopPerformers, leagueDisappointments, eliminationInfo } = dashboard;
+  const { activeMatchup, remainingPlayers, topPerformers, disappointments, lineupAlerts, lastResult, leagueActivity, leagueTopPerformers, leagueDisappointments, eliminationInfo, championInfo, playoffPending } = dashboard;
 
   // Fetch teams and matchups for rival badge
   const [allTeams, allMatchups] = await Promise.all([
@@ -94,8 +94,65 @@ export default async function TeamMatchupPage({
     }));
   }
 
+  const isChampion = championInfo && championInfo.teamId === teamId;
+
   return (
     <div style={{ display: "grid", gap: 16 }}>
+
+      {/* ── 0. Champion card — top of page when playoffs complete and I won ── */}
+      {isChampion && championInfo && (
+        <div style={{
+          background: "linear-gradient(135deg, rgba(251,191,36,0.12), rgba(245,158,11,0.06))",
+          border: "2px solid rgba(251,191,36,0.4)",
+          borderRadius: 20, padding: "20px 24px",
+          display: "flex", flexDirection: "column", gap: 10,
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <span style={{ fontSize: 32 }}>🏆</span>
+            <div>
+              <div style={{ fontSize: 20, fontWeight: 800, color: "#fbbf24", lineHeight: 1.1 }}>
+                Champions!
+              </div>
+              <div style={{ fontSize: 13, color: "#94a3b8", marginTop: 4 }}>
+                {championInfo.teamName} won the championship
+              </div>
+            </div>
+          </div>
+          <div style={{
+            display: "flex", alignItems: "center", gap: 16, padding: "12px 16px",
+            background: "rgba(251,191,36,0.06)", borderRadius: 12,
+            border: "1px solid rgba(251,191,36,0.15)",
+          }}>
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: "#92400e", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>
+                {championInfo.teamName}
+              </div>
+              <div style={{ fontSize: 28, fontWeight: 900, color: "#fbbf24", fontVariantNumeric: "tabular-nums" }}>
+                {championInfo.myScore.toFixed(1)}
+              </div>
+            </div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: "#475569" }}>vs</div>
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>
+                {championInfo.opponentTeamName}
+              </div>
+              <div style={{ fontSize: 28, fontWeight: 900, color: "#64748b", fontVariantNumeric: "tabular-nums" }}>
+                {championInfo.opponentScore.toFixed(1)}
+              </div>
+            </div>
+          </div>
+          <div style={{ fontSize: 13, color: "#78716c" }}>
+            Congratulations on a great season. See you next year!
+          </div>
+          <Link href={`/league/${leagueId}/bracket`} style={{
+            display: "inline-block", fontSize: 12, fontWeight: 700, padding: "6px 14px", borderRadius: 8,
+            background: "rgba(251,191,36,0.15)", color: "#fbbf24",
+            border: "1px solid rgba(251,191,36,0.3)", textDecoration: "none", alignSelf: "flex-start",
+          }}>
+            View bracket →
+          </Link>
+        </div>
+      )}
 
       {/* ── 1. Lineup alerts — top of page, always visible when present ── */}
       {lineupAlerts.length > 0 && (
@@ -160,7 +217,7 @@ export default async function TeamMatchupPage({
 
       {/* ── 2. Matchup hero ── */}
       {activeMatchup ? (
-        <MatchupHero matchup={activeMatchup} teamId={teamId} />
+        <MatchupHero matchup={activeMatchup} teamId={teamId} leagueId={leagueId} />
       ) : eliminationInfo ? (
         <Card>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
@@ -171,6 +228,48 @@ export default async function TeamMatchupPage({
               </div>
               <div style={{ fontSize: 12, color: "#94a3b8", marginTop: 2 }}>
                 You made a great playoff run. Better luck next season!
+              </div>
+            </div>
+          </div>
+          <Link href={`/league/${leagueId}/bracket`} style={{
+            fontSize: 12, fontWeight: 700, padding: "6px 14px", borderRadius: 8,
+            background: "rgba(99,102,241,0.15)", color: "#818cf8",
+            border: "1px solid rgba(99,102,241,0.3)", textDecoration: "none",
+          }}>
+            View bracket →
+          </Link>
+        </Card>
+      ) : playoffPending ? (
+        <Card>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
+            <span style={{ fontSize: 16 }}>⏳</span>
+            <div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: "#e2e8f0" }}>
+                Playoffs are advancing
+              </div>
+              <div style={{ fontSize: 12, color: "#94a3b8", marginTop: 2 }}>
+                You advanced to the next round! Your next matchup will appear shortly once the commissioner advances the bracket.
+              </div>
+            </div>
+          </div>
+          <Link href={`/league/${leagueId}/bracket`} style={{
+            fontSize: 12, fontWeight: 700, padding: "6px 14px", borderRadius: 8,
+            background: "rgba(99,102,241,0.15)", color: "#818cf8",
+            border: "1px solid rgba(99,102,241,0.3)", textDecoration: "none",
+          }}>
+            View bracket →
+          </Link>
+        </Card>
+      ) : championInfo && !isChampion ? (
+        <Card>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
+            <span style={{ fontSize: 16 }}>🏆</span>
+            <div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: "#e2e8f0" }}>
+                Season complete — {championInfo.teamName} are champions!
+              </div>
+              <div style={{ fontSize: 12, color: "#94a3b8", marginTop: 2 }}>
+                Great season. See you next year!
               </div>
             </div>
           </div>
@@ -628,11 +727,11 @@ const editLink: React.CSSProperties = {
 
 // ── MatchupHero ────────────────────────────────────────────────────────────────
 
-function MatchupHero({ matchup, teamId }: { matchup: ActiveMatchup; teamId: string }) {
+function MatchupHero({ matchup, teamId, leagueId }: { matchup: ActiveMatchup; teamId: string; leagueId: string }) {
   // Two modes: 1v1 (playoffs — single opponent, win probability, rivalry) and
   // VTF (regular season — ranked against the whole field).
   return matchup.opponentTeam
-    ? <DuelHero matchup={matchup} opponent={matchup.opponentTeam} teamId={teamId} />
+    ? <DuelHero matchup={matchup} opponent={matchup.opponentTeam} teamId={teamId} leagueId={leagueId} />
     : <FieldHero matchup={matchup} teamId={teamId} />;
 }
 
@@ -734,11 +833,12 @@ function FieldHero({ matchup, teamId }: { matchup: ActiveMatchup; teamId: string
 
 // ── 1v1 (playoffs): head-to-head duel with win probability + rivalry ────────────
 function DuelHero({
-  matchup, opponent, teamId,
+  matchup, opponent, teamId, leagueId,
 }: {
   matchup: ActiveMatchup;
   opponent: NonNullable<ActiveMatchup["opponentTeam"]>;
   teamId: string;
+  leagueId: string;
 }) {
   const isUpcoming = matchup.status === "upcoming";
   const myLead = matchup.myTeam.score - opponent.score;
@@ -759,6 +859,15 @@ function DuelHero({
           <span style={{ fontSize: 12, color: "#64748b" }}>{periodLabel}</span>
           {matchup.isPlayoff && matchup.roundLabel && (
             <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 20, background: "rgba(99,102,241,0.18)", color: "#a5b4fc" }}>{matchup.roundLabel}</span>
+          )}
+          {matchup.isPlayoff && (
+            <Link href={`/league/${leagueId}/bracket`} style={{
+              fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 20,
+              background: "rgba(99,102,241,0.1)", color: "#818cf8",
+              border: "1px solid rgba(99,102,241,0.2)", textDecoration: "none",
+            }}>
+              View bracket →
+            </Link>
           )}
           {isUpcoming && (
             <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 20, background: "rgba(245,158,11,0.15)", color: "#f59e0b" }}>Upcoming</span>

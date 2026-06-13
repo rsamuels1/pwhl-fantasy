@@ -501,7 +501,17 @@ export async function generatePlayoffMatchups(
   pairings: PlayoffMatchupPairing[],
   prisma: PrismaClient
 ): Promise<void> {
+  // Determine the max regular-season week so playoff weeks get meaningful numbers
+  // (maxWeek + round) instead of "Week 0".
+  const maxWeekRow = await prisma.matchup.aggregate({
+    where: { leagueId, isPlayoff: false },
+    _max: { week: true },
+  });
+  const maxRegularWeek = maxWeekRow._max.week ?? 0;
+
   for (const pairing of pairings) {
+    const playoffWeek = maxRegularWeek + pairing.round;
+
     const existing = await prisma.matchup.findFirst({
       where: {
         leagueId,
@@ -515,6 +525,7 @@ export async function generatePlayoffMatchups(
       await prisma.matchup.update({
         where: { id: existing.id },
         data: {
+          week: playoffWeek,
           homeTeamId: pairing.homeTeamId,
           awayTeamId: pairing.awayTeamId,
           startsAt: pairing.startsAt,
@@ -527,7 +538,7 @@ export async function generatePlayoffMatchups(
       await prisma.matchup.create({
         data: {
           leagueId,
-          week: 0, // Placeholder; playoffs don't use week numbers in the same way
+          week: playoffWeek,
           homeTeamId: pairing.homeTeamId,
           awayTeamId: pairing.awayTeamId,
           startsAt: pairing.startsAt,

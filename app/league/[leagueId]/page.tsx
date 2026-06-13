@@ -57,6 +57,18 @@ export default async function LeagueOverviewPage({
     getLeagueActivity(leagueId, 6, prisma).catch(() => []),
   ]);
 
+  // Determine champion for COMPLETE playoffs
+  let championTeamName: string | null = null;
+  if (league.playoffStatus === "COMPLETE") {
+    const finalMatchup = matchups
+      .filter((m) => m.isPlayoff && m.homeScore !== null && m.awayScore !== null)
+      .sort((a, b) => (b.round ?? 0) - (a.round ?? 0))[0];
+    if (finalMatchup && finalMatchup.homeScore !== null && finalMatchup.awayScore !== null) {
+      const homeWon = finalMatchup.homeScore >= finalMatchup.awayScore;
+      championTeamName = homeWon ? finalMatchup.homeTeam.name : finalMatchup.awayTeam.name;
+    }
+  }
+
   const vpStandings = computeVpStandings(
     league.teams,
     matchups.map((m) => ({
@@ -141,6 +153,17 @@ export default async function LeagueOverviewPage({
       seasonState.periods.every((p) => p.status === "COMPLETE" || p.status === "SCORING_PENDING");
     const regularSeasonDone = league.status === "IN_SEASON" && allDone && !playoffsStarted;
 
+    // Playoff round detection: populated matchups (both teams set) that are unscored
+    const populatedPlayoffMatchups = matchups.filter(
+      (m) => m.isPlayoff && m.homeTeamId && m.awayTeamId
+    );
+    const currentPlayoffRound = populatedPlayoffMatchups.length > 0
+      ? Math.min(...populatedPlayoffMatchups.filter((m) => m.homeScore === null).map((m) => m.round ?? 1).concat([Infinity]))
+      : null;
+    const playoffRoundComplete = currentPlayoffRound !== Infinity && currentPlayoffRound !== null &&
+      populatedPlayoffMatchups.filter((m) => (m.round ?? 1) === currentPlayoffRound).every((m) => m.homeScore !== null);
+    const playoffRoundLive = currentPlayoffRound !== null && currentPlayoffRound !== Infinity && !playoffRoundComplete;
+
     if (league.status === "PRE_DRAFT" && (!league.draft || league.draft.status === "PENDING")) {
       commishAction = {
         label: "Draft setup needed",
@@ -159,6 +182,18 @@ export default async function LeagueOverviewPage({
         label: "Regular season complete",
         sublabel: "All weeks are scored. Head to the admin panel to seed and start the playoffs.",
         href: `/league/${leagueId}/admin`,
+      };
+    } else if (league.playoffStatus === "IN_PROGRESS" && playoffRoundComplete && currentPlayoffRound !== null && currentPlayoffRound !== Infinity) {
+      commishAction = {
+        label: `Playoff round ${currentPlayoffRound} complete — advance to next round`,
+        sublabel: "Score the round and create the next matchup in the season controls.",
+        href: `/league/${leagueId}/season`,
+      };
+    } else if (league.playoffStatus === "IN_PROGRESS" && playoffRoundLive && currentPlayoffRound !== null) {
+      commishAction = {
+        label: `Playoffs in progress — Round ${currentPlayoffRound} is live`,
+        sublabel: "Once all games are final, use the season controls to advance the round.",
+        href: `/league/${leagueId}/season`,
       };
     }
   }
@@ -267,18 +302,99 @@ export default async function LeagueOverviewPage({
         {/* LEFT: Playoff race (primary) */}
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
 
-          {/* Playoffs underway — link to bracket */}
-          {playoffsStarted && (
-            <section style={card}>
+          {/* Champion announcement */}
+          {league.playoffStatus === "COMPLETE" && championTeamName && (
+            <section style={{
+              ...card,
+              background: "linear-gradient(135deg, rgba(251,191,36,0.1), rgba(245,158,11,0.04))",
+              border: "2px solid rgba(251,191,36,0.35)",
+            }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-                <h2 style={sectionTitle}>🏒 Playoffs underway</h2>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <span style={{ fontSize: 24 }}>🏆</span>
+                  <div>
+                    <h2 style={{ ...sectionTitle, color: "#fbbf24", marginBottom: 2 }}>Season Complete</h2>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: "#e2e8f0" }}>
+                      {championTeamName} are champions!
+                    </div>
+                  </div>
+                </div>
                 <Link href={`/league/${leagueId}/bracket`} style={ctaLink}>View bracket →</Link>
               </div>
-              <p style={{ color: "#64748b", margin: 0, fontSize: 13 }}>
-                The regular season is over. Check the bracket for current matchups and results.
+              <p style={{ color: "#78716c", margin: 0, fontSize: 13 }}>
+                Congratulations to {championTeamName} on a great season. See you next year!
               </p>
             </section>
           )}
+
+          {/* Playoffs underway — mini bracket summary */}
+          {playoffsStarted && league.playoffStatus !== "COMPLETE" && (() => {
+            const playoffMatchups = matchups.filter((m) => m.isPlayoff);
+            const populatedPlayoffMatchups = playoffMatchups.filter((m) => m.homeTeamId && m.awayTeamId);
+            if (populatedPlayoffMatchups.length === 0) return null;
+
+            // Find current round: lowest round with unscored matchups, else highest scored
+            const unscoredRounds = populatedPlayoffMatchups
+              .filter((m) => m.homeScore === null)
+              .map((m) => m.round ?? 1);
+            const currentPlayoffRound = unscoredRounds.length > 0
+              ? Math.min(...unscoredRounds)
+              : Math.max(...populatedPlayoffMatchups.map((m) => m.round ?? 1));
+
+            const currentRoundMatchups = populatedPlayoffMatchups.filter(
+              (m) => (m.round ?? 1) === currentPlayoffRound
+            );
+            const totalRounds = Math.max(...populatedPlayoffMatchups.map((m) => m.round ?? 1));
+            const roundLabel =
+              currentPlayoffRound === totalRounds ? "Championship" :
+              currentPlayoffRound === totalRounds - 1 ? "Semifinals" :
+              `Round ${currentPlayoffRound}`;
+
+            return (
+              <section style={card}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+                  <h2 style={sectionTitle}>🏒 {roundLabel}</h2>
+                  <Link href={`/league/${leagueId}/bracket`} style={ctaLink}>Full bracket →</Link>
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  {currentRoundMatchups.map((m) => {
+                    const scored = m.homeScore !== null && m.awayScore !== null;
+                    const isMyMatchup = m.homeTeamId === myTeamInLeague?.id || m.awayTeamId === myTeamInLeague?.id;
+                    return (
+                      <div key={m.id} style={{
+                        display: "grid", gridTemplateColumns: "1fr auto 1fr",
+                        gap: "4px 8px", padding: "8px 10px", borderRadius: 8, alignItems: "center",
+                        background: isMyMatchup ? "rgba(99,102,241,0.07)" : "rgba(255,255,255,0.02)",
+                        border: isMyMatchup ? "1px solid rgba(99,102,241,0.2)" : "1px solid rgba(148,163,184,0.06)",
+                      }}>
+                        <span style={{
+                          fontSize: 13, textAlign: "right", overflow: "hidden",
+                          textOverflow: "ellipsis", whiteSpace: "nowrap",
+                          color: m.homeTeamId === myTeamInLeague?.id ? "#e2e8f0" : "#94a3b8",
+                          fontWeight: m.homeTeamId === myTeamInLeague?.id ? 600 : 400,
+                        }}>
+                          {m.homeTeam.name}
+                          {scored && <span style={{ marginLeft: 6, fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>{m.homeScore!.toFixed(1)}</span>}
+                        </span>
+                        <span style={{ fontSize: 10, color: "#334155", fontWeight: 700, letterSpacing: "0.5px" }}>
+                          {scored ? "FINAL" : "VS"}
+                        </span>
+                        <span style={{
+                          fontSize: 13, overflow: "hidden",
+                          textOverflow: "ellipsis", whiteSpace: "nowrap",
+                          color: m.awayTeamId === myTeamInLeague?.id ? "#e2e8f0" : "#94a3b8",
+                          fontWeight: m.awayTeamId === myTeamInLeague?.id ? 600 : 400,
+                        }}>
+                          {scored && <span style={{ marginRight: 6, fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>{m.awayScore!.toFixed(1)}</span>}
+                          {m.awayTeam.name}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </section>
+            );
+          })()}
 
           {/* Playoff race / standings — primary module */}
           {hasResults && !playoffsStarted && standings.length > 0 && (

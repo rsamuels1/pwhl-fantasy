@@ -101,7 +101,7 @@ export default async function TeamLineupPage({ params }: Props) {
           },
           orderBy: { acquired: "asc" },
         },
-        league: { select: { rosterSettings: true, scoringSettings: true, name: true, season: true, isReplay: true } },
+        league: { select: { rosterSettings: true, scoringSettings: true, name: true, season: true, isReplay: true, playoffStatus: true } },
       },
     }),
     prisma.game.findMany({
@@ -130,7 +130,32 @@ export default async function TeamLineupPage({ params }: Props) {
     ? (seasonState.periods.find((p) => p.status === "UPCOMING")?.period ?? null)
     : null;
   // Period used for games-remaining badge: active if in-week, upcoming if between weeks
-  const periodForGames = activePeriod ?? upcomingPeriod;
+  let periodForGames = activePeriod ?? upcomingPeriod;
+
+  // Playoff period fallback: if no regular-season period is active/upcoming,
+  // check for a current in-progress playoff matchup
+  if (periodForGames === null && fullTeam.league.playoffStatus !== "NOT_STARTED") {
+    const playoffMatchup = await prisma.matchup.findFirst({
+      where: {
+        leagueId,
+        isPlayoff: true,
+        status: { not: "COMPLETE" },
+        OR: [
+          { homeTeamId: teamId },
+          { awayTeamId: teamId },
+        ],
+      },
+    });
+
+    if (playoffMatchup) {
+      periodForGames = {
+        week: playoffMatchup.week,
+        startsAt: playoffMatchup.startsAt,
+        endsAt: playoffMatchup.endsAt,
+      };
+    }
+  }
+
   // Next period for projections — always the first UPCOMING period (may be next week even during an active week)
   const nextPeriod = seasonState.periods.find((p) => p.status === "UPCOMING")?.period ?? null;
 
@@ -300,7 +325,7 @@ export default async function TeamLineupPage({ params }: Props) {
 
   const roster: RosterEntryRow[] = fullTeam.roster.map((entry) => {
     const pTeamId = entry.player.team?.id ?? null;
-    const locked = lockTime(pTeamId, periodGames, nowMs, activePeriod?.startsAt.getTime());
+    const locked = lockTime(pTeamId, periodGames, nowMs, periodForGames?.startsAt.getTime());
     return {
       id: entry.id,
       playerId: entry.playerId,

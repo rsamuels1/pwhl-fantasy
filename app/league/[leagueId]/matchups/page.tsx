@@ -10,8 +10,8 @@ function fmtDate(d: Date) {
   return new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" }).format(d);
 }
 
-export default async function MatchupsPage({ params }: { params: { leagueId: string } }) {
-  const { leagueId } = params;
+export default async function MatchupsPage({ params }: { params: Promise<{ leagueId: string }> }) {
+  const { leagueId } = await params;
   const user = await requireAuth(`/league/${leagueId}/matchups`);
   const myTeam = await requireLeagueMember(leagueId, user.id);
 

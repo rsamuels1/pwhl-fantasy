@@ -35,9 +35,9 @@ function RaceChip({ info }: { info: RaceInfo }) {
 export default async function PlayoffsPage({
   params,
 }: {
-  params: { leagueId: string };
+  params: Promise<{ leagueId: string }>;
 }) {
-  const { leagueId } = params;
+  const { leagueId } = await params;
   const user = await requireAuth(`/league/${leagueId}/bracket`);
   const myTeam = await requireLeagueMember(leagueId, user.id);
 

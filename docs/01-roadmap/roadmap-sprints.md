@@ -120,11 +120,12 @@ Closed all in-progress feature gaps and carry-forwards before beta.
 - **Draft Reliability Certification** ✅ — duplicate-tab handling, concurrent-league load test (8–10 leagues), reconnect stress test (10+ forced disconnects); findings documented in `docs/04-operations/commissioner-runbook.md`. MVP scorecard all green.
 - **Founder Operations Console** ✅ — `FOUNDER_EMAILS` env-var auth gate; `/founder/` dashboard (league stats, MVP gates, cross-league commissioner action feed); `/founder/leagues` searchable explorer; `/founder/leagues/[leagueId]` tabbed detail (Config · Standings · Season with sim controls · Draft); `/founder/simulate` end-to-end throwaway season validator (create → auto-draft → score all → playoffs → champion). New API routes: `POST /api/founder/leagues/[leagueId]/simulate`, `POST /api/founder/leagues/[leagueId]/start-playoffs`, `POST /api/founder/simulate-season`. No schema changes. (commit c48a1e7)
 
+- **Playoff Experience UX + Journey Fixes** ✅ — Full audit of the playoff user journey revealed 9 issues (3 P0 blockers, 4 P1 UX gaps, 2 P2 polish items). All fixed: new `POST /api/leagues/[leagueId]/advance-playoff-round` commissioner route with SeasonControls UI (P0-A); eliminated-team detection in `getPlayoffDashboardData` (P0-B); playoff matchup week numbers (P0-C); champion announcement card + league overview banner + `ChampionInfo` on `DashboardData` (P1-A); commissioner action strip playoff awareness (P1-B); "View bracket →" in DuelHero (P1-C); between-rounds `playoffPending` state (P1-D); rich mini bracket summary in league overview (P2-A); async params in bracket/matchups pages (P2-B). tsc clean.
+
 **Remaining Sprint 5 items:**
 
 4. **Commissioner workflow validation** — end-to-end manual test of all commissioner actions; runbook accuracy review; screenshots added (parallel with/after Founder Console)
 5. **Beta Feedback Infrastructure** — in-app feedback widget (bug reports, suggestions), founding commissioner tracking (invited → accepted → active → renewed)
-6. **Playoff Experience UX Polish (#30)** — champion banner, between-round nudge, bracket prominence (~40K tokens; moved from Sprint 6)
 
 **Exit:** commissioner can run a league start-to-finish with no engineering help; founder can monitor platform health without DB access; founding commissioner cohort can be invited.
 

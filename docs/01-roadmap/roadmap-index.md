@@ -105,8 +105,8 @@ The list below is sequenced by **token efficiency** — each feature's estimated
 
 ### Quick wins (< 45K tokens — batch 2–3 per session)
 
-1. **Playoff Experience UX (#30)** · ~40K
-   Bracket prominence, champion banner, between-round nudge. Polish on existing pages; no schema changes.
+1. **Commissioner Workflow Validation** · ~15K
+   End-to-end manual test of all commissioner actions; runbook accuracy review; screenshots.
 
 ### Standard sessions (60–90K tokens — one feature per session)
 

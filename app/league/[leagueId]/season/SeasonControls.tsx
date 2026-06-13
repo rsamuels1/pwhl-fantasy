@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import type { SeasonState } from "@/lib/season/lifecycle";
 
 interface Props {
@@ -16,7 +16,10 @@ interface Props {
 export default function SeasonControls({ leagueId, periods, onResult, isReplay, replayCurrentDate, playoffStatus, lifecycleStatus }: Props) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [advancingPlayoff, startAdvancingPlayoff] = useTransition();
+  const [playoffAdvanceResult, setPlayoffAdvanceResult] = useState<string | null>(null);
   const showStartPlayoffs = lifecycleStatus === "COMPLETE" && playoffStatus === "NOT_STARTED";
+  const showAdvancePlayoff = playoffStatus === "IN_PROGRESS";
 
   const activePeriod = periods.find((p) => p.status === "ACTIVE");
   const firstPending  = periods.find((p) => p.status === "SCORING_PENDING");
@@ -96,6 +99,27 @@ export default function SeasonControls({ leagueId, periods, onResult, isReplay, 
     window.location.reload();
   }
 
+  function handleAdvancePlayoffRound() {
+    startAdvancingPlayoff(async () => {
+      setPlayoffAdvanceResult(null);
+      setError(null);
+      const res = await fetch(`/api/leagues/${leagueId}/advance-playoff-round`, {
+        method: "POST",
+      });
+      const data = await res.json() as { round?: number; matchupsScored?: number; nextRound?: number | null; playoffComplete?: boolean; error?: string };
+      if (!res.ok || data.error) {
+        setError(data.error ?? "Failed to advance playoff round.");
+        return;
+      }
+      const msg = data.playoffComplete
+        ? "Playoffs complete! Champion determined."
+        : `Round ${data.round} scored. Round ${data.nextRound} matchup created.`;
+      setPlayoffAdvanceResult(msg);
+      // Reload so playoff status + bracket refresh from server.
+      window.location.reload();
+    });
+  }
+
   function advanceOneDay() {
     if (isReplay) {
       // Replay: advance the DB date by 1 day without scoring.
@@ -168,6 +192,11 @@ export default function SeasonControls({ leagueId, periods, onResult, isReplay, 
             {loading ? "…" : "▶ Start Playoffs"}
           </button>
         )}
+        {showAdvancePlayoff && (
+          <button onClick={handleAdvancePlayoffRound} disabled={advancingPlayoff || loading} style={btn("#f59e0b")}>
+            {advancingPlayoff ? "…" : "⏭ Advance playoff round"}
+          </button>
+        )}
         {targetPeriod && (
           <span style={{ fontSize: 11, color: "#64748b" }}>
             {activePeriod
@@ -212,10 +241,14 @@ export default function SeasonControls({ leagueId, periods, onResult, isReplay, 
             Clear sim date
           </button>
           {error && <p style={{ margin: 0, fontSize: 12, color: "#f87171" }}>{error}</p>}
+          {playoffAdvanceResult && <p style={{ margin: 0, fontSize: 12, color: "#34d399" }}>{playoffAdvanceResult}</p>}
         </div>
       )}
       {isReplay && error && (
         <p style={{ margin: "8px 0 0", fontSize: 12, color: "#f87171" }}>{error}</p>
+      )}
+      {isReplay && playoffAdvanceResult && (
+        <p style={{ margin: "8px 0 0", fontSize: 12, color: "#34d399" }}>{playoffAdvanceResult}</p>
       )}
     </div>
   );

@@ -113,6 +113,15 @@ export interface WeeklyRecap {
   roundLabel?: string;
 }
 
+export interface ChampionInfo {
+  teamId: string;
+  teamName: string;
+  opponentTeamId: string;
+  opponentTeamName: string;
+  myScore: number;
+  opponentScore: number;
+}
+
 export interface DashboardData {
   activeMatchup: ActiveMatchup | null;
   remainingPlayers: RemainingPlayer[];
@@ -124,6 +133,8 @@ export interface DashboardData {
   leagueTopPerformers: LeaguePerformerRow[];
   leagueDisappointments: LeaguePerformerRow[];
   eliminationInfo?: { round: number; roundLabel: string } | null;
+  championInfo?: ChampionInfo | null;
+  playoffPending?: boolean;
 }
 
 // ── main ──────────────────────────────────────────────────────────────────────
@@ -449,6 +460,43 @@ async function getPlayoffDashboardData(
     leagueDisappointments: [],
   };
 
+  // P1-A: When playoffs are complete, determine the champion from the final-round matchup.
+  if (league.playoffStatus === "COMPLETE") {
+    const finalMatchup = await prisma.matchup.findFirst({
+      where: {
+        leagueId,
+        isPlayoff: true,
+        homeScore: { not: null },
+        awayScore: { not: null },
+      },
+      orderBy: { round: "desc" },
+      include: {
+        homeTeam: { select: { id: true, name: true } },
+        awayTeam: { select: { id: true, name: true } },
+      },
+    });
+
+    let championInfo: ChampionInfo | null = null;
+    if (finalMatchup && finalMatchup.homeScore !== null && finalMatchup.awayScore !== null) {
+      const homeWon = finalMatchup.homeScore >= finalMatchup.awayScore;
+      const championTeam = homeWon ? finalMatchup.homeTeam : finalMatchup.awayTeam;
+      const runnerUpTeam = homeWon ? finalMatchup.awayTeam : finalMatchup.homeTeam;
+      const champScore = homeWon ? finalMatchup.homeScore : finalMatchup.awayScore;
+      const runnerUpScore = homeWon ? finalMatchup.awayScore : finalMatchup.homeScore;
+      if (championTeam && runnerUpTeam) {
+        championInfo = {
+          teamId: championTeam.id,
+          teamName: championTeam.name,
+          opponentTeamId: runnerUpTeam.id,
+          opponentTeamName: runnerUpTeam.name,
+          myScore: champScore,
+          opponentScore: runnerUpScore,
+        };
+      }
+    }
+    return { ...empty, championInfo };
+  }
+
   // Find my current playoff matchup (highest round first — eliminates earlier)
   const myMatchup = await prisma.matchup.findFirst({
     where: {
@@ -474,6 +522,10 @@ async function getPlayoffDashboardData(
         OR: [{ homeTeamId: myTeamId }, { awayTeamId: myTeamId }],
       },
       orderBy: { round: "desc" },
+      include: {
+        homeTeam: { select: { id: true, name: true } },
+        awayTeam: { select: { id: true, name: true } },
+      },
     });
 
     if (lastPlayoffMatchup?.round !== null && lastPlayoffMatchup?.round !== undefined) {
@@ -482,6 +534,49 @@ async function getPlayoffDashboardData(
       return { ...empty, eliminationInfo: { round: lastPlayoffMatchup.round, roundLabel } };
     }
     return empty;
+  }
+
+  // P0-B: Check if myMatchup is already fully scored and the current team lost.
+  // In that case, the team is eliminated — we should return eliminationInfo instead
+  // of treating the finished matchup as the active one.
+  // P1-D: If myMatchup is scored and the team WON, but the period has ended and no
+  // next-round matchup exists yet, return playoffPending so the UI can show a helpful message.
+  if (myMatchup.homeScore !== null && myMatchup.awayScore !== null) {
+    const iAmHome = myMatchup.homeTeamId === myTeamId;
+    const myMatchupScore = iAmHome ? myMatchup.homeScore : myMatchup.awayScore;
+    const opponentMatchupScore = iAmHome ? myMatchup.awayScore : myMatchup.homeScore;
+    const iLost = myMatchupScore < opponentMatchupScore;
+
+    if (iLost && myMatchup.round !== null && myMatchup.round !== undefined) {
+      // Team was eliminated — return eliminationInfo.
+      const totalRounds = calculatePlayoffRounds(league.playoffSettings?.teamsInPlayoff || 4);
+      const roundLabel = getRoundLabel(myMatchup.round, totalRounds);
+      return {
+        ...empty,
+        eliminationInfo: {
+          round: myMatchup.round,
+          roundLabel,
+        },
+      };
+    }
+
+    // Team won this round. Check if we're between rounds (period ended, no next-round matchup yet).
+    if (!iLost && nowMs > myMatchup.endsAt.getTime()) {
+      // Check if a next-round matchup exists for this team
+      const nextRoundMatchup = await prisma.matchup.findFirst({
+        where: {
+          leagueId,
+          isPlayoff: true,
+          round: (myMatchup.round ?? 1) + 1,
+          OR: [{ homeTeamId: myTeamId }, { awayTeamId: myTeamId }],
+        },
+        select: { id: true },
+      });
+      if (!nextRoundMatchup) {
+        // Between rounds — commissioner hasn't advanced yet.
+        return { ...empty, playoffPending: true };
+      }
+    }
   }
 
   const iAmHome = myMatchup.homeTeamId === myTeamId;
