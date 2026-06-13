@@ -124,7 +124,7 @@ export default async function PlayoffsPage({
 
   const ps = (league.playoffSettings ?? {}) as { teamsInPlayoff?: number; topSeedsWithBye?: number };
   const teamsInPlayoff = ps.teamsInPlayoff ?? 6;
-  const topSeedsWithBye = ps.topSeedsWithBye ?? 2;
+  const topSeedsWithBye = ps.topSeedsWithBye ?? 0;
 
   // Season progress stats for the race banner
   const regularMatchups = matchups.filter((m) => !m.isPlayoff);
@@ -172,8 +172,12 @@ export default async function PlayoffsPage({
             fontSize: 13, color: "#94a3b8",
           }}>
             <span style={{ color: "#a5b4fc", fontWeight: 700 }}>🏆 {teamsInPlayoff} teams qualify</span>
-            <span style={{ color: "#334155" }}>·</span>
-            <span>Top {topSeedsWithBye} seeds receive a first-round bye</span>
+            {topSeedsWithBye > 0 && (
+              <>
+                <span style={{ color: "#334155" }}>·</span>
+                <span>Top {topSeedsWithBye} seeds receive a first-round bye</span>
+              </>
+            )}
             {totalWeeks > 0 && (
               <>
                 <span style={{ color: "#334155" }}>·</span>
