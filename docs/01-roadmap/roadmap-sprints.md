@@ -98,6 +98,10 @@ Close the in-progress feature gaps and carry-forwards before beta.
 - **#01 Commissioner Dashboard (remaining gaps)** ✅ — pause/restart replay shortcut; force-draft-start CTA; lineup lock override (`POST .../commissioner/unlock-player`); settings editor (gated on pre-draft); all actions write to audit log (shipped June 13, 2026; commit eb65449)
 - **#17 Rivalries (remaining gaps)** ✅ — rival badge + H2H history view on matchup page (shipped June 13, 2026; commit cbe8374); rival = most-played opponent (tie-break W/L); H2H shows last 5 matchups with dates, scores, outcomes
 
+**Bug fixes & UX improvements (Sprint 4):**
+- **VP Standings Zeroing Fix** ✅ — root cause: `homeVP`/`awayVP` columns defined in schema but missing from Prisma migration; DB returned `undefined` → unsafe casts degraded to `null` → `computeVpStandings` skipped all rows. Solution: created migration `20260627101300_add_vp_scoring` to add missing columns; removed 7 unsafe type casts across standings-service, 4 page components, and season/index (commit da9a027)
+- **League Matchup Slate on Franchise Page** ✅ — added "This week" card to `/team/[teamId]/matchup` showing all 4 VP matchups per week with current + projected scores. New `MatchupSlateRow` type; batch-projected all teams' remaining scores during active periods; user's own matchup row highlighted in indigo. Improves visibility of league-wide competitive landscape (commit da9a027)
+
 **Exit:**
 - NT-002: ✅ ACHIEVED — manager with a starter whose PWHL team has no games remaining this period receives a LINEUP_INCOMPLETE in-app notification on dashboard load; second load in the same period does not duplicate it.
 - IA-011: ✅ ACHIEVED (Sprint 3) — bracket shows no "bye" text on default 4-team format; admin settings render as readable tables.
