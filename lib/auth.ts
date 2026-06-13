@@ -127,3 +127,29 @@ export async function apiRequireCommissioner(
   }
   return league;
 }
+
+// ── Founder guards ────────────────────────────────────────────────────────────
+
+function isFounderEmail(email: string): boolean {
+  const list = process.env.FOUNDER_EMAILS ?? "";
+  return list.split(",").map((e) => e.trim()).includes(email);
+}
+
+// Page-level: returns the authenticated user if they are a founder, else notFound().
+export async function requireFounder(): Promise<User> {
+  const user = await requireAuth("/founder");
+  if (!isFounderEmail(user.email)) notFound();
+  return user;
+}
+
+// API-level: returns the User or a 403 NextResponse.
+export async function apiRequireFounder(
+  req: NextRequest
+): Promise<User | NextResponse> {
+  const auth = await apiRequireAuth(req);
+  if (auth instanceof NextResponse) return auth;
+  if (!isFounderEmail(auth.email)) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+  return auth;
+}

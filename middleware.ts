@@ -6,8 +6,12 @@ export function middleware(req: NextRequest) {
   const cookie = req.cookies.get(SESSION_COOKIE)?.value;
   const { pathname } = req.nextUrl;
 
-  // League / team pages — redirect to login with returnTo
-  if (pathname.startsWith("/league/") || pathname.startsWith("/team/")) {
+  // League / team / founder pages — redirect to login with returnTo
+  if (
+    pathname.startsWith("/league/") ||
+    pathname.startsWith("/team/") ||
+    pathname.startsWith("/founder")
+  ) {
     if (!cookie) {
       const url = req.nextUrl.clone();
       url.pathname = "/login";
@@ -16,8 +20,8 @@ export function middleware(req: NextRequest) {
     }
   }
 
-  // League API routes — return 401
-  if (pathname.startsWith("/api/leagues/")) {
+  // League + founder API routes — return 401
+  if (pathname.startsWith("/api/leagues/") || pathname.startsWith("/api/founder/")) {
     if (!cookie) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -27,5 +31,5 @@ export function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/league/:path*", "/team/:path*", "/api/leagues/:path*"],
+  matcher: ["/league/:path*", "/team/:path*", "/founder/:path*", "/founder", "/api/leagues/:path*", "/api/founder/:path*"],
 };
