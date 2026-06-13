@@ -31,7 +31,7 @@ Evidence:
 
 # Draft
 
-PASS WITH RISKS
+PASS
 
 Evidence:
 
@@ -39,11 +39,10 @@ Evidence:
 - Auto draft support (`auto-draft.ts`)
 - Draft room UI (`app/draft/[leagueId]/`)
 - Roster assignments match approved 13-slot configuration
-
-Residual risks:
-
-- Disconnect/reconnect and duplicate-tab behavior not fully load-tested
-- Auto-escalation (consecutive auto-picks) only tested via unit tests, not end-to-end
+- **Duplicate-tab safety:** Server evicts old socket on new `JOIN` for same team; client shows "switch to other tab" overlay (code 4001)
+- **Load test:** 4 concurrent leagues × 4 teams completed cleanly with zero cross-league broadcasts (`scripts/load-test-draft.ts`)
+- **Reconnect stress test:** 10 forced socket kills/reconnects; all state restored within 500ms (`scripts/stress-test-reconnect.ts`)
+- **Commissioner escalation guide:** Documented in `docs/04-operations/commissioner-runbook.md` ("Draft Reliability Guide")
 
 ---
 

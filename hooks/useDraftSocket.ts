@@ -15,6 +15,7 @@ export interface DraftSocket {
   draft: DraftState | null;
   available: PlayerSummary[];
   lastError: { code: string; message: string } | null;
+  evicted: boolean;
   start: () => void;
   makePick: (playerId: string) => void;
   listAvailable: (search?: string) => void;
@@ -32,6 +33,7 @@ export function useDraftSocket(leagueId: string, teamId: string): DraftSocket {
   const [draft, setDraft] = useState<DraftState | null>(null);
   const [available, setAvailable] = useState<PlayerSummary[]>([]);
   const [lastError, setLastError] = useState<{ code: string; message: string } | null>(null);
+  const [evicted, setEvicted] = useState(false);
 
   // Reconnection state — all refs so the closures inside connect() always read
   // the current values without needing to be re-created.
@@ -93,9 +95,15 @@ export function useDraftSocket(leagueId: string, teamId: string): DraftSocket {
         }
       };
 
-      ws.onclose = () => {
-        setConnStatus("closed");
-        scheduleReconnect();
+      ws.onclose = (event: CloseEvent) => {
+        if (event.code === 4001) {
+          // Evicted by server (duplicate tab)
+          shouldReconnectRef.current = false;
+          setEvicted(true);
+        } else {
+          setConnStatus("closed");
+          scheduleReconnect();
+        }
       };
 
       // onerror always fires immediately before onclose — let onclose schedule the reconnect.
@@ -138,5 +146,5 @@ export function useDraftSocket(leagueId: string, teamId: string): DraftSocket {
   const pause = useCallback(() => send({ type: "PAUSE" }), [send]);
   const resume = useCallback(() => send({ type: "RESUME" }), [send]);
 
-  return { connStatus, draft, available, lastError, start, makePick, listAvailable, setQueue, pause, resume };
+  return { connStatus, draft, available, lastError, evicted, start, makePick, listAvailable, setQueue, pause, resume };
 }

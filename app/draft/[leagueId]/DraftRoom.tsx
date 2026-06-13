@@ -20,6 +20,42 @@ import type { PickSlot } from "@/lib/draft/snake";
 import type { PlayerStats } from "@/app/api/leagues/[leagueId]/draft/players/route";
 
 // ---------------------------------------------------------------------------
+// Evicted overlay
+// ---------------------------------------------------------------------------
+
+function EvictedOverlay() {
+  return (
+    <div style={{
+      position: "fixed",
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      background: "rgba(0, 0, 0, 0.8)",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      zIndex: 10000,
+    }}>
+      <div style={{
+        background: "var(--surface)",
+        borderRadius: 8,
+        padding: 32,
+        textAlign: "center",
+        maxWidth: 400,
+      }}>
+        <p style={{ fontSize: 16, fontWeight: 600, marginBottom: 8 }}>
+          You opened the draft in another tab
+        </p>
+        <p style={{ fontSize: 14, color: "var(--muted)" }}>
+          Switch to that tab to continue drafting.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Top bar
 // ---------------------------------------------------------------------------
 
@@ -797,8 +833,12 @@ export default function DraftRoom({
   initialStats: PlayerStats[];
   statSeason: string | null;
 }) {
-  const { connStatus, draft, available, lastError, start, makePick, listAvailable, setQueue, pause, resume } =
+  const { connStatus, draft, available, lastError, evicted, start, makePick, listAvailable, setQueue, pause, resume } =
     useDraftSocket(leagueId, teamId);
+
+  if (evicted) {
+    return <EvictedOverlay />;
+  }
 
   const isMobile = useIsMobile(900);
   const [mobileTab, setMobileTab] = useState<"pick" | "board" | "needs">("pick");

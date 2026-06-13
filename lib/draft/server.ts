@@ -69,6 +69,14 @@ class DraftRoom {
   }
 
   addSocket(ws: WebSocket, fantasyTeamId: string) {
+    // Evict any existing socket for this team (duplicate tab). Last-tab-wins.
+    for (const [existingWs, teamId] of this.sockets.entries()) {
+      if (teamId === fantasyTeamId) {
+        existingWs.close(4001, "evicted: new tab connected");
+        this.removeSocket(existingWs);
+        break;
+      }
+    }
     this.sockets.set(ws, fantasyTeamId);
     this.send(ws, { type: "STATE", state: toWireState(this.state) });
   }
