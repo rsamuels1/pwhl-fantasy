@@ -117,14 +117,14 @@ Closed all in-progress feature gaps and carry-forwards before beta.
 
 - **Replay gap bug fix** ✅ — After scoring Week 10 of the 2025-26 season the 21-day all-star break gap (Jan 31 → Feb 21) caused the "Score week N" button to disappear because `targetPeriod` only checked for ACTIVE or SCORING_PENDING periods. Added UPCOMING as a third fallback so the button correctly shows "Score week 11" and bridges the gap in one click. Fixed in `app/league/[leagueId]/season/SeasonControls.tsx`.
 - **"Sim to playoffs" button** ✅ — Added a purple "⏩ Sim to playoffs" button in the replay/dev season controls. Scores all remaining regular-season weeks in a single click by calling `advanceSeason` with the simulated date set past the final week's end. After completion, the "▶ Start Playoffs" button appears. No API changes — `advanceSeason` already supports multi-week scoring. Implemented in `app/league/[leagueId]/season/SeasonControls.tsx`.
+- **Draft Reliability Certification** ✅ — duplicate-tab handling, concurrent-league load test (8–10 leagues), reconnect stress test (10+ forced disconnects); findings documented in `docs/04-operations/commissioner-runbook.md`. MVP scorecard all green.
+- **Founder Operations Console** ✅ — `FOUNDER_EMAILS` env-var auth gate; `/founder/` dashboard (league stats, MVP gates, cross-league commissioner action feed); `/founder/leagues` searchable explorer; `/founder/leagues/[leagueId]` tabbed detail (Config · Standings · Season with sim controls · Draft); `/founder/simulate` end-to-end throwaway season validator (create → auto-draft → score all → playoffs → champion). New API routes: `POST /api/founder/leagues/[leagueId]/simulate`, `POST /api/founder/leagues/[leagueId]/start-playoffs`, `POST /api/founder/simulate-season`. No schema changes. (commit c48a1e7)
 
-**Recommended starting order (remaining):**
+**Remaining Sprint 5 items:**
 
-1. **Draft Reliability Certification** — duplicate-tab handling, load test concurrent leagues, reconnect stress test; findings documented in `commissioner-runbook.md`. (Unblocks beta invites; last remaining ⚠️ on MVP scorecard)
-2. **Playoff Experience UX Polish (#30)** — champion banner, between-round nudge, bracket prominence (quick win ~40K tokens, high visibility for first beta commissioners)
-3. **Founder Operations Console** — league explorer (search by league/commissioner/user, view config + draft state + standings), simulation launcher, validation dashboard — spec `docs/02-engineering/founder-ops-console.md` (needed for founder to monitor platform health without DB access)
 4. **Commissioner workflow validation** — end-to-end manual test of all commissioner actions; runbook accuracy review; screenshots added (parallel with/after Founder Console)
-5. **Beta Feedback Infrastructure** — in-app feedback widget (bug reports, suggestions), founding commissioner tracking (invited → accepted → active → renewed) (parallel with/after Founder Console)
+5. **Beta Feedback Infrastructure** — in-app feedback widget (bug reports, suggestions), founding commissioner tracking (invited → accepted → active → renewed)
+6. **Playoff Experience UX Polish (#30)** — champion banner, between-round nudge, bracket prominence (~40K tokens; moved from Sprint 6)
 
 **Exit:** commissioner can run a league start-to-finish with no engineering help; founder can monitor platform health without DB access; founding commissioner cohort can be invited.
 

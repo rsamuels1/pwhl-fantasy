@@ -57,6 +57,7 @@ Implemented systems include:
 - Draft Analytics (6 events instrumented)
 - League Creation UX (8-team recommendation)
 - In-app notifications (all three MVP-critical types)
+- Founder Operations Console (`/founder/`) — cross-league monitoring, simulation launcher, end-to-end validator; `FOUNDER_EMAILS` env-var auth gate; no schema change
 
 These systems should be considered core platform functionality.
 
@@ -69,7 +70,7 @@ Snapshot of launch-blocking areas. **Confidence to launch: ~95%.**
 | Area | Status | Blocker |
 |---|---|---|
 | League creation | ✅ PASS | — |
-| Draft | ⚠️ PASS WITH RISKS | reconnect ✅ · commissioner auth ✅ · auto-pick position-aware ✅ · duplicate-tab unvalidated |
+| Draft | ✅ PASS | reconnect ✅ · commissioner auth ✅ · auto-pick position-aware ✅ · duplicate-tab ✅ |
 | Rosters | ✅ PASS | — |
 | Weekly matchups | ✅ PASS | — |
 | VP standings | ✅ PASS | — |
@@ -80,7 +81,7 @@ Snapshot of launch-blocking areas. **Confidence to launch: ~95%.**
 | Analytics | ✅ PASS | 6 events instrumented |
 | End-to-end season sim | ✅ PASS | — |
 
-**Remaining soft blockers:** draft duplicate-tab handling (unvalidated).
+**Remaining soft blockers:** none — all MVP gates green. Ready to invite founding commissioners.
 
 ---
 

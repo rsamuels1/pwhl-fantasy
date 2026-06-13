@@ -739,8 +739,8 @@
             </div>
 
             <div class="task-row">
-              <span class="task-check">○</span>
-              <span style="color: #ccc"><strong style="color:#f5a623">Priority 3 — Founder Operations Console</strong> — league explorer (search by league / commissioner / user, view config + draft state + standings), simulation launcher, validation dashboard. Spec: <code>docs/02-engineering/founder-ops-console.md</code>. Plan a dedicated session (~130K token heavy lift). <em>Needed for founder to monitor platform health without DB access before inviting beta commissioners.</em></span>
+              <span class="task-check">✅</span>
+              <span style="color: #666"><strong style="color:#888">Priority 3 — Founder Operations Console</strong> — <code>/founder/</code> dashboard (league stats, MVP gates, cross-league commissioner action feed); <code>/founder/leagues</code> searchable explorer; <code>/founder/leagues/[leagueId]</code> tabbed detail (Config · Standings · Season with sim controls · Draft); <code>/founder/simulate</code> end-to-end throwaway season validator. New API routes: simulate, start-playoffs, simulate-season. <code>FOUNDER_EMAILS</code> env-var auth gate; no schema change. (commit c48a1e7)</span>
             </div>
 
             <div class="task-row">

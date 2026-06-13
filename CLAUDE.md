@@ -166,6 +166,8 @@ survives DB resets and schema migrations.
    - Error Handling ✅ (`components/ErrorState.tsx`, `EmptyState.tsx`, `LoadingState.tsx`; `loading.tsx`+`error.tsx` for 11 routes; draft room raw-error display fixed; empty-state copy standardised; pre-season standings empty state; spec: `docs/02-engineering/error-handling-spec.md`)
    - IA-011 ✅ (bracket page hides bye text when `topSeedsWithBye === 0`; fixed default from 2→0; settings page replaces raw JSON `<pre>` dumps with human-readable labeled rows for scoring, roster, and playoff format; checklist: `docs/02-engineering/ia-011-checklist.md`)
 6. Integration + load test the draft room + beta
+   - Draft Reliability Certification ✅ (duplicate-tab handling, concurrent-league load test, reconnect stress test; findings in `docs/04-operations/commissioner-runbook.md`; all MVP scorecard gates green)
+   - Founder Operations Console ✅ (`app/founder/` — dashboard, league explorer, league detail with sim controls, throwaway season validator; `FOUNDER_EMAILS` env-var auth gate; API routes under `app/api/founder/`; no schema change)
 7. Public launch ~early Nov, drafts ~1 week before opener
 
 ## Draft room UI (`app/draft/[leagueId]/`)
