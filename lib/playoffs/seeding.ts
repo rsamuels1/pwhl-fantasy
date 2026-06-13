@@ -225,7 +225,8 @@ export interface RaceInfo {
 export function computeRace(
   standings: Pick<Standing, "fantasyTeamId" | "points" | "wins" | "losses" | "ties">[],
   matchups: Matchup[],
-  cutoff: number
+  cutoff: number,
+  maxPointsPerWeek = 4
 ): Map<string, RaceInfo> {
   const map = new Map<string, RaceInfo>();
   if (standings.length === 0 || cutoff <= 0 || cutoff >= standings.length) {
@@ -254,11 +255,11 @@ export function computeRace(
     const rank = i + 1;
     const inSpot = rank <= cutoff;
     const remaining = remainingFor(s.fantasyTeamId);
-    const maxPoints = s.points + remaining;
+    const maxPoints = s.points + remaining * maxPointsPerWeek;
 
     let status: RaceInfo["status"];
     if (inSpot) {
-      const bubbleCeiling = bubbleTeam.points + remainingFor(bubbleTeam.fantasyTeamId);
+      const bubbleCeiling = bubbleTeam.points + remainingFor(bubbleTeam.fantasyTeamId) * maxPointsPerWeek;
       status = bubbleCeiling < s.points ? "clinched" : rank === cutoff ? "bubble" : "in";
     } else {
       status = maxPoints < lineTeam.points ? "eliminated" : "out";

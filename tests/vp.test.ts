@@ -313,4 +313,46 @@ describe("computeVpStandings", () => {
     const t1 = standings.find(s => s.fantasyTeamId === "t1");
     expect(t1?.teamName).toBe("Team 1");
   });
+
+  it("wins tiebreaker: higher wins ranks first when VP equal", () => {
+    // t1 and t2 both have 4 VP, but t1 has 2 wins and t2 has 1 win
+    const matchups = [
+      makeMatchup("t1", "t2", 80, 60, 4, 0),   // t1 wins (2 wins total)
+      makeMatchup("t1", "t3", 70, 50, 2, 0),   // t1 wins again (2 wins)
+      makeMatchup("t2", "t3", 90, 50, 4, 0),   // t2 wins once (1 win)
+    ];
+    const standings = computeVpStandings(teams, matchups);
+    expect(standings[0].fantasyTeamId).toBe("t1"); // 4 VP, 2 wins
+    expect(standings[1].fantasyTeamId).toBe("t2"); // 4 VP, 1 win
+  });
+
+  it("H2H tiebreaker: H2H winner ranks first when VP and wins equal", () => {
+    // t1 and t2 both have 2 VP and 1 win; t1 beat t2 head-to-head
+    const matchups = [
+      makeMatchup("t1", "t2", 80, 60, 2, 0),   // t1 beats t2 (H2H)
+      makeMatchup("t1", "t3", 50, 40, 0, 0),   // t1 loses
+      makeMatchup("t2", "t3", 90, 70, 2, 0),   // t2 beats t3 (1st win)
+    ];
+    const standings = computeVpStandings(teams, matchups);
+    // Both t1 and t2 have 2 VP and 1 win, but t1 beat t2 H2H
+    expect(standings[0].fantasyTeamId).toBe("t1");
+    expect(standings[1].fantasyTeamId).toBe("t2");
+  });
+
+  it("pointsFor fallback: higher FP ranks first when VP, wins, and H2H equal", () => {
+    // t1 and t2 both have 2 VP, 1 win, no H2H matchup; t1 scored more total
+    const matchups = [
+      makeMatchup("t1", "t3", 100, 50, 2, 0),  // t1 wins, 100 points
+      makeMatchup("t2", "t3", 90, 60, 2, 0),   // t2 wins, 90 points (1 H2H tiebreaker to override)
+    ];
+    // Swap: make sure they never meet
+    const teamsNoH2h = [
+      { id: "t1", name: "Team 1" },
+      { id: "t2", name: "Team 2" },
+      { id: "t3", name: "Team 3" },
+    ];
+    const standings = computeVpStandings(teamsNoH2h, matchups);
+    expect(standings[0].fantasyTeamId).toBe("t1"); // 2 VP, 1 win, 100 FP
+    expect(standings[1].fantasyTeamId).toBe("t2"); // 2 VP, 1 win, 90 FP
+  });
 });

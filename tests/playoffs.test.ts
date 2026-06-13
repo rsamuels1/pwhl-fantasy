@@ -15,7 +15,7 @@ import {
   PlayoffSettings,
   SeededTeam,
 } from "@/lib/playoffs/brackets";
-import { computeStandings } from "@/lib/playoffs/seeding";
+import { computeStandings, computeRace } from "@/lib/playoffs/seeding";
 import { computeVpStandings } from "@/lib/scoring/vp";
 import { Matchup } from "@prisma/client";
 
@@ -310,5 +310,44 @@ describe("Standings (W-L-T)", () => {
     expect(standings).toHaveLength(3);
     // team3: 1W+0.5T=1.5pts, team1: 1W+0.5T=1.5pts, team2: 0.5T=0.5pts
     expect(standings[2].fantasyTeamId).toBe("team2");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// computeRace ceiling with VP mode (maxPointsPerWeek = 4)
+// ---------------------------------------------------------------------------
+
+describe("computeRace with VP mode", () => {
+  it("computes race ceiling correctly with maxPointsPerWeek=4", () => {
+    // 4-team race, cutoff at 2 (top 2 make playoffs). 3 total weeks (1 unplayed).
+    // t1 at 20 VP (2 weeks played), t2 at 18 VP (2 weeks played).
+    // t3 at 14 VP (2 weeks played, 1 left): max 14 + 1*4 = 18 VP (ties line team).
+    // t4 at 8 VP (1 week played, 2 left): max 8 + 2*4 = 16 VP (below line, so "out").
+    const standings = [
+      { fantasyTeamId: "t1", points: 20, wins: 5, losses: 0, ties: 1 },
+      { fantasyTeamId: "t2", points: 18, wins: 4, losses: 1, ties: 1 }, // playoff line
+      { fantasyTeamId: "t3", points: 14, wins: 3, losses: 2, ties: 1 }, // 4 behind, 1 week left
+      { fantasyTeamId: "t4", points: 8, wins: 2, losses: 3, ties: 0 },   // 10 behind, 2 weeks left
+    ];
+    const matchups: Matchup[] = [
+      // Week 1
+      { id: "m1", leagueId: "league1", week: 1, startsAt: new Date(), endsAt: new Date(),
+        homeTeamId: "t1", awayTeamId: "t2", homeScore: 100, awayScore: 90, homeVP: 2, awayVP: 0, isPlayoff: false, round: null, createdAt: new Date(), updatedAt: new Date() },
+      { id: "m2", leagueId: "league1", week: 1, startsAt: new Date(), endsAt: new Date(),
+        homeTeamId: "t3", awayTeamId: "t4", homeScore: 85, awayScore: 75, homeVP: 2, awayVP: 0, isPlayoff: false, round: null, createdAt: new Date(), updatedAt: new Date() },
+      // Week 2
+      { id: "m3", leagueId: "league1", week: 2, startsAt: new Date(), endsAt: new Date(),
+        homeTeamId: "t1", awayTeamId: "t3", homeScore: 105, awayScore: 80, homeVP: 2, awayVP: 0, isPlayoff: false, round: null, createdAt: new Date(), updatedAt: new Date() },
+      { id: "m4", leagueId: "league1", week: 2, startsAt: new Date(), endsAt: new Date(),
+        homeTeamId: "t2", awayTeamId: "t4", homeScore: 95, awayScore: 70, homeVP: 2, awayVP: 0, isPlayoff: false, round: null, createdAt: new Date(), updatedAt: new Date() },
+      // Week 3 — unplayed
+      { id: "m5", leagueId: "league1", week: 3, startsAt: new Date(), endsAt: new Date(),
+        homeTeamId: "t1", awayTeamId: "t4", homeScore: null, awayScore: null, homeVP: null, awayVP: null, isPlayoff: false, round: null, createdAt: new Date(), updatedAt: new Date() },
+    ];
+    const race = computeRace(standings, matchups, 2, 4); // cutoff=2, VP mode
+    // t3: max = 14 + 1*4 = 18, lineTeam.points = 18, so 18 < 18 is false → "out"
+    expect(race.get("t3")?.status).toBe("out");
+    // t4: max = 8 + 2*4 = 16, lineTeam.points = 18, so 16 < 18 is true → "eliminated"
+    expect(race.get("t4")?.status).toBe("eliminated");
   });
 });

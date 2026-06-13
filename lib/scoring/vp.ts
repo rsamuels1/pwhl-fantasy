@@ -178,8 +178,26 @@ export function computeVpStandings(
     away.rankVP += (m.awayVP - amVP);
   }
 
+  // Pre-compute H2H wins for tiebreaker (spec order: VP → Wins → H2H → Total FP)
+  const h2hWins = new Map<string, Map<string, number>>();
+  for (const m of matchups) {
+    if (m.isPlayoff || m.homeScore === null || m.awayScore === null) continue;
+    if (!h2hWins.has(m.homeTeamId)) h2hWins.set(m.homeTeamId, new Map());
+    if (!h2hWins.has(m.awayTeamId)) h2hWins.set(m.awayTeamId, new Map());
+    const hmId = m.homeTeamId, awId = m.awayTeamId;
+    if (m.homeScore > m.awayScore) {
+      h2hWins.get(hmId)!.set(awId, (h2hWins.get(hmId)!.get(awId) ?? 0) + 1);
+    } else if (m.awayScore > m.homeScore) {
+      h2hWins.get(awId)!.set(hmId, (h2hWins.get(awId)!.get(hmId) ?? 0) + 1);
+    }
+  }
+
   return [...byTeam.values()].sort((a, b) => {
     if (b.totalVP !== a.totalVP) return b.totalVP - a.totalVP;
-    return b.pointsFor - a.pointsFor; // tiebreak: total FP
+    if (b.wins !== a.wins) return b.wins - a.wins;
+    const aVsB = h2hWins.get(a.fantasyTeamId)?.get(b.fantasyTeamId) ?? 0;
+    const bVsA = h2hWins.get(b.fantasyTeamId)?.get(a.fantasyTeamId) ?? 0;
+    if (aVsB !== bVsA) return bVsA - aVsB;
+    return b.pointsFor - a.pointsFor;
   });
 }
