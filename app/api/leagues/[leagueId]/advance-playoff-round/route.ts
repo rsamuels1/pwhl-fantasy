@@ -9,6 +9,8 @@ import { apiRequireAuth, apiRequireCommissioner } from "@/lib/auth";
 import { computeAllTeamScores } from "@/lib/scoring/matchups";
 import { parseScoringSettings } from "@/lib/scoring/settings";
 import { getPlayoffSettings, calculatePlayoffRounds } from "@/lib/playoffs/lifecycle";
+import { emitEvent, type LeagueEventType } from "@/lib/services/activity";
+import { getRoundLabel } from "@/lib/playoffs/brackets";
 
 export async function POST(
   req: NextRequest,
@@ -149,6 +151,36 @@ export async function POST(
     nextRound = currentRound + 1;
     await populateOrCreateNextRound(leagueId, nextRound, winnerIds, allPlayoffMatchups, prisma);
   }
+
+  // Emit elimination / clinch / championship events for the activity feed
+  await Promise.all(
+    results.map(async (r) => {
+      const loserId   = r.winnerId === r.homeTeamId ? r.awayTeamId   : r.homeTeamId;
+      const loserName = r.winnerId === r.homeTeamId ? r.awayTeamName : r.homeTeamName;
+      const winnerName = r.winnerId === r.homeTeamId ? r.homeTeamName : r.awayTeamName;
+      const roundLabel = getRoundLabel(currentRound, totalRounds);
+      const nextLabel  = getRoundLabel(currentRound + 1, totalRounds);
+
+      await emitEvent(
+        { leagueId, teamId: loserId, type: "PLAYOFF_ELIMINATION" as LeagueEventType,
+          data: { description: `${loserName} eliminated in the ${roundLabel}`, round: currentRound } },
+        prisma
+      );
+      if (isFinalRound) {
+        await emitEvent(
+          { leagueId, teamId: r.winnerId, type: "CHAMPIONSHIP_WON" as LeagueEventType,
+            data: { description: `🏆 ${winnerName} are the champions!`, round: currentRound } },
+          prisma
+        );
+      } else {
+        await emitEvent(
+          { leagueId, teamId: r.winnerId, type: "PLAYOFF_CLINCH" as LeagueEventType,
+            data: { description: `${winnerName} advance to the ${nextLabel}`, round: currentRound } },
+          prisma
+        );
+      }
+    })
+  );
 
   return NextResponse.json({
     round: currentRound,

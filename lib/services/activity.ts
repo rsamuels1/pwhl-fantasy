@@ -13,6 +13,9 @@ export type LeagueEventType =
   | "PLAYER_DROP"
   | "TRADE"
   | "PLAYOFF_QUALIFICATION"
+  | "PLAYOFF_CLINCH"
+  | "PLAYOFF_ELIMINATION"
+  | "CHAMPIONSHIP_WON"
   | "MAJOR_PERFORMANCE";
 
 export async function getLeagueActivity(

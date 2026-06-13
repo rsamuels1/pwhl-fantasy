@@ -105,33 +105,33 @@ The list below is sequenced by **token efficiency** — each feature's estimated
 
 ### Quick wins (< 45K tokens — batch 2–3 per session)
 
-1. **Commissioner Workflow Validation** · ~15K
-   End-to-end manual test of all commissioner actions; runbook accuracy review; screenshots.
+1. **Commissioner Workflow Validation** · ~15K · Sprint 5
+   End-to-end manual test of all commissioner actions; runbook accuracy review; screenshots. See `docs/02-engineering/commissioner-workflow-validation-plan.md`.
 
 ### Standard sessions (60–90K tokens — one feature per session)
 
-2. **Error Handling (#4)** · ~65K
-   Empty + loading states across all core pages. Many files but each change is small and localized.
+2. **Weekly Performance Dashboard (#29)** · ~65K · Sprint 5
+   New page replacing the Schedule tab. Aggregates existing `Matchup` + `StatLine` rows; no schema changes. Pulled up from Sprint 6 — no schema changes, all reads on existing data, directly serves manager experience during beta.
 
-3. **Weekly Performance Dashboard (#29)** · ~65K
-   New page replacing the Schedule tab. Aggregates existing `Matchup` + `StatLine` rows; no schema changes.
-
-4. **Team Analysis & Insights (#25)** · ~85K
+3. **Team Analysis & Insights (#25)** · ~85K · Sprint 6
    New Analysis tab on the matchup page. Complex aggregation but all reads on existing data; trade suggestions deferred until Trade System exists.
 
-5. **League Onboarding (#2)** · ~100K ✅ (SHIPPED)
+4. **League Onboarding (#2)** · ~100K ✅ (SHIPPED)
    Welcome flow, 6-step wizard, manager draft prep guide, replay explanation; `User.onboardingCompletedAt` schema field.
 
-6. **Transaction History (#8)** · ~55K ✅ (SHIPPED)
+5. **Transaction History (#8)** · ~55K ✅ (SHIPPED)
    Paginated API + transaction page with type/team filters, replay guard, infinite scroll. No schema changes.
 
 ### Heavy lifts (100K+ tokens — plan a fresh session)
 
-7. **Trade System (#7)** · ~130K
+6. **Trade System (#7)** · ~130K · Sprint 6
    New domain: schema tables, API routes, proposal/review/approval UI. Plan a dedicated session. Built on top of Transaction History.
 
-8. **Waiver Priority + Processing (#5)** · ~110K
+7. **Waiver Priority + Processing (#5)** · ~110K · Sprint 6
    Waiver priority ordering, batched claim-resolution jobs, commissioner settings.
+
+8. **Beta Feedback Infrastructure** · ~80K · Sprint 6 (deferred from Sprint 5)
+   In-app feedback widget (bug reports, suggestions); founding commissioner tracking (invited → accepted → active → renewed). Deferred from Sprint 5 — beta cohort is small enough to use out-of-band channels until real users are active.
 
 **Stretch (differentiators, not beta blockers):** league-wide matchup storylines (#11 · ~50K) and the rivalry/Hall-of-Fame retention layer (#17–#18). Player Legacy (#31 · ~95K) deferred until at least one live season completes. Replay work (Phase 4) stays out of this list.
 

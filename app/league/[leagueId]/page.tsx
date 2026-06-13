@@ -88,7 +88,13 @@ export default async function LeagueOverviewPage({
   const playoffSettings = (league.playoffSettings ?? {}) as { teamsInPlayoff?: number };
   const teamsInPlayoff = playoffSettings.teamsInPlayoff ?? 4;
   const hasResults = matchups.some((m) => m.homeScore !== null);
-  const playoffsStarted = league.playoffStatus !== "NOT_STARTED";
+  const playoffStatus = league.playoffStatus;
+  const playoffsStarted = playoffStatus !== "NOT_STARTED";
+
+  // Bracket is the primary landing during active playoffs (same pattern as draft redirect)
+  if (playoffStatus === "IN_PROGRESS") {
+    redirect(`/league/${leagueId}/bracket`);
+  }
 
   // Current week derivation
   const startedMatchups = matchups.filter((m) => new Date(m.startsAt).getTime() <= nowMs);
@@ -183,19 +189,10 @@ export default async function LeagueOverviewPage({
         sublabel: "All weeks are scored. Head to the admin panel to seed and start the playoffs.",
         href: `/league/${leagueId}/admin`,
       };
-    } else if (league.playoffStatus === "IN_PROGRESS" && playoffRoundComplete && currentPlayoffRound !== null && currentPlayoffRound !== Infinity) {
-      commishAction = {
-        label: `Playoff round ${currentPlayoffRound} complete — advance to next round`,
-        sublabel: "Score the round and create the next matchup in the season controls.",
-        href: `/league/${leagueId}/season`,
-      };
-    } else if (league.playoffStatus === "IN_PROGRESS" && playoffRoundLive && currentPlayoffRound !== null) {
-      commishAction = {
-        label: `Playoffs in progress — Round ${currentPlayoffRound} is live`,
-        sublabel: "Once all games are final, use the season controls to advance the round.",
-        href: `/league/${leagueId}/season`,
-      };
     }
+    // Note: IN_PROGRESS playoff actions omitted — when playoffs are IN_PROGRESS the page
+    // redirects to /bracket, so these branches are unreachable. Playoff controls live on
+    // the season page, accessible from the bracket page nav.
   }
 
   const fmt = (d: Date) =>

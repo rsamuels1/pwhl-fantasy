@@ -125,7 +125,10 @@ Closed all in-progress feature gaps and carry-forwards before beta.
 **Remaining Sprint 5 items:**
 
 4. **Commissioner workflow validation** — end-to-end manual test of all commissioner actions; runbook accuracy review; screenshots added (parallel with/after Founder Console)
-5. **Beta Feedback Infrastructure** — in-app feedback widget (bug reports, suggestions), founding commissioner tracking (invited → accepted → active → renewed)
+5. **Weekly Performance Dashboard (#29)** — new page replacing the Schedule tab; aggregates existing `Matchup` + `StatLine` rows by week; no schema changes; all reads on existing data. Pulled up from Sprint 6 — low implementation risk, directly serves manager experience during beta.
+
+**Deferred to Sprint 6+ backlog:**
+- **Beta Feedback Infrastructure** — in-app feedback widget (bug reports, suggestions); founding commissioner tracking (invited → accepted → active → renewed). Deferred because: (a) beta cohort is small enough to use out-of-band channels (email/Slack); (b) the widget requires schema changes and a new UI surface that adds scope with marginal return before we have real users. Revisit once founding commissioners are active.
 
 **Exit:** commissioner can run a league start-to-finish with no engineering help; founder can monitor platform health without DB access; founding commissioner cohort can be invited.
 
@@ -133,8 +136,9 @@ Closed all in-progress feature gaps and carry-forwards before beta.
 
 Sequenced from "What To Build Next" and the GPT launch phases:
 
+- **Beta Feedback Infrastructure** — in-app feedback widget (bug reports, suggestions); founding commissioner tracking (invited → accepted → active → renewed). Deferred from Sprint 5 — revisit once founding commissioners are active in closed beta.
 - **Transactions:** #7 Trade System → #5 Waiver priority/processing → #6 FAAB (Transaction History #8 now in Sprint 3)
-- **Engagement:** #25 Team Analysis & Insights · #29 Weekly Performance Dashboard · #11 league-wide storylines · #30 Playoff Experience UX polish
+- **Engagement:** #25 Team Analysis & Insights · #11 league-wide storylines
 - **Multi-season UX layer** (schema laid in Sprint 2 via MS-001/002/003/004): MS-005 League History views · League Hall of Fame (#18) · Player Legacy (#31)
 - **Growth / retention:** GR-001/002 activation + retention analytics (AN-002/003 dashboards) · GR-003 referral loop · GR-004 league-fill progress
 - **Phases 5–7:** rivalries H2H history · Hall of Fame · player legacy · keeper → dynasty · real-time push scoring · push notifications · player trends
