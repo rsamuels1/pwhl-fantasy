@@ -69,7 +69,7 @@ export default async function LeagueLayout({ children, params }: LeagueLayoutPro
       ? prisma.fantasyTeam.findFirst({ where: { leagueId, ownerId: user.id }, select: { id: true } })
       : Promise.resolve(null),
     user
-      ? prisma.notification.count({ where: { userId: user.id, leagueId, readAt: null } })
+      ? prisma.notification.count({ where: { userId: user.id, leagueId, readAt: null } }).catch(() => 0)
       : Promise.resolve(0),
   ]);
 
