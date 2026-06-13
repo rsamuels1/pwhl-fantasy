@@ -377,7 +377,7 @@
       
         <div class="sprint-card current" onclick="switchTab('sprints'); setTimeout(() => document.getElementById('sprint-4').scrollIntoView({behavior: 'smooth'}), 100)">
           <div class="name">Sprint 4</div>
-          <div class="progress">10/11</div>
+          <div class="progress">12/13</div>
           <span class="status current">● LIVE</span>
         </div>
       
@@ -667,7 +667,12 @@
           
             <div class="task-row">
               <span class="task-check">✅</span>
-              <span style="color: #666">League Matchup Slate on Franchise Page — added "This week" card to `/team/[teamId]/matchup` showing all 4 VP matchups per week with current + projected scores. New `MatchupSlateRow` type; batch-projected all teams' remaining scores during active periods; user's own matchup row highlighted in indigo. Improves visibility of league-wide competitive landscape (commit da9a027)</span>
+              <span style="color: #666">League Matchup Slate Removal — user feedback: slate card showing all league matchups was not the right UX. Removed MatchupSlateRow type, leagueMatchupSlate field, VP-mode slate computation, and MatchupSlateItem component. Remaining sections on matchup page unchanged: hero card, rival badge, playing tonight, swing players, rosters, activity feed (commit b41161b)</span>
+            </div>
+          
+            <div class="task-row">
+              <span class="task-check">✅</span>
+              <span style="color: #666">Playoff Mode + Replay Support — fixed critical bug in `derivePlayoffPeriods` (removed broken array-index heuristic); implemented `getPlayoffDashboardData()` showing live playoff 1v1 matchups on franchise page with DuelHero component; added "Start Playoffs →" button and "+1 Week" advancement to ReplayDayBar; added "Playoffs" tab to TeamNav when in playoffs; added playoff R1/R2 round chips to team layout; fixed `getLastResult` to include playoff results in recap card; added playoff action item to dashboard; removed placeholder matchup row creation (foreign key constraint violation); all TypeScript checks pass (commit b41161b)</span>
             </div>
           
             <div class="task-row">
@@ -688,6 +693,11 @@
             <div class="task-row">
               <span class="task-check">✅</span>
               <span style="color: #666">#17: ACHIEVED — rival badge shows most-played opponent with season series W-L-T record; H2H history on matchup page displays last 5 matchups with dates, scores, and outcomes. Rival = opponent with highest number of completed matchups (tie-break by W-L record). Data computed from existing `Matchup` rows; no schema changes.</span>
+            </div>
+          
+            <div class="task-row">
+              <span class="task-check">✅</span>
+              <span style="color: #666">Playoff Mode (Replay + Live): ACHIEVED — replay commissioners can advance through game days until regular season ends, then click "Start Playoffs →" to initialize playoffs. ReplayDayBar shows "+1 Week" to advance through playoff rounds. Franchise page shows live 1v1 playoff matchup with DuelHero, opponent rosters, and win probability. TeamNav shows "Playoffs" tab linking to bracket. Team layout shows "R1"/"R2" etc. playoff round chips. Dashboard surfaces "🏆 Playoffs are live" action item. All controls work in both replay and dev-sim modes.</span>
             </div>
           
             <div class="task-row">
