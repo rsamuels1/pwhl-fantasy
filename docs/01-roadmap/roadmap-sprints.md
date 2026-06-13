@@ -86,9 +86,9 @@ Assumes a solo builder working with Claude (Pro), ~2 weeks per sprint. Tracks: *
 
 **Exit:** a brand-new user creates and drafts a league on a phone with no docs. ✅ ACHIEVED
 
-## Sprint 4 — "Product polish: lineup, commissioner UX, rivalries" · ~1–2 wks · Track F ← CURRENT
+## Sprint 4 — "Product polish: lineup, commissioner UX, rivalries" · ✅ COMPLETE · Jun 13, 2026 · Track F
 
-Close the in-progress feature gaps and carry-forwards before beta.
+Closed all in-progress feature gaps and carry-forwards before beta.
 
 **Shipped early Sprint 4 (June 13, 2026):**
 - **NT-002 LINEUP_INCOMPLETE notification** ✅ — `checkAndEmitScheduledNotifications(userId, nowMs, prisma)` in `lib/services/notification-service.ts`; wired into `app/dashboard/page.tsx` on load; `dedupeKey = "{periodStartsAt}-{teamId}"`; fires when any active starter's PWHL team has no games remaining in the active period; idempotent via DB unique constraint (commits `cb3a5d1`, `1a63871`)
@@ -111,12 +111,15 @@ Close the in-progress feature gaps and carry-forwards before beta.
 - **Playoff Mode (Replay + Live):** ✅ ACHIEVED — replay commissioners can advance through game days until regular season ends, then click "Start Playoffs →" to initialize playoffs. ReplayDayBar shows "+1 Week" to advance through playoff rounds. Franchise page shows live 1v1 playoff matchup with DuelHero, opponent rosters, and win probability. TeamNav shows "Playoffs" tab linking to bracket. Team layout shows "R1"/"R2" etc. playoff round chips. Dashboard surfaces "🏆 Playoffs are live" action item. All controls work in both replay and dev-sim modes.
 - No Phase 1 or Phase 5 feature card enters beta in "partial" state when the remaining work is small and well-specified. Any item not shipped must be explicitly deferred with a documented reason.
 
-## Sprint 5 — "Validation + Beta Operations" · ~2 wks · Track V
+## Sprint 5 — "Validation + Beta Operations" · ~2 wks · Track V ← CURRENT
 
-- Draft reliability certification — duplicate-tab handling, load test concurrent leagues, reconnect stress test; findings documented in `commissioner-runbook.md`
-- Founder Operations Console — league explorer (search by league/commissioner/user, view config + draft state + standings), simulation launcher, validation dashboard — spec `docs/02-engineering/founder-ops-console.md`
-- Beta Feedback Infrastructure — in-app feedback widget (bug reports, suggestions), founding commissioner tracking (invited → accepted → active → renewed)
-- Commissioner workflow validation — end-to-end manual test of all commissioner actions; runbook accuracy review; screenshots added
+**Recommended starting order:**
+
+1. **Draft Reliability Certification** — duplicate-tab handling, load test concurrent leagues, reconnect stress test; findings documented in `commissioner-runbook.md`. (Unblocks beta invites; last remaining ⚠️ on MVP scorecard)
+2. **Playoff Experience UX Polish (#30)** — champion banner, between-round nudge, bracket prominence (quick win ~40K tokens, high visibility for first beta commissioners)
+3. **Founder Operations Console** — league explorer (search by league/commissioner/user, view config + draft state + standings), simulation launcher, validation dashboard — spec `docs/02-engineering/founder-ops-console.md` (needed for founder to monitor platform health without DB access)
+4. **Commissioner workflow validation** — end-to-end manual test of all commissioner actions; runbook accuracy review; screenshots added (parallel with/after Founder Console)
+5. **Beta Feedback Infrastructure** — in-app feedback widget (bug reports, suggestions), founding commissioner tracking (invited → accepted → active → renewed) (parallel with/after Founder Console)
 
 **Exit:** commissioner can run a league start-to-finish with no engineering help; founder can monitor platform health without DB access; founding commissioner cohort can be invited.
 
@@ -140,15 +143,15 @@ Sequenced from "What To Build Next" and the GPT launch phases:
 | Sprint 1 — Season Validation | ✅ COMPLETE (Jun 12, 2026) | Full season simulates, 114 tests pass, confidence 85–90% |
 | Sprint 2 — Commissioner + Platform Foundation | ✅ COMPLETE (Jun 2026) | Commissioner recovery tools, multi-season schema, analytics (6 events), VP education; 130 tests pass |
 | Sprint 3 — Beta Readiness | ✅ COMPLETE (Jun 13, 2026) | Onboarding ✅, error handling ✅, mobile ✅, NT-001 ✅, draft notifications ✅, transaction history ✅, IA-011 ✅ |
-| Sprint 4 — Product Polish | ✅ COMPLETE (Jun 13, 2026) | NT-002 LINEUP_INCOMPLETE ✅, #01 commissioner dashboard ✅, #17 rivalries ✅ |
-| Sprint 5 — Validation + Beta Operations | ⏳ PLANNED | Draft cert, founder dashboard, beta feedback infra |
+| Sprint 4 — Product Polish | ✅ COMPLETE (Jun 13, 2026) | NT-002 LINEUP_INCOMPLETE ✅ · #01 commissioner dashboard ✅ · #17 rivalries ✅ · VP standings fix ✅ · playoff mode + replay support ✅ |
+| Sprint 5 — Validation + Beta Operations | ⏳ CURRENT | Draft cert, founder dashboard, beta feedback infra |
 | Sprint 6+ — Launch Features | ⏳ PLANNED | Transactions, trade, waivers, growth |
 
 ---
 
 # MVP Launch Timeline & Beyond
 
-**Anchor:** today is June 12, 2026. The PWHL 2026-27 opener is ~Nov 2026, with fantasy drafts
+**Anchor:** today is June 13, 2026. The PWHL 2026-27 opener is ~Nov 2026, with fantasy drafts
 ~1 week prior (~late Oct 2026). That real date is the natural public-launch target — MVP must
 be drafting-ready before it. Dates below assume ~2-week sprints, solo + Claude. They are
 estimates, not commitments.
@@ -160,8 +163,8 @@ estimates, not commitments.
 | **Jun–Jul 2026** | Sprint 2 — commissioner recovery + platform foundation + analytics ✅ |
 | **Jun–Jul 2026** | Sprint 3 — onboarding ✅, error handling ✅, mobile ✅, notifications (draft ✅), IA-011 ✅ COMPLETE |
 | **Jun 13, 2026** | NT-002 LINEUP_INCOMPLETE notification shipped (`checkAndEmitScheduledNotifications` on dashboard load) ✅ |
-| **Jun 13, 2026** | Sprint 4 — commissioner dashboard gaps ✅, rivalries ✅ **COMPLETE** |
-| **Late Aug 2026** | Sprint 5 — draft cert, founder dashboard, beta feedback infra ← next |
+| **Jun 13, 2026** | Sprint 4 — commissioner dashboard gaps ✅, rivalries ✅, playoff mode ✅, VP fix ✅ **COMPLETE** |
+| **Late Aug 2026** | Sprint 5 — draft cert, founder dashboard, beta feedback infra ← current |
 | **Early Sep 2026** | **MVP code-complete — all launch gates pass** |
 | **Sep – mid Oct 2026** | Closed beta: founding commissioners run replay + small live test leagues; fix findings |
 | **Late Oct 2026** | **PUBLIC LAUNCH** — real leagues draft ~1 week before the opener |

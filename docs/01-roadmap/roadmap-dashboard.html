@@ -226,7 +226,7 @@
     <div class="header-right">
       <div class="stat">
         <span class="label">Current:</span>
-        <span class="value">Sprint 4</span>
+        <span class="value">Sprint 5</span>
       </div>
       <div class="stat">
         <span class="label">To Beta:</span>
@@ -234,7 +234,7 @@
       </div>
       <div class="stat">
         <span class="label">Sprints:</span>
-        <span class="value">4/7</span>
+        <span class="value">5/7</span>
       </div>
       <div class="stat">
         <span class="label">Gates:</span>
@@ -375,16 +375,16 @@
           <span class="status complete">✅ DONE</span>
         </div>
       
-        <div class="sprint-card current" onclick="switchTab('sprints'); setTimeout(() => document.getElementById('sprint-4').scrollIntoView({behavior: 'smooth'}), 100)">
+        <div class="sprint-card complete" onclick="switchTab('sprints'); setTimeout(() => document.getElementById('sprint-4').scrollIntoView({behavior: 'smooth'}), 100)">
           <div class="name">Sprint 4</div>
           <div class="progress">12/13</div>
-          <span class="status current">● LIVE</span>
+          <span class="status complete">✅ DONE</span>
         </div>
       
-        <div class="sprint-card planned" onclick="switchTab('sprints'); setTimeout(() => document.getElementById('sprint-5').scrollIntoView({behavior: 'smooth'}), 100)">
+        <div class="sprint-card current" onclick="switchTab('sprints'); setTimeout(() => document.getElementById('sprint-5').scrollIntoView({behavior: 'smooth'}), 100)">
           <div class="name">Sprint 5</div>
-          <div class="progress">0/4</div>
-          <span class="status planned">○ PLAN</span>
+          <div class="progress">0/0</div>
+          <span class="status current">● LIVE</span>
         </div>
       
         <div class="sprint-card planned" onclick="switchTab('sprints'); setTimeout(() => document.getElementById('sprint-6').scrollIntoView({behavior: 'smooth'}), 100)">
@@ -630,13 +630,13 @@
         <div class="exit-criteria"><strong>Exit:</strong> a brand-new user creates and drafts a league on a phone with no docs. ✅ ACHIEVED</div>
       </div>
     
-      <div id="sprint-4" class="card current">
+      <div id="sprint-4" class="card complete">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
           <div>
             <div style="font-weight: 700; font-size: 1rem;">Sprint 4 · "Product polish: lineup, commissioner UX, rivalries"</div>
             <div style="font-size: 0.8rem; color: #888;">Track: F</div>
           </div>
-          <span class="status current">● IN FLIGHT</span>
+          <span class="status complete">✅ COMPLETE</span>
         </div>
         <div>
           
@@ -709,35 +709,15 @@
         <div class="exit-criteria"><strong>Exit:</strong> - NT-002: ✅ ACHIEVED — manager with a starter whose PWHL team has no games remaining this period receives a LINEUP_INCOMPLETE in-app notification on dashboard load; second load in the same period does not duplicate it.</div>
       </div>
     
-      <div id="sprint-5" class="card planned">
+      <div id="sprint-5" class="card current">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
           <div>
             <div style="font-weight: 700; font-size: 1rem;">Sprint 5 · "Validation + Beta Operations"</div>
             <div style="font-size: 0.8rem; color: #888;">Track: V</div>
           </div>
-          <span class="status planned">○ PLANNED</span>
+          <span class="status current">● IN FLIGHT</span>
         </div>
         <div>
-          
-            <div class="task-row">
-              <span class="task-check">○</span>
-              <span style="color: #ccc">Draft reliability certification — duplicate-tab handling, load test concurrent leagues, reconnect stress test; findings documented in `commissioner-runbook.md`</span>
-            </div>
-          
-            <div class="task-row">
-              <span class="task-check">○</span>
-              <span style="color: #ccc">Founder Operations Console — league explorer (search by league/commissioner/user, view config + draft state + standings), simulation launcher, validation dashboard — spec `docs/02-engineering/founder-ops-console.md`</span>
-            </div>
-          
-            <div class="task-row">
-              <span class="task-check">○</span>
-              <span style="color: #ccc">Beta Feedback Infrastructure — in-app feedback widget (bug reports, suggestions), founding commissioner tracking (invited → accepted → active → renewed)</span>
-            </div>
-          
-            <div class="task-row">
-              <span class="task-check">○</span>
-              <span style="color: #ccc">Commissioner workflow validation — end-to-end manual test of all commissioner actions; runbook accuracy review; screenshots added</span>
-            </div>
           
         </div>
         <div class="exit-criteria"><strong>Exit:</strong> commissioner can run a league start-to-finish with no engineering help; founder can monitor platform health without DB access; founding commissioner cohort can be invited.</div>
