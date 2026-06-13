@@ -10,6 +10,8 @@ interface Props {
   currentDate: string | null; // "YYYY-MM-DD" of the last completed game day
   hasNextDay: boolean;
   canStartSeason: boolean;
+  playoffStatus: string; // "NOT_STARTED" | "IN_PROGRESS" | "COMPLETE"
+  leagueStatus: string; // "PRE_DRAFT" | "IN_SEASON" | "COMPLETE"
 }
 
 export default function ReplayDayBar({
@@ -19,6 +21,8 @@ export default function ReplayDayBar({
   currentDate,
   hasNextDay,
   canStartSeason,
+  playoffStatus,
+  leagueStatus,
 }: Props) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -56,6 +60,53 @@ export default function ReplayDayBar({
       const data = await res.json();
       if (!res.ok) {
         setError(data.error ?? "Failed to start season.");
+      } else {
+        router.refresh();
+      }
+    } catch {
+      setError("Network error.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleStartPlayoffs = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/leagues/${leagueId}/start-playoffs`, {
+        method: "POST",
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        setError(data.error ?? "Failed to start playoffs.");
+      } else {
+        router.refresh();
+      }
+    } catch {
+      setError("Network error.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAdvanceWeek = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const now = new Date();
+      if (!currentDate) return;
+      const curr = new Date(currentDate + "T12:00:00Z");
+      const next = new Date(curr.getTime() + 7 * 24 * 60 * 60 * 1000);
+      const nextIso = next.toISOString();
+      const res = await fetch(`/api/leagues/${leagueId}/season/advance`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "set-date", simulatedDate: nextIso }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error ?? "Failed to advance.");
       } else {
         router.refresh();
       }
@@ -164,9 +215,45 @@ export default function ReplayDayBar({
           >
             {loading ? "…" : "Next day →"}
           </button>
+        ) : playoffStatus === "NOT_STARTED" && leagueStatus === "COMPLETE" ? (
+          <button
+            onClick={handleStartPlayoffs}
+            disabled={loading}
+            style={{
+              background: loading ? "rgba(217,119,6,0.3)" : "#d97706",
+              border: "none",
+              borderRadius: 8,
+              color: "#fff",
+              padding: "6px 14px",
+              fontSize: 13,
+              fontWeight: 600,
+              cursor: loading ? "default" : "pointer",
+              transition: "background 0.15s",
+            }}
+          >
+            {loading ? "…" : "Start Playoffs →"}
+          </button>
+        ) : playoffStatus === "IN_PROGRESS" ? (
+          <button
+            onClick={handleAdvanceWeek}
+            disabled={loading}
+            style={{
+              background: loading ? "rgba(99,102,241,0.3)" : "#6366f1",
+              border: "none",
+              borderRadius: 8,
+              color: "#fff",
+              padding: "6px 14px",
+              fontSize: 13,
+              fontWeight: 600,
+              cursor: loading ? "default" : "pointer",
+              transition: "background 0.15s",
+            }}
+          >
+            {loading ? "…" : "+1 Week →"}
+          </button>
         ) : (
           <span style={{ fontSize: 12, color: "#34d399", fontWeight: 600 }}>
-            ✓ Season complete
+            🏆 Season complete
           </span>
         )}
         {!canStartSeason && (

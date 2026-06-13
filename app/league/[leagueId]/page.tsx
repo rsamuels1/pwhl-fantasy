@@ -64,6 +64,7 @@ export default async function LeagueOverviewPage({
       homeScore: m.homeScore, awayScore: m.awayScore,
       homeVP: m.homeVP, awayVP: m.awayVP,
       isPlayoff: m.isPlayoff,
+      week: m.week,
     }))
   );
   // Map to Standing shape (points = totalVP) so computeRace works.

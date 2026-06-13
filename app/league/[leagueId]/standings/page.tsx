@@ -68,6 +68,7 @@ export default async function StandingsPage({ params }: { params: { leagueId: st
       homeScore: m.homeScore, awayScore: m.awayScore,
       homeVP: m.homeVP, awayVP: m.awayVP,
       isPlayoff: m.isPlayoff,
+      week: m.week,
     }))
   );
   // Map VP standings to the Standing shape so race computation works.

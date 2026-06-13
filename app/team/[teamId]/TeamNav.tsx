@@ -7,9 +7,10 @@ interface Props {
   teamId: string;
   leagueId: string;
   leagueName: string;
+  playoffStatus: string;
 }
 
-export default function TeamNav({ teamId, leagueId, leagueName }: Props) {
+export default function TeamNav({ teamId, leagueId, leagueName, playoffStatus }: Props) {
   const pathname = usePathname();
 
   const tabs = [
@@ -18,6 +19,9 @@ export default function TeamNav({ teamId, leagueId, leagueName }: Props) {
     { label: "Rosters",       href: `/team/${teamId}/roster` },
     { label: "Standings",     href: `/team/${teamId}/standings` },
     { label: "PWHL Schedule", href: `/team/${teamId}/schedule` },
+    ...(playoffStatus !== "NOT_STARTED"
+      ? [{ label: "Playoffs", href: `/league/${leagueId}/bracket` }]
+      : []),
   ];
 
   return (

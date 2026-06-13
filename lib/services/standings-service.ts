@@ -57,6 +57,7 @@ export async function getStandings(
       homeVP: m.homeVP,
       awayVP: m.awayVP,
       isPlayoff: m.isPlayoff,
+      week: m.week,
     }))
   );
   const playoffSettings = getPlayoffSettings(league.playoffSettings as Parameters<typeof getPlayoffSettings>[0]);

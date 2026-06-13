@@ -139,6 +139,7 @@ export function computeVpStandings(
     homeScore: number | null; awayScore: number | null;
     homeVP: number | null; awayVP: number | null;
     isPlayoff: boolean;
+    week?: number;
   }>
 ): VpStanding[] {
   const byTeam = new Map<string, VpStanding>();
@@ -150,14 +151,47 @@ export function computeVpStandings(
     });
   }
 
+  // Pre-pass: for scored weeks that lack homeVP/awayVP, derive VP from scores
+  const derivedVp = new Map<string, { homeVP: number; awayVP: number }>();
+  const nullVpByWeek = new Map<number, typeof matchups[number][]>();
+
   for (const m of matchups) {
-    if (m.isPlayoff || m.homeVP === null || m.awayVP === null) continue;
+    if (!m.isPlayoff && m.homeVP === null && m.homeScore !== null && m.awayScore !== null && m.week != null) {
+      const bucket = nullVpByWeek.get(m.week) ?? [];
+      bucket.push(m);
+      nullVpByWeek.set(m.week, bucket);
+    }
+  }
+
+  for (const [, weekMatchups] of nullVpByWeek) {
+    // Build teamScores: every team's score for this week
+    const teamScores = new Map<string, number>();
+    for (const m of weekMatchups) {
+      teamScores.set(m.homeTeamId, m.homeScore!);
+      teamScores.set(m.awayTeamId, m.awayScore!);
+    }
+    const pairs = weekMatchups.map(m => ({ homeTeamId: m.homeTeamId, awayTeamId: m.awayTeamId }));
+    const weekResult = computeVpForWeek(teamScores, pairs);
+    for (const m of weekMatchups) {
+      const key = `${m.homeTeamId}:${m.awayTeamId}`;
+      derivedVp.set(key, {
+        homeVP: weekResult.get(m.homeTeamId)?.totalVP ?? 0,
+        awayVP: weekResult.get(m.awayTeamId)?.totalVP ?? 0,
+      });
+    }
+  }
+
+  for (const m of matchups) {
+    // Resolve VP with fallback to derived values
+    const homeVP = m.homeVP ?? derivedVp.get(`${m.homeTeamId}:${m.awayTeamId}`)?.homeVP ?? null;
+    const awayVP = m.awayVP ?? derivedVp.get(`${m.homeTeamId}:${m.awayTeamId}`)?.awayVP ?? null;
+    if (m.isPlayoff || homeVP === null || awayVP === null) continue;
     const home = byTeam.get(m.homeTeamId);
     const away = byTeam.get(m.awayTeamId);
     if (!home || !away) continue;
 
-    home.totalVP += m.homeVP;
-    away.totalVP += m.awayVP;
+    home.totalVP += homeVP;
+    away.totalVP += awayVP;
     home.pointsFor += m.homeScore ?? 0;
     away.pointsFor += m.awayScore ?? 0;
 
@@ -174,8 +208,8 @@ export function computeVpStandings(
     const amVP = as > hs ? VP_WIN : hs === as ? VP_TIE : 0;
     home.matchupVP += hmVP;
     away.matchupVP += amVP;
-    home.rankVP += (m.homeVP - hmVP);
-    away.rankVP += (m.awayVP - amVP);
+    home.rankVP += (homeVP - hmVP);
+    away.rankVP += (awayVP - amVP);
   }
 
   // Pre-compute H2H wins for tiebreaker (spec order: VP → Wins → H2H → Total FP)

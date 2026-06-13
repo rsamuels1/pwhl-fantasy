@@ -132,7 +132,16 @@ export default async function DashboardPage() {
     const league = team.league;
     const tNowMs = teamNowMs(team);
 
-    // Draft live right now — highest priority
+    // Playoffs are live — highest priority
+    if (league.playoffStatus === "IN_PROGRESS") {
+      actions.push({
+        label: "🏆 Playoffs are live — check your bracket!",
+        href: `/league/${team.leagueId}/bracket`,
+        teamName: league.name,
+      });
+    }
+
+    // Draft live right now
     if (league.draft?.status === "IN_PROGRESS") {
       actions.push({
         label: "🎯 Draft is live right now!",

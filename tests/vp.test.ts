@@ -355,4 +355,21 @@ describe("computeVpStandings", () => {
     expect(standings[0].fantasyTeamId).toBe("t1"); // 2 VP, 1 win, 100 FP
     expect(standings[1].fantasyTeamId).toBe("t2"); // 2 VP, 1 win, 90 FP
   });
+
+  it("derives VP from scores when homeVP/awayVP are null but scores exist", () => {
+    // Simulate legacy matchups with scores but null VP columns (pre-migration)
+    const matchups = [
+      { homeTeamId: "t1", awayTeamId: "t2", homeScore: 80, awayScore: 60, homeVP: null, awayVP: null, isPlayoff: false, week: 1 },
+      { homeTeamId: "t3", awayTeamId: "t1", homeScore: 50, awayScore: 70, homeVP: null, awayVP: null, isPlayoff: false, week: 1 },
+    ];
+    const standings = computeVpStandings(teams, matchups);
+    // Week 1: t1 beats t2 (2 matchup VP) and beats t3 (2 matchup VP)
+    // t1 score = 80+70 = 150 (highest in week 1, +2 rank VP) → 6 VP total
+    // t2 score = 60 (lowest)
+    // t3 score = 50
+    // Expect t1 has non-zero VP from derived calculation
+    const t1 = standings.find(s => s.fantasyTeamId === "t1");
+    expect(t1?.totalVP).toBeGreaterThan(0);
+    expect(t1?.wins).toBe(2); // won against both t2 and t3
+  });
 });

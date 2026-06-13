@@ -62,6 +62,7 @@ export async function getBracket(
       homeScore: m.homeScore, awayScore: m.awayScore,
       homeVP: m.homeVP, awayVP: m.awayVP,
       isPlayoff: m.isPlayoff,
+      week: m.week,
     }))
   );
   const playoffSettings = getPlayoffSettings(league.playoffSettings as Parameters<typeof getPlayoffSettings>[0]);
@@ -143,6 +144,7 @@ export async function startPlayoffs(
       homeScore: m.homeScore, awayScore: m.awayScore,
       homeVP: m.homeVP, awayVP: m.awayVP,
       isPlayoff: m.isPlayoff,
+      week: m.week,
     }))
   );
   const playoffSettings = getPlayoffSettings(league.playoffSettings as Parameters<typeof getPlayoffSettings>[0]);
@@ -170,14 +172,20 @@ export async function startPlayoffs(
     orderBy: { startsAt: "asc" },
   });
 
+  // Playoff starts one week after the last regular season game
+  if (games.length === 0) {
+    throw new Error("No games available to determine playoff start date");
+  }
+  const lastGame = games[games.length - 1];
+  const playoffStartsAt = new Date(lastGame.startsAt.getTime() + 7 * 24 * 60 * 60 * 1000);
+
   const playoffPeriods = derivePlayoffPeriods(
-    games,
-    matchups.length / league.teams.length,
+    playoffStartsAt,
     playoffSettings.roundDurationPeriods,
     totalRounds
   );
 
-  // Build first-round pairings; subsequent rounds are created as results come in.
+  // Build first-round pairings only; subsequent rounds are created as results come in.
   const pairings: PlayoffMatchupPairing[] = [];
   for (let i = 0; i < seededTeams.length; i++) {
     const team = seededTeams[i];
@@ -193,12 +201,6 @@ export async function startPlayoffs(
         endsAt: period.endsAt,
       });
     }
-  }
-
-  // Placeholder rows for subsequent rounds (filled when previous round completes).
-  for (let round = 2; round <= totalRounds; round++) {
-    const period = playoffPeriods[round - 1];
-    pairings.push({ homeTeamId: "", awayTeamId: "", round, startsAt: period.startsAt, endsAt: period.endsAt });
   }
 
   await generatePlayoffMatchups(leagueId, pairings, prisma);

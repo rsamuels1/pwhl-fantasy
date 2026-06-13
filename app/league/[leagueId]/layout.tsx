@@ -30,6 +30,7 @@ export default async function LeagueLayout({ children, params }: LeagueLayoutPro
       select: {
         commissionerId: true, name: true, isReplay: true,
         replayCurrentDate: true, season: true, status: true,
+        playoffStatus: true,
         draft: { select: { status: true } },
       },
     }),
@@ -45,6 +46,8 @@ export default async function LeagueLayout({ children, params }: LeagueLayoutPro
     currentDate: string | null;
     hasNextDay: boolean;
     canStartSeason: boolean;
+    playoffStatus: string;
+    leagueStatus: string;
   } = null;
   const isDraftComplete = league?.draft?.status === "COMPLETE";
   const isReplayVisible = league?.isReplay && isCommissioner &&
@@ -61,6 +64,8 @@ export default async function LeagueLayout({ children, params }: LeagueLayoutPro
       currentDate: lastDay ? lastDay.toISOString().slice(0, 10) : null,
       hasNextDay: inSeason ? nextGameDay(replayMs, gameDays) !== null : false,
       canStartSeason: isDraftComplete && league!.status !== "IN_SEASON" && league!.status !== "COMPLETE",
+      playoffStatus: league!.playoffStatus ?? "NOT_STARTED",
+      leagueStatus: league!.status,
     };
   }
 
@@ -128,6 +133,8 @@ export default async function LeagueLayout({ children, params }: LeagueLayoutPro
             currentDate={replayDayProps.currentDate}
             hasNextDay={replayDayProps.hasNextDay}
             canStartSeason={replayDayProps.canStartSeason}
+            playoffStatus={replayDayProps.playoffStatus}
+            leagueStatus={replayDayProps.leagueStatus}
           />
         )}
 

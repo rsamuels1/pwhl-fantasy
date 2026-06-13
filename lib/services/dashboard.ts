@@ -68,12 +68,6 @@ export interface WeeklyStanding {
   score: number;
 }
 
-export interface MatchupSlateRow {
-  homeTeam: { id: string; name: string; score: number; projected: number };
-  awayTeam: { id: string; name: string; score: number; projected: number };
-  isMyMatchup: boolean;
-}
-
 export interface ActiveMatchup {
   week: number;
   period: ScoringPeriod;
@@ -91,8 +85,6 @@ export interface ActiveMatchup {
   opponentProjected: number;
   winProbability: number;
   rivalry: RivalryRecord;
-  // VP mode only: all matchups this week with projected scores
-  leagueMatchupSlate: MatchupSlateRow[];
 }
 
 export interface LineupAlert {
@@ -169,7 +161,22 @@ export async function getDashboardData(
     leagueDisappointments: [],
   };
 
-  if (!displayPeriod) return empty;
+  if (!displayPeriod) {
+    // Check if we're in playoffs
+    if (league.playoffStatus === "IN_PROGRESS" || league.playoffStatus === "COMPLETE") {
+      return await getPlayoffDashboardData(
+        leagueId,
+        myTeamId,
+        nowMs,
+        league,
+        lastResult,
+        leagueActivity,
+        scoringSettings,
+        prisma
+      );
+    }
+    return empty;
+  }
 
   // Fetch all teams + confirm a matchup exists for this week
   const [allTeams, matchupCheck] = await Promise.all([
@@ -247,7 +254,6 @@ export async function getDashboardData(
         opponentProjected: 0,
         winProbability: 0,
         rivalry: { wins: 0, losses: 0, ties: 0 },
-        leagueMatchupSlate: [],
       },
     };
   }
@@ -381,39 +387,6 @@ export async function getDashboardData(
   const oppProj = opponentProjected as number;
   const winProb = isVpMode && opponentTeamId ? winProbability(myProj, oppProj) : 0;
 
-  // VP mode: build full matchup slate with projected scores
-  let leagueMatchupSlate: MatchupSlateRow[] = [];
-  if (isVpMode) {
-    const weekPairings = await prisma.matchup.findMany({
-      where: { leagueId, week: displayPeriod.week, isPlayoff: false },
-      select: { homeTeamId: true, awayTeamId: true },
-    });
-    if (weekPairings.length > 0) {
-      const teamIds = allTeams.map((t) => t.id);
-      const projectedResults = await Promise.all(
-        teamIds.map((id) =>
-          projectTeamRemainingScore(id, allScores.get(id) ?? 0, displayPeriod, scoringSettings, prisma, nowMs)
-        )
-      );
-      const projectedByTeam = new Map(teamIds.map((id, i) => [id, projectedResults[i]]));
-      leagueMatchupSlate = weekPairings.map((p) => ({
-        homeTeam: {
-          id: p.homeTeamId,
-          name: allTeams.find((t) => t.id === p.homeTeamId)?.name ?? "",
-          score: allScores.get(p.homeTeamId) ?? 0,
-          projected: projectedByTeam.get(p.homeTeamId) ?? 0,
-        },
-        awayTeam: {
-          id: p.awayTeamId,
-          name: allTeams.find((t) => t.id === p.awayTeamId)?.name ?? "",
-          score: allScores.get(p.awayTeamId) ?? 0,
-          projected: projectedByTeam.get(p.awayTeamId) ?? 0,
-        },
-        isMyMatchup: p.homeTeamId === myTeamId || p.awayTeamId === myTeamId,
-      }));
-    }
-  }
-
   return {
     activeMatchup: {
       week: displayPeriod.week,
@@ -432,7 +405,6 @@ export async function getDashboardData(
       opponentProjected: oppProj,
       winProbability: winProb,
       rivalry: { wins: 0, losses: 0, ties: 0 },
-      leagueMatchupSlate,
     },
     remainingPlayers,
     topPerformers,
@@ -446,6 +418,210 @@ export async function getDashboardData(
 }
 
 // ── helpers ───────────────────────────────────────────────────────────────────
+
+async function getPlayoffDashboardData(
+  leagueId: string,
+  myTeamId: string,
+  nowMs: number,
+  league: any,
+  lastResult: WeeklyRecap | null,
+  leagueActivity: ActivityEvent[],
+  scoringSettings: ScoringSettings,
+  prisma: PrismaClient
+): Promise<DashboardData> {
+  const empty: DashboardData = {
+    activeMatchup: null,
+    remainingPlayers: [],
+    topPerformers: [],
+    disappointments: [],
+    lineupAlerts: [],
+    lastResult,
+    leagueActivity,
+    leagueTopPerformers: [],
+    leagueDisappointments: [],
+  };
+
+  // Find my current playoff matchup (highest round first — eliminates earlier)
+  const myMatchup = await prisma.matchup.findFirst({
+    where: {
+      leagueId,
+      isPlayoff: true,
+      OR: [{ homeTeamId: myTeamId }, { awayTeamId: myTeamId }],
+    },
+    orderBy: { round: "desc" },
+    include: {
+      homeTeam: { select: { id: true, name: true } },
+      awayTeam: { select: { id: true, name: true } },
+    },
+  });
+
+  if (!myMatchup) return empty; // Team didn't qualify or was eliminated
+
+  const iAmHome = myMatchup.homeTeamId === myTeamId;
+  const opponentTeamId = iAmHome ? myMatchup.awayTeamId : myMatchup.homeTeamId;
+  const period: ScoringPeriod = {
+    week: myMatchup.week,
+    startsAt: myMatchup.startsAt,
+    endsAt: myMatchup.endsAt,
+  };
+
+  const status = nowMs < myMatchup.startsAt.getTime() ? "upcoming" : "active";
+
+  // Fetch all teams for team name map
+  const allTeams = await prisma.fantasyTeam.findMany({
+    where: { leagueId },
+    select: { id: true, name: true },
+  });
+
+  const activeRosterInclude = {
+    player: {
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        position: true,
+        team: { select: { id: true, abbreviation: true } },
+      },
+    },
+  } as const;
+
+  // Compute scores for both teams
+  const [myDetailed, opponentDetailed, allScores] = await Promise.all([
+    computeTeamScoreDetailed(myTeamId, period, scoringSettings, prisma, nowMs),
+    computeTeamScoreDetailed(opponentTeamId, period, scoringSettings, prisma, nowMs),
+    computeAllTeamScores(leagueId, period, scoringSettings, prisma, nowMs),
+  ]);
+
+  const myScore = allScores.get(myTeamId) ?? 0;
+  const opponentScore = allScores.get(opponentTeamId) ?? 0;
+  const opponentTeamName = allTeams.find((t) => t.id === opponentTeamId)?.name ?? "";
+
+  // Remaining games batch query
+  const allTeamIds = [
+    ...new Set([
+      ...myDetailed.players.map((p) => p.teamId),
+      ...opponentDetailed.players.map((p) => p.teamId),
+    ].filter((id): id is string => !!id)),
+  ];
+
+  const gamesPerTeam = await gamesPerTeamInWindow(
+    allTeamIds,
+    new Date(nowMs),
+    period.endsAt,
+    prisma,
+    { exclusiveStart: true }
+  );
+
+  function withGames(players: typeof myDetailed.players): PlayerMatchupRow[] {
+    return players.map((p) => ({
+      playerId: p.playerId,
+      name: p.name,
+      position: p.position,
+      slot: p.slot,
+      teamAbbr: p.teamAbbr,
+      gamesThisPeriod: p.teamId !== null ? (gamesPerTeam.get(p.teamId) ?? 0) : null,
+      points: p.points,
+      gameCount: p.gameCount,
+      statBreakdown: p.statBreakdown,
+    }));
+  }
+
+  const myPlayers = withGames(myDetailed.players);
+  const opponentPlayers = withGames(opponentDetailed.players);
+
+  // Lineup alerts for zero-game players
+  const lineupAlerts: LineupAlert[] = myPlayers
+    .filter((p) =>
+      p.gamesThisPeriod === 0 &&
+      p.gameCount === 0 &&
+      p.slot !== "BENCH" &&
+      p.slot !== "IR"
+    )
+    .map((p) => ({ playerId: p.playerId, name: p.name, reason: "zero_games" as const }));
+
+  // Top performers
+  const sorted = [...myDetailed.players].sort((a, b) => b.points - a.points);
+  const topPerformers: PlayerPerfSummary[] = sorted.slice(0, 3).map((p) => ({
+    playerId: p.playerId,
+    name: p.name,
+    position: p.position,
+    points: p.points,
+    statBreakdown: p.statBreakdown,
+  }));
+
+  // Disappointments
+  const disappointments: PlayerPerfSummary[] = [...myDetailed.players]
+    .filter((p) => p.gameCount > 0)
+    .sort((a, b) => a.points - b.points)
+    .slice(0, 3)
+    .map((p) => ({ playerId: p.playerId, name: p.name, position: p.position, points: p.points, statBreakdown: p.statBreakdown }));
+
+  // Remaining players tonight
+  const remainingPlayers = await getRemainingPlayersTonight(myTeamId, scoringSettings, prisma, nowMs);
+
+  // Win probability
+  const myProjected = await projectTeamRemainingScore(myTeamId, myScore, period, scoringSettings, prisma, nowMs);
+  const opponentProjected = await projectTeamRemainingScore(opponentTeamId, opponentScore, period, scoringSettings, prisma, nowMs);
+  const { winProbability } = await import("../projections");
+  const winProb = winProbability(myProjected, opponentProjected);
+
+  // H2H record in playoffs (count wins/losses so far)
+  const h2hMatchups = await prisma.matchup.findMany({
+    where: {
+      leagueId,
+      isPlayoff: true,
+      homeScore: { not: null },
+      awayScore: { not: null },
+      OR: [
+        {
+          AND: [{ homeTeamId: myTeamId }, { awayTeamId: opponentTeamId }],
+        },
+        {
+          AND: [{ homeTeamId: opponentTeamId }, { awayTeamId: myTeamId }],
+        },
+      ],
+    },
+  });
+
+  let h2hWins = 0,
+    h2hLosses = 0,
+    h2hTies = 0;
+  for (const match of h2hMatchups) {
+    const myH2hScore = match.homeTeamId === myTeamId ? match.homeScore : match.awayScore;
+    const oppH2hScore = match.awayTeamId === myTeamId ? match.awayScore : match.homeScore;
+    if (myH2hScore === null || oppH2hScore === null) continue;
+    if (myH2hScore > oppH2hScore) h2hWins++;
+    else if (myH2hScore < oppH2hScore) h2hLosses++;
+    else h2hTies++;
+  }
+
+  return {
+    activeMatchup: {
+      week: myMatchup.week,
+      period,
+      status: status as "active" | "upcoming",
+      isPlayoff: true,
+      myTeam: { id: myTeamId, name: allTeams.find((t) => t.id === myTeamId)?.name ?? "", score: myScore },
+      myProjected,
+      myPlayers,
+      weeklyStandings: [],
+      myRecord: { wins: 0, losses: 0, ties: 0 },
+      opponentTeam: { id: opponentTeamId, name: opponentTeamName, score: opponentScore },
+      opponentPlayers,
+      opponentProjected,
+      winProbability: winProb,
+      rivalry: { wins: h2hWins, losses: h2hLosses, ties: h2hTies },
+    },
+    remainingPlayers,
+    topPerformers,
+    disappointments,
+    lineupAlerts,
+    lastResult,
+    leagueActivity,
+    leagueTopPerformers: [],
+    leagueDisappointments: [],
+  };
+}
 
 async function gamesPerTeamInWindow(
   teamIds: string[],
@@ -480,12 +656,11 @@ async function getLastResult(
   const last = await prisma.matchup.findFirst({
     where: {
       leagueId,
-      isPlayoff: false,
       homeScore: { not: null },
       awayScore: { not: null },
       OR: [{ homeTeamId: myTeamId }, { awayTeamId: myTeamId }],
     },
-    orderBy: { week: "desc" },
+    orderBy: [{ round: "desc" }, { week: "desc" }],
     include: {
       homeTeam: { select: { id: true, name: true } },
       awayTeam: { select: { id: true, name: true } },
@@ -502,7 +677,7 @@ async function getLastResult(
   const [detailed, weekMatchups] = await Promise.all([
     computeTeamScoreDetailed(myTeamId, period, scoringSettings, prisma),
     prisma.matchup.findMany({
-      where: { leagueId, week: last.week, isPlayoff: false, homeScore: { not: null }, awayScore: { not: null } },
+      where: { leagueId, week: last.week, homeScore: { not: null }, awayScore: { not: null } },
       include: { homeTeam: { select: { name: true } }, awayTeam: { select: { name: true } } },
     }),
   ]);

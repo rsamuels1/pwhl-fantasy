@@ -1,13 +1,11 @@
 /**
  * Playoff scheduling and period derivation.
- * 
+ *
  * Handles:
  * - Deriving playoff scheduling periods from regular season periods
  * - Calculating start/end times for each playoff round
  * - Ensuring each round spans the configured number of periods
  */
-
-import { Game } from "@prisma/client";
 
 export interface PlayoffPeriod {
   round: number;
@@ -16,49 +14,24 @@ export interface PlayoffPeriod {
 }
 
 /**
- * Derive playoff periods from game schedule.
- * 
- * Each playoff round spans `roundDurationPeriods` real scheduling periods,
- * calculated from actual game dates.
- * 
- * @param games - All real games in the season, ordered by date
- * @param regularSeasonEndWeek - The week number where regular season ends
- * @param roundDurationPeriods - Number of real periods per playoff round
- * @param numPlayoffRounds - Total playoff rounds (e.g., 3 for 6 teams)
+ * Derive playoff periods given a playoff start date.
+ *
+ * Each playoff round spans `roundDurationPeriods` real scheduling periods (~7 days each).
+ *
+ * @param playoffStartsAt - The date playoff rounds begin (typically one week after last RS game)
+ * @param roundDurationPeriods - Number of real periods per playoff round (e.g., 1 for single-week rounds)
+ * @param numPlayoffRounds - Total playoff rounds (e.g., 3 for 4-team bracket)
  * @returns Array of playoff periods with start/end times
  */
 export function derivePlayoffPeriods(
-  games: Game[],
-  regularSeasonEndWeek: number,
+  playoffStartsAt: Date,
   roundDurationPeriods: number,
   numPlayoffRounds: number
 ): PlayoffPeriod[] {
-  if (games.length === 0) {
-    throw new Error("No games available for playoff schedule");
-  }
-
-  // Sort games by date
-  const sorted = [...games].sort(
-    (a, b) => new Date(a.startsAt).getTime() - new Date(b.startsAt).getTime()
-  );
-
-  // Find the first game after regular season
-  const playoffStartGame = sorted.find((g) => {
-    const gameDate = new Date(g.startsAt);
-    // Estimate: each period is ~7 days. This is a rough heuristic.
-    // In practice, you'd use the actual period boundaries.
-    return gameDate > new Date(sorted[regularSeasonEndWeek * 7].startsAt);
-  });
-
-  if (!playoffStartGame) {
-    throw new Error("Cannot determine playoff start date from games");
-  }
-
   const periods: PlayoffPeriod[] = [];
-  let currentStartDate = new Date(playoffStartGame.startsAt);
+  let currentStartDate = new Date(playoffStartsAt);
 
   for (let round = 1; round <= numPlayoffRounds; round++) {
-    // Round ends after roundDurationPeriods * 7 days (rough estimate)
     const roundEndDate = new Date(currentStartDate);
     roundEndDate.setDate(roundEndDate.getDate() + roundDurationPeriods * 7);
 
@@ -68,7 +41,6 @@ export function derivePlayoffPeriods(
       endsAt: roundEndDate,
     });
 
-    // Next round starts after current round ends
     currentStartDate = new Date(roundEndDate);
   }
 

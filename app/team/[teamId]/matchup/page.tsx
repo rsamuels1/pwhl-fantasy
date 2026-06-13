@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { requireAuth, requireTeamOwner } from "@/lib/auth";
-import { getDashboardData, type ActiveMatchup, type PlayerMatchupRow, type WeeklyRecap, type LeaguePerformerRow, type MatchupSlateRow } from "@/lib/services/dashboard";
+import { getDashboardData, type ActiveMatchup, type PlayerMatchupRow, type WeeklyRecap, type LeaguePerformerRow } from "@/lib/services/dashboard";
 import InlineLineupEditor, { type LineupPlayer } from "./InlineLineupEditor";
 import LiveScoreRefresh from "@/components/LiveScoreRefresh";
 import { getSwingPlayers } from "@/lib/matchups/swingPlayers";
@@ -167,21 +167,7 @@ export default async function TeamMatchupPage({
         </Card>
       )}
 
-      {/* ── 2a. This week's matchups (VP mode only) ── */}
-      {activeMatchup?.status === "active" && activeMatchup.leagueMatchupSlate.length > 0 && (
-        <Card>
-          <h2 style={{ ...sectionHead, marginBottom: 14 }}>
-            This week · Week {activeMatchup.week}
-          </h2>
-          <div style={{ display: "grid", gap: 8 }}>
-            {activeMatchup.leagueMatchupSlate.map((row, i) => (
-              <MatchupSlateItem key={i} row={row} />
-            ))}
-          </div>
-        </Card>
-      )}
-
-      {/* ── 2b. Rival badge and H2H history ── */}
+      {/* ── 2. Rival badge and H2H history ── */}
       {rival && (
         <Card>
           <RivalBadge rival={rival} compact={false} />
@@ -921,61 +907,6 @@ function RosterTable({ players }: { players: PlayerMatchupRow[] }) {
         <span style={{ textAlign: "right", fontSize: 15, fontWeight: 800, color: "#e2e8f0", fontVariantNumeric: "tabular-nums" }}>
           {players.reduce((s, p) => s + p.points, 0).toFixed(1)}
         </span>
-      </div>
-    </div>
-  );
-}
-
-function MatchupSlateItem({ row }: { row: MatchupSlateRow }) {
-  const bgStyle = row.isMyMatchup
-    ? "rgba(99,102,241,0.06)"
-    : "rgba(255,255,255,0.02)";
-  const borderStyle = row.isMyMatchup
-    ? "1px solid rgba(99,102,241,0.2)"
-    : "1px solid rgba(148,163,184,0.06)";
-
-  return (
-    <div style={{
-      display: "grid",
-      gridTemplateColumns: "1fr auto 1fr",
-      alignItems: "center",
-      gap: "4px 10px",
-      padding: "10px 12px",
-      borderRadius: 10,
-      background: bgStyle,
-      border: borderStyle,
-    }}>
-      {/* Home team */}
-      <div>
-        <div style={{ fontSize: 12, fontWeight: 600, color: "#cbd5e1" }}>
-          {row.homeTeam.name}
-        </div>
-        <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginTop: 2 }}>
-          <span style={{ fontSize: 15, fontWeight: 800, color: "#e2e8f0", fontVariantNumeric: "tabular-nums" }}>
-            {row.homeTeam.score.toFixed(1)}
-          </span>
-          <span style={{ fontSize: 11, color: "#475569", fontWeight: 500 }}>
-            proj {row.homeTeam.projected.toFixed(1)}
-          </span>
-        </div>
-      </div>
-
-      {/* Separator */}
-      <span style={{ fontSize: 12, color: "#475569", fontWeight: 500 }}>vs</span>
-
-      {/* Away team */}
-      <div style={{ textAlign: "right" }}>
-        <div style={{ fontSize: 12, fontWeight: 600, color: "#cbd5e1" }}>
-          {row.awayTeam.name}
-        </div>
-        <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginTop: 2, justifyContent: "flex-end" }}>
-          <span style={{ fontSize: 15, fontWeight: 800, color: "#e2e8f0", fontVariantNumeric: "tabular-nums" }}>
-            {row.awayTeam.score.toFixed(1)}
-          </span>
-          <span style={{ fontSize: 11, color: "#475569", fontWeight: 500 }}>
-            proj {row.awayTeam.projected.toFixed(1)}
-          </span>
-        </div>
       </div>
     </div>
   );

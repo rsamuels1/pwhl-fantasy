@@ -19,7 +19,7 @@ export default async function TeamLayout({ children, params }: TeamLayoutProps) 
 
   const cookieStore = await cookies();
 
-  // Lightweight matchup context: one query to find the current week's matchup
+  // Lightweight matchup context: find current week's matchup, falling back to playoff matchup
   const currentMatchup = await prisma.matchup.findFirst({
     where: {
       leagueId: team.league.id,
@@ -29,6 +29,19 @@ export default async function TeamLayout({ children, params }: TeamLayoutProps) 
     },
     orderBy: { week: "asc" },
   });
+
+  // Fallback: if no regular season matchup, check for playoff matchup
+  const playoffMatchup = currentMatchup
+    ? null
+    : await prisma.matchup.findFirst({
+        where: {
+          leagueId: team.league.id,
+          OR: [{ homeTeamId: teamId }, { awayTeamId: teamId }],
+          isPlayoff: true,
+        },
+        orderBy: { round: "desc" },
+      });
+
   const simDateRaw = (process.env.NODE_ENV !== "production" || process.env.ALLOW_SIM_DATE === "true")
     ? cookieStore.get("pwhl_dev_sim_date")?.value ?? null
     : null;
@@ -52,12 +65,27 @@ export default async function TeamLayout({ children, params }: TeamLayoutProps) 
               Wk {currentMatchup.week}
             </Link>
           )}
+          {playoffMatchup && (
+            <Link
+              href={`/team/${teamId}/matchup`}
+              style={{
+                fontSize: 12, padding: "3px 10px", borderRadius: 20,
+                background: "rgba(217, 119, 6, 0.1)",
+                border: "1px solid rgba(217, 119, 6, 0.25)",
+                color: "#fdba74", textDecoration: "none", fontWeight: 600,
+                flexShrink: 0,
+              }}
+            >
+              R{playoffMatchup.round}
+            </Link>
+          )}
         </header>
 
         <TeamNav
           teamId={teamId}
           leagueId={team.league.id}
           leagueName={team.league.name}
+          playoffStatus={team.league.playoffStatus ?? "NOT_STARTED"}
         />
 
         {simDateRaw && (
