@@ -1,900 +1,1034 @@
 <!DOCTYPE html>
-<html lang="en" class="bg-slate-950">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PWHL Fantasy Roadmap</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['Inter', 'sans-serif'],
-            mono: ['JetBrains Mono', 'monospace'],
-          },
-          colors: {
-            pwhl: {
-              purple: '#4c1d95',
-              accent: '#2dd4bf',
-              dark: '#020617',
-            }
-          }
-        }
-      }
-    }
-  </script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/lucide@latest"></script>
+  <title>PWHL Fantasy · Project Tracker</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
   <style>
-    .custom-scrollbar::-webkit-scrollbar {
-      width: 6px;
-      height: 6px;
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'JetBrains Mono', monospace;
+      background-color: #0a0a0a;
+      color: #e0e0e0;
+      line-height: 1.5;
     }
-    .custom-scrollbar::-webkit-scrollbar-track {
-      background: #0f172a;
+    a { color: #64b5f6; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* Header */
+    header {
+      background: #111;
+      border-bottom: 1px solid #222;
+      padding: 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
-    .custom-scrollbar::-webkit-scrollbar-thumb {
-      background: #334155;
-      border-radius: 3px;
+    header h1 { font-size: 1.2rem; font-weight: 700; letter-spacing: 0.05em; }
+    .header-right { text-align: right; font-size: 0.85rem; }
+    .header-right .stat { display: inline-block; margin-left: 2rem; }
+    .header-right .label { color: #888; }
+    .header-right .value { font-weight: 700; color: #64b5f6; }
+
+    /* Tab bar */
+    .tab-bar {
+      background: #111;
+      border-bottom: 1px solid #222;
+      display: flex;
+      padding: 0 1.5rem;
+      gap: 2rem;
+      position: sticky;
+      top: 0;
+      z-index: 10;
     }
-    .status-done { @apply bg-emerald-500/10 text-emerald-400 border-emerald-500/20; }
-    .status-partial { @apply bg-amber-500/10 text-amber-400 border-amber-500/20; }
-    .status-todo { @apply bg-slate-500/10 text-slate-400 border-slate-500/20; }
-    .status-risk { @apply bg-rose-500/10 text-rose-400 border-rose-500/20; }
-    .gradient-text {
-      background: linear-gradient(135deg, #2dd4bf 0%, #4c1d95 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
+    .tab-button {
+      flex: 0 0 auto;
+      padding: 0.75rem 0;
+      background: none;
+      border: none;
+      color: #888;
+      cursor: pointer;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.9rem;
+      font-weight: 500;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
     }
-    .ping-circle {
-      animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+    .tab-button:hover { color: #ccc; }
+    .tab-button.active {
+      color: #22c55e;
+      border-bottom-color: #22c55e;
     }
-    @keyframes ping {
-      75%, 100% {
-        transform: scale(2);
-        opacity: 0;
-      }
+
+    /* Tab content */
+    .tab-content {
+      display: none;
+      padding: 1.5rem;
+    }
+    .tab-content.active { display: block; }
+
+    /* Cards & panels */
+    .card {
+      background: #111;
+      border: 1px solid #222;
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+    }
+    .card.complete { border-left: 4px solid #22c55e; background: #0f1a0f; }
+    .card.current { border-left: 4px solid #f59e0b; }
+    .card.planned { border: 1px dashed #444; }
+
+    /* Status chips */
+    .status { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 4px; font-size: 0.8rem; font-weight: 700; }
+    .status.done { background: rgba(34, 197, 94, 0.1); color: #22c55e; }
+    .status.partial { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
+    .status.todo { background: rgba(107, 114, 128, 0.1); color: #9ca3af; }
+    .status.complete { background: rgba(34, 197, 94, 0.1); color: #22c55e; }
+    .status.planned { background: rgba(107, 114, 128, 0.1); color: #6b7280; }
+    .status.risk { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+
+    /* Gates & tasks */
+    .gate-row {
+      display: grid;
+      grid-template-columns: 2rem 1fr 6rem 1fr;
+      gap: 1rem;
+      padding: 0.75rem;
+      border-bottom: 1px solid #1a1a1a;
+      align-items: center;
+      font-size: 0.9rem;
+    }
+    .gate-row:last-child { border-bottom: none; }
+    .gate-icon { font-size: 1rem; }
+    .task-row {
+      padding: 0.5rem 0;
+      font-size: 0.9rem;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    .task-row:last-child { border-bottom: none; }
+    .task-check { display: inline-block; width: 1.5rem; }
+
+    /* Sprint grid */
+    .sprint-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0.75rem; margin: 1rem 0; }
+    .sprint-card {
+      background: #111;
+      border: 1px solid #222;
+      border-radius: 6px;
+      padding: 0.75rem;
+      text-align: center;
+      cursor: pointer;
+      font-size: 0.8rem;
+      transition: all 0.2s;
+    }
+    .sprint-card:hover { border-color: #444; }
+    .sprint-card.complete { border-color: #22c55e; }
+    .sprint-card.current { border-color: #f59e0b; background: rgba(245, 158, 11, 0.05); }
+    .sprint-card .name { font-weight: 700; margin-bottom: 0.25rem; }
+    .sprint-card .progress { font-size: 0.75rem; color: #888; margin-top: 0.25rem; }
+
+    /* Backlog table */
+    .backlog-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+    .backlog-table th {
+      background: #0a0a0a;
+      padding: 0.75rem;
+      text-align: left;
+      border-bottom: 1px solid #222;
+      font-weight: 700;
+      color: #888;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .backlog-table td {
+      padding: 0.75rem;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    .backlog-table tr:hover { background: #0f0f0f; }
+
+    /* Section header */
+    .section-header {
+      font-size: 1rem;
+      font-weight: 700;
+      margin: 1.5rem 0 1rem 0;
+      color: #ccc;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .section-count { font-size: 0.85rem; color: #666; font-weight: 400; }
+
+    /* Filter pills */
+    .filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid #222;
+    }
+    .filter-group { display: flex; gap: 0.5rem; align-items: center; }
+    .filter-group label { font-size: 0.8rem; color: #888; text-transform: uppercase; letter-spacing: 0.05em; }
+    .filter-btn {
+      padding: 0.4rem 0.8rem;
+      background: #111;
+      border: 1px solid #222;
+      border-radius: 4px;
+      color: #888;
+      cursor: pointer;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      transition: all 0.2s;
+    }
+    .filter-btn:hover { border-color: #444; }
+    .filter-btn.active {
+      background: #22c55e;
+      border-color: #22c55e;
+      color: #000;
+    }
+
+    /* Criticality dots */
+    .crit-dot { display: inline-block; width: 0.6rem; height: 0.6rem; border-radius: 50%; margin-right: 0.5rem; }
+    .crit-blocker { background: #ef4444; }
+    .crit-high { background: #f59e0b; }
+    .crit-medium { background: #eab308; }
+    .crit-low { background: #6b7280; }
+
+    /* Blocker callout */
+    .blocker-callout {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid #ef4444;
+      border-radius: 6px;
+      padding: 1rem;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .blocker-callout strong { color: #ef4444; }
+
+    /* Exit criteria */
+    .exit-criteria {
+      margin-top: 0.75rem;
+      padding-top: 0.75rem;
+      border-top: 1px solid #222;
+      font-size: 0.85rem;
+      color: #888;
     }
   </style>
 </head>
-<body class="text-slate-100 bg-slate-950 custom-scrollbar">
+<body>
   <!-- Header -->
-  <header class="sticky top-0 z-50 bg-slate-950/95 backdrop-blur border-b border-slate-800 p-6">
-    <div class="max-w-7xl mx-auto flex justify-between items-center">
-      <div>
-        <h1 class="text-3xl font-black gradient-text">PWHL Fantasy</h1>
-        <p class="text-sm text-slate-400">Product Roadmap</p>
+  <header>
+    <h1>PWHL Fantasy · Project Tracker</h1>
+    <div class="header-right">
+      <div class="stat">
+        <span class="label">Current:</span>
+        <span class="value">No active sprint</span>
       </div>
-      <div class="text-right">
-        <div class="text-2xl font-mono font-bold text-pwhl-accent" id="countdown">
-          Loading...
-        </div>
-        <p class="text-xs text-slate-500">until public launch</p>
+      <div class="stat">
+        <span class="label">To Beta:</span>
+        <span class="value">80 days</span>
+      </div>
+      <div class="stat">
+        <span class="label">Sprints:</span>
+        <span class="value">4/4</span>
+      </div>
+      <div class="stat">
+        <span class="label">Gates:</span>
+        <span class="value">12/12</span>
       </div>
     </div>
   </header>
 
-  <main class="max-w-7xl mx-auto p-6 space-y-8">
-    <!-- KPI Row -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-        <div class="flex items-center justify-between mb-4">
-          <h3 class="text-sm font-mono text-slate-400">Launch Confidence</h3>
-          <div class="w-12 h-12 relative">
-            <canvas id="readinessChart" width="48" height="48"></canvas>
-            <div class="absolute inset-0 flex items-center justify-center">
-              <span class="font-mono text-xs font-bold text-pwhl-accent">100%</span>
-            </div>
-          </div>
+  <!-- Tab bar -->
+  <div class="tab-bar">
+    <button class="tab-button active" onclick="switchTab('overview')">Overview</button>
+    <button class="tab-button" onclick="switchTab('sprints')">Sprints</button>
+    <button class="tab-button" onclick="switchTab('backlog')">Backlog</button>
+  </div>
+
+  <!-- Tab 1: Overview -->
+  <div id="overview" class="tab-content active">
+    <div class="section-header">Launch Gates <span class="section-count">12/12</span></div>
+    <div class="card">
+      
+        <div class="gate-row">
+          <div class="gate-icon">✅</div>
+          <div>---</div>
+          <div><span class="status done">PASS</span></div>
+          <div style="font-size: 0.85rem; color: #888;">---</div>
         </div>
-        <p class="text-xs text-slate-500">areas PASS</p>
-      </div>
-      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-        <p class="text-4xl font-mono font-bold text-pwhl-accent">12</p>
-        <p class="text-xs text-slate-500 mt-2">launch gates</p>
-        <div class="w-full bg-slate-800 h-1.5 rounded-full mt-3"></div>
-      </div>
-      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-        <p class="text-4xl font-mono font-bold text-emerald-400">0</p>
-        <p class="text-xs text-slate-500 mt-2">features shipped</p>
-        <div class="w-full bg-slate-800 h-1.5 rounded-full mt-3"></div>
-      </div>
-      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-        <p class="text-sm font-mono text-pwhl-accent font-bold">Sprint 4</p>
-        <p class="text-xs text-slate-500 mt-2">IN FLIGHT</p>
-        <div class="flex gap-1 mt-3">
-          <div class="w-2 h-2 bg-pwhl-accent rounded-full ping-circle"></div>
-          <div class="w-2 h-2 bg-slate-700 rounded-full"></div>
+      
+        <div class="gate-row">
+          <div class="gate-icon">✅</div>
+          <div>League creation</div>
+          <div><span class="status done">PASS</span></div>
+          <div style="font-size: 0.85rem; color: #888;">—</div>
         </div>
-      </div>
+      
+        <div class="gate-row">
+          <div class="gate-icon">⚠️</div>
+          <div>Draft</div>
+          <div><span class="status partial">RISK</span></div>
+          <div style="font-size: 0.85rem; color: #888;">reconnect ✅ · commissioner auth ✅ · auto-pick position-aware ✅ · duplicate-tab unvalidated</div>
+        </div>
+      
+        <div class="gate-row">
+          <div class="gate-icon">✅</div>
+          <div>Rosters</div>
+          <div><span class="status done">PASS</span></div>
+          <div style="font-size: 0.85rem; color: #888;">—</div>
+        </div>
+      
+        <div class="gate-row">
+          <div class="gate-icon">✅</div>
+          <div>Weekly matchups</div>
+          <div><span class="status done">PASS</span></div>
+          <div style="font-size: 0.85rem; color: #888;">—</div>
+        </div>
+      
+        <div class="gate-row">
+          <div class="gate-icon">✅</div>
+          <div>VP standings</div>
+          <div><span class="status done">PASS</span></div>
+          <div style="font-size: 0.85rem; color: #888;">—</div>
+        </div>
+      
+        <div class="gate-row">
+          <div class="gate-icon">✅</div>
+          <div>Weekly lineup lock</div>
+          <div><span class="status done">PASS</span></div>
+          <div style="font-size: 0.85rem; color: #888;">—</div>
+        </div>
+      
+        <div class="gate-row">
+          <div class="gate-icon">✅</div>
+          <div>Playoffs</div>
+          <div><span class="status done">PASS</span></div>
+          <div style="font-size: 0.85rem; color: #888;">—</div>
+        </div>
+      
+        <div class="gate-row">
+          <div class="gate-icon">✅</div>
+          <div>Commissioner tools</div>
+          <div><span class="status done">PASS</span></div>
+          <div style="font-size: 0.85rem; color: #888;">force move, undo transaction, replace manager, audit log all shipped</div>
+        </div>
+      
+        <div class="gate-row">
+          <div class="gate-icon">✅</div>
+          <div>Notifications</div>
+          <div><span class="status done">PASS</span></div>
+          <div style="font-size: 0.85rem; color: #888;">all 3 MVP-critical types shipped (draft starting, on the clock, lineup incomplete)</div>
+        </div>
+      
+        <div class="gate-row">
+          <div class="gate-icon">✅</div>
+          <div>Analytics</div>
+          <div><span class="status done">PASS</span></div>
+          <div style="font-size: 0.85rem; color: #888;">6 events instrumented</div>
+        </div>
+      
+        <div class="gate-row">
+          <div class="gate-icon">✅</div>
+          <div>End-to-end season sim</div>
+          <div><span class="status done">PASS</span></div>
+          <div style="font-size: 0.85rem; color: #888;">—</div>
+        </div>
+      
     </div>
 
-    <!-- MVP Readiness Scorecard -->
-    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-      <h2 class="text-lg font-mono font-bold mb-4">MVP Readiness Scorecard</h2>
-      <div class="overflow-x-auto">
-        <table class="w-full text-sm">
-          <thead>
-            <tr class="border-b border-slate-800">
-              <th class="text-left py-2 px-2 text-slate-400 font-mono">Area</th>
-              <th class="text-left py-2 px-2 text-slate-400 font-mono">Status</th>
-              <th class="text-left py-2 px-2 text-slate-400 font-mono">Blocker</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-slate-800">
-            
-              <tr class="hover:bg-slate-800/50">
-                <td class="py-3 px-2">---</td>
-                <td class="py-3 px-2">
-                  <span class="px-2 py-1 rounded-full text-xs font-mono border status-pass">
-                    ✅ PASS
-                  </span>
-                </td>
-                <td class="py-3 px-2 text-slate-400">---</td>
-              </tr>
-            
-              <tr class="hover:bg-slate-800/50">
-                <td class="py-3 px-2">League creation</td>
-                <td class="py-3 px-2">
-                  <span class="px-2 py-1 rounded-full text-xs font-mono border status-pass">
-                    ✅ PASS
-                  </span>
-                </td>
-                <td class="py-3 px-2 text-slate-400">—</td>
-              </tr>
-            
-              <tr class="hover:bg-slate-800/50">
-                <td class="py-3 px-2">Draft</td>
-                <td class="py-3 px-2">
-                  <span class="px-2 py-1 rounded-full text-xs font-mono border status-pass">
-                    ⚠️ PASS WITH RISKS
-                  </span>
-                </td>
-                <td class="py-3 px-2 text-slate-400">reconnect ✅ · commissioner auth ✅ · auto-pick position-aware ✅ · duplicate-tab unvalidated</td>
-              </tr>
-            
-              <tr class="hover:bg-slate-800/50">
-                <td class="py-3 px-2">Rosters</td>
-                <td class="py-3 px-2">
-                  <span class="px-2 py-1 rounded-full text-xs font-mono border status-pass">
-                    ✅ PASS
-                  </span>
-                </td>
-                <td class="py-3 px-2 text-slate-400">—</td>
-              </tr>
-            
-              <tr class="hover:bg-slate-800/50">
-                <td class="py-3 px-2">Weekly matchups</td>
-                <td class="py-3 px-2">
-                  <span class="px-2 py-1 rounded-full text-xs font-mono border status-pass">
-                    ✅ PASS
-                  </span>
-                </td>
-                <td class="py-3 px-2 text-slate-400">—</td>
-              </tr>
-            
-              <tr class="hover:bg-slate-800/50">
-                <td class="py-3 px-2">VP standings</td>
-                <td class="py-3 px-2">
-                  <span class="px-2 py-1 rounded-full text-xs font-mono border status-pass">
-                    ✅ PASS
-                  </span>
-                </td>
-                <td class="py-3 px-2 text-slate-400">—</td>
-              </tr>
-            
-              <tr class="hover:bg-slate-800/50">
-                <td class="py-3 px-2">Weekly lineup lock</td>
-                <td class="py-3 px-2">
-                  <span class="px-2 py-1 rounded-full text-xs font-mono border status-pass">
-                    ✅ PASS
-                  </span>
-                </td>
-                <td class="py-3 px-2 text-slate-400">—</td>
-              </tr>
-            
-              <tr class="hover:bg-slate-800/50">
-                <td class="py-3 px-2">Playoffs</td>
-                <td class="py-3 px-2">
-                  <span class="px-2 py-1 rounded-full text-xs font-mono border status-pass">
-                    ✅ PASS
-                  </span>
-                </td>
-                <td class="py-3 px-2 text-slate-400">—</td>
-              </tr>
-            
-              <tr class="hover:bg-slate-800/50">
-                <td class="py-3 px-2">Commissioner tools</td>
-                <td class="py-3 px-2">
-                  <span class="px-2 py-1 rounded-full text-xs font-mono border status-pass">
-                    ✅ PASS
-                  </span>
-                </td>
-                <td class="py-3 px-2 text-slate-400">force move, undo transaction, replace manager, audit log all shipped</td>
-              </tr>
-            
-              <tr class="hover:bg-slate-800/50">
-                <td class="py-3 px-2">Notifications</td>
-                <td class="py-3 px-2">
-                  <span class="px-2 py-1 rounded-full text-xs font-mono border status-pass">
-                    ✅ PASS
-                  </span>
-                </td>
-                <td class="py-3 px-2 text-slate-400">all 3 MVP-critical types shipped (draft starting, on the clock, lineup incomplete)</td>
-              </tr>
-            
-              <tr class="hover:bg-slate-800/50">
-                <td class="py-3 px-2">Analytics</td>
-                <td class="py-3 px-2">
-                  <span class="px-2 py-1 rounded-full text-xs font-mono border status-pass">
-                    ✅ PASS
-                  </span>
-                </td>
-                <td class="py-3 px-2 text-slate-400">6 events instrumented</td>
-              </tr>
-            
-              <tr class="hover:bg-slate-800/50">
-                <td class="py-3 px-2">End-to-end season sim</td>
-                <td class="py-3 px-2">
-                  <span class="px-2 py-1 rounded-full text-xs font-mono border status-pass">
-                    ✅ PASS
-                  </span>
-                </td>
-                <td class="py-3 px-2 text-slate-400">—</td>
-              </tr>
-            
-          </tbody>
-        </table>
+    
+      <div class="blocker-callout">
+        <strong>What's blocking beta:</strong><br/>
+        • Draft — reconnect ✅ · commissioner auth ✅ · auto-pick position-aware ✅ · duplicate-tab unvalidated
       </div>
-    </div>
+    
 
-    <!-- Current State (Shipped) -->
-    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-      <h2 class="text-lg font-mono font-bold mb-4">✅ Shipped Platform Capabilities</h2>
-      <div class="flex flex-wrap gap-2">
-        <span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full px-3 py-1 text-xs font-mono">Authentication & user accounts</span><span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full px-3 py-1 text-xs font-mono">League creation & management (commissioner admin panel: team management, draft setup, season controls, announcements)</span><span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full px-3 py-1 text-xs font-mono">Draft room (live WebSocket draft, queue, auto-draft, auto-escalation)</span><span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full px-3 py-1 text-xs font-mono">Rosters & lineups (locking, play-lock rule, games-remaining badges, projected FPTS)</span><span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full px-3 py-1 text-xs font-mono">Matchups (VTF regular season + 1v1 playoffs) & Matchup Center / Fantasy Home (hero scores, top performers, swing players, storyline chip, playing-tonight, roster breakdown)</span><span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full px-3 py-1 text-xs font-mono">Projections & Win Probability engine</span><span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full px-3 py-1 text-xs font-mono">Standings (with playoff race clinch/eliminate indicators)</span><span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full px-3 py-1 text-xs font-mono">Playoffs (seeding, bracket, single-elimination)</span><span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full px-3 py-1 text-xs font-mono">Historical Replay & Season advancement / lifecycle</span><span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full px-3 py-1 text-xs font-mono">Schedule management & scoring engine (VTF point scoring)</span><span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full px-3 py-1 text-xs font-mono">Victory Point (VP) scoring model (win/placement bonuses, `homeVP`/`awayVP`)</span><span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full px-3 py-1 text-xs font-mono">Free-agent add/drop (immediate)</span><span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full px-3 py-1 text-xs font-mono">Live score polling (client-side refresh during active matchups)</span><span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full px-3 py-1 text-xs font-mono">Season-long head-to-head (rivalry) records</span><span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full px-3 py-1 text-xs font-mono">Commissioner Recovery Tools (force roster move, undo transaction, replace inactive manager)</span><span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full px-3 py-1 text-xs font-mono">Commissioner Admin Center (audit log visibility, draft pause visibility, season renewal entry point)</span><span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full px-3 py-1 text-xs font-mono">Draft Analytics (6 events instrumented)</span><span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full px-3 py-1 text-xs font-mono">League Creation UX (8-team recommendation)</span><span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full px-3 py-1 text-xs font-mono">In-app notifications (all three MVP-critical types)</span>
-      </div>
-    </div>
-
-    <!-- What To Build Next (Token Planner) -->
-    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-      <h2 class="text-lg font-mono font-bold mb-4">⚡ Session Planner (Tokens)</h2>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div class="space-y-3">
-          
+    <div class="section-header" style="margin-top: 2rem;">Sprint Overview</div>
+    <div class="sprint-grid">
+      
+        <div class="sprint-card complete" onclick="switchTab('sprints'); setTimeout(() => document.getElementById('sprint-0').scrollIntoView({behavior: 'smooth'}), 100)">
+          <div class="name">Sprint 0</div>
+          <div class="progress">4/4</div>
+          <span class="status complete">✅ DONE</span>
         </div>
-        <div class="space-y-4">
+      
+        <div class="sprint-card complete" onclick="switchTab('sprints'); setTimeout(() => document.getElementById('sprint-1').scrollIntoView({behavior: 'smooth'}), 100)">
+          <div class="name">Sprint 1</div>
+          <div class="progress">5/5</div>
+          <span class="status complete">✅ DONE</span>
+        </div>
+      
+        <div class="sprint-card complete" onclick="switchTab('sprints'); setTimeout(() => document.getElementById('sprint-2').scrollIntoView({behavior: 'smooth'}), 100)">
+          <div class="name">Sprint 2</div>
+          <div class="progress">14/14</div>
+          <span class="status complete">✅ DONE</span>
+        </div>
+      
+        <div class="sprint-card complete" onclick="switchTab('sprints'); setTimeout(() => document.getElementById('sprint-3').scrollIntoView({behavior: 'smooth'}), 100)">
+          <div class="name">Sprint 3</div>
+          <div class="progress">10/12</div>
+          <span class="status complete">✅ DONE</span>
+        </div>
+      
+    </div>
+  </div>
+
+  <!-- Tab 2: Sprints -->
+  <div id="sprints" class="tab-content">
+    
+      <div id="sprint-0" class="card complete">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
           <div>
-            <label class="text-xs text-slate-400 font-mono">Total Session Cost</label>
-            <div class="text-4xl font-mono font-bold text-pwhl-accent" id="tokenSum">15K</div>
-            <div class="text-xs text-slate-500">base (CLAUDE.md + overhead)</div>
+            <div style="font-weight: 700; font-size: 1rem;">Sprint 0 · "Make it match the rules"</div>
+            <div style="font-size: 0.8rem; color: #888;">Track: Track A (P0)</div>
           </div>
+          <span class="status complete">✅ COMPLETE</span>
+        </div>
+        <div>
+          
+            <div class="task-row">
+              <span class="task-check">✅</span>
+              <span style="color: #666">IA-001 Roster defaults 3F — validation updated + CLAUDE.md updated</span>
+            </div>
+          
+            <div class="task-row">
+              <span class="task-check">✅</span>
+              <span style="color: #666">IA-002 VP authoritative (standings, qualification, seeding)</span>
+            </div>
+          
+            <div class="task-row">
+              <span class="task-check">✅</span>
+              <span style="color: #666">IA-003 Playoff defaults → 4 teams / no byes / single-week</span>
+            </div>
+          
+            <div class="task-row">
+              <span class="task-check">✅</span>
+              <span style="color: #666">IA-007 Auto-draft rebalance for 3F demand</span>
+            </div>
+          
+        </div>
+        <div class="exit-criteria"><strong>Exit:</strong> scorecard Rosters / VP standings / Playoffs flipped FAIL → PASS. ✅</div>
+      </div>
+    
+      <div id="sprint-1" class="card complete">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
           <div>
-            <label class="text-xs text-slate-400 font-mono">Status</label>
-            <div class="flex gap-2 mt-2">
-              <div class="flex-1 bg-slate-800 h-2 rounded-full overflow-hidden">
-                <div id="tokenBar" class="h-full bg-indigo-500 transition-all duration-300" style="width: 0%"></div>
-              </div>
-            </div>
-            <div id="tokenBadge" class="mt-2 inline-block px-2 py-1 rounded-full text-xs font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">✓ Optimal</div>
+            <div style="font-weight: 700; font-size: 1rem;">Sprint 1 · "Prove a season completes"</div>
+            <div style="font-size: 0.8rem; color: #888;">Track: Track V (P0)</div>
           </div>
+          <span class="status complete">✅ COMPLETE</span>
         </div>
+        <div>
+          
+            <div class="task-row">
+              <span class="task-check">✅</span>
+              <span style="color: #666">End-to-end season simulation framework (`scripts/simulate-season.ts`)</span>
+            </div>
+          
+            <div class="task-row">
+              <span class="task-check">✅</span>
+              <span style="color: #666">VP standings validation suite — 28 tests in `tests/vp.test.ts`</span>
+            </div>
+          
+            <div class="task-row">
+              <span class="task-check">✅</span>
+              <span style="color: #666">Playoff qualification & seeding validation suite — 18 tests in `tests/playoffs.test.ts`</span>
+            </div>
+          
+            <div class="task-row">
+              <span class="task-check">✅</span>
+              <span style="color: #666">Period-based lineup lock (LC-001)</span>
+            </div>
+          
+            <div class="task-row">
+              <span class="task-check">✅</span>
+              <span style="color: #666">MVP readiness scorecard updated — confidence 85–90%</span>
+            </div>
+          
+        </div>
+        <div class="exit-criteria"><strong>Exit:</strong> one simulated league completes a full season with zero manual DB edits. ✅</div>
+      </div>
+    
+      <div id="sprint-2" class="card complete">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+          <div>
+            <div style="font-weight: 700; font-size: 1rem;">Sprint 2 · "Commissioner + Platform Foundation"</div>
+            
+          </div>
+          <span class="status complete">✅ COMPLETE</span>
+        </div>
+        <div>
+          
+            <div class="task-row">
+              <span class="task-check">✅</span>
+              <span style="color: #666">C1 WebSocket reconnect with exponential backoff (`useDraftSocket.ts`)</span>
+            </div>
+          
+            <div class="task-row">
+              <span class="task-check">✅</span>
+              <span style="color: #666">C2 Commissioner auth enforcement on START/PAUSE/RESUME — server-side (`server.ts`)</span>
+            </div>
+          
+            <div class="task-row">
+              <span class="task-check">✅</span>
+              <span style="color: #666">H1/H3 Position-aware + value-ranked auto-pick — tier (G needed → skater starter → bench) + proxy FP</span>
+            </div>
+          
+            <div class="task-row">
+              <span class="task-check">✅</span>
+              <span style="color: #666">CT-001 Force roster move, undo transaction, replace inactive manager</span>
+            </div>
+          
+            <div class="task-row">
+              <span class="task-check">✅</span>
+              <span style="color: #666">CT-002 Audit logging — `lib/services/audit-service.ts`, all routes write `LeagueEvent`; admin panel shows last 50</span>
+            </div>
+          
+            <div class="task-row">
+              <span class="task-check">✅</span>
+              <span style="color: #666">CT-004 Draft pause/resume audit writes + draft-paused banner on admin panel</span>
+            </div>
+          
+            <div class="task-row">
+              <span class="task-check">✅</span>
+              <span style="color: #666">IA-004 Season boundary validation — `validateSeasonBoundary()` in `lib/season/lifecycle.ts`</span>
+            </div>
+          
+            <div class="task-row">
+              <span class="task-check">✅</span>
+              <span style="color: #666">MS-001 `parentLeagueId` schema + self-referencing `"LeagueLineage"` relation</span>
+            </div>
+          
+            <div class="task-row">
+              <span class="task-check">✅</span>
+              <span style="color: #666">MS-002 `rulesVersion Int @default(1)` on `FantasyLeague`</span>
+            </div>
+          
+            <div class="task-row">
+              <span class="task-check">✅</span>
+              <span style="color: #666">MS-003 `scoringVersion Int @default(1)` on `FantasyLeague`</span>
+            </div>
+          
+            <div class="task-row">
+              <span class="task-check">✅</span>
+              <span style="color: #666">MS-004 Season renewal — `lib/services/renewal-service.ts`, `/renew` API, `RenewLeagueForm`, admin "Start Next Season"</span>
+            </div>
+          
+            <div class="task-row">
+              <span class="task-check">✅</span>
+              <span style="color: #666">AN-001 All 6 events shipped — `lib/analytics/index.ts` `trackEvent()`; `user_registered`, `league_created`, `league_joined`, `draft_started`, `draft_completed`, `lineup_saved`</span>
+            </div>
+          
+            <div class="task-row">
+              <span class="task-check">✅</span>
+              <span style="color: #666">IA-006 VP education UI — `components/VpExplainer.tsx` on standings page</span>
+            </div>
+          
+            <div class="task-row">
+              <span class="task-check">✅</span>
+              <span style="color: #666">IA-005 8-team "Recommended" label on league creation form</span>
+            </div>
+          
+        </div>
+        <div class="exit-criteria"><strong>Exit:</strong> ✅ 130/130 tests pass · `tsc --noEmit` clean · commissioner can recover from any stuck state without engineering help · schema is multi-season-ready · schedule generator blocks PWHL playoff overlaps.</div>
+      </div>
+    
+      <div id="sprint-3" class="card complete">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+          <div>
+            <div style="font-weight: 700; font-size: 1rem;">Sprint 3 · "Beta-ready: onboarding, trust, mobile"</div>
+            <div style="font-size: 0.8rem; color: #888;">Track: June 13, 2026 · Track F</div>
+          </div>
+          <span class="status complete">✅ COMPLETE</span>
+        </div>
+        <div>
+          
+            <div class="task-row">
+              <span class="task-check">✅</span>
+              <span style="color: #666">#2 League Onboarding (welcome flow, setup wizard, draft prep guide, replay explanation; `User.onboardingCompletedAt`; `components/WelcomeFlow.tsx`; `app/create-league/CreateLeagueWizard.tsx`; manager checklist on league overview)</span>
+            </div>
+          
+            <div class="task-row">
+              <span class="task-check">✅</span>
+              <span style="color: #666">#4 Error Handling (empty / loading / retry across all core pages — draft room, matchup, lineup, standings, roster)</span>
+            </div>
+          
+            <div class="task-row">
+              <span class="task-check">✅</span>
+              <span style="color: #666">#3 Mobile Optimization (draft room tabbed layout at ≤900px, 44px touch targets everywhere, BottomNav safe-area, standings minWidth, matchup score clamp())</span>
+            </div>
+          
+            <div class="task-row">
+              <span class="task-check">✅</span>
+              <span style="color: #666">NT-001 in-app notification infrastructure (`lib/services/notification-service.ts`, bell UI, draft server call sites for DRAFT_STARTING + ON_THE_CLOCK)</span>
+            </div>
+          
+            <div class="task-row">
+              <span class="task-check">✅</span>
+              <span style="color: #666">NT-001 schema delta (`title`, `body`, `actionUrl`, `teamId`, `dedupeKey` on `Notification`; `@@unique([userId,type,dedupeKey])` live; bell renders stored fields)</span>
+            </div>
+          
+            <div class="task-row">
+              <span class="task-check">✅</span>
+              <span style="color: #666">NT-002 draft notifications (DRAFT_STARTING + ON_THE_CLOCK wired from `lib/draft/server.ts`)</span>
+            </div>
+          
+            <div class="task-row">
+              <span class="task-check">✅</span>
+              <span style="color: #666">NT-003 Scheduled trigger decision resolved June 13, 2026: check-on-dashboard-load + DB-level dedupeKey — see `docs/02-engineering/notification-framework-spec.md`</span>
+            </div>
+          
+            <div class="task-row">
+              <span class="task-check">✅</span>
+              <span style="color: #666">#8 Transaction History (paginated API + page with type/team filters, replay guard, infinite scroll)</span>
+            </div>
+          
+            <div class="task-row">
+              <span class="task-check">✅</span>
+              <span style="color: #666">#28 Lineup Stats Tab Polish (unplanned positive addition — renamed "Matchup Proj", between-weeks default, "This week" hidden when no active period)</span>
+            </div>
+          
+            <div class="task-row">
+              <span class="task-check">✅</span>
+              <span style="color: #666">#32 Draft Room Team Distribution Panel (unplanned positive addition — `TeamSpreadPanel` in `DraftRoom.tsx`, concentration color-coding)</span>
+            </div>
+          
+            <div class="task-row">
+              <span class="task-check">○</span>
+              <span style="color: #ccc">NT-002 LINEUP_INCOMPLETE — shipped early Sprint 4 (June 13, 2026); see Sprint 4 shipped items</span>
+            </div>
+          
+            <div class="task-row">
+              <span class="task-check">○</span>
+              <span style="color: #ccc">IA-011 Hide advanced non-v1 settings — shipped during Sprint 3 (`ae9246d`)</span>
+            </div>
+          
+        </div>
+        <div class="exit-criteria"><strong>Exit:</strong> a brand-new user creates and drafts a league on a phone with no docs. ✅ ACHIEVED</div>
+      </div>
+    
+  </div>
+
+  <!-- Tab 3: Backlog -->
+  <div id="backlog" class="tab-content">
+    <div class="filters">
+      <div class="filter-group">
+        <label>Status:</label>
+        <button class="filter-btn active" onclick="filterBacklog('status', 'all')">All</button>
+        <button class="filter-btn" onclick="filterBacklog('status', 'todo')">Todo</button>
+        <button class="filter-btn" onclick="filterBacklog('status', 'partial')">Partial</button>
+      </div>
+      <div class="filter-group">
+        <label>Criticality:</label>
+        <button class="filter-btn active" onclick="filterBacklog('crit', 'all')">All</button>
+        <button class="filter-btn" onclick="filterBacklog('crit', 'blocker')">Blocker</button>
+        <button class="filter-btn" onclick="filterBacklog('crit', 'high')">High</button>
+        <button class="filter-btn" onclick="filterBacklog('crit', 'medium')">Medium</button>
       </div>
     </div>
 
-    <!-- Phases -->
     
-      <div id="phase-0">
-        <div class="flex items-center gap-3 mb-4">
-          <h2 class="text-xl font-mono font-bold">Phase 0: Implementation Alignment (Launch Blockers)</h2>
-          <span class="px-2 py-1 rounded text-xs font-mono font-bold bg-slate-500/10 text-slate-400">CRITICAL (P0 items are hard launch blockers)</span>
-        </div>
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div class="crit-section-blocker">
           
         </div>
-      </div>
-    
-      <div id="phase-1">
-        <div class="flex items-center gap-3 mb-4">
-          <h2 class="text-xl font-mono font-bold">Phase 1: Beta Completion</h2>
-          <span class="px-2 py-1 rounded text-xs font-mono font-bold bg-rose-500/10 text-rose-400">CRITICAL</span>
-        </div>
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      
+        <div class="crit-section-high">
           
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-              <div class="flex items-start justify-between mb-3">
-                <h3 class="font-mono font-bold text-sm">#1 C</h3>
-                <span class="px-2 py-1 rounded text-xs font-mono border status-partial">
-                  ⚠️ PARTIAL
-                </span>
-              </div>
-              
-              <p class="text-sm text-slate-300">The admin panel (`app/league/[leagueId]/admin/`) is the central commissioner interface:</p>
-            </div>
-          
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-              <div class="flex items-start justify-between mb-3">
-                <h3 class="font-mono font-bold text-sm">#2 L</h3>
-                <span class="px-2 py-1 rounded text-xs font-mono border status-todo">
-                  TODO
-                </span>
-              </div>
-              
-              <p class="text-sm text-slate-300">Spec: `docs/onboarding-spec.md`</p>
-            </div>
-          
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-              <div class="flex items-start justify-between mb-3">
-                <h3 class="font-mono font-bold text-sm">#3 M</h3>
-                <span class="px-2 py-1 rounded text-xs font-mono border status-todo">
-                  TODO
-                </span>
-              </div>
-              <div class="text-xs text-slate-400 mb-2">~75K tokens</div>
-              <p class="text-sm text-slate-300">Estimated tokens: ~75K</p>
-            </div>
-          
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-              <div class="flex items-start justify-between mb-3">
-                <h3 class="font-mono font-bold text-sm">#4 E</h3>
-                <span class="px-2 py-1 rounded text-xs font-mono border status-todo">
-                  TODO
-                </span>
-              </div>
-              <div class="text-xs text-slate-400 mb-2">~65K tokens</div>
-              <p class="text-sm text-slate-300">Estimated tokens: ~65K (many small localized touches across all core pages)</p>
-            </div>
-          
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-              <div class="flex items-start justify-between mb-3">
-                <h3 class="font-mono font-bold text-sm">#26 L</h3>
-                <span class="px-2 py-1 rounded text-xs font-mono border status-todo">
-                  TODO
-                </span>
-              </div>
-              
-              <p class="text-sm text-slate-300">Phase: 1</p>
-            </div>
-          
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-              <div class="flex items-start justify-between mb-3">
-                <h3 class="font-mono font-bold text-sm">#27 R</h3>
-                <span class="px-2 py-1 rounded text-xs font-mono border status-todo">
-                  TODO
-                </span>
-              </div>
-              
-              <p class="text-sm text-slate-300">Phase: 1</p>
-            </div>
-          
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-              <div class="flex items-start justify-between mb-3">
-                <h3 class="font-mono font-bold text-sm">#28 L</h3>
-                <span class="px-2 py-1 rounded text-xs font-mono border status-todo">
-                  TODO
-                </span>
-              </div>
-              <div class="text-xs text-slate-400 mb-2">~25K tokens</div>
-              <p class="text-sm text-slate-300">Phase: 1</p>
-            </div>
-          
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-              <div class="flex items-start justify-between mb-3">
-                <h3 class="font-mono font-bold text-sm">#32 D</h3>
-                <span class="px-2 py-1 rounded text-xs font-mono border status-todo">
-                  TODO
-                </span>
-              </div>
-              <div class="text-xs text-slate-400 mb-2">~30K tokens</div>
-              <p class="text-sm text-slate-300">Phase: 1 (draft room feature)</p>
-            </div>
+            <div class="section-header">🟠 High Priority <span class="section-count">1</span></div>
+            <table class="backlog-table">
+              <thead>
+                <tr>
+                  <th style="width: 2rem;"></th>
+                  <th style="width: 4rem;">#</th>
+                  <th>Title</th>
+                  <th style="width: 6rem;">Status</th>
+                  <th style="width: 5rem;">Tokens</th>
+                  <th style="width: 5rem;">Phase</th>
+                </tr>
+              </thead>
+              <tbody>
+                
+                  <tr class="backlog-row" data-status="todo" data-crit="high">
+                    <td><span class="crit-dot crit-high"></span></td>
+                    <td>#27</td>
+                    <td>Roster Page UX Overhaul</td>
+                    <td><span class="status todo">TODO</span></td>
+                    <td>—</td>
+                    <td>1</td>
+                  </tr>
+                
+              </tbody>
+            </table>
           
         </div>
-      </div>
-    
-      <div id="phase-2">
-        <div class="flex items-center gap-3 mb-4">
-          <h2 class="text-xl font-mono font-bold">Phase 2: Fantasy Essentials</h2>
-          <span class="px-2 py-1 rounded text-xs font-mono font-bold bg-amber-500/10 text-amber-400">HIGH</span>
-        </div>
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      
+        <div class="crit-section-medium">
           
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-              <div class="flex items-start justify-between mb-3">
-                <h3 class="font-mono font-bold text-sm">#5 W</h3>
-                <span class="px-2 py-1 rounded text-xs font-mono border status-partial">
-                  ⚠️ PARTIAL
-                </span>
-              </div>
-              <div class="text-xs text-slate-400 mb-2">~110K tokens</div>
-              <p class="text-sm text-slate-300">Estimated tokens: ~110K (new schema columns, waiver service, processing job, commissioner UI)</p>
-            </div>
-          
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-              <div class="flex items-start justify-between mb-3">
-                <h3 class="font-mono font-bold text-sm">#6 F</h3>
-                <span class="px-2 py-1 rounded text-xs font-mono border status-todo">
-                  TODO
-                </span>
-              </div>
-              <div class="text-xs text-slate-400 mb-2">~80K tokens</div>
-              <p class="text-sm text-slate-300">Estimated tokens: ~80K (depends on #5; bidding logic + UI + budget tracking)</p>
-            </div>
-          
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-              <div class="flex items-start justify-between mb-3">
-                <h3 class="font-mono font-bold text-sm">#7 T</h3>
-                <span class="px-2 py-1 rounded text-xs font-mono border status-todo">
-                  TODO
-                </span>
-              </div>
-              <div class="text-xs text-slate-400 mb-2">~130K tokens</div>
-              <p class="text-sm text-slate-300">Estimated tokens: ~130K (new domain — schema tables, API routes, proposal/review/approval UI; plan a dedicated session)</p>
-            </div>
-          
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-              <div class="flex items-start justify-between mb-3">
-                <h3 class="font-mono font-bold text-sm">#8 T</h3>
-                <span class="px-2 py-1 rounded text-xs font-mono border status-todo">
-                  TODO
-                </span>
-              </div>
-              <div class="text-xs text-slate-400 mb-2">~55K tokens</div>
-              <p class="text-sm text-slate-300">Estimated tokens: ~55K (standalone; built on existing CT-002 audit log foundation — no schema changes)</p>
-            </div>
-          
-        </div>
-      </div>
-    
-      <div id="phase-3">
-        <div class="flex items-center gap-3 mb-4">
-          <h2 class="text-xl font-mono font-bold">Phase 3: Matchup & Season Experience</h2>
-          <span class="px-2 py-1 rounded text-xs font-mono font-bold bg-amber-500/10 text-amber-400">HIGH</span>
-        </div>
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-              <div class="flex items-start justify-between mb-3">
-                <h3 class="font-mono font-bold text-sm">#9 L</h3>
-                <span class="px-2 py-1 rounded text-xs font-mono border status-todo">
-                  TODO
-                </span>
-              </div>
-              
-              <p class="text-sm text-slate-300">Features:</p>
-            </div>
-          
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-              <div class="flex items-start justify-between mb-3">
-                <h3 class="font-mono font-bold text-sm">#10 W</h3>
-                <span class="px-2 py-1 rounded text-xs font-mono border status-todo">
-                  TODO
-                </span>
-              </div>
-              
-              <p class="text-sm text-slate-300">Features:</p>
-            </div>
-          
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-              <div class="flex items-start justify-between mb-3">
-                <h3 class="font-mono font-bold text-sm">#11 M</h3>
-                <span class="px-2 py-1 rounded text-xs font-mono border status-partial">
-                  ⚠️ PARTIAL
-                </span>
-              </div>
-              
-              <p class="text-sm text-slate-300">Per-team storyline chip ("🔥 X is leading your team…") and a weekly recap card ship today.</p>
-            </div>
-          
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-              <div class="flex items-start justify-between mb-3">
-                <h3 class="font-mono font-bold text-sm">#24 L</h3>
-                <span class="px-2 py-1 rounded text-xs font-mono border status-todo">
-                  TODO
-                </span>
-              </div>
-              
-              <p class="text-sm text-slate-300">Features implemented:</p>
-            </div>
-          
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-              <div class="flex items-start justify-between mb-3">
-                <h3 class="font-mono font-bold text-sm">#25 T</h3>
-                <span class="px-2 py-1 rounded text-xs font-mono border status-todo">
-                  TODO
-                </span>
-              </div>
-              <div class="text-xs text-slate-400 mb-2">~85K tokens</div>
-              <p class="text-sm text-slate-300">Estimated tokens: ~85K (new page, per-position-group aggregation queries; all reads on existing data)</p>
-            </div>
-          
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-              <div class="flex items-start justify-between mb-3">
-                <h3 class="font-mono font-bold text-sm">#29 W</h3>
-                <span class="px-2 py-1 rounded text-xs font-mono border status-todo">
-                  TODO
-                </span>
-              </div>
-              <div class="text-xs text-slate-400 mb-2">~65K tokens</div>
-              <p class="text-sm text-slate-300"></p>
-            </div>
-          
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-              <div class="flex items-start justify-between mb-3">
-                <h3 class="font-mono font-bold text-sm">#30 P</h3>
-                <span class="px-2 py-1 rounded text-xs font-mono border status-todo">
-                  TODO
-                </span>
-              </div>
-              <div class="text-xs text-slate-400 mb-2">~40K tokens</div>
-              <p class="text-sm text-slate-300">Estimated tokens: ~40K (polish on existing bracket/matchup/overview pages; minimal new logic)</p>
-            </div>
-          
-        </div>
-      </div>
-    
-      <div id="phase-4">
-        <div class="flex items-center gap-3 mb-4">
-          <h2 class="text-xl font-mono font-bold">Phase 4: Historical Replay Expansion</h2>
-          <span class="px-2 py-1 rounded text-xs font-mono font-bold bg-slate-500/10 text-slate-400">LOW — replay is a QA/testing tool, not a flagship. Build only the minimum needed</span>
-        </div>
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-              <div class="flex items-start justify-between mb-3">
-                <h3 class="font-mono font-bold text-sm">#12 M</h3>
-                <span class="px-2 py-1 rounded text-xs font-mono border status-todo">
-                  TODO
-                </span>
-              </div>
-              
-              <p class="text-sm text-slate-300">Support:</p>
-            </div>
-          
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-              <div class="flex items-start justify-between mb-3">
-                <h3 class="font-mono font-bold text-sm">#13 R</h3>
-                <span class="px-2 py-1 rounded text-xs font-mono border status-todo">
-                  TODO
-                </span>
-              </div>
-              
-              <p class="text-sm text-slate-300"></p>
-            </div>
-          
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-              <div class="flex items-start justify-between mb-3">
-                <h3 class="font-mono font-bold text-sm">#14 A</h3>
-                <span class="px-2 py-1 rounded text-xs font-mono border status-todo">
-                  TODO
-                </span>
-              </div>
-              
-              <p class="text-sm text-slate-300"></p>
-            </div>
-          
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-              <div class="flex items-start justify-between mb-3">
-                <h3 class="font-mono font-bold text-sm">#15 R</h3>
-                <span class="px-2 py-1 rounded text-xs font-mono border status-todo">
-                  TODO
-                </span>
-              </div>
-              
-              <p class="text-sm text-slate-300"></p>
-            </div>
-          
-        </div>
-      </div>
-    
-      <div id="phase-5">
-        <div class="flex items-center gap-3 mb-4">
-          <h2 class="text-xl font-mono font-bold">Phase 5: Retention & Community</h2>
-          <span class="px-2 py-1 rounded text-xs font-mono font-bold bg-slate-500/10 text-slate-400">MEDIUM</span>
-        </div>
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-              <div class="flex items-start justify-between mb-3">
-                <h3 class="font-mono font-bold text-sm">#33 M</h3>
-                <span class="px-2 py-1 rounded text-xs font-mono border status-todo">
-                  TODO
-                </span>
-              </div>
-              <div class="text-xs text-slate-400 mb-2">~90K tokens</div>
-              <p class="text-sm text-slate-300">Spec: `docs/06-architecture/implement-parentleagueid.md` (Story MS-001)</p>
-            </div>
-          
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-              <div class="flex items-start justify-between mb-3">
-                <h3 class="font-mono font-bold text-sm">#16 L</h3>
-                <span class="px-2 py-1 rounded text-xs font-mono border status-todo">
-                  TODO
-                </span>
-              </div>
-              
-              <p class="text-sm text-slate-300"></p>
-            </div>
-          
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-              <div class="flex items-start justify-between mb-3">
-                <h3 class="font-mono font-bold text-sm">#17 R</h3>
-                <span class="px-2 py-1 rounded text-xs font-mono border status-partial">
-                  ⚠️ PARTIAL
-                </span>
-              </div>
-              
-              <p class="text-sm text-slate-300">Season-long head-to-head records are already computed (`getHeadToHeadRecord` in</p>
-            </div>
-          
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-              <div class="flex items-start justify-between mb-3">
-                <h3 class="font-mono font-bold text-sm">#18 L</h3>
-                <span class="px-2 py-1 rounded text-xs font-mono border status-todo">
-                  TODO
-                </span>
-              </div>
-              
-              <p class="text-sm text-slate-300"></p>
-            </div>
-          
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-              <div class="flex items-start justify-between mb-3">
-                <h3 class="font-mono font-bold text-sm">#31 P</h3>
-                <span class="px-2 py-1 rounded text-xs font-mono border status-todo">
-                  TODO
-                </span>
-              </div>
-              <div class="text-xs text-slate-400 mb-2">~95K tokens</div>
-              <p class="text-sm text-slate-300"></p>
-            </div>
-          
-        </div>
-      </div>
-    
-      <div id="phase-6">
-        <div class="flex items-center gap-3 mb-4">
-          <h2 class="text-xl font-mono font-bold">Phase 6: Advanced League Formats</h2>
-          <span class="px-2 py-1 rounded text-xs font-mono font-bold bg-slate-500/10 text-slate-400">MEDIUM</span>
-        </div>
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-              <div class="flex items-start justify-between mb-3">
-                <h3 class="font-mono font-bold text-sm">#19 K</h3>
-                <span class="px-2 py-1 rounded text-xs font-mono border status-todo">
-                  TODO
-                </span>
-              </div>
-              
-              <p class="text-sm text-slate-300"></p>
-            </div>
-          
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-              <div class="flex items-start justify-between mb-3">
-                <h3 class="font-mono font-bold text-sm">#20 D</h3>
-                <span class="px-2 py-1 rounded text-xs font-mono border status-todo">
-                  TODO
-                </span>
-              </div>
-              
-              <p class="text-sm text-slate-300"></p>
-            </div>
-          
-        </div>
-      </div>
-    
-      <div id="phase-7">
-        <div class="flex items-center gap-3 mb-4">
-          <h2 class="text-xl font-mono font-bold">Phase 7: Live Season Enhancements</h2>
-          <span class="px-2 py-1 rounded text-xs font-mono font-bold bg-slate-500/10 text-slate-400">MEDIUM</span>
-        </div>
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-              <div class="flex items-start justify-between mb-3">
-                <h3 class="font-mono font-bold text-sm">#21 L</h3>
-                <span class="px-2 py-1 rounded text-xs font-mono border status-partial">
-                  ⚠️ PARTIAL
-                </span>
-              </div>
-              
-              <p class="text-sm text-slate-300">`components/LiveScoreRefresh.tsx` polls and refreshes active-matchup scores client-side</p>
-            </div>
-          
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-              <div class="flex items-start justify-between mb-3">
-                <h3 class="font-mono font-bold text-sm">#22 P</h3>
-                <span class="px-2 py-1 rounded text-xs font-mono border status-todo">
-                  TODO
-                </span>
-              </div>
-              
-              <p class="text-sm text-slate-300"></p>
-            </div>
-          
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-              <div class="flex items-start justify-between mb-3">
-                <h3 class="font-mono font-bold text-sm">#23 P</h3>
-                <span class="px-2 py-1 rounded text-xs font-mono border status-todo">
-                  TODO
-                </span>
-              </div>
-              
-              <p class="text-sm text-slate-300"></p>
-            </div>
+            <div class="section-header">🟡 Medium Priority <span class="section-count">31</span></div>
+            <table class="backlog-table">
+              <thead>
+                <tr>
+                  <th style="width: 2rem;"></th>
+                  <th style="width: 4rem;">#</th>
+                  <th>Title</th>
+                  <th style="width: 6rem;">Status</th>
+                  <th style="width: 5rem;">Tokens</th>
+                  <th style="width: 5rem;">Phase</th>
+                </tr>
+              </thead>
+              <tbody>
+                
+                  <tr class="backlog-row" data-status="partial" data-crit="medium">
+                    <td><span class="crit-dot crit-medium"></span></td>
+                    <td>#1</td>
+                    <td>Commissioner Dashboard</td>
+                    <td><span class="status partial">PARTIAL</span></td>
+                    <td>—</td>
+                    <td>1</td>
+                  </tr>
+                
+                  <tr class="backlog-row" data-status="todo" data-crit="medium">
+                    <td><span class="crit-dot crit-medium"></span></td>
+                    <td>#2</td>
+                    <td>League Onboarding</td>
+                    <td><span class="status todo">TODO</span></td>
+                    <td>—</td>
+                    <td>1</td>
+                  </tr>
+                
+                  <tr class="backlog-row" data-status="todo" data-crit="medium">
+                    <td><span class="crit-dot crit-medium"></span></td>
+                    <td>#3</td>
+                    <td>Mobile Optimization</td>
+                    <td><span class="status todo">TODO</span></td>
+                    <td>~75K</td>
+                    <td>1</td>
+                  </tr>
+                
+                  <tr class="backlog-row" data-status="todo" data-crit="medium">
+                    <td><span class="crit-dot crit-medium"></span></td>
+                    <td>#4</td>
+                    <td>Error Handling</td>
+                    <td><span class="status todo">TODO</span></td>
+                    <td>~65K</td>
+                    <td>1</td>
+                  </tr>
+                
+                  <tr class="backlog-row" data-status="todo" data-crit="medium">
+                    <td><span class="crit-dot crit-medium"></span></td>
+                    <td>#26</td>
+                    <td>League Overview Redesign</td>
+                    <td><span class="status todo">TODO</span></td>
+                    <td>—</td>
+                    <td>1</td>
+                  </tr>
+                
+                  <tr class="backlog-row" data-status="todo" data-crit="medium">
+                    <td><span class="crit-dot crit-medium"></span></td>
+                    <td>#28</td>
+                    <td>Lineup Stats Tab: "Matchup Proj" Rename & Default Polish</td>
+                    <td><span class="status todo">TODO</span></td>
+                    <td>~25K</td>
+                    <td>1</td>
+                  </tr>
+                
+                  <tr class="backlog-row" data-status="todo" data-crit="medium">
+                    <td><span class="crit-dot crit-medium"></span></td>
+                    <td>#32</td>
+                    <td>Draft Room: Team Distribution Panel</td>
+                    <td><span class="status todo">TODO</span></td>
+                    <td>~30K</td>
+                    <td>1</td>
+                  </tr>
+                
+                  <tr class="backlog-row" data-status="partial" data-crit="medium">
+                    <td><span class="crit-dot crit-medium"></span></td>
+                    <td>#5</td>
+                    <td>Waiver Wire System</td>
+                    <td><span class="status partial">PARTIAL</span></td>
+                    <td>~110K</td>
+                    <td>2</td>
+                  </tr>
+                
+                  <tr class="backlog-row" data-status="todo" data-crit="medium">
+                    <td><span class="crit-dot crit-medium"></span></td>
+                    <td>#6</td>
+                    <td>Free Agent Acquisition Budget</td>
+                    <td><span class="status todo">TODO</span></td>
+                    <td>~80K</td>
+                    <td>2</td>
+                  </tr>
+                
+                  <tr class="backlog-row" data-status="todo" data-crit="medium">
+                    <td><span class="crit-dot crit-medium"></span></td>
+                    <td>#7</td>
+                    <td>Trade System</td>
+                    <td><span class="status todo">TODO</span></td>
+                    <td>~130K</td>
+                    <td>2</td>
+                  </tr>
+                
+                  <tr class="backlog-row" data-status="todo" data-crit="medium">
+                    <td><span class="crit-dot crit-medium"></span></td>
+                    <td>#8</td>
+                    <td>Transaction History</td>
+                    <td><span class="status todo">TODO</span></td>
+                    <td>~55K</td>
+                    <td>2</td>
+                  </tr>
+                
+                  <tr class="backlog-row" data-status="todo" data-crit="medium">
+                    <td><span class="crit-dot crit-medium"></span></td>
+                    <td>#9</td>
+                    <td>Live Matchup Center</td>
+                    <td><span class="status todo">TODO</span></td>
+                    <td>—</td>
+                    <td>3</td>
+                  </tr>
+                
+                  <tr class="backlog-row" data-status="todo" data-crit="medium">
+                    <td><span class="crit-dot crit-medium"></span></td>
+                    <td>#10</td>
+                    <td>Win Probability Engine</td>
+                    <td><span class="status todo">TODO</span></td>
+                    <td>—</td>
+                    <td>3</td>
+                  </tr>
+                
+                  <tr class="backlog-row" data-status="partial" data-crit="medium">
+                    <td><span class="crit-dot crit-medium"></span></td>
+                    <td>#11</td>
+                    <td>Matchup Storylines</td>
+                    <td><span class="status partial">PARTIAL</span></td>
+                    <td>—</td>
+                    <td>3</td>
+                  </tr>
+                
+                  <tr class="backlog-row" data-status="todo" data-crit="medium">
+                    <td><span class="crit-dot crit-medium"></span></td>
+                    <td>#24</td>
+                    <td>Lineup Management v2</td>
+                    <td><span class="status todo">TODO</span></td>
+                    <td>—</td>
+                    <td>3</td>
+                  </tr>
+                
+                  <tr class="backlog-row" data-status="todo" data-crit="medium">
+                    <td><span class="crit-dot crit-medium"></span></td>
+                    <td>#25</td>
+                    <td>Team Analysis & Insights Tab</td>
+                    <td><span class="status todo">TODO</span></td>
+                    <td>~85K</td>
+                    <td>3</td>
+                  </tr>
+                
+                  <tr class="backlog-row" data-status="todo" data-crit="medium">
+                    <td><span class="crit-dot crit-medium"></span></td>
+                    <td>#29</td>
+                    <td>Weekly Performance Dashboard</td>
+                    <td><span class="status todo">TODO</span></td>
+                    <td>~65K</td>
+                    <td>3</td>
+                  </tr>
+                
+                  <tr class="backlog-row" data-status="todo" data-crit="medium">
+                    <td><span class="crit-dot crit-medium"></span></td>
+                    <td>#30</td>
+                    <td>Playoff Experience UX</td>
+                    <td><span class="status todo">TODO</span></td>
+                    <td>~40K</td>
+                    <td>3</td>
+                  </tr>
+                
+                  <tr class="backlog-row" data-status="todo" data-crit="medium">
+                    <td><span class="crit-dot crit-medium"></span></td>
+                    <td>#12</td>
+                    <td>Multi-Season Historical Library</td>
+                    <td><span class="status todo">TODO</span></td>
+                    <td>—</td>
+                    <td>4</td>
+                  </tr>
+                
+                  <tr class="backlog-row" data-status="todo" data-crit="medium">
+                    <td><span class="crit-dot crit-medium"></span></td>
+                    <td>#13</td>
+                    <td>Replay Simulation Speed Controls</td>
+                    <td><span class="status todo">TODO</span></td>
+                    <td>—</td>
+                    <td>4</td>
+                  </tr>
+                
+                  <tr class="backlog-row" data-status="todo" data-crit="medium">
+                    <td><span class="crit-dot crit-medium"></span></td>
+                    <td>#14</td>
+                    <td>Alternate History Drafts</td>
+                    <td><span class="status todo">TODO</span></td>
+                    <td>—</td>
+                    <td>4</td>
+                  </tr>
+                
+                  <tr class="backlog-row" data-status="todo" data-crit="medium">
+                    <td><span class="crit-dot crit-medium"></span></td>
+                    <td>#15</td>
+                    <td>Replay Analytics</td>
+                    <td><span class="status todo">TODO</span></td>
+                    <td>—</td>
+                    <td>4</td>
+                  </tr>
+                
+                  <tr class="backlog-row" data-status="todo" data-crit="medium">
+                    <td><span class="crit-dot crit-medium"></span></td>
+                    <td>#16</td>
+                    <td>League Chat</td>
+                    <td><span class="status todo">TODO</span></td>
+                    <td>—</td>
+                    <td>5</td>
+                  </tr>
+                
+                  <tr class="backlog-row" data-status="partial" data-crit="medium">
+                    <td><span class="crit-dot crit-medium"></span></td>
+                    <td>#17</td>
+                    <td>Rivalries</td>
+                    <td><span class="status partial">PARTIAL</span></td>
+                    <td>—</td>
+                    <td>5</td>
+                  </tr>
+                
+                  <tr class="backlog-row" data-status="todo" data-crit="medium">
+                    <td><span class="crit-dot crit-medium"></span></td>
+                    <td>#18</td>
+                    <td>League Hall of Fame</td>
+                    <td><span class="status todo">TODO</span></td>
+                    <td>—</td>
+                    <td>5</td>
+                  </tr>
+                
+                  <tr class="backlog-row" data-status="todo" data-crit="medium">
+                    <td><span class="crit-dot crit-medium"></span></td>
+                    <td>#31</td>
+                    <td>Player Legacy & Cross-Season Tracking</td>
+                    <td><span class="status todo">TODO</span></td>
+                    <td>~95K</td>
+                    <td>5</td>
+                  </tr>
+                
+                  <tr class="backlog-row" data-status="todo" data-crit="medium">
+                    <td><span class="crit-dot crit-medium"></span></td>
+                    <td>#19</td>
+                    <td>Keeper Leagues</td>
+                    <td><span class="status todo">TODO</span></td>
+                    <td>—</td>
+                    <td>6</td>
+                  </tr>
+                
+                  <tr class="backlog-row" data-status="todo" data-crit="medium">
+                    <td><span class="crit-dot crit-medium"></span></td>
+                    <td>#20</td>
+                    <td>Dynasty Leagues</td>
+                    <td><span class="status todo">TODO</span></td>
+                    <td>—</td>
+                    <td>6</td>
+                  </tr>
+                
+                  <tr class="backlog-row" data-status="partial" data-crit="medium">
+                    <td><span class="crit-dot crit-medium"></span></td>
+                    <td>#21</td>
+                    <td>Live Scoring</td>
+                    <td><span class="status partial">PARTIAL</span></td>
+                    <td>—</td>
+                    <td>7</td>
+                  </tr>
+                
+                  <tr class="backlog-row" data-status="todo" data-crit="medium">
+                    <td><span class="crit-dot crit-medium"></span></td>
+                    <td>#22</td>
+                    <td>Push Notifications</td>
+                    <td><span class="status todo">TODO</span></td>
+                    <td>—</td>
+                    <td>7</td>
+                  </tr>
+                
+                  <tr class="backlog-row" data-status="todo" data-crit="medium">
+                    <td><span class="crit-dot crit-medium"></span></td>
+                    <td>#23</td>
+                    <td>Player Trends</td>
+                    <td><span class="status todo">TODO</span></td>
+                    <td>—</td>
+                    <td>7</td>
+                  </tr>
+                
+              </tbody>
+            </table>
           
         </div>
-      </div>
-    
-
-    <!-- Sprint Timeline -->
-    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-      <h2 class="text-lg font-mono font-bold mb-6">Sprint Timeline</h2>
-      <div class="space-y-4">
-        
-          <div class="flex gap-4">
-            <div class="flex flex-col items-center">
-              <div class="w-10 h-10 rounded-full flex items-center justify-center border-2 border-pwhl-accent bg-pwhl-accent/10 relative">
-                ✓
-              </div>
-              <div class="w-0.5 h-12 bg-slate-800"></div>
-            </div>
-            <div class="flex-1 py-1">
-              <div class="font-mono font-bold">Sprint 0 — Make it match the rules</div>
-              <div class="text-xs text-slate-400 mt-1">
-                ✅ COMPLETE
-              </div>
-              
-            </div>
-          </div>
-        
-          <div class="flex gap-4">
-            <div class="flex flex-col items-center">
-              <div class="w-10 h-10 rounded-full flex items-center justify-center border-2 border-pwhl-accent bg-pwhl-accent/10 relative">
-                ✓
-              </div>
-              <div class="w-0.5 h-12 bg-slate-800"></div>
-            </div>
-            <div class="flex-1 py-1">
-              <div class="font-mono font-bold">Sprint 1 — Prove a season completes</div>
-              <div class="text-xs text-slate-400 mt-1">
-                ✅ COMPLETE
-              </div>
-              
-            </div>
-          </div>
-        
-          <div class="flex gap-4">
-            <div class="flex flex-col items-center">
-              <div class="w-10 h-10 rounded-full flex items-center justify-center border-2 border-pwhl-accent bg-pwhl-accent/10 relative">
-                ✓
-              </div>
-              <div class="w-0.5 h-12 bg-slate-800"></div>
-            </div>
-            <div class="flex-1 py-1">
-              <div class="font-mono font-bold">Sprint 2 — Commissioner + Platform Foundation</div>
-              <div class="text-xs text-slate-400 mt-1">
-                ✅ COMPLETE
-              </div>
-              
-            </div>
-          </div>
-        
-          <div class="flex gap-4">
-            <div class="flex flex-col items-center">
-              <div class="w-10 h-10 rounded-full flex items-center justify-center border-2 border-pwhl-accent bg-pwhl-accent/10 relative">
-                ✓
-              </div>
-              
-            </div>
-            <div class="flex-1 py-1">
-              <div class="font-mono font-bold">Sprint 3 — Beta-ready: onboarding, trust, mobile</div>
-              <div class="text-xs text-slate-400 mt-1">
-                ✅ COMPLETE
-              </div>
-              
-            </div>
-          </div>
-        
-      </div>
-    </div>
-
-    <!-- Timeline -->
-    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-      <h2 class="text-lg font-mono font-bold mb-4">MVP Launch Timeline</h2>
-      <div class="space-y-2">
-        
-      </div>
-    </div>
-  </main>
-
-  <!-- Footer -->
-  <footer class="border-t border-slate-800 mt-12 py-6 text-center text-xs text-slate-500">
-    <p>Generated: 6/13/2026 · Run <code class="bg-slate-800 px-2 py-1 rounded">npm run build-roadmap</code> to regenerate</p>
-  </footer>
+      
+        <div class="crit-section-low">
+          
+            <div class="section-header">⚪ Low / Post-launch <span class="section-count">1</span></div>
+            <table class="backlog-table">
+              <thead>
+                <tr>
+                  <th style="width: 2rem;"></th>
+                  <th style="width: 4rem;">#</th>
+                  <th>Title</th>
+                  <th style="width: 6rem;">Status</th>
+                  <th style="width: 5rem;">Tokens</th>
+                  <th style="width: 5rem;">Phase</th>
+                </tr>
+              </thead>
+              <tbody>
+                
+                  <tr class="backlog-row" data-status="todo" data-crit="low">
+                    <td><span class="crit-dot crit-low"></span></td>
+                    <td>#33</td>
+                    <td>Multi-Season League Architecture</td>
+                    <td><span class="status todo">TODO</span></td>
+                    <td>~90K</td>
+                    <td>5</td>
+                  </tr>
+                
+              </tbody>
+            </table>
+          
+        </div>
+      
+  </div>
 
   <script>
-    // Countdown timer
-    function updateCountdown() {
-      const target = new Date('2026-10-24').getTime();
-      const now = new Date().getTime();
-      const diff = target - now;
+    function switchTab(tabName) {
+      // Hide all tabs
+      document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
 
-      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-      const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-
-      document.getElementById('countdown').textContent = `${days}D : ${hours}H : ${mins}M`;
+      // Show selected tab
+      document.getElementById(tabName).classList.add('active');
+      event.target.classList.add('active');
     }
-    updateCountdown();
-    setInterval(updateCountdown, 1000);
 
-    // Readiness chart
-    const ctx = document.getElementById('readinessChart')?.getContext('2d');
-    if (ctx) {
-      new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-          datasets: [{
-            data: [100, 100 - 100],
-            backgroundColor: ['#2dd4bf', '#0f172a'],
-            borderColor: ['#2dd4bf', '#0f172a'],
-            borderWidth: 1,
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: true,
-          cutout: '80%',
-          plugins: {
-            legend: { display: false },
-            tooltip: { enabled: false }
-          }
+    function filterBacklog(filterType, value) {
+      // Update button state
+      event.target.parentElement.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      event.target.classList.add('active');
+
+      // Filter rows
+      const rows = document.querySelectorAll('.backlog-row');
+      rows.forEach(row => {
+        let show = true;
+
+        if (filterType === 'status' && value !== 'all') {
+          show = row.dataset.status === value;
+        } else if (filterType === 'crit' && value !== 'all') {
+          show = row.dataset.crit === value;
         }
+
+        row.style.display = show ? 'table-row' : 'none';
       });
     }
-
-    // Token planner
-    const items = document.querySelectorAll('.token-item');
-    items.forEach(item => {
-      item.addEventListener('change', updateTokens);
-    });
-
-    function updateTokens() {
-      let total = 15000; // base
-      items.forEach(item => {
-        if (item.checked) total += parseInt(item.dataset.tokens) * 1000;
-      });
-
-      const display = total >= 1000000 ? (total / 1000000).toFixed(1) + 'M' : (total / 1000).toFixed(0) + 'K';
-      document.getElementById('tokenSum').textContent = display;
-
-      const pct = Math.min(100, (total / 200000) * 100);
-      document.getElementById('tokenBar').style.width = pct + '%';
-
-      let badge, badgeClass;
-      if (total <= 120000) {
-        badge = '✓ Optimal';
-        badgeClass = 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
-      } else if (total <= 180000) {
-        badge = '⚠ Caution';
-        badgeClass = 'bg-amber-500/10 text-amber-400 border-amber-500/20';
-      } else {
-        badge = '✗ Exceeds window';
-        badgeClass = 'bg-rose-500/10 text-rose-400 border-rose-500/20';
-      }
-
-      const badgeEl = document.getElementById('tokenBadge');
-      badgeEl.textContent = badge;
-      badgeEl.className = `mt-2 inline-block px-2 py-1 rounded-full text-xs font-mono border ${badgeClass}`;
-    }
-
-    // Lucide icons
-    lucide.createIcons();
   </script>
 </body>
 </html>

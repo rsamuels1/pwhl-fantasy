@@ -8,28 +8,9 @@ interface ScorecardRow {
   blocker: string;
 }
 
-interface BuildQueueItem {
-  category: "quick" | "standard" | "heavy";
-  number: number;
-  title: string;
-  tokens: number;
-  description: string;
-}
-
-interface Feature {
-  number: number;
-  title: string;
-  status: "done" | "partial" | "todo" | "risk";
-  priority?: string;
-  tokens?: number;
-  description: string;
-}
-
-interface Phase {
-  number: number;
-  name: string;
-  priority: string;
-  features: Feature[];
+interface SprintTask {
+  text: string;
+  done: boolean;
 }
 
 interface Sprint {
@@ -37,21 +18,25 @@ interface Sprint {
   name: string;
   status: "complete" | "current" | "planned";
   track?: string;
-  tasks: string[];
+  tasks: SprintTask[];
   exitCriteria?: string;
 }
 
-interface Milestone {
-  date: string;
-  event: string;
-  completed: boolean;
+interface Feature {
+  number: number;
+  title: string;
+  status: "done" | "partial" | "todo";
+  priority: string;
+  tokens?: number;
+  phase: number;
 }
 
 interface Stats {
-  readinessPct: number;
-  gatesCount: number;
-  shippedCount: number;
   currentSprint: string;
+  sprintsComplete: number;
+  sprintsTotal: number;
+  gatesPassing: number;
+  gatesTotal: number;
 }
 
 // Read markdown files
@@ -72,7 +57,7 @@ function parseScorecard(md: string): ScorecardRow[] {
   if (!scorecard) return rows;
 
   const tableContent = scorecard[1];
-  const lines = tableContent.split("\n").slice(1); // Skip header separator
+  const lines = tableContent.split("\n").slice(1);
   for (const line of lines) {
     const match = line.match(/\|\s*(.+?)\s*\|\s*(.+?)\s*\|\s*(.+?)\s*\|/);
     if (!match) continue;
@@ -89,136 +74,6 @@ function parseScorecard(md: string): ScorecardRow[] {
     });
   }
   return rows;
-}
-
-function parseCurrentState(md: string): string[] {
-  const items: string[] = [];
-  const stateSection = md.match(
-    /## Current State\n\n([\s\S]*?)(?:\n\n---|\n\n##)/
-  );
-  if (!stateSection) return items;
-
-  const lines = stateSection[1].split("\n");
-  for (const line of lines) {
-    const trimmed = line.trim();
-    if (trimmed.startsWith("- ")) {
-      items.push(trimmed.slice(2));
-    }
-  }
-  return items;
-}
-
-function parseBuildQueue(md: string): BuildQueueItem[] {
-  const items: BuildQueueItem[] = [];
-  const queueSection = md.match(
-    /## What To Build Next([\s\S]*?)(?:\n\n---|\n\n##|## See Also)/
-  );
-  if (!queueSection) return items;
-
-  let category: "quick" | "standard" | "heavy" = "quick";
-  const lines = queueSection[1].split("\n");
-
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-
-    if (line.includes("Quick wins")) category = "quick";
-    if (line.includes("Standard sessions")) category = "standard";
-    if (line.includes("Heavy lifts")) category = "heavy";
-
-    const match = line.match(/^\d+\.\s+\*\*(.+?)\s+\(#(\d+)\)\*\*\s+·\s+~?([\d]+)K/);
-    if (match) {
-      const [, title, number, tokens] = match;
-      const description = lines[i + 1]?.trim() || "";
-
-      items.push({
-        category,
-        number: parseInt(number),
-        title,
-        tokens: parseInt(tokens),
-        description: description.split(" ").slice(0, 15).join(" ") + "...",
-      });
-    }
-  }
-
-  return items;
-}
-
-function parsePhases(md: string): Phase[] {
-  const phases: Phase[] = [];
-  const phaseBlocks = md.split(/^# Phase /m).slice(1);
-
-  for (const block of phaseBlocks) {
-    const lines = block.split("\n");
-    const headerLine = lines[0];
-    const match = headerLine.match(/(\d+):\s+(.+?)(?:\n|$)/);
-    if (!match) continue;
-
-    const [, numStr, name] = match;
-    const phaseNum = parseInt(numStr);
-    const priorityMatch = block.match(/Priority:\s*(.+?)(?:\n|$)/);
-    const priority = priorityMatch ? priorityMatch[1].trim() : "MEDIUM";
-
-    const features: Feature[] = [];
-    const featureMatches = block.matchAll(/^## (\d+)\.?\s+(.+?)(?:\n|$)/gm);
-
-    for (const fm of featureMatches) {
-      const [fullMatch, numStr, titleWithStatus] = fm;
-      const featureNum = parseInt(numStr);
-      const titleMatch = titleWithStatus.match(/^([^·]+?)(?:\s*·)?\s*(.*)$/);
-      if (!titleMatch) continue;
-
-      const [, title, rest] = titleMatch;
-      const featureStartIdx = block.indexOf(fullMatch);
-      const nextFeatureIdx = block.indexOf("\n## ", featureStartIdx + 1);
-      const featureBlock = block.slice(
-        featureStartIdx,
-        nextFeatureIdx > 0 ? nextFeatureIdx : undefined
-      );
-
-      // Parse status
-      let status: "done" | "partial" | "todo" | "risk" = "todo";
-      if (/✅\s*(DONE|COMPLETE|Implemented|PASS)/.test(featureBlock))
-        status = "done";
-      else if (/Partially|Largely|Partial/.test(featureBlock))
-        status = "partial";
-      else if (/Not Implemented|Needed|Desired/.test(featureBlock))
-        status = "todo";
-
-      // Parse tokens
-      const tokensMatch = featureBlock.match(/Estimated tokens:\s*~?([\d]+)K/);
-      const tokens = tokensMatch ? parseInt(tokensMatch[1]) : undefined;
-
-      // Get description (first paragraph)
-      const descMatch = featureBlock.match(
-        /Status:[\s\S]*?\n\n([\s\S]*?)(?:\n\n|Acceptance Criteria|$)/
-      );
-      const description = descMatch
-        ? descMatch[1]
-            .trim()
-            .split("\n")[0]
-            .slice(0, 150)
-            .replace(/\[.+?\]\(.+?\)/g, "")
-            .trim()
-        : "";
-
-      features.push({
-        number: featureNum,
-        title: title.trim(),
-        status,
-        tokens,
-        description,
-      });
-    }
-
-    phases.push({
-      number: phaseNum,
-      name: name.trim(),
-      priority,
-      features,
-    });
-  }
-
-  return phases;
 }
 
 function parseSprints(md: string): Sprint[] {
@@ -242,453 +97,577 @@ function parseSprints(md: string): Sprint[] {
       nextSprintIdx > 0 ? nextSprintIdx : undefined
     );
 
-    const tasks: string[] = [];
-    const taskLines = sprintBlock
-      .split("\n")
-      .filter((l) => l.match(/^-\s+\*\*?[A-Z]/));
+    // Parse tasks with done status
+    const tasks: SprintTask[] = [];
+    const taskLines = sprintBlock.split("\n").filter((l) => l.match(/^-\s+/));
     for (const line of taskLines) {
-      const cleaned = line
+      const done = line.includes("✅");
+      const text = line
         .replace(/^-\s+/, "")
-        .replace(/\*\*([^*]+)\*\*:?/g, "$1")
+        .replace(/✅\s*/g, "")
+        .replace(/\*\*([^*]+)\*\*/g, "$1")
         .trim();
-      if (cleaned) tasks.push(cleaned);
+      if (text) tasks.push({ text, done });
     }
+
+    // Parse exit criteria
+    const exitMatch = sprintBlock.match(/\*\*Exit:\*\*([\s\S]*?)(?:\n## Sprint|\n\n##|$)/);
+    const exitCriteria = exitMatch
+      ? exitMatch[1]
+          .split("\n")[0]
+          .replace(/\*\*([^*]+)\*\*/g, "$1")
+          .trim()
+      : undefined;
 
     sprints.push({
       number,
       name: name.trim(),
       status,
       track: track?.trim(),
-      tasks: tasks.slice(0, 3), // Limit to 3 tasks for display
+      tasks,
+      exitCriteria,
     });
   }
 
   return sprints;
 }
 
-function parseTimeline(md: string): Milestone[] {
-  const milestones: Milestone[] = [];
-  const timelineSection = md.match(
-    /## MVP Launch Timeline & Beyond[\s\S]*?\| Window \| Milestone \|([\s\S]*?)(?:\n\n|##)/
-  );
-  if (!timelineSection) return milestones;
+function parseFeatures(md: string): Feature[] {
+  const features: Feature[] = [];
+  const phaseBlocks = md.split(/^# Phase /m).slice(1);
 
-  const lines = timelineSection[1].split("\n");
-  for (const line of lines) {
-    const match = line.match(
-      /\|\s*\*\*(.+?)\*\*\s*\|\s*(.+?)\s*\|/
-    );
-    if (!match) continue;
+  for (const block of phaseBlocks) {
+    const headerLine = block.split("\n")[0];
+    const phaseMatch = headerLine.match(/(\d+):/);
+    if (!phaseMatch) continue;
+    const phaseNum = parseInt(phaseMatch[1]);
 
-    const [, dateStr, event] = match;
-    const completed = /✅|COMPLETE|LIVE|SHIPPED/.test(event);
+    const featureMatches = block.matchAll(/^## (\d+)\.?\s+(.+?)(?:\n|$)/gm);
 
-    milestones.push({
-      date: dateStr.trim(),
-      event: event.trim(),
-      completed,
-    });
+    for (const fm of featureMatches) {
+      const [fullMatch, numStr, titleText] = fm;
+      const featureNum = parseInt(numStr);
+
+      const featureStartIdx = block.indexOf(fullMatch);
+      const nextFeatureIdx = block.indexOf("\n## ", featureStartIdx + 1);
+      const featureBlock = block.slice(
+        featureStartIdx,
+        nextFeatureIdx > 0 ? nextFeatureIdx : undefined
+      );
+
+      // Parse title (before any · or other delimiter)
+      const title = titleText.split(/\s*·|\s*\(/).shift()?.trim() || titleText;
+
+      // Parse status
+      let status: "done" | "partial" | "todo" = "todo";
+      if (/✅\s*(DONE|COMPLETE|Implemented|PASS)/.test(featureBlock))
+        status = "done";
+      else if (/Partially|Largely|Partial/.test(featureBlock))
+        status = "partial";
+
+      // Parse priority
+      const priorityMatch = featureBlock.match(/Priority:\s*(.+?)(?:\n|$)/);
+      const priority = priorityMatch ? priorityMatch[1].trim() : "MEDIUM";
+
+      // Parse tokens
+      const tokensMatch = featureBlock.match(/Estimated tokens:\s*~?([\d]+)K/);
+      const tokens = tokensMatch ? parseInt(tokensMatch[1]) : undefined;
+
+      features.push({
+        number: featureNum,
+        title,
+        status,
+        priority,
+        tokens,
+        phase: phaseNum,
+      });
+    }
   }
 
-  return milestones;
+  return features;
 }
 
-function computeStats(phases: Phase[], scorecard: ScorecardRow[]): Stats {
-  const passCount = scorecard.filter((s) => s.status.includes("pass")).length;
-  const readinessPct = Math.round((passCount / scorecard.length) * 100);
-
-  const gatesCount = scorecard.filter((s) =>
-    s.area.includes("Launch gates")
-  ).length;
-  const shippedCount = phases.reduce(
-    (sum, p) => sum + p.features.filter((f) => f.status === "done").length,
-    0
-  );
+function computeStats(sprints: Sprint[], scorecard: ScorecardRow[]): Stats {
+  const completeSprints = sprints.filter((s) => s.status === "complete").length;
+  const gatesPassing = scorecard.filter((s) => s.status.includes("pass")).length;
+  const currentSprintObj = sprints.find((s) => s.status === "current");
 
   return {
-    readinessPct,
-    gatesCount: scorecard.length,
-    shippedCount,
-    currentSprint: "Sprint 4",
+    currentSprint: currentSprintObj ? `Sprint ${currentSprintObj.number}` : "No active sprint",
+    sprintsComplete: completeSprints,
+    sprintsTotal: sprints.length,
+    gatesPassing,
+    gatesTotal: scorecard.length,
   };
 }
 
-// HTML Rendering
+function criticalityLevel(
+  feature: Feature,
+  allFeatures: Feature[]
+): "blocker" | "high" | "medium" | "low" {
+  if (feature.status === "done") return "low"; // Don't show completed items
+
+  if (feature.phase === 0) return "blocker"; // All Phase 0 items
+  if (feature.priority === "CRITICAL") return "blocker";
+  if (feature.priority === "HIGH") return "high";
+  if (feature.priority === "MEDIUM") return "medium";
+  if (feature.phase >= 4) return "low"; // Phases 4+ are post-launch
+  return "medium";
+}
+
 function renderHTML(
   scorecard: ScorecardRow[],
-  currentState: string[],
-  buildQueue: BuildQueueItem[],
-  phases: Phase[],
   sprints: Sprint[],
-  timeline: Milestone[],
+  features: Feature[],
   stats: Stats
 ): string {
-  const now = new Date().toLocaleDateString();
+  const now = new Date();
+  const betaCodeComplete = new Date("2026-09-01");
+  const daysRemaining = Math.ceil((betaCodeComplete.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+
+  // Build backlog grouped by criticality
+  const backlog = features.filter((f) => f.status !== "done");
+  const bycriticality = {
+    blocker: backlog.filter((f) => criticalityLevel(f, features) === "blocker"),
+    high: backlog.filter((f) => criticalityLevel(f, features) === "high"),
+    medium: backlog.filter((f) => criticalityLevel(f, features) === "medium"),
+    low: backlog.filter((f) => criticalityLevel(f, features) === "low"),
+  };
+
+  // Build sprint overview
+  const sprintOverview = sprints.map((s) => {
+    const tasksDone = s.tasks.filter((t) => t.done).length;
+    return { ...s, tasksDone, tasksTotal: s.tasks.length };
+  });
 
   return `<!DOCTYPE html>
-<html lang="en" class="bg-slate-950">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PWHL Fantasy Roadmap</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['Inter', 'sans-serif'],
-            mono: ['JetBrains Mono', 'monospace'],
-          },
-          colors: {
-            pwhl: {
-              purple: '#4c1d95',
-              accent: '#2dd4bf',
-              dark: '#020617',
-            }
-          }
-        }
-      }
-    }
-  </script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/lucide@latest"></script>
+  <title>PWHL Fantasy · Project Tracker</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
   <style>
-    .custom-scrollbar::-webkit-scrollbar {
-      width: 6px;
-      height: 6px;
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'JetBrains Mono', monospace;
+      background-color: #0a0a0a;
+      color: #e0e0e0;
+      line-height: 1.5;
     }
-    .custom-scrollbar::-webkit-scrollbar-track {
-      background: #0f172a;
+    a { color: #64b5f6; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* Header */
+    header {
+      background: #111;
+      border-bottom: 1px solid #222;
+      padding: 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
-    .custom-scrollbar::-webkit-scrollbar-thumb {
-      background: #334155;
-      border-radius: 3px;
+    header h1 { font-size: 1.2rem; font-weight: 700; letter-spacing: 0.05em; }
+    .header-right { text-align: right; font-size: 0.85rem; }
+    .header-right .stat { display: inline-block; margin-left: 2rem; }
+    .header-right .label { color: #888; }
+    .header-right .value { font-weight: 700; color: #64b5f6; }
+
+    /* Tab bar */
+    .tab-bar {
+      background: #111;
+      border-bottom: 1px solid #222;
+      display: flex;
+      padding: 0 1.5rem;
+      gap: 2rem;
+      position: sticky;
+      top: 0;
+      z-index: 10;
     }
-    .status-done { @apply bg-emerald-500/10 text-emerald-400 border-emerald-500/20; }
-    .status-partial { @apply bg-amber-500/10 text-amber-400 border-amber-500/20; }
-    .status-todo { @apply bg-slate-500/10 text-slate-400 border-slate-500/20; }
-    .status-risk { @apply bg-rose-500/10 text-rose-400 border-rose-500/20; }
-    .gradient-text {
-      background: linear-gradient(135deg, #2dd4bf 0%, #4c1d95 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
+    .tab-button {
+      flex: 0 0 auto;
+      padding: 0.75rem 0;
+      background: none;
+      border: none;
+      color: #888;
+      cursor: pointer;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.9rem;
+      font-weight: 500;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
     }
-    .ping-circle {
-      animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+    .tab-button:hover { color: #ccc; }
+    .tab-button.active {
+      color: #22c55e;
+      border-bottom-color: #22c55e;
     }
-    @keyframes ping {
-      75%, 100% {
-        transform: scale(2);
-        opacity: 0;
-      }
+
+    /* Tab content */
+    .tab-content {
+      display: none;
+      padding: 1.5rem;
+    }
+    .tab-content.active { display: block; }
+
+    /* Cards & panels */
+    .card {
+      background: #111;
+      border: 1px solid #222;
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+    }
+    .card.complete { border-left: 4px solid #22c55e; background: #0f1a0f; }
+    .card.current { border-left: 4px solid #f59e0b; }
+    .card.planned { border: 1px dashed #444; }
+
+    /* Status chips */
+    .status { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 4px; font-size: 0.8rem; font-weight: 700; }
+    .status.done { background: rgba(34, 197, 94, 0.1); color: #22c55e; }
+    .status.partial { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
+    .status.todo { background: rgba(107, 114, 128, 0.1); color: #9ca3af; }
+    .status.complete { background: rgba(34, 197, 94, 0.1); color: #22c55e; }
+    .status.planned { background: rgba(107, 114, 128, 0.1); color: #6b7280; }
+    .status.risk { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+
+    /* Gates & tasks */
+    .gate-row {
+      display: grid;
+      grid-template-columns: 2rem 1fr 6rem 1fr;
+      gap: 1rem;
+      padding: 0.75rem;
+      border-bottom: 1px solid #1a1a1a;
+      align-items: center;
+      font-size: 0.9rem;
+    }
+    .gate-row:last-child { border-bottom: none; }
+    .gate-icon { font-size: 1rem; }
+    .task-row {
+      padding: 0.5rem 0;
+      font-size: 0.9rem;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    .task-row:last-child { border-bottom: none; }
+    .task-check { display: inline-block; width: 1.5rem; }
+
+    /* Sprint grid */
+    .sprint-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0.75rem; margin: 1rem 0; }
+    .sprint-card {
+      background: #111;
+      border: 1px solid #222;
+      border-radius: 6px;
+      padding: 0.75rem;
+      text-align: center;
+      cursor: pointer;
+      font-size: 0.8rem;
+      transition: all 0.2s;
+    }
+    .sprint-card:hover { border-color: #444; }
+    .sprint-card.complete { border-color: #22c55e; }
+    .sprint-card.current { border-color: #f59e0b; background: rgba(245, 158, 11, 0.05); }
+    .sprint-card .name { font-weight: 700; margin-bottom: 0.25rem; }
+    .sprint-card .progress { font-size: 0.75rem; color: #888; margin-top: 0.25rem; }
+
+    /* Backlog table */
+    .backlog-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+    .backlog-table th {
+      background: #0a0a0a;
+      padding: 0.75rem;
+      text-align: left;
+      border-bottom: 1px solid #222;
+      font-weight: 700;
+      color: #888;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .backlog-table td {
+      padding: 0.75rem;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    .backlog-table tr:hover { background: #0f0f0f; }
+
+    /* Section header */
+    .section-header {
+      font-size: 1rem;
+      font-weight: 700;
+      margin: 1.5rem 0 1rem 0;
+      color: #ccc;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .section-count { font-size: 0.85rem; color: #666; font-weight: 400; }
+
+    /* Filter pills */
+    .filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid #222;
+    }
+    .filter-group { display: flex; gap: 0.5rem; align-items: center; }
+    .filter-group label { font-size: 0.8rem; color: #888; text-transform: uppercase; letter-spacing: 0.05em; }
+    .filter-btn {
+      padding: 0.4rem 0.8rem;
+      background: #111;
+      border: 1px solid #222;
+      border-radius: 4px;
+      color: #888;
+      cursor: pointer;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      transition: all 0.2s;
+    }
+    .filter-btn:hover { border-color: #444; }
+    .filter-btn.active {
+      background: #22c55e;
+      border-color: #22c55e;
+      color: #000;
+    }
+
+    /* Criticality dots */
+    .crit-dot { display: inline-block; width: 0.6rem; height: 0.6rem; border-radius: 50%; margin-right: 0.5rem; }
+    .crit-blocker { background: #ef4444; }
+    .crit-high { background: #f59e0b; }
+    .crit-medium { background: #eab308; }
+    .crit-low { background: #6b7280; }
+
+    /* Blocker callout */
+    .blocker-callout {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid #ef4444;
+      border-radius: 6px;
+      padding: 1rem;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .blocker-callout strong { color: #ef4444; }
+
+    /* Exit criteria */
+    .exit-criteria {
+      margin-top: 0.75rem;
+      padding-top: 0.75rem;
+      border-top: 1px solid #222;
+      font-size: 0.85rem;
+      color: #888;
     }
   </style>
 </head>
-<body class="text-slate-100 bg-slate-950 custom-scrollbar">
+<body>
   <!-- Header -->
-  <header class="sticky top-0 z-50 bg-slate-950/95 backdrop-blur border-b border-slate-800 p-6">
-    <div class="max-w-7xl mx-auto flex justify-between items-center">
-      <div>
-        <h1 class="text-3xl font-black gradient-text">PWHL Fantasy</h1>
-        <p class="text-sm text-slate-400">Product Roadmap</p>
+  <header>
+    <h1>PWHL Fantasy · Project Tracker</h1>
+    <div class="header-right">
+      <div class="stat">
+        <span class="label">Current:</span>
+        <span class="value">${stats.currentSprint}</span>
       </div>
-      <div class="text-right">
-        <div class="text-2xl font-mono font-bold text-pwhl-accent" id="countdown">
-          Loading...
-        </div>
-        <p class="text-xs text-slate-500">until public launch</p>
+      <div class="stat">
+        <span class="label">To Beta:</span>
+        <span class="value">${daysRemaining} days</span>
+      </div>
+      <div class="stat">
+        <span class="label">Sprints:</span>
+        <span class="value">${stats.sprintsComplete}/${stats.sprintsTotal}</span>
+      </div>
+      <div class="stat">
+        <span class="label">Gates:</span>
+        <span class="value">${stats.gatesPassing}/${stats.gatesTotal}</span>
       </div>
     </div>
   </header>
 
-  <main class="max-w-7xl mx-auto p-6 space-y-8">
-    <!-- KPI Row -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-        <div class="flex items-center justify-between mb-4">
-          <h3 class="text-sm font-mono text-slate-400">Launch Confidence</h3>
-          <div class="w-12 h-12 relative">
-            <canvas id="readinessChart" width="48" height="48"></canvas>
-            <div class="absolute inset-0 flex items-center justify-center">
-              <span class="font-mono text-xs font-bold text-pwhl-accent">${stats.readinessPct}%</span>
-            </div>
-          </div>
+  <!-- Tab bar -->
+  <div class="tab-bar">
+    <button class="tab-button active" onclick="switchTab('overview')">Overview</button>
+    <button class="tab-button" onclick="switchTab('sprints')">Sprints</button>
+    <button class="tab-button" onclick="switchTab('backlog')">Backlog</button>
+  </div>
+
+  <!-- Tab 1: Overview -->
+  <div id="overview" class="tab-content active">
+    <div class="section-header">Launch Gates <span class="section-count">${stats.gatesPassing}/${stats.gatesTotal}</span></div>
+    <div class="card">
+      ${scorecard
+        .map(
+          (row) => `
+        <div class="gate-row">
+          <div class="gate-icon">${row.status === "pass" ? "✅" : row.status === "pass-with-risks" ? "⚠️" : "❌"}</div>
+          <div>${row.area}</div>
+          <div><span class="status ${row.status === "pass" ? "done" : row.status === "pass-with-risks" ? "partial" : "risk"}">${row.status === "pass" ? "PASS" : row.status === "pass-with-risks" ? "RISK" : "FAIL"}</span></div>
+          <div style="font-size: 0.85rem; color: #888;">${row.blocker}</div>
         </div>
-        <p class="text-xs text-slate-500">areas PASS</p>
-      </div>
-      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-        <p class="text-4xl font-mono font-bold text-pwhl-accent">${stats.gatesCount}</p>
-        <p class="text-xs text-slate-500 mt-2">launch gates</p>
-        <div class="w-full bg-slate-800 h-1.5 rounded-full mt-3"></div>
-      </div>
-      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-        <p class="text-4xl font-mono font-bold text-emerald-400">${stats.shippedCount}</p>
-        <p class="text-xs text-slate-500 mt-2">features shipped</p>
-        <div class="w-full bg-slate-800 h-1.5 rounded-full mt-3"></div>
-      </div>
-      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-        <p class="text-sm font-mono text-pwhl-accent font-bold">${stats.currentSprint}</p>
-        <p class="text-xs text-slate-500 mt-2">IN FLIGHT</p>
-        <div class="flex gap-1 mt-3">
-          <div class="w-2 h-2 bg-pwhl-accent rounded-full ping-circle"></div>
-          <div class="w-2 h-2 bg-slate-700 rounded-full"></div>
-        </div>
-      </div>
+      `
+        )
+        .join("")}
     </div>
 
-    <!-- MVP Readiness Scorecard -->
-    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-      <h2 class="text-lg font-mono font-bold mb-4">MVP Readiness Scorecard</h2>
-      <div class="overflow-x-auto">
-        <table class="w-full text-sm">
-          <thead>
-            <tr class="border-b border-slate-800">
-              <th class="text-left py-2 px-2 text-slate-400 font-mono">Area</th>
-              <th class="text-left py-2 px-2 text-slate-400 font-mono">Status</th>
-              <th class="text-left py-2 px-2 text-slate-400 font-mono">Blocker</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-slate-800">
-            ${scorecard
-              .map(
-                (row) => `
-              <tr class="hover:bg-slate-800/50">
-                <td class="py-3 px-2">${row.area}</td>
-                <td class="py-3 px-2">
-                  <span class="px-2 py-1 rounded-full text-xs font-mono border status-${row.status.split("-")[0]}">
-                    ${row.status === "pass" ? "✅ PASS" : row.status === "pass-with-risks" ? "⚠️ PASS WITH RISKS" : "FAIL"}
-                  </span>
-                </td>
-                <td class="py-3 px-2 text-slate-400">${row.blocker}</td>
-              </tr>
-            `
-              )
-              .join("")}
-          </tbody>
-        </table>
+    ${
+      scorecard.some((r) => r.status !== "pass")
+        ? `
+      <div class="blocker-callout">
+        <strong>What's blocking beta:</strong><br/>
+        ${scorecard
+          .filter((r) => r.status !== "pass")
+          .map((r) => `• ${r.area} — ${r.blocker}`)
+          .join("<br/>")}
       </div>
-    </div>
+    `
+        : ""
+    }
 
-    <!-- Current State (Shipped) -->
-    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-      <h2 class="text-lg font-mono font-bold mb-4">✅ Shipped Platform Capabilities</h2>
-      <div class="flex flex-wrap gap-2">
-        ${currentState
-          .map(
-            (item) =>
-              `<span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full px-3 py-1 text-xs font-mono">${item.split(" ·")[0]}</span>`
-          )
-          .join("")}
-      </div>
-    </div>
-
-    <!-- What To Build Next (Token Planner) -->
-    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-      <h2 class="text-lg font-mono font-bold mb-4">⚡ Session Planner (Tokens)</h2>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div class="space-y-3">
-          ${buildQueue
-            .map(
-              (item) => `
-            <label class="flex items-start gap-3 p-3 bg-slate-800/50 rounded-lg hover:bg-slate-800 cursor-pointer group">
-              <input type="checkbox" class="token-item mt-1" data-tokens="${item.tokens}" value="${item.number}" />
-              <div class="flex-1 min-w-0">
-                <div class="font-mono text-sm font-bold">#${item.number} ${item.title}</div>
-                <div class="text-xs text-slate-400">~${item.tokens}K tokens</div>
-              </div>
-            </label>
-          `
-            )
-            .join("")}
+    <div class="section-header" style="margin-top: 2rem;">Sprint Overview</div>
+    <div class="sprint-grid">
+      ${sprintOverview
+        .map(
+          (s) => `
+        <div class="sprint-card ${s.status}" onclick="switchTab('sprints'); setTimeout(() => document.getElementById('sprint-${s.number}').scrollIntoView({behavior: 'smooth'}), 100)">
+          <div class="name">Sprint ${s.number}</div>
+          <div class="progress">${s.tasksDone}/${s.tasksTotal}</div>
+          <span class="status ${s.status}">${s.status === "complete" ? "✅ DONE" : s.status === "current" ? "● LIVE" : "○ PLAN"}</span>
         </div>
-        <div class="space-y-4">
-          <div>
-            <label class="text-xs text-slate-400 font-mono">Total Session Cost</label>
-            <div class="text-4xl font-mono font-bold text-pwhl-accent" id="tokenSum">15K</div>
-            <div class="text-xs text-slate-500">base (CLAUDE.md + overhead)</div>
-          </div>
-          <div>
-            <label class="text-xs text-slate-400 font-mono">Status</label>
-            <div class="flex gap-2 mt-2">
-              <div class="flex-1 bg-slate-800 h-2 rounded-full overflow-hidden">
-                <div id="tokenBar" class="h-full bg-indigo-500 transition-all duration-300" style="width: 0%"></div>
-              </div>
-            </div>
-            <div id="tokenBadge" class="mt-2 inline-block px-2 py-1 rounded-full text-xs font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">✓ Optimal</div>
-          </div>
-        </div>
-      </div>
+      `
+        )
+        .join("")}
     </div>
+  </div>
 
-    <!-- Phases -->
-    ${phases
+  <!-- Tab 2: Sprints -->
+  <div id="sprints" class="tab-content">
+    ${sprints
       .map(
-        (phase) => `
-      <div id="phase-${phase.number}">
-        <div class="flex items-center gap-3 mb-4">
-          <h2 class="text-xl font-mono font-bold">Phase ${phase.number}: ${phase.name}</h2>
-          <span class="px-2 py-1 rounded text-xs font-mono font-bold ${phase.priority === "CRITICAL" ? "bg-rose-500/10 text-rose-400" : phase.priority === "HIGH" ? "bg-amber-500/10 text-amber-400" : "bg-slate-500/10 text-slate-400"}">${phase.priority}</span>
+        (s) => `
+      <div id="sprint-${s.number}" class="card ${s.status}">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+          <div>
+            <div style="font-weight: 700; font-size: 1rem;">Sprint ${s.number} · "${s.name}"</div>
+            ${s.track ? `<div style="font-size: 0.8rem; color: #888;">Track: ${s.track}</div>` : ""}
+          </div>
+          <span class="status ${s.status}">${s.status === "complete" ? "✅ COMPLETE" : s.status === "current" ? "● IN FLIGHT" : "○ PLANNED"}</span>
         </div>
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          ${phase.features
+        <div>
+          ${s.tasks
             .map(
-              (feat) => `
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-              <div class="flex items-start justify-between mb-3">
-                <h3 class="font-mono font-bold text-sm">#${feat.number} ${feat.title}</h3>
-                <span class="px-2 py-1 rounded text-xs font-mono border status-${feat.status}">
-                  ${feat.status === "done" ? "✅ DONE" : feat.status === "partial" ? "⚠️ PARTIAL" : feat.status === "todo" ? "TODO" : "RISK"}
-                </span>
-              </div>
-              ${feat.tokens ? `<div class="text-xs text-slate-400 mb-2">~${feat.tokens}K tokens</div>` : ""}
-              <p class="text-sm text-slate-300">${feat.description}</p>
+              (t) => `
+            <div class="task-row">
+              <span class="task-check">${t.done ? "✅" : "○"}</span>
+              <span style="color: ${t.done ? "#666" : "#ccc"}">${t.text}</span>
             </div>
           `
             )
             .join("")}
         </div>
+        ${s.exitCriteria ? `<div class="exit-criteria"><strong>Exit:</strong> ${s.exitCriteria}</div>` : ""}
       </div>
     `
       )
       .join("")}
+  </div>
 
-    <!-- Sprint Timeline -->
-    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-      <h2 class="text-lg font-mono font-bold mb-6">Sprint Timeline</h2>
-      <div class="space-y-4">
-        ${sprints
-          .map(
-            (sprint, idx) => `
-          <div class="flex gap-4">
-            <div class="flex flex-col items-center">
-              <div class="w-10 h-10 rounded-full flex items-center justify-center border-2 ${sprint.status === "complete" ? "border-pwhl-accent bg-pwhl-accent/10" : sprint.status === "current" ? "border-pwhl-accent bg-pwhl-accent/20 ping-circle" : "border-slate-700 bg-slate-800"} relative">
-                ${sprint.status === "complete" ? '✓' : sprint.status === "current" ? "●" : "○"}
-              </div>
-              ${idx < sprints.length - 1 ? '<div class="w-0.5 h-12 bg-slate-800"></div>' : ""}
-            </div>
-            <div class="flex-1 py-1">
-              <div class="font-mono font-bold">Sprint ${sprint.number} — ${sprint.name}</div>
-              <div class="text-xs text-slate-400 mt-1">
-                ${sprint.status === "complete" ? "✅ COMPLETE" : sprint.status === "current" ? "← CURRENT" : "⏳ PLANNED"}
-              </div>
-              ${sprint.tasks.length > 0 ? `<div class="text-xs text-slate-400 mt-2">Tasks: ${sprint.tasks.slice(0, 2).join(", ")}</div>` : ""}
-            </div>
-          </div>
-        `
-          )
-          .join("")}
+  <!-- Tab 3: Backlog -->
+  <div id="backlog" class="tab-content">
+    <div class="filters">
+      <div class="filter-group">
+        <label>Status:</label>
+        <button class="filter-btn active" onclick="filterBacklog('status', 'all')">All</button>
+        <button class="filter-btn" onclick="filterBacklog('status', 'todo')">Todo</button>
+        <button class="filter-btn" onclick="filterBacklog('status', 'partial')">Partial</button>
+      </div>
+      <div class="filter-group">
+        <label>Criticality:</label>
+        <button class="filter-btn active" onclick="filterBacklog('crit', 'all')">All</button>
+        <button class="filter-btn" onclick="filterBacklog('crit', 'blocker')">Blocker</button>
+        <button class="filter-btn" onclick="filterBacklog('crit', 'high')">High</button>
+        <button class="filter-btn" onclick="filterBacklog('crit', 'medium')">Medium</button>
       </div>
     </div>
 
-    <!-- Timeline -->
-    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-      <h2 class="text-lg font-mono font-bold mb-4">MVP Launch Timeline</h2>
-      <div class="space-y-2">
-        ${timeline
-          .map(
-            (m) => `
-          <div class="flex items-center gap-3 py-2 px-3 rounded-lg ${m.completed ? "bg-emerald-500/10" : ""}">
-            <div class="w-6 text-center">
-              ${m.completed ? '<span class="text-pwhl-accent">✓</span>' : '<span class="text-slate-500">→</span>'}
-            </div>
-            <div class="flex-1">
-              <span class="font-mono text-sm font-bold">${m.date}</span>
-              <span class="text-xs text-slate-400 ml-3">${m.event}</span>
-            </div>
-          </div>
-        `
-          )
-          .join("")}
-      </div>
-    </div>
-  </main>
-
-  <!-- Footer -->
-  <footer class="border-t border-slate-800 mt-12 py-6 text-center text-xs text-slate-500">
-    <p>Generated: ${now} · Run <code class="bg-slate-800 px-2 py-1 rounded">npm run build-roadmap</code> to regenerate</p>
-  </footer>
+    ${Object.entries(
+      {
+        blocker: "🔴 Beta Blocker",
+        high: "🟠 High Priority",
+        medium: "🟡 Medium Priority",
+        low: "⚪ Low / Post-launch",
+      }
+    )
+      .map(
+        ([key, label]) => `
+        <div class="crit-section-${key}">
+          ${bycriticality[key as keyof typeof bycriticality].length > 0 ? `
+            <div class="section-header">${label} <span class="section-count">${bycriticality[key as keyof typeof bycriticality].length}</span></div>
+            <table class="backlog-table">
+              <thead>
+                <tr>
+                  <th style="width: 2rem;"></th>
+                  <th style="width: 4rem;">#</th>
+                  <th>Title</th>
+                  <th style="width: 6rem;">Status</th>
+                  <th style="width: 5rem;">Tokens</th>
+                  <th style="width: 5rem;">Phase</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${bycriticality[key as keyof typeof bycriticality]
+                  .map(
+                    (f) => `
+                  <tr class="backlog-row" data-status="${f.status}" data-crit="${key}">
+                    <td><span class="crit-dot crit-${key}"></span></td>
+                    <td>#${f.number}</td>
+                    <td>${f.title}</td>
+                    <td><span class="status ${f.status}">${f.status.toUpperCase()}</span></td>
+                    <td>${f.tokens ? "~" + f.tokens + "K" : "—"}</td>
+                    <td>${f.phase}</td>
+                  </tr>
+                `
+                  )
+                  .join("")}
+              </tbody>
+            </table>
+          ` : ""}
+        </div>
+      `
+      )
+      .join("")}
+  </div>
 
   <script>
-    // Countdown timer
-    function updateCountdown() {
-      const target = new Date('2026-10-24').getTime();
-      const now = new Date().getTime();
-      const diff = target - now;
+    function switchTab(tabName) {
+      // Hide all tabs
+      document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
 
-      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-      const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-
-      document.getElementById('countdown').textContent = \`\${days}D : \${hours}H : \${mins}M\`;
+      // Show selected tab
+      document.getElementById(tabName).classList.add('active');
+      event.target.classList.add('active');
     }
-    updateCountdown();
-    setInterval(updateCountdown, 1000);
 
-    // Readiness chart
-    const ctx = document.getElementById('readinessChart')?.getContext('2d');
-    if (ctx) {
-      new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-          datasets: [{
-            data: [${stats.readinessPct}, 100 - ${stats.readinessPct}],
-            backgroundColor: ['#2dd4bf', '#0f172a'],
-            borderColor: ['#2dd4bf', '#0f172a'],
-            borderWidth: 1,
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: true,
-          cutout: '80%',
-          plugins: {
-            legend: { display: false },
-            tooltip: { enabled: false }
-          }
+    function filterBacklog(filterType, value) {
+      // Update button state
+      event.target.parentElement.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      event.target.classList.add('active');
+
+      // Filter rows
+      const rows = document.querySelectorAll('.backlog-row');
+      rows.forEach(row => {
+        let show = true;
+
+        if (filterType === 'status' && value !== 'all') {
+          show = row.dataset.status === value;
+        } else if (filterType === 'crit' && value !== 'all') {
+          show = row.dataset.crit === value;
         }
+
+        row.style.display = show ? 'table-row' : 'none';
       });
     }
-
-    // Token planner
-    const items = document.querySelectorAll('.token-item');
-    items.forEach(item => {
-      item.addEventListener('change', updateTokens);
-    });
-
-    function updateTokens() {
-      let total = 15000; // base
-      items.forEach(item => {
-        if (item.checked) total += parseInt(item.dataset.tokens) * 1000;
-      });
-
-      const display = total >= 1000000 ? (total / 1000000).toFixed(1) + 'M' : (total / 1000).toFixed(0) + 'K';
-      document.getElementById('tokenSum').textContent = display;
-
-      const pct = Math.min(100, (total / 200000) * 100);
-      document.getElementById('tokenBar').style.width = pct + '%';
-
-      let badge, badgeClass;
-      if (total <= 120000) {
-        badge = '✓ Optimal';
-        badgeClass = 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
-      } else if (total <= 180000) {
-        badge = '⚠ Caution';
-        badgeClass = 'bg-amber-500/10 text-amber-400 border-amber-500/20';
-      } else {
-        badge = '✗ Exceeds window';
-        badgeClass = 'bg-rose-500/10 text-rose-400 border-rose-500/20';
-      }
-
-      const badgeEl = document.getElementById('tokenBadge');
-      badgeEl.textContent = badge;
-      badgeEl.className = \`mt-2 inline-block px-2 py-1 rounded-full text-xs font-mono border \${badgeClass}\`;
-    }
-
-    // Lucide icons
-    lucide.createIcons();
   </script>
 </body>
 </html>`;
@@ -696,22 +675,11 @@ function renderHTML(
 
 // Main execution
 const scorecard = parseScorecard(indexMd);
-const currentState = parseCurrentState(indexMd);
-const buildQueue = parseBuildQueue(indexMd);
-const phases = parsePhases(featuresMd);
 const sprints = parseSprints(sprintsMd);
-const timeline = parseTimeline(sprintsMd);
-const stats = computeStats(phases, scorecard);
+const features = parseFeatures(featuresMd);
+const stats = computeStats(sprints, scorecard);
 
-const html = renderHTML(
-  scorecard,
-  currentState,
-  buildQueue,
-  phases,
-  sprints,
-  timeline,
-  stats
-);
+const html = renderHTML(scorecard, sprints, features, stats);
 
 const outputPath = resolve("docs/01-roadmap/roadmap-dashboard.html");
 writeFileSync(outputPath, html);
