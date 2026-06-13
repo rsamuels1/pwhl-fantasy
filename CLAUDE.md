@@ -159,6 +159,7 @@ survives DB resets and schema migrations.
    - Season boundary enforcement ✅ (`validateSeasonBoundary()` in `lib/season/lifecycle.ts`; `startSeason()` blocks overlap when `pwhlPlayoffStartsAt` is set on the league)
    - Analytics instrumentation ✅ (`trackEvent` in `lib/analytics/index.ts`; 6 events: `user_registered`, `league_created`, `league_joined`, `draft_started`, `draft_completed`, `lineup_saved`)
    - VP education ✅ (`components/VpExplainer.tsx` on standings page; 8-team "Recommended" label on league creation form; IA-005/006)
+   - Notification framework 🔄 (`lib/services/notification-service.ts`; `Notification`/`NotificationPreference` models; in-app bell in league layout; draft server call sites; email deferred)
 6. Integration + load test the draft room + beta
 7. Public launch ~early Nov, drafts ~1 week before opener
 
@@ -270,6 +271,24 @@ Called by: all three commissioner API routes, and `lib/draft/server.ts` after PA
 | `draft_started` | `lib/draft/server.ts` — after `PERSIST_STATUS` lands `IN_PROGRESS` |
 | `draft_completed` | `lib/draft/server.ts` — after `COMPLETE` effect |
 | `lineup_saved` | `app/api/leagues/[leagueId]/lineup/route.ts` PUT handler |
+
+## Notification framework (`lib/services/notification-service.ts`)
+
+`createNotification(userId, type, data, prisma, leagueId?)` — writes a `Notification` row. Fire-and-forget — all call sites use `void` and catch internally. `markAllRead(userId, leagueId, prisma)` — sets `readAt = now` on all unread notifications for that user in the league.
+
+**`NotificationType` enum:** `DRAFT_STARTING` | `ON_THE_CLOCK` | `LINEUP_INCOMPLETE`
+
+**Schema models:** `Notification` (id, userId, leagueId?, type, data Json, readAt DateTime?, createdAt) and `NotificationPreference` (userId, leagueId, type, enabled — `@@unique([userId, leagueId, type])`).
+
+**Call sites in `lib/draft/server.ts`:**
+- `PERSIST_STATUS IN_PROGRESS` effect → `void this.notifyDraftStarting()` (one notification per team owner) and `void this.notifyOnClock()` (the first team on the clock)
+- `BROADCAST_PICK` effect → `void this.notifyOnClock()` for the next team on the clock (skips after final pick)
+
+**API:** `GET /api/leagues/[leagueId]/notifications` returns last 20 for the current user in this league. `POST` with `{ action: "markAllRead" }` marks all as read.
+
+**UI:** `components/NotificationBell.tsx` — client component. Server-fetches unread count in `app/league/[leagueId]/layout.tsx` and passes as `initialCount`. On click: fetches notification list, marks all read, shows dropdown. Unread badge turns red when count > 0.
+
+**V1 is in-app only.** Email and push channels are deferred post-beta.
 
 ## Draft module (`lib/draft/`)
 

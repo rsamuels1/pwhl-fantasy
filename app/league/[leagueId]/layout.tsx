@@ -6,6 +6,7 @@ import { getCurrentUser } from "@/lib/auth";
 import DevTimeClear from "@/components/DevTimeClear";
 import BottomNav from "@/components/BottomNav";
 import ReplayDayBar from "@/components/ReplayDayBar";
+import NotificationBell from "@/components/NotificationBell";
 import { getGameDays, currentDayNumber, nextGameDay, prevGameDay } from "@/lib/replay/gameDays";
 
 interface LeagueLayoutProps {
@@ -63,9 +64,14 @@ export default async function LeagueLayout({ children, params }: LeagueLayoutPro
     };
   }
 
-  const myTeam = user
-    ? await prisma.fantasyTeam.findFirst({ where: { leagueId, ownerId: user.id }, select: { id: true } })
-    : null;
+  const [myTeam, unreadCount] = await Promise.all([
+    user
+      ? prisma.fantasyTeam.findFirst({ where: { leagueId, ownerId: user.id }, select: { id: true } })
+      : Promise.resolve(null),
+    user
+      ? prisma.notification.count({ where: { userId: user.id, leagueId, readAt: null } })
+      : Promise.resolve(0),
+  ]);
 
   const navItems = [
     { label: "Overview", href: `${basePath}` },
@@ -89,22 +95,27 @@ export default async function LeagueLayout({ children, params }: LeagueLayoutPro
               </Link>
               <span style={{ color: "#94a3b8", fontSize: 14 }}>{league?.name ?? "League"}</span>
             </div>
-            {myTeam && (
-              <Link
-                href={`/team/${myTeam.id}/matchup`}
-                style={{
-                  fontSize: 13,
-                  color: "#a5b4fc",
-                  textDecoration: "none",
-                  padding: "6px 14px",
-                  borderRadius: 999,
-                  background: "rgba(99,102,241,0.12)",
-                  border: "1px solid rgba(99,102,241,0.3)",
-                }}
-              >
-                My Franchise →
-              </Link>
-            )}
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              {user && (
+                <NotificationBell initialCount={unreadCount} leagueId={leagueId} />
+              )}
+              {myTeam && (
+                <Link
+                  href={`/team/${myTeam.id}/matchup`}
+                  style={{
+                    fontSize: 13,
+                    color: "#a5b4fc",
+                    textDecoration: "none",
+                    padding: "6px 14px",
+                    borderRadius: 999,
+                    background: "rgba(99,102,241,0.12)",
+                    border: "1px solid rgba(99,102,241,0.3)",
+                  }}
+                >
+                  My Franchise →
+                </Link>
+              )}
+            </div>
           </div>
         </header>
 

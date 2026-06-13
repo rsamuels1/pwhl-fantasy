@@ -89,40 +89,50 @@ model StatLine {
 }
 
 model User {
-  id           String          @id @default(cuid())
-  email        String          @unique
-  displayName  String
-  passwordHash String?
-  createdAt    DateTime        @default(now())
-  updatedAt    DateTime        @updatedAt
-  ownedLeagues FantasyLeague[] @relation("Commissioner")
-  memberships  FantasyTeam[]
+  id                      String                   @id @default(cuid())
+  email                   String                   @unique
+  displayName             String
+  passwordHash            String?
+  createdAt               DateTime                 @default(now())
+  updatedAt               DateTime                 @updatedAt
+  ownedLeagues            FantasyLeague[]          @relation("Commissioner")
+  memberships             FantasyTeam[]
+  notifications           Notification[]
+  notificationPreferences NotificationPreference[]
 }
 
 model FantasyLeague {
-  id              String              @id @default(cuid())
-  name            String
-  season          String              @default("2026-27")
-  draftType       DraftType           @default(SNAKE)
-  status          FantasyLeagueStatus @default(PRE_DRAFT)
-  maxTeams        Int                 @default(8)
-  commissionerId  String
-  scoringSettings Json                @default("{}")
-  rosterSettings  Json                @default("{}")
-  playoffSettings Json                @default("{\"teamsInPlayoff\": 4, \"topSeedsWithBye\": 0, \"higherSeedWinsTies\": true, \"roundDurationPeriods\": 2}")
-  playoffStatus   PlayoffStatus       @default(NOT_STARTED)
-  announcement      String?
-  draftStartsAt     DateTime?
-  isReplay          Boolean             @default(false)
-  replayCurrentDate DateTime?
-  scoringMode       String              @default("VP")
-  createdAt         DateTime            @default(now())
-  updatedAt       DateTime            @updatedAt
-  draft           Draft?
-  commissioner    User                @relation("Commissioner", fields: [commissionerId], references: [id])
-  teams           FantasyTeam[]
-  matchups        Matchup[]
-  leagueEvents    LeagueEvent[]
+  id                      String                   @id @default(cuid())
+  name                    String
+  season                  String                   @default("2026-27")
+  draftType               DraftType                @default(SNAKE)
+  status                  FantasyLeagueStatus      @default(PRE_DRAFT)
+  maxTeams                Int                      @default(8)
+  commissionerId          String
+  scoringSettings         Json                     @default("{}")
+  rosterSettings          Json                     @default("{}")
+  playoffSettings         Json                     @default("{\"teamsInPlayoff\": 4, \"topSeedsWithBye\": 0, \"higherSeedWinsTies\": true, \"roundDurationPeriods\": 2}")
+  playoffStatus           PlayoffStatus            @default(NOT_STARTED)
+  announcement            String?
+  draftStartsAt           DateTime?
+  isReplay                Boolean                  @default(false)
+  replayCurrentDate       DateTime?
+  scoringMode             String                   @default("VP")
+  parentLeagueId          String?
+  rulesVersion            Int                      @default(1)
+  scoringVersion          Int                      @default(1)
+  pwhlPlayoffStartsAt     DateTime?
+  createdAt               DateTime                 @default(now())
+  updatedAt               DateTime                 @updatedAt
+  draft                   Draft?
+  commissioner            User                     @relation("Commissioner", fields: [commissionerId], references: [id])
+  teams                   FantasyTeam[]
+  matchups                Matchup[]
+  leagueEvents            LeagueEvent[]
+  notifications           Notification[]
+  notificationPreferences NotificationPreference[]
+  parentLeague            FantasyLeague?           @relation("LeagueLineage", fields: [parentLeagueId], references: [id])
+  childLeagues            FantasyLeague[]          @relation("LeagueLineage")
 
   @@index([status])
 }
@@ -170,6 +180,7 @@ model Draft {
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
   autoPickTimerSecs Int           @default(10)
+  queueData         Json?
   league            FantasyLeague @relation(fields: [leagueId], references: [id])
   picks             DraftPick[]
 }
@@ -212,6 +223,47 @@ model Matchup {
   league     FantasyLeague @relation(fields: [leagueId], references: [id])
 
   @@index([leagueId, week])
+}
+
+model LeagueEvent {
+  id        String        @id @default(cuid())
+  leagueId  String
+  teamId    String?
+  playerId  String?
+  type      EventType
+  data      Json          @default("{}")
+  createdAt DateTime      @default(now())
+  league    FantasyLeague @relation(fields: [leagueId], references: [id])
+
+  @@index([leagueId, createdAt])
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  leagueId  String?
+  type      NotificationType
+  data      Json             @default("{}")
+  readAt    DateTime?
+  createdAt DateTime         @default(now())
+  user      User             @relation(fields: [userId], references: [id])
+  league    FantasyLeague?   @relation(fields: [leagueId], references: [id])
+
+  @@index([userId, leagueId, readAt])
+  @@index([leagueId])
+}
+
+model NotificationPreference {
+  id       String           @id @default(cuid())
+  userId   String
+  leagueId String
+  type     NotificationType
+  enabled  Boolean          @default(true)
+  user     User             @relation(fields: [userId], references: [id])
+  league   FantasyLeague    @relation(fields: [leagueId], references: [id])
+
+  @@unique([userId, leagueId, type])
+  @@index([userId])
 }
 
 enum Position {
@@ -261,6 +313,12 @@ enum DraftStatus {
   COMPLETE
 }
 
+enum NotificationType {
+  DRAFT_STARTING
+  ON_THE_CLOCK
+  LINEUP_INCOMPLETE
+}
+
 enum EventType {
   DRAFT_PICK
   PLAYER_ADD
@@ -268,17 +326,11 @@ enum EventType {
   TRADE
   PLAYOFF_QUALIFICATION
   MAJOR_PERFORMANCE
-}
-
-model LeagueEvent {
-  id        String        @id @default(cuid())
-  leagueId  String
-  teamId    String?
-  playerId  String?
-  type      EventType
-  data      Json          @default("{}")
-  createdAt DateTime      @default(now())
-  league    FantasyLeague @relation(fields: [leagueId], references: [id])
-
-  @@index([leagueId, createdAt])
+  COMMISSIONER_FORCE_MOVE
+  COMMISSIONER_UNDO_TRANSACTION
+  COMMISSIONER_REPLACE_MANAGER
+  COMMISSIONER_DRAFT_PAUSED
+  COMMISSIONER_DRAFT_RESUMED
+  COMMISSIONER_ANNOUNCEMENT
+  COMMISSIONER_SETTINGS_CHANGED
 }

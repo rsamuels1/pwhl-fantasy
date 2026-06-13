@@ -16,6 +16,7 @@ import type { ClientMessage, ServerMessage, CompletedPick } from "./messages";
 import { emitEvent, type LeagueEventType } from "../services/activity";
 import { trackEvent } from "../analytics";
 import { logCommissionerAction, type CommissionerEventType } from "../services/audit-service";
+import { createNotification } from "../services/notification-service";
 
 const prisma = new PrismaClient();
 
@@ -203,6 +204,43 @@ class DraftRoom {
     return this.runEffects(result.effects);
   }
 
+  private async notifyDraftStarting(): Promise<void> {
+    try {
+      const teams = await prisma.fantasyTeam.findMany({
+        where: { leagueId: this.leagueId },
+        select: { ownerId: true },
+      });
+      await Promise.all(
+        teams.map((t) =>
+          createNotification(t.ownerId, "DRAFT_STARTING", { leagueId: this.leagueId }, prisma, this.leagueId)
+        )
+      );
+    } catch {
+      // fire-and-forget — never block the draft
+    }
+  }
+
+  private async notifyOnClock(): Promise<void> {
+    try {
+      const slot = this.state.order[this.state.currentOverall - 1];
+      if (!slot) return;
+      const team = await prisma.fantasyTeam.findUnique({
+        where: { id: slot.fantasyTeamId },
+        select: { ownerId: true, name: true },
+      });
+      if (!team) return;
+      await createNotification(
+        team.ownerId,
+        "ON_THE_CLOCK",
+        { leagueId: this.leagueId, teamName: team.name, overall: this.state.currentOverall },
+        prisma,
+        this.leagueId
+      );
+    } catch {
+      // fire-and-forget — never block the draft
+    }
+  }
+
   private async logDraftAction(action: CommissionerEventType): Promise<void> {
     try {
       const league = await prisma.fantasyLeague.findUnique({
@@ -229,6 +267,9 @@ class DraftRoom {
             pick: e.pick,
             state: toWireState(this.state),
           });
+          if (this.state.status === "IN_PROGRESS" && this.state.order[this.state.currentOverall - 1]) {
+            void this.notifyOnClock();
+          }
           break;
         case "BROADCAST_STATE":
           this.broadcast({ type: "STATE", state: toWireState(this.state) });
@@ -249,6 +290,8 @@ class DraftRoom {
           });
           if (e.status === "IN_PROGRESS") {
             try { trackEvent({ event: "draft_started", leagueId: this.leagueId }); } catch {}
+            void this.notifyDraftStarting();
+            void this.notifyOnClock();
           }
           break;
         case "COMPLETE":

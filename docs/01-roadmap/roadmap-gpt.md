@@ -67,6 +67,7 @@ Prioritization order:
 - Season Boundary Enforcement (validateSeasonBoundary in lib/season/lifecycle.ts)
 - Analytics Instrumentation (6 events: user_registered, league_created, league_joined, draft_started, draft_completed, lineup_saved)
 - VP Education UX (VpExplainer on standings, 8-team recommendation at creation)
+- Notification Framework (in-app bell, draft notifications; email deferred)
 
 ## Remaining Risks
 
@@ -249,18 +250,25 @@ Priority: P1
 
 ### Notifications
 
-#### NT-001 — Notification Framework
+#### NT-001 — Notification Framework 🔄 (In Progress)
 
-In-app and email channels.
+In-app channel complete. Email deferred post-beta.
 
-#### NT-002 — Critical Notifications
+- `Notification` + `NotificationPreference` schema models ✅
+- `lib/services/notification-service.ts` — `createNotification`, `markAllRead` ✅
+- `GET/POST /api/leagues/[leagueId]/notifications` ✅
+- `components/NotificationBell.tsx` — bell + unread badge in league layout ✅
+- Email delivery — deferred
 
-- Draft Starting Soon
-- On The Clock
-- Incomplete Lineup
-- Trade Received
-- Waiver Result
-- Playoff Clinched
+#### NT-002 — Critical Notifications 🔄 (Partial)
+
+Shipped (in-app):
+- Draft Starting — fired at `PERSIST_STATUS IN_PROGRESS` in `lib/draft/server.ts` ✅
+- On The Clock — fired after each `BROADCAST_PICK` in `lib/draft/server.ts` ✅
+
+Deferred (post-beta):
+- Lineup Incomplete (requires a scheduled sweep job)
+- Trade Received, Waiver Result, Playoff Clinched (features not yet built)
 
 Spec: `docs/02-engineering/notification-framework-spec.md` · Priority: P1
 
