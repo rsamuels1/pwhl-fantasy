@@ -3,10 +3,10 @@ import { prisma } from "@/lib/db";
 import { apiRequireAuth, apiRequireCommissioner } from "@/lib/auth";
 import { logCommissionerAction } from "@/lib/services/audit-service";
 
-// PUT /api/leagues/[leagueId]/announcement
-// Body: { announcement: string | null }
-// Commissioner-only. Sets (or clears, when empty) the league announcement banner.
-export async function PUT(
+// POST /api/leagues/[leagueId]/replay/restart
+// Commissioner-only. Resets the replay day counter to the start.
+// Scored matchups and league status are preserved.
+export async function POST(
   req: NextRequest,
   { params }: { params: { leagueId: string } }
 ) {
@@ -15,22 +15,19 @@ export async function PUT(
   const commissioner = await apiRequireCommissioner(params.leagueId, auth.id);
   if (commissioner instanceof NextResponse) return commissioner;
 
-  const body = (await req.json().catch(() => ({}))) as { announcement?: string | null };
-  const raw = typeof body.announcement === "string" ? body.announcement.trim() : "";
-  const announcement = raw.length > 0 ? raw.slice(0, 500) : null;
-
+  // Reset replay current date to null
   await prisma.fantasyLeague.update({
     where: { id: params.leagueId },
-    data: { announcement },
+    data: { replayCurrentDate: null },
   });
 
   await logCommissionerAction(
     params.leagueId,
     auth.id,
-    "COMMISSIONER_ANNOUNCEMENT",
-    { announcement },
+    "COMMISSIONER_SETTINGS_CHANGED",
+    { action: "replay_restart" },
     prisma
   );
 
-  return NextResponse.json({ announcement });
+  return NextResponse.json({ success: true });
 }

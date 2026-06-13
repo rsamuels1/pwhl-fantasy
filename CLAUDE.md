@@ -966,4 +966,4 @@ the cookie is never read.
 - Use `(prisma as any).leagueEvent` with a null-check guard for any code that queries `LeagueEvent`
   until `prisma db push` + `prisma generate` has been run in the target environment.
 - **When updating CLAUDE.md** (build order, feature status, or sprint notes), keep these sibling files in sync:
-  `docs/01-roadmap/roadmap.md`, `docs/01-roadmap/roadmap-gpt.md`, `docs/01-roadmap/roadmap.html`, and `docs/01-roadmap/roadmap-dashboard-vnext.html`. All four track the same feature status and sprint assignments.
+  `docs/01-roadmap/roadmap-index.md`, `docs/01-roadmap/roadmap-features.md`, `docs/01-roadmap/roadmap-sprints.md`, and `docs/01-roadmap/roadmap-gpt.md`. The HTML files are independently maintained visual dashboards on a separate cadence.

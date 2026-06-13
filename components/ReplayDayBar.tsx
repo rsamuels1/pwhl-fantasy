@@ -66,6 +66,29 @@ export default function ReplayDayBar({
     }
   };
 
+  const handleRestart = async () => {
+    if (!window.confirm("Reset replay to Day 0? Scored matchups are preserved.")) {
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/leagues/${leagueId}/replay/restart`, {
+        method: "POST",
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        setError(data.error ?? "Failed to restart.");
+      } else {
+        router.refresh();
+      }
+    } catch {
+      setError("Network error.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const dateLabel = currentDate
     ? new Date(currentDate + "T12:00:00Z").toLocaleDateString("en-US", { month: "short", day: "numeric" })
     : "Pre-season";
@@ -105,48 +128,67 @@ export default function ReplayDayBar({
         </div>
       )}
 
-      {canStartSeason ? (
-        <button
-          onClick={handleStartSeason}
-          disabled={loading}
-          style={{
-            flexShrink: 0,
-            background: loading ? "rgba(52,211,153,0.2)" : "#059669",
-            border: "none",
-            borderRadius: 8,
-            color: "#fff",
-            padding: "6px 14px",
-            fontSize: 13,
-            fontWeight: 600,
-            cursor: loading ? "default" : "pointer",
-          }}
-        >
-          {loading ? "…" : "Start season →"}
-        </button>
-      ) : hasNextDay ? (
-        <button
-          onClick={handleNextDay}
-          disabled={loading}
-          style={{
-            flexShrink: 0,
-            background: loading ? "rgba(99,102,241,0.3)" : "#6366f1",
-            border: "none",
-            borderRadius: 8,
-            color: "#fff",
-            padding: "6px 14px",
-            fontSize: 13,
-            fontWeight: 600,
-            cursor: loading ? "default" : "pointer",
-            transition: "background 0.15s",
-          }}
-        >
-          {loading ? "…" : "Next day →"}
-        </button>
-      ) : (
-        <span style={{ fontSize: 12, color: "#34d399", fontWeight: 600, flexShrink: 0 }}>
-          ✓ Season complete
-        </span>
-      )}
+      <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
+        {canStartSeason ? (
+          <button
+            onClick={handleStartSeason}
+            disabled={loading}
+            style={{
+              background: loading ? "rgba(52,211,153,0.2)" : "#059669",
+              border: "none",
+              borderRadius: 8,
+              color: "#fff",
+              padding: "6px 14px",
+              fontSize: 13,
+              fontWeight: 600,
+              cursor: loading ? "default" : "pointer",
+            }}
+          >
+            {loading ? "…" : "Start season →"}
+          </button>
+        ) : hasNextDay ? (
+          <button
+            onClick={handleNextDay}
+            disabled={loading}
+            style={{
+              background: loading ? "rgba(99,102,241,0.3)" : "#6366f1",
+              border: "none",
+              borderRadius: 8,
+              color: "#fff",
+              padding: "6px 14px",
+              fontSize: 13,
+              fontWeight: 600,
+              cursor: loading ? "default" : "pointer",
+              transition: "background 0.15s",
+            }}
+          >
+            {loading ? "…" : "Next day →"}
+          </button>
+        ) : (
+          <span style={{ fontSize: 12, color: "#34d399", fontWeight: 600 }}>
+            ✓ Season complete
+          </span>
+        )}
+        {!canStartSeason && (
+          <button
+            onClick={handleRestart}
+            disabled={loading}
+            style={{
+              background: loading ? "rgba(148,163,184,0.2)" : "rgba(148,163,184,0.3)",
+              border: "1px solid rgba(148,163,184,0.2)",
+              borderRadius: 8,
+              color: "#94a3b8",
+              padding: "6px 12px",
+              fontSize: 13,
+              fontWeight: 600,
+              cursor: loading ? "default" : "pointer",
+              transition: "background 0.15s",
+            }}
+          >
+            {loading ? "…" : "↺ Restart"}
+          </button>
+        )}
+      </div>
 
       {error && (
         <span style={{ fontSize: 12, color: "#f87171", width: "100%" }}>{error}</span>

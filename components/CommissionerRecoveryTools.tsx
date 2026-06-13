@@ -14,14 +14,16 @@ interface Props {
   leagueId: string;
   teams: TeamRow[];
   isDraftPaused: boolean;
+  isInSeason?: boolean;
 }
 
-export function CommissionerRecoveryTools({ leagueId, teams, isDraftPaused }: Props) {
+export function CommissionerRecoveryTools({ leagueId, teams, isDraftPaused, isInSeason }: Props) {
   return (
     <div style={{ display: "grid", gap: 20 }}>
       <ReplaceOwnerSection leagueId={leagueId} teams={teams} />
       <UndoTransactionSection leagueId={leagueId} teams={teams} isDraftPaused={isDraftPaused} />
       <ForceRosterMoveSection leagueId={leagueId} teams={teams} />
+      {isInSeason && <UnlockPlayerSection leagueId={leagueId} teams={teams} />}
     </div>
   );
 }
@@ -222,6 +224,76 @@ function ForceRosterMoveSection({ leagueId, teams }: { leagueId: string; teams: 
         <input placeholder="Reason (optional, logged in audit trail)" value={reason} onChange={(e) => setReason(e.target.value)} style={inputStyle} />
         <button onClick={handleMove} disabled={busy || !selectedTeam || !selectedPlayer} style={btnStyle(busy || !selectedTeam || !selectedPlayer)}>
           {busy ? "Moving…" : "Move player"}
+        </button>
+      </div>
+      {result && <p style={{ margin: "8px 0 0", fontSize: 13, color: result.startsWith("Error") ? "#f87171" : "#34d399" }}>{result}</p>}
+    </div>
+  );
+}
+
+// ── Unlock Player ────────────────────────────────────────────────────────
+
+function UnlockPlayerSection({ leagueId, teams }: { leagueId: string; teams: TeamRow[] }) {
+  const router = useRouter();
+  const [selectedTeam, setSelectedTeam] = useState("");
+  const [selectedPlayer, setSelectedPlayer] = useState("");
+  const [targetSlot, setTargetSlot] = useState<Slot>("BENCH");
+  const [reason, setReason] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [result, setResult] = useState<string | null>(null);
+
+  const currentTeam = teams.find((t) => t.id === selectedTeam);
+
+  async function handleUnlock() {
+    if (!selectedTeam || !selectedPlayer) return;
+    setBusy(true);
+    setResult(null);
+    try {
+      const res = await fetch(`/api/leagues/${leagueId}/commissioner/unlock-player`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ teamId: selectedTeam, playerId: selectedPlayer, targetSlot, reason: reason || undefined }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setResult(`Error: ${data.error}`);
+      } else {
+        setResult("Player unlocked successfully.");
+        setSelectedPlayer("");
+        setReason("");
+        router.refresh();
+      }
+    } catch {
+      setResult("Network error");
+    }
+    setBusy(false);
+  }
+
+  return (
+    <div>
+      <h3 style={{ fontSize: 15, margin: "0 0 10px", color: "#e2e8f0" }}>Unlock locked player</h3>
+      <p style={{ fontSize: 13, color: "#64748b", margin: "0 0 12px" }}>
+        Clear period-lock on a player (e.g., due to cancelled game). Does not bypass play-lock.
+      </p>
+      <div style={{ display: "grid", gap: 8 }}>
+        <select value={selectedTeam} onChange={(e) => { setSelectedTeam(e.target.value); setSelectedPlayer(""); }} style={inputStyle}>
+          <option value="">Select team…</option>
+          {teams.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+        </select>
+        {currentTeam && (
+          <select value={selectedPlayer} onChange={(e) => setSelectedPlayer(e.target.value)} style={inputStyle}>
+            <option value="">Select player…</option>
+            {currentTeam.roster.map((p) => (
+              <option key={p.playerId} value={p.playerId}>{p.playerName} ({p.slot})</option>
+            ))}
+          </select>
+        )}
+        <select value={targetSlot} onChange={(e) => setTargetSlot(e.target.value as Slot)} style={inputStyle}>
+          {SLOTS.map((s) => <option key={s} value={s}>{s}</option>)}
+        </select>
+        <input placeholder="Reason (optional, logged in audit trail)" value={reason} onChange={(e) => setReason(e.target.value)} style={inputStyle} />
+        <button onClick={handleUnlock} disabled={busy || !selectedTeam || !selectedPlayer} style={btnStyle(busy || !selectedTeam || !selectedPlayer)}>
+          {busy ? "Unlocking…" : "Unlock player"}
         </button>
       </div>
       {result && <p style={{ margin: "8px 0 0", fontSize: 13, color: result.startsWith("Error") ? "#f87171" : "#34d399" }}>{result}</p>}

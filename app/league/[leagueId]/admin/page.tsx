@@ -12,6 +12,7 @@ import InviteLinkButton from "@/components/InviteLinkButton";
 import AnnouncementForm from "@/components/AnnouncementForm";
 import { RenewLeagueForm } from "@/components/RenewLeagueForm";
 import { CommissionerRecoveryTools } from "@/components/CommissionerRecoveryTools";
+import { LeagueSettingsEditor } from "@/components/LeagueSettingsEditor";
 import SeasonView from "../season/SeasonView";
 
 const COMMISSIONER_EVENT_TYPES = [
@@ -78,6 +79,7 @@ export default async function AdminPage({ params, searchParams }: Props) {
   }));
 
   const isDraftPaused = league.draft?.status === "PAUSED";
+  const commTeam = league.teams.find((t) => t.ownerId === user.id);
 
   const devNow = await getDevNow();
   const nowMs = (league.isReplay && league.replayCurrentDate)
@@ -344,7 +346,32 @@ export default async function AdminPage({ params, searchParams }: Props) {
                 {isDev && (
                   <AutoDraftButton leagueId={leagueId} />
                 )}
-                {!isDev && (
+                {!isDev && commTeam && (
+                  <Link
+                    href={`/draft/${leagueId}?team=${commTeam.id}`}
+                    style={{
+                      display: "inline-block",
+                      marginTop: 12,
+                      color: "#fff",
+                      fontSize: 14,
+                      fontWeight: 600,
+                      textDecoration: "none",
+                      background: "#6366f1",
+                      padding: "10px 16px",
+                      borderRadius: 8,
+                      transition: "background 0.15s",
+                    }}
+                    onMouseEnter={(e) => {
+                      (e.currentTarget as HTMLElement).style.background = "#4f46e5";
+                    }}
+                    onMouseLeave={(e) => {
+                      (e.currentTarget as HTMLElement).style.background = "#6366f1";
+                    }}
+                  >
+                    ▶ Go to draft room to start →
+                  </Link>
+                )}
+                {!isDev && !commTeam && (
                   <p style={{ marginTop: 12, fontSize: 12, color: "#475569" }}>
                     You start the draft from inside the draft room once everyone is connected.
                   </p>
@@ -409,6 +436,29 @@ export default async function AdminPage({ params, searchParams }: Props) {
         )}
       </section>
 
+      {/* ── League settings editor ── */}
+      <section style={panelStyle}>
+        <h2 style={{ fontSize: 18, marginBottom: 16 }}>League settings (editor)</h2>
+        {draftDone && (
+          <p style={{ color: "#94a3b8", fontSize: 14, marginBottom: 0 }}>
+            Settings are locked after the draft. View settings on the league settings page.
+          </p>
+        )}
+        {!draftDone && (
+          <>
+            <p style={{ color: "#94a3b8", fontSize: 14, marginBottom: 16 }}>
+              Adjust max teams and draft type before the draft begins. Changes are logged in the audit trail.
+            </p>
+            <LeagueSettingsEditor
+              leagueId={leagueId}
+              maxTeams={league.maxTeams}
+              draftType={league.draftType}
+              draftDone={draftDone}
+            />
+          </>
+        )}
+      </section>
+
       {/* ── Commissioner recovery tools ── */}
       {draftDone && (
         <section style={panelStyle}>
@@ -420,6 +470,7 @@ export default async function AdminPage({ params, searchParams }: Props) {
             leagueId={leagueId}
             teams={teamRows}
             isDraftPaused={isDraftPaused}
+            isInSeason={league.status === "IN_SEASON"}
           />
         </section>
       )}
