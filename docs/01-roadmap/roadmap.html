@@ -409,11 +409,11 @@
         <ul class="feats"><li>Proposals</li><li>Review</li><li>Approval</li><li>History</li></ul>
         <div class="dep"><b>Depends on:</b> Transaction system</div>
       </div>
-      <div class="card todo">
-        <div class="card-top"><span class="num">08</span><span class="status-tag todo"><span class="tdot"></span>Not built</span></div>
+      <div class="card shipped">
+        <div class="card-top"><span class="num">08</span><span class="status-tag shipped"><span class="tdot"></span>Shipped</span></div>
         <h3>Transaction History</h3>
-        <p>A single league log of every move — adds, drops, trades, and waiver claims — so league activity is transparent and auditable.</p>
-        <ul class="feats"><li>Adds / drops</li><li>Trades</li><li>Waiver claims</li></ul>
+        <p>A paginated league transaction log at <code>/league/[leagueId]/transactions</code> — type filters, team filter, scroll pagination, replay guard. Built on existing <code>LeagueEvent</code> rows.</p>
+        <ul class="feats"><li class="done">Paginated API ✓</li><li class="done">Type + team filters ✓</li><li class="done">Replay guard ✓</li><li class="done">Infinite scroll ✓</li></ul>
       </div>
     </div>
   </section>
@@ -650,7 +650,7 @@
       <li><div><div class="t">Team Analysis &amp; Insights <span style="color:#7fb2e8">· #25</span></div><div class="d">New Analysis tab — position-group trends, FA recommendations, trade suggestions once #7 lands.</div></div><span class="tok">~85K</span></li>
       <li class="tier-head"><span class="tl">Heavy lifts — plan a fresh session (100K+ tokens)</span></li>
       <li><div><div class="t">League Onboarding <span style="color:#7fb2e8">· #2</span></div><div class="d">Entirely unbuilt — welcome flow, setup wizard, draft guide. Beta prerequisite despite token cost.</div></div><span class="tok">~100K</span></li>
-      <li><div><div class="t">Transaction History <span style="color:#7fb2e8">· #8</span></div><div class="d">Infrastructure first — records every add, drop, waiver, and trade. Built on CT-002 audit log from Sprint 2.</div></div><span class="tok">~55K</span></li>
+      <li><div><div class="t">Transaction History <span style="color:#7fb2e8">· #8 ✅</span></div><div class="d">Shipped — paginated API + transaction page with type/team filters, replay guard, infinite scroll.</div></div></li>
       <li><div><div class="t">Trade System <span style="color:#7fb2e8">· #7</span></div><div class="d">New domain: schema tables, API routes, proposal / review / approval UI. Built on top of Transaction History. Plan a dedicated session.</div></div><span class="tok">~130K</span></li>
       <li><div><div class="t">Waiver Priority + Processing <span style="color:#7fb2e8">· #5</span></div><div class="d">Priority ordering, batched claim-resolution jobs, commissioner settings. Schema + service + UI.</div></div><span class="tok">~110K</span></li>
     </ol>
@@ -710,7 +710,7 @@
         <div class="sp-meta">~2–3 wks · MVP launch gate · beta prerequisites</div>
         <ul>
           <li>#2 League Onboarding (welcome, setup wizard, draft guide)</li>
-          <li>#8 Transaction History (build on CT-002 audit log; required before Trade System)</li>
+          <li>#8 Transaction History ✅ (paginated API + page with type/team filters, replay guard)</li>
           <li>#4 Error Handling (empty / loading / retry)</li>
           <li>#3 Mobile Optimization (draft, matchup, standings, roster)</li>
           <li>NT-001/002 Notifications — draft starting, on the clock, lineup incomplete</li>

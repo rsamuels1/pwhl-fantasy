@@ -349,7 +349,7 @@ Launch Phases Remaining
 <tr><td>Playoff Lifecycle</td><td><span class="status complete">Complete</span></td><td>advanceSeason() auto-calls startPlayoffs(); manual fallback button in SeasonControls</td></tr>
 <tr><td>Analytics</td><td><span class="status complete">Complete</span></td><td>6 events: user_registered, league_created, league_joined, draft_started, draft_completed, lineup_saved</td></tr>
 <tr><td>User Education</td><td><span class="status complete">Complete</span></td><td>VpExplainer on standings page; 8-team "Recommended" label on create form</td></tr>
-<tr><td>Transaction History</td><td><span class="status planned">Post-MVP</span></td><td>Waiver ledger, trade history — Sprint 4+</td></tr>
+<tr><td>Transaction History</td><td><span class="status complete">Complete</span></td><td>Paginated API + page with type/team filters, replay guard, infinite scroll — shipped in Sprint 3</td></tr>
 <tr><td>Reliability Validation</td><td><span class="status planned">Sprint 3</span></td><td>Draft load test, duplicate-tab handling, season sim cert</td></tr>
 <tr><td>Notifications</td><td><span class="status planned">Sprint 3</span></td><td>Draft starting, on the clock, lineup incomplete</td></tr>
 <tr><td>Onboarding</td><td><span class="status planned">Sprint 3</span></td><td>Welcome flow, setup wizard, draft guide</td></tr>
@@ -509,12 +509,11 @@ Launch Phases Remaining
 <h2>Sprint 4 — Post-MVP Features</h2>
 
 <details>
-<summary>Transaction History (moved from S2 — post-MVP)</summary>
+<summary>Transaction History ✅ (shipped Sprint 3)</summary>
 <div class="story-list">
-  <div class="story"><span class="story-text">Add/drop ledger (built on CT-002 audit log)</span><span class="effort ef-l">L</span></div>
-  <div class="story"><span class="story-text">Transaction timeline UI</span><span class="effort ef-m">M</span></div>
-  <div class="story"><span class="story-text">Trade extensibility</span><span class="effort ef-xl">XL</span></div>
-  <div class="story"><span class="story-text">Waiver priority + processing</span><span class="effort ef-l">L</span></div>
+  <div class="story done"><span class="story-text">Paginated API with cursor, team/type filters, replay guard</span></div>
+  <div class="story done"><span class="story-text">Transaction page with type tabs, team dropdown, infinite scroll</span></div>
+  <div class="story done"><span class="story-text">Player name enrichment + timeAgo display</span></div>
 </div>
 </details>
 
@@ -555,7 +554,7 @@ Launch Phases Remaining
 <div class="dep">
 ✅ Audit Log Framework (CT-002)
         ↓
-☐ Transaction History (Sprint 4+)
+✅ Transaction History (Sprint 3)
         ↓
 ✅ Season Simulation Suite (simulate-season.ts)
         ↓
@@ -620,7 +619,7 @@ Launch Phases Remaining
 
 <div class="phase">
 <h3>Sprint 4+</h3>
-<p>Post-MVP — Transaction history, trade system, waivers, FAAB, growth loops.</p>
+<p>Post-MVP — Trade system, waivers, FAAB, growth loops. (Transaction history shipped in Sprint 3.)</p>
 </div>
 
 <div class="phase">
