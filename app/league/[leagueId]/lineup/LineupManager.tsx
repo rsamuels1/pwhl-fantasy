@@ -103,6 +103,7 @@ export default function LineupManager({
   const activeSeats = buildActiveSeats(rosterSettings);
   const benchPlayers = roster.filter((p) => p.slot === "BENCH");
   const irPlayers = roster.filter((p) => p.slot === "IR");
+  const tabOptions: StatsView[] = ["projected", ...(thisWeekLabel ? ["thisWeek" as StatsView] : []), "lastWeek", "season"];
 
   const seatedActive: Array<{ slot: SlotType; index: number; player: RosterEntryRow | null }> = (() => {
     const bySlot: Record<string, RosterEntryRow[]> = {};
@@ -229,8 +230,8 @@ export default function LineupManager({
 
         {/* Stats view toggle */}
         <div style={{ display: "flex", gap: 4, background: "rgba(255,255,255,0.05)", borderRadius: 8, padding: 3 }}>
-          {(["projected", "thisWeek", "lastWeek", "season"] as StatsView[]).map((view) => {
-            const label = view === "projected" ? "Projected" : view === "season" ? "Season" : view === "lastWeek" ? "Last week" : "This week";
+          {tabOptions.map((view) => {
+            const label = view === "projected" ? "Matchup Proj" : view === "season" ? "Season" : view === "lastWeek" ? "Last week" : "This week";
             const disabled = (view === "thisWeek" && !thisWeekLabel) || (view === "projected" && !nextWeekLabel);
             return (
               <button
@@ -252,7 +253,7 @@ export default function LineupManager({
       </div>
 
       {(statsView === "projected" && nextWeekLabel) && (
-        <div style={{ fontSize: 12, color: "#64748b" }}>Projections for {nextWeekLabel} · rolling 5-game avg × scheduled games</div>
+        <div style={{ fontSize: 12, color: "#64748b" }}>Matchup projections for {nextWeekLabel} · rolling 5-game avg × scheduled games</div>
       )}
       {(statsView === "lastWeek" && lastWeekLabel) && (
         <div style={{ fontSize: 12, color: "#64748b" }}>{lastWeekLabel}</div>
