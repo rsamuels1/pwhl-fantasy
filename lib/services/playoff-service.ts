@@ -98,6 +98,17 @@ export async function getBracket(
     }
   }
 
+  // Derive actual current round: lowest round with an unscored matchup, or highest if all scored
+  const incompleteRounds = playoffMatchups
+    .filter((m) => m.homeScore === null || m.awayScore === null)
+    .map((m) => m.round ?? 1);
+  if (incompleteRounds.length > 0) {
+    bracket.currentRound = Math.min(...incompleteRounds);
+  } else {
+    const allRounds = playoffMatchups.map((m) => m.round ?? 1);
+    bracket.currentRound = allRounds.length > 0 ? Math.max(...allRounds) : 1;
+  }
+
   return {
     leagueId,
     leagueName: league.name,

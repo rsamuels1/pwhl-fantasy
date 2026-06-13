@@ -3,65 +3,9 @@ import { prisma } from "@/lib/db";
 import { requireAuth, requireLeagueMember } from "@/lib/auth";
 import { getStandings } from "@/lib/services/standings-service";
 import { getBracket, PlayoffNotStartedError } from "@/lib/services/playoff-service";
+import { computeRace, type RaceInfo } from "@/lib/playoffs/seeding";
 import PlayoffBracket from "@/components/PlayoffBracket";
 import type { Matchup } from "@prisma/client";
-
-interface RaceInfo {
-  status: "clinched" | "eliminated" | "in" | "bubble" | "out";
-  gamesBack: number | null;
-  cushion: number | null;
-}
-
-function computeRace(
-  standings: { fantasyTeamId: string; totalVP: number }[],
-  matchups: Matchup[],
-  cutoff: number
-): Map<string, RaceInfo> {
-  const map = new Map<string, RaceInfo>();
-  if (standings.length === 0 || cutoff <= 0 || cutoff >= standings.length) {
-    standings.forEach((s) =>
-      map.set(s.fantasyTeamId, { status: "in", gamesBack: null, cushion: null })
-    );
-    return map;
-  }
-
-  const totalWeeks = matchups
-    .filter((m) => !m.isPlayoff)
-    .reduce((max, m) => Math.max(max, m.week), 0);
-
-  const remainingFor = (teamId: string) => {
-    const played = matchups.filter(
-      (m) => !m.isPlayoff && m.homeScore !== null &&
-        (m.homeTeamId === teamId || m.awayTeamId === teamId)
-    ).length;
-    return Math.max(0, totalWeeks - played);
-  };
-
-  const lineTeam = standings[cutoff - 1];
-  const bubbleTeam = standings[cutoff];
-
-  standings.forEach((s, i) => {
-    const rank = i + 1;
-    const inSpot = rank <= cutoff;
-    const maxPoints = s.totalVP + remainingFor(s.fantasyTeamId);
-
-    let status: RaceInfo["status"];
-    if (inSpot) {
-      const bubbleCeiling = bubbleTeam.totalVP + remainingFor(bubbleTeam.fantasyTeamId);
-      status = bubbleCeiling < s.totalVP ? "clinched" : rank === cutoff ? "bubble" : "in";
-    } else {
-      status = maxPoints < lineTeam.totalVP ? "eliminated" : "out";
-    }
-
-    map.set(s.fantasyTeamId, {
-      status,
-      gamesBack: inSpot ? null : Math.round((lineTeam.totalVP - s.totalVP) * 10) / 10,
-      cushion: inSpot ? Math.round((s.totalVP - bubbleTeam.totalVP) * 10) / 10 : null,
-    });
-  });
-
-  return map;
-}
 
 function RaceChip({ info }: { info: RaceInfo }) {
   if (info.status === "clinched") {
@@ -135,7 +79,7 @@ export default async function PlayoffsPage({
   const hasResults = regularMatchups.some((m) => m.homeScore !== null);
   const race =
     playoffCutoff !== null && hasResults && !hasPlayoffs
-      ? computeRace(standings, matchups, playoffCutoff)
+      ? computeRace(standings.map(s => ({ ...s, points: s.totalVP })), matchups, playoffCutoff, 4)
       : null;
 
   const statusLabel =
@@ -293,9 +237,12 @@ export default async function PlayoffsPage({
       )}
 
       {hasPlayoffs && !bracketResult?.bracket && (
-        <p style={{ fontSize: 13, color: "#475569", textAlign: "center" }}>
-          Bracket is being generated.
-        </p>
+        <section style={card}>
+          <div style={{ padding: 40, textAlign: "center" }}>
+            <div style={{ fontSize: 14, color: "#94a3b8", marginBottom: 8 }}>⏳ Bracket is being set up</div>
+            <div style={{ fontSize: 12, color: "#64748b" }}>Check back shortly.</div>
+          </div>
+        </section>
       )}
 
     </div>

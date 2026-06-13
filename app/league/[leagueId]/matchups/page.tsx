@@ -3,6 +3,8 @@ import { prisma } from "@/lib/db";
 import { requireAuth, requireLeagueMember } from "@/lib/auth";
 import { getDevNow } from "@/lib/devTime";
 import { getReplayNow } from "@/lib/replayTime";
+import { getRoundLabel } from "@/lib/playoffs/brackets";
+import { calculatePlayoffRounds } from "@/lib/playoffs/lifecycle";
 
 function fmtDate(d: Date) {
   return new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" }).format(d);
@@ -35,6 +37,17 @@ export default async function MatchupsPage({ params }: { params: { leagueId: str
     const arr = byWeek.get(m.week) ?? [];
     arr.push(m);
     byWeek.set(m.week, arr);
+  }
+
+  // Group playoff by round
+  const byRound = new Map<number, typeof playoffMatchups>();
+  let totalPlayoffRounds = 0;
+  for (const m of playoffMatchups) {
+    const round = m.round ?? 1;
+    totalPlayoffRounds = Math.max(totalPlayoffRounds, round);
+    const arr = byRound.get(round) ?? [];
+    arr.push(m);
+    byRound.set(round, arr);
   }
 
   // Find "current" week using sim date
@@ -165,49 +178,70 @@ export default async function MatchupsPage({ params }: { params: { leagueId: str
       {playoffMatchups.length > 0 && (
         <section style={card}>
           <h2 style={{ fontSize: 16, fontWeight: 700, margin: "0 0 14px", color: "#e2e8f0" }}>Playoffs</h2>
-          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            {playoffMatchups.map((m) => {
-              const scored = m.homeScore !== null && m.awayScore !== null;
-              const homeWon = scored && m.homeScore! > m.awayScore!;
-              const awayWon = scored && m.awayScore! > m.homeScore!;
-              const roundLabel = m.round != null ? `Round ${m.round}` : "Playoffs";
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            {Array.from({ length: totalPlayoffRounds }, (_, i) => {
+              const round = i + 1;
+              const roundMatchups = byRound.get(round) ?? [];
+              if (roundMatchups.length === 0) return null;
+              const roundName = getRoundLabel(round, totalPlayoffRounds);
+              const dateRange = roundMatchups.length > 0
+                ? `${fmtDate(new Date(roundMatchups[0].startsAt))} – ${fmtDate(new Date(roundMatchups[0].endsAt))}`
+                : "";
 
               return (
-                <div key={m.id} style={{
-                  display: "grid",
-                  gridTemplateColumns: "1fr auto 1fr",
-                  alignItems: "center",
-                  gap: "4px 10px",
-                  padding: "10px 14px",
-                  borderRadius: 10,
-                  background: "rgba(255,255,255,0.02)",
-                  border: "1px solid rgba(148,163,184,0.06)",
-                }}>
-                  <div style={{ textAlign: "right", minWidth: 0 }}>
-                    <div style={{ fontSize: 13, fontWeight: 500, color: "#94a3b8", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                      {m.homeTeam.name}
-                    </div>
-                    {scored && (
-                      <div style={{ fontSize: 17, fontWeight: 800, color: homeWon ? "#e2e8f0" : "#475569", fontVariantNumeric: "tabular-nums" }}>
-                        {m.homeScore!.toFixed(1)}
-                      </div>
-                    )}
+                <div key={round}>
+                  {/* Round header */}
+                  <div style={{ marginBottom: 12, display: "flex", alignItems: "center", gap: 10 }}>
+                    <span style={{ fontSize: 14, fontWeight: 700, color: "#e2e8f0" }}>{roundName}</span>
+                    <span style={{ fontSize: 11, color: "#475569" }}>{dateRange}</span>
                   </div>
-                  <div style={{ textAlign: "center", minWidth: 44 }}>
-                    <div style={{ fontSize: 10, fontWeight: 700, color: "#334155", letterSpacing: "0.5px" }}>
-                      {scored ? "FINAL" : "VS"}
-                    </div>
-                    <div style={{ fontSize: 10, color: "#475569", marginTop: 2 }}>{roundLabel} · Wk {m.week}</div>
-                  </div>
-                  <div style={{ textAlign: "left", minWidth: 0 }}>
-                    <div style={{ fontSize: 13, fontWeight: 500, color: "#94a3b8", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                      {m.awayTeam.name}
-                    </div>
-                    {scored && (
-                      <div style={{ fontSize: 17, fontWeight: 800, color: awayWon ? "#e2e8f0" : "#475569", fontVariantNumeric: "tabular-nums" }}>
-                        {m.awayScore!.toFixed(1)}
-                      </div>
-                    )}
+                  {/* Matchups in this round */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                    {roundMatchups.map((m) => {
+                      const scored = m.homeScore !== null && m.awayScore !== null;
+                      const homeWon = scored && m.homeScore! > m.awayScore!;
+                      const awayWon = scored && m.awayScore! > m.homeScore!;
+                      const isMyMatchup = m.homeTeamId === myTeam.id || m.awayTeamId === myTeam.id;
+
+                      return (
+                        <div key={m.id} style={{
+                          display: "grid",
+                          gridTemplateColumns: "1fr auto 1fr",
+                          alignItems: "center",
+                          gap: "4px 10px",
+                          padding: "10px 14px",
+                          borderRadius: 10,
+                          background: isMyMatchup ? "rgba(99,102,241,0.08)" : "rgba(255,255,255,0.02)",
+                          border: isMyMatchup ? "1px solid rgba(99,102,241,0.3)" : "1px solid rgba(148,163,184,0.06)",
+                        }}>
+                          <div style={{ textAlign: "right", minWidth: 0 }}>
+                            <div style={{ fontSize: 13, fontWeight: 500, color: "#94a3b8", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                              {m.homeTeam.name}
+                            </div>
+                            {scored && (
+                              <div style={{ fontSize: 17, fontWeight: 800, color: homeWon ? "#e2e8f0" : "#475569", fontVariantNumeric: "tabular-nums" }}>
+                                {m.homeScore!.toFixed(1)}
+                              </div>
+                            )}
+                          </div>
+                          <div style={{ textAlign: "center", minWidth: 44 }}>
+                            <div style={{ fontSize: 10, fontWeight: 700, color: "#334155", letterSpacing: "0.5px" }}>
+                              {scored ? "FINAL" : "VS"}
+                            </div>
+                          </div>
+                          <div style={{ textAlign: "left", minWidth: 0 }}>
+                            <div style={{ fontSize: 13, fontWeight: 500, color: "#94a3b8", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                              {m.awayTeam.name}
+                            </div>
+                            {scored && (
+                              <div style={{ fontSize: 17, fontWeight: 800, color: awayWon ? "#e2e8f0" : "#475569", fontVariantNumeric: "tabular-nums" }}>
+                                {m.awayScore!.toFixed(1)}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               );

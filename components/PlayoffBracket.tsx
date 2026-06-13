@@ -2,19 +2,11 @@
 
 import React from "react";
 import type { PlayoffBracket as BracketType, BracketMatchup, SeededTeam } from "@/lib/playoffs/brackets";
+import { getRoundLabel } from "@/lib/playoffs/brackets";
 
 interface Props {
   bracket: Pick<BracketType, "seededTeams" | "rounds" | "settings" | "currentRound">;
   myTeamId?: string;
-}
-
-const ROUND_NAMES: Record<number, Record<number, string>> = {
-  2: { 1: "Semifinals", 2: "Championship" },
-  3: { 1: "First Round", 2: "Semifinals", 3: "Championship" },
-};
-
-function getRoundName(totalRounds: number, round: number): string {
-  return ROUND_NAMES[totalRounds]?.[round] ?? `Round ${round}`;
 }
 
 function seedStyle(seed: number | null | undefined): React.CSSProperties {
@@ -35,7 +27,7 @@ export default function PlayoffBracket({ bracket, myTeamId }: Props) {
         minWidth: `${totalRounds * 260}px`,
         padding: "16px 16px 8px",
       }}>
-        {rounds.map((round, rIdx) => {
+        {rounds.map((round: BracketMatchup[], rIdx: number) => {
           const isCurrentRound = currentRound !== null && (rIdx + 1) === currentRound;
           const isChampionship = rIdx === totalRounds - 1;
 
@@ -56,7 +48,7 @@ export default function PlayoffBracket({ bracket, myTeamId }: Props) {
                 borderBottom: "1px solid rgba(148,163,184,0.12)",
               }}>
                 <div style={{ fontSize: 13, fontWeight: 700, color: isChampionship ? "#fbbf24" : "#e2e8f0" }}>
-                  {isChampionship ? "🏆 " : ""}{getRoundName(totalRounds, rIdx + 1)}
+                  {isChampionship ? "🏆 " : ""}{getRoundLabel(rIdx + 1, totalRounds)}
                 </div>
                 <div style={{ fontSize: 11, color: "#475569", marginTop: 2 }}>
                   {settings.roundDurationPeriods} week{settings.roundDurationPeriods !== 1 ? "s" : ""}
@@ -66,7 +58,7 @@ export default function PlayoffBracket({ bracket, myTeamId }: Props) {
 
               {/* Matchups */}
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                {round.map((matchup, mIdx) => (
+                {round.map((matchup: BracketMatchup, mIdx: number) => (
                   <BracketMatchupCard
                     key={mIdx}
                     matchup={matchup}

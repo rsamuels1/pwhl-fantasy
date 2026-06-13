@@ -275,6 +275,16 @@ export function recordMatchupResult(
 }
 
 /**
+ * Get human-readable round label (Championship, Semifinals, etc.)
+ */
+export function getRoundLabel(round: number, totalRounds: number): string {
+  if (round === totalRounds) return "Championship";
+  if (round === totalRounds - 1) return "Semifinals";
+  if (round === totalRounds - 2) return "Quarterfinals";
+  return `Round ${round}`;
+}
+
+/**
  * Get the current bracket state as JSON (for storage or transmission).
  */
 export function serializeBracket(bracket: PlayoffBracket): string {

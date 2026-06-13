@@ -32,7 +32,7 @@ export default async function TeamMatchupPage({
   const scoringSettings = parseScoringSettings(league.scoringSettings);
   const nowMs = getReplayNow(league, await getDevNow());
   const dashboard = await getDashboardData(leagueId, teamId, nowMs, prisma);
-  const { activeMatchup, remainingPlayers, topPerformers, disappointments, lineupAlerts, lastResult, leagueActivity, leagueTopPerformers, leagueDisappointments } = dashboard;
+  const { activeMatchup, remainingPlayers, topPerformers, disappointments, lineupAlerts, lastResult, leagueActivity, leagueTopPerformers, leagueDisappointments, eliminationInfo } = dashboard;
 
   // Fetch teams and matchups for rival badge
   const [allTeams, allMatchups] = await Promise.all([
@@ -137,7 +137,9 @@ export default async function TeamMatchupPage({
         }}>
           <div>
             <div style={{ fontSize: 13, fontWeight: 700, color: "#fbbf24" }}>
-              Week {activeMatchup.week} is coming up
+              {activeMatchup.isPlayoff && activeMatchup.roundLabel
+                ? `${activeMatchup.roundLabel} is coming up`
+                : `Week ${activeMatchup.week} is coming up`}
             </div>
             <div style={{ fontSize: 12, color: "#94a3b8", marginTop: 2 }}>
               Set your lineup before games begin — check projected scores on the lineup page.
@@ -159,6 +161,27 @@ export default async function TeamMatchupPage({
       {/* ── 2. Matchup hero ── */}
       {activeMatchup ? (
         <MatchupHero matchup={activeMatchup} teamId={teamId} />
+      ) : eliminationInfo ? (
+        <Card>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
+            <span style={{ fontSize: 16 }}>🏁</span>
+            <div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: "#e2e8f0" }}>
+                You were eliminated in the {eliminationInfo.roundLabel}
+              </div>
+              <div style={{ fontSize: 12, color: "#94a3b8", marginTop: 2 }}>
+                You made a great playoff run. Better luck next season!
+              </div>
+            </div>
+          </div>
+          <Link href={`/league/${leagueId}/bracket`} style={{
+            fontSize: 12, fontWeight: 700, padding: "6px 14px", borderRadius: 8,
+            background: "rgba(99,102,241,0.15)", color: "#818cf8",
+            border: "1px solid rgba(99,102,241,0.3)", textDecoration: "none",
+          }}>
+            View bracket →
+          </Link>
+        </Card>
       ) : (
         <Card>
           <p style={{ color: "#94a3b8", margin: 0, fontSize: 14 }}>
@@ -493,6 +516,10 @@ function RecapCard({ recap }: { recap: WeeklyRecap }) {
   const isHighScore = recap.highestScore?.teamName === recap.opponentName ||
     recap.myRank === 1;
 
+  const periodLabel = recap.isPlayoff && recap.roundLabel
+    ? recap.roundLabel
+    : `Wk ${recap.week}`;
+
   return (
     <div style={{
       background: bg, border: `1px solid ${color}33`,
@@ -505,7 +532,7 @@ function RecapCard({ recap }: { recap: WeeklyRecap }) {
           fontSize: 11, fontWeight: 800, letterSpacing: "0.05em", textTransform: "uppercase",
           color, padding: "3px 9px", borderRadius: 20, background: `${color}1f`, flexShrink: 0,
         }}>
-          {tie ? "TIE" : verb} · Wk {recap.week}
+          {tie ? "TIE" : verb} · {periodLabel}
         </span>
         <span style={{ fontSize: 15, fontWeight: 700, color: "#e2e8f0", fontVariantNumeric: "tabular-nums" }}>
           {recap.myScore.toFixed(1)}
@@ -612,6 +639,9 @@ function MatchupHero({ matchup, teamId }: { matchup: ActiveMatchup; teamId: stri
 function heroPeriodLabel(matchup: ActiveMatchup) {
   const fmt = (d: Date | string) =>
     new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" }).format(new Date(d));
+  if (matchup.isPlayoff && matchup.roundLabel && matchup.round) {
+    return `${matchup.roundLabel} · ${fmt(matchup.period.startsAt)} – ${fmt(new Date(new Date(matchup.period.endsAt).getTime() - 1))}`;
+  }
   return `${fmt(matchup.period.startsAt)} – ${fmt(new Date(new Date(matchup.period.endsAt).getTime() - 1))}`;
 }
 
@@ -632,7 +662,7 @@ function FieldHero({ matchup, teamId }: { matchup: ActiveMatchup; teamId: string
     <div style={{ background: accentBg, border: `1px solid ${accentColor}40`, borderRadius: 24, padding: "24px 24px 20px" }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-          <span style={{ fontSize: 12, color: "#64748b" }}>Week {matchup.week} · {periodLabel}</span>
+          <span style={{ fontSize: 12, color: "#64748b" }}>{matchup.isPlayoff && matchup.roundLabel ? matchup.roundLabel : `Week ${matchup.week}`} · {periodLabel}</span>
           {isUpcoming && (
             <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 20, background: "rgba(245,158,11,0.15)", color: "#f59e0b" }}>Upcoming</span>
           )}
@@ -726,9 +756,9 @@ function DuelHero({
     <div style={{ background: accentBg, border: `1px solid ${accentColor}40`, borderRadius: 24, padding: "24px 24px 20px" }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 8, flexWrap: "wrap" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-          <span style={{ fontSize: 12, color: "#64748b" }}>Week {matchup.week} · {periodLabel}</span>
-          {matchup.isPlayoff && (
-            <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 20, background: "rgba(99,102,241,0.18)", color: "#a5b4fc" }}>Playoffs</span>
+          <span style={{ fontSize: 12, color: "#64748b" }}>{periodLabel}</span>
+          {matchup.isPlayoff && matchup.roundLabel && (
+            <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 20, background: "rgba(99,102,241,0.18)", color: "#a5b4fc" }}>{matchup.roundLabel}</span>
           )}
           {isUpcoming && (
             <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 20, background: "rgba(245,158,11,0.15)", color: "#f59e0b" }}>Upcoming</span>

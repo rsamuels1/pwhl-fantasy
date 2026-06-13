@@ -15,6 +15,8 @@ import { getLeagueActivity } from "./activity";
 import type { ScoringPeriod } from "../scoring/periods";
 import { parseScoringSettings } from "../scoring/settings";
 import { getReplayNow } from "../replayTime";
+import { getRoundLabel } from "../playoffs/brackets";
+import { calculatePlayoffRounds } from "../playoffs/lifecycle";
 
 // ── types ─────────────────────────────────────────────────────────────────────
 
@@ -73,6 +75,8 @@ export interface ActiveMatchup {
   period: ScoringPeriod;
   status: "active" | "upcoming";
   isPlayoff: boolean;
+  round?: number;
+  roundLabel?: string;
   myTeam: { id: string; name: string; score: number };
   myProjected: number;
   myPlayers: PlayerMatchupRow[];
@@ -104,6 +108,9 @@ export interface WeeklyRecap {
   teamsCount: number;
   closestMatchup: { margin: number; teams: [string, string] } | null;
   highestScore: { teamName: string; score: number } | null;
+  isPlayoff?: boolean;
+  round?: number;
+  roundLabel?: string;
 }
 
 export interface DashboardData {
@@ -116,6 +123,7 @@ export interface DashboardData {
   leagueActivity: ActivityEvent[];
   leagueTopPerformers: LeaguePerformerRow[];
   leagueDisappointments: LeaguePerformerRow[];
+  eliminationInfo?: { round: number; roundLabel: string } | null;
 }
 
 // ── main ──────────────────────────────────────────────────────────────────────
@@ -455,7 +463,26 @@ async function getPlayoffDashboardData(
     },
   });
 
-  if (!myMatchup) return empty; // Team didn't qualify or was eliminated
+  if (!myMatchup) {
+    // Team didn't qualify or was eliminated — find their highest-round matchup for context
+    const lastPlayoffMatchup = await prisma.matchup.findFirst({
+      where: {
+        leagueId,
+        isPlayoff: true,
+        homeScore: { not: null },
+        awayScore: { not: null },
+        OR: [{ homeTeamId: myTeamId }, { awayTeamId: myTeamId }],
+      },
+      orderBy: { round: "desc" },
+    });
+
+    if (lastPlayoffMatchup?.round !== null && lastPlayoffMatchup?.round !== undefined) {
+      const totalRounds = calculatePlayoffRounds(league.playoffSettings?.teamsInPlayoff || 4);
+      const roundLabel = getRoundLabel(lastPlayoffMatchup.round, totalRounds);
+      return { ...empty, eliminationInfo: { round: lastPlayoffMatchup.round, roundLabel } };
+    }
+    return empty;
+  }
 
   const iAmHome = myMatchup.homeTeamId === myTeamId;
   const opponentTeamId = iAmHome ? myMatchup.awayTeamId : myMatchup.homeTeamId;
@@ -466,6 +493,10 @@ async function getPlayoffDashboardData(
   };
 
   const status = nowMs < myMatchup.startsAt.getTime() ? "upcoming" : "active";
+
+  // Compute round and round label for playoff matchup
+  const totalRounds = calculatePlayoffRounds(league.playoffSettings?.teamsInPlayoff || 4);
+  const roundLabel = myMatchup.round ? getRoundLabel(myMatchup.round, totalRounds) : undefined;
 
   // Fetch all teams for team name map
   const allTeams = await prisma.fantasyTeam.findMany({
@@ -601,6 +632,8 @@ async function getPlayoffDashboardData(
       period,
       status: status as "active" | "upcoming",
       isPlayoff: true,
+      round: myMatchup.round ?? undefined,
+      roundLabel,
       myTeam: { id: myTeamId, name: allTeams.find((t) => t.id === myTeamId)?.name ?? "", score: myScore },
       myProjected,
       myPlayers,
@@ -664,6 +697,7 @@ async function getLastResult(
     include: {
       homeTeam: { select: { id: true, name: true } },
       awayTeam: { select: { id: true, name: true } },
+      league: { select: { playoffSettings: true } },
     },
   });
   if (!last) return null;
@@ -722,9 +756,15 @@ async function getLastResult(
     ? (myScore > opponentScore ? "win" : myScore < opponentScore ? "loss" : "tie")
     : (myRank === 1 ? "win" : "loss");
 
+  const isPlayoff = last.isPlayoff;
+  const roundLabel = isPlayoff && last.round
+    ? getRoundLabel(last.round, calculatePlayoffRounds((last.league?.playoffSettings as any)?.teamsInPlayoff || 4))
+    : undefined;
+
   return {
     week: last.week, result, myScore, opponentScore, opponentName, myTopPerformer,
     myRank, teamsCount: teamScores.size, closestMatchup, highestScore,
+    isPlayoff, round: last.round ?? undefined, roundLabel,
   };
 }
 
