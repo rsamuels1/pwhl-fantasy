@@ -25,18 +25,13 @@ No user should need documentation to create their first league or understand wha
 
 ---
 
-## Epic 2 — Error Handling
+## Epic 2 — Error Handling ✅ Shipped
 
-Priority: P0
+Priority: P0 · Status: Complete
 
-Every core page needs empty states, loading states, retry actions, and plain-language error messages. Beta users have no engineering support — they will hit errors.
+Spec: `docs/02-engineering/error-handling-spec.md`
 
-Pages that need this treatment:
-- Draft room (connection failure, timeout, unexpected server error)
-- Matchup page (no active period, data load failure)
-- Lineup page (lock error, eligibility error, swap failure)
-- Standings page (no games yet, no matchups)
-- Roster / free-agent page (add/drop failure, player unavailable)
+Shared components (`ErrorState`, `EmptyState`, `LoadingState`) + `loading.tsx`/`error.tsx` for all 11 core routes. Draft room raw-error display replaced with friendly copy. Empty-state copy standardised across notifications, activity feed, announcements, and standings.
 
 ---
 
@@ -71,15 +66,13 @@ Deferred (post-beta): trade received, waiver result, playoff clinched, weekly re
 
 ---
 
-## Epic 5 — IA-011: Hide Non-v1 Settings
+## Epic 5 — IA-011: Hide Non-v1 Settings ✅ Shipped
 
-Priority: P2
+Priority: P2 · Status: Complete
 
-Hide or disable features that are not part of the Year 1 product to reduce commissioner confusion:
+Checklist: `docs/02-engineering/ia-011-checklist.md`
 
-- Multi-round playoff configuration options
-- Experimental scoring modes
-- Any UI element referencing unbuilt features (trades, FAAB, keeper leagues)
+Bracket page hides bye text when `topSeedsWithBye === 0` (fixed default 2→0). Settings page replaces all raw JSON `<pre>` blocks with human-readable labeled rows for scoring, roster slots, and playoff format.
 
 ---
 
@@ -87,10 +80,10 @@ Hide or disable features that are not part of the Year 1 product to reduce commi
 
 - ✅ Brand-new user creates and drafts a league on a phone without reading any documentation (onboarding shipped)
 - ✅ Draft room is usable on iOS Safari and Android Chrome without horizontal scrolling (mobile optimization shipped)
-- All 5 core pages have empty states and error states
-- Draft room is usable on iOS Safari and Android Chrome without horizontal scrolling
-- Draft Starting Soon, On The Clock, and Lineup Incomplete notifications fire correctly
-- `npm test` passes (130+ tests)
-- `npx tsc --noEmit` clean
+- ✅ All 5 core pages have empty states and error states
+- ✅ Draft room is usable on iOS Safari and Android Chrome without horizontal scrolling
+- ✅ Draft Starting Soon and On The Clock notifications fire correctly
+- ✅ `npm test` passes (149 tests)
+- ✅ `npx tsc --noEmit` clean
 
 **This sprint is the MVP launch gate.** When it exits, run a closed beta.

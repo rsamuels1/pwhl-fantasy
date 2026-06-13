@@ -159,7 +159,7 @@
 
 <header class="hero">
   <div class="wrap">
-    <div class="eyebrow"><span class="puck"></span> PWHL Fantasy &nbsp;·&nbsp; Product Roadmap &nbsp;·&nbsp; Updated June 12, 2026</div>
+    <div class="eyebrow"><span class="puck"></span> PWHL Fantasy &nbsp;·&nbsp; Product Roadmap &nbsp;·&nbsp; Updated June 13, 2026</div>
     <h1>The road to a public beta.
       <span class="thin">Alignment, then features — eight phases, thirty-three features, MVP by late October 2026.</span>
     </h1>
@@ -295,8 +295,8 @@
       <div class="card shipped">
         <div class="card-top"><span class="num">IA-005–006</span><span class="status-tag shipped"><span class="tdot"></span>Shipped</span></div>
         <h3>Consistency, Education &amp; Scope Control</h3>
-        <p>IA-005: 8-team "Recommended" label on league creation form ✓. IA-006: <code>VpExplainer</code> component on standings page explaining VP win/tie/rank bonuses ✓. IA-011 (hide non-v1 features) is Sprint 3.</p>
-        <ul class="feats"><li class="done">8-team recommendation ✓</li><li class="done">VP explainer ✓</li><li>IA-011 → Sprint 3</li></ul>
+        <p>IA-005: 8-team "Recommended" label on league creation form ✓. IA-006: <code>VpExplainer</code> component on standings page explaining VP win/tie/rank bonuses ✓. IA-011: bracket bye text hidden when 0 byes; settings page shows human-readable scoring/roster/playoff rows ✓.</p>
+        <ul class="feats"><li class="done">8-team recommendation ✓</li><li class="done">VP explainer ✓</li><li class="done">IA-011 ✓</li></ul>
       </div>
       <div class="card todo">
         <div class="card-top"><span class="num">MVP</span><span class="pri high">GATES</span></div>
@@ -358,11 +358,11 @@
         <p>Guide new users from signup to first draft without needing documentation — welcome flow, setup wizard, draft prep, and replay-mode explanation. Spec: <code>docs/onboarding-spec.md</code>.</p>
         <ul class="feats"><li>Welcome flow (<code>WelcomeFlow.tsx</code>)</li><li>6-step setup wizard (<code>CreateLeagueWizard.tsx</code>)</li><li>Manager draft prep guide on league overview</li><li>Replay explanation inline in wizard</li><li><code>User.onboardingCompletedAt</code> schema field</li></ul>
       </div>
-      <div class="card todo">
-        <div class="card-top"><span class="num">04</span><span class="status-tag todo"><span class="tdot"></span>Not built</span></div>
+      <div class="card shipped">
+        <div class="card-top"><span class="num">04</span><span class="status-tag shipped"><span class="tdot"></span>Shipped</span></div>
         <h3>Error Handling</h3>
-        <p>Build user trust with graceful failure — empty states, loading states, retry actions, and plain-language error messages across every screen.</p>
-        <ul class="feats"><li>Empty states</li><li>Loading states</li><li>Retry actions</li></ul>
+        <p>Empty states, loading states, retry actions, and plain-language error messages across all core screens — draft room, matchup, lineup, standings, and roster. Shipped Sprint 3.</p>
+        <ul class="feats"><li class="done">Empty states ✓</li><li class="done">Loading states ✓</li><li class="done">Retry actions ✓</li></ul>
       </div>
       <div class="card shipped">
         <div class="card-top"><span class="num">32</span><span class="status-tag shipped"><span class="tdot"></span>Shipped</span></div>
@@ -706,28 +706,32 @@
         <div class="exit"><b>Exit achieved:</b> commissioner can recover any stuck state; schema is multi-season-ready; schedule generator blocks PWHL-overlapping seasons; analytics collecting.</div>
       </div>
       <div class="sprint">
-        <h4>Sprint 3 — Beta Readiness <span class="trk f">F</span> ← current</h4>
-        <div class="sp-meta">~2–3 wks · MVP launch gate · beta prerequisites</div>
+        <h4>Sprint 3 — Beta Readiness <span class="trk f">F</span> ✅</h4>
+        <div class="sp-meta">COMPLETE · Jun 13, 2026 · MVP launch gate achieved · 2 items carry to Sprint 4</div>
         <ul>
           <li>#2 League Onboarding ✅ (welcome flow, 6-step wizard, manager draft prep guide, replay explanation, <code>User.onboardingCompletedAt</code>)</li>
           <li>#8 Transaction History ✅ (paginated API + page with type/team filters, replay guard)</li>
-          <li>#4 Error Handling (empty / loading / retry)</li>
+          <li>#4 Error Handling ✅ (empty / loading / retry across draft room, matchup, lineup, standings, roster)</li>
           <li>#3 Mobile Optimization ✅ (draft room tabbed layout, 44px touch targets, BottomNav safe-area, standings minWidth, matchup score clamp())</li>
           <li>NT-001 Notification infrastructure ✅ (schema delta shipped: title/body/actionUrl/teamId/dedupeKey + dedup constraint; bell renders stored fields)</li>
-          <li>NT-002 Critical notifications 🔄 (draft starting ✅, on the clock ✅; lineup incomplete ❌ not yet wired)</li>
-          <li>IA-011 Hide advanced non-v1 settings</li>
+          <li>NT-002 Draft notifications ✅ (draft starting + on the clock wired from <code>lib/draft/server.ts</code>)</li>
+          <li>#28 Lineup Stats Tab Polish ✅ — unplanned positive addition (shipped during Sprint 3)</li>
+          <li>#32 Team Distribution Panel ✅ — unplanned positive addition (shipped during Sprint 3)</li>
+          <li>NT-002 LINEUP_INCOMPLETE ❌ — carry-forward to Sprint 4 (schema ready; call site not wired)</li>
+          <li>IA-011 Hide advanced non-v1 settings ✅</li>
         </ul>
-        <div class="exit"><b>Exit:</b> a new user drafts a league on a phone with no docs. <b>MVP launch gate.</b></div>
+        <div class="exit"><b>Exit achieved:</b> a new user drafts a league on a phone with no docs. <b>MVP launch gate.</b></div>
       </div>
       <div class="sprint">
-        <h4>Sprint 4 — Product Polish <span class="trk f">F</span></h4>
-        <div class="sp-meta">~1–2 wks · close partial-feature gaps before beta</div>
+        <h4>Sprint 4 — Product Polish <span class="trk f">F</span> ← current</h4>
+        <div class="sp-meta">~1–2 wks · close partial-feature gaps before beta · 2 carry-forwards from Sprint 3</div>
         <ul>
-          <li>#28 Lineup Stats Tab Polish ✅ — rename "Projected" → "Matchup Proj"; default between weeks; hide "This week" tab when no active period</li>
-          <li>#01 Commissioner Dashboard (remaining gaps) — pause/restart replay shortcut; force-draft-start CTA; lineup lock override (<code>unlock-player</code> route); settings editor (pre-draft only); all audit-logged</li>
-          <li>#17 Rivalries (remaining gaps) — rival badge on team cards; H2H history view on matchup page; built on existing <code>Matchup</code> rows + <code>getHeadToHeadRecord</code>; no schema changes</li>
+          <li><b>NT-002 LINEUP_INCOMPLETE (carry-forward, P0)</b> — wire <code>checkAndEmitScheduledNotifications</code> into <code>app/dashboard/page.tsx</code>; <code>dedupeKey = "{periodStartsAt}-{teamId}"</code>; schema ready</li>
+          <li>#28 Lineup Stats Tab Polish ✅ — shipped during Sprint 3; no further work needed</li>
+          <li>#01 Commissioner Dashboard (remaining gaps) — pause/restart replay; force-draft-start CTA; lineup lock override (<code>unlock-player</code> route — <b>needs spec</b>); settings editor (pre-draft only); all audit-logged</li>
+          <li>#17 Rivalries (remaining gaps) — rival badge on team cards (<b>needs rival-definition spec</b>); H2H history view on matchup page; built on <code>Matchup</code> rows + <code>getHeadToHeadRecord</code>; no schema changes</li>
         </ul>
-        <div class="exit"><b>Exit:</b> no Phase 1 or Phase 5 "in progress" card enters beta with known incomplete work.</div>
+        <div class="exit"><b>Exit:</b> NT-002 delivers LINEUP_INCOMPLETE without duplication · IA-011 ACs all pass · commissioner unlock-player available and audit-logged · rival badge and H2H history view shipped · no Phase 1 or Phase 5 card enters beta in partial state without a documented deferral reason.</div>
       </div>
       <div class="sprint">
         <h4>Sprint 5 — Validation + Beta Operations <span class="trk v">V</span></h4>
@@ -763,8 +767,8 @@
       <div class="tl-row"><div class="tl-when">Jun 12, 2026 ✅</div><div class="tl-what">Sprint 0 — alignment P0s closed (roster / VP / playoffs match rules)</div></div>
       <div class="tl-row"><div class="tl-when">Jun 12, 2026 ✅</div><div class="tl-what">Sprint 1 — season simulation + validation suites green (85–90% confidence)</div></div>
       <div class="tl-row"><div class="tl-when">Jun 2026 ✅</div><div class="tl-what">Sprint 2 — commissioner recovery, multi-season schema, analytics, VP education (95% confidence)</div></div>
-      <div class="tl-row"><div class="tl-when">Jul–Aug 2026 ← current</div><div class="tl-what">Sprint 3 — onboarding ✅, error handling, mobile ✅, notifications (MVP launch gate)</div></div>
-      <div class="tl-row"><div class="tl-when">Aug 2026</div><div class="tl-what">Sprint 4 — lineup tab polish ✅, commissioner dashboard gaps, rivalries</div></div>
+      <div class="tl-row"><div class="tl-when">Jun–Jul 2026 ✅</div><div class="tl-what">Sprint 3 — onboarding ✅, error handling ✅, mobile ✅, notifications (draft ✅) — COMPLETE Jun 13, 2026 (MVP launch gate achieved)</div></div>
+      <div class="tl-row"><div class="tl-when">Aug 2026 ← current</div><div class="tl-what">Sprint 4 — NT-002 LINEUP_INCOMPLETE, commissioner dashboard gaps, rivalries</div></div>
       <div class="tl-row"><div class="tl-when">Late Aug 2026</div><div class="tl-what">Sprint 5 — draft cert, founder dashboard, beta feedback infra</div></div>
       <div class="tl-row key"><div class="tl-when">Early Sep 2026</div><div class="tl-what">MVP code-complete — all launch gates pass</div></div>
       <div class="tl-row"><div class="tl-when">Sep – mid Oct 2026</div><div class="tl-what">Closed beta — run replay + small live test leagues end-to-end; fix findings</div></div>

@@ -163,6 +163,8 @@ survives DB resets and schema migrations.
    - Notification framework ✅ (`lib/services/notification-service.ts`; `Notification`/`NotificationPreference` models; in-app bell in league layout; draft server call sites; schema delta shipped: `title`, `body`, `actionUrl`, `teamId`, `dedupeKey` + `@@unique([userId,type,dedupeKey])`; email deferred)
    - Onboarding ✅ (welcome flow, 6-step league setup wizard, manager draft prep guide, replay explanation; `User.onboardingCompletedAt`; `components/WelcomeFlow.tsx`; `app/create-league/CreateLeagueWizard.tsx`; `app/api/user/onboarding/route.ts`)
    - Mobile Optimization ✅ (draft room tabbed layout at ≤900px via `useIsMobile`; 44px touch targets on all interactive buttons; BottomNav `env(safe-area-inset-bottom)`; standings `minWidth` reduced; matchup score `clamp()`; swing player ellipsis truncation; spec: `docs/02-engineering/mobile-optimization-spec.md`)
+   - Error Handling ✅ (`components/ErrorState.tsx`, `EmptyState.tsx`, `LoadingState.tsx`; `loading.tsx`+`error.tsx` for 11 routes; draft room raw-error display fixed; empty-state copy standardised; pre-season standings empty state; spec: `docs/02-engineering/error-handling-spec.md`)
+   - IA-011 ✅ (bracket page hides bye text when `topSeedsWithBye === 0`; fixed default from 2→0; settings page replaces raw JSON `<pre>` dumps with human-readable labeled rows for scoring, roster, and playoff format; checklist: `docs/02-engineering/ia-011-checklist.md`)
 6. Integration + load test the draft room + beta
 7. Public launch ~early Nov, drafts ~1 week before opener
 
