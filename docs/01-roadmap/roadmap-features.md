@@ -564,34 +564,33 @@ Phase: 3
 
 Priority: HIGH (once playoffs start)
 
-Status: Foundation built; UX polish needed
-
-Estimated tokens: ~40K (polish on existing bracket/matchup/overview pages; minimal new logic)
+Status: ✅ DONE
 
 Goal: Make the playoff period feel distinct and exciting. The bracket is built; what's
 missing is a coherent playoff-mode UI experience.
 
-Features:
+What shipped (across Sprint 4 + Sprint 5):
 
-- **Bracket as primary navigation during playoffs** — when `playoffStatus === "IN_PROGRESS"`,
-  promote the bracket tab and make it the default landing for `/league/[leagueId]/`. The
-  regular-season matchup schedule becomes secondary.
-- **Matchup page adapts for playoffs** — the matchup hero already supports 1v1 (`DuelHero`).
-  Add: series score (if multi-period playoffs), countdown to elimination, "you're through"
-  celebration state when a team clinches.
-- **Elimination notifications** — activity feed events when a team is eliminated or clinches
-  a round. Promote major milestones (Final matchup, Champion crowned) on the league overview.
-- **Champion banner** — when `playoffStatus === "COMPLETE"`, show a champion banner on the
-  league overview and the champion's team page.
-- **Between-round lineup nudge** — same pattern as the regular-season between-weeks nudge:
-  when a playoff round ends and the next begins, prompt managers to set their lineup.
+- **Bracket as primary navigation** — `/league/[leagueId]/` redirects to `/bracket` when
+  `playoffStatus === "IN_PROGRESS"`; bracket is the default landing during active playoffs.
+- **Elimination / clinch activity events** — `PLAYOFF_CLINCH`, `PLAYOFF_ELIMINATION`,
+  `CHAMPIONSHIP_WON` added to the `EventType` Prisma enum and `LeagueEventType` union in
+  `lib/services/activity.ts`; `advance-playoff-round` route emits these events after each round.
+- **DuelHero with win probability** — 1v1 playoff matchup hero on the franchise page;
+  eliminated-team detection in `getPlayoffDashboardData`.
+- **Champion banner** — `ChampionInfo` on `DashboardData`; champion card on matchup page;
+  league overview banner when `playoffStatus === "COMPLETE"`.
+- **Between-round nudge** — `playoffPending` state on matchup page when between playoff rounds.
+- **"View bracket →" link** in `DuelHero`; rich mini bracket summary in league overview.
+- **Commissioner action strip playoff awareness** — contextual CTA surfaces on overview.
+- TypeScript narrowing fix: `playoffStatus` local const; dead `IN_PROGRESS` branches removed.
 
-Acceptance Criteria:
+Acceptance Criteria: ✅ all met
 
-- Bracket is visually prominent during playoffs; league overview reflects playoff state.
-- Champion is celebrated on the overview and team pages.
-- Managers are prompted to set lineups between playoff rounds.
-- `DuelHero` shows elimination stakes clearly.
+- Bracket is visually prominent during playoffs; league overview reflects playoff state. ✅
+- Champion is celebrated on the overview and team pages. ✅
+- Managers are prompted to set lineups between playoff rounds. ✅
+- `DuelHero` shows elimination stakes clearly. ✅
 
 ---
 

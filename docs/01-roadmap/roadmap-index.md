@@ -45,7 +45,7 @@ Implemented systems include:
 - Matchups (VTF regular season + 1v1 playoffs) & Matchup Center / Fantasy Home (hero scores, top performers, swing players, storyline chip, playing-tonight, roster breakdown)
 - Projections & Win Probability engine
 - Standings (with playoff race clinch/eliminate indicators)
-- Playoffs (seeding, bracket, single-elimination)
+- Playoffs (seeding, bracket, single-elimination, full playoff experience UX — bracket-as-primary-landing, elimination/clinch/champion activity events, champion banner, between-round lineup nudge)
 - Historical Replay & Season advancement / lifecycle (gap-week handling fixed; "⏩ Sim to playoffs" button scores all remaining regular-season weeks in one click)
 - Schedule management & scoring engine (VTF point scoring)
 - Victory Point (VP) scoring model (win/placement bonuses, `homeVP`/`awayVP`)
@@ -113,7 +113,10 @@ The list below is sequenced by **token efficiency** — each feature's estimated
 2. **Weekly Performance Dashboard (#29)** · ~65K · Sprint 5
    New page replacing the Schedule tab. Aggregates existing `Matchup` + `StatLine` rows; no schema changes. Pulled up from Sprint 6 — no schema changes, all reads on existing data, directly serves manager experience during beta.
 
-3. **Team Analysis & Insights (#25)** · ~85K · Sprint 6
+3. **Auto-Set Lineup** · ~60K · Sprint 6
+   One-click button on the lineup page that fills all active slots with the optimal combination of eligible, unlocked players based on projected FP (`lib/projections/`). No schema changes — writes via the existing `PUT /api/leagues/[leagueId]/lineup` endpoint. Priority: P1 (launch quality). Reduces new-manager friction during beta. Spec TBD.
+
+4. **Team Analysis & Insights (#25)** · ~85K · Sprint 6
    New Analysis tab on the matchup page. Complex aggregation but all reads on existing data; trade suggestions deferred until Trade System exists.
 
 4. **League Onboarding (#2)** · ~100K ✅ (SHIPPED)
