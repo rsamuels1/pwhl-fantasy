@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-950">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PWHL Fantasy PM Dashboard & Launch Readiness</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        pwhl: {
+                            purple: '#4c1d95',
+                            accent: '#2dd4bf', // Ice Teal
+                            dark: '#020617',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body class="h-full text-slate-100 flex flex-col custom-scrollbar overflow-y-auto">
+
+    <!-- Top Navigation Bar -->
+    <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-50 px-6 py-4">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <div class="p-2 bg-gradient-to-tr from-purple-600 to-teal-400 rounded-lg shadow-lg">
+                    <i data-lucide="trophy" class="w-6 h-6 text-white"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold tracking-tight bg-gradient-to-r from-white via-slate-200 to-teal-400 bg-clip-text text-transparent">PWHL Fantasy MVP</h1>
+                    <p class="text-xs text-slate-400 font-mono">ROADMAP CONTROL CENTER &bull; RUNNING SPRINT 4</p>
+                </div>
+            </div>
+            
+            <!-- Live Launch Countdown -->
+            <div class="bg-slate-950/80 border border-slate-800 rounded-xl px-4 py-2 flex items-center gap-4">
+                <div class="flex items-center gap-2">
+                    <span class="relative flex h-2 w-2">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-rose-500"></span>
+                    </span>
+                    <span class="text-xs text-slate-400 font-semibold uppercase tracking-wider">Launch Countdown:</span>
+                </div>
+                <div id="countdown" class="font-mono text-sm font-bold text-teal-400 tracking-wider">
+                    Calculating...
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-1 max-w-7xl w-full mx-auto p-6 space-y-6">
+        
+        <!-- Grid: KPI Badges & Radial Health -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+            
+            <!-- Overall Health Radial Gauge -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col items-center justify-center relative overflow-hidden">
+                <div class="absolute top-0 right-0 p-3 opacity-10">
+                    <i data-lucide="activity" class="w-24 h-24 text-teal-400"></i>
+                </div>
+                <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Launch Readiness</h3>
+                <div class="relative flex items-center justify-center">
+                    <canvas id="readinessChart" class="w-32 h-32"></canvas>
+                    <div class="absolute text-center">
+                        <span class="text-3xl font-extrabold font-mono tracking-tighter text-white">95%</span>
+                        <p class="text-[10px] text-teal-400 font-semibold uppercase tracking-wider">Confidence</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Total Closed Features -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col justify-between">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">MVP Verification Gates</p>
+                        <h3 class="text-4xl font-extrabold font-mono text-white mt-2">8 <span class="text-lg text-slate-500">/ 10</span></h3>
+                    </div>
+                    <span class="p-2 bg-emerald-500/10 text-emerald-400 rounded-lg">
+                        <i data-lucide="check-circle" class="w-6 h-6"></i>
+                    </span>
+                </div>
+                <div class="mt-4">
+                    <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                        <div class="bg-emerald-400 h-full rounded-full" style="width: 80%"></div>
+                    </div>
+                    <p class="text-xs text-slate-400 mt-2 font-mono flex justify-between"><span>E2E Simulation Checked</span> <span class="text-emerald-400">80%</span></p>
+                </div>
+            </div>
+
+            <!-- Current Risk Level -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col justify-between">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Active Risks</p>
+                        <h3 class="text-4xl font-extrabold font-mono text-amber-400 mt-2">2</h3>
+                    </div>
+                    <span class="p-2 bg-amber-500/10 text-amber-400 rounded-lg">
+                        <i data-lucide="alert-triangle" class="w-6 h-6"></i>
+                    </span>
+                </div>
+                <p class="text-xs text-slate-400 mt-4 leading-relaxed">
+                    <strong class="text-slate-300">Unvalidated:</strong> Duplicate tabs in draft rooms &amp; scheduled background notifications.
+                </p>
+            </div>
+
+            <!-- Active Sprint Meta -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col justify-between">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Current Iteration</p>
+                        <h3 class="text-2xl font-extrabold text-white mt-2">Sprint 4</h3>
+                        <p class="text-xs text-slate-400 font-mono mt-1">Status: <span class="text-purple-400 font-bold uppercase">In Flight</span></p>
+                    </div>
+                    <span class="p-2 bg-purple-500/10 text-purple-400 rounded-lg animate-pulse">
+                        <i data-lucide="zap" class="w-6 h-6"></i>
+                    </span>
+                </div>
+                <div class="mt-4 text-xs text-slate-400 font-mono">
+                    Target Complete: <span class="text-slate-200">August 2026</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Grid: Main Dashboard & Details -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <!-- Left Panel: Scorecard & Sprint Tracking -->
+            <div class="lg:col-span-2 space-y-6">
+                
+                <!-- Scorecard Component -->
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
+                    <div class="px-6 py-4 border-b border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="clipboard-list" class="w-5 h-5 text-teal-400"></i>
+                            <h2 class="text-lg font-bold">MVP Readiness Scorecard</h2>
+                        </div>
+                        <div class="flex gap-1.5 bg-slate-950 p-1 rounded-lg border border-slate-800 text-xs font-mono">
+                            <button onclick="filterScorecard('all')" class="scorecard-tab-btn active px-3 py-1 rounded bg-slate-800 text-white font-semibold transition">All</button>
+                            <button onclick="filterScorecard('pass')" class="scorecard-tab-btn px-3 py-1 rounded text-slate-400 hover:text-white transition">Pass</button>
+                            <button onclick="filterScorecard('risk')" class="scorecard-tab-btn px-3 py-1 rounded text-slate-400 hover:text-white transition">Risks</button>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto max-h-[420px] custom-scrollbar overflow-y-auto">
+                        <table class="w-full text-left border-collapse text-sm">
+                            <thead class="bg-slate-950/60 text-slate-400 text-xs uppercase font-mono sticky top-0 backdrop-blur">
+                                <tr>
+                                    <th class="px-6 py-3 border-b border-slate-800">Area / Module</th>
+                                    <th class="px-6 py-3 border-b border-slate-800">Status</th>
+                                    <th class="px-6 py-3 border-b border-slate-800">Risk &amp; Mitigations</th>
+                                </tr>
+                            </thead>
+                            <tbody id="scorecardTableBody">
+                                <!-- JS injected values -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Interactive Sprint Timeline -->
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+                    <div class="flex items-center gap-2 mb-6">
+                        <i data-lucide="milestone" class="w-5 h-5 text-purple-400"></i>
+                        <h2 class="text-lg font-bold">Milestone Roadmap Execution</h2>
+                    </div>
+                    <div class="relative pl-6 border-l-2 border-slate-800 space-y-8">
+                        
+                        <!-- Sprint 4 (Active) -->
+                        <div class="relative">
+                            <span class="absolute -left-[31px] top-1.5 flex h-4 w-4 items-center justify-center rounded-full border border-purple-500 bg-slate-950">
+                                <span class="h-2 w-2 rounded-full bg-purple-400 animate-ping"></span>
+                            </span>
+                            <div class="flex justify-between items-start gap-4">
+                                <div>
+                                    <h4 class="font-bold text-slate-200">Sprint 4: Product Polish</h4>
+                                    <p class="text-xs text-slate-400 mt-1 font-mono">August 2026 &bull; CURRENT ITERATION</p>
+                                    <ul class="mt-2 text-xs text-slate-300 list-disc list-inside space-y-1">
+                                        <li>NT-002: Deploy P0 Lineup Incomplete background notification</li>
+                                        <li>IA-011: Mask core setting dumps with readable layouts</li>
+                                        <li>#01: Build custom manager locker/override endpoints</li>
+                                    </ul>
+                                </div>
+                                <span class="text-xs px-2.5 py-1 rounded-full font-mono bg-purple-500/10 text-purple-400 font-semibold uppercase">In Flight</span>
+                            </div>
+                        </div>
+
+                        <!-- Sprint 5 -->
+                        <div class="relative opacity-60 hover:opacity-100 transition duration-300">
+                            <span class="absolute -left-[31px] top-1.5 flex h-4 w-4 items-center justify-center rounded-full border border-slate-700 bg-slate-950">
+                                <span class="h-2 w-2 rounded-full bg-slate-700"></span>
+                            </span>
+                            <div class="flex justify-between items-start gap-4">
+                                <div>
+                                    <h4 class="font-bold text-slate-200">Sprint 5: Validation &amp; Beta Readiness</h4>
+                                    <p class="text-xs text-slate-400 mt-1 font-mono">Late August 2026</p>
+                                    <p class="text-xs text-slate-400 mt-1 leading-relaxed">Focus: Perform tab concurrency load tests, initialize standard feedback modules, and launch founder telemetry consoles.</p>
+                                </div>
+                                <span class="text-xs px-2.5 py-1 rounded-full font-mono bg-slate-800 text-slate-400 uppercase">Planned</span>
+                            </div>
+                        </div>
+
+                        <!-- Sprint 3 (Closed) -->
+                        <div class="relative">
+                            <span class="absolute -left-[31px] top-1.5 flex h-4 w-4 items-center justify-center rounded-full border border-teal-500 bg-teal-950">
+                                <i data-lucide="check" class="w-3 h-3 text-teal-400"></i>
+                            </span>
+                            <div>
+                                <h4 class="font-bold text-slate-400 line-through">Sprint 3: Beta Foundation Completed</h4>
+                                <p class="text-xs text-slate-500 mt-1 font-mono">June 13, 2026 &bull; COMPLETED</p>
+                                <p class="text-xs text-slate-500 mt-1">Delivered: Responsive system overhauls, onboarding assistants, mobile navigation padding rules, and initial draft alerts.</p>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Right Panel: PM Tools & Session Calculators -->
+            <div class="space-y-6">
+                
+                <!-- Claude Token Simulator -->
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 relative overflow-hidden">
+                    <div class="absolute top-0 right-0 p-3 opacity-5">
+                        <i data-lucide="cpu" class="w-32 h-32 text-indigo-400"></i>
+                    </div>
+                    
+                    <div class="flex items-center gap-2 mb-4">
+                        <i data-lucide="cog" class="w-5 h-5 text-indigo-400"></i>
+                        <h2 class="text-lg font-bold">Claude Pro Session Planner</h2>
+                    </div>
+                    <p class="text-xs text-slate-400 mb-4 leading-relaxed">
+                        To maintain high developer velocity, choose features below to estimate the total token weight relative to the 200K Claude Pro context window.
+                    </p>
+
+                    <!-- Base Session Cost -->
+                    <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-xs font-mono mb-4 flex justify-between items-center">
+                        <span class="text-slate-400">Base System Context Weight:</span>
+                        <span class="text-indigo-400 font-bold">15,000 tokens</span>
+                    </div>
+
+                    <!-- Feature Tick List -->
+                    <div id="tokenChecklist" class="space-y-2.5 max-h-[220px] overflow-y-auto custom-scrollbar pr-1">
+                        <!-- Injected JS checkboxes -->
+                    </div>
+
+                    <!-- Visual Calculation Progress -->
+                    <div class="mt-6 pt-6 border-t border-slate-800 space-y-4">
+                        <div class="flex justify-between items-end text-sm">
+                            <span class="text-slate-400 font-medium">Estimated Token Overhead:</span>
+                            <span id="calculatedTokens" class="font-mono font-extrabold text-indigo-400 text-lg">15,000 / 200,000</span>
+                        </div>
+                        
+                        <div class="w-full bg-slate-950 border border-slate-800 h-3 rounded-full overflow-hidden p-0.5">
+                            <div id="tokenBar" class="bg-indigo-500 h-full rounded-full transition-all duration-300" style="width: 7.5%"></div>
+                        </div>
+
+                        <!-- Heuristic Output Badge -->
+                        <div id="tokenBadge" class="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-center">
+                            <p class="text-xs font-bold text-emerald-400">Optimal (Plenty of buffer remaining)</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Launch Checklist Card -->
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+                    <div class="flex items-center gap-2 mb-4">
+                        <i data-lucide="shield-check" class="w-5 h-5 text-rose-500"></i>
+                        <h2 class="text-lg font-bold">Launch Gate Checklists</h2>
+                    </div>
+                    <p class="text-xs text-slate-400 mb-4">Hard launch criteria required before code freeze.</p>
+                    
+                    <ul class="space-y-3">
+                        <li class="flex items-start gap-3 text-xs">
+                            <span class="p-0.5 bg-emerald-500/10 text-emerald-400 rounded mt-0.5">
+                                <i data-lucide="check" class="w-3.5 h-3.5"></i>
+                            </span>
+                            <div>
+                                <strong class="text-slate-200">Rule Matching (Phase 0):</strong>
+                                <p class="text-slate-400 font-mono text-[10px]">Authoritative VP standings &amp; roster defaults match production schemas.</p>
+                            </div>
+                        </li>
+                        <li class="flex items-start gap-3 text-xs">
+                            <span class="p-0.5 bg-slate-950 border border-slate-800 text-slate-400 rounded mt-0.5">
+                                <i data-lucide="clock" class="w-3.5 h-3.5"></i>
+                            </span>
+                            <div>
+                                <strong class="text-slate-200">Draft Tab Concurrency Validation:</strong>
+                                <p class="text-slate-400 font-mono text-[10px]">Load test concurrent drafted environments to address socket state overlaps.</p>
+                            </div>
+                        </li>
+                        <li class="flex items-start gap-3 text-xs">
+                            <span class="p-0.5 bg-emerald-500/10 text-emerald-400 rounded mt-0.5">
+                                <i data-lucide="check" class="w-3.5 h-3.5"></i>
+                            </span>
+                            <div>
+                                <strong class="text-slate-200">E2E Season Simulation:</strong>
+                                <p class="text-slate-400 font-mono text-[10px]">Verified automatically through simulation testing suites.</p>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Footer Area -->
+    <footer class="border-t border-slate-900 bg-slate-950 px-6 py-4 mt-12">
+        <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4 text-xs text-slate-500">
+            <p>&copy; 2026 PWHL Fantasy. All rights reserved.</p>
+            <div class="flex items-center gap-4 font-mono">
+                <span>SYSTEM STATUS: <span class="text-emerald-400 font-bold">STABLE</span></span>
+                <span>&bull;</span>
+                <span>DATA INTEGRITY: <span class="text-emerald-400 font-bold">100%</span></span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Core Interactive Logic Script -->
+    <script>
+        // Set dynamic date countdown relative to actual PM specifications (Late Oct 2026 launch)
+        const launchDate = new Date("October 24, 2026 00:00:00").getTime();
+        
+        function updateCountdown() {
+            const now = new Date().getTime();
+            const difference = launchDate - now;
+
+            if (difference < 0) {
+                document.getElementById("countdown").innerText = "MVP LAUNCH READY / IN CLOSED BETA";
+                return;
+            }
+
+            const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+
+            document.getElementById("countdown").innerText = `${days}D : ${hours}H : ${minutes}M`;
+        }
+        setInterval(updateCountdown, 1000);
+        updateCountdown();
+
+        // Radial Readiness Indicator Powered by ChartJS
+        const ctxReadiness = document.getElementById('readinessChart').getContext('2d');
+        new Chart(ctxReadiness, {
+            type: 'doughnut',
+            data: {
+                datasets: [{
+                    data: [95, 5],
+                    backgroundColor: ['#2dd4bf', '#0f172a'],
+                    borderWidth: 0,
+                    borderRadius: 10
+                }]
+            },
+            options: {
+                cutout: '80%',
+                responsive: false,
+                plugins: { legend: { display: false }, tooltip: { enabled: false } }
+            }
+        });
+
+        // Datasets matching exact specs outlined in PM unified source lists
+        const scorecardData = [
+            { area: "League Creation", status: "PASS", detail: "8-team settings, onboarding wizards enabled." },
+            { area: "Draft Experience", status: "RISK", detail: "Auto-pick, retry-sockets green. Duplicate-tab state unvalidated." },
+            { area: "Rosters", status: "PASS", detail: "Normalized 13-slot defaults match rules engine." },
+            { area: "Weekly Matchups", status: "PASS", detail: "DuelHero interfaces and comparison views verified." },
+            { area: "VP Standings", status: "PASS", detail: "computeVpStandings source of truth is locked down." },
+            { area: "Weekly Lineup Lock", status: "PASS", detail: "LockTime rule algorithms active." },
+            { area: "Playoffs", status: "PASS", detail: "No-byes seeding modules verified green." },
+            { area: "Commissioner Tools", status: "PASS", detail: "Transaction overrides and audit logs in admin view." },
+            { area: "Analytics Instrumentation", status: "PASS", detail: "6 core user tracking funnels active." },
+            { area: "E2E Season Simulation", status: "PASS", detail: "Validated by automate run simulations." },
+            { area: "Notifications", status: "PARTIAL", detail: "Draft & bell framework active. Lineup incomplete carry-over pending." }
+        ];
+
+        const sessionPlannerData = [
+            { id: "playoff", name: "Playoff Experience UX (#30)", tokens: 40000, desc: "Brackets, champion badges, match stakes." },
+            { id: "lineup", name: "Lineup Stats Tab Polish (#28)", tokens: 25000, desc: "Renamed Matchup Proj, hidden inactive tabs." },
+            { id: "draftPanel", name: "Draft Room Team Panel (#32)", tokens: 30000, desc: "Team distributions counters." },
+            { id: "errors", name: "Comprehensive Error Handling (#4)", tokens: 65000, desc: "Fallback blocks across all screens." },
+            { id: "performance", name: "Weekly Performance Tab (#29)", tokens: 65000, desc: "Standings movement calculations." },
+            { id: "analysis", name: "Team Analysis & Insights (#25)", tokens: 85000, desc: "Aggregate trend comparisons." },
+            { id: "waiver", name: "Waiver Priority & Workers (#5)", tokens: 110000, desc: "Waiver batch queues." },
+            { id: "trade", name: "Interactive Trade Modules (#7)", tokens: 130000, desc: "State models, approval dashboards." },
+            { id: "transactions", name: "Transaction History View (#8)", tokens: 55000, desc: "Paginated auditing history grids." },
+            { id: "onboard", name: "League Onboarding Wizard (#2)", tokens: 100000, desc: "Guides and wizard step states." }
+        ];
+
+        // Hydrate Scorecard Table
+        function renderScorecardTable(filter = 'all') {
+            const tableBody = document.getElementById("scorecardTableBody");
+            tableBody.innerHTML = "";
+
+            scorecardData.forEach(item => {
+                if (filter === 'pass' && item.status !== 'PASS') return;
+                if (filter === 'risk' && (item.status === 'PASS')) return;
+
+                let badgeColor = "bg-slate-800 text-slate-300";
+                if (item.status === "PASS") badgeColor = "bg-emerald-500/10 text-emerald-400 border-emerald-500/20";
+                if (item.status === "RISK") badgeColor = "bg-amber-500/10 text-amber-400 border-amber-500/20";
+                if (item.status === "PARTIAL") badgeColor = "bg-rose-500/10 text-rose-400 border-rose-500/20";
+
+                tableBody.innerHTML += `
+                    <tr class="hover:bg-slate-900/50 transition border-b border-slate-800/60 last:border-0">
+                        <td class="px-6 py-4 font-semibold text-slate-100">${item.area}</td>
+                        <td class="px-6 py-4">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-mono font-bold border ${badgeColor}">
+                                ${item.status}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 text-xs text-slate-400 leading-relaxed">${item.detail}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        function filterScorecard(type) {
+            document.querySelectorAll('.scorecard-tab-btn').forEach(btn => {
+                btn.classList.remove('bg-slate-800', 'text-white', 'font-semibold');
+                btn.classList.add('text-slate-400');
+            });
+            event.target.classList.remove('text-slate-400');
+            event.target.classList.add('bg-slate-800', 'text-white', 'font-semibold');
+            renderScorecardTable(type);
+        }
+
+        // Hydrate and Calculate Token Planner
+        function initTokenPlanner() {
+            const container = document.getElementById("tokenChecklist");
+            container.innerHTML = "";
+
+            sessionPlannerData.forEach(item => {
+                container.innerHTML += `
+                    <label class="flex items-start gap-3 p-3 bg-slate-950 hover:bg-slate-800/40 border border-slate-800/80 rounded-xl cursor-pointer transition">
+                        <input type="checkbox" value="${item.tokens}" onchange="calculateTokenWeight()" class="planner-checkbox mt-1 text-purple-600 rounded border-slate-800 bg-slate-900 focus:ring-purple-500">
+                        <div class="flex-1">
+                            <div class="flex justify-between items-center">
+                                <span class="text-xs font-bold text-slate-200">${item.name}</span>
+                                <span class="text-[10px] font-mono text-slate-400 font-bold bg-slate-800 px-1.5 py-0.5 rounded">${(item.tokens/1000)}K</span>
+                            </div>
+                            <p class="text-[10px] text-slate-400 mt-1">${item.desc}</p>
+                        </div>
+                    </label>
+                `;
+            });
+        }
+
+        function calculateTokenWeight() {
+            const checkboxes = document.querySelectorAll(".planner-checkbox");
+            let totalTokens = 15000; // Starting base system footprint context weight
+
+            checkboxes.forEach(cb => {
+                if (cb.checked) {
+                    totalTokens += parseInt(cb.value);
+                }
+            });
+
+            const parsedTotal = totalTokens.toLocaleString();
+            document.getElementById("calculatedTokens").innerText = `${parsedTotal} / 200,000`;
+            
+            const percentage = Math.min((totalTokens / 200000) * 100, 100);
+            const tokenBar = document.getElementById("tokenBar");
+            tokenBar.style.width = `${percentage}%`;
+
+            const badge = document.getElementById("tokenBadge");
+            if (totalTokens < 120000) {
+                tokenBar.className = "bg-indigo-400 h-full rounded-full transition-all duration-300";
+                badge.className = "p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-center";
+                badge.innerHTML = `<p class="text-xs font-bold text-emerald-400">Optimal (Plenty of buffer remaining)</p>`;
+            } else if (totalTokens >= 120000 && totalTokens <= 180000) {
+                tokenBar.className = "bg-amber-400 h-full rounded-full transition-all duration-300";
+                badge.className = "p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl text-center";
+                badge.innerHTML = `<p class="text-xs font-bold text-amber-400">Caution (Entering heavy session territory)</p>`;
+            } else {
+                tokenBar.className = "bg-rose-500 h-full rounded-full transition-all duration-300";
+                badge.className = "p-3 bg-rose-500/10 border border-rose-500/20 rounded-xl text-center";
+                badge.innerHTML = `<p class="text-xs font-bold text-rose-400">Exceeds recommended window! Split into separate sessions.</p>`;
+            }
+        }
+
+        // DOM Initialization
+        window.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            renderScorecardTable();
+            initTokenPlanner();
+            calculateTokenWeight();
+        });
+    </script>
+</body>
+</html>

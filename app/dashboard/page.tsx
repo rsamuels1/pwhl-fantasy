@@ -5,6 +5,7 @@ import { getReplayNow } from "@/lib/replayTime";
 import { getMatchupQuickSummary, getTeamTopPerformers, type MatchupQuickSummary } from "@/lib/services/matchup-summary";
 import Link from "next/link";
 import WelcomeFlow from "@/components/WelcomeFlow";
+import { checkAndEmitScheduledNotifications } from "@/lib/services/notification-service";
 
 function MatchupHero({ summary, teamName }: { summary: MatchupQuickSummary; teamName: string }) {
   const isActive   = summary.status === "active";
@@ -85,6 +86,9 @@ export default async function DashboardPage() {
 
   const devNow = await getDevNow();
   const nowMs = devNow;
+
+  // Run scheduled checks (like LINEUP_INCOMPLETE notifications) for the current user
+  await checkAndEmitScheduledNotifications(user.id, nowMs, prisma);
 
   const ownedTeams = await prisma.fantasyTeam.findMany({
     where: { ownerId: user.id },
