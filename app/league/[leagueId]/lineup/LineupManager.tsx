@@ -2,6 +2,7 @@
 
 import { useState, useTransition, useEffect } from "react";
 import type { RosterSettings } from "@/lib/lineup";
+import { computeOptimalLineup } from "@/lib/lineup";
 import LockCountdown from "@/components/LockCountdown";
 
 export type SlotType = "FORWARD" | "DEFENSE" | "GOALIE" | "UTIL" | "BENCH" | "IR";
@@ -167,6 +168,49 @@ export default function LineupManager({
     setSelectedId(null);
   }
 
+  function autoSet() {
+    if (!projectedStats) return;
+    setError(null);
+    setHasEverEdited(true);
+
+    // Convert roster to format expected by computeOptimalLineup
+    const rosterForOptimizer = roster.map((p) => ({
+      playerId: p.playerId,
+      position: p.position,
+      active: p.active,
+      slot: p.slot,
+      lockedAt: p.lockedAt,
+      hasPlayedThisPeriod: p.hasPlayedThisPeriod,
+      eligibleSlots: p.eligibleSlots,
+      projectedFp: projectedStats[p.playerId]?.projectedFp ?? 0,
+    }));
+
+    const optimalAssignment = computeOptimalLineup(rosterForOptimizer, rosterSettings);
+
+    // Check if any changes
+    let hasChanges = false;
+    for (const [playerId, targetSlot] of optimalAssignment) {
+      const current = roster.find((p) => p.playerId === playerId)?.slot;
+      if (current !== targetSlot) {
+        hasChanges = true;
+        break;
+      }
+    }
+
+    if (!hasChanges) {
+      setError("Your lineup is already optimal!");
+      return;
+    }
+
+    // Apply the optimal assignment to roster state
+    setRoster((r) =>
+      r.map((p) => {
+        const targetSlot = optimalAssignment.get(p.playerId);
+        return targetSlot && targetSlot !== p.slot ? { ...p, slot: targetSlot } : p;
+      })
+    );
+  }
+
   async function saveLineup() {
     if (!hasPendingChanges || isSaving) return;
     setIsSaving(true);
@@ -302,6 +346,23 @@ export default function LineupManager({
         </div>
 
         <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
+          {/* Auto-set Lineup button */}
+          <button
+            onClick={() => autoSet()}
+            disabled={!projectedStats || isSaving}
+            title={!projectedStats ? "Projections not available" : "Optimize lineup by projected points"}
+            style={{
+              minHeight: 36, padding: "0 14px", borderRadius: 8, border: "none", cursor: projectedStats && !isSaving ? "pointer" : "default",
+              fontSize: 12, fontWeight: 700,
+              background: projectedStats && !isSaving ? "rgba(168,85,247,0.2)" : "rgba(255,255,255,0.05)",
+              color: projectedStats && !isSaving ? "#d8b4fe" : "#64748b",
+              transition: "background 0.2s, color 0.2s",
+              opacity: !projectedStats || isSaving ? 0.5 : 1,
+            }}
+          >
+            Auto-set
+          </button>
+
           {/* Save Lineup button */}
           <button
             onClick={() => saveLineup()}

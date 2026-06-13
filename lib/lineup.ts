@@ -4,6 +4,17 @@
 
 import type { LineupSlot, Position } from "@prisma/client";
 
+export interface RosterEntryWithProjection {
+  playerId: string;
+  position: "FORWARD" | "DEFENSE" | "GOALIE";
+  active: boolean;
+  slot: LineupSlot;
+  lockedAt: string | null;
+  hasPlayedThisPeriod: boolean;
+  eligibleSlots: LineupSlot[];
+  projectedFp?: number;
+}
+
 export interface RosterSettings {
   forward?: number;
   defense?: number;
@@ -84,4 +95,90 @@ export function lockTime(
     if (g.startsAt >= windowStart && g.startsAt <= now) return g.startsAt;
   }
   return null;
+}
+
+// Compute optimal lineup slot assignment by projected FP, respecting locks and constraints.
+// Returns a Map of playerId → targetSlot showing the optimal arrangement.
+// Locked players stay in their current slot. Already-played-this-period active players cannot move to bench.
+export function computeOptimalLineup(
+  roster: RosterEntryWithProjection[],
+  settings: RosterSettings
+): Map<string, LineupSlot> {
+  const result = new Map<string, LineupSlot>();
+
+  const ACTIVE_SLOTS: LineupSlot[] = ["FORWARD", "DEFENSE", "GOALIE", "UTIL"];
+
+  // Separate roster into categories
+  const locked = new Set(roster.filter((p) => p.lockedAt).map((p) => p.playerId));
+  const pinnedActive = new Set(
+    roster.filter((p) => p.hasPlayedThisPeriod && ACTIVE_SLOTS.includes(p.slot)).map((p) => p.playerId)
+  );
+  const moveable = roster.filter((p) => !locked.has(p.playerId) && !pinnedActive.has(p.playerId));
+
+  // Sort moveable players descending by projected FP (with name as tiebreaker for determinism)
+  const sorted = moveable.sort((a, b) => {
+    const fpDiff = (b.projectedFp ?? 0) - (a.projectedFp ?? 0);
+    if (fpDiff !== 0) return fpDiff;
+    // Tiebreaker: would need player name, but we don't have it here, so just use playerId
+    return a.playerId.localeCompare(b.playerId);
+  });
+
+  // Build the list of active seats to fill
+  const activeSeats: LineupSlot[] = [];
+  for (const slot of ACTIVE_SLOTS) {
+    const count = settings[slot.toLowerCase() as keyof RosterSettings] ?? 0;
+    for (let i = 0; i < count; i++) activeSeats.push(slot);
+  }
+
+  // Pre-fill locked and pinned-active players' slots as occupied
+  const occupiedSlots = new Map<LineupSlot, number>();
+  for (const slot of ACTIVE_SLOTS) {
+    occupiedSlots.set(slot, 0);
+  }
+  for (const p of roster) {
+    if (locked.has(p.playerId) || pinnedActive.has(p.playerId)) {
+      if (ACTIVE_SLOTS.includes(p.slot)) {
+        occupiedSlots.set(p.slot, (occupiedSlots.get(p.slot) ?? 0) + 1);
+        result.set(p.playerId, p.slot);
+      }
+    }
+  }
+
+  // Greedily fill remaining active seats with sorted moveable players
+  const placed = new Set(result.keys());
+  for (const player of sorted) {
+    if (placed.has(player.playerId)) continue;
+
+    // Try to place in an available active slot they're eligible for
+    let placed_ = false;
+    for (const targetSlot of activeSeats) {
+      if (placed_) break;
+      if (!player.eligibleSlots.includes(targetSlot)) continue;
+
+      const occupied = occupiedSlots.get(targetSlot) ?? 0;
+      const capacity = settings[targetSlot.toLowerCase() as keyof RosterSettings] ?? 0;
+
+      if (occupied < capacity) {
+        result.set(player.playerId, targetSlot);
+        occupiedSlots.set(targetSlot, occupied + 1);
+        placed.add(player.playerId);
+        placed_ = true;
+      }
+    }
+
+    // If not placed in active, put in bench
+    if (!placed_) {
+      result.set(player.playerId, "BENCH");
+      placed.add(player.playerId);
+    }
+  }
+
+  // All other moveable players go to bench (not placed above)
+  for (const player of moveable) {
+    if (!placed.has(player.playerId)) {
+      result.set(player.playerId, "BENCH");
+    }
+  }
+
+  return result;
 }

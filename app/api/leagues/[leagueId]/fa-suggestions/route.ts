@@ -1,0 +1,126 @@
+import { prisma } from "@/lib/db";
+import { apiRequireLeagueMember } from "@/lib/auth";
+import { scoreStatLine, DEFAULT_SCORING } from "@/lib/scoring";
+import type { ScoringSettings } from "@/lib/scoring";
+import type { Position } from "@prisma/client";
+import type { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
+
+const STAT_SELECT = {
+  playerId: true,
+  goals: true,
+  assists: true,
+  shots: true,
+  plusMinus: true,
+  penaltyMinutes: true,
+  powerPlayPts: true,
+  hits: true,
+  blocks: true,
+  saves: true,
+  goalsAgainst: true,
+  shutout: true,
+  win: true,
+} as const;
+
+type RawStatLine = typeof STAT_SELECT;
+
+export async function GET(
+  req: NextRequest,
+  { params }: { params: Promise<{ leagueId: string }> }
+) {
+  try {
+    const { leagueId } = await params;
+    const user = await apiRequireLeagueMember(leagueId, undefined as any);
+    if (user instanceof NextResponse) return user;
+
+    const league = await prisma.fantasyLeague.findUnique({
+      where: { id: leagueId },
+      select: { season: true, scoringSettings: true },
+    });
+
+    if (!league) return NextResponse.json({ error: "League not found" }, { status: 404 });
+
+    // Get all unrostered active players
+    const rosterEntries = await prisma.rosterEntry.findMany({
+      where: { fantasyTeam: { leagueId } },
+      select: { playerId: true },
+    });
+    const rosteredPlayerIds = new Set(rosterEntries.map((e) => e.playerId));
+
+    const unrosteredPlayers = await prisma.player.findMany({
+      where: {
+        active: true,
+        id: { notIn: Array.from(rosteredPlayerIds) },
+      },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        position: true,
+        team: { select: { abbreviation: true } },
+      },
+    });
+
+    // Fetch recent stat lines for projection (last 90 days)
+    const ninetyDaysAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
+    const statLines = await prisma.statLine.findMany({
+      where: {
+        playerId: { in: unrosteredPlayers.map((p) => p.id) },
+        game: {
+          season: league.season,
+          startsAt: { gte: ninetyDaysAgo },
+        },
+      },
+      select: STAT_SELECT,
+      orderBy: { game: { startsAt: "desc" } },
+    });
+
+    const scoring = (league.scoringSettings && Object.keys(league.scoringSettings as object).length > 0
+      ? league.scoringSettings
+      : DEFAULT_SCORING) as ScoringSettings;
+
+    // Group stat lines by player, keeping only last 5
+    const linesByPlayer: Record<string, typeof statLines> = {};
+    for (const line of statLines) {
+      if (!linesByPlayer[line.playerId]) linesByPlayer[line.playerId] = [];
+      if (linesByPlayer[line.playerId].length < 5) {
+        linesByPlayer[line.playerId].push(line as any);
+      }
+    }
+
+    // Compute projections for each player
+    const positionMap: Record<string, Position> = {};
+    for (const p of unrosteredPlayers) {
+      positionMap[p.id] = p.position as Position;
+    }
+
+    const suggestions = unrosteredPlayers
+      .map((player) => {
+        const lines = linesByPlayer[player.id] ?? [];
+        if (lines.length === 0) return null;
+
+        const totalFp = lines.reduce(
+          (sum, l) => sum + scoreStatLine(l, player.position as Position, scoring),
+          0
+        );
+        const avgFpPerGame = Math.round((totalFp / lines.length) * 100) / 100;
+
+        return {
+          playerId: player.id,
+          playerName: `${player.firstName} ${player.lastName}`,
+          playerTeam: player.team?.abbreviation ?? null,
+          position: player.position,
+          projectedFp: avgFpPerGame,
+          avgFpPerGame,
+        };
+      })
+      .filter((s): s is NonNullable<typeof s> => s !== null)
+      .sort((a, b) => b.projectedFp - a.projectedFp)
+      .slice(0, 10);
+
+    return NextResponse.json(suggestions);
+  } catch (err) {
+    console.error("FA suggestions error:", err);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
+}
