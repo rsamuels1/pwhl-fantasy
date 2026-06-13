@@ -1,0 +1,32 @@
+
+**Response**:
+- **200 OK**: Returns an authentication token.
+  ```json
+  {
+    "token": "string"
+  }
+  ```
+- **400 Bad Request**: Email or password is missing.
+  ```json
+  {
+    "error": "Email and password are required."
+  }
+  ```
+
+### POST /api/auth/logout
+
+**Description**: Logs out a user.
+
+**Response**:
+- **200 OK**: User logged out successfully.
+  ```json
+  {
+    "message": "Logged out"
+  }
+  ```
+
+### POST /api/auth/register
+
+**Description**: Registers a new user.
+
+**Request Body**:
