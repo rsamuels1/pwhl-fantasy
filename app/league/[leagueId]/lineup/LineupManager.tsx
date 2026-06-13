@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import type { RosterSettings } from "@/lib/lineup";
 import LockCountdown from "@/components/LockCountdown";
 
@@ -92,8 +92,12 @@ export default function LineupManager({
   projectedStats, nextWeekLabel,
 }: Props) {
   const [roster, setRoster] = useState<RosterEntryRow[]>(initialRoster);
+  const [savedRoster, setSavedRoster] = useState<RosterEntryRow[]>(initialRoster);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [hasEverEdited, setHasEverEdited] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [justSaved, setJustSaved] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [statsView, setStatsView] = useState<StatsView>(
     thisWeekLabel ? "thisWeek" : (nextWeekLabel ? "projected" : "season")
@@ -104,6 +108,23 @@ export default function LineupManager({
   const benchPlayers = roster.filter((p) => p.slot === "BENCH");
   const irPlayers = roster.filter((p) => p.slot === "IR");
   const tabOptions: StatsView[] = ["projected", ...(thisWeekLabel ? ["thisWeek" as StatsView] : []), "lastWeek", "season"];
+
+  // Detect pending changes by comparing roster to savedRoster
+  const hasPendingChanges = roster.some((p) => {
+    const saved = savedRoster.find((s) => s.playerId === p.playerId);
+    return saved?.slot !== p.slot;
+  });
+
+  // Use beforeunload to warn if leaving with unsaved changes
+  useEffect(() => {
+    if (!hasPendingChanges) return;
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [hasPendingChanges]);
 
   const seatedActive: Array<{ slot: SlotType; index: number; player: RosterEntryRow | null }> = (() => {
     const bySlot: Record<string, RosterEntryRow[]> = {};
@@ -128,7 +149,7 @@ export default function LineupManager({
     return thisWeekStats[playerId] ?? null;
   }
 
-  async function moveTo(targetSlot: SlotType, targetPlayerId?: string) {
+  function moveTo(targetSlot: SlotType, targetPlayerId?: string) {
     if (!selected) return;
     if (targetPlayerId === selected.playerId) { setSelectedId(null); return; }
     const newSlot = targetPlayerId
@@ -137,29 +158,82 @@ export default function LineupManager({
     if (newSlot === selected.slot) { setSelectedId(null); return; }
 
     setError(null);
-    const prev = roster;
+    setHasEverEdited(true);
     setRoster((r) => r.map((p) => {
       if (p.playerId === selected.playerId) return { ...p, slot: newSlot };
       if (targetPlayerId && p.playerId === targetPlayerId) return { ...p, slot: selected.slot };
       return p;
     }));
     setSelectedId(null);
+  }
 
-    startTransition(async () => {
-      const body = targetPlayerId
-        ? { teamId, playerId: selected.playerId, slot: newSlot, swapWithPlayerId: targetPlayerId }
-        : { teamId, playerId: selected.playerId, slot: newSlot };
-      const res = await fetch(`/api/leagues/${leagueId}/lineup`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-      if (!res.ok) {
-        const data = await res.json() as { error?: string };
-        setRoster(prev);
-        setError(data.error ?? "Failed to update lineup.");
+  async function saveLineup() {
+    if (!hasPendingChanges || isSaving) return;
+    setIsSaving(true);
+    setError(null);
+
+    const moves: Array<{ playerId: string; slot: SlotType; swapWithPlayerId?: string }> = [];
+
+    // Compute the diff and detect swaps
+    const rosterMap = new Map(roster.map((p) => [p.playerId, p.slot]));
+    const savedMap = new Map(savedRoster.map((p) => [p.playerId, p.slot]));
+    const processed = new Set<string>();
+
+    for (const player of roster) {
+      if (processed.has(player.playerId)) continue;
+      const prevSlot = savedMap.get(player.playerId);
+      if (prevSlot === player.slot) continue;
+
+      // Check if this is part of a swap (two players exchanging positions)
+      const swappedWith = roster.find((p) =>
+        !processed.has(p.playerId) &&
+        p.playerId !== player.playerId &&
+        savedMap.get(p.playerId) === player.slot &&
+        rosterMap.get(p.playerId) === prevSlot
+      );
+
+      if (swappedWith) {
+        moves.push({
+          playerId: player.playerId,
+          slot: player.slot,
+          swapWithPlayerId: swappedWith.playerId,
+        });
+        processed.add(swappedWith.playerId);
+      } else {
+        moves.push({
+          playerId: player.playerId,
+          slot: player.slot,
+        });
       }
-    });
+      processed.add(player.playerId);
+    }
+
+    // Fire all PUT calls in sequence
+    try {
+      for (const move of moves) {
+        const res = await fetch(`/api/leagues/${leagueId}/lineup`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ teamId, ...move }),
+        });
+        if (!res.ok) {
+          const data = await res.json() as { error?: string };
+          setRoster(savedRoster);
+          setError(data.error ?? "Failed to update lineup.");
+          setIsSaving(false);
+          return;
+        }
+      }
+      // Success: update saved state and show confirmation
+      setSavedRoster(roster);
+      setJustSaved(true);
+      setTimeout(() => setJustSaved(false), 1500);
+    } catch (err) {
+      setRoster(savedRoster);
+      setError("An error occurred while saving. Please try again.");
+    } finally {
+      setIsSaving(false);
+    }
   }
 
   function selectPlayer(playerId: string) {
@@ -224,31 +298,48 @@ export default function LineupManager({
           <h1 style={{ fontSize: 22, margin: 0 }}>{teamName}</h1>
           <span style={{ color: "#64748b", fontSize: 13 }}>
             {activeCount} active · {benchPlayers.length} bench
-            {isPending && <span style={{ marginLeft: 10, color: "#60a5fa" }}>Saving…</span>}
           </span>
         </div>
 
-        {/* Stats view toggle */}
-        <div style={{ display: "flex", gap: 4, background: "rgba(255,255,255,0.05)", borderRadius: 8, padding: 3 }}>
-          {tabOptions.map((view) => {
-            const label = view === "projected" ? "Matchup Proj" : view === "season" ? "Season" : view === "lastWeek" ? "Last week" : "This week";
-            const disabled = (view === "thisWeek" && !thisWeekLabel) || (view === "projected" && !nextWeekLabel);
-            return (
-              <button
-                key={view}
-                onClick={() => !disabled && setStatsView(view)}
-                disabled={disabled}
-                style={{
-                  minHeight: 36, padding: "0 12px", borderRadius: 6, border: "none", cursor: disabled ? "default" : "pointer", fontSize: 12, fontWeight: 600,
-                  background: statsView === view ? "rgba(99,102,241,0.3)" : "transparent",
-                  color: disabled ? "#334155" : statsView === view ? "#a5b4fc" : "#64748b",
-                  transition: "background 0.1s, color 0.1s",
-                }}
-              >
-                {label}
-              </button>
-            );
-          })}
+        <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
+          {/* Save Lineup button */}
+          <button
+            onClick={() => saveLineup()}
+            disabled={!hasPendingChanges || isSaving}
+            style={{
+              minHeight: 36, padding: "0 14px", borderRadius: 8, border: "none", cursor: hasPendingChanges && !isSaving ? "pointer" : "default",
+              fontSize: 12, fontWeight: 700,
+              background: justSaved ? "rgba(52,211,153,0.15)" : hasPendingChanges && !isSaving ? "rgba(99,102,241,0.3)" : "rgba(255,255,255,0.05)",
+              color: justSaved ? "#34d399" : hasPendingChanges && !isSaving ? "#a5b4fc" : "#64748b",
+              transition: "background 0.2s, color 0.2s",
+              opacity: isSaving ? 0.6 : 1,
+            }}
+          >
+            {justSaved ? "✓ Lineup saved" : `Save Lineup${hasPendingChanges ? ` (${roster.filter((p) => savedRoster.find((s) => s.playerId === p.playerId)?.slot !== p.slot).length} changes)` : ""}`}
+          </button>
+
+          {/* Stats view toggle */}
+          <div style={{ display: "flex", gap: 4, background: "rgba(255,255,255,0.05)", borderRadius: 8, padding: 3 }}>
+            {tabOptions.map((view) => {
+              const label = view === "projected" ? "Matchup Proj" : view === "season" ? "Season" : view === "lastWeek" ? "Last week" : "This week";
+              const disabled = (view === "thisWeek" && !thisWeekLabel) || (view === "projected" && !nextWeekLabel);
+              return (
+                <button
+                  key={view}
+                  onClick={() => !disabled && setStatsView(view)}
+                  disabled={disabled}
+                  style={{
+                    minHeight: 36, padding: "0 12px", borderRadius: 6, border: "none", cursor: disabled ? "default" : "pointer", fontSize: 12, fontWeight: 600,
+                    background: statsView === view ? "rgba(99,102,241,0.3)" : "transparent",
+                    color: disabled ? "#334155" : statsView === view ? "#a5b4fc" : "#64748b",
+                    transition: "background 0.1s, color 0.1s",
+                  }}
+                >
+                  {label}
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
 
@@ -260,6 +351,17 @@ export default function LineupManager({
       )}
       {(statsView === "thisWeek" && thisWeekLabel) && (
         <div style={{ fontSize: 12, color: "#64748b" }}>{thisWeekLabel}</div>
+      )}
+
+      {/* Entry-state instruction tip */}
+      {!hasEverEdited && !selected && (
+        <div style={{
+          padding: "10px 14px", borderRadius: 10,
+          background: "rgba(100,116,139,0.08)", border: "1px solid rgba(100,116,139,0.15)",
+          fontSize: 12, color: "#94a3b8",
+        }}>
+          Tap a player to select them, then tap where to move them — changes save when you press Save Lineup.
+        </div>
       )}
 
       {selected && (

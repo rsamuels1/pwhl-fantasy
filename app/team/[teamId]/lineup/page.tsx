@@ -133,16 +133,22 @@ export default async function TeamLineupPage({ params }: Props) {
   let periodForGames = activePeriod ?? upcomingPeriod;
 
   // Playoff period fallback: if no regular-season period is active/upcoming,
-  // check for a current in-progress playoff matchup
+  // check for a current in-progress playoff matchup (unscored or in-progress)
   if (periodForGames === null && fullTeam.league.playoffStatus !== "NOT_STARTED") {
     const playoffMatchup = await prisma.matchup.findFirst({
       where: {
         leagueId,
         isPlayoff: true,
-        status: { not: "COMPLETE" },
         OR: [
-          { homeTeamId: teamId },
-          { awayTeamId: teamId },
+          { homeScore: null },  // matchup is not yet scored
+        ],
+        AND: [
+          {
+            OR: [
+              { homeTeamId: teamId },
+              { awayTeamId: teamId },
+            ],
+          },
         ],
       },
     });
