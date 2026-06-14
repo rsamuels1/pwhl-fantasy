@@ -111,32 +111,42 @@ The list below is sequenced by **token efficiency** — each feature's estimated
 ### Standard sessions (60–90K tokens — one feature per session)
 
 2. **Weekly Performance Dashboard (#29)** · ~65K · Sprint 5
-   New page replacing the Schedule tab. Aggregates existing `Matchup` + `StatLine` rows; no schema changes. Pulled up from Sprint 6 — no schema changes, all reads on existing data, directly serves manager experience during beta.
+   Spec: `docs/02-engineering/weekly-performance-dashboard-spec.md`. New page replacing the Schedule tab. Aggregates existing `Matchup` + `StatLine` rows; no schema changes. Pulled up from Sprint 6 — no schema changes, all reads on existing data, directly serves manager experience during beta.
 
-3. **Auto-Set Lineup** · ~60K · Sprint 6
-   One-click button on the lineup page that fills all active slots with the optimal combination of eligible, unlocked players based on projected FP (`lib/projections/`). No schema changes — writes via the existing `PUT /api/leagues/[leagueId]/lineup` endpoint. Priority: P1 (launch quality). Reduces new-manager friction during beta. Spec TBD.
+3. **Auto-Set Lineup** · ~60K · Sprint 6 — P1
+   Spec: `docs/02-engineering/auto-set-lineup-spec.md`. One-click optimal lineup fill (staged save, auto-set algorithm, FA suggestions, playoff period fallback). No schema changes.
 
-4. **Team Analysis & Insights (#25)** · ~85K · Sprint 6
-   New Analysis tab on the matchup page. Complex aggregation but all reads on existing data; trade suggestions deferred until Trade System exists.
+4. **Beta Feedback Infrastructure** · ~40K · Sprint 6
+   Spec: `docs/02-engineering/beta-feedback-spec.md`. In-app feedback widget + `FeedbackSubmission` table + Founder Console feed. `betaStatus` field on `FantasyLeague`.
 
-4. **League Onboarding (#2)** · ~100K ✅ (SHIPPED)
-   Welcome flow, 6-step wizard, manager draft prep guide, replay explanation; `User.onboardingCompletedAt` schema field.
-
-5. **Transaction History (#8)** · ~55K ✅ (SHIPPED)
-   Paginated API + transaction page with type/team filters, replay guard, infinite scroll. No schema changes.
-
-### Heavy lifts (100K+ tokens — plan a fresh session)
+5. **Team Analysis & Insights (#25)** · ~85K · Sprint 6
+   Spec: `docs/02-engineering/team-analysis-spec.md`. New Analysis tab on the matchup page. Player trends + position-group vs league median + FA suggestions. Trade suggestion CTA deferred until #7.
 
 6. **Trade System (#7)** · ~130K · Sprint 6
-   New domain: schema tables, API routes, proposal/review/approval UI. Plan a dedicated session. Built on top of Transaction History.
+   Spec: `docs/02-engineering/trade-spec.md`. Dedicated session. `Trade`/`TradeOffer` schema, proposal/accept/reject flow, commissioner review gate.
 
 7. **Waiver Priority + Processing (#5)** · ~110K · Sprint 6
-   Waiver priority ordering, batched claim-resolution jobs, commissioner settings.
+   Spec: `docs/02-engineering/waiver-spec.md`. Rolling priority, 48h window, daily batch processing. `WaiverClaim` + `WaiverPriority` tables.
 
-8. **Beta Feedback Infrastructure** · ~80K · Sprint 6 (deferred from Sprint 5)
-   In-app feedback widget (bug reports, suggestions); founding commissioner tracking (invited → accepted → active → renewed). Deferred from Sprint 5 — beta cohort is small enough to use out-of-band channels until real users are active.
+**Shipped:**
+- **League Onboarding (#2)** · ✅ Welcome flow, 6-step wizard, manager draft prep guide; `User.onboardingCompletedAt` schema field.
+- **Transaction History (#8)** · ✅ Paginated API + page with type/team filters, replay guard, infinite scroll.
 
-**Stretch (differentiators, not beta blockers):** league-wide matchup storylines (#11 · ~50K) and the rivalry/Hall-of-Fame retention layer (#17–#18). Player Legacy (#31 · ~95K) deferred until at least one live season completes. Replay work (Phase 4) stays out of this list.
+**Sprint 7 (retention layer):**
+
+8. **League History & Hall of Fame (#33/#18)** · ~50K · Sprint 7
+   Spec: `docs/02-engineering/league-history-spec.md`. `/league/[leagueId]/history` page walking `parentLeagueId` chain. Past season cards + Hall of Fame. No schema changes.
+
+9. **League-Wide Matchup Storylines (#11)** · ~50K · Sprint 7
+   Spec: `docs/02-engineering/matchup-storylines-spec.md`. `getLeagueStorylines()` service + league overview sidebar card. Closest matchup, point leader, biggest climber. No schema changes.
+
+10. **FAAB (#6)** · ~80K · Sprint 7
+    Blind-bid acquisition on top of Sprint 6 waiver system. Depends on #5.
+
+11. **Player Legacy (#31)** · ~95K · Sprint 7
+    `/profile` page with career history and global leaderboard. Meaningful only after first completed+renewed season; ship skeleton now.
+
+**Deferred to post-Sprint-7 backlog:** Growth analytics (GR-001/002/003/004) · real-time push scoring · push notifications · multi-season historical library (#12) · player trends (#23) · keeper/dynasty (#19/#20) · native apps / AI features. See `docs/01-roadmap/roadmap-sprints.md` for full backlog list.
 
 ---
 

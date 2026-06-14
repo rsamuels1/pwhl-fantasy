@@ -134,17 +134,109 @@ Closed all in-progress feature gaps and carry-forwards before beta.
 
 **Exit:** commissioner can run a league start-to-finish with no engineering help; founder can monitor platform health without DB access; founding commissioner cohort can be invited.
 
-## Sprint 6+ — Post-MVP / Launch features · P1 → P2
+## Sprint 6 — "Engagement + Transactions" · ~2 wks · Track F · P1
 
-Sequenced from "What To Build Next" and the GPT launch phases:
+Goal: Ship the features founding commissioners will notice during the closed beta. All five
+items here are read-heavy or isolated new domains — none touch the draft or standings core.
 
-- **Beta Feedback Infrastructure** — in-app feedback widget (bug reports, suggestions); founding commissioner tracking (invited → accepted → active → renewed). Deferred from Sprint 5 — revisit once founding commissioners are active in closed beta.
-- **Auto-Set Lineup** — one-click optimal lineup fill on the lineup page; uses `lib/projections/` projected FP to rank eligible, unlocked players; writes via existing `PUT /api/leagues/[leagueId]/lineup`; no schema changes. P1 (launch quality) — reduces new-manager friction.
-- **Transactions:** #7 Trade System → #5 Waiver priority/processing → #6 FAAB (Transaction History #8 now in Sprint 3)
-- **Engagement:** #25 Team Analysis & Insights · #11 league-wide storylines
-- **Multi-season UX layer** (schema laid in Sprint 2 via MS-001/002/003/004): MS-005 League History views · League Hall of Fame (#18) · Player Legacy (#31)
-- **Growth / retention:** GR-001/002 activation + retention analytics (AN-002/003 dashboards) · GR-003 referral loop · GR-004 league-fill progress
-- **Phases 5–7:** rivalries H2H history · Hall of Fame · player legacy · keeper → dynasty · real-time push scoring · push notifications · player trends
+**Priority 1 — Auto-Set Lineup** · ~60K
+Spec: `docs/02-engineering/auto-set-lineup-spec.md`
+One-click optimal lineup fill (staged save + auto-set algorithm + FA suggestions + playoff
+period fallback). No schema changes. Writes via existing `PUT /api/leagues/[leagueId]/lineup`.
+P1 (launch quality) — closes the biggest new-manager friction gap before live drafts.
+
+**Priority 2 — Beta Feedback Infrastructure** · ~40K
+Spec: `docs/02-engineering/beta-feedback-spec.md`
+In-app feedback widget (Bug/Suggestion/Other) + `FeedbackSubmission` table + Founder Console
+feed. `betaStatus` lifecycle field on `FantasyLeague` for tracking cohort progression. Two
+small schema additions; minimal surface. Deferred from Sprint 5 — needed once founding
+commissioners are active.
+
+**Priority 3 — Team Analysis & Insights (#25)** · ~85K
+Spec: `docs/02-engineering/team-analysis-spec.md`
+New "Analysis" tab on the matchup page. Player hot/cold verdicts vs projection baseline;
+position-group trend vs league median (last 4 weeks); top 3 FA upgrade suggestions for the
+weakest group. All reads on existing data. Trade suggestion CTA deferred until Trade System
+(#7) ships.
+
+**Priority 4 — Trade System (#7)** · ~130K
+Spec: `docs/02-engineering/trade-spec.md`
+New domain: `Trade`, `TradeOffer` schema tables; multi-player two-team proposal/accept/reject
+flow; optional commissioner review gate; `TRADE_RECEIVED`/`TRADE_ACCEPTED`/`TRADE_REJECTED`
+notification types; full audit log. Plan a dedicated session. Roster legality enforced
+atomically at execution.
+
+**Priority 5 — Waiver Priority + Processing (#5)** · ~110K
+Spec: `docs/02-engineering/waiver-spec.md`
+The fairness layer on top of existing instant add/drop: rolling priority order, 48h waiver
+window for dropped players, daily batch processing at 03:00 ET. `WaiverClaim` +
+`WaiverPriority` schema tables; `processWaivers()` idempotent service; claim submission +
+status UI on the roster page. Commissioner controls reuse existing recovery tools.
+
+**Exit:** founding commissioners can auto-set lineups, submit feedback visible in founder console,
+view their team analysis, and (stretch) make trades if Trade System ships.
+
+---
+
+## Sprint 7 — "Retention Layer" · ~2 wks · Track F · P2
+
+Goal: Cement the multi-season story before the season ends. These features build on the
+schema foundation laid in Sprint 2 (parentLeagueId, rulesVersion, scoringVersion) and the
+engagement surfaces from Sprint 6.
+
+**Priority 1 — League History & Hall of Fame (#33 / #18)** · ~50K
+Spec: `docs/02-engineering/league-history-spec.md`
+New `/league/[leagueId]/history` page walking the `parentLeagueId` chain. Past season cards:
+champion, top-4 standings. Hall of Fame section: all past champions + two all-time records
+(highest single-week FP, most VP in a season). Nav tab hidden in season 1. No schema changes.
+
+**Priority 2 — League-Wide Matchup Storylines (#11)** · ~50K
+Spec: `docs/02-engineering/matchup-storylines-spec.md`
+`getLeagueStorylines()` service + `/api/leagues/[leagueId]/storylines` route + `StorylinesCard`
+component on the league overview sidebar. Ships: closest matchup, biggest blowout, weekly point
+leader, biggest rank climber, top scoring player. No schema changes.
+
+**Priority 3 — FAAB (#6)** · ~80K
+Blind-bid acquisition budget layered on top of the Sprint 6 waiver system. Commissioner enables
+per league; managers submit sealed bids with claims; highest bid wins ties broken by waiver
+priority. Depends on Waiver System (#5) being complete.
+
+**Priority 4 — Player Legacy & Cross-Season Tracking (#31)** · ~95K
+`/profile` page with career history (all leagues/seasons, FP totals, championship count). Global
+leaderboard ranked by career FP or championship count. Requires at least one completed and
+renewed season to be meaningful; ship the page skeleton with single-season data and let it fill
+in naturally. `UserCareerStats` cached table is post-season work.
+
+**Stretch — Email Notifications** · ~50K
+Email channel for `LINEUP_INCOMPLETE`, `TRADE_RECEIVED`, and `WAIVER_RESULT` notification types.
+Uses the existing `Notification` / `NotificationPreference` models. Integration with a transactional
+email provider (e.g. Resend). Deferred from Sprint 3 — add only if beta feedback surfaces it as P1.
+
+**Exit:** founding commissioners can view their league history; the league overview shows weekly
+storylines; leagues with active waivers can use FAAB. The platform is retention-ready for the
+2027-28 off-season renewal window.
+
+---
+
+## Post-Sprint-7 Backlog (not planned)
+
+Items below are acknowledged but have no sprint assignment. They become candidates for the
+2027-28 off-season roadmap:
+
+- **Growth / retention analytics** — GR-001/002 activation + retention dashboards (AN-002/003);
+  GR-003 referral loop; GR-004 league-fill progress bar.
+- **Real-time push scoring** — HockeyTech Firebase RTDB WebSocket integration replacing
+  `LiveScoreRefresh.tsx` polling. Medium risk; not needed until live games run.
+- **Push notifications** — web push for `LINEUP_INCOMPLETE` and `TRADE_RECEIVED`. Requires
+  service worker setup. Deferred until retention data justifies the complexity.
+- **Multi-season Historical Library (#12)** — extend fixture/ingest support for 2024 and 2024-25
+  seasons as replay options. Low urgency; the 2025-26 fixture is sufficient for beta QA.
+- **Player Trends (#23)** — hot/cold streak badges on player cards across all pages. Partially
+  covered by Team Analysis tab; full standalone trend view is Phase 7.
+- **Advanced formats: Keeper (#19) → Dynasty (#20)** — post-2027 season work; requires at least
+  one completed live season and confirmed user demand.
+- **Native apps / AI features** — Phase 5+ "future expansion"; revisit only once retention
+  metrics justify the cost.
 
 ---
 
@@ -157,8 +249,9 @@ Sequenced from "What To Build Next" and the GPT launch phases:
 | Sprint 2 — Commissioner + Platform Foundation | ✅ COMPLETE (Jun 2026) | Commissioner recovery tools, multi-season schema, analytics (6 events), VP education; 130 tests pass |
 | Sprint 3 — Beta Readiness | ✅ COMPLETE (Jun 13, 2026) | Onboarding ✅, error handling ✅, mobile ✅, NT-001 ✅, draft notifications ✅, transaction history ✅, IA-011 ✅ |
 | Sprint 4 — Product Polish | ✅ COMPLETE (Jun 13, 2026) | NT-002 LINEUP_INCOMPLETE ✅ · #01 commissioner dashboard ✅ · #17 rivalries ✅ · VP standings fix ✅ · playoff mode + replay support ✅ |
-| Sprint 5 — Validation + Beta Operations | ⏳ CURRENT | Replay gap fix ✅ (Playwright PASS) · sim-to-playoffs ✅ (Playwright PASS) · draft cert ✅ · founder dashboard ✅ · commissioner workflow validation + beta feedback infra pending |
-| Sprint 6+ — Launch Features | ⏳ PLANNED | Transactions, trade, waivers, growth |
+| Sprint 5 — Validation + Beta Operations | ⏳ CURRENT | Replay gap fix ✅ (Playwright PASS) · sim-to-playoffs ✅ (Playwright PASS) · draft cert ✅ · founder dashboard ✅ · commissioner workflow validation + weekly perf dashboard pending |
+| Sprint 6 — Engagement + Transactions | ⏳ PLANNED | Auto-set lineup · beta feedback · team analysis · trade system · waiver priority |
+| Sprint 7 — Retention Layer | ⏳ PLANNED | League history + HoF · storylines · FAAB · player legacy |
 
 ---
 

@@ -388,10 +388,16 @@
       
         <div class="sprint-card planned" onclick="switchTab('sprints'); setTimeout(() => document.getElementById('sprint-6').scrollIntoView({behavior: 'smooth'}), 100)">
           <div class="name">Sprint 6</div>
-          <div class="progress">0/7</div>
+          <div class="progress">0/5</div>
           <span class="status planned">○ PLAN</span>
         </div>
-      
+
+        <div class="sprint-card planned" onclick="switchTab('sprints'); setTimeout(() => document.getElementById('sprint-7').scrollIntoView({behavior: 'smooth'}), 100)">
+          <div class="name">Sprint 7</div>
+          <div class="progress">0/4</div>
+          <span class="status planned">○ PLAN</span>
+        </div>
+
     </div>
   </div>
 
@@ -765,60 +771,77 @@
       <div id="sprint-6" class="card planned">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
           <div>
-            <div style="font-weight: 700; font-size: 1rem;">Sprint 6 · "Post-MVP / Launch features"</div>
-            
+            <div style="font-weight: 700; font-size: 1rem;">Sprint 6 · "Engagement + Transactions"</div>
+            <div style="font-size: 0.8rem; color: #888; margin-top: 0.2rem;">Goal: Features founding commissioners will notice during closed beta · P1</div>
           </div>
           <span class="status planned">○ PLANNED</span>
         </div>
         <div>
-          
+
             <div class="task-row">
               <span class="task-check">○</span>
-              <span style="color: #ccc"><strong style="color:#aaa">Beta Feedback Infrastructure</strong> — in-app feedback widget (bug reports, suggestions); founding commissioner tracking (invited → accepted → active → renewed). <em>Deferred from Sprint 5.</em></span>
+              <span style="color: #ccc"><strong style="color:#f5c842">Priority 1 — Auto-Set Lineup</strong> · ~60K · <em>Spec: <code>docs/02-engineering/auto-set-lineup-spec.md</code></em> — staged save model, one-click optimal lineup fill, FA suggestions panel, playoff period fallback for games-remaining badges. No schema changes. Writes via existing <code>PUT /api/leagues/[leagueId]/lineup</code>. P1 — closes biggest new-manager friction gap before live drafts.</span>
             </div>
 
             <div class="task-row">
               <span class="task-check">○</span>
-              <span style="color: #ccc"><strong style="color:#aaa">Auto-Set Lineup</strong> — one-click optimal lineup fill on the lineup page; uses <code>lib/projections/</code> projected FP to rank eligible unlocked players; writes via existing <code>PUT /api/leagues/[leagueId]/lineup</code>; no schema changes. P1 (launch quality).</span>
+              <span style="color: #ccc"><strong style="color:#f5c842">Priority 2 — Beta Feedback Infrastructure</strong> · ~40K · <em>Spec: <code>docs/02-engineering/beta-feedback-spec.md</code></em> — in-app feedback widget (Bug/Suggestion/Other modal); <code>FeedbackSubmission</code> table; Founder Console feed at <code>/founder/feedback</code>; <code>betaStatus</code> lifecycle field on <code>FantasyLeague</code> for cohort tracking. Two schema additions. Deferred from Sprint 5 — activate once founding commissioners are live.</span>
             </div>
 
             <div class="task-row">
               <span class="task-check">○</span>
-              <span style="color: #ccc">Transactions: #7 Trade System → #5 Waiver priority/processing → #6 FAAB (Transaction History #8 now in Sprint 3)</span>
+              <span style="color: #ccc"><strong style="color:#f5c842">Priority 3 — Team Analysis &amp; Insights (#25)</strong> · ~85K · <em>Spec: <code>docs/02-engineering/team-analysis-spec.md</code></em> — "Analysis" tab on the matchup page: player hot/cold verdicts vs projection, position-group FP trend vs league median (last 4 weeks), top 3 FA upgrade suggestions for weakest group. All reads on existing data; no schema changes. Trade suggestion CTA deferred until Trade System (#7) ships.</span>
             </div>
 
             <div class="task-row">
               <span class="task-check">○</span>
-              <span style="color: #ccc">Engagement: #25 Team Analysis &amp; Insights · #11 league-wide storylines (Weekly Performance Dashboard #29 pulled to Sprint 5; Playoff Experience UX #30 moved to Sprint 5)</span>
+              <span style="color: #ccc"><strong style="color:#aaa">Priority 4 — Trade System (#7)</strong> · ~130K · <em>Spec: <code>docs/02-engineering/trade-spec.md</code></em> — dedicated session. <code>Trade</code> + <code>TradeOffer</code> schema tables; multi-player two-team proposal/accept/reject flow; optional commissioner review gate; <code>TRADE_RECEIVED</code>/<code>TRADE_ACCEPTED</code>/<code>TRADE_REJECTED</code> notifications; full audit log. Roster legality enforced atomically at execution.</span>
             </div>
-          
+
             <div class="task-row">
               <span class="task-check">○</span>
-              <span style="color: #ccc">Multi-season UX layer (schema laid in Sprint 2 via MS-001/002/003/004): MS-005 League History views · League Hall of Fame (#18) · Player Legacy (#31)</span>
+              <span style="color: #ccc"><strong style="color:#aaa">Priority 5 — Waiver Priority + Processing (#5)</strong> · ~110K · <em>Spec: <code>docs/02-engineering/waiver-spec.md</code></em> — rolling priority order, 48h waiver window for dropped players, daily batch processing at 03:00 ET. <code>WaiverClaim</code> + <code>WaiverPriority</code> schema tables; <code>processWaivers()</code> idempotent service; claim submission + status UI on roster page. Commissioner controls reuse existing recovery tools.</span>
             </div>
-          
-            <div class="task-row">
-              <span class="task-check">○</span>
-              <span style="color: #ccc">Growth / retention: GR-001/002 activation + retention analytics (AN-002/003 dashboards) · GR-003 referral loop · GR-004 league-fill progress</span>
-            </div>
-          
-            <div class="task-row">
-              <span class="task-check">○</span>
-              <span style="color: #ccc">Phases 5–7: rivalries H2H history · Hall of Fame · player legacy · keeper → dynasty · real-time push scoring · push notifications · player trends</span>
-            </div>
-          
-            <div class="task-row">
-              <span class="task-check">○</span>
-              <span style="color: #ccc">Q4 2026 (in-season): Transaction History → Trade System → Waivers → FAAB; engagement surfaces (#25 analysis, #29 performance dashboard) while the first live season runs.</span>
-            </div>
-          
-            <div class="task-row">
-              <span class="task-check">○</span>
-              <span style="color: #ccc">Off-season — winter/spring 2027: Multi-Season UX layer — League History views, Hall of Fame, Player Legacy. The schema foundation (parentLeagueId, rulesVersion, scoringVersion) was laid in Sprint 2, so this is purely the product surface. Growth/retention analytics dashboards (AN-002/003) and referral loop. Target: 2027-28 leagues renew in-place and keep their history.</span>
-            </div>
-          
+
         </div>
-        
+      </div>
+
+      <div id="sprint-7" class="card planned">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+          <div>
+            <div style="font-weight: 700; font-size: 1rem;">Sprint 7 · "Retention Layer"</div>
+            <div style="font-size: 0.8rem; color: #888; margin-top: 0.2rem;">Goal: Multi-season story + engagement surfaces before season ends · P2</div>
+          </div>
+          <span class="status planned">○ PLANNED</span>
+        </div>
+        <div>
+
+            <div class="task-row">
+              <span class="task-check">○</span>
+              <span style="color: #ccc"><strong style="color:#f5c842">Priority 1 — League History &amp; Hall of Fame (#33/#18)</strong> · ~50K · <em>Spec: <code>docs/02-engineering/league-history-spec.md</code></em> — new <code>/league/[leagueId]/history</code> page walking <code>parentLeagueId</code> chain. Past season cards: champion, top-4 standings. Hall of Fame: all past champions + two all-time records (highest single-week FP, most VP in a season). Nav tab hidden in season 1. No schema changes.</span>
+            </div>
+
+            <div class="task-row">
+              <span class="task-check">○</span>
+              <span style="color: #ccc"><strong style="color:#f5c842">Priority 2 — League-Wide Matchup Storylines (#11)</strong> · ~50K · <em>Spec: <code>docs/02-engineering/matchup-storylines-spec.md</code></em> — <code>getLeagueStorylines()</code> service + <code>/api/leagues/[leagueId]/storylines</code> route + <code>StorylinesCard</code> on league overview sidebar. Ships: closest matchup, biggest blowout, weekly point leader, biggest rank climber, top scoring player. No schema changes.</span>
+            </div>
+
+            <div class="task-row">
+              <span class="task-check">○</span>
+              <span style="color: #ccc"><strong style="color:#aaa">Priority 3 — FAAB (#6)</strong> · ~80K — blind-bid acquisition on top of Sprint 6 waiver system. Commissioner enables per-league; managers submit sealed bids; highest bid wins, ties broken by waiver priority. Depends on Waiver System (#5) being complete.</span>
+            </div>
+
+            <div class="task-row">
+              <span class="task-check">○</span>
+              <span style="color: #ccc"><strong style="color:#aaa">Priority 4 — Player Legacy &amp; Cross-Season Tracking (#31)</strong> · ~95K — <code>/profile</code> page with career history across all leagues and seasons; global leaderboard by career FP or championship count. Meaningful after first completed + renewed season; ship skeleton now and let it fill in. <code>UserCareerStats</code> cached table is post-season work.</span>
+            </div>
+
+            <div class="task-row">
+              <span class="task-check">○</span>
+              <span style="color: #888"><em>Stretch: Email Notifications · ~50K — email channel for <code>LINEUP_INCOMPLETE</code>, <code>TRADE_RECEIVED</code>, and <code>WAIVER_RESULT</code> notification types. Transactional email provider (e.g. Resend). Add only if beta feedback surfaces as P1.</em></span>
+            </div>
+
+        </div>
       </div>
     
   </div>
