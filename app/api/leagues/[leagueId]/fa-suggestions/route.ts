@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/db";
-import { apiRequireLeagueMember } from "@/lib/auth";
+import { apiRequireAuth, apiRequireLeagueMember } from "@/lib/auth";
 import { scoreStatLine, DEFAULT_SCORING } from "@/lib/scoring";
 import type { ScoringSettings } from "@/lib/scoring";
 import type { Position } from "@prisma/client";
@@ -30,7 +30,9 @@ export async function GET(
 ) {
   try {
     const { leagueId } = await params;
-    const user = await apiRequireLeagueMember(leagueId, undefined as any);
+    const auth = await apiRequireAuth(req);
+    if (auth instanceof NextResponse) return auth;
+    const user = await apiRequireLeagueMember(leagueId, auth.id);
     if (user instanceof NextResponse) return user;
 
     const league = await prisma.fantasyLeague.findUnique({

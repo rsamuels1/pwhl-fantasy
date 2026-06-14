@@ -182,7 +182,7 @@ export default function LineupManager({
       lockedAt: p.lockedAt,
       hasPlayedThisPeriod: p.hasPlayedThisPeriod,
       eligibleSlots: p.eligibleSlots,
-      projectedFp: projectedStats[p.playerId]?.projectedFp ?? 0,
+      projectedFp: projectedStats[p.playerId]?.projectedFp || seasonStats[p.playerId]?.fantasyPoints || 0,
     }));
 
     const optimalAssignment = computeOptimalLineup(rosterForOptimizer, rosterSettings);

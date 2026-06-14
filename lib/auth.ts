@@ -88,6 +88,26 @@ export async function requireCommissioner(
   return league;
 }
 
+// Returns the user's FantasyTeam (may be null) and isCommissioner flag for the league.
+// Calls notFound() if the user is neither a team owner nor commissioner in the league.
+export async function requireLeagueAccess(
+  leagueId: string,
+  userId: string
+): Promise<{ myTeam: FantasyTeam | null; isCommissioner: boolean }> {
+  const [team, league] = await Promise.all([
+    prisma.fantasyTeam.findFirst({
+      where: { leagueId, ownerId: userId },
+    }),
+    prisma.fantasyLeague.findFirst({
+      where: { id: leagueId },
+      select: { commissionerId: true },
+    }),
+  ]);
+  const isCommissioner = league?.commissionerId === userId;
+  if (!team && !isCommissioner) notFound();
+  return { myTeam: team, isCommissioner };
+}
+
 // ── API-level guards (return NextResponse on failure) ────────────────────────
 
 // Reads the auth cookie from the request and looks up the user.

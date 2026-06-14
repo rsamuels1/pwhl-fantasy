@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
-import { requireAuth, requireLeagueMember } from "@/lib/auth";
+import { requireAuth, requireLeagueAccess } from "@/lib/auth";
 import { getStandings } from "@/lib/services/standings-service";
 import { getBracket, PlayoffNotStartedError } from "@/lib/services/playoff-service";
 import { computeRace, type RaceInfo } from "@/lib/playoffs/seeding";
@@ -39,7 +39,7 @@ export default async function PlayoffsPage({
 }) {
   const { leagueId } = await params;
   const user = await requireAuth(`/league/${leagueId}/bracket`);
-  const myTeam = await requireLeagueMember(leagueId, user.id);
+  const { myTeam } = await requireLeagueAccess(leagueId, user.id);
 
   const league = await prisma.fantasyLeague.findUnique({
     where: { id: leagueId },
@@ -139,7 +139,7 @@ export default async function PlayoffsPage({
                 const inZone = s.isPlayoffEligible;
                 const hasBye = s.seed !== null && s.seed <= topSeedsWithBye;
                 const raceInfo = race?.get(s.fantasyTeamId) ?? null;
-                const isMe = s.fantasyTeamId === myTeam.id;
+                const isMe = myTeam && s.fantasyTeamId === myTeam.id;
                 const isLastIn = playoffCutoff !== null && i === playoffCutoff - 1;
 
                 return (
@@ -231,7 +231,7 @@ export default async function PlayoffsPage({
         <section style={card}>
           <PlayoffBracket
             bracket={bracketResult.bracket as Parameters<typeof PlayoffBracket>[0]["bracket"]}
-            myTeamId={myTeam.id}
+            myTeamId={myTeam?.id}
           />
         </section>
       )}

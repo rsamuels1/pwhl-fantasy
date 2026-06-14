@@ -3,7 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { computeRace } from "@/lib/playoffs/seeding";
 import { computeVpStandings } from "@/lib/scoring/vp";
-import { requireAuth, requireLeagueMember } from "@/lib/auth";
+import { requireAuth, requireLeagueAccess } from "@/lib/auth";
 import { getLeagueActivity } from "@/lib/services/activity";
 import { getSeasonState } from "@/lib/season";
 import { getDevNow } from "@/lib/devTime";
@@ -24,7 +24,7 @@ export default async function LeagueOverviewPage({
   const isWelcome = sp?.welcome === "1";
 
   const user = await requireAuth(`/league/${leagueId}`);
-  const myTeam = await requireLeagueMember(leagueId, user.id);
+  const { myTeam, isCommissioner } = await requireLeagueAccess(leagueId, user.id);
 
   const league = await prisma.fantasyLeague.findUnique({
     where: { id: leagueId },
@@ -36,12 +36,9 @@ export default async function LeagueOverviewPage({
 
   if (!league) notFound();
 
-  const myTeamInLeague = league.teams.find((t) => t.ownerId === user?.id);
-  const isCommissioner = user.id === league.commissionerId;
-
-  // Draft in progress → draft room
-  if (league.draft?.status === "IN_PROGRESS" && myTeamInLeague) {
-    redirect(`/draft/${leagueId}?team=${myTeamInLeague.id}`);
+  // Draft in progress → draft room (only if user has a team in the league)
+  if (league.draft?.status === "IN_PROGRESS" && myTeam) {
+    redirect(`/draft/${leagueId}?team=${myTeam.id}`);
   }
 
   const nowMs = getReplayNow(league, await getDevNow());
@@ -202,22 +199,22 @@ export default async function LeagueOverviewPage({
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
 
       {/* ── Welcome banner ── */}
-      {isWelcome && myTeamInLeague && (
+      {isWelcome && myTeam && (
         <div style={{
           padding: "16px 20px", borderRadius: 16,
           background: "rgba(52,211,153,0.07)", border: "1px solid rgba(52,211,153,0.2)",
           display: "flex", flexDirection: "column", gap: 6,
         }}>
           <p style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "#34d399" }}>
-            ✓ You&apos;re in! {myTeamInLeague.name} is registered.
+            ✓ You&apos;re in! {myTeam.name} is registered.
           </p>
           {league.draft?.status === "COMPLETE" ? (
             <p style={{ margin: 0, fontSize: 13, color: "#64748b" }}>
-              The draft is done. <Link href={`/team/${myTeamInLeague.id}/lineup`} style={{ color: "#a5b4fc" }}>Set your lineup →</Link>
+              The draft is done. <Link href={`/team/${myTeam.id}/lineup`} style={{ color: "#a5b4fc" }}>Set your lineup →</Link>
             </p>
           ) : league.draft?.status === "IN_PROGRESS" ? (
             <p style={{ margin: 0, fontSize: 13, color: "#64748b" }}>
-              The draft is live right now! <Link href={`/draft/${leagueId}?team=${myTeamInLeague.id}`} style={{ color: "#a5b4fc" }}>Join the draft room →</Link>
+              The draft is live right now! <Link href={`/draft/${leagueId}?team=${myTeam.id}`} style={{ color: "#a5b4fc" }}>Join the draft room →</Link>
             </p>
           ) : (
             <p style={{ margin: 0, fontSize: 13, color: "#64748b" }}>
@@ -356,7 +353,7 @@ export default async function LeagueOverviewPage({
                 <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                   {currentRoundMatchups.map((m) => {
                     const scored = m.homeScore !== null && m.awayScore !== null;
-                    const isMyMatchup = m.homeTeamId === myTeamInLeague?.id || m.awayTeamId === myTeamInLeague?.id;
+                    const isMyMatchup = m.homeTeamId === myTeam?.id || m.awayTeamId === myTeam?.id;
                     return (
                       <div key={m.id} style={{
                         display: "grid", gridTemplateColumns: "1fr auto 1fr",
@@ -367,8 +364,8 @@ export default async function LeagueOverviewPage({
                         <span style={{
                           fontSize: 13, textAlign: "right", overflow: "hidden",
                           textOverflow: "ellipsis", whiteSpace: "nowrap",
-                          color: m.homeTeamId === myTeamInLeague?.id ? "#e2e8f0" : "#94a3b8",
-                          fontWeight: m.homeTeamId === myTeamInLeague?.id ? 600 : 400,
+                          color: m.homeTeamId === myTeam?.id ? "#e2e8f0" : "#94a3b8",
+                          fontWeight: m.homeTeamId === myTeam?.id ? 600 : 400,
                         }}>
                           {m.homeTeam.name}
                           {scored && <span style={{ marginLeft: 6, fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>{m.homeScore!.toFixed(1)}</span>}
@@ -379,8 +376,8 @@ export default async function LeagueOverviewPage({
                         <span style={{
                           fontSize: 13, overflow: "hidden",
                           textOverflow: "ellipsis", whiteSpace: "nowrap",
-                          color: m.awayTeamId === myTeamInLeague?.id ? "#e2e8f0" : "#94a3b8",
-                          fontWeight: m.awayTeamId === myTeamInLeague?.id ? 600 : 400,
+                          color: m.awayTeamId === myTeam?.id ? "#e2e8f0" : "#94a3b8",
+                          fontWeight: m.awayTeamId === myTeam?.id ? 600 : 400,
                         }}>
                           {scored && <span style={{ marginRight: 6, fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>{m.awayScore!.toFixed(1)}</span>}
                           {m.awayTeam.name}
@@ -409,7 +406,7 @@ export default async function LeagueOverviewPage({
               <div style={{ display: "flex", flexDirection: "column", gap: 1 }}>
                 {standings.map((s, i) => {
                   const rank = i + 1;
-                  const isMe = s.fantasyTeamId === myTeamInLeague?.id;
+                  const isMe = s.fantasyTeamId === myTeam?.id;
                   const race = raceMap?.get(s.fantasyTeamId);
                   const isLastIn = rank === teamsInPlayoff;
 
@@ -474,11 +471,11 @@ export default async function LeagueOverviewPage({
           {!hasResults && league.status !== "IN_SEASON" && (
             <>
               {/* Manager draft prep guide — shown to non-commissioners in PRE_DRAFT */}
-              {league.status === "PRE_DRAFT" && !isCommissioner && myTeamInLeague && (
+              {league.status === "PRE_DRAFT" && !isCommissioner && myTeam && (
                 <section style={card}>
                   <h2 style={{ ...sectionTitle, marginBottom: 14 }}>Get ready to draft</h2>
                   <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 16 }}>
-                    <DraftPrepItem done label="Joined league" detail={`You're in as ${myTeamInLeague.name}`} />
+                    <DraftPrepItem done label="Joined league" detail={`You're in as ${myTeam.name}`} />
                     <DraftPrepItem done={false} label="Learn how scoring works" detail="Victory Points: win your matchup AND be a top scorer each week.">
                       <VpExplainer />
                     </DraftPrepItem>
@@ -486,7 +483,7 @@ export default async function LeagueOverviewPage({
                       done={false}
                       label="Build a draft queue"
                       detail="Queue up players you want before the draft starts — you'll be on the clock!"
-                      linkHref={league.draft?.id ? `/draft/${leagueId}?team=${myTeamInLeague.id}` : undefined}
+                      linkHref={league.draft?.id ? `/draft/${leagueId}?team=${myTeam.id}` : undefined}
                       linkLabel="Open draft room →"
                     />
                     {league.draftStartsAt && (() => {
@@ -511,7 +508,7 @@ export default async function LeagueOverviewPage({
               )}
 
               {/* Commissioner sees the admin panel checklist, not this */}
-              {(isCommissioner || !myTeamInLeague) && (
+              {(isCommissioner || !myTeam) && (
                 <section style={card}>
                   <h2 style={sectionTitle}>Standings</h2>
                   <p style={{ color: "#475569", fontSize: 13, margin: "10px 0 0" }}>
@@ -541,7 +538,7 @@ export default async function LeagueOverviewPage({
               <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
                 {thisWeekMatchups.map((m) => {
                   const scored = m.homeScore !== null && m.awayScore !== null;
-                  const isMyMatchup = m.homeTeamId === myTeamInLeague?.id || m.awayTeamId === myTeamInLeague?.id;
+                  const isMyMatchup = m.homeTeamId === myTeam?.id || m.awayTeamId === myTeam?.id;
                   return (
                     <div key={m.id} style={{
                       display: "grid", gridTemplateColumns: "1fr auto 1fr",
@@ -552,8 +549,8 @@ export default async function LeagueOverviewPage({
                       <span style={{
                         fontSize: 13, textAlign: "right", overflow: "hidden",
                         textOverflow: "ellipsis", whiteSpace: "nowrap",
-                        color: m.homeTeamId === myTeamInLeague?.id ? "#e2e8f0" : "#94a3b8",
-                        fontWeight: m.homeTeamId === myTeamInLeague?.id ? 600 : 400,
+                        color: m.homeTeamId === myTeam?.id ? "#e2e8f0" : "#94a3b8",
+                        fontWeight: m.homeTeamId === myTeam?.id ? 600 : 400,
                       }}>
                         {m.homeTeam.name}
                         {scored && <span style={{ marginLeft: 6, fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>{m.homeScore!.toFixed(1)}</span>}
@@ -564,8 +561,8 @@ export default async function LeagueOverviewPage({
                       <span style={{
                         fontSize: 13, overflow: "hidden",
                         textOverflow: "ellipsis", whiteSpace: "nowrap",
-                        color: m.awayTeamId === myTeamInLeague?.id ? "#e2e8f0" : "#94a3b8",
-                        fontWeight: m.awayTeamId === myTeamInLeague?.id ? 600 : 400,
+                        color: m.awayTeamId === myTeam?.id ? "#e2e8f0" : "#94a3b8",
+                        fontWeight: m.awayTeamId === myTeam?.id ? 600 : 400,
                       }}>
                         {scored && <span style={{ marginRight: 6, fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>{m.awayScore!.toFixed(1)}</span>}
                         {m.awayTeam.name}
@@ -582,29 +579,29 @@ export default async function LeagueOverviewPage({
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
 
           {/* My matchup compact widget */}
-          {myTeamInLeague && (() => {
+          {myTeam && (() => {
             const myMatchups = thisWeekMatchups.filter(
-              (m) => m.homeTeamId === myTeamInLeague.id || m.awayTeamId === myTeamInLeague.id
+              (m) => m.homeTeamId === myTeam.id || m.awayTeamId === myTeam.id
             );
             const myScore = myMatchups.length > 0
               ? (() => {
                   const first = myMatchups[0];
                   const scored = first.homeScore !== null;
                   if (!scored) return null;
-                  return first.homeTeamId === myTeamInLeague.id ? first.homeScore : first.awayScore;
+                  return first.homeTeamId === myTeam.id ? first.homeScore : first.awayScore;
                 })()
               : null;
             const scoredCount = myMatchups.filter((m) => m.homeScore !== null).length;
             const wins = myMatchups.filter((m) => {
               if (m.homeScore === null) return false;
-              const mine = m.homeTeamId === myTeamInLeague.id ? m.homeScore : m.awayScore!;
-              const theirs = m.homeTeamId === myTeamInLeague.id ? m.awayScore! : m.homeScore;
+              const mine = m.homeTeamId === myTeam.id ? m.homeScore : m.awayScore!;
+              const theirs = m.homeTeamId === myTeam.id ? m.awayScore! : m.homeScore;
               return mine > theirs;
             }).length;
             const losses = myMatchups.filter((m) => {
               if (m.homeScore === null) return false;
-              const mine = m.homeTeamId === myTeamInLeague.id ? m.homeScore : m.awayScore!;
-              const theirs = m.homeTeamId === myTeamInLeague.id ? m.awayScore! : m.homeScore;
+              const mine = m.homeTeamId === myTeam.id ? m.homeScore : m.awayScore!;
+              const theirs = m.homeTeamId === myTeam.id ? m.awayScore! : m.homeScore;
               return mine < theirs;
             }).length;
 
@@ -637,7 +634,7 @@ export default async function LeagueOverviewPage({
                     </span>
                   )}
                 </div>
-                <Link href={`/team/${myTeamInLeague.id}/matchup`} style={ctaLink}>
+                <Link href={`/team/${myTeam.id}/matchup`} style={ctaLink}>
                   My Matchup →
                 </Link>
               </section>
@@ -651,7 +648,7 @@ export default async function LeagueOverviewPage({
               <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                 {league.teams.map((t) => {
                   const alerts = alertsByTeam.get(t.id) ?? 0;
-                  const isMe = t.id === myTeamInLeague?.id;
+                  const isMe = t.id === myTeam?.id;
                   const chip = !periodForGames
                     ? { label: "—", bg: "rgba(100,116,139,0.08)", color: "#475569" }
                     : alerts > 0
