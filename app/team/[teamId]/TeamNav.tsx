@@ -18,7 +18,7 @@ export default function TeamNav({ teamId, leagueId, leagueName, playoffStatus }:
     { label: "Lineup",        href: `/team/${teamId}/lineup` },
     { label: "Rosters",       href: `/team/${teamId}/roster` },
     { label: "Standings",     href: `/team/${teamId}/standings` },
-    { label: "PWHL Schedule", href: `/team/${teamId}/schedule` },
+    { label: "Performance",   href: `/team/${teamId}/schedule` },
     ...(playoffStatus !== "NOT_STARTED"
       ? [{ label: "Playoffs", href: `/league/${leagueId}/bracket` }]
       : []),
