@@ -640,7 +640,7 @@ function FaColHeader({ isGoalie, sortKey, sortAsc, onSort }: {
 }) {
   const cols = isGoalie
     ? "minmax(80px,1fr) 40px 50px 50px 60px 50px 50px 60px 80px"
-    : "minmax(80px,1fr) 40px 36px 36px 36px 46px 46px 36px 36px 60px 80px";
+    : "minmax(80px,1fr) 40px 36px 36px 36px 46px 46px 36px 36px 60px 80px 80px";
 
   function SortTh({ label, k, title }: { label: string; k: SortKey; title?: string }) {
     const active = sortKey === k;
@@ -705,7 +705,7 @@ function FaRow({ player, index, isFull, rosterPlayers, pendingAdd, dropForAdd,
   const isThisPending = pendingAdd === player.playerId;
   const cols = isGoalie
     ? "minmax(80px,1fr) 40px 50px 50px 60px 50px 50px 60px 80px"
-    : "minmax(80px,1fr) 40px 36px 36px 36px 46px 46px 36px 36px 60px 80px";
+    : "minmax(80px,1fr) 40px 36px 36px 36px 46px 46px 36px 36px 60px 80px 80px";
   const fmtSvPct = (v: number | null) => v != null ? v.toFixed(3).replace(/^0/, "") : "—";
 
   return (
