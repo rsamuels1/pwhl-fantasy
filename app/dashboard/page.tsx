@@ -111,7 +111,10 @@ export default async function DashboardPage() {
       })
     : [];
 
-  const teams = [...ownedTeams, ...extraTeams];
+  const teams = [
+    ...ownedTeams.map(t => ({ ...t, isOwned: true as const })),
+    ...extraTeams.map(t => ({ ...t, isOwned: t.ownerId === user.id })),
+  ];
   const hasTeams = teams.length > 0;
 
   const teamNowMs = (team: (typeof teams)[number]) =>
@@ -283,7 +286,14 @@ export default async function DashboardPage() {
                 return (
                   <div key={team.id} className="team-card" style={{ display: "flex", flexDirection: "column", gap: 14 }}>
                     <div>
-                      <h3 style={{ margin: 0, fontSize: 17, fontWeight: 700 }}>{team.name}</h3>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                        <h3 style={{ margin: 0, fontSize: 17, fontWeight: 700 }}>{team.name}</h3>
+                        {!team.isOwned && (
+                          <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 4, background: "rgba(168,85,247,0.15)", color: "#d8b4fe", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                            Commissioner
+                          </span>
+                        )}
+                      </div>
                       <p className="team-meta" style={{ marginTop: 2, display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                         <span>{team.league.name} · Season {team.league.season}</span>
                         <LeagueStatusChip status={team.league.status} />
@@ -318,11 +328,20 @@ export default async function DashboardPage() {
                     )}
 
                     <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                      <Link href={`/team/${team.id}/matchup`} className="button-primary">
-                        My Matchup →
+                      {team.isOwned && (
+                        <>
+                          <Link href={`/team/${team.id}/matchup`} className="button-primary">
+                            My Matchup →
+                          </Link>
+                          <Link href={`/team/${team.id}/lineup`} className="button-secondary">Set Lineup</Link>
+                        </>
+                      )}
+                      <Link href={`/league/${team.leagueId}`} className="button-secondary">
+                        {team.isOwned ? "League" : "View League →"}
                       </Link>
-                      <Link href={`/team/${team.id}/lineup`} className="button-secondary">Set Lineup</Link>
-                      <Link href={`/league/${team.leagueId}`} className="button-secondary">League</Link>
+                      {!team.isOwned && (
+                        <Link href={`/league/${team.leagueId}/admin`} className="button-secondary">Admin Panel</Link>
+                      )}
                     </div>
                   </div>
                 );

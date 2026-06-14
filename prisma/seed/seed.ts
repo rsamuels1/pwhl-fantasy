@@ -71,11 +71,17 @@ async function main() {
 
   const teams = await source.fetchTeams("2026-27");
   for (const t of teams) {
-    await prisma.team.upsert({
-      where: { externalId: t.externalId },
-      update: { name: t.name, city: t.city, abbreviation: t.abbreviation },
-      create: { ...t },
+    const existing = await prisma.team.findFirst({
+      where: { OR: [{ externalId: t.externalId }, { abbreviation: t.abbreviation }] },
     });
+    if (existing) {
+      await prisma.team.update({
+        where: { id: existing.id },
+        data: { externalId: t.externalId, name: t.name, city: t.city, abbreviation: t.abbreviation },
+      });
+    } else {
+      await prisma.team.create({ data: t });
+    }
   }
 
   const players = await source.fetchPlayers("2026-27");

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import InviteLinkButton from "@/components/InviteLinkButton";
 import Link from "next/link";
 
-const TOTAL_STEPS = 6;
+const TOTAL_STEPS = 7;
 
 const SIZE_OPTIONS: { value: number; label: string; note: string }[] = [
   { value: 6,  label: "6 teams",  note: "Smaller, more intimate" },
@@ -27,9 +27,11 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
   const [isReplay, setIsReplay] = useState(startAsReplay);
   const [draftDate, setDraftDate] = useState("");
   const [draftTime, setDraftTime] = useState("19:00");
+  const [teamName, setTeamName] = useState(`${userDisplayName}'s Team`);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [createdLeagueId, setCreatedLeagueId] = useState<string | null>(null);
+  const [createdTeamId, setCreatedTeamId] = useState<string | null>(null);
 
   // Mark onboarding seen on mount (idempotent)
   useEffect(() => {
@@ -41,7 +43,7 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
   };
   const goBack = () => setStep((s) => Math.max(s - 1, 1));
 
-  // In replay mode, skip steps 4–5 (rules + invite) and go straight to creation
+  // In replay mode, skip steps 4–5 (rules + invite) but still go through team creation
   const handleReplayCreate = async () => {
     setLoading(true);
     setError(null);
@@ -52,8 +54,9 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
         body: JSON.stringify({ leagueName: name || "My Replay League", maxTeams, useLastSeasonSimulation: true }),
       });
       const data = await res.json();
-      if (!res.ok) { setError(data?.error || "Failed to create league"); return; }
-      router.push(data.redirectTo ?? `/league/${data.leagueId}/admin?welcome=1`);
+      if (!res.ok) { setError(data?.error || "Failed to create league"); setLoading(false); return; }
+      setCreatedLeagueId(data.leagueId);
+      setStep(5);
     } catch {
       setError("Unable to create league. Please try again.");
     } finally {
@@ -61,7 +64,7 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
     }
   };
 
-  // Create the live league (called at step 5 transition)
+  // Create the live league (called at step 4)
   const handleCreate = async () => {
     setLoading(true);
     setError(null);
@@ -86,7 +89,35 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
     }
   };
 
+  // Create the commissioner's team (called at step 5)
+  const handleCreateTeam = async () => {
+    if (!createdLeagueId || !teamName.trim()) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/leagues/join", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          leagueId: createdLeagueId,
+          teamName: teamName.trim(),
+          ownerEmail: "", // Will be filled by backend from auth
+          ownerName: userDisplayName,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) { setError(data?.error || "Failed to create team"); setLoading(false); return; }
+      setCreatedTeamId(data.teamId);
+      setStep(6);
+    } catch {
+      setError("Unable to create team. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const nameValid = name.trim().length > 0 && name.trim().length <= 50;
+  const teamNameValid = teamName.trim().length > 0 && teamName.trim().length <= 50;
 
   return (
     <div className="page-width" style={{ padding: "32px 16px" }}>
@@ -352,8 +383,47 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
             </div>
           )}
 
-          {/* ── Step 5: Invite managers ── */}
-          {step === 5 && createdLeagueId && (
+          {/* ── Step 5: Commissioner creates their team ── */}
+          {step === 5 && createdLeagueId && !createdTeamId && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+              <div>
+                <h1 style={{ margin: "0 0 6px", fontSize: 22 }}>Create your team</h1>
+                <p style={{ margin: 0, color: "#64748b", fontSize: 14 }}>
+                  You&apos;ll be the commissioner, but you also need a team to draft and play. Choose your team name.
+                </p>
+              </div>
+
+              <label className="form-label">
+                Team name
+                <input
+                  className="form-input"
+                  value={teamName}
+                  onChange={(e) => setTeamName(e.target.value)}
+                  maxLength={50}
+                  placeholder="e.g. Poulin Power Play"
+                  autoFocus
+                />
+                <span style={{ fontSize: 11, color: teamName.length > 45 ? "#f59e0b" : "#475569", marginTop: 4, display: "block" }}>
+                  {teamName.length}/50
+                </span>
+              </label>
+
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <button className="button-secondary" onClick={goBack}>← Back</button>
+                <button
+                  className="button-primary"
+                  onClick={handleCreateTeam}
+                  disabled={loading || !teamNameValid}
+                >
+                  {loading ? "Creating team…" : "Create my team →"}
+                </button>
+              </div>
+              {error && <p style={{ color: "#f87171", fontSize: 13, margin: 0 }}>{error}</p>}
+            </div>
+          )}
+
+          {/* ── Step 6: Invite managers ── */}
+          {step === 6 && createdLeagueId && (
             <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
               <div style={{
                 padding: "14px 16px", borderRadius: 12,
@@ -390,8 +460,8 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
             </div>
           )}
 
-          {/* ── Step 6: Done → draft prep ── */}
-          {step === 6 && createdLeagueId && (
+          {/* ── Step 7: Done → draft prep ── */}
+          {step === 7 && createdLeagueId && (
             <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
               <div>
                 <p style={{ fontSize: 28, margin: "0 0 8px" }}>🎉</p>

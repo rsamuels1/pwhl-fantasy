@@ -8,8 +8,16 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const leagueId = String(body.leagueId || "").trim();
     const teamName = String(body.teamName || "").trim();
-    const ownerEmail = String(body.ownerEmail || "").trim();
+    let ownerEmail = String(body.ownerEmail || "").trim();
     const ownerName = String(body.ownerName || "").trim();
+
+    // Check if user is already authenticated (via session cookie)
+    const sessionEmail = req.cookies.get("pwhl_user_email")?.value;
+
+    // If ownerEmail is not provided, use the session email (for authenticated team creation in wizard)
+    if (!ownerEmail) {
+      ownerEmail = sessionEmail || "";
+    }
 
     if (!leagueId || !teamName || !ownerEmail) {
       return NextResponse.json({ error: "League ID, team name, and owner email are required." }, { status: 400 });
@@ -70,7 +78,11 @@ export async function POST(req: NextRequest) {
       redirectTo: `/league/${leagueId}?welcome=1`,
       message: "Team created successfully.",
     });
-    setAuthCookie(response, owner.email);
+    // Only set cookie for unauthenticated joiners (invite link flow).
+    // Authenticated users (wizard team-creation, admin panel test teams) keep their existing session.
+    if (!sessionEmail) {
+      setAuthCookie(response, owner.email);
+    }
     return response;
   } catch (error) {
     console.error("Error joining league:", error);

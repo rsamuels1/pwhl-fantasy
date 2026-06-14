@@ -226,15 +226,15 @@
     <div class="header-right">
       <div class="stat">
         <span class="label">Current:</span>
-        <span class="value">Sprint 5</span>
+        <span class="value">Sprint 5/6</span>
       </div>
       <div class="stat">
         <span class="label">To Beta:</span>
-        <span class="value">80 days</span>
+        <span class="value">~80 days</span>
       </div>
       <div class="stat">
         <span class="label">Sprints:</span>
-        <span class="value">5/7</span>
+        <span class="value">5–6/7</span>
       </div>
       <div class="stat">
         <span class="label">Gates:</span>
@@ -382,14 +382,14 @@
       
         <div class="sprint-card current" onclick="switchTab('sprints'); setTimeout(() => document.getElementById('sprint-5').scrollIntoView({behavior: 'smooth'}), 100)">
           <div class="name">Sprint 5</div>
-          <div class="progress">4/7</div>
+          <div class="progress">5/7</div>
           <span class="status current">● LIVE</span>
         </div>
-      
-        <div class="sprint-card planned" onclick="switchTab('sprints'); setTimeout(() => document.getElementById('sprint-6').scrollIntoView({behavior: 'smooth'}), 100)">
+
+        <div class="sprint-card current" onclick="switchTab('sprints'); setTimeout(() => document.getElementById('sprint-6').scrollIntoView({behavior: 'smooth'}), 100)">
           <div class="name">Sprint 6</div>
-          <div class="progress">0/5</div>
-          <span class="status planned">○ PLAN</span>
+          <div class="progress">1/5</div>
+          <span class="status current">● LIVE</span>
         </div>
 
         <div class="sprint-card planned" onclick="switchTab('sprints'); setTimeout(() => document.getElementById('sprint-7').scrollIntoView({behavior: 'smooth'}), 100)">
@@ -741,7 +741,7 @@
 
             <div class="task-row">
               <span class="task-check">✅</span>
-              <span style="color: #666"><strong style="color:#888">Priority 2 — Playoff Experience UX Polish (#30)</strong> — full playoff journey audit + 9 fixes: round-advancement API route + commissioner UI (P0-A); eliminated-team detection fix (P0-B); playoff matchup week numbers (P0-C); champion announcement card + banner (P1-A); commissioner action strip playoff awareness (P1-B); "View bracket →" link in DuelHero (P1-C); between-rounds pending state (P1-D); rich mini bracket in league overview (P2-A); async params in bracket/matchups pages (P2-B). tsc clean.</span>
+              <span style="color: #666"><strong style="color:#888">Priority 2 — Playoff Experience UX (#30)</strong> ✅ COMPLETE — full playoff journey audit + 9 fixes: round-advancement API route + commissioner UI (P0-A); eliminated-team detection fix (P0-B); playoff matchup week numbers (P0-C); champion announcement card + banner (P1-A); commissioner action strip playoff awareness (P1-B); "View bracket →" link in DuelHero (P1-C); between-rounds pending state (P1-D); rich mini bracket in league overview (P2-A); async params in bracket/matchups pages (P2-B). Final pieces (commit 5df2b0c): bracket redirect when <code>playoffStatus === IN_PROGRESS</code>; <code>PLAYOFF_CLINCH</code>/<code>PLAYOFF_ELIMINATION</code>/<code>CHAMPIONSHIP_WON</code> activity events.</span>
             </div>
 
             <div class="task-row">
@@ -768,19 +768,19 @@
         <div class="exit-criteria"><strong>Exit:</strong> commissioner can run a league start-to-finish with no engineering help; founder can monitor platform health without DB access; founding commissioner cohort can be invited.</div>
       </div>
     
-      <div id="sprint-6" class="card planned">
+      <div id="sprint-6" class="card current">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
           <div>
             <div style="font-weight: 700; font-size: 1rem;">Sprint 6 · "Engagement + Transactions"</div>
             <div style="font-size: 0.8rem; color: #888; margin-top: 0.2rem;">Goal: Features founding commissioners will notice during closed beta · P1</div>
           </div>
-          <span class="status planned">○ PLANNED</span>
+          <span class="status current">● IN FLIGHT</span>
         </div>
         <div>
 
             <div class="task-row">
-              <span class="task-check">○</span>
-              <span style="color: #ccc"><strong style="color:#f5c842">Priority 1 — Auto-Set Lineup</strong> · ~60K · <em>Spec: <code>docs/02-engineering/auto-set-lineup-spec.md</code></em> — staged save model, one-click optimal lineup fill, FA suggestions panel, playoff period fallback for games-remaining badges. No schema changes. Writes via existing <code>PUT /api/leagues/[leagueId]/lineup</code>. P1 — closes biggest new-manager friction gap before live drafts.</span>
+              <span class="task-check">✅</span>
+              <span style="color: #666"><strong style="color:#888">Priority 1 — Auto-Set Lineup (#34)</strong> · ~60K · <em>Spec: <code>docs/02-engineering/auto-set-lineup-spec.md</code></em> — <code>computeOptimalLineup()</code> in <code>lib/lineup.ts</code>; staged save model; "Auto-set" button (purple, disabled when no projections); <code>beforeunload</code> guard; playoff period fallback; <code>GET /api/leagues/[leagueId]/fa-suggestions</code> (top 10 unrostered by projected FP). No schema changes. (commits 3e6bbd0, f83468f, 1f06c9a)</span>
             </div>
 
             <div class="task-row">
@@ -795,15 +795,11 @@
 
             <div class="task-row">
               <span class="task-check">○</span>
-              <span style="color: #ccc"><strong style="color:#aaa">Priority 4 — Trade System (#7)</strong> · ~130K · <em>Spec: <code>docs/02-engineering/trade-spec.md</code></em> — dedicated session. <code>Trade</code> + <code>TradeOffer</code> schema tables; multi-player two-team proposal/accept/reject flow; optional commissioner review gate; <code>TRADE_RECEIVED</code>/<code>TRADE_ACCEPTED</code>/<code>TRADE_REJECTED</code> notifications; full audit log. Roster legality enforced atomically at execution.</span>
-            </div>
-
-            <div class="task-row">
-              <span class="task-check">○</span>
-              <span style="color: #ccc"><strong style="color:#aaa">Priority 5 — Waiver Priority + Processing (#5)</strong> · ~110K · <em>Spec: <code>docs/02-engineering/waiver-spec.md</code></em> — rolling priority order, 48h waiver window for dropped players, daily batch processing at 03:00 ET. <code>WaiverClaim</code> + <code>WaiverPriority</code> schema tables; <code>processWaivers()</code> idempotent service; claim submission + status UI on roster page. Commissioner controls reuse existing recovery tools.</span>
+              <span style="color: #ccc"><strong style="color:#aaa">Priority 4 — Waiver Priority + Processing (#5)</strong> · ~110K · <em>Spec: <code>docs/02-engineering/waiver-spec.md</code></em> — rolling priority order, 48h waiver window for dropped players, daily batch processing at 03:00 ET. <code>WaiverClaim</code> + <code>WaiverPriority</code> schema tables; <code>processWaivers()</code> idempotent service; claim submission + status UI on roster page. Commissioner controls reuse existing recovery tools.</span>
             </div>
 
         </div>
+        <div class="exit-criteria"><strong>Exit:</strong> founding commissioners can auto-set lineups ✅, submit feedback visible in founder console, and view their team analysis.</div>
       </div>
 
       <div id="sprint-7" class="card planned">
@@ -871,7 +867,7 @@
       
         <div class="crit-section-high">
           
-            <div class="section-header">🟠 High Priority <span class="section-count">1</span></div>
+            <div class="section-header">🟠 High Priority (all done) <span class="section-count">1</span></div>
             <table class="backlog-table">
               <thead>
                 <tr>
@@ -880,18 +876,18 @@
                   <th>Title</th>
                   <th style="width: 6rem;">Status</th>
                   <th style="width: 5rem;">Tokens</th>
-                  <th style="width: 5rem;">Phase</th>
+                  <th style="width: 5rem;">Sprint</th>
                 </tr>
               </thead>
               <tbody>
                 
-                  <tr class="backlog-row" data-status="todo" data-crit="high">
+                  <tr class="backlog-row" data-status="done" data-crit="high">
                     <td><span class="crit-dot crit-high"></span></td>
                     <td>#27</td>
                     <td>Roster Page UX Overhaul</td>
-                    <td><span class="status todo">TODO</span></td>
+                    <td><span class="status done">DONE</span></td>
                     <td>—</td>
-                    <td>1</td>
+                    <td>4</td>
                   </tr>
                 
               </tbody>
@@ -910,288 +906,288 @@
                   <th>Title</th>
                   <th style="width: 6rem;">Status</th>
                   <th style="width: 5rem;">Tokens</th>
-                  <th style="width: 5rem;">Phase</th>
+                  <th style="width: 5rem;">Sprint</th>
                 </tr>
               </thead>
               <tbody>
                 
-                  <tr class="backlog-row" data-status="partial" data-crit="medium">
+                  <tr class="backlog-row" data-status="done" data-crit="medium">
                     <td><span class="crit-dot crit-medium"></span></td>
                     <td>#1</td>
                     <td>Commissioner Dashboard</td>
-                    <td><span class="status partial">PARTIAL</span></td>
+                    <td><span class="status done">DONE</span></td>
                     <td>—</td>
-                    <td>1</td>
+                    <td>2–4</td>
                   </tr>
-                
-                  <tr class="backlog-row" data-status="todo" data-crit="medium">
+
+                  <tr class="backlog-row" data-status="done" data-crit="medium">
                     <td><span class="crit-dot crit-medium"></span></td>
                     <td>#2</td>
                     <td>League Onboarding</td>
-                    <td><span class="status todo">TODO</span></td>
+                    <td><span class="status done">DONE</span></td>
                     <td>—</td>
-                    <td>1</td>
+                    <td>3</td>
                   </tr>
-                
-                  <tr class="backlog-row" data-status="todo" data-crit="medium">
+
+                  <tr class="backlog-row" data-status="done" data-crit="medium">
                     <td><span class="crit-dot crit-medium"></span></td>
                     <td>#3</td>
                     <td>Mobile Optimization</td>
-                    <td><span class="status todo">TODO</span></td>
+                    <td><span class="status done">DONE</span></td>
                     <td>~75K</td>
-                    <td>1</td>
+                    <td>3</td>
                   </tr>
-                
-                  <tr class="backlog-row" data-status="todo" data-crit="medium">
+
+                  <tr class="backlog-row" data-status="done" data-crit="medium">
                     <td><span class="crit-dot crit-medium"></span></td>
                     <td>#4</td>
                     <td>Error Handling</td>
-                    <td><span class="status todo">TODO</span></td>
+                    <td><span class="status done">DONE</span></td>
                     <td>~65K</td>
-                    <td>1</td>
+                    <td>3</td>
                   </tr>
-                
-                  <tr class="backlog-row" data-status="todo" data-crit="medium">
+
+                  <tr class="backlog-row" data-status="done" data-crit="medium">
                     <td><span class="crit-dot crit-medium"></span></td>
                     <td>#26</td>
                     <td>League Overview Redesign</td>
-                    <td><span class="status todo">TODO</span></td>
+                    <td><span class="status done">DONE</span></td>
                     <td>—</td>
-                    <td>1</td>
+                    <td>4</td>
                   </tr>
-                
-                  <tr class="backlog-row" data-status="todo" data-crit="medium">
+
+                  <tr class="backlog-row" data-status="done" data-crit="medium">
                     <td><span class="crit-dot crit-medium"></span></td>
                     <td>#28</td>
-                    <td>Lineup Stats Tab: "Matchup Proj" Rename & Default Polish</td>
-                    <td><span class="status todo">TODO</span></td>
+                    <td>Lineup Stats Tab: "Matchup Proj" Rename &amp; Default Polish</td>
+                    <td><span class="status done">DONE</span></td>
                     <td>~25K</td>
-                    <td>1</td>
+                    <td>3</td>
                   </tr>
-                
-                  <tr class="backlog-row" data-status="todo" data-crit="medium">
+
+                  <tr class="backlog-row" data-status="done" data-crit="medium">
                     <td><span class="crit-dot crit-medium"></span></td>
                     <td>#32</td>
                     <td>Draft Room: Team Distribution Panel</td>
-                    <td><span class="status todo">TODO</span></td>
+                    <td><span class="status done">DONE</span></td>
                     <td>~30K</td>
-                    <td>1</td>
+                    <td>3</td>
                   </tr>
-                
+
+                  <tr class="backlog-row" data-status="done" data-crit="medium">
+                    <td><span class="crit-dot crit-medium"></span></td>
+                    <td>#34</td>
+                    <td>Auto-Set Lineup</td>
+                    <td><span class="status done">DONE</span></td>
+                    <td>~60K</td>
+                    <td>6</td>
+                  </tr>
+
                   <tr class="backlog-row" data-status="partial" data-crit="medium">
                     <td><span class="crit-dot crit-medium"></span></td>
                     <td>#5</td>
                     <td>Waiver Wire System</td>
                     <td><span class="status partial">PARTIAL</span></td>
                     <td>~110K</td>
-                    <td>2</td>
+                    <td>6</td>
                   </tr>
-                
+
                   <tr class="backlog-row" data-status="todo" data-crit="medium">
                     <td><span class="crit-dot crit-medium"></span></td>
                     <td>#6</td>
                     <td>Free Agent Acquisition Budget</td>
                     <td><span class="status todo">TODO</span></td>
                     <td>~80K</td>
-                    <td>2</td>
+                    <td>7</td>
                   </tr>
-                
-                  <tr class="backlog-row" data-status="todo" data-crit="medium">
-                    <td><span class="crit-dot crit-medium"></span></td>
-                    <td>#7</td>
-                    <td>Trade System</td>
-                    <td><span class="status todo">TODO</span></td>
-                    <td>~130K</td>
-                    <td>2</td>
-                  </tr>
-                
-                  <tr class="backlog-row" data-status="todo" data-crit="medium">
+
+                  <tr class="backlog-row" data-status="done" data-crit="medium">
                     <td><span class="crit-dot crit-medium"></span></td>
                     <td>#8</td>
                     <td>Transaction History</td>
-                    <td><span class="status todo">TODO</span></td>
+                    <td><span class="status done">DONE</span></td>
                     <td>~55K</td>
-                    <td>2</td>
+                    <td>3</td>
                   </tr>
-                
-                  <tr class="backlog-row" data-status="todo" data-crit="medium">
+
+                  <tr class="backlog-row" data-status="done" data-crit="medium">
                     <td><span class="crit-dot crit-medium"></span></td>
                     <td>#9</td>
                     <td>Live Matchup Center</td>
-                    <td><span class="status todo">TODO</span></td>
+                    <td><span class="status done">DONE</span></td>
                     <td>—</td>
-                    <td>3</td>
+                    <td>4</td>
                   </tr>
-                
-                  <tr class="backlog-row" data-status="todo" data-crit="medium">
+
+                  <tr class="backlog-row" data-status="done" data-crit="medium">
                     <td><span class="crit-dot crit-medium"></span></td>
                     <td>#10</td>
                     <td>Win Probability Engine</td>
-                    <td><span class="status todo">TODO</span></td>
+                    <td><span class="status done">DONE</span></td>
                     <td>—</td>
-                    <td>3</td>
+                    <td>4</td>
                   </tr>
-                
+
                   <tr class="backlog-row" data-status="partial" data-crit="medium">
                     <td><span class="crit-dot crit-medium"></span></td>
                     <td>#11</td>
                     <td>Matchup Storylines</td>
                     <td><span class="status partial">PARTIAL</span></td>
-                    <td>—</td>
-                    <td>3</td>
+                    <td>~50K</td>
+                    <td>7</td>
                   </tr>
-                
-                  <tr class="backlog-row" data-status="todo" data-crit="medium">
+
+                  <tr class="backlog-row" data-status="done" data-crit="medium">
                     <td><span class="crit-dot crit-medium"></span></td>
                     <td>#24</td>
                     <td>Lineup Management v2</td>
-                    <td><span class="status todo">TODO</span></td>
+                    <td><span class="status done">DONE</span></td>
                     <td>—</td>
-                    <td>3</td>
+                    <td>4</td>
                   </tr>
-                
+
                   <tr class="backlog-row" data-status="todo" data-crit="medium">
                     <td><span class="crit-dot crit-medium"></span></td>
                     <td>#25</td>
-                    <td>Team Analysis & Insights Tab</td>
+                    <td>Team Analysis &amp; Insights Tab</td>
                     <td><span class="status todo">TODO</span></td>
                     <td>~85K</td>
-                    <td>3</td>
+                    <td>6</td>
                   </tr>
-                
+
                   <tr class="backlog-row" data-status="todo" data-crit="medium">
                     <td><span class="crit-dot crit-medium"></span></td>
                     <td>#29</td>
                     <td>Weekly Performance Dashboard</td>
                     <td><span class="status todo">TODO</span></td>
                     <td>~65K</td>
-                    <td>3</td>
+                    <td>5</td>
                   </tr>
-                
-                  <tr class="backlog-row" data-status="todo" data-crit="medium">
+
+                  <tr class="backlog-row" data-status="done" data-crit="medium">
                     <td><span class="crit-dot crit-medium"></span></td>
                     <td>#30</td>
                     <td>Playoff Experience UX</td>
-                    <td><span class="status todo">TODO</span></td>
+                    <td><span class="status done">DONE</span></td>
                     <td>~40K</td>
-                    <td>3</td>
+                    <td>5</td>
                   </tr>
                 
                   <tr class="backlog-row" data-status="todo" data-crit="medium">
                     <td><span class="crit-dot crit-medium"></span></td>
                     <td>#12</td>
                     <td>Multi-Season Historical Library</td>
-                    <td><span class="status todo">TODO</span></td>
+                    <td><span class="status todo">BACKLOG</span></td>
                     <td>—</td>
-                    <td>4</td>
+                    <td>Post-S7</td>
                   </tr>
-                
-                  <tr class="backlog-row" data-status="todo" data-crit="medium">
+
+                  <tr class="backlog-row" data-status="done" data-crit="medium">
                     <td><span class="crit-dot crit-medium"></span></td>
                     <td>#13</td>
                     <td>Replay Simulation Speed Controls</td>
-                    <td><span class="status todo">TODO</span></td>
+                    <td><span class="status done">DONE</span></td>
                     <td>—</td>
-                    <td>4</td>
+                    <td>5</td>
                   </tr>
-                
+
                   <tr class="backlog-row" data-status="todo" data-crit="medium">
                     <td><span class="crit-dot crit-medium"></span></td>
                     <td>#14</td>
                     <td>Alternate History Drafts</td>
-                    <td><span class="status todo">TODO</span></td>
+                    <td><span class="status todo">BACKLOG</span></td>
                     <td>—</td>
-                    <td>4</td>
+                    <td>Post-S7</td>
                   </tr>
-                
+
                   <tr class="backlog-row" data-status="todo" data-crit="medium">
                     <td><span class="crit-dot crit-medium"></span></td>
                     <td>#15</td>
                     <td>Replay Analytics</td>
-                    <td><span class="status todo">TODO</span></td>
+                    <td><span class="status todo">BACKLOG</span></td>
                     <td>—</td>
-                    <td>4</td>
+                    <td>Post-S7</td>
                   </tr>
-                
+
                   <tr class="backlog-row" data-status="todo" data-crit="medium">
                     <td><span class="crit-dot crit-medium"></span></td>
                     <td>#16</td>
                     <td>League Chat</td>
-                    <td><span class="status todo">TODO</span></td>
+                    <td><span class="status todo">BACKLOG</span></td>
                     <td>—</td>
-                    <td>5</td>
+                    <td>Post-S7</td>
                   </tr>
-                
-                  <tr class="backlog-row" data-status="partial" data-crit="medium">
+
+                  <tr class="backlog-row" data-status="done" data-crit="medium">
                     <td><span class="crit-dot crit-medium"></span></td>
                     <td>#17</td>
                     <td>Rivalries</td>
-                    <td><span class="status partial">PARTIAL</span></td>
+                    <td><span class="status done">DONE</span></td>
                     <td>—</td>
-                    <td>5</td>
+                    <td>4</td>
                   </tr>
-                
+
                   <tr class="backlog-row" data-status="todo" data-crit="medium">
                     <td><span class="crit-dot crit-medium"></span></td>
                     <td>#18</td>
                     <td>League Hall of Fame</td>
                     <td><span class="status todo">TODO</span></td>
                     <td>—</td>
-                    <td>5</td>
+                    <td>7</td>
                   </tr>
-                
+
                   <tr class="backlog-row" data-status="todo" data-crit="medium">
                     <td><span class="crit-dot crit-medium"></span></td>
                     <td>#31</td>
-                    <td>Player Legacy & Cross-Season Tracking</td>
+                    <td>Player Legacy &amp; Cross-Season Tracking</td>
                     <td><span class="status todo">TODO</span></td>
                     <td>~95K</td>
-                    <td>5</td>
+                    <td>7</td>
                   </tr>
-                
+
                   <tr class="backlog-row" data-status="todo" data-crit="medium">
                     <td><span class="crit-dot crit-medium"></span></td>
                     <td>#19</td>
                     <td>Keeper Leagues</td>
-                    <td><span class="status todo">TODO</span></td>
+                    <td><span class="status todo">BACKLOG</span></td>
                     <td>—</td>
-                    <td>6</td>
+                    <td>Post-S7</td>
                   </tr>
-                
+
                   <tr class="backlog-row" data-status="todo" data-crit="medium">
                     <td><span class="crit-dot crit-medium"></span></td>
                     <td>#20</td>
                     <td>Dynasty Leagues</td>
-                    <td><span class="status todo">TODO</span></td>
+                    <td><span class="status todo">BACKLOG</span></td>
                     <td>—</td>
-                    <td>6</td>
+                    <td>Post-S7</td>
                   </tr>
-                
+
                   <tr class="backlog-row" data-status="partial" data-crit="medium">
                     <td><span class="crit-dot crit-medium"></span></td>
                     <td>#21</td>
                     <td>Live Scoring</td>
                     <td><span class="status partial">PARTIAL</span></td>
                     <td>—</td>
-                    <td>7</td>
+                    <td>Post-S7</td>
                   </tr>
-                
+
                   <tr class="backlog-row" data-status="todo" data-crit="medium">
                     <td><span class="crit-dot crit-medium"></span></td>
                     <td>#22</td>
                     <td>Push Notifications</td>
-                    <td><span class="status todo">TODO</span></td>
+                    <td><span class="status todo">BACKLOG</span></td>
                     <td>—</td>
-                    <td>7</td>
+                    <td>Post-S7</td>
                   </tr>
-                
+
                   <tr class="backlog-row" data-status="todo" data-crit="medium">
                     <td><span class="crit-dot crit-medium"></span></td>
                     <td>#23</td>
                     <td>Player Trends</td>
-                    <td><span class="status todo">TODO</span></td>
+                    <td><span class="status todo">BACKLOG</span></td>
                     <td>—</td>
-                    <td>7</td>
+                    <td>Post-S7</td>
                   </tr>
                 
               </tbody>
@@ -1201,7 +1197,7 @@
       
         <div class="crit-section-low">
           
-            <div class="section-header">⚪ Low / Post-launch <span class="section-count">1</span></div>
+            <div class="section-header">⚪ Low / Post-launch <span class="section-count">2</span></div>
             <table class="backlog-table">
               <thead>
                 <tr>
@@ -1210,20 +1206,29 @@
                   <th>Title</th>
                   <th style="width: 6rem;">Status</th>
                   <th style="width: 5rem;">Tokens</th>
-                  <th style="width: 5rem;">Phase</th>
+                  <th style="width: 5rem;">Sprint</th>
                 </tr>
               </thead>
               <tbody>
-                
-                  <tr class="backlog-row" data-status="todo" data-crit="low">
+
+                  <tr class="backlog-row" data-status="partial" data-crit="low">
                     <td><span class="crit-dot crit-low"></span></td>
                     <td>#33</td>
                     <td>Multi-Season League Architecture</td>
-                    <td><span class="status todo">TODO</span></td>
+                    <td><span class="status partial">PARTIAL</span></td>
                     <td>~90K</td>
-                    <td>5</td>
+                    <td>2 (schema) / 7 (UX)</td>
                   </tr>
-                
+
+                  <tr class="backlog-row" data-status="todo" data-crit="low">
+                    <td><span class="crit-dot crit-low"></span></td>
+                    <td>#7</td>
+                    <td>Trade System — Deferred / Someday Maybe</td>
+                    <td><span class="status todo">DEFERRED</span></td>
+                    <td>~130K</td>
+                    <td>Deferred</td>
+                  </tr>
+
               </tbody>
             </table>
           

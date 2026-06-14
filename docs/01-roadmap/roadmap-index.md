@@ -58,6 +58,7 @@ Implemented systems include:
 - League Creation UX (8-team recommendation)
 - In-app notifications (all three MVP-critical types)
 - Founder Operations Console (`/founder/`) — cross-league monitoring, simulation launcher, end-to-end validator; `FOUNDER_EMAILS` env-var auth gate; no schema change
+- Auto-Set Lineup (`#34`) — `computeOptimalLineup()` in `lib/lineup.ts`; staged save model; "Auto-set" button in lineup manager; FA suggestions API (`GET /api/leagues/[leagueId]/fa-suggestions`); playoff period fallback for games-remaining badges
 
 These systems should be considered core platform functionality.
 
@@ -110,27 +111,22 @@ The list below is sequenced by **token efficiency** — each feature's estimated
 
 ### Standard sessions (60–90K tokens — one feature per session)
 
-2. **Weekly Performance Dashboard (#29)** · ~65K · Sprint 5
+2. **Weekly Performance Dashboard (#29)** · ~65K · Sprint 5 (remaining)
    Spec: `docs/02-engineering/weekly-performance-dashboard-spec.md`. New page replacing the Schedule tab. Aggregates existing `Matchup` + `StatLine` rows; no schema changes. Pulled up from Sprint 6 — no schema changes, all reads on existing data, directly serves manager experience during beta.
 
-3. **Auto-Set Lineup** · ~60K · Sprint 6 — P1
-   Spec: `docs/02-engineering/auto-set-lineup-spec.md`. One-click optimal lineup fill (staged save, auto-set algorithm, FA suggestions, playoff period fallback). No schema changes.
-
-4. **Beta Feedback Infrastructure** · ~40K · Sprint 6
+3. **Beta Feedback Infrastructure** · ~40K · Sprint 6
    Spec: `docs/02-engineering/beta-feedback-spec.md`. In-app feedback widget + `FeedbackSubmission` table + Founder Console feed. `betaStatus` field on `FantasyLeague`.
 
-5. **Team Analysis & Insights (#25)** · ~85K · Sprint 6
-   Spec: `docs/02-engineering/team-analysis-spec.md`. New Analysis tab on the matchup page. Player trends + position-group vs league median + FA suggestions. Trade suggestion CTA deferred until #7.
+4. **Team Analysis & Insights (#25)** · ~85K · Sprint 6
+   Spec: `docs/02-engineering/team-analysis-spec.md`. New Analysis tab on the matchup page. Player trends + position-group vs league median + FA suggestions. Trade suggestion CTA removed — gated on Trade System (#7), which is now deferred.
 
-6. **Trade System (#7)** · ~130K · Sprint 6
-   Spec: `docs/02-engineering/trade-spec.md`. Dedicated session. `Trade`/`TradeOffer` schema, proposal/accept/reject flow, commissioner review gate.
-
-7. **Waiver Priority + Processing (#5)** · ~110K · Sprint 6
+5. **Waiver Priority + Processing (#5)** · ~110K · Sprint 6
    Spec: `docs/02-engineering/waiver-spec.md`. Rolling priority, 48h window, daily batch processing. `WaiverClaim` + `WaiverPriority` tables.
 
 **Shipped:**
-- **League Onboarding (#2)** · ✅ Welcome flow, 6-step wizard, manager draft prep guide; `User.onboardingCompletedAt` schema field.
-- **Transaction History (#8)** · ✅ Paginated API + page with type/team filters, replay guard, infinite scroll.
+- **League Onboarding (#2)** · ✅ Welcome flow, 6-step wizard, manager draft prep guide; `User.onboardingCompletedAt` schema field. (Sprint 3)
+- **Transaction History (#8)** · ✅ Paginated API + page with type/team filters, replay guard, infinite scroll. (Sprint 3)
+- **Auto-Set Lineup (#34)** · ✅ `computeOptimalLineup()`, staged save model, FA suggestions API, playoff period fallback. (Sprint 6)
 
 **Sprint 7 (retention layer):**
 
@@ -145,6 +141,8 @@ The list below is sequenced by **token efficiency** — each feature's estimated
 
 11. **Player Legacy (#31)** · ~95K · Sprint 7
     `/profile` page with career history and global leaderboard. Meaningful only after first completed+renewed season; ship skeleton now.
+
+**Deferred / lowest priority:** **Trade System (#7)** · ~130K — deprioritized June 2026. Beta cohort is small enough for out-of-band trades; revisit only if founding commissioners surface strong demand. Spec exists at `docs/02-engineering/trade-spec.md` when ready.
 
 **Deferred to post-Sprint-7 backlog:** Growth analytics (GR-001/002/003/004) · real-time push scoring · push notifications · multi-season historical library (#12) · player trends (#23) · keeper/dynasty (#19/#20) · native apps / AI features. See `docs/01-roadmap/roadmap-sprints.md` for full backlog list.
 

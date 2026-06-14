@@ -342,9 +342,10 @@ export async function getDashboardData(
     ...(opponentRosterRaw as Array<{ player: { team: { id: string } | null } }>).map((e) => e.player.team?.id ?? null),
   ].filter((id): id is string => !!id))];
 
-  const gamesPerTeam = await gamesPerTeamInWindow(
-    allTeamIds, new Date(nowMs), displayPeriod.endsAt, prisma, { exclusiveStart: true }
-  );
+  const [gamesPerTeam, gamesPlayedPerTeam] = await Promise.all([
+    gamesPerTeamInWindow(allTeamIds, new Date(nowMs), displayPeriod.endsAt, prisma, { exclusiveStart: true }),
+    gamesPerTeamInWindow(allTeamIds, displayPeriod.startsAt, new Date(nowMs), prisma),
+  ]);
 
   function withGames(players: typeof myDetailed.players): PlayerMatchupRow[] {
     return players.map((p) => ({
@@ -376,13 +377,13 @@ export async function getDashboardData(
   ]);
 
   const myPlayers = withGames(myDetailed.players);
-  const lineupAlerts: LineupAlert[] = myPlayers
-    .filter((p) =>
-      p.gamesThisPeriod === 0 &&
-      p.gameCount === 0 &&
-      p.slot !== "BENCH" &&
-      p.slot !== "IR"
-    )
+  const lineupAlerts: LineupAlert[] = myDetailed.players
+    .filter((p) => {
+      if (p.slot === "BENCH" || p.slot === "IR") return false;
+      const futureGames = p.teamId ? (gamesPerTeam.get(p.teamId) ?? 0) : 0;
+      const playedGames = p.teamId ? (gamesPlayedPerTeam.get(p.teamId) ?? 0) : 0;
+      return futureGames === 0 && p.gameCount === 0 && playedGames === 0;
+    })
     .map((p) => ({ playerId: p.playerId, name: p.name, reason: "zero_games" as const }));
 
   // VP mode: resolve opponent roster rows
@@ -630,13 +631,10 @@ async function getPlayoffDashboardData(
     ].filter((id): id is string => !!id)),
   ];
 
-  const gamesPerTeam = await gamesPerTeamInWindow(
-    allTeamIds,
-    new Date(nowMs),
-    period.endsAt,
-    prisma,
-    { exclusiveStart: true }
-  );
+  const [gamesPerTeam, gamesPlayedPerTeam] = await Promise.all([
+    gamesPerTeamInWindow(allTeamIds, new Date(nowMs), period.endsAt, prisma, { exclusiveStart: true }),
+    gamesPerTeamInWindow(allTeamIds, period.startsAt, new Date(nowMs), prisma),
+  ]);
 
   function withGames(players: typeof myDetailed.players): PlayerMatchupRow[] {
     return players.map((p) => ({
@@ -656,13 +654,13 @@ async function getPlayoffDashboardData(
   const opponentPlayers = withGames(opponentDetailed.players);
 
   // Lineup alerts for zero-game players
-  const lineupAlerts: LineupAlert[] = myPlayers
-    .filter((p) =>
-      p.gamesThisPeriod === 0 &&
-      p.gameCount === 0 &&
-      p.slot !== "BENCH" &&
-      p.slot !== "IR"
-    )
+  const lineupAlerts: LineupAlert[] = myDetailed.players
+    .filter((p) => {
+      if (p.slot === "BENCH" || p.slot === "IR") return false;
+      const futureGames = p.teamId ? (gamesPerTeam.get(p.teamId) ?? 0) : 0;
+      const playedGames = p.teamId ? (gamesPlayedPerTeam.get(p.teamId) ?? 0) : 0;
+      return futureGames === 0 && p.gameCount === 0 && playedGames === 0;
+    })
     .map((p) => ({ playerId: p.playerId, name: p.name, reason: "zero_games" as const }));
 
   // Top performers

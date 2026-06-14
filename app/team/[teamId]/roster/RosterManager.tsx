@@ -2,6 +2,7 @@
 
 import { useState, useTransition, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import AddAndSlotModal from "@/components/AddAndSlotModal";
 
 export type Position = "FORWARD" | "DEFENSE" | "GOALIE";
 
@@ -23,6 +24,9 @@ export interface FreeAgentRow {
   position: Position;
   teamAbbr: string | null;
   stats: SkaterStats | GoalieStats | null;
+  pwhlTeamId?: string | null;
+  gamesThisPeriod?: number | null;
+  isLocked?: boolean;
 }
 
 export interface SkaterStats {
@@ -41,6 +45,7 @@ interface Props {
   teamId: string;
   teamName: string;
   maxRosterSize: number;
+  rosterSettings: { forward?: number; defense?: number; goalie?: number; util?: number };
   initialRoster: RosterPlayerRow[];
   freeAgents: FreeAgentRow[];
   allTeams: { id: string; name: string }[];
@@ -68,12 +73,12 @@ const POS_COLORS: Record<string, string> = {
 
 type Tab = "roster" | "freeAgents";
 type ViewMode = "cards" | "table";
-type SortKey = "name" | "pts" | "goals" | "assists" | "ppp" | "shots" | "hits" | "blocks" | "wins" | "savePct" | "goalsAgainst" | "fp";
+type SortKey = "name" | "pts" | "goals" | "assists" | "ppp" | "shots" | "hits" | "blocks" | "wins" | "savePct" | "goalsAgainst" | "fp" | "gamesThisPeriod";
 
 // ── main component ────────────────────────────────────────────────────────────
 
 export default function RosterManager({
-  leagueId, teamId, teamName, maxRosterSize,
+  leagueId, teamId, teamName, maxRosterSize, rosterSettings,
   initialRoster, freeAgents,
   allTeams, viewTeamId, viewTeamName, viewRoster, isOwnRoster,
 }: Props) {
@@ -97,6 +102,7 @@ export default function RosterManager({
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [slottingPlayer, setSlottingPlayer] = useState<FreeAgentRow | null>(null);
 
   const isFull = roster.length >= maxRosterSize;
 
@@ -119,7 +125,12 @@ export default function RosterManager({
       setPendingAdd(null);
       setDropForAdd(null);
       setSuccessMsg(`${addedFa?.name ?? "Player"} added to your roster.`);
-      router.refresh();
+      // Show Add & Slot modal for unlocked players; locked players go straight to bench
+      if (addedFa && !addedFa.isLocked) {
+        setSlottingPlayer(addedFa);
+      } else {
+        router.refresh();
+      }
     });
   }
 
@@ -341,6 +352,18 @@ export default function RosterManager({
             </div>
           )}
         </div>
+      )}
+
+      {/* ── Add & Slot modal ── */}
+      {slottingPlayer && (
+        <AddAndSlotModal
+          player={slottingPlayer}
+          activeRoster={initialRoster.filter((e) => e.slot !== "BENCH" && e.slot !== "IR")}
+          rosterSettings={rosterSettings}
+          teamId={teamId}
+          leagueId={leagueId}
+          onComplete={() => { setSlottingPlayer(null); router.refresh(); }}
+        />
       )}
 
       {/* ── FREE AGENTS TAB (own team only) ── */}
@@ -616,13 +639,13 @@ function FaColHeader({ isGoalie, sortKey, sortAsc, onSort }: {
   isGoalie: boolean; sortKey: SortKey; sortAsc: boolean; onSort: (k: SortKey) => void;
 }) {
   const cols = isGoalie
-    ? "minmax(80px,1fr) 50px 50px 60px 50px 50px 60px 80px"
-    : "minmax(80px,1fr) 36px 36px 36px 46px 46px 36px 36px 60px 80px";
+    ? "minmax(80px,1fr) 40px 50px 50px 60px 50px 50px 60px 80px"
+    : "minmax(80px,1fr) 40px 36px 36px 36px 46px 46px 36px 36px 60px 80px";
 
-  function SortTh({ label, k }: { label: string; k: SortKey }) {
+  function SortTh({ label, k, title }: { label: string; k: SortKey; title?: string }) {
     const active = sortKey === k;
     return (
-      <button onClick={() => onSort(k)} style={{
+      <button onClick={() => onSort(k)} title={title} style={{
         background: "none", border: "none", cursor: "pointer", textAlign: "right",
         fontSize: 10, fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase",
         color: active ? "#a5b4fc" : "#475569", padding: 0,
@@ -640,6 +663,7 @@ function FaColHeader({ isGoalie, sortKey, sortAsc, onSort }: {
       borderBottom: "1px solid rgba(148,163,184,0.08)",
     }}>
       <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase", color: "#475569" }}>Player</span>
+      <SortTh label="Wk" k="gamesThisPeriod" title="Games remaining this period" />
       {isGoalie ? (
         <>
           <SortTh label="GP" k="fp" />
@@ -680,8 +704,8 @@ function FaRow({ player, index, isFull, rosterPlayers, pendingAdd, dropForAdd,
   const s = player.stats;
   const isThisPending = pendingAdd === player.playerId;
   const cols = isGoalie
-    ? "minmax(80px,1fr) 50px 50px 60px 50px 50px 60px 80px"
-    : "minmax(80px,1fr) 36px 36px 36px 46px 46px 36px 36px 60px 80px";
+    ? "minmax(80px,1fr) 40px 50px 50px 60px 50px 50px 60px 80px"
+    : "minmax(80px,1fr) 40px 36px 36px 36px 46px 46px 36px 36px 60px 80px";
   const fmtSvPct = (v: number | null) => v != null ? v.toFixed(3).replace(/^0/, "") : "—";
 
   return (
@@ -700,6 +724,20 @@ function FaRow({ player, index, isFull, rosterPlayers, pendingAdd, dropForAdd,
           </span>
           {player.teamAbbr && <span style={{ fontSize: 10, color: "#475569", flexShrink: 0 }}>{player.teamAbbr}</span>}
         </div>
+
+        {/* Games remaining this period badge */}
+        {player.gamesThisPeriod != null ? (
+          <span style={{
+            fontSize: 11, fontWeight: 700, textAlign: "center",
+            padding: "2px 6px", borderRadius: 10,
+            background: player.gamesThisPeriod > 0 ? "rgba(99,102,241,0.2)" : "rgba(100,116,139,0.15)",
+            color: player.gamesThisPeriod > 0 ? "#a5b4fc" : "#475569",
+          }}>
+            {player.gamesThisPeriod}
+          </span>
+        ) : (
+          <span style={{ fontSize: 11, color: "#334155", textAlign: "center" }}>—</span>
+        )}
 
         {isGoalie ? (
           <>
@@ -775,6 +813,7 @@ function Num({ v, highlight }: { v: number | null | undefined; highlight?: boole
 }
 
 function getSortValue(fa: FreeAgentRow, key: SortKey): number {
+  if (key === "gamesThisPeriod") return fa.gamesThisPeriod ?? -1;
   const s = fa.stats;
   if (!s) return -Infinity;
   if (key === "fp") return s.fantasyPoints;

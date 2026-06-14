@@ -3,6 +3,8 @@ import { prisma } from "@/lib/db";
 import { requireAuth, requireTeamOwner } from "@/lib/auth";
 import { scoreStatLine, DEFAULT_SCORING } from "@/lib/scoring";
 import type { ScoringSettings } from "@/lib/scoring";
+import { getDevNow } from "@/lib/devTime";
+import { getSeasonState } from "@/lib/season";
 import RosterManager from "./RosterManager";
 import type { RosterPlayerRow, FreeAgentRow, SkaterStats, GoalieStats } from "./RosterManager";
 import type { RosterSettings } from "@/lib/lineup";
@@ -79,6 +81,12 @@ export default async function TeamRosterPage({ params, searchParams }: Props) {
 
   const leagueId = team.league.id;
   const settings = (team.league.rosterSettings ?? {}) as RosterSettings;
+  const nowMs = await getDevNow();
+  const now = new Date(nowMs);
+  const seasonState = await getSeasonState(leagueId, nowMs, prisma);
+  const activePeriod = seasonState.activePeriod;
+  const upcomingPeriod = seasonState.periods.find((p) => p.status === "UPCOMING")?.period ?? null;
+  const periodForGames = activePeriod ?? upcomingPeriod;
   const scoring = (
     team.league.scoringSettings && typeof team.league.scoringSettings === "object" &&
     "skater" in (team.league.scoringSettings as object)
@@ -164,7 +172,7 @@ export default async function TeamRosterPage({ params, searchParams }: Props) {
   // Free agents (only needed for own-roster add/drop; still fetched so the tab renders instantly)
   type AggRow = {
     id: string; firstName: string; lastName: string;
-    position: string; abbreviation: string | null;
+    position: string; abbreviation: string | null; pwhlTeamId: string | null;
     gp: bigint; goals: bigint; assists: bigint; plusMinus: bigint; penaltyMinutes: bigint;
     ppp: bigint; shots: bigint; hits: bigint; blocks: bigint;
     saves: bigint; goalsAgainst: bigint; wins: bigint; shutouts: bigint;
@@ -177,6 +185,7 @@ export default async function TeamRosterPage({ params, searchParams }: Props) {
       p."lastName",
       p.position::text,
       t.abbreviation,
+      p."teamId" as "pwhlTeamId",
       COUNT(sl.id)                                                    AS gp,
       COALESCE(SUM(sl.goals), 0)                                      AS goals,
       COALESCE(SUM(sl.assists), 0)                                    AS assists,
@@ -203,9 +212,32 @@ export default async function TeamRosterPage({ params, searchParams }: Props) {
         JOIN "FantasyTeam" ft ON ft.id = re."fantasyTeamId"
         WHERE ft."leagueId" = ${leagueId}
       )
-    GROUP BY p.id, p."firstName", p."lastName", p.position, t.abbreviation
+    GROUP BY p.id, p."firstName", p."lastName", p.position, t.abbreviation, p."teamId"
     ORDER BY (COALESCE(SUM(sl.goals), 0) + COALESCE(SUM(sl.assists), 0)) DESC, p."lastName"
   `;
+
+  // Batch query: period games for all FA PWHL teams — used for games-remaining badge and lock status
+  const faTeamIds = [...new Set(faRows.map((r) => r.pwhlTeamId).filter((id): id is string => !!id))];
+  const periodGames = periodForGames && faTeamIds.length > 0
+    ? await prisma.game.findMany({
+        where: {
+          startsAt: { gte: periodForGames.startsAt, lt: periodForGames.endsAt },
+          OR: [{ homeTeamId: { in: faTeamIds } }, { awayTeamId: { in: faTeamIds } }],
+        },
+        select: { homeTeamId: true, awayTeamId: true, startsAt: true },
+      })
+    : [];
+  const gamesRemaining = new Map<string, number>();
+  const lockedTeamIds = new Set<string>();
+  for (const g of periodGames) {
+    if (g.startsAt > now) {
+      gamesRemaining.set(g.homeTeamId, (gamesRemaining.get(g.homeTeamId) ?? 0) + 1);
+      gamesRemaining.set(g.awayTeamId, (gamesRemaining.get(g.awayTeamId) ?? 0) + 1);
+    } else {
+      lockedTeamIds.add(g.homeTeamId);
+      lockedTeamIds.add(g.awayTeamId);
+    }
+  }
 
   const sk = scoring.skater;
   const gk = scoring.goalie;
@@ -225,6 +257,9 @@ export default async function TeamRosterPage({ params, searchParams }: Props) {
         name: `${r.firstName} ${r.lastName}`,
         position,
         teamAbbr: r.abbreviation ?? null,
+        pwhlTeamId: r.pwhlTeamId,
+        gamesThisPeriod: periodForGames ? (gamesRemaining.get(r.pwhlTeamId ?? "") ?? 0) : null,
+        isLocked: lockedTeamIds.has(r.pwhlTeamId ?? ""),
         stats: gp === 0 ? null : { gp, wins, saves, goalsAgainst: ga, shutouts, savePct: totalFaced > 0 ? saves / totalFaced : null, fantasyPoints } as GoalieStats,
       };
     }
@@ -246,6 +281,9 @@ export default async function TeamRosterPage({ params, searchParams }: Props) {
       name: `${r.firstName} ${r.lastName}`,
       position,
       teamAbbr: r.abbreviation ?? null,
+      pwhlTeamId: r.pwhlTeamId,
+      gamesThisPeriod: periodForGames ? (gamesRemaining.get(r.pwhlTeamId ?? "") ?? 0) : null,
+      isLocked: lockedTeamIds.has(r.pwhlTeamId ?? ""),
       stats: gp === 0 ? null : { gp, goals, assists, points: goals + assists, plusMinus, ppp, shots, hits, blocks, fantasyPoints } as SkaterStats,
     };
   });
@@ -256,6 +294,7 @@ export default async function TeamRosterPage({ params, searchParams }: Props) {
       teamId={teamId}
       teamName={team.name}
       maxRosterSize={maxRosterSize(settings)}
+      rosterSettings={settings}
       initialRoster={ownRosterRows}
       freeAgents={freeAgents}
       allTeams={allTeams}

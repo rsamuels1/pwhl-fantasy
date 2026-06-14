@@ -76,6 +76,24 @@ export async function POST(
 
     if (action === "start") {
       await startSeason(leagueId, prisma);
+      // Fetch the resulting state to find Week 1's start date
+      const stateAfterStart = await getSeasonState(leagueId, nowMs, prisma);
+      const firstPeriod = stateAfterStart.periods[0];
+      const week1Ms = firstPeriod ? firstPeriod.period.startsAt.getTime() : nowMs;
+
+      if (leagueRow?.isReplay) {
+        await prisma.fantasyLeague.update({
+          where: { id: leagueId },
+          data: { replayCurrentDate: new Date(week1Ms) },
+        });
+      }
+      const finalState = await getSeasonState(leagueId, week1Ms, prisma);
+      return NextResponse.json({
+        simulatedDate: new Date(week1Ms).toISOString(),
+        scoredWeeks: [],
+        message: "Season started. Set your lineup for Week 1!",
+        state: finalState,
+      });
     }
 
     const result = await advanceSeason(leagueId, nowMs, prisma);

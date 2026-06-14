@@ -70,10 +70,10 @@ opt-in until the official date is known for 2026-27. 3 tests in `tests/season-li
 
 - **IA-005** · Recommend 8-team leagues at creation — ✅ DONE ("Recommended" label + green highlight at 8 teams on creation form)
 - **IA-006** · VP education UI — ✅ DONE (`components/VpExplainer.tsx` on standings page; inline "?" toggle)
-- **IA-007** · Rebalance auto-draft for 3F demand (simulation-tested) — P1
-- **IA-008** · Finalize waiver spec (duration, priority, reset, processing schedule) — P2
-- **IA-009** · Finalize VP tiebreakers: VP → matchup wins → H2H → total FP → random draw — P2
-- **IA-010** · Stat-correction policy (cutoff window, playoff/championship handling) — P2
+- **IA-007** · Rebalance auto-draft for 3F demand (simulation-tested) — ✅ DONE (Sprint 0)
+- **IA-008** · Finalize waiver spec (duration, priority, reset, processing schedule) — Sprint 6 (captured in waiver-spec.md)
+- **IA-009** · Finalize VP tiebreakers: VP → matchup wins → H2H → total FP → random draw — Post-Sprint-7 backlog
+- **IA-010** · Stat-correction policy (cutoff window, playoff/championship handling) — Post-Sprint-7 backlog
 - **IA-011** · Hide advanced non-v1 features (byes, multi-round config, experimental scoring) — ✅ DONE
   Bracket page hides bye text when `topSeedsWithBye === 0`; fixed default 2→0; settings page renders scoring/roster/playoff as human-readable rows (not raw JSON). Checklist: `docs/02-engineering/ia-011-checklist.md`
 
@@ -89,25 +89,24 @@ Priority: CRITICAL
 
 ## 1. Commissioner Dashboard
 
-Status: Largely Implemented
+Status: Implemented ✅
+
+Sprint: 2–4
 
 The admin panel (`app/league/[leagueId]/admin/`) is the central commissioner interface:
 team management, draft setup + auto-draft, replay-aware season controls (advance/score
 week, sim-date stepping), announcements, and a setup checklist. Permissions are enforced
 via `requireCommissioner`.
 
-Remaining gaps:
-
-- Explicit pause / restart replay-season controls
-- Force draft start (currently start happens from the draft room)
-- Lock/unlock lineups override
-- A consolidated league-settings editor (scoring/roster rules post-creation)
+Shipped in Sprint 4 (commit eb65449): pause/restart replay shortcut; force-draft-start CTA;
+lineup lock override (`POST .../commissioner/unlock-player`); pre-draft settings editor;
+all actions write to audit log.
 
 Acceptance Criteria:
 
-- Single dashboard for all commissioner actions ✅ (admin panel)
+- Single dashboard for all commissioner actions ✅
 - Permissions enforced ✅
-- Replay controls available ✅ (advance/score; pause/restart still TODO)
+- All four recovery actions available and audit-logged ✅
 
 ---
 
@@ -153,23 +152,18 @@ All core pages are now usable on a 390px phone without horizontal scrolling. Tou
 
 ## 4. Error Handling
 
-Status: Needed
+Status: Implemented ✅
+
+Sprint: 3
 
 Estimated tokens: ~65K (many small localized touches across all core pages)
 
-Improve user trust.
-
-Features:
-
-- Empty states
-- Loading states
-- Retry actions
-- User-friendly error messages
+Shipped: `components/ErrorState.tsx`, `EmptyState.tsx`, `LoadingState.tsx`; `loading.tsx` + `error.tsx` for 11 routes; draft room raw-error display fixed; empty-state copy standardised; pre-season standings empty state. Spec: `docs/02-engineering/error-handling-spec.md`.
 
 Acceptance Criteria:
 
-- No uncaught UI errors
-- All API failures handled gracefully
+- No uncaught UI errors ✅
+- All API failures handled gracefully ✅
 
 ---
 
@@ -177,7 +171,7 @@ Acceptance Criteria:
 
 Status: Implemented ✅
 
-Phase: 1
+Sprint: 4
 
 Two-column `.overview-grid` layout. Left column: playoff race table using the shared
 `computeRace` from `lib/playoffs/seeding.ts` with clinch / eliminated / bubble / games-back
@@ -193,7 +187,7 @@ admin-panel-only editing UX.
 
 Status: Implemented ✅
 
-Phase: 1
+Sprint: 4
 
 Priority: HIGH
 
@@ -211,7 +205,7 @@ by any column.
 
 Status: Implemented ✅
 
-Phase: 1
+Sprint: 3 (unplanned positive addition)
 
 Priority: MEDIUM
 
@@ -242,7 +236,7 @@ Acceptance Criteria ✅:
 
 Status: Implemented ✅
 
-Phase: 1 (draft room feature)
+Sprint: 3 (unplanned positive addition)
 
 Priority: MEDIUM
 
@@ -288,7 +282,7 @@ Priority: HIGH
 
 ## 5. Waiver Wire System
 
-Status: Partially Implemented
+Status: Partially Implemented — Sprint 6
 
 Estimated tokens: ~110K (new schema columns, waiver service, processing job, commissioner UI)
 
@@ -316,7 +310,7 @@ Dependencies:
 
 ## 6. Free Agent Acquisition Budget (FAAB)
 
-Status: Not Implemented
+Status: Not Implemented — Sprint 7
 
 Estimated tokens: ~80K (depends on #5; bidding logic + UI + budget tracking)
 
@@ -339,9 +333,14 @@ Dependencies:
 
 ## 7. Trade System
 
-Status: Not Implemented
+Status: Not Implemented — DEFERRED (lowest priority / someday maybe)
+
+Sprint: None — moved to backlog as of June 2026
 
 Estimated tokens: ~130K (new domain — schema tables, API routes, proposal/review/approval UI; plan a dedicated session)
+
+Note: Deprioritized June 2026. Beta cohort is small enough for out-of-band trades. Revisit
+only if founding commissioners surface strong demand before public launch.
 
 Features:
 
@@ -363,20 +362,24 @@ Dependencies:
 
 ## 8. Transaction History
 
-Status: Not Implemented
+Status: Implemented ✅
+
+Sprint: 3
 
 Estimated tokens: ~55K (standalone; built on existing CT-002 audit log foundation — no schema changes)
 
+Shipped: Paginated API + `/league/[leagueId]/transactions` page with type/team filters, replay guard, infinite scroll.
+
 Features:
 
-- Adds
-- Drops
-- Trades
-- Waiver claims
+- Adds ✅
+- Drops ✅
+- Trades — pending Trade System (#7)
+- Waiver claims ✅
 
 Acceptance Criteria:
 
-- League transaction log available
+- League transaction log available ✅
 
 ---
 
@@ -430,10 +433,12 @@ Dependencies:
 
 ## 11. Matchup Storylines
 
+Sprint: 7 (league-wide storylines)
+
 Status: Partially Implemented
 
-Per-team storyline chip ("🔥 X is leading your team…") and a weekly recap card ship today.
-League-wide auto-generated storylines are not yet built.
+Per-team storyline chip ("🔥 X is leading your team…") and a weekly recap card are live.
+League-wide auto-generated storylines are scheduled for Sprint 7.
 
 Features:
 
@@ -462,9 +467,36 @@ Features implemented:
 
 ---
 
+## 34. Auto-Set Lineup
+
+Sprint: 6
+
+Priority: P1
+
+Status: Implemented ✅
+
+Estimated tokens: ~60K
+
+Shipped (commits 3e6bbd0, f83468f, 1f06c9a): `computeOptimalLineup()` in `lib/lineup.ts`; "Auto-set" button in `LineupManager.tsx` (purple, disabled when no projections); staged save model (pending changes shown before commit); `beforeunload` guard; playoff period fallback for games-remaining badges during playoffs; `GET /api/leagues/[leagueId]/fa-suggestions` returning top 10 unrostered players by projected FP. Spec: `docs/02-engineering/auto-set-lineup-spec.md`.
+
+Features:
+
+- One-click optimal lineup fill ✅ (greedy algorithm: fill active slots by position priority using projected FP, respecting locks)
+- Staged save model ✅ (user reviews diff before persisting)
+- FA suggestions panel ✅ (top 10 by projected FP with games-remaining count)
+- Playoff period fallback ✅ (uses playoff matchup window when no scoring periods exist)
+
+Acceptance Criteria:
+
+- Auto-set button computes and stages an optimal lineup without saving it ✅
+- Locked (period-locked and play-locked) players are not moved ✅
+- FA suggestions show top upgrades ranked by projected FP ✅
+
+---
+
 ## 25. Team Analysis & Insights Tab
 
-Phase: 3
+Sprint: 6
 
 Priority: HIGH (trade-suggestion portion gated by Trade System #7)
 
@@ -518,7 +550,7 @@ Dependencies:
 
 ## 29. Weekly Performance Dashboard (Schedule Tab Replacement)
 
-Phase: 3
+Sprint: 5 (remaining)
 
 Priority: MEDIUM
 
@@ -560,7 +592,7 @@ Acceptance Criteria:
 
 ## 30. Playoff Experience UX
 
-Phase: 3
+Sprint: 5
 
 Priority: HIGH (once playoffs start)
 
@@ -681,11 +713,11 @@ Priority: MEDIUM
 
 ## 33. Multi-Season League Architecture (`parentLeagueId`)
 
-Phase: 5 (UX / feature layer; schema foundation is Sprint 2)
+Sprint: 2 (schema + renewal); Sprint 7 (history/UX layer)
 
 Priority: P1 — foundational; unlocks the entire retention layer
 
-Status: Schema building in Sprint 2 (MS-001/002/003); renewal UX + history views are Phase 5 post-MVP
+Status: Schema + renewal shipped Sprint 2 (MS-001/002/003/004 ✅); history views (Sprint 7)
 
 Spec: `docs/06-architecture/implement-parentleagueid.md` (Story MS-001)
 
@@ -740,25 +772,31 @@ Acceptance Criteria:
 
 ## 17. Rivalries
 
-Status: Partially Implemented
+Status: Implemented ✅
 
-Season-long head-to-head records are already computed (`getHeadToHeadRecord` in
-`lib/playoffs/seeding.ts`) and surfaced on the matchup hero in 1v1 mode. Rival badges and
-a dedicated historical-matchups view are not yet built.
+Sprint: 4
+
+Season-long head-to-head records computed via `getHeadToHeadRecord` in `lib/playoffs/seeding.ts`.
+Rival badge and H2H history view shipped Sprint 4 (commit cbe8374).
 
 Features:
 
 - Head-to-head records ✅
-- Rival badges — not built
-- Historical matchups — not built (dedicated view)
+- Rival badge ✅ (most-played opponent, tie-break by W-L record)
+- Historical matchups ✅ (last 5 matchups on matchup page: dates, scores, outcomes)
 
 Acceptance Criteria:
 
-- League history persists (H2H records done; persistent rivalry UI TODO)
+- Rival badge visible with season series W-L-T record ✅
+- H2H history view on matchup page ✅
 
 ---
 
 ## 18. League Hall of Fame
+
+Sprint: 7 (combined with #33 — see League History & Hall of Fame)
+
+Status: Not Implemented
 
 Features:
 
@@ -774,7 +812,7 @@ Acceptance Criteria:
 
 ## 31. Player Legacy & Cross-Season Tracking
 
-Phase: 5
+Sprint: 7
 
 Priority: MEDIUM
 

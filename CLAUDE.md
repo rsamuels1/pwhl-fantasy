@@ -170,6 +170,7 @@ survives DB resets and schema migrations.
 6. Integration + load test the draft room + beta
    - Draft Reliability Certification ✅ (duplicate-tab handling, concurrent-league load test, reconnect stress test; findings in `docs/04-operations/commissioner-runbook.md`; all MVP scorecard gates green)
    - Founder Operations Console ✅ (`app/founder/` — dashboard, league explorer, league detail with sim controls, throwaway season validator; `FOUNDER_EMAILS` env-var auth gate; API routes under `app/api/founder/`; no schema change)
+   - Auto-Set Lineup ✅ (`computeOptimalLineup()` in `lib/lineup.ts`; staged save model — "Auto-set" purple button in `LineupManager.tsx`, pending diff shown before persisting; `beforeunload` guard; playoff period fallback for games-remaining badges during playoffs; `GET /api/leagues/[leagueId]/fa-suggestions` returns top 10 unrostered players by projected FP; spec: `docs/02-engineering/auto-set-lineup-spec.md`; commits: 3e6bbd0, f83468f, 1f06c9a)
 7. Public launch ~early Nov, drafts ~1 week before opener
 
 ## Draft room UI (`app/draft/[leagueId]/`)
@@ -978,4 +979,4 @@ the cookie is never read.
 - Use `(prisma as any).leagueEvent` with a null-check guard for any code that queries `LeagueEvent`
   until `prisma db push` + `prisma generate` has been run in the target environment.
 - **When updating CLAUDE.md** (build order, feature status, or sprint notes), keep these sibling files in sync:
-  `docs/01-roadmap/roadmap-index.md`, `docs/01-roadmap/roadmap-features.md`, `docs/01-roadmap/roadmap-sprints.md`, and `docs/01-roadmap/roadmap-gpt.md`. The HTML files are independently maintained visual dashboards on a separate cadence.
+  `docs/01-roadmap/roadmap-index.md`, `docs/01-roadmap/roadmap-features.md`, `docs/01-roadmap/roadmap-sprints.md`. The HTML dashboard (`docs/01-roadmap/roadmap-dashboard.html`) is the visual tracker and should be updated on the same cadence as the markdown files.

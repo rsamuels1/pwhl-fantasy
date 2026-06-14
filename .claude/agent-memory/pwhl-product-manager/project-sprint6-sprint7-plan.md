@@ -7,12 +7,13 @@ metadata:
 
 Sprint 6 and Sprint 7 were planned June 13, 2026 as part of a full backlog audit.
 
-**Sprint 6 — "Engagement + Transactions" (5 items, P1):**
-1. Auto-Set Lineup — spec exists at `docs/02-engineering/auto-set-lineup-spec.md`
+**Sprint 6 — "Engagement + Transactions" (4 items, P1):**
+1. Auto-Set Lineup — DONE ✅
 2. Beta Feedback Infrastructure — spec at `docs/02-engineering/beta-feedback-spec.md`; adds `FeedbackSubmission` table + `betaStatus` on `FantasyLeague`
-3. Team Analysis & Insights (#25) — spec at `docs/02-engineering/team-analysis-spec.md`; trade suggestion CTA deferred until #7
-4. Trade System (#7) — spec at `docs/02-engineering/trade-spec.md`
-5. Waiver Priority + Processing (#5) — spec at `docs/02-engineering/waiver-spec.md`
+3. Team Analysis & Insights (#25) — spec at `docs/02-engineering/team-analysis-spec.md`; trade suggestion CTA removed (Trade System now deferred)
+4. Waiver Priority + Processing (#5) — spec at `docs/02-engineering/waiver-spec.md`
+
+**Trade System (#7) — REMOVED from Sprint 6. Moved to bottom of backlog as "someday maybe." Do NOT re-add without explicit user instruction.**
 
 **Sprint 7 — "Retention Layer" (4 items + stretch, P2):**
 1. League History & Hall of Fame (#33/#18) — spec at `docs/02-engineering/league-history-spec.md`; no schema changes (uses existing parentLeagueId chain)
@@ -29,4 +30,4 @@ Stretch: Email Notifications — add only if beta feedback surfaces as P1
 
 **Why:** targeting ~80 days to public launch (early Nov 2026); each sprint is ~2 days (solo + Claude Pro); Sprint 7 is the last planned sprint — anything beyond goes to backlog.
 
-**How to apply:** When the user asks about sequencing, reference this ordering. Auto-set lineup is the highest-value Sprint 6 item. Trade system is the highest-risk (largest new domain, ~130K tokens — plan a dedicated session).
+**How to apply:** When the user asks about sequencing, reference this ordering. Auto-set lineup is done. Next Sprint 6 items are Beta Feedback or Team Analysis. Trade System is NOT in the plan — never suggest it as a next step unless the user brings it up.

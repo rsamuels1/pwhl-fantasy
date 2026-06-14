@@ -25,11 +25,13 @@ export default async function TeamMatchupPage({
 
   const league = await prisma.fantasyLeague.findUnique({
     where: { id: leagueId },
-    select: { scoringSettings: true, isReplay: true, replayCurrentDate: true },
+    select: { scoringSettings: true, rosterSettings: true, isReplay: true, replayCurrentDate: true },
   });
   if (!league) notFound();
 
   const scoringSettings = parseScoringSettings(league.scoringSettings);
+  const rs = (league.rosterSettings as Record<string, number>) ?? {};
+  const activeSlotCount = (rs.forward ?? 3) + (rs.defense ?? 2) + (rs.goalie ?? 1) + (rs.util ?? 1);
   const nowMs = getReplayNow(league, await getDevNow());
   const dashboard = await getDashboardData(leagueId, teamId, nowMs, prisma);
   const { activeMatchup, remainingPlayers, topPerformers, disappointments, lineupAlerts, lastResult, leagueActivity, leagueTopPerformers, leagueDisappointments, eliminationInfo, championInfo, playoffPending } = dashboard;
@@ -185,7 +187,7 @@ export default async function TeamMatchupPage({
       )}
 
       {/* ── 1b. Between-weeks lineup nudge ── */}
-      {activeMatchup?.status === "upcoming" && (
+      {activeMatchup?.status === "upcoming" && (activeMatchup.myPlayers.length < activeSlotCount) && (
         <div style={{
           background: "rgba(245,158,11,0.07)",
           border: "1px solid rgba(245,158,11,0.25)",
