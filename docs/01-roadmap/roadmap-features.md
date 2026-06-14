@@ -467,6 +467,33 @@ Features implemented:
 
 ---
 
+## 35. FA Schedule Awareness + Add & Slot
+
+Sprint: 6
+
+Priority: P1
+
+Status: Implemented ✅
+
+Commit: `6a6b40f`
+
+Goal: Surface games-remaining data on the free-agent panel so managers can make informed add decisions, and streamline slotting a new pickup into the active lineup in one flow.
+
+What shipped:
+
+- **Games-remaining "Wk" badge on FA panel** — each free-agent row in `app/team/[teamId]/roster/page.tsx` and `RosterManager.tsx` shows games left in the current scoring period, powered by the same batch query used by the lineup page. Sortable column in the FA table.
+- **AddAndSlotModal** (`components/AddAndSlotModal.tsx`) — after a successful FA add, a modal offers eligible active slots (F/D/G/UTIL) for the new player. Selecting a slot calls `PUT /api/leagues/[leagueId]/lineup`. "Bench for now" dismisses without slotting. Locked FAs skip the modal entirely.
+- **Bonus fixes (same commit)** — lineup nudge on matchup page now respects roster settings slot count (no longer hardcoded); lineup alert in `dashboard.ts` checks `gamesPlayedPerTeam` to avoid false positives for players who have already scored.
+
+Acceptance Criteria:
+
+- FA panel shows games-remaining badge per player in the current period ✅
+- After adding a FA, manager is offered active slot choices before landing on bench ✅
+- Locked FAs skip the slot modal ✅
+- Lineup nudge count and dashboard alerts are accurate ✅
+
+---
+
 ## 34. Auto-Set Lineup
 
 Sprint: 6

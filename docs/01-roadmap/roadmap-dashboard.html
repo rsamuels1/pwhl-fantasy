@@ -388,7 +388,7 @@
 
         <div class="sprint-card current" onclick="switchTab('sprints'); setTimeout(() => document.getElementById('sprint-6').scrollIntoView({behavior: 'smooth'}), 100)">
           <div class="name">Sprint 6</div>
-          <div class="progress">1/5</div>
+          <div class="progress">2/5</div>
           <span class="status current">● LIVE</span>
         </div>
 
@@ -784,6 +784,11 @@
             </div>
 
             <div class="task-row">
+              <span class="task-check">✅</span>
+              <span style="color: #666"><strong style="color:#888">FA Schedule Awareness + Add &amp; Slot (#35)</strong> · Commit: 6a6b40f — games-remaining "Wk" badge on every FA row in <code>app/team/[teamId]/roster/</code> (same batch query as lineup page; sortable column); <code>components/AddAndSlotModal.tsx</code> — after adding a FA, modal offers eligible active slots (F/D/G/UTIL); selecting one calls <code>PUT /api/leagues/[leagueId]/lineup</code>; "Bench for now" dismisses; locked FAs skip modal. Bonus: lineup nudge now respects roster settings slot count; dashboard alert checks <code>gamesPlayedPerTeam</code>. No schema changes.</span>
+            </div>
+
+            <div class="task-row">
               <span class="task-check">○</span>
               <span style="color: #ccc"><strong style="color:#f5c842">Priority 2 — Beta Feedback Infrastructure</strong> · ~40K · <em>Spec: <code>docs/02-engineering/beta-feedback-spec.md</code></em> — in-app feedback widget (Bug/Suggestion/Other modal); <code>FeedbackSubmission</code> table; Founder Console feed at <code>/founder/feedback</code>; <code>betaStatus</code> lifecycle field on <code>FantasyLeague</code> for cohort tracking. Two schema additions. Deferred from Sprint 5 — activate once founding commissioners are live.</span>
             </div>
@@ -897,7 +902,7 @@
       
         <div class="crit-section-medium">
           
-            <div class="section-header">🟡 Medium Priority <span class="section-count">31</span></div>
+            <div class="section-header">🟡 Medium Priority <span class="section-count">32</span></div>
             <table class="backlog-table">
               <thead>
                 <tr>
@@ -980,6 +985,15 @@
                     <td>Auto-Set Lineup</td>
                     <td><span class="status done">DONE</span></td>
                     <td>~60K</td>
+                    <td>6</td>
+                  </tr>
+
+                  <tr class="backlog-row" data-status="done" data-crit="medium">
+                    <td><span class="crit-dot crit-medium"></span></td>
+                    <td>#35</td>
+                    <td>FA Schedule Awareness + Add &amp; Slot</td>
+                    <td><span class="status done">DONE</span></td>
+                    <td>—</td>
                     <td>6</td>
                   </tr>
 

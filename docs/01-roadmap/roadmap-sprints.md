@@ -148,6 +148,9 @@ items here are read-heavy or isolated new domains — none touch the draft or st
 - **Wizard team-name step + join flow fix** ✅
   `CreateLeagueWizard.tsx` gains a new Step 5 where the commissioner names their own team before seeing the invite link (wizard now 7 steps). `POST /api/leagues/join` is session-aware: fills `ownerEmail` from the `pwhl_user_email` cookie when not provided; does not overwrite the existing session. Dashboard gains a "Commissioner" badge on teams the user commissions but doesn't own, and hides owner-only CTAs (Set Lineup, My Matchup) for those entries. Season "Start" action auto-sets `replayCurrentDate` to Week 1's `startsAt` so replay commissioners land on Week 1 immediately. Seed script upsert uses `OR [externalId, abbreviation]` to handle team-abbreviation conflicts on re-seed.
 
+- **FA Schedule Awareness + Add & Slot (#35)** ✅ · Commit: 6a6b40f
+  Games-remaining "Wk" badge on every FA row in `app/team/[teamId]/roster/page.tsx` + `RosterManager.tsx`, powered by the same batch query as the lineup page; sortable column. `components/AddAndSlotModal.tsx`: after adding a FA the modal offers eligible active slots (F/D/G/UTIL); selecting one calls `PUT /api/leagues/[leagueId]/lineup`; "Bench for now" dismisses; locked FAs skip the modal. Bonus fixes: lineup nudge on matchup page now respects roster settings slot count; dashboard lineup alert checks `gamesPlayedPerTeam` to avoid false positives. No schema changes.
+
 **Bug fixes & UX improvements (Sprint 6):**
 - **Between-weeks lineup nudge false-positive** ✅ — "Week N is coming up / Set lineup before games begin" amber banner persisted on the matchup page even after the user had used Auto-Set Lineup and saved. Root cause: nudge condition was `status === "upcoming"` only, with no check for lineup state. Fix: suppress nudge when `myPlayers.length >= activeSlotCount` (forward + defense + goalie + util from `rosterSettings`). `app/team/[teamId]/matchup/page.tsx`.
 
@@ -174,7 +177,7 @@ window for dropped players, daily batch processing at 03:00 ET. `WaiverClaim` +
 `WaiverPriority` schema tables; `processWaivers()` idempotent service; claim submission +
 status UI on the roster page. Commissioner controls reuse existing recovery tools.
 
-**Exit:** founding commissioners can auto-set lineups ✅, see their weekly performance history ✅, submit feedback visible in founder console, and view their team analysis.
+**Exit:** founding commissioners can auto-set lineups ✅, see their weekly performance history ✅, add a FA with immediate slot-in flow ✅, submit feedback visible in founder console, and view their team analysis.
 
 ---
 
@@ -268,7 +271,7 @@ Items below are acknowledged but have no sprint assignment. They become candidat
 | Sprint 3 — Beta Readiness | ✅ COMPLETE (Jun 13, 2026) | Onboarding ✅, error handling ✅, mobile ✅, NT-001 ✅, draft notifications ✅, transaction history ✅, IA-011 ✅ |
 | Sprint 4 — Product Polish | ✅ COMPLETE (Jun 13, 2026) | NT-002 LINEUP_INCOMPLETE ✅ · #01 commissioner dashboard ✅ · #17 rivalries ✅ · VP standings fix ✅ · playoff mode + replay support ✅ |
 | Sprint 5 — Validation + Beta Operations | ⏳ CURRENT | Replay gap fix ✅ · sim-to-playoffs ✅ · draft cert ✅ · founder dashboard ✅ · playoff experience UX ✅ · commissioner workflow validation + weekly perf dashboard pending |
-| Sprint 6 — Engagement + Transactions | ⏳ IN PROGRESS | Auto-set lineup ✅ · beta feedback · team analysis · waiver priority |
+| Sprint 6 — Engagement + Transactions | ⏳ IN PROGRESS | Auto-set lineup ✅ · FA schedule awareness + add & slot ✅ · beta feedback · team analysis · waiver priority |
 | Sprint 7 — Retention Layer | ⏳ PLANNED | League history + HoF · storylines · FAAB · player legacy |
 
 ---
