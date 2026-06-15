@@ -5,11 +5,12 @@ import { apiRequireAuth, apiRequireCommissioner } from "@/lib/auth";
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { leagueId: string } }
+  { params }: { params: Promise<{ leagueId: string }> }
 ) {
+  const { leagueId } = await params;
   const auth = await apiRequireAuth(req);
   if (auth instanceof NextResponse) return auth;
-  const commissioner = await apiRequireCommissioner(params.leagueId, auth.id);
+  const commissioner = await apiRequireCommissioner(leagueId, auth.id);
   if (commissioner instanceof NextResponse) return commissioner;
 
   const body = await req.json().catch(() => ({}));
@@ -21,7 +22,7 @@ export async function POST(
   }
 
   try {
-    const { newLeagueId } = await renewLeague(params.leagueId, overrides, prisma);
+    const { newLeagueId } = await renewLeague(leagueId, overrides, prisma);
     return NextResponse.json({
       newLeagueId,
       redirectTo: `/league/${newLeagueId}/admin?renewed=1`,

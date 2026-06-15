@@ -24,9 +24,16 @@ export default function SeasonControls({ leagueId, periods, onResult, isReplay, 
   const activePeriod = periods.find((p) => p.status === "ACTIVE");
   const firstPending  = periods.find((p) => p.status === "SCORING_PENDING");
   const firstUpcoming = periods.find((p) => p.status === "UPCOMING");
+  const completePeriod = periods.find((p) => p.status === "COMPLETE");
   const targetPeriod  = activePeriod ?? firstPending ?? firstUpcoming;
   const lastPeriod    = periods[periods.length - 1];
   const hasRemaining  = periods.some((p) => p.status !== "COMPLETE");
+
+  // Between-weeks state: when there's a pending/complete period followed by an upcoming period
+  const isBetweenWeeks = (firstPending || completePeriod) && firstUpcoming && !activePeriod;
+  const betweenWeeksPeriod = firstPending ?? completePeriod;
+  const nextPeriodAfterBreak = firstUpcoming;
+
   const defaultDate = targetPeriod
     ? new Date(targetPeriod.period.endsAt.getTime() + 60_000).toISOString().slice(0, 16)
     : new Date().toISOString().slice(0, 16);
@@ -53,33 +60,28 @@ export default function SeasonControls({ leagueId, periods, onResult, isReplay, 
           endsAt: new Date(p.period.endsAt),
         },
       }));
-      const newActive   = newPeriods.find((p) => p.status === "ACTIVE");
-      const newPending  = newPeriods.find((p) => p.status === "SCORING_PENDING");
-      const newUpcoming = newPeriods.find((p) => p.status === "UPCOMING");
-      const newTarget   = newActive ?? newPending ?? newUpcoming;
+
+      // For dev mode: set cookie to the exact date provided (no auto-jump).
+      // Caller is responsible for setting the correct target date.
+      let finalCookieDate = new Date(dateToUse).toISOString();
+
+      // Special case: on "start season", jump to 9am of first week
+      if (action === "start" && newPeriods.length > 0) {
+        const d = new Date(newPeriods[0].period.startsAt);
+        d.setHours(9, 0, 0, 0);
+        const morning = d.getTime() >= newPeriods[0].period.startsAt.getTime()
+          ? d : new Date(newPeriods[0].period.startsAt.getTime() + 5_000);
+        finalCookieDate = morning.toISOString();
+        setSimulatedDate(morning.toISOString().slice(0, 16));
+      }
 
       if (isReplay) {
         // Replay leagues: DB is the source of truth — no cookie to set.
-        // Update the date picker to the next period's morning so the next click is pre-filled.
-        if (newTarget) {
-          const d = new Date(newTarget.period.startsAt);
-          d.setHours(9, 0, 0, 0);
-          const morning = d.getTime() >= newTarget.period.startsAt.getTime()
-            ? d : new Date(newTarget.period.startsAt.getTime() + 5_000);
-          setSimulatedDate(morning.toISOString().slice(0, 16));
-        }
+        setSimulatedDate(new Date(finalCookieDate).toISOString().slice(0, 16));
       } else {
         // Dev mode: set cookie so other pages pick up the simulated time.
-        let cookieDate = new Date(dateToUse).toISOString();
-        if (newTarget) {
-          const d = new Date(newTarget.period.startsAt);
-          d.setHours(9, 0, 0, 0);
-          const morning = d.getTime() >= newTarget.period.startsAt.getTime()
-            ? d : new Date(newTarget.period.startsAt.getTime() + 5_000);
-          cookieDate = morning.toISOString();
-          setSimulatedDate(morning.toISOString().slice(0, 16));
-        }
-        document.cookie = `pwhl_dev_sim_date=${cookieDate}; path=/; max-age=86400`;
+        document.cookie = `pwhl_dev_sim_date=${finalCookieDate}; path=/; max-age=86400`;
+        setSimulatedDate(new Date(finalCookieDate).toISOString().slice(0, 16));
       }
 
       onResult(data.state, data.message ?? "Done.");
@@ -156,22 +158,38 @@ export default function SeasonControls({ leagueId, periods, onResult, isReplay, 
 
       {/* Quick actions row */}
       <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 14, alignItems: "center" }}>
-        {targetPeriod && (
+        {/* Active week: show "End Week N" button */}
+        {activePeriod && (
           <button
             onClick={() => {
-              const endDate = new Date(targetPeriod.period.endsAt.getTime() + 60_000).toISOString().slice(0, 16);
+              const endDate = new Date(activePeriod.period.endsAt.getTime() + 60_000).toISOString().slice(0, 16);
               setSimulatedDate(endDate);
               call("advance", endDate);
             }}
             disabled={loading}
             style={btn("#f59e0b")}
           >
-            {loading ? "…" : activePeriod
-              ? `⏭ Score week ${targetPeriod.period.week}`
-              : `▶ Score week ${targetPeriod.period.week}`}
+            {loading ? "…" : `⏭ End week ${activePeriod.period.week}`}
           </button>
         )}
-        {hasRemaining && lastPeriod && (
+
+        {/* Between weeks: show "Start Week N+1" button */}
+        {isBetweenWeeks && nextPeriodAfterBreak && (
+          <button
+            onClick={() => {
+              const startDate = new Date(nextPeriodAfterBreak.period.startsAt.getTime()).toISOString().slice(0, 16);
+              setSimulatedDate(startDate);
+              call("advance", startDate);
+            }}
+            disabled={loading}
+            style={btn("#10b981")}
+          >
+            {loading ? "…" : `▶ Start week ${nextPeriodAfterBreak.period.week}`}
+          </button>
+        )}
+
+        {/* Quick jump to playoffs (if regular season still has unscored weeks) */}
+        {!isBetweenWeeks && hasRemaining && lastPeriod && activePeriod && (
           <button
             onClick={() => {
               const endDate = new Date(lastPeriod.period.endsAt.getTime() + 60_000).toISOString().slice(0, 16);
@@ -184,24 +202,32 @@ export default function SeasonControls({ leagueId, periods, onResult, isReplay, 
             {loading ? "…" : "⏩ Sim to playoffs"}
           </button>
         )}
+
         <button onClick={advanceOneDay} disabled={loading} style={btn("#10b981")}>
           +1 Day →
         </button>
+
         {showStartPlayoffs && (
           <button onClick={handleStartPlayoffs} disabled={loading} style={btn("#a855f7")}>
             {loading ? "…" : "▶ Start Playoffs"}
           </button>
         )}
+
         {showAdvancePlayoff && (
           <button onClick={handleAdvancePlayoffRound} disabled={advancingPlayoff || loading} style={btn("#f59e0b")}>
             {advancingPlayoff ? "…" : "⏭ Advance playoff round"}
           </button>
         )}
-        {targetPeriod && (
+
+        {/* Status text */}
+        {isBetweenWeeks && betweenWeeksPeriod && (
+          <span style={{ fontSize: 11, color: "#34d399", fontWeight: 600 }}>
+            📋 Between weeks — set your lineup for week {nextPeriodAfterBreak?.period.week}
+          </span>
+        )}
+        {activePeriod && !isBetweenWeeks && (
           <span style={{ fontSize: 11, color: "#64748b" }}>
-            {activePeriod
-              ? `Scores week ${targetPeriod.period.week}`
-              : `Scores week ${targetPeriod.period.week}`}
+            Currently in week {activePeriod.period.week}
           </span>
         )}
       </div>

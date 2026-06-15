@@ -13,11 +13,12 @@ const VALID_SLOTS = ["FORWARD", "DEFENSE", "GOALIE", "UTIL", "BENCH", "IR"] as c
 // Commissioner-only. Clears period-lock on a player; enforces play-lock.
 export async function POST(
   req: NextRequest,
-  { params }: { params: { leagueId: string } }
+  { params }: { params: Promise<{ leagueId: string }> }
 ) {
+  const { leagueId } = await params;
   const auth = await apiRequireAuth(req);
   if (auth instanceof NextResponse) return auth;
-  const commissioner = await apiRequireCommissioner(params.leagueId, auth.id);
+  const commissioner = await apiRequireCommissioner(leagueId, auth.id);
   if (commissioner instanceof NextResponse) return commissioner;
 
   const body = (await req.json().catch(() => ({}))) as {
@@ -62,7 +63,7 @@ export async function POST(
 
   // Fetch rosterSettings
   const league = await prisma.fantasyLeague.findUnique({
-    where: { id: params.leagueId },
+    where: { id: leagueId },
     select: { rosterSettings: true, status: true },
   });
 
@@ -88,7 +89,7 @@ export async function POST(
 
   // Fetch active period to check play-lock
   const nowMs = getDevNowFromRequest(req);
-  const state = await getSeasonState(params.leagueId, nowMs, prisma);
+  const state = await getSeasonState(leagueId, nowMs, prisma);
 
   const activePeriod = state.activePeriod;
 
@@ -127,7 +128,7 @@ export async function POST(
 
   // Log the action
   await logCommissionerAction(
-    params.leagueId,
+    leagueId,
     auth.id,
     "COMMISSIONER_FORCE_MOVE",
     {

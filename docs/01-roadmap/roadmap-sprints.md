@@ -125,7 +125,7 @@ Closed all in-progress feature gaps and carry-forwards before beta.
 - **Feature #30 Playoff Experience UX — COMPLETE** ✅ (commit 5df2b0c) — final pieces: `/league/[leagueId]/` now redirects to `/bracket` when `playoffStatus === IN_PROGRESS` (bracket is the primary landing during active playoffs); `PLAYOFF_CLINCH`, `PLAYOFF_ELIMINATION`, `CHAMPIONSHIP_WON` added to `EventType` enum in `prisma/schema.prisma` and `LeagueEventType` union in `lib/services/activity.ts`; `advance-playoff-round` route emits elimination/clinch/championship activity feed events after scoring each round; TypeScript narrowing fix (`playoffStatus` local const, dead `IN_PROGRESS` commissioner branches removed from overview). Files: `prisma/schema.prisma`, `lib/services/activity.ts`, `app/api/leagues/[leagueId]/advance-playoff-round/route.ts`, `app/league/[leagueId]/page.tsx`.
 
 **Deferred from Sprint 5 to Sprint 6:**
-- **Commissioner workflow validation** — rolled into ongoing Sprint 6 polish.
+- **Commissioner workflow validation** ✅ COMPLETE — async params fixed in 4 routes; null-check guard added to undo-transaction; force-move no-op comment added; runbook updated with VP values, playoff instructions, season renewal UI path, reconnect backoff, champion banner, replace-manager edge case, and per-tool detail. Findings documented in `docs/02-engineering/commissioner-workflow-validation-plan.md`.
 - **Weekly Performance Dashboard (#29)** — shipped Sprint 6; see below.
 - **Beta Feedback Infrastructure** — deferred: cohort small enough for out-of-band channels. Revisit once founding commissioners are active.
 
@@ -313,7 +313,7 @@ Items below are acknowledged but have no sprint assignment. They become candidat
 | Sprint 2 — Commissioner + Platform Foundation | ✅ COMPLETE (Jun 2026) | Commissioner recovery tools, multi-season schema, analytics (6 events), VP education; 130 tests pass |
 | Sprint 3 — Beta Readiness | ✅ COMPLETE (Jun 13, 2026) | Onboarding ✅, error handling ✅, mobile ✅, NT-001 ✅, draft notifications ✅, transaction history ✅, IA-011 ✅ |
 | Sprint 4 — Product Polish | ✅ COMPLETE (Jun 13, 2026) | NT-002 LINEUP_INCOMPLETE ✅ · #01 commissioner dashboard ✅ · #17 rivalries ✅ · VP standings fix ✅ · playoff mode + replay support ✅ |
-| Sprint 5 — Validation + Beta Operations | ⏳ CURRENT | Replay gap fix ✅ · sim-to-playoffs ✅ · draft cert ✅ · founder dashboard ✅ · playoff experience UX ✅ · commissioner workflow validation + weekly perf dashboard pending |
+| Sprint 5 — Validation + Beta Operations | ✅ COMPLETE | Replay gap fix ✅ · sim-to-playoffs ✅ · draft cert ✅ · founder dashboard ✅ · playoff experience UX ✅ · commissioner workflow validation ✅ |
 | Sprint 6 — Engagement + Transactions | ⏳ IN PROGRESS | Auto-set lineup ✅ · FA schedule awareness + add & slot ✅ · beta feedback infrastructure ✅ · code review audit · team analysis · waiver priority |
 | Sprint 7 — Retention Layer | ⏳ PLANNED | League history + HoF · storylines · FAAB · player legacy · Replay Sim V2 (#38) |
 

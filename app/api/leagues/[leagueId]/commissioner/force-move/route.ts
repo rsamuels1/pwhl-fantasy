@@ -95,6 +95,7 @@ export async function POST(
 
     const slotA = entry.slot;
     const slotB = entryB.slot;
+    // Same-slot swap is a no-op: no state changed, so intentionally skip logCommissionerAction.
     if (slotA === slotB) return NextResponse.json({ success: true });
 
     const eligA = eligibleSlots(entry.player.position, entry.player.active);

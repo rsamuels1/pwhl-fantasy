@@ -108,6 +108,8 @@ Acceptance Criteria:
 - Permissions enforced ✅
 - All four recovery actions available and audit-logged ✅
 
+**Sprint 5/6 validation complete:** async params fixed in 4 commissioner routes (Next.js 15 compat); null-check guard added to undo-transaction to return 503 when `LeagueEvent` schema not pushed; force-move same-slot no-op documented inline; runbook updated with VP Model A values, playoff initialization/advancement UI, season renewal UI path, reconnect backoff, champion banner, replace-manager edge case, and per-tool operational detail. Findings recorded in `docs/02-engineering/commissioner-workflow-validation-plan.md`.
+
 ---
 
 ## 2. League Onboarding
@@ -640,7 +642,9 @@ Dependencies:
 
 ## 29. Weekly Performance Dashboard (Schedule Tab Replacement)
 
-Sprint: 5 (remaining)
+Sprint: 5
+
+Status: ✅ DONE
 
 Priority: MEDIUM
 
@@ -650,33 +654,12 @@ Goal: Replace the current Schedule tab (`/team/[teamId]/schedule`) with a richer
 week-over-week performance table — less about upcoming games, more about how teams
 and players are trending across the season.
 
-Features:
+What shipped (commit 5757cc7):
 
-- **Week-by-week standings changes** — a table you can page through week by week showing
-  each team's rank, FP score, and W/L for that week. Arrow indicators (↑ / ↓ / —) show
-  whether each team rose, fell, or held their standing vs the prior week.
-- **Rising and falling teams callout** — a brief "hot/cold" highlight at the top: which team
-  had the best week, which had the worst, biggest rank climber.
-- **Stat breakdown by position group by team** — for the selected week, a table showing each
-  team's FP contribution from Forwards, Defense, and Goalies. Helps managers diagnose where
-  they won or lost.
-- **Week navigation** — prev/next week controls; defaults to the most recent scored week.
-
-Implementation notes:
-
-- All data is already in `Matchup` rows and `StatLine` history; this is a new read-path
-  aggregation, no schema changes needed.
-- Heavy aggregation (per-position-group weekly FP per team) should be computed server-side
-  and cached per scored period.
-- The existing PWHL-games progress bar from the schedule tab may be retained as a smaller
-  secondary section below the performance table.
-
-Acceptance Criteria:
-
-- Page shows week-by-week team rankings with rise/fall indicators.
-- Selectable week navigation.
-- Position-group FP breakdown per team per week.
-- Current games-remaining schedule info still accessible (secondary).
+- `lib/services/performance-service.ts` — `getWeeklyPerformance()` reads scored `Matchup` rows for past weeks and calls `computeAllTeamScores` live for the active period; returns per-week FP, rank, wins, losses, ties.
+- `app/team/[teamId]/schedule/page.tsx` — overhauled to show full performance history: each completed/active week shows FP total, rank chip (1st / 2nd / Nth of N), VP W-L-T record, and the existing PWHL game schedule below.
+- `app/team/[teamId]/TeamNav.tsx` — tab renamed "PWHL Schedule" → "Performance".
+- No schema changes.
 
 ---
 

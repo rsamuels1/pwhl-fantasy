@@ -8,11 +8,12 @@ import { logCommissionerAction } from "@/lib/services/audit-service";
 // Commissioner-only. Sets (or clears, when empty) the league announcement banner.
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { leagueId: string } }
+  { params }: { params: Promise<{ leagueId: string }> }
 ) {
+  const { leagueId } = await params;
   const auth = await apiRequireAuth(req);
   if (auth instanceof NextResponse) return auth;
-  const commissioner = await apiRequireCommissioner(params.leagueId, auth.id);
+  const commissioner = await apiRequireCommissioner(leagueId, auth.id);
   if (commissioner instanceof NextResponse) return commissioner;
 
   const body = (await req.json().catch(() => ({}))) as { announcement?: string | null };
@@ -20,12 +21,12 @@ export async function PUT(
   const announcement = raw.length > 0 ? raw.slice(0, 500) : null;
 
   await prisma.fantasyLeague.update({
-    where: { id: params.leagueId },
+    where: { id: leagueId },
     data: { announcement },
   });
 
   await logCommissionerAction(
-    params.leagueId,
+    leagueId,
     auth.id,
     "COMMISSIONER_ANNOUNCEMENT",
     { announcement },

@@ -5,15 +5,16 @@ import { apiRequireAuth, apiRequireCommissioner } from "@/lib/auth";
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { leagueId: string } }
+  { params }: { params: Promise<{ leagueId: string }> }
 ) {
+  const { leagueId } = await params;
   const auth = await apiRequireAuth(req);
   if (auth instanceof NextResponse) return auth;
-  const commissioner = await apiRequireCommissioner(params.leagueId, auth.id);
+  const commissioner = await apiRequireCommissioner(leagueId, auth.id);
   if (commissioner instanceof NextResponse) return commissioner;
 
   try {
-    const result = await startPlayoffs(params.leagueId, prisma);
+    const result = await startPlayoffs(leagueId, prisma);
     return NextResponse.json({ success: true, message: "Playoffs initialized successfully", ...result });
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Failed to start playoffs";

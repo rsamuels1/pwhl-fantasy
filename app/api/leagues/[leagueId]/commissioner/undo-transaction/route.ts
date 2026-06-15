@@ -39,8 +39,18 @@ async function undoWaiverTransaction(
   commissionerId: string,
   db: typeof prisma
 ): Promise<NextResponse> {
+  // Guard: leagueEvent model requires `prisma db push` to be activated in the target environment.
+  // Return a clean 503 instead of a 500 crash if the table doesn't exist yet.
+  const leagueEventModel = (db as any).leagueEvent as typeof db.leagueEvent | undefined;
+  if (!leagueEventModel) {
+    return NextResponse.json(
+      { error: "Transaction history not available — run prisma db push" },
+      { status: 503 }
+    );
+  }
+
   // Find the most recent add or drop for this team in this league
-  const lastEvent = await (db as any).leagueEvent.findFirst({
+  const lastEvent = await leagueEventModel.findFirst({
     where: {
       leagueId,
       teamId,
@@ -93,7 +103,7 @@ async function undoWaiverTransaction(
   }
 
   // Delete the event so it doesn't appear as undoable again
-  await (db as any).leagueEvent.delete({ where: { id: lastEvent.id } });
+  await leagueEventModel.delete({ where: { id: lastEvent.id } });
 
   await logCommissionerAction(leagueId, commissionerId, "COMMISSIONER_UNDO_TRANSACTION", {
     target: teamId,

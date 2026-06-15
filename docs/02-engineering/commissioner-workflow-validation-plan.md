@@ -421,4 +421,7 @@ All of the following must be true before marking this item complete:
 
 | # | Action | Finding | Resolution | Status |
 |---|---|---|---|---|
-| — | — | No findings yet | — | — |
+| 1 | All commissioner routes | 4 routes used non-async params pattern (Next.js 15 compat warning) | Fixed: awaited params in unlock-player, announcement, renew, start-playoffs | ✅ |
+| 2 | Undo waiver transaction | `leagueEvent` access threw 500 if schema not pushed | Fixed: null-check guard returns 503 with actionable message | ✅ |
+| 3 | Force roster move (same-slot swap) | No-op path skipped audit log silently | Documented via inline comment (intentional — no state changed) | ✅ |
+| 4 | Replace manager | Commissioner can assign own email to another team | Known edge case — documented in runbook, no code fix needed | ✅ |

@@ -108,8 +108,8 @@ The list below is sequenced by **token efficiency** — each feature's estimated
 
 ### Quick wins (< 45K tokens — batch 2–3 per session)
 
-1. **Commissioner Workflow Validation** · ~15K · Sprint 5
-   End-to-end manual test of all commissioner actions; runbook accuracy review; screenshots. See `docs/02-engineering/commissioner-workflow-validation-plan.md`.
+1. **Commissioner Workflow Validation** · ~15K · Sprint 5 · ✅ COMPLETE
+   Async params fixed in 4 routes; null-check guard in undo-transaction; runbook updated with VP values, playoff UI path, season renewal steps, reconnect backoff, champion banner, and per-tool detail. Findings in `docs/02-engineering/commissioner-workflow-validation-plan.md`.
 
 ### Quick wins (< 45K tokens — batch 2–3 per session)
 

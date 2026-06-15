@@ -714,13 +714,13 @@
         <div class="exit-criteria"><strong>Exit:</strong> - NT-002: ✅ ACHIEVED — manager with a starter whose PWHL team has no games remaining this period receives a LINEUP_INCOMPLETE in-app notification on dashboard load; second load in the same period does not duplicate it.</div>
       </div>
     
-      <div id="sprint-5" class="card current">
+      <div id="sprint-5" class="card complete">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
           <div>
             <div style="font-weight: 700; font-size: 1rem;">Sprint 5 · "Validation + Beta Operations"</div>
             <div style="font-size: 0.8rem; color: #888;">Track: V</div>
           </div>
-          <span class="status current">● IN FLIGHT</span>
+          <span class="status complete">✅ COMPLETE</span>
         </div>
         <div>
 
@@ -750,13 +750,13 @@
             </div>
 
             <div class="task-row">
-              <span class="task-check">○</span>
-              <span style="color: #ccc"><strong style="color:#f5c842">Priority 4 — Commissioner Workflow Validation</strong> — end-to-end manual test of all commissioner actions; runbook accuracy review; screenshots added to <code>commissioner-runbook.md</code>. Can run in parallel with or after Founder Console.</span>
+              <span class="task-check">✅</span>
+              <span style="color: #666"><strong style="color:#888">Priority 4 — Commissioner Workflow Validation</strong> — async params fixed in 4 routes; null-check guard in undo-transaction; runbook updated with VP values, playoff UI path, season renewal steps, reconnect backoff, champion banner, replace-manager edge case, and per-tool detail. Findings in <code>commissioner-workflow-validation-plan.md</code>.</span>
             </div>
 
             <div class="task-row">
-              <span class="task-check">○</span>
-              <span style="color: #ccc"><strong style="color:#f5c842">Priority 5 — Weekly Performance Dashboard (#29)</strong> — new page aggregating per-week fantasy scores for the manager's team; replaces the Schedule tab; reads existing <code>Matchup</code> + <code>StatLine</code> rows; no schema changes. <em>Pulled up from Sprint 6 — low risk, directly serves manager experience during beta.</em></span>
+              <span class="task-check">✅</span>
+              <span style="color: #aaa"><strong style="color:#aaa">Priority 5 — Weekly Performance Dashboard (#29)</strong> — shipped 5757cc7; Schedule tab → Performance history; <code>lib/services/performance-service.ts</code>; per-week FP, rank chip, VP W-L-T record; no schema changes.</span>
             </div>
 
             <div class="task-row" style="opacity: 0.45; text-decoration: line-through; text-decoration-color: #555;">
@@ -1106,11 +1106,11 @@
                     <td>6</td>
                   </tr>
 
-                  <tr class="backlog-row" data-status="todo" data-crit="medium">
+                  <tr class="backlog-row" data-status="done" data-crit="medium">
                     <td><span class="crit-dot crit-medium"></span></td>
                     <td>#29</td>
                     <td>Weekly Performance Dashboard</td>
-                    <td><span class="status todo">TODO</span></td>
+                    <td><span class="status done">DONE</span></td>
                     <td>~65K</td>
                     <td>5</td>
                   </tr>
