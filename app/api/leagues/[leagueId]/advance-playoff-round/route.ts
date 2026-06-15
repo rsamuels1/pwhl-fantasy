@@ -1,6 +1,12 @@
 // app/api/leagues/[leagueId]/advance-playoff-round/route.ts
 // Commissioner-only: score the current playoff round and populate the next round's
 // matchup (or mark the league COMPLETE if this was the final round).
+//
+// PLAYOFF SCORING MODEL: playoff matchups use 1v1 scoring via computeAllTeamScores()
+// (sum of stat-line FP for each team's active roster over the playoff period's date range).
+// This is intentionally different from regular-season VTF/VP scoring — playoff rounds are
+// head-to-head, not vs-the-field. No VP points are awarded; the winner advances by raw score.
+// The tie-break rule is configured per-league via playoffSettings.higherSeedWinsTies.
 
 import type { PrismaClient } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";

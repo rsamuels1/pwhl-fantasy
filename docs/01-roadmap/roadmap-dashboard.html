@@ -795,7 +795,7 @@
 
             <div class="task-row">
               <span class="task-check">✅</span>
-              <span style="color: #666"><strong style="color:#888">Priority 3 — Code Review &amp; Pre-Beta Audit (#37)</strong> — staff-engineer-level review complete. 3 P0 blockers identified and fixed: renewal race condition (wrapped in <code>$transaction</code>); draft concurrent-pick P2002 handling in <code>persistPick()</code>; <code>pickInFlight</code> mutex in <code>onTimeout()</code>. Findings: <code>docs/04-operations/pre-beta-audit.md</code>.</span>
+              <span style="color: #666"><strong style="color:#888">Priority 3 — Code Review &amp; Pre-Beta Audit (#37)</strong> — staff-engineer-level review complete; all P0 + P1 findings resolved. <strong style="color:#22c55e">Go/No-Go: ✅ GREEN.</strong> P0: renewal <code>$transaction</code> atomicity; draft pick P2002 handling; <code>pickInFlight</code> guard. P1: force-move play-lock (single-move + swap paths); playoff scoring model documented; undo-waiver P2002 → 409. Findings: <code>docs/04-operations/pre-beta-audit.md</code>.</span>
             </div>
 
             <div class="task-row">

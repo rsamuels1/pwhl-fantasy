@@ -1279,15 +1279,15 @@ if (league.status !== "PRE_DRAFT" && league.isReplay !== newIsReplay) {
 
 ## Summary of Recommendations by Priority
 
-### MUST FIX BEFORE BETA (P0)
-1. **Renewal race condition** (P0-001) — wrap in transaction, stricter guard
-2. **Draft concurrent pick race** (P0-002 revised) — add P2002 handling in persistPick
-3. **Auto-escalation state fragility** (P0-003) — add mutex/serial queue guard (lower priority than #1 and #2 due to Node.js single-threaded nature)
+### MUST FIX BEFORE BETA (P0) — ✅ ALL FIXED (commit 00f26b0)
+1. **Renewal race condition** (P0-001) — ✅ FIXED: `renewLeague()` wrapped in `prisma.$transaction()`
+2. **Draft concurrent pick race** (P0-002 revised) — ✅ FIXED: P2002 catch added to `persistPick()`
+3. **Auto-escalation state fragility** (P0-003) — ✅ FIXED: `pickInFlight` guard added to `onTimeout()`
 
-### FIX BEFORE OR DURING BETA (P1)
-1. **Force-move play-lock enforcement** (P1-004) — add play-lock check
-2. **Playoff scoring function** (Playoff audit) — clarify/extract playoff-specific scoring
-3. **Undo-waiver safety** (P1-005) — improve error messages (actual code is safe)
+### FIX BEFORE OR DURING BETA (P1) — ✅ ALL FIXED (commit below)
+1. **Force-move play-lock enforcement** (P1-004) — ✅ FIXED: `playerHasPlayedThisPeriod()` helper added to `force-move/route.ts`; play-lock enforced for both single-move (active→bench/IR) and swap paths (both directions checked)
+2. **Playoff scoring function** (Playoff audit) — ✅ CLARIFIED: playoff scoring lives in `advance-playoff-round/route.ts` using `computeAllTeamScores()` (1v1 raw FP, no VP); header comment added to the route explaining the model and how it differs from VTF/VP regular-season scoring
+3. **Undo-waiver safety** (P1-005) — ✅ FIXED: P2002 catch added to `db.rosterEntry.create()` in the PLAYER_DROP reversal path; returns a clean 409 instead of an unhandled 500 if a race causes the player to be re-added before the undo lands
 
 ### POST-BETA (P2)
 1. Reduce N+1 in draft auto-pick (O1-002)
@@ -1301,20 +1301,20 @@ if (league.status !== "PRE_DRAFT" && league.isReplay !== newIsReplay) {
 
 ## Final Risk Assessment
 
-| Category | Finding | Risk | Blocker? |
-|----------|---------|------|----------|
-| Renewal | Race condition allows concurrent seasons | CRITICAL | YES |
-| Draft | Concurrent pick race (transactions safe, but fragile) | HIGH | Mitigation exists (P2002) |
-| Auto-escalation | State divergence (unlikely in Node.js) | MEDIUM | Unlikely in practice |
-| Force-move | Play-lock bypass | MEDIUM | YES (fairness rule) |
-| Playoff | Scoring function unclear | MEDIUM | Needs clarification |
-| Undo-transaction | Edge cases mostly handled | LOW | Defensive enough |
-| Notify | Fire-and-forget, no error logging | LOW | Observable failure is OK for beta |
-| Tests | Gaps in concurrent scenarios | MEDIUM | Manageable risk for beta |
+| Category | Finding | Risk | Status |
+|----------|---------|------|--------|
+| Renewal | Race condition allows concurrent seasons | CRITICAL | ✅ FIXED |
+| Draft | Concurrent pick race — P2002 now caught | HIGH | ✅ FIXED |
+| Auto-escalation | State divergence (unlikely in Node.js) | MEDIUM | ✅ FIXED |
+| Force-move | Play-lock bypass (both paths) | MEDIUM | ✅ FIXED |
+| Playoff | Scoring model undocumented | MEDIUM | ✅ CLARIFIED |
+| Undo-transaction | P2002 on drop-reversal race | LOW | ✅ FIXED |
+| Notify | Fire-and-forget, no error logging | LOW | Acceptable for beta |
+| Tests | Gaps in concurrent scenarios | MEDIUM | Manageable for beta |
 
-**Overall Assessment**: The codebase is **production-ready in structure** (good separation of concerns, comprehensive unit tests, safe transactions). However, **three data-integrity issues** must be fixed before beta invites: renewal race, forced-move play-lock bypass, and playoff scoring clarification.
+**Overall Assessment**: All P0 and P1 findings resolved. The codebase is **ready for the closed beta**. P2 items (test gaps, N+1 in auto-pick, renewal mode inheritance) are tracked above and can be addressed during or after the beta period.
 
-**Go/No-Go Recommendation**: **HOLD FOR FIXES** — fix P0-001, P1-004, and playoff scoring function before inviting beta users. After those fixes, the codebase is safe to ship.
+**Go/No-Go Recommendation**: ✅ **GREEN — READY TO INVITE FOUNDING COMMISSIONERS**
 
 ---
 

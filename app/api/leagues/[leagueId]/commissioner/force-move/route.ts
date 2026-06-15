@@ -9,6 +9,23 @@ import { getSeasonState } from "@/lib/season";
 import { logCommissionerAction } from "@/lib/services/audit-service";
 
 const VALID_SLOTS: LineupSlot[] = ["FORWARD", "DEFENSE", "GOALIE", "UTIL", "BENCH", "IR"];
+const ACTIVE_SLOTS: LineupSlot[] = ["FORWARD", "DEFENSE", "GOALIE", "UTIL"];
+const BENCH_SLOTS: LineupSlot[] = ["BENCH", "IR"];
+
+// Returns true if the player has contributed stat lines in the current scoring period.
+// Used to enforce the play-lock rule: a player who has scored this period cannot be
+// moved from an active slot to bench/IR (same rule as the regular lineup API).
+async function playerHasPlayedThisPeriod(
+  playerId: string,
+  activePeriod: { startsAt: Date } | null,
+  now: Date
+): Promise<boolean> {
+  if (!activePeriod) return false;
+  const count = await prisma.statLine.count({
+    where: { playerId, game: { startsAt: { gte: activePeriod.startsAt, lte: now } } },
+  });
+  return count > 0;
+}
 
 // POST /api/leagues/[leagueId]/commissioner/force-move
 // Commissioner override for lineup moves on any team. Respects eligibility and lock rules.
@@ -107,6 +124,23 @@ export async function POST(
       return NextResponse.json({ error: `${entryB.player.firstName} ${entryB.player.lastName} cannot play the ${slotA} slot.` }, { status: 422 });
     }
 
+    // Play-lock: moving an active player to bench/IR is blocked if they already scored
+    // this period — even for swaps, to prevent retroactive benching of scorers.
+    if (ACTIVE_SLOTS.includes(slotA) && BENCH_SLOTS.includes(slotB)) {
+      if (await playerHasPlayedThisPeriod(body.playerId, activePeriod, now)) {
+        return NextResponse.json({
+          error: `${entry.player.firstName} ${entry.player.lastName} has already played this period and cannot be benched.`,
+        }, { status: 422 });
+      }
+    }
+    if (ACTIVE_SLOTS.includes(slotB) && BENCH_SLOTS.includes(slotA)) {
+      if (await playerHasPlayedThisPeriod(body.swapWithPlayerId!, activePeriod, now)) {
+        return NextResponse.json({
+          error: `${entryB.player.firstName} ${entryB.player.lastName} has already played this period and cannot be benched.`,
+        }, { status: 422 });
+      }
+    }
+
     await prisma.$transaction([
       prisma.rosterEntry.update({
         where: { fantasyTeamId_playerId: { fantasyTeamId: body.teamId, playerId: body.playerId } },
@@ -127,6 +161,15 @@ export async function POST(
   }
 
   // Single-player move
+  // Play-lock: active → bench/IR is blocked if the player has already scored this period.
+  if (ACTIVE_SLOTS.includes(fromSlot) && BENCH_SLOTS.includes(targetSlot)) {
+    if (await playerHasPlayedThisPeriod(body.playerId, activePeriod, now)) {
+      return NextResponse.json({
+        error: `${entry.player.firstName} ${entry.player.lastName} has already played this period and cannot be benched.`,
+      }, { status: 422 });
+    }
+  }
+
   const rosterMap = team.roster.map((e) => ({ playerId: e.playerId, slot: e.slot }));
   const validationError = validateSlotMove(
     entry.player.position,

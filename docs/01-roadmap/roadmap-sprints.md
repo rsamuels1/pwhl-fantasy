@@ -158,11 +158,17 @@ items here are read-heavy or isolated new domains — none touch the draft or st
 **Bug fixes & UX improvements (Sprint 6):**
 - **Between-weeks lineup nudge false-positive** ✅ — "Week N is coming up / Set lineup before games begin" amber banner persisted on the matchup page even after the user had used Auto-Set Lineup and saved. Root cause: nudge condition was `status === "upcoming"` only, with no check for lineup state. Fix: suppress nudge when `myPlayers.length >= activeSlotCount` (forward + defense + goalie + util from `rosterSettings`). `app/team/[teamId]/matchup/page.tsx`.
 
-- **Priority 3 — Code Review & Pre-Beta Audit (#37)** ✅
-  Findings: `docs/04-operations/pre-beta-audit.md`. All 3 P0 blockers resolved:
-  - **Renewal race condition** (`lib/services/renewal-service.ts`) — wrapped entire function in `prisma.$transaction()` so the `playoffStatus !== "COMPLETE"` guard and the child-league `create` are atomic; concurrent renewal calls can no longer both pass the guard before either commits.
-  - **Draft concurrent-pick P2002 handling** (`lib/draft/server.ts` `persistPick()`) — added `try/catch` for Prisma P2002 (unique constraint on `RosterEntry.fantasyTeamId_playerId`); logs and no-ops instead of throwing, since the in-memory engine already deduplicates via `draftedPlayerIds`.
-  - **Auto-timeout re-entrancy guard** (`lib/draft/server.ts` `onTimeout()`) — added `pickInFlight` boolean flag; a stale or re-fired timer callback now returns immediately if a pick is already being processed.
+- **Priority 3 — Code Review & Pre-Beta Audit (#37)** ✅ — Findings: `docs/04-operations/pre-beta-audit.md`. All P0 and P1 findings resolved. **Go/No-Go: ✅ GREEN — ready to invite founding commissioners.**
+
+  **P0 fixes (commit 00f26b0):**
+  - **Renewal race condition** (`lib/services/renewal-service.ts`) — wrapped in `prisma.$transaction()` so the `playoffStatus` guard and child-league `create` are atomic.
+  - **Draft concurrent-pick P2002 handling** (`lib/draft/server.ts` `persistPick()`) — P2002 caught; logs and no-ops instead of throwing.
+  - **Auto-timeout re-entrancy guard** (`lib/draft/server.ts` `onTimeout()`) — `pickInFlight` flag prevents stale callbacks from re-entering pick resolution.
+
+  **P1 fixes:**
+  - **Force-move play-lock** (`commissioner/force-move/route.ts`) — `playerHasPlayedThisPeriod()` helper added; play-lock enforced on both the single-move path and both directions of the swap path.
+  - **Playoff scoring documented** (`advance-playoff-round/route.ts`) — header comment clarifies 1v1 raw-FP scoring model vs VTF/VP regular-season scoring.
+  - **Undo-waiver P2002 handling** (`commissioner/undo-transaction/route.ts`) — P2002 on PLAYER_DROP reversal now returns a clean 409 instead of an unhandled 500.
 
 **Remaining Sprint 6:**
 
@@ -309,7 +315,7 @@ Items below are acknowledged but have no sprint assignment. They become candidat
 | Sprint 3 — Beta Readiness | ✅ COMPLETE (Jun 13, 2026) | Onboarding ✅, error handling ✅, mobile ✅, NT-001 ✅, draft notifications ✅, transaction history ✅, IA-011 ✅ |
 | Sprint 4 — Product Polish | ✅ COMPLETE (Jun 13, 2026) | NT-002 LINEUP_INCOMPLETE ✅ · #01 commissioner dashboard ✅ · #17 rivalries ✅ · VP standings fix ✅ · playoff mode + replay support ✅ |
 | Sprint 5 — Validation + Beta Operations | ✅ COMPLETE | Replay gap fix ✅ · sim-to-playoffs ✅ · draft cert ✅ · founder dashboard ✅ · playoff experience UX ✅ · commissioner workflow validation ✅ |
-| Sprint 6 — Engagement + Transactions | ⏳ IN PROGRESS | Auto-set lineup ✅ · FA schedule awareness + add & slot ✅ · beta feedback infrastructure ✅ · code audit + P0 fixes ✅ · team analysis · waiver priority |
+| Sprint 6 — Engagement + Transactions | ⏳ IN PROGRESS | Auto-set lineup ✅ · FA schedule awareness + add & slot ✅ · beta feedback infrastructure ✅ · code audit + all P0/P1 fixes ✅ · team analysis · waiver priority |
 | Sprint 7 — Retention Layer | ⏳ PLANNED | League history + HoF · storylines · FAAB · player legacy · Replay Sim V2 (#38) |
 
 ---

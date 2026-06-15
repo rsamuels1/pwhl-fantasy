@@ -92,14 +92,23 @@ async function undoWaiverTransaction(
         error: "Player was picked up by another team — undo would create a conflict",
       }, { status: 409 });
     }
-    await db.rosterEntry.create({
-      data: {
-        fantasyTeamId: teamId,
-        playerId,
-        slot: (data.slot as any) ?? "BENCH",
-        acquired: new Date(),
-      },
-    });
+    try {
+      await db.rosterEntry.create({
+        data: {
+          fantasyTeamId: teamId,
+          playerId,
+          slot: (data.slot as any) ?? "BENCH",
+          acquired: new Date(),
+        },
+      });
+    } catch (e: unknown) {
+      if ((e as { code?: string })?.code === "P2002") {
+        return NextResponse.json({
+          error: "Player is already on this team — undo would create a duplicate entry",
+        }, { status: 409 });
+      }
+      throw e;
+    }
   }
 
   // Delete the event so it doesn't appear as undoable again
