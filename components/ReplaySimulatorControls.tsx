@@ -85,7 +85,7 @@ export default function ReplaySimulatorControls({
       const payload =
         action === "advance"
           ? { action: "advance", simulatedDate: isoDate }
-          : { simulatedDate: isoDate };
+          : { action: "set-date", simulatedDate: isoDate };
 
       const res = await fetch(endpoint, {
         method: "POST",
