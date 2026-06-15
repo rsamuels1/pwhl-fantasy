@@ -155,6 +155,12 @@ function isFounderEmail(email: string): boolean {
   return list.split(",").map((e) => e.trim()).includes(email);
 }
 
+// Synchronous helper: checks if a user (by email) is a founder.
+// Use this in client components where you already have the user object.
+export function isFounder(userEmail: string): boolean {
+  return isFounderEmail(userEmail);
+}
+
 // Page-level: returns the authenticated user if they are a founder, else notFound().
 export async function requireFounder(): Promise<User> {
   const user = await requireAuth("/founder");

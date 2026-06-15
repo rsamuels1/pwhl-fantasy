@@ -6,6 +6,7 @@ import DevTimeClear from "@/components/DevTimeClear";
 import TeamNav from "./TeamNav";
 import BottomNav from "@/components/BottomNav";
 import Link from "next/link";
+import FeedbackWidget from "@/components/FeedbackWidget";
 
 interface TeamLayoutProps {
   children: ReactNode;
@@ -103,6 +104,7 @@ export default async function TeamLayout({ children, params }: TeamLayoutProps) 
         <main className="bottom-nav-pad" style={{ paddingBottom: 40 }}>{children}</main>
       </div>
       <BottomNav teamId={teamId} leagueId={team.league.id} />
+      <FeedbackWidget leagueId={team.league.id} />
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import { requireFounder } from "@/lib/auth";
 import Link from "next/link";
+import FeedbackWidget from "@/components/FeedbackWidget";
 
 export default async function FounderLayout({ children }: { children: React.ReactNode }) {
   await requireFounder();
@@ -17,6 +18,7 @@ export default async function FounderLayout({ children }: { children: React.Reac
           <Link href="/founder" style={{ color: "#9ca3af" }}>Dashboard</Link>
           <Link href="/founder/leagues" style={{ color: "#9ca3af" }}>Leagues</Link>
           <Link href="/founder/simulate" style={{ color: "#9ca3af" }}>Simulate</Link>
+          <Link href="/founder/feedback" style={{ color: "#9ca3af" }}>Feedback</Link>
         </nav>
         <div style={{ marginLeft: "auto" }}>
           <Link href="/dashboard" style={{ color: "#6b7280", fontSize: "0.8rem" }}>← App</Link>
@@ -25,6 +27,7 @@ export default async function FounderLayout({ children }: { children: React.Reac
       <main style={{ padding: "1.5rem" }}>
         {children}
       </main>
+      <FeedbackWidget />
     </div>
   );
 }

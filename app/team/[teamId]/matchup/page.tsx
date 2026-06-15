@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { prisma } from "@/lib/db";
-import { requireAuth, requireTeamOwner } from "@/lib/auth";
+import { requireAuth, requireTeamOwner, isFounder } from "@/lib/auth";
 import { getDashboardData, type ActiveMatchup, type PlayerMatchupRow, type WeeklyRecap, type LeaguePerformerRow, type ChampionInfo } from "@/lib/services/dashboard";
 import InlineLineupEditor, { type LineupPlayer } from "./InlineLineupEditor";
 import LiveScoreRefresh from "@/components/LiveScoreRefresh";
@@ -12,6 +12,8 @@ import { getReplayNow } from "@/lib/replayTime";
 import { getRival } from "@/lib/playoffs/seeding";
 import { RivalBadge } from "@/components/RivalBadge";
 import { HeadToHeadHistory } from "@/components/HeadToHeadHistory";
+import ReplaySimulatorControls from "@/components/ReplaySimulatorControls";
+import { getSeasonState } from "@/lib/season";
 
 export default async function TeamMatchupPage({
   params,
@@ -34,6 +36,16 @@ export default async function TeamMatchupPage({
   const activeSlotCount = (rs.forward ?? 3) + (rs.defense ?? 2) + (rs.goalie ?? 1) + (rs.util ?? 1);
   const nowMs = getReplayNow(league, await getDevNow());
   const dashboard = await getDashboardData(leagueId, teamId, nowMs, prisma);
+
+  // Fetch season state and playoff status for replay controls (if needed)
+  const leagueForSeason = await prisma.fantasyLeague.findUnique({
+    where: { id: leagueId },
+    select: { isReplay: true, commissionerId: true, playoffStatus: true },
+  });
+  const seasonState = leagueForSeason?.isReplay
+    ? await getSeasonState(leagueId, nowMs, prisma)
+    : null;
+  const playoffStatusValue = leagueForSeason?.playoffStatus ?? "NOT_STARTED";
   const { activeMatchup, remainingPlayers, topPerformers, disappointments, lineupAlerts, lastResult, leagueActivity, leagueTopPerformers, leagueDisappointments, eliminationInfo, championInfo, playoffPending } = dashboard;
 
   // Fetch teams and matchups for rival badge
@@ -184,6 +196,19 @@ export default async function TeamMatchupPage({
             Fix lineup →
           </Link>
         </div>
+      )}
+
+      {/* ── 1a. Replay simulator controls (for commissioners/founders) ── */}
+      {leagueForSeason?.isReplay && seasonState && (leagueForSeason.commissionerId === user.id || isFounder(user.email)) && (
+        <ReplaySimulatorControls
+          leagueId={leagueId}
+          seasonState={seasonState}
+          nowMs={nowMs}
+          isCommissioner={leagueForSeason.commissionerId === user.id}
+          isFounder={isFounder(user.email)}
+          placement="inline-panel"
+          playoffStatus={playoffStatusValue}
+        />
       )}
 
       {/* ── 1b. Between-weeks lineup nudge ── */}

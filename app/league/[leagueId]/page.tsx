@@ -3,7 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { computeRace } from "@/lib/playoffs/seeding";
 import { computeVpStandings } from "@/lib/scoring/vp";
-import { requireAuth, requireLeagueAccess } from "@/lib/auth";
+import { requireAuth, requireLeagueAccess, isFounder } from "@/lib/auth";
 import { getLeagueActivity } from "@/lib/services/activity";
 import { getSeasonState } from "@/lib/season";
 import { getDevNow } from "@/lib/devTime";
@@ -11,6 +11,7 @@ import { getReplayNow } from "@/lib/replayTime";
 import Link from "next/link";
 import AnnouncementForm from "@/components/AnnouncementForm";
 import { VpExplainer } from "@/components/VpExplainer";
+import ReplaySimulatorControls from "@/components/ReplaySimulatorControls";
 
 export default async function LeagueOverviewPage({
   params,
@@ -196,7 +197,12 @@ export default async function LeagueOverviewPage({
     new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" }).format(d);
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+    <div style={{
+      display: "flex",
+      flexDirection: "column",
+      gap: 20,
+      paddingBottom: league.isReplay && (isCommissioner || isFounder(user.email)) ? 100 : 0,
+    }}>
 
       {/* ── Welcome banner ── */}
       {isWelcome && myTeam && (
@@ -714,6 +720,19 @@ export default async function LeagueOverviewPage({
 
         </div>
       </div>
+
+      {/* Replay simulator sticky footer (for commissioners/founders of replay leagues) */}
+      {league.isReplay && (isCommissioner || isFounder(user.email)) && (
+        <ReplaySimulatorControls
+          leagueId={leagueId}
+          seasonState={seasonState}
+          nowMs={nowMs}
+          isCommissioner={isCommissioner}
+          isFounder={isFounder(user.email)}
+          placement="sticky-footer"
+          playoffStatus={league.playoffStatus}
+        />
+      )}
     </div>
   );
 }

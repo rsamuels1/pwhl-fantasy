@@ -100,6 +100,7 @@ model User {
   memberships             FantasyTeam[]
   notifications           Notification[]
   notificationPreferences NotificationPreference[]
+  feedbackSubmissions     FeedbackSubmission[]
 }
 
 model FantasyLeague {
@@ -114,6 +115,7 @@ model FantasyLeague {
   rosterSettings          Json                     @default("{}")
   playoffSettings         Json                     @default("{\"teamsInPlayoff\": 4, \"topSeedsWithBye\": 0, \"higherSeedWinsTies\": true, \"roundDurationPeriods\": 2}")
   playoffStatus           PlayoffStatus            @default(NOT_STARTED)
+  betaStatus              BetaStatus               @default(NONE)
   announcement            String?
   draftStartsAt           DateTime?
   isReplay                Boolean                  @default(false)
@@ -134,6 +136,7 @@ model FantasyLeague {
   notificationPreferences NotificationPreference[]
   parentLeague            FantasyLeague?           @relation("LeagueLineage", fields: [parentLeagueId], references: [id])
   childLeagues            FantasyLeague[]          @relation("LeagueLineage")
+  feedbackSubmissions     FeedbackSubmission[]
 
   @@index([status])
 }
@@ -324,6 +327,34 @@ enum NotificationType {
   DRAFT_STARTING
   ON_THE_CLOCK
   LINEUP_INCOMPLETE
+}
+
+model FeedbackSubmission {
+  id        String        @id @default(cuid())
+  userId    String
+  leagueId  String?
+  type      FeedbackType
+  body      String        @db.Text
+  url       String?
+  createdAt DateTime      @default(now())
+  user      User          @relation(fields: [userId], references: [id])
+  league    FantasyLeague? @relation(fields: [leagueId], references: [id])
+
+  @@index([createdAt])
+}
+
+enum FeedbackType {
+  BUG
+  SUGGESTION
+  OTHER
+}
+
+enum BetaStatus {
+  NONE
+  INVITED
+  ACCEPTED
+  ACTIVE
+  RENEWED
 }
 
 enum EventType {

@@ -91,6 +91,7 @@ export default async function FounderLeagueDetail({ params }: Props) {
           maxTeams: league.maxTeams,
           isReplay: league.isReplay ?? false,
           playoffStatus: league.playoffStatus,
+          betaStatus: league.betaStatus,
           scoringSettings: parsedScoring as { skater: Record<string, number>; goalie: Record<string, number> } | null,
           rosterSettings: league.rosterSettings as Record<string, number> | null,
           playoffSettings: league.playoffSettings as Record<string, unknown> | null,

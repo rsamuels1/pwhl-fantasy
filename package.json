@@ -36,6 +36,7 @@
     "@playwright/test": "^1.60.0",
     "@types/bcryptjs": "^2.4.6",
     "@types/react": "19.2.16",
+    "@types/react-dom": "^19.2.3",
     "@types/ws": "^8.5.10",
     "playwright": "^1.60.0",
     "prisma": "^5.0.0",

@@ -272,6 +272,43 @@ Acceptance Criteria:
 
 ---
 
+## 37. Code Review & Pre-Beta Audit
+
+Sprint: 6
+
+Priority: HIGH — pre-beta launch gate
+
+Status: Not Implemented
+
+Goal: A staff-engineer-level review of the full codebase before the beta cohort is invited.
+The audit should surface architectural issues, duplicate logic, state machine correctness
+gaps, test coverage blind spots, and operational risks that are easier to fix now than after
+real user data exists.
+
+Focus areas:
+- Duplicate or inconsistent logic across the scoring, lineup, draft, and playoff domains
+- State machine correctness (draft engine, season lifecycle, playoff bracket advancement)
+- API route auth guard coverage — any missing `apiRequireAuth` / `apiRequireCommissioner`
+- Test gaps relative to P0 business logic (scoring, VP standings, playoff seeding)
+- Operational risks: error paths that could silently corrupt league state; missing indexes;
+  foreign-key constraints that block safe recovery from stuck states
+
+Output: a prioritized findings document in `docs/04-operations/` or `docs/02-engineering/`
+with P0 / P1 / P2 labels. P0 findings (correctness bugs, data corruption risks, auth gaps)
+must be resolved before the beta cohort is invited. P1 findings (architectural improvements,
+test gaps) resolved before public launch.
+
+User story: As the founding engineer, I want a comprehensive code audit before opening the
+beta so that we catch architectural issues and operational risks before real users hit them.
+
+Acceptance Criteria:
+
+- Audit complete with findings categorized as P0 / P1 / P2
+- Findings document committed to `docs/04-operations/` or `docs/02-engineering/`
+- All P0 findings resolved and verified before beta invites go out
+
+---
+
 # Phase 2: Fantasy Essentials
 
 Goal: Reach feature parity with major fantasy platforms.
@@ -494,6 +531,32 @@ Acceptance Criteria:
 
 ---
 
+## 36. Beta Feedback Infrastructure
+
+Sprint: 6
+
+Priority: P1
+
+Status: Implemented ✅
+
+Spec: `docs/02-engineering/beta-feedback-spec.md`
+
+What shipped:
+
+- **Schema** — `FeedbackSubmission` model (`id`, `userId`, `leagueId?`, `type FeedbackType`, `body`, `createdAt`); `FeedbackType` enum (`BUG`, `SUGGESTION`, `OTHER`); `BetaStatus` enum (`NONE`, `INVITED`, `ACCEPTED`, `ACTIVE`, `RENEWED`); `betaStatus BetaStatus @default(NONE)` field on `FantasyLeague` for cohort lifecycle tracking.
+- **Feedback Widget** (`components/FeedbackWidget.tsx`) — fixed bottom-right floating button opens a modal with Bug/Suggestion/Other type selector, a textarea for the body, and a submit button. Rendered via `ReactDOM.createPortal` into `document.body` to escape stacking contexts. Mounted in league layout, team layout, and founder layout so it is available on all authenticated surfaces.
+- **API routes** — `POST /api/feedback` (auth-gated; validates type + body; writes `FeedbackSubmission` row); `GET /api/founder/feedback` (founder-only; returns last 100 submissions ordered by `createdAt` desc); `PATCH /api/founder/leagues/[leagueId]/beta-status` (founder-only; updates `FantasyLeague.betaStatus`).
+- **Founder Console additions** — `app/founder/feedback/page.tsx`: feed table showing all submissions with type chip, user email, league, body, and timestamp. New "Feedback" nav link in `app/founder/layout.tsx`. New "Beta" tab in `app/founder/leagues/[leagueId]/LeagueDetailTabs.tsx` with a `betaStatus` dropdown to manage cohort lifecycle per league.
+
+Acceptance Criteria:
+
+- Founding commissioners can submit feedback from any league or team page ✅
+- Feedback type, body, user, and league are captured in the DB ✅
+- Founder can view all submissions in the Founder Console ✅
+- Founder can track and update each league's beta cohort status ✅
+
+---
+
 ## 34. Auto-Set Lineup
 
 Sprint: 6
@@ -696,6 +759,63 @@ Acceptance Criteria:
 
 - Commissioners can control pace ✅
 - Sim correctly bridges multi-week calendar gaps ✅
+
+---
+
+## 38. Replay Simulation V2 — Accelerated & Scheduled Playback
+
+Sprint: 7
+
+Priority: MEDIUM
+
+Status: Not Implemented
+
+Goal: Enhance the replay experience so commissioners can run faster, more automated
+simulations that keep their league engaged. V1 advances one day at a time via the
+`ReplayDayBar`. V2 adds speed controls, a jump-to-week shortcut, a progress summary card,
+and notification trigger points so managers receive league updates during replay without
+the commissioner having to chase them down.
+
+Builds on: `isReplay` / `replayCurrentDate` / `getReplayNow()` / `ReplayDayBar`
+(`lib/devTime.ts`, `scripts/seed-replay.ts`, `app/league/[leagueId]/season/SeasonControls.tsx`).
+
+Features:
+
+- **Configurable playback speed** — commissioner can select "advance N days per click" (e.g.
+  1 / 3 / 7) or enable an auto-advance timer that scores the next scoring unit on an interval.
+  Implemented as a control on the replay day bar; persisted in `FantasyLeague.replaySettings`
+  (a JSON field, no schema migration required if embedded in the existing settings column) or
+  as a client-side preference cookie.
+- **Jump to week N** — a dropdown in the season controls listing all scoring periods by name
+  ("Week 1", "Week 2", …). Selecting a target week calls `advanceSeason` with a simulated date
+  set past that period's `endsAt`, scoring all intermediate weeks in one operation. Same
+  code path as the existing "Sim to playoffs" button; no API changes needed.
+- **Replay progress summary card** — a new card in the league overview right sidebar (visible
+  when `isReplay === true` and `replayCurrentDate` is set). Shows: current simulated date,
+  team's W-L record, standings position, top scorer this replay so far. Derived entirely from
+  existing `Matchup` + `StatLine` + `computeVpStandings` data; no schema changes.
+- **Notification trigger points** — when the commissioner advances past a scoring period
+  boundary, the `advanceSeason` flow (or a new `advanceReplayWeek` wrapper) calls
+  `createNotification` for each team owner with a `REPLAY_WEEK_COMPLETE` type (new enum
+  value), body "Week N is complete — check your standings!", and a `dedupeKey` of
+  `replay-{leagueId}-week-{N}` to prevent duplicates on repeated advances. Uses the existing
+  `createNotification` / `NotificationBell` infrastructure.
+
+Implementation notes:
+
+- All data is available without schema changes. The only potential schema addition is a new
+  `NotificationType` enum value (`REPLAY_WEEK_COMPLETE`), which requires `npx prisma db push`.
+- Speed control can live entirely client-side in `ReplayDayBar` if N-days-per-click is
+  implemented as a local preference. Auto-advance on a server timer is out of scope for V2.
+- Jump-to-week reuses `advanceSeason` which already handles multi-week gaps; no new API route.
+- The progress summary card is a read-only server component; no client-side data fetch needed.
+
+Acceptance Criteria:
+
+- Speed control UI allows advancing N days per click; N is configurable by the commissioner
+- "Jump to week N" scores all weeks from the current position to the selected week in one action
+- Replay progress summary card shows current date, W-L, standing, and top scorer on the league overview
+- At least one notification is sent per manager per scored week, with a dedupeKey preventing duplicates
 
 ---
 

@@ -151,33 +151,41 @@ items here are read-heavy or isolated new domains — none touch the draft or st
 - **FA Schedule Awareness + Add & Slot (#35)** ✅ · Commit: 6a6b40f
   Games-remaining "Wk" badge on every FA row in `app/team/[teamId]/roster/page.tsx` + `RosterManager.tsx`, powered by the same batch query as the lineup page; sortable column. `components/AddAndSlotModal.tsx`: after adding a FA the modal offers eligible active slots (F/D/G/UTIL); selecting one calls `PUT /api/leagues/[leagueId]/lineup`; "Bench for now" dismisses; locked FAs skip the modal. Bonus fixes: lineup nudge on matchup page now respects roster settings slot count; dashboard lineup alert checks `gamesPlayedPerTeam` to avoid false positives. No schema changes.
 
+- **Beta Feedback Infrastructure** ✅
+  Spec: `docs/02-engineering/beta-feedback-spec.md`
+  Schema: `FeedbackSubmission` model, `FeedbackType` enum (BUG/SUGGESTION/OTHER), `BetaStatus` enum (NONE/INVITED/ACCEPTED/ACTIVE/RENEWED), `betaStatus` field on `FantasyLeague`. Widget: `components/FeedbackWidget.tsx` — fixed bottom-right button → modal with type selector, textarea, submit; rendered via `ReactDOM.createPortal` into `document.body`; mounted in league, team, and founder layouts. API: `POST /api/feedback` (auth-gated, writes FeedbackSubmission rows); `GET /api/founder/feedback` (last 100 submissions); `PATCH /api/founder/leagues/[leagueId]/beta-status`. Founder Console: `app/founder/feedback/page.tsx` (feed table) + new Beta tab in `LeagueDetailTabs.tsx` with betaStatus dropdown.
+
 **Bug fixes & UX improvements (Sprint 6):**
 - **Between-weeks lineup nudge false-positive** ✅ — "Week N is coming up / Set lineup before games begin" amber banner persisted on the matchup page even after the user had used Auto-Set Lineup and saved. Root cause: nudge condition was `status === "upcoming"` only, with no check for lineup state. Fix: suppress nudge when `myPlayers.length >= activeSlotCount` (forward + defense + goalie + util from `rosterSettings`). `app/team/[teamId]/matchup/page.tsx`.
 
 **Remaining Sprint 6:**
 
-**Priority 2 — Beta Feedback Infrastructure** · ~40K
-Spec: `docs/02-engineering/beta-feedback-spec.md`
-In-app feedback widget (Bug/Suggestion/Other) + `FeedbackSubmission` table + Founder Console
-feed. `betaStatus` lifecycle field on `FantasyLeague` for tracking cohort progression. Two
-small schema additions; minimal surface. Deferred from Sprint 5 — needed once founding
-commissioners are active.
+**Priority 3 — Code Review & Pre-Beta Audit (#37)**
+A staff-engineer-level review of the full codebase before beta launch. Focus areas:
+architectural issues, duplicate logic, state machine correctness, test gaps, and operational
+risks. Output: prioritized findings doc (P0/P1/P2), with P0/P1 issues fixed before the beta
+cohort is invited. Findings committed to `docs/04-operations/` or `docs/02-engineering/`.
 
-**Priority 3 — Team Analysis & Insights (#25)** · ~85K
+User story: As the founding engineer, I want a comprehensive code audit before opening the
+beta so that we catch architectural issues and operational risks before real users hit them.
+
+Acceptance criteria: audit complete, P0 findings resolved, findings doc committed.
+
+**Priority 4 — Team Analysis & Insights (#25)** · ~85K
 Spec: `docs/02-engineering/team-analysis-spec.md`
 New "Analysis" tab on the matchup page. Player hot/cold verdicts vs projection baseline;
 position-group trend vs league median (last 4 weeks); top 3 FA upgrade suggestions for the
 weakest group. All reads on existing data. Trade suggestion CTA deferred until Trade System
 (#7) ships.
 
-**Priority 4 — Waiver Priority + Processing (#5)** · ~110K
+**Priority 5 — Waiver Priority + Processing (#5)** · ~110K
 Spec: `docs/02-engineering/waiver-spec.md`
 The fairness layer on top of existing instant add/drop: rolling priority order, 48h waiver
 window for dropped players, daily batch processing at 03:00 ET. `WaiverClaim` +
 `WaiverPriority` schema tables; `processWaivers()` idempotent service; claim submission +
 status UI on the roster page. Commissioner controls reuse existing recovery tools.
 
-**Exit:** founding commissioners can auto-set lineups ✅, see their weekly performance history ✅, add a FA with immediate slot-in flow ✅, submit feedback visible in founder console, and view their team analysis.
+**Exit:** founding commissioners can auto-set lineups ✅, see their weekly performance history ✅, add a FA with immediate slot-in flow ✅, submit feedback visible in founder console ✅, code audit complete with P0 findings resolved, and team analysis shipped.
 
 ---
 
@@ -210,14 +218,41 @@ leaderboard ranked by career FP or championship count. Requires at least one com
 renewed season to be meaningful; ship the page skeleton with single-season data and let it fill
 in naturally. `UserCareerStats` cached table is post-season work.
 
+**Priority 5 — Replay Simulation V2 — Accelerated & Scheduled Playback (#38)**
+Enhance the replay experience so commissioners can run faster, more automated simulations.
+V1 lets you click "Next day" one day at a time. V2 adds:
+
+- (a) Configurable playback speed — advance N days per click, or auto-advance on a timer
+- (b) "Jump to week N" shortcut — commissioner selects a target week from a dropdown and
+  the simulation advances all intermediate days/weeks in one operation
+- (c) Replay progress summary card — shown in the league overview during active replay; displays
+  current simulated date, W-L record, standings snapshot, and top scorer at that point in the season
+- (d) Notification trigger points — fire at least one notification to managers at a key replay
+  moment (e.g. "Week 3 complete — check your standings!"), using the existing
+  `createNotification` / `dedupeKey` infrastructure so triggers are idempotent
+
+User story: As a commissioner running a replay league, I want to control the speed and flow
+of the simulation so that my league stays engaged without requiring me to manually click
+through every single day.
+
+Acceptance criteria:
+- Speed control UI on the season/replay controls page (advance N days per click or timer)
+- "Jump to week N" dropdown that scores all weeks up to the target in one action
+- Replay progress summary card visible on the league overview with record, standings, top scorer
+- At least one notification trigger point fires during replay advancement with a dedupeKey
+
+Builds on: `isReplay` / `replayCurrentDate` / `getReplayNow()` / `ReplayDayBar`
+(`scripts/seed-replay.ts`). No schema changes anticipated.
+
 **Stretch — Email Notifications** · ~50K
 Email channel for `LINEUP_INCOMPLETE`, `TRADE_RECEIVED`, and `WAIVER_RESULT` notification types.
 Uses the existing `Notification` / `NotificationPreference` models. Integration with a transactional
 email provider (e.g. Resend). Deferred from Sprint 3 — add only if beta feedback surfaces it as P1.
 
 **Exit:** founding commissioners can view their league history; the league overview shows weekly
-storylines; leagues with active waivers can use FAAB. The platform is retention-ready for the
-2027-28 off-season renewal window.
+storylines; leagues with active waivers can use FAAB; replay commissioners can run accelerated
+simulations with progress visibility. The platform is retention-ready for the 2027-28 off-season
+renewal window.
 
 ---
 
@@ -271,8 +306,8 @@ Items below are acknowledged but have no sprint assignment. They become candidat
 | Sprint 3 — Beta Readiness | ✅ COMPLETE (Jun 13, 2026) | Onboarding ✅, error handling ✅, mobile ✅, NT-001 ✅, draft notifications ✅, transaction history ✅, IA-011 ✅ |
 | Sprint 4 — Product Polish | ✅ COMPLETE (Jun 13, 2026) | NT-002 LINEUP_INCOMPLETE ✅ · #01 commissioner dashboard ✅ · #17 rivalries ✅ · VP standings fix ✅ · playoff mode + replay support ✅ |
 | Sprint 5 — Validation + Beta Operations | ⏳ CURRENT | Replay gap fix ✅ · sim-to-playoffs ✅ · draft cert ✅ · founder dashboard ✅ · playoff experience UX ✅ · commissioner workflow validation + weekly perf dashboard pending |
-| Sprint 6 — Engagement + Transactions | ⏳ IN PROGRESS | Auto-set lineup ✅ · FA schedule awareness + add & slot ✅ · beta feedback · team analysis · waiver priority |
-| Sprint 7 — Retention Layer | ⏳ PLANNED | League history + HoF · storylines · FAAB · player legacy |
+| Sprint 6 — Engagement + Transactions | ⏳ IN PROGRESS | Auto-set lineup ✅ · FA schedule awareness + add & slot ✅ · beta feedback infrastructure ✅ · code review audit · team analysis · waiver priority |
+| Sprint 7 — Retention Layer | ⏳ PLANNED | League history + HoF · storylines · FAAB · player legacy · Replay Sim V2 (#38) |
 
 ---
 
@@ -292,7 +327,7 @@ estimates, not commitments.
 | **Jun 13, 2026** | NT-002 LINEUP_INCOMPLETE notification shipped (`checkAndEmitScheduledNotifications` on dashboard load) ✅ |
 | **Jun 13, 2026** | Sprint 4 — commissioner dashboard gaps ✅, rivalries ✅, playoff mode ✅, VP fix ✅ **COMPLETE** |
 | **Late Aug 2026** | Sprint 5 — draft cert, founder dashboard, playoff UX ✅ complete; commissioner workflow validation + weekly perf dashboard pending |
-| **Mid–Late Aug 2026** | Sprint 6 — auto-set lineup ✅ shipped; beta feedback, team analysis, trade, waivers remaining ← current |
+| **Mid–Late Aug 2026** | Sprint 6 — auto-set lineup ✅ · FA schedule awareness ✅ · beta feedback infrastructure ✅ shipped; team analysis, waivers remaining ← current |
 | **Early Sep 2026** | **MVP code-complete — all launch gates pass** |
 | **Sep – mid Oct 2026** | Closed beta: founding commissioners run replay + small live test leagues; fix findings |
 | **Late Oct 2026** | **PUBLIC LAUNCH** — real leagues draft ~1 week before the opener |

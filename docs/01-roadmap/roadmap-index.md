@@ -60,6 +60,7 @@ Implemented systems include:
 - Founder Operations Console (`/founder/`) — cross-league monitoring, simulation launcher, end-to-end validator; `FOUNDER_EMAILS` env-var auth gate; no schema change
 - Auto-Set Lineup (`#34`) — `computeOptimalLineup()` in `lib/lineup.ts`; staged save model; "Auto-set" button in lineup manager; FA suggestions API (`GET /api/leagues/[leagueId]/fa-suggestions`); playoff period fallback for games-remaining badges
 - FA Schedule Awareness + Add & Slot (`#35`) — games-remaining "Wk" badge on every FA row (roster page); `AddAndSlotModal` lets managers immediately slot a new pickup into an active position after adding; locked FAs skip the modal
+- Beta Feedback Infrastructure (`#36`) — in-app feedback widget (`components/FeedbackWidget.tsx`) mounted on all authenticated layouts; `POST /api/feedback` persists submissions; `GET /api/founder/feedback` + Founder Console feed table; `PATCH /api/founder/leagues/[leagueId]/beta-status`; `FeedbackSubmission` model + `FeedbackType` / `BetaStatus` enums + `betaStatus` on `FantasyLeague`
 
 These systems should be considered core platform functionality.
 
@@ -110,18 +111,17 @@ The list below is sequenced by **token efficiency** — each feature's estimated
 1. **Commissioner Workflow Validation** · ~15K · Sprint 5
    End-to-end manual test of all commissioner actions; runbook accuracy review; screenshots. See `docs/02-engineering/commissioner-workflow-validation-plan.md`.
 
+### Quick wins (< 45K tokens — batch 2–3 per session)
+
+2. **Code Review & Pre-Beta Audit (#37)** · Sprint 6 (current)
+   Staff-engineer-level audit before beta opens. Focus: architectural issues, duplicate logic, state machine correctness, test gaps, operational risks. Output: prioritized findings doc in `docs/04-operations/` or `docs/02-engineering/` with P0/P1/P2 labels. P0 findings must resolve before beta invites.
+
 ### Standard sessions (60–90K tokens — one feature per session)
 
-2. **Weekly Performance Dashboard (#29)** · ~65K · Sprint 5 (remaining)
-   Spec: `docs/02-engineering/weekly-performance-dashboard-spec.md`. New page replacing the Schedule tab. Aggregates existing `Matchup` + `StatLine` rows; no schema changes. Pulled up from Sprint 6 — no schema changes, all reads on existing data, directly serves manager experience during beta.
-
-3. **Beta Feedback Infrastructure** · ~40K · Sprint 6
-   Spec: `docs/02-engineering/beta-feedback-spec.md`. In-app feedback widget + `FeedbackSubmission` table + Founder Console feed. `betaStatus` field on `FantasyLeague`.
-
-4. **Team Analysis & Insights (#25)** · ~85K · Sprint 6
+3. **Team Analysis & Insights (#25)** · ~85K · Sprint 6
    Spec: `docs/02-engineering/team-analysis-spec.md`. New Analysis tab on the matchup page. Player trends + position-group vs league median + FA suggestions. Trade suggestion CTA removed — gated on Trade System (#7), which is now deferred.
 
-5. **Waiver Priority + Processing (#5)** · ~110K · Sprint 6
+4. **Waiver Priority + Processing (#5)** · ~110K · Sprint 6
    Spec: `docs/02-engineering/waiver-spec.md`. Rolling priority, 48h window, daily batch processing. `WaiverClaim` + `WaiverPriority` tables.
 
 **Shipped:**
@@ -129,6 +129,7 @@ The list below is sequenced by **token efficiency** — each feature's estimated
 - **Transaction History (#8)** · ✅ Paginated API + page with type/team filters, replay guard, infinite scroll. (Sprint 3)
 - **Auto-Set Lineup (#34)** · ✅ `computeOptimalLineup()`, staged save model, FA suggestions API, playoff period fallback. (Sprint 6)
 - **FA Schedule Awareness + Add & Slot (#35)** · ✅ Games-remaining badge on FA panel; `AddAndSlotModal` for immediate active-slot pickup; locked FAs skip modal; bonus lineup nudge + alert fixes. (Sprint 6, commit 6a6b40f)
+- **Beta Feedback Infrastructure (#36)** · ✅ `components/FeedbackWidget.tsx` on all authenticated layouts; `POST /api/feedback`; Founder Console feed + per-league beta status management; `FeedbackSubmission` / `FeedbackType` / `BetaStatus` schema additions. (Sprint 6)
 
 **Sprint 7 (retention layer):**
 
@@ -143,6 +144,9 @@ The list below is sequenced by **token efficiency** — each feature's estimated
 
 11. **Player Legacy (#31)** · ~95K · Sprint 7
     `/profile` page with career history and global leaderboard. Meaningful only after first completed+renewed season; ship skeleton now.
+
+12. **Replay Simulation V2 (#38)** · Sprint 7
+    Configurable playback speed (N days per click), jump-to-week shortcut, replay progress summary card on league overview, and at least one notification trigger point per scored week. Builds on `isReplay` / `replayCurrentDate` / `getReplayNow()` / `ReplayDayBar`. No schema changes except a new `REPLAY_WEEK_COMPLETE` `NotificationType` enum value.
 
 **Deferred / lowest priority:** **Trade System (#7)** · ~130K — deprioritized June 2026. Beta cohort is small enough for out-of-band trades; revisit only if founding commissioners surface strong demand. Spec exists at `docs/02-engineering/trade-spec.md` when ready.
 

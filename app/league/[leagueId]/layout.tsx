@@ -7,6 +7,7 @@ import DevTimeClear from "@/components/DevTimeClear";
 import BottomNav from "@/components/BottomNav";
 import ReplayDayBar from "@/components/ReplayDayBar";
 import NotificationBell from "@/components/NotificationBell";
+import FeedbackWidget from "@/components/FeedbackWidget";
 import { getGameDays, currentDayNumber, nextGameDay, prevGameDay } from "@/lib/replay/gameDays";
 
 interface LeagueLayoutProps {
@@ -201,6 +202,7 @@ export default async function LeagueLayout({ children, params }: LeagueLayoutPro
 
         <main className="bottom-nav-pad">{children}</main>
         {myTeam && <BottomNav teamId={myTeam.id} leagueId={leagueId} />}
+        <FeedbackWidget leagueId={leagueId} />
       </div>
     </div>
   );

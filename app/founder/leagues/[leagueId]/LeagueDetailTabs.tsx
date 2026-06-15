@@ -52,6 +52,7 @@ interface Props {
     maxTeams: number;
     isReplay: boolean;
     playoffStatus: string;
+    betaStatus: string;
     scoringSettings: ScoringSettings | null;
     rosterSettings: Record<string, number> | null;
     playoffSettings: Record<string, unknown> | null;
@@ -63,14 +64,19 @@ interface Props {
   teams: { id: string; name: string; owner: { email: string } | null }[];
 }
 
-const TABS = ["Config", "Standings", "Season", "Draft"] as const;
+const TABS = ["Config", "Standings", "Season", "Draft", "Beta"] as const;
 type Tab = typeof TABS[number];
+
+const BETA_STATUSES = ["NONE", "INVITED", "ACCEPTED", "ACTIVE", "RENEWED"] as const;
 
 export function LeagueDetailTabs({ leagueId, league, standings, seasonState, draft, teams }: Props) {
   const [activeTab, setActiveTab] = useState<Tab>("Config");
   const [simResult, setSimResult] = useState<string | null>(null);
   const [simError, setSimError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [betaStatus, setBetaStatus] = useState(league.betaStatus);
+  const [betaSaved, setBetaSaved] = useState(false);
+  const [betaError, setBetaError] = useState<string | null>(null);
 
   async function simulate(action: "scoreNextWeek" | "scoreAll") {
     setSimResult(null);
@@ -102,6 +108,27 @@ export function LeagueDetailTabs({ leagueId, league, standings, seasonState, dra
         setSimResult(`Playoffs started — ${data.totalRounds} round(s). Top seeds: ${data.seededTeams?.slice(0, 4).map((t: { teamName: string }) => t.teamName).join(", ")}`);
       } catch (e) {
         setSimError(e instanceof Error ? e.message : "Failed");
+      }
+    });
+  }
+
+  function handleBetaStatusChange(newStatus: string) {
+    setBetaSaved(false);
+    setBetaError(null);
+    setBetaStatus(newStatus);
+    startTransition(async () => {
+      try {
+        const res = await fetch(`/api/founder/leagues/${leagueId}/beta-status`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ betaStatus: newStatus }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error((data as { error?: string }).error ?? "Unknown error");
+        setBetaStatus((data as { betaStatus: string }).betaStatus);
+        setBetaSaved(true);
+      } catch (e) {
+        setBetaError(e instanceof Error ? e.message : "Failed to update beta status");
       }
     });
   }
@@ -287,6 +314,47 @@ export function LeagueDetailTabs({ leagueId, league, standings, seasonState, dra
           <div style={{ marginTop: "0.75rem" }}>
             <Link href={`/league/${leagueId}/season`} style={{ color: "#64b5f6", fontSize: "0.8rem" }}>Open season page →</Link>
           </div>
+        </div>
+      )}
+
+      {activeTab === "Beta" && (
+        <div>
+          <Section title="Beta Status">
+            <div style={{ padding: "0.5rem 0" }}>
+              <label style={{ display: "block", fontSize: "0.78rem", color: "#666", marginBottom: "0.4rem" }}>
+                Status for this league
+              </label>
+              <select
+                value={betaStatus}
+                onChange={(e) => handleBetaStatusChange(e.target.value)}
+                disabled={isPending}
+                style={{
+                  background: "#0a0a0a",
+                  border: "1px solid #333",
+                  borderRadius: 4,
+                  color: "#ccc",
+                  fontFamily: "monospace",
+                  fontSize: "0.85rem",
+                  padding: "0.4rem 0.75rem",
+                  cursor: "pointer",
+                  opacity: isPending ? 0.6 : 1,
+                }}
+              >
+                {BETA_STATUSES.map((s) => (
+                  <option key={s} value={s}>{s}</option>
+                ))}
+              </select>
+              {isPending && (
+                <span style={{ marginLeft: "0.75rem", color: "#888", fontSize: "0.78rem" }}>Saving…</span>
+              )}
+              {betaSaved && !isPending && (
+                <span style={{ marginLeft: "0.75rem", color: "#22c55e", fontSize: "0.78rem" }}>Saved</span>
+              )}
+              {betaError && (
+                <div style={{ marginTop: "0.5rem", color: "#ef4444", fontSize: "0.78rem" }}>{betaError}</div>
+              )}
+            </div>
+          </Section>
         </div>
       )}
 
