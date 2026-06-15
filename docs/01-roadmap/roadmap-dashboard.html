@@ -226,7 +226,7 @@
     <div class="header-right">
       <div class="stat">
         <span class="label">Current:</span>
-        <span class="value">Sprint 5/6</span>
+        <span class="value">Sprint 6</span>
       </div>
       <div class="stat">
         <span class="label">To Beta:</span>
@@ -380,15 +380,15 @@
           <span class="status complete">✅ DONE</span>
         </div>
       
-        <div class="sprint-card current" onclick="switchTab('sprints'); setTimeout(() => document.getElementById('sprint-5').scrollIntoView({behavior: 'smooth'}), 100)">
+        <div class="sprint-card complete" onclick="switchTab('sprints'); setTimeout(() => document.getElementById('sprint-5').scrollIntoView({behavior: 'smooth'}), 100)">
           <div class="name">Sprint 5</div>
-          <div class="progress">5/7</div>
-          <span class="status current">● LIVE</span>
+          <div class="progress">7/7</div>
+          <span class="status complete">✅ DONE</span>
         </div>
 
         <div class="sprint-card current" onclick="switchTab('sprints'); setTimeout(() => document.getElementById('sprint-6').scrollIntoView({behavior: 'smooth'}), 100)">
           <div class="name">Sprint 6</div>
-          <div class="progress">3/6</div>
+          <div class="progress">5/6</div>
           <span class="status current">● LIVE</span>
         </div>
 
@@ -756,7 +756,7 @@
 
             <div class="task-row">
               <span class="task-check">✅</span>
-              <span style="color: #aaa"><strong style="color:#aaa">Priority 5 — Weekly Performance Dashboard (#29)</strong> — shipped 5757cc7; Schedule tab → Performance history; <code>lib/services/performance-service.ts</code>; per-week FP, rank chip, VP W-L-T record; no schema changes.</span>
+              <span style="color: #666"><strong style="color:#888">Priority 5 — Weekly Performance Dashboard (#29)</strong> — shipped 5757cc7; Schedule tab → Performance history; <code>lib/services/performance-service.ts</code>; per-week FP, rank chip, VP W-L-T record; no schema changes.</span>
             </div>
 
             <div class="task-row" style="opacity: 0.45; text-decoration: line-through; text-decoration-color: #555;">
@@ -794,8 +794,8 @@
             </div>
 
             <div class="task-row">
-              <span class="task-check">○</span>
-              <span style="color: #ccc"><strong style="color:#f5c842">Priority 3 — Code Review &amp; Pre-Beta Audit (#37)</strong> — staff-engineer-level review before beta launch. Focus: architectural issues, duplicate logic, state machine correctness, test gaps, operational risks. Output: prioritized findings doc (P0/P1/P2) committed to <code>docs/04-operations/</code> or <code>docs/02-engineering/</code>. P0 findings resolved before beta invites go out.</span>
+              <span class="task-check">✅</span>
+              <span style="color: #666"><strong style="color:#888">Priority 3 — Code Review &amp; Pre-Beta Audit (#37)</strong> — staff-engineer-level review complete. 3 P0 blockers identified and fixed: renewal race condition (wrapped in <code>$transaction</code>); draft concurrent-pick P2002 handling in <code>persistPick()</code>; <code>pickInFlight</code> mutex in <code>onTimeout()</code>. Findings: <code>docs/04-operations/pre-beta-audit.md</code>.</span>
             </div>
 
             <div class="task-row">

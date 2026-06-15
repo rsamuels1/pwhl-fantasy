@@ -158,18 +158,13 @@ items here are read-heavy or isolated new domains — none touch the draft or st
 **Bug fixes & UX improvements (Sprint 6):**
 - **Between-weeks lineup nudge false-positive** ✅ — "Week N is coming up / Set lineup before games begin" amber banner persisted on the matchup page even after the user had used Auto-Set Lineup and saved. Root cause: nudge condition was `status === "upcoming"` only, with no check for lineup state. Fix: suppress nudge when `myPlayers.length >= activeSlotCount` (forward + defense + goalie + util from `rosterSettings`). `app/team/[teamId]/matchup/page.tsx`.
 
+- **Priority 3 — Code Review & Pre-Beta Audit (#37)** ✅
+  Findings: `docs/04-operations/pre-beta-audit.md`. All 3 P0 blockers resolved:
+  - **Renewal race condition** (`lib/services/renewal-service.ts`) — wrapped entire function in `prisma.$transaction()` so the `playoffStatus !== "COMPLETE"` guard and the child-league `create` are atomic; concurrent renewal calls can no longer both pass the guard before either commits.
+  - **Draft concurrent-pick P2002 handling** (`lib/draft/server.ts` `persistPick()`) — added `try/catch` for Prisma P2002 (unique constraint on `RosterEntry.fantasyTeamId_playerId`); logs and no-ops instead of throwing, since the in-memory engine already deduplicates via `draftedPlayerIds`.
+  - **Auto-timeout re-entrancy guard** (`lib/draft/server.ts` `onTimeout()`) — added `pickInFlight` boolean flag; a stale or re-fired timer callback now returns immediately if a pick is already being processed.
+
 **Remaining Sprint 6:**
-
-**Priority 3 — Code Review & Pre-Beta Audit (#37)**
-A staff-engineer-level review of the full codebase before beta launch. Focus areas:
-architectural issues, duplicate logic, state machine correctness, test gaps, and operational
-risks. Output: prioritized findings doc (P0/P1/P2), with P0/P1 issues fixed before the beta
-cohort is invited. Findings committed to `docs/04-operations/` or `docs/02-engineering/`.
-
-User story: As the founding engineer, I want a comprehensive code audit before opening the
-beta so that we catch architectural issues and operational risks before real users hit them.
-
-Acceptance criteria: audit complete, P0 findings resolved, findings doc committed.
 
 **Priority 4 — Team Analysis & Insights (#25)** · ~85K
 Spec: `docs/02-engineering/team-analysis-spec.md`
@@ -314,7 +309,7 @@ Items below are acknowledged but have no sprint assignment. They become candidat
 | Sprint 3 — Beta Readiness | ✅ COMPLETE (Jun 13, 2026) | Onboarding ✅, error handling ✅, mobile ✅, NT-001 ✅, draft notifications ✅, transaction history ✅, IA-011 ✅ |
 | Sprint 4 — Product Polish | ✅ COMPLETE (Jun 13, 2026) | NT-002 LINEUP_INCOMPLETE ✅ · #01 commissioner dashboard ✅ · #17 rivalries ✅ · VP standings fix ✅ · playoff mode + replay support ✅ |
 | Sprint 5 — Validation + Beta Operations | ✅ COMPLETE | Replay gap fix ✅ · sim-to-playoffs ✅ · draft cert ✅ · founder dashboard ✅ · playoff experience UX ✅ · commissioner workflow validation ✅ |
-| Sprint 6 — Engagement + Transactions | ⏳ IN PROGRESS | Auto-set lineup ✅ · FA schedule awareness + add & slot ✅ · beta feedback infrastructure ✅ · code review audit · team analysis · waiver priority |
+| Sprint 6 — Engagement + Transactions | ⏳ IN PROGRESS | Auto-set lineup ✅ · FA schedule awareness + add & slot ✅ · beta feedback infrastructure ✅ · code audit + P0 fixes ✅ · team analysis · waiver priority |
 | Sprint 7 — Retention Layer | ⏳ PLANNED | League history + HoF · storylines · FAAB · player legacy · Replay Sim V2 (#38) |
 
 ---

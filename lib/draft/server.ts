@@ -24,6 +24,7 @@ const prisma = new PrismaClient();
 class DraftRoom {
   private timer: NodeJS.Timeout | null = null;
   private sockets = new Map<WebSocket, string>(); // socket -> fantasyTeamId
+  private pickInFlight = false;
 
   constructor(
     private state: EngineState,
@@ -188,18 +189,27 @@ class DraftRoom {
   }
 
   // Fired by the server's own timer — the authoritative clock.
+  // pickInFlight prevents a stale timer callback from re-entering if a pick
+  // is already being processed (shouldn't happen in Node's single-threaded
+  // event loop, but guards against any future async parallelism).
   private async onTimeout() {
-    const slot = this.state.order[this.state.currentOverall - 1];
-    const teamId = slot?.fantasyTeamId ?? "";
-    const bestAvailable = await this.bestAvailablePlayerIds(teamId);
-    const result = reduce(this.state, {
-      kind: "TIMEOUT",
-      nowMs: Date.now(),
-      timerConfig: this.timerConfig,
-      bestAvailable,
-    });
-    this.state = result.state;
-    await this.runEffects(result.effects);
+    if (this.pickInFlight) return;
+    this.pickInFlight = true;
+    try {
+      const slot = this.state.order[this.state.currentOverall - 1];
+      const teamId = slot?.fantasyTeamId ?? "";
+      const bestAvailable = await this.bestAvailablePlayerIds(teamId);
+      const result = reduce(this.state, {
+        kind: "TIMEOUT",
+        nowMs: Date.now(),
+        timerConfig: this.timerConfig,
+        bestAvailable,
+      });
+      this.state = result.state;
+      await this.runEffects(result.effects);
+    } finally {
+      this.pickInFlight = false;
+    }
   }
 
   start() {
@@ -337,26 +347,37 @@ class DraftRoom {
   // Persist the pick AND advance the draft's currentPick atomically, plus add
   // the player to the drafting team's roster. Writing immediately is what lets a
   // restart rebuild state from the DB.
+  // P2002 (unique constraint on RosterEntry.fantasyTeamId_playerId) means the player
+  // was already drafted by another team — treat as a no-op; the in-memory engine
+  // already deduplicates via draftedPlayerIds, so this is a safety net only.
   private async persistPick(pick: CompletedPick) {
-    await prisma.$transaction([
-      prisma.draftPick.update({
-        where: {
-          draftId_overall: { draftId: this.state.draftId, overall: pick.overall },
-        },
-        data: { playerId: pick.playerId, auto: pick.auto, pickedAt: new Date() },
-      }),
-      prisma.draft.update({
-        where: { id: this.state.draftId },
-        data: { currentPick: this.state.currentOverall },
-      }),
-      prisma.rosterEntry.create({
-        data: {
-          fantasyTeamId: pick.fantasyTeamId,
-          playerId: pick.playerId,
-          slot: "BENCH",
-        },
-      }),
-    ]);
+    try {
+      await prisma.$transaction([
+        prisma.draftPick.update({
+          where: {
+            draftId_overall: { draftId: this.state.draftId, overall: pick.overall },
+          },
+          data: { playerId: pick.playerId, auto: pick.auto, pickedAt: new Date() },
+        }),
+        prisma.draft.update({
+          where: { id: this.state.draftId },
+          data: { currentPick: this.state.currentOverall },
+        }),
+        prisma.rosterEntry.create({
+          data: {
+            fantasyTeamId: pick.fantasyTeamId,
+            playerId: pick.playerId,
+            slot: "BENCH",
+          },
+        }),
+      ]);
+    } catch (e: unknown) {
+      if ((e as { code?: string })?.code === "P2002") {
+        console.error(`[Draft] Pick ${pick.overall} skipped: player ${pick.playerId} already on a roster`);
+        return;
+      }
+      throw e;
+    }
   }
 
   private async emitDraftPickEvent(pick: CompletedPick) {
