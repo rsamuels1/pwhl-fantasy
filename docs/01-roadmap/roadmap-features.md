@@ -819,6 +819,47 @@ Acceptance Criteria:
 
 ---
 
+## 39. Replay Season Simulator v2 — Week-by-Week Progression UX
+
+Sprint: 7
+
+Priority: MEDIUM
+
+Status: ✅ Implemented
+
+Goal: Improve the replay season experience by pausing at week boundaries and making simulator controls accessible from the league overview and commissioner matchup page. Commissioners can now step through a replay season week-by-week with natural moments to adjust lineups before the next week begins.
+
+Builds on: `isReplay` / `replayCurrentDate` / `getReplayNow()` / existing `/api/leagues/[leagueId]/season` endpoints.
+
+Features:
+
+- **Week-boundary pauses** — When a matchup week is scored, the simulator pauses at the week boundary, giving commissioners a clear moment to adjust lineups before starting the next week. No automatic jump to the next week's games.
+- **Persistent simulator controls** — `ReplaySimulatorControls` component renders on `/league/[leagueId]/` (sticky footer at bottom of viewport) and `/team/[teamId]/matchup/` (inline panel above matchup hero). Only commissioners see these controls.
+- **Smart button set** — Buttons change based on season state:
+  - **During a week:** "+1 Day" (step forward 24h), "End Week Now" (score and pause at next week boundary), "Jump to date" (arbitrary date picker)
+  - **Between weeks:** "Start Week N" (begin the week), "Skip to Playoffs" (score all remaining regular-season weeks), "Jump to date"
+  - **During playoffs:** All buttons disabled (playoff advancement via existing season admin page)
+- **Date picker modal** — "Jump to date" opens a date picker allowing commissioners to jump to any ISO date; weeks between the current date and jump target are auto-scored in one operation.
+
+Implementation notes:
+
+- No schema changes; reuses existing `isReplay` and `replayCurrentDate` columns
+- No new API routes; reuses existing `/api/leagues/[leagueId]/season` POST (with `action: "advance"`) and `/season/advance` endpoints
+- All existing tests pass (154 tests); TypeScript strict mode clean; production build successful
+- Old `SeasonControls.tsx` (v1) on `/league/[leagueId]/season/` page remains but is superseded; can be deprecated/removed in future refactor once v2 is validated in production
+
+Acceptance Criteria:
+
+- ✅ Sticky footer visible on league overview when `isReplay && isCommissioner`
+- ✅ Inline panel visible on commissioner matchup page above `MatchupHero`
+- ✅ Button set changes correctly based on `SeasonState` (ACTIVE vs between-weeks)
+- ✅ "Start Week" advances to week start; "End Week" scores and pauses; "+1 Day" steps 24h
+- ✅ "Jump to date" opens modal, auto-scores skipped weeks
+- ✅ All buttons disabled during `playoffStatus === "IN_PROGRESS"` with informational tooltip
+- ✅ Regular team owners never see simulator controls
+
+---
+
 ## 14. Alternate History Drafts
 
 Features:

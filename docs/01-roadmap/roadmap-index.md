@@ -130,6 +130,7 @@ The list below is sequenced by **token efficiency** — each feature's estimated
 - **Auto-Set Lineup (#34)** · ✅ `computeOptimalLineup()`, staged save model, FA suggestions API, playoff period fallback. (Sprint 6)
 - **FA Schedule Awareness + Add & Slot (#35)** · ✅ Games-remaining badge on FA panel; `AddAndSlotModal` for immediate active-slot pickup; locked FAs skip modal; bonus lineup nudge + alert fixes. (Sprint 6, commit 6a6b40f)
 - **Beta Feedback Infrastructure (#36)** · ✅ `components/FeedbackWidget.tsx` on all authenticated layouts; `POST /api/feedback`; Founder Console feed + per-league beta status management; `FeedbackSubmission` / `FeedbackType` / `BetaStatus` schema additions. (Sprint 6)
+- **Replay Season Simulator v2 — UX Overhaul (#39)** · ✅ Week-by-week progression with lineup pause points; persistent controls on league overview (sticky footer) + commissioner matchup page (inline panel); smart button set based on season state; no schema changes. (Sprint 7, commit 5f501c8)
 
 **Sprint 7 (retention layer):**
 
@@ -145,8 +146,8 @@ The list below is sequenced by **token efficiency** — each feature's estimated
 11. **Player Legacy (#31)** · ~95K · Sprint 7
     `/profile` page with career history and global leaderboard. Meaningful only after first completed+renewed season; ship skeleton now.
 
-12. **Replay Simulation V2 (#38)** · Sprint 7
-    Configurable playback speed (N days per click), jump-to-week shortcut, replay progress summary card on league overview, and at least one notification trigger point per scored week. Builds on `isReplay` / `replayCurrentDate` / `getReplayNow()` / `ReplayDayBar`. No schema changes except a new `REPLAY_WEEK_COMPLETE` `NotificationType` enum value.
+12. **Replay Simulation Accelerated Playback (#38)** · ~90K · Sprint 7 (DEFERRED)
+    Configurable playback speed (N days per click or auto-advance timer), jump-to-week shortcut, replay progress summary card, notification trigger points. Builds on `isReplay` / `replayCurrentDate` / `getReplayNow()`. Deferred in favor of #39 (UX overhaul), which ships the core week-boundary pausing experience first. Accelerated playback can be layered on top post-launch.
 
 **Deferred / lowest priority:** **Trade System (#7)** · ~130K — deprioritized June 2026. Beta cohort is small enough for out-of-band trades; revisit only if founding commissioners surface strong demand. Spec exists at `docs/02-engineering/trade-spec.md` when ready.
 

@@ -218,7 +218,15 @@ leaderboard ranked by career FP or championship count. Requires at least one com
 renewed season to be meaningful; ship the page skeleton with single-season data and let it fill
 in naturally. `UserCareerStats` cached table is post-season work.
 
-**Priority 5 — Replay Simulation V2 — Accelerated & Scheduled Playback (#38)**
+**Priority 4a — Replay Season Simulator v2 — UX Overhaul (#39)** · ✅ SHIPPED
+Complete replacement of v1 SeasonControls. Commissioners can now step through replay seasons
+week-by-week with natural pauses for lineup adjustments. Controls persist on league overview
+(sticky footer) and commissioner matchup page (inline panel), eliminating the need to navigate
+to a separate admin page. Button set changes based on season state (during week vs between weeks).
+Reuses existing `/api/leagues/[leagueId]/season` endpoints; no schema changes.
+Shipped June 14, 2026. Spec: `docs/02-engineering/replay-season-simulator-spec.md`.
+
+**Priority 5 — Replay Simulation V2 — Accelerated & Scheduled Playback (#38)** (DEFERRED)
 Enhance the replay experience so commissioners can run faster, more automated simulations.
 V1 lets you click "Next day" one day at a time. V2 adds:
 
