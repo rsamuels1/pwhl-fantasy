@@ -25,7 +25,7 @@ export async function getSeasonState(
     select: { season: true },
   });
 
-  const [gameDates, scoredMatchups] = await Promise.all([
+  const [gameDates, scoredMatchups, allRegularMatchups] = await Promise.all([
     prisma.game.findMany({
       where: { season: league.season },
       select: { startsAt: true, status: true },
@@ -36,9 +36,20 @@ export async function getSeasonState(
       select: { week: true },
       distinct: ["week"],
     }),
+    // All regular-season matchups (scored or not) to cap periods to actual generated weeks.
+    prisma.matchup.findMany({
+      where: { leagueId, isPlayoff: false },
+      select: { week: true },
+      distinct: ["week"],
+    }),
   ]);
 
-  const periods = derivePeriods(gameDates.map((g) => g.startsAt));
+  let periods = derivePeriods(gameDates.map((g) => g.startsAt));
+  // If regular-season matchups were created with reservePlayoffWeeks, cap periods to match.
+  if (allRegularMatchups.length > 0) {
+    const maxRegularWeek = Math.max(...allRegularMatchups.map((m) => m.week));
+    periods = periods.slice(0, maxRegularWeek);
+  }
   const scoredWeeks = new Set(scoredMatchups.map((m) => m.week));
 
   return computeSeasonState(periods, gameDates, scoredWeeks, nowMs);

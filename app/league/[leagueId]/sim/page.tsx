@@ -5,6 +5,7 @@ import { getSeasonState } from "@/lib/season";
 import { getDevNow } from "@/lib/devTime";
 import { getReplayNow } from "@/lib/replayTime";
 import { getLeagueActivity, type ActivityEvent } from "@/lib/services/activity";
+import { calculatePlayoffRounds, getPlayoffSettings } from "@/lib/playoffs/lifecycle";
 import GMCommandCenter from "@/components/sim/GMCommandCenter";
 
 interface Props {
@@ -85,6 +86,22 @@ export default async function SimPage({ params }: Props) {
       ? state.periods.find((p) => p.status === "UPCOMING")?.period
       : state.activePeriod ?? undefined;
 
+  // Fetch playoff round state for the PlayoffsPanel
+  let currentPlayoffRound = 1;
+  let totalPlayoffRounds = 2;
+  if (phase === "PLAYOFFS") {
+    const ps = getPlayoffSettings(league.playoffSettings as Parameters<typeof getPlayoffSettings>[0]);
+    totalPlayoffRounds = calculatePlayoffRounds(ps.teamsInPlayoff);
+    const unscoredPlayoffMatchups = await prisma.matchup.findMany({
+      where: { leagueId, isPlayoff: true, homeScore: null },
+      select: { round: true },
+      orderBy: { round: "asc" },
+    });
+    currentPlayoffRound = unscoredPlayoffMatchups.length > 0
+      ? Math.min(...unscoredPlayoffMatchups.map((m) => m.round ?? 1))
+      : totalPlayoffRounds + 1;
+  }
+
   return (
     <div style={{ minHeight: "100vh", background: "#0f1117", color: "#e2e8f0" }}>
       <div style={{ maxWidth: 1200, margin: "0 auto", padding: "24px 16px" }}>
@@ -98,6 +115,8 @@ export default async function SimPage({ params }: Props) {
           lastMatchup={lastMatchup}
           nextPeriod={nextPeriod}
           activity={activity}
+          currentPlayoffRound={currentPlayoffRound}
+          totalPlayoffRounds={totalPlayoffRounds}
         />
       </div>
     </div>

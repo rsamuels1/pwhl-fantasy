@@ -31,6 +31,8 @@ interface Props {
   lastMatchup: Matchup | null;
   nextPeriod: ScoringPeriod | null | undefined;
   activity: ActivityEvent[];
+  currentPlayoffRound?: number;
+  totalPlayoffRounds?: number;
 }
 
 export default function GMCommandCenter({
@@ -43,6 +45,8 @@ export default function GMCommandCenter({
   lastMatchup,
   nextPeriod,
   activity,
+  currentPlayoffRound,
+  totalPlayoffRounds,
 }: Props) {
   const router = useRouter();
   const [isSimulating, setIsSimulating] = useState(false);
@@ -285,7 +289,13 @@ export default function GMCommandCenter({
         />
       )}
 
-      {phase === "PLAYOFFS" && <PlayoffsPanel leagueId={leagueId} />}
+      {phase === "PLAYOFFS" && (
+        <PlayoffsPanel
+          leagueId={leagueId}
+          currentRound={currentPlayoffRound}
+          totalRounds={totalPlayoffRounds}
+        />
+      )}
     </div>
   );
 }
