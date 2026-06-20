@@ -67,7 +67,14 @@ export default function GMCommandCenter({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "simulate" }),
       });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error(`API Error ${res.status}:`, errorText);
+        throw new Error(`HTTP ${res.status}: ${errorText}`);
+      }
+    } catch (error) {
+      console.error("Simulation failed:", error);
+      alert(`Error: ${error instanceof Error ? error.message : "Unknown error"}`);
     } finally {
       setIsSimulating(false);
       router.refresh();
@@ -82,7 +89,14 @@ export default function GMCommandCenter({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "advance" }),
       });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error(`API Error ${res.status}:`, errorText);
+        throw new Error(`HTTP ${res.status}: ${errorText}`);
+      }
+    } catch (error) {
+      console.error("Advance failed:", error);
+      alert(`Error: ${error instanceof Error ? error.message : "Unknown error"}`);
     } finally {
       setIsSimulating(false);
       router.refresh();
@@ -97,7 +111,14 @@ export default function GMCommandCenter({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "start" }),
       });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error(`API Error ${res.status}:`, errorText);
+        throw new Error(`HTTP ${res.status}: ${errorText}`);
+      }
+    } catch (error) {
+      console.error("Start season failed:", error);
+      alert(`Error: ${error instanceof Error ? error.message : "Unknown error"}`);
     } finally {
       setIsSimulating(false);
       router.refresh();
@@ -111,7 +132,14 @@ export default function GMCommandCenter({
         method: "POST",
         headers: { "Content-Type": "application/json" },
       });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error(`API Error ${res.status}:`, errorText);
+        throw new Error(`HTTP ${res.status}: ${errorText}`);
+      }
+    } catch (error) {
+      console.error("Start playoffs failed:", error);
+      alert(`Error: ${error instanceof Error ? error.message : "Unknown error"}`);
     } finally {
       setIsSimulating(false);
       router.refresh();
