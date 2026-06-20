@@ -48,7 +48,8 @@ export async function POST(
   }
 
   try {
-    const nowMs = getDevNowFromRequest(req);
+    // Use the league's replayCurrentDate from the database, not the cookie
+    const nowMs = league.replayCurrentDate?.getTime() ?? getDevNowFromRequest(req);
 
     if (action === "start") {
       // PRE_SEASON → SETUP: start the season
