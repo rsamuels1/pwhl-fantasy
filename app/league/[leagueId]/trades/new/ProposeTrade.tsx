@@ -8,20 +8,27 @@ interface PlayerOption {
   name: string;
   position: string;
   active: boolean;
+  fp: number;
+}
+
+interface LeaguePlayer extends PlayerOption {
+  teamId: string;
+  teamName: string;
 }
 
 interface Props {
   leagueId: string;
   myTeamId: string;
   myTeamName: string;
-  otherTeams: Array<{ id: string; name: string }>;
   myRoster: PlayerOption[];
-  rostersByTeam: Record<string, PlayerOption[]>;
+  leaguePlayers: LeaguePlayer[];
   preselectedTeamId: string | null;
   counterOfId: string | null;
 }
 
-function PlayerPicker({
+const POS_ORDER: Record<string, number> = { FORWARD: 0, DEFENSE: 1, GOALIE: 2 };
+
+function MyRosterPicker({
   players,
   selected,
   onToggle,
@@ -33,27 +40,46 @@ function PlayerPicker({
   label: string;
 }) {
   const [search, setSearch] = useState("");
-  const filtered = players.filter((p) =>
-    p.name.toLowerCase().includes(search.toLowerCase())
-  );
+  const [sortBy, setSortBy] = useState<"fp" | "pos">("fp");
+
+  const filtered = players
+    .filter((p) => p.name.toLowerCase().includes(search.toLowerCase()))
+    .sort((a, b) =>
+      sortBy === "fp"
+        ? b.fp - a.fp
+        : (POS_ORDER[a.position] ?? 9) - (POS_ORDER[b.position] ?? 9)
+    );
 
   return (
     <div>
       <div style={{ fontSize: 12, color: "#94a3b8", marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.05em" }}>
         {label}
       </div>
-      <input
-        type="text"
-        placeholder="Search players..."
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        style={{
-          width: "100%", padding: "8px 12px", borderRadius: 8,
-          background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)",
-          color: "#e2e8f0", fontSize: 13, marginBottom: 8, boxSizing: "border-box",
-        }}
-      />
-      <div style={{ maxHeight: 240, overflowY: "auto" }}>
+      <div style={{ display: "flex", gap: 6, marginBottom: 8 }}>
+        <input
+          type="text"
+          placeholder="Search..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          style={{
+            flex: 1, padding: "7px 10px", borderRadius: 6,
+            background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)",
+            color: "#e2e8f0", fontSize: 13,
+          }}
+        />
+        <button
+          type="button"
+          onClick={() => setSortBy((s) => s === "fp" ? "pos" : "fp")}
+          style={{
+            padding: "7px 10px", borderRadius: 6, fontSize: 12, cursor: "pointer",
+            background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)",
+            color: "#94a3b8", whiteSpace: "nowrap",
+          }}
+        >
+          {sortBy === "fp" ? "↓ FP" : "↓ Pos"}
+        </button>
+      </div>
+      <div style={{ maxHeight: 280, overflowY: "auto" }}>
         {filtered.length === 0 ? (
           <div style={{ color: "#64748b", fontSize: 13, padding: 8 }}>No players found.</div>
         ) : (
@@ -66,11 +92,10 @@ function PlayerPicker({
                 onClick={() => onToggle(p.playerId)}
                 style={{
                   display: "flex", alignItems: "center", justifyContent: "space-between",
-                  width: "100%", padding: "8px 12px", borderRadius: 8,
+                  width: "100%", padding: "8px 10px", borderRadius: 6, marginBottom: 3,
                   background: isSelected ? "rgba(99,102,241,0.2)" : "rgba(255,255,255,0.03)",
                   border: isSelected ? "1px solid rgba(99,102,241,0.5)" : "1px solid rgba(255,255,255,0.06)",
-                  cursor: "pointer", marginBottom: 4, color: isSelected ? "#a5b4fc" : "#e2e8f0",
-                  textAlign: "left",
+                  cursor: "pointer", color: isSelected ? "#a5b4fc" : "#e2e8f0", textAlign: "left",
                 }}
               >
                 <span>
@@ -78,15 +103,128 @@ function PlayerPicker({
                   {" "}
                   <span style={{ fontSize: 11, color: "#64748b" }}>{p.position}</span>
                 </span>
-                {isSelected && <span style={{ fontSize: 12, color: "#a5b4fc" }}>✓ Selected</span>}
+                <span style={{ fontSize: 12, color: isSelected ? "#a5b4fc" : "#475569" }}>
+                  {isSelected ? "✓" : ""} {p.fp > 0 ? `${p.fp} FP` : ""}
+                </span>
               </button>
             );
           })
         )}
       </div>
       {selected.size > 0 && (
-        <div style={{ marginTop: 8, fontSize: 12, color: "#a5b4fc" }}>
-          {selected.size} player{selected.size !== 1 ? "s" : ""} selected
+        <div style={{ marginTop: 6, fontSize: 12, color: "#a5b4fc" }}>
+          {selected.size} selected
+        </div>
+      )}
+    </div>
+  );
+}
+
+function LeaguePlayerPicker({
+  players,
+  selected,
+  lockedTeamId,
+  onToggle,
+  label,
+}: {
+  players: LeaguePlayer[];
+  selected: Set<string>;
+  lockedTeamId: string | null;
+  onToggle: (player: LeaguePlayer) => void;
+  label: string;
+}) {
+  const [search, setSearch] = useState("");
+  const [sortBy, setSortBy] = useState<"fp" | "pos">("fp");
+
+  const filtered = players
+    .filter((p) => {
+      const matchesSearch = p.name.toLowerCase().includes(search.toLowerCase()) ||
+        p.teamName.toLowerCase().includes(search.toLowerCase());
+      return matchesSearch;
+    })
+    .sort((a, b) =>
+      sortBy === "fp"
+        ? b.fp - a.fp
+        : (POS_ORDER[a.position] ?? 9) - (POS_ORDER[b.position] ?? 9)
+    );
+
+  return (
+    <div>
+      <div style={{ fontSize: 12, color: "#94a3b8", marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+        {label}
+      </div>
+      <div style={{ display: "flex", gap: 6, marginBottom: 8 }}>
+        <input
+          type="text"
+          placeholder="Search players or teams..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          style={{
+            flex: 1, padding: "7px 10px", borderRadius: 6,
+            background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)",
+            color: "#e2e8f0", fontSize: 13,
+          }}
+        />
+        <button
+          type="button"
+          onClick={() => setSortBy((s) => s === "fp" ? "pos" : "fp")}
+          style={{
+            padding: "7px 10px", borderRadius: 6, fontSize: 12, cursor: "pointer",
+            background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)",
+            color: "#94a3b8", whiteSpace: "nowrap",
+          }}
+        >
+          {sortBy === "fp" ? "↓ FP" : "↓ Pos"}
+        </button>
+      </div>
+      <div style={{ maxHeight: 280, overflowY: "auto" }}>
+        {filtered.length === 0 ? (
+          <div style={{ color: "#64748b", fontSize: 13, padding: 8 }}>No players found.</div>
+        ) : (
+          filtered.map((p) => {
+            const isSelected = selected.has(p.playerId);
+            const isWrongTeam = lockedTeamId !== null && p.teamId !== lockedTeamId && !isSelected;
+            return (
+              <button
+                key={p.playerId}
+                type="button"
+                onClick={() => !isWrongTeam && onToggle(p)}
+                disabled={isWrongTeam}
+                style={{
+                  display: "flex", alignItems: "center", justifyContent: "space-between",
+                  width: "100%", padding: "8px 10px", borderRadius: 6, marginBottom: 3,
+                  background: isSelected
+                    ? "rgba(99,102,241,0.2)"
+                    : isWrongTeam
+                    ? "rgba(255,255,255,0.01)"
+                    : "rgba(255,255,255,0.03)",
+                  border: isSelected
+                    ? "1px solid rgba(99,102,241,0.5)"
+                    : "1px solid rgba(255,255,255,0.06)",
+                  cursor: isWrongTeam ? "not-allowed" : "pointer",
+                  color: isSelected ? "#a5b4fc" : isWrongTeam ? "#334155" : "#e2e8f0",
+                  textAlign: "left",
+                  opacity: isWrongTeam ? 0.4 : 1,
+                }}
+              >
+                <span>
+                  <span style={{ fontWeight: 600, fontSize: 13 }}>{p.name}</span>
+                  {" "}
+                  <span style={{ fontSize: 11, color: isWrongTeam ? "#334155" : "#64748b" }}>
+                    {p.position} · {p.teamName}
+                  </span>
+                </span>
+                <span style={{ fontSize: 12, color: isSelected ? "#a5b4fc" : "#475569" }}>
+                  {isSelected ? "✓" : ""} {p.fp > 0 ? `${p.fp} FP` : ""}
+                </span>
+              </button>
+            );
+          })
+        )}
+      </div>
+      {selected.size > 0 && (
+        <div style={{ marginTop: 6, fontSize: 12, color: "#a5b4fc" }}>
+          {selected.size} selected
         </div>
       )}
     </div>
@@ -96,25 +234,30 @@ function PlayerPicker({
 export default function ProposeTrade({
   leagueId,
   myTeamId,
-  myTeamName,
-  otherTeams,
   myRoster,
-  rostersByTeam,
+  myTeamName,
+  leaguePlayers,
   preselectedTeamId,
   counterOfId,
 }: Props) {
   const router = useRouter();
-  const [selectedTeamId, setSelectedTeamId] = useState(preselectedTeamId ?? "");
+
+  // Derive locked team from preselectedTeamId or first selected league player
+  const preselectedPlayers = preselectedTeamId
+    ? leaguePlayers.filter((p) => p.teamId === preselectedTeamId)
+    : [];
+
   const [mySelected, setMySelected] = useState<Set<string>>(new Set());
   const [theirSelected, setTheirSelected] = useState<Set<string>>(new Set());
+  // lockedTeamId is the team we're trading with — derived from the first player selected from the league
+  const [lockedTeamId, setLockedTeamId] = useState<string | null>(preselectedTeamId);
   const [message, setMessage] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
-  const theirRoster = selectedTeamId ? (rostersByTeam[selectedTeamId] ?? []) : [];
-  const selectedTeamName = otherTeams.find((t) => t.id === selectedTeamId)?.name ?? "Their team";
-
-  const canSubmit = selectedTeamId && mySelected.size > 0 && theirSelected.size > 0;
+  const lockedTeamName = lockedTeamId
+    ? leaguePlayers.find((p) => p.teamId === lockedTeamId)?.teamName ?? "Their team"
+    : null;
 
   function toggleMyPlayer(id: string) {
     setMySelected((prev) => {
@@ -124,33 +267,44 @@ export default function ProposeTrade({
     });
   }
 
-  function toggleTheirPlayer(id: string) {
+  function toggleLeaguePlayer(player: LeaguePlayer) {
     setTheirSelected((prev) => {
       const next = new Set(prev);
-      if (next.has(id)) next.delete(id); else next.add(id);
+      if (next.has(player.playerId)) {
+        next.delete(player.playerId);
+        // If nothing left selected from this team, unlock
+        const stillHasFromTeam = [...next].some(
+          (id) => leaguePlayers.find((p) => p.playerId === id)?.teamId === player.teamId
+        );
+        if (!stillHasFromTeam) setLockedTeamId(null);
+      } else {
+        next.add(player.playerId);
+        setLockedTeamId(player.teamId);
+      }
       return next;
     });
   }
 
+  const canSubmit = lockedTeamId && mySelected.size > 0 && theirSelected.size > 0;
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!canSubmit) return;
+    if (!canSubmit || !lockedTeamId) return;
     setError(null);
 
     const items = [
       ...[...mySelected].map((playerId) => ({
         fromTeamId: myTeamId,
-        toTeamId: selectedTeamId,
+        toTeamId: lockedTeamId,
         playerId,
       })),
       ...[...theirSelected].map((playerId) => ({
-        fromTeamId: selectedTeamId,
+        fromTeamId: lockedTeamId,
         toTeamId: myTeamId,
         playerId,
       })),
     ];
 
-    // If this is a counter, POST to the counter endpoint, else to the main trades endpoint
     const url = counterOfId
       ? `/api/leagues/${leagueId}/trades/${counterOfId}/counter`
       : `/api/leagues/${leagueId}/trades`;
@@ -160,7 +314,7 @@ export default function ProposeTrade({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          receivingTeamId: selectedTeamId,
+          receivingTeamId: lockedTeamId,
           items,
           message: message.trim() || undefined,
         }),
@@ -179,11 +333,31 @@ export default function ProposeTrade({
     }
   }
 
+  const mySelectedNames = [...mySelected].map(
+    (id) => myRoster.find((p) => p.playerId === id)?.name ?? id
+  );
+  const theirSelectedNames = [...theirSelected].map(
+    (id) => leaguePlayers.find((p) => p.playerId === id)?.name ?? id
+  );
+
   return (
-    <div style={{ maxWidth: 740 }}>
-      <h1 style={{ margin: 0, fontSize: 22, fontWeight: 700, marginBottom: 24 }}>
+    <div style={{ maxWidth: 860 }}>
+      <h1 style={{ margin: 0, fontSize: 22, fontWeight: 700, marginBottom: 6 }}>
         {counterOfId ? "Counter Offer" : "Propose Trade"}
       </h1>
+      {lockedTeamName && (
+        <p style={{ margin: "0 0 20px", fontSize: 14, color: "#94a3b8" }}>
+          Trading with <strong style={{ color: "#e2e8f0" }}>{lockedTeamName}</strong>
+          {" "}
+          <button
+            type="button"
+            onClick={() => { setLockedTeamId(null); setTheirSelected(new Set()); }}
+            style={{ background: "none", border: "none", color: "#64748b", fontSize: 12, cursor: "pointer", textDecoration: "underline" }}
+          >
+            change
+          </button>
+        </p>
+      )}
 
       {error && (
         <div style={{
@@ -195,63 +369,49 @@ export default function ProposeTrade({
       )}
 
       <form onSubmit={handleSubmit}>
-        {/* Step 1: Pick team */}
-        <div style={{
-          background: "rgba(255,255,255,0.04)",
-          border: "1px solid rgba(255,255,255,0.08)",
-          borderRadius: 12, padding: 20, marginBottom: 20,
-        }}>
-          <label style={{ fontSize: 14, fontWeight: 600, color: "#e2e8f0", display: "block", marginBottom: 10 }}>
-            Trade with
-          </label>
-          <select
-            value={selectedTeamId}
-            onChange={(e) => { setSelectedTeamId(e.target.value); setTheirSelected(new Set()); }}
-            style={{
-              padding: "10px 14px", borderRadius: 8,
-              background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)",
-              color: "#e2e8f0", fontSize: 14, width: "100%",
-            }}
-          >
-            <option value="">Select a team...</option>
-            {otherTeams.map((t) => (
-              <option key={t.id} value={t.id}>{t.name}</option>
-            ))}
-          </select>
-        </div>
-
-        {/* Step 2: Select players */}
+        {/* Player pickers side by side */}
         <div style={{
           background: "rgba(255,255,255,0.04)",
           border: "1px solid rgba(255,255,255,0.08)",
           borderRadius: 12, padding: 20, marginBottom: 20,
         }}>
           <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", gap: 20, alignItems: "start" }}>
-            <PlayerPicker
+            <MyRosterPicker
               players={myRoster}
               selected={mySelected}
               onToggle={toggleMyPlayer}
               label={`${myTeamName} gives`}
             />
-            <div style={{ paddingTop: 24, color: "#64748b", fontSize: 24, textAlign: "center" }}>⇄</div>
-            <PlayerPicker
-              players={theirRoster}
+            <div style={{ paddingTop: 32, color: "#475569", fontSize: 22, textAlign: "center" }}>⇄</div>
+            <LeaguePlayerPicker
+              players={leaguePlayers}
               selected={theirSelected}
-              onToggle={toggleTheirPlayer}
-              label={`${selectedTeamId ? selectedTeamName : "Other team"} gives`}
+              lockedTeamId={lockedTeamId}
+              onToggle={toggleLeaguePlayer}
+              label={lockedTeamName ? `${lockedTeamName} gives` : "Want from league"}
             />
           </div>
-          {!selectedTeamId && (
-            <div style={{ marginTop: 12, color: "#64748b", fontSize: 13 }}>
-              Select a team above to see their roster.
-            </div>
+          {!lockedTeamId && (
+            <p style={{ marginTop: 12, color: "#64748b", fontSize: 13 }}>
+              Search by player name or team name and click a player to start building your trade.
+            </p>
           )}
         </div>
 
-        {/* Step 3: Message */}
+        {/* Trade summary */}
+        {(mySelected.size > 0 || theirSelected.size > 0) && (
+          <div style={{
+            background: "rgba(99,102,241,0.08)", border: "1px solid rgba(99,102,241,0.2)",
+            borderRadius: 10, padding: "12px 16px", marginBottom: 16, fontSize: 13, color: "#a5b4fc",
+          }}>
+            {mySelected.size > 0 && <div>You give: {mySelectedNames.join(", ")}</div>}
+            {theirSelected.size > 0 && <div>You receive: {theirSelectedNames.join(", ")}</div>}
+          </div>
+        )}
+
+        {/* Message */}
         <div style={{
-          background: "rgba(255,255,255,0.04)",
-          border: "1px solid rgba(255,255,255,0.08)",
+          background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)",
           borderRadius: 12, padding: 20, marginBottom: 20,
         }}>
           <label style={{ fontSize: 14, fontWeight: 600, color: "#e2e8f0", display: "block", marginBottom: 8 }}>
@@ -261,7 +421,7 @@ export default function ProposeTrade({
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             maxLength={300}
-            rows={3}
+            rows={2}
             placeholder="Add a note to your proposal..."
             style={{
               width: "100%", padding: "10px 14px", borderRadius: 8,
@@ -270,22 +430,6 @@ export default function ProposeTrade({
             }}
           />
         </div>
-
-        {/* Summary + submit */}
-        {(mySelected.size > 0 || theirSelected.size > 0) && (
-          <div style={{
-            background: "rgba(99,102,241,0.08)",
-            border: "1px solid rgba(99,102,241,0.2)",
-            borderRadius: 10, padding: "12px 16px", marginBottom: 16, fontSize: 13, color: "#a5b4fc",
-          }}>
-            {mySelected.size > 0 && (
-              <div>You give: {[...mySelected].map((id) => myRoster.find((p) => p.playerId === id)?.name ?? id).join(", ")}</div>
-            )}
-            {theirSelected.size > 0 && (
-              <div>You receive: {[...theirSelected].map((id) => theirRoster.find((p) => p.playerId === id)?.name ?? id).join(", ")}</div>
-            )}
-          </div>
-        )}
 
         <div style={{ display: "flex", gap: 12 }}>
           <button
@@ -304,11 +448,9 @@ export default function ProposeTrade({
           <a
             href={`/league/${leagueId}/trades`}
             style={{
-              padding: "12px 24px", borderRadius: 8,
-              border: "1px solid rgba(148,163,184,0.3)",
-              background: "transparent", color: "#94a3b8",
-              fontSize: 14, textDecoration: "none", lineHeight: "normal",
-              display: "inline-flex", alignItems: "center",
+              padding: "12px 24px", borderRadius: 8, border: "1px solid rgba(148,163,184,0.3)",
+              background: "transparent", color: "#94a3b8", fontSize: 14,
+              textDecoration: "none", lineHeight: "normal", display: "inline-flex", alignItems: "center",
             }}
           >
             Cancel

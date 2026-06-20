@@ -274,9 +274,9 @@ describe("VP-based playoff seeding", () => {
 describe("Standings (W-L-T)", () => {
   it("computes standings from matchup results", () => {
     const teams = [
-      { id: "team1", name: "Team 1", leagueId: "league1", ownerId: "user1", draftOrder: 1, createdAt: new Date(), updatedAt: new Date() },
-      { id: "team2", name: "Team 2", leagueId: "league1", ownerId: "user2", draftOrder: 2, createdAt: new Date(), updatedAt: new Date() },
-      { id: "team3", name: "Team 3", leagueId: "league1", ownerId: "user3", draftOrder: 3, createdAt: new Date(), updatedAt: new Date() },
+      { id: "team1", name: "Team 1", leagueId: "league1", ownerId: "user1", draftOrder: 1, isBot: false, createdAt: new Date(), updatedAt: new Date() },
+      { id: "team2", name: "Team 2", leagueId: "league1", ownerId: "user2", draftOrder: 2, isBot: false, createdAt: new Date(), updatedAt: new Date() },
+      { id: "team3", name: "Team 3", leagueId: "league1", ownerId: "user3", draftOrder: 3, isBot: false, createdAt: new Date(), updatedAt: new Date() },
     ];
 
     const matchups: Matchup[] = [

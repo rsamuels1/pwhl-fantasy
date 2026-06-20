@@ -108,7 +108,7 @@ export async function proposeTrade(
   // Validate league is in tradeable state (no trades during playoffs)
   const league = await prisma.fantasyLeague.findUnique({
     where: { id: leagueId },
-    select: { status: true, playoffStatus: true, rosterSettings: true },
+    select: { status: true, playoffStatus: true, rosterSettings: true, tradeReviewHours: true, requireCommissionerTradeApproval: true },
   });
   if (!league) throw new TradeValidationError("League not found.");
   if (league.status !== "IN_SEASON") {
@@ -161,6 +161,15 @@ export async function proposeTrade(
       properties: { tradeId: trade.id, itemCount: items.length },
     });
   } catch {}
+
+  // Auto-accept if the receiving team is a bot
+  const receivingTeam = await prisma.fantasyTeam.findUnique({
+    where: { id: receivingTeamId },
+    select: { isBot: true },
+  });
+  if (receivingTeam?.isBot) {
+    return acceptTrade(trade.id, receivingTeamId, nowMs, prisma);
+  }
 
   return trade;
 }

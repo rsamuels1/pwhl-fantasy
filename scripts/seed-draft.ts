@@ -80,6 +80,7 @@ async function main() {
         leagueId: league.id,
         ownerId: owner.id,
         draftOrder: i, // 1..N
+        isBot: i !== 1, // all teams except the commissioner's are bots
       },
     });
     teams.push(team);

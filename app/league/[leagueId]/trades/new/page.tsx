@@ -1,11 +1,13 @@
 // app/league/[leagueId]/trades/new/page.tsx
-// Propose Trade flow — pick team, select players from each roster, add message, submit.
 
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { requireAuth, requireLeagueMember } from "@/lib/auth";
 import { getTrade } from "@/lib/services/trade-service";
+import { parseScoringSettings } from "@/lib/scoring/settings";
+import { scoreStatLine, type StatLineInput } from "@/lib/scoring";
+import { Position } from "@prisma/client";
 import ProposeTrade from "./ProposeTrade";
 
 interface Props {
@@ -22,7 +24,7 @@ export default async function NewTradePage({ params, searchParams }: Props) {
 
   const league = await prisma.fantasyLeague.findUnique({
     where: { id: leagueId },
-    select: { status: true, playoffStatus: true, name: true },
+    select: { status: true, playoffStatus: true, name: true, season: true, scoringSettings: true },
   });
   if (!league) notFound();
 
@@ -30,23 +32,70 @@ export default async function NewTradePage({ params, searchParams }: Props) {
     redirect(`/league/${leagueId}/trades`);
   }
 
-  // Load all teams except mine
-  const otherTeams = await prisma.fantasyTeam.findMany({
-    where: { leagueId, id: { not: myTeam.id } },
-    select: { id: true, name: true },
-    orderBy: { name: "asc" },
+  const scoringSettings = parseScoringSettings(league.scoringSettings);
+
+  // Load all roster entries for the league with player + team info
+  const allRosters = await prisma.rosterEntry.findMany({
+    where: { fantasyTeam: { leagueId } },
+    include: {
+      player: { select: { id: true, firstName: true, lastName: true, position: true, active: true } },
+      fantasyTeam: { select: { id: true, name: true } },
+    },
   });
 
-  // Load my roster with player details
-  const myRoster = await prisma.rosterEntry.findMany({
-    where: { fantasyTeamId: myTeam.id },
-    include: {
-      player: {
-        select: { id: true, firstName: true, lastName: true, position: true, active: true },
-      },
+  // Aggregate FP for every rostered player from this season's stat lines
+  const rosterPlayerIds = allRosters.map((e) => e.playerId);
+  // Build a playerId → position map for scoring
+  const positionByPlayer: Record<string, Position> = {};
+  for (const entry of allRosters) {
+    positionByPlayer[entry.playerId] = entry.player.position;
+  }
+
+  const statLines = await prisma.statLine.findMany({
+    where: {
+      playerId: { in: rosterPlayerIds },
+      game: { season: league.season },
     },
-    orderBy: { acquired: "asc" },
+    select: {
+      playerId: true, goals: true, assists: true, shots: true, plusMinus: true,
+      penaltyMinutes: true, powerPlayPts: true, hits: true, blocks: true,
+      saves: true, goalsAgainst: true, shutout: true, win: true,
+    },
   });
+
+  // Sum FP per player
+  const fpByPlayer: Record<string, number> = {};
+  for (const sl of statLines) {
+    const position = positionByPlayer[sl.playerId] ?? Position.FORWARD;
+    const fp = scoreStatLine(sl as StatLineInput, position, scoringSettings);
+    fpByPlayer[sl.playerId] = (fpByPlayer[sl.playerId] ?? 0) + fp;
+  }
+
+  // Build my roster
+  const myRoster = allRosters
+    .filter((e) => e.fantasyTeamId === myTeam.id)
+    .map((e) => ({
+      playerId: e.playerId,
+      name: `${e.player.firstName} ${e.player.lastName}`,
+      position: e.player.position,
+      active: e.player.active,
+      fp: Math.round((fpByPlayer[e.playerId] ?? 0) * 10) / 10,
+    }))
+    .sort((a, b) => b.fp - a.fp);
+
+  // Build flat list of all other league players
+  const leaguePlayers = allRosters
+    .filter((e) => e.fantasyTeamId !== myTeam.id)
+    .map((e) => ({
+      playerId: e.playerId,
+      name: `${e.player.firstName} ${e.player.lastName}`,
+      position: e.player.position,
+      active: e.player.active,
+      teamId: e.fantasyTeam.id,
+      teamName: e.fantasyTeam.name,
+      fp: Math.round((fpByPlayer[e.playerId] ?? 0) * 10) / 10,
+    }))
+    .sort((a, b) => b.fp - a.fp);
 
   // Pre-select receiving team from query param or counterOf trade
   let preselectedTeamId = sp.team ?? null;
@@ -55,40 +104,9 @@ export default async function NewTradePage({ params, searchParams }: Props) {
   if (sp.counterOf) {
     counterOf = await getTrade(sp.counterOf, leagueId, prisma);
     if (counterOf) {
-      // For a counter, the receiving team is the original proposer
       preselectedTeamId = counterOf.proposingTeamId;
     }
   }
-
-  // Load all rosters for the league (keyed by teamId) to show other team's players
-  const allRosters = await prisma.rosterEntry.findMany({
-    where: { fantasyTeam: { leagueId } },
-    include: {
-      player: {
-        select: { id: true, firstName: true, lastName: true, position: true, active: true },
-      },
-    },
-  });
-
-  const rostersByTeam: Record<string, Array<{
-    playerId: string; name: string; position: string; active: boolean;
-  }>> = {};
-  for (const entry of allRosters) {
-    if (!rostersByTeam[entry.fantasyTeamId]) rostersByTeam[entry.fantasyTeamId] = [];
-    rostersByTeam[entry.fantasyTeamId].push({
-      playerId: entry.playerId,
-      name: `${entry.player.firstName} ${entry.player.lastName}`,
-      position: entry.player.position,
-      active: entry.player.active,
-    });
-  }
-
-  const myRosterItems = myRoster.map((e) => ({
-    playerId: e.playerId,
-    name: `${e.player.firstName} ${e.player.lastName}`,
-    position: e.player.position,
-    active: e.player.active,
-  }));
 
   return (
     <div>
@@ -104,9 +122,8 @@ export default async function NewTradePage({ params, searchParams }: Props) {
         leagueId={leagueId}
         myTeamId={myTeam.id}
         myTeamName={myTeam.name}
-        otherTeams={otherTeams}
-        myRoster={myRosterItems}
-        rostersByTeam={rostersByTeam}
+        myRoster={myRoster}
+        leaguePlayers={leaguePlayers}
         preselectedTeamId={preselectedTeamId}
         counterOfId={sp.counterOf ?? null}
       />
