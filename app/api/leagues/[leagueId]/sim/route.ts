@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { apiRequireAuth, apiRequireCommissioner } from "@/lib/auth";
-import { advanceSeason, startSeason } from "@/lib/season";
+import { advanceSeason, startSeason, getSeasonState } from "@/lib/season";
 import { getDevNowFromRequest } from "@/lib/devTime";
 
 interface SimRequest {
@@ -55,7 +55,6 @@ export async function POST(
       await startSeason(leagueId, prisma);
 
       // Fetch the first period to set replayCurrentDate
-      const { getSeasonState } = await import("@/lib/season");
       const state = await getSeasonState(leagueId, nowMs, prisma);
       const firstPeriod = state.periods[0];
 
@@ -72,7 +71,6 @@ export async function POST(
     if (action === "simulate") {
       // SETUP → RECAP: score the active week
       // We fetch the season state to find the active period's end time
-      const { getSeasonState } = await import("@/lib/season");
       const state = await getSeasonState(leagueId, nowMs, prisma);
       const activePeriod = state.periods.find((p) => p.status === "ACTIVE")?.period;
 
@@ -98,7 +96,6 @@ export async function POST(
 
     if (action === "advance") {
       // RECAP → SETUP (next week): move to the next period's start
-      const { getSeasonState } = await import("@/lib/season");
       const state = await getSeasonState(leagueId, nowMs, prisma);
 
       const nextPeriod = state.periods.find((p) => p.status === "UPCOMING");
@@ -120,7 +117,6 @@ export async function POST(
 
     if (action === "skip-to-playoffs") {
       // Advance past all remaining regular-season periods
-      const { getSeasonState } = await import("@/lib/season");
       const state = await getSeasonState(leagueId, nowMs, prisma);
 
       const lastRegularSeasonPeriod = [...state.periods]
