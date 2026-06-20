@@ -833,12 +833,44 @@ export default function DraftRoom({
   initialStats: PlayerStats[];
   statSeason: string | null;
 }) {
-  const { connStatus, draft, available, lastError, evicted, start, makePick, listAvailable, setQueue, pause, resume } =
-    useDraftSocket(leagueId, teamId);
+  const { evicted } = useDraftSocket(leagueId, teamId);
 
   if (evicted) {
     return <EvictedOverlay />;
   }
+
+  return (
+    <DraftRoomContent
+      leagueId={leagueId}
+      teamId={teamId}
+      teamNames={teamNames}
+      isCommissioner={isCommissioner}
+      initialStats={initialStats}
+      statSeason={statSeason}
+      rosterSettings={rosterSettings}
+    />
+  );
+}
+
+function DraftRoomContent({
+  leagueId,
+  teamId,
+  teamNames,
+  isCommissioner,
+  initialStats,
+  statSeason,
+  rosterSettings,
+}: {
+  leagueId: string;
+  teamId: string;
+  teamNames: Record<string, string>;
+  isCommissioner: boolean;
+  rosterSettings: Record<string, number>;
+  initialStats: PlayerStats[];
+  statSeason: string | null;
+}) {
+  const { connStatus, draft, available, lastError, start, makePick, listAvailable, setQueue, pause, resume } =
+    useDraftSocket(leagueId, teamId);
 
   const isMobile = useIsMobile(900);
   const [mobileTab, setMobileTab] = useState<"pick" | "board" | "needs">("pick");
