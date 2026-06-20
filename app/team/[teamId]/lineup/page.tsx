@@ -3,8 +3,9 @@ import { prisma } from "@/lib/db";
 import { requireAuth, requireTeamOwner } from "@/lib/auth";
 import { eligibleSlots, lockTime } from "@/lib/lineup";
 import type { RosterSettings } from "@/lib/lineup";
-import { scoreStatLine, DEFAULT_SCORING } from "@/lib/scoring";
+import { scoreStatLine } from "@/lib/scoring";
 import type { ScoringSettings } from "@/lib/scoring";
+import { parseScoringSettings } from "@/lib/scoring/settings";
 import { getSeasonState } from "@/lib/season";
 import { getDevNow } from "@/lib/devTime";
 import { getReplayNow } from "@/lib/replayTime";
@@ -113,9 +114,7 @@ export default async function TeamLineupPage({ params }: Props) {
   if (!fullTeam) notFound();
 
   const settings = (fullTeam.league.rosterSettings ?? {}) as RosterSettings;
-  const scoring = (fullTeam.league.scoringSettings && Object.keys(fullTeam.league.scoringSettings as object).length > 0
-    ? fullTeam.league.scoringSettings
-    : DEFAULT_SCORING) as ScoringSettings;
+  const scoring = parseScoringSettings(fullTeam.league.scoringSettings);
   const leagueSeason = fullTeam.league.season;
 
   const playerIds = fullTeam.roster.map((e) => e.playerId);

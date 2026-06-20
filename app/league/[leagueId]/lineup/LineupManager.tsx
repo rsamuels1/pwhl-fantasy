@@ -301,13 +301,24 @@ export default function LineupManager({
     if (!selected) return false;
     if (occupant?.playerId === selected.playerId) return false;
     if (!occupant) return canMoveTo(seatSlot);
+    // If swapping would demote the occupant from an active slot to bench (selected is on bench),
+    // block it when the occupant has already played this period
+    if (
+      occupant.hasPlayedThisPeriod &&
+      ACTIVE_SLOTS.includes(occupant.slot) &&
+      !ACTIVE_SLOTS.includes(selected.slot)
+    ) return false;
     return canMoveTo(seatSlot) && occupant.eligibleSlots.includes(selected.slot);
   }
 
   const activeCount = roster.filter((p) => ACTIVE_SLOTS.includes(p.slot)).length;
 
   const zeroGameStarters = roster.filter(
-    (p) => ACTIVE_SLOTS.includes(p.slot) && p.gamesThisPeriod === 0
+    (p) =>
+      ACTIVE_SLOTS.includes(p.slot) &&
+      p.gamesThisPeriod === 0 &&
+      !p.lockedAt &&
+      !p.hasPlayedThisPeriod
   );
 
   return (

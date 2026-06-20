@@ -1,7 +1,8 @@
 import { prisma } from "@/lib/db";
 import { apiRequireAuth, apiRequireLeagueMember } from "@/lib/auth";
-import { scoreStatLine, DEFAULT_SCORING } from "@/lib/scoring";
+import { scoreStatLine } from "@/lib/scoring";
 import type { ScoringSettings } from "@/lib/scoring";
+import { parseScoringSettings } from "@/lib/scoring/settings";
 import type { Position } from "@prisma/client";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
@@ -77,9 +78,7 @@ export async function GET(
       orderBy: { game: { startsAt: "desc" } },
     });
 
-    const scoring = (league.scoringSettings && Object.keys(league.scoringSettings as object).length > 0
-      ? league.scoringSettings
-      : DEFAULT_SCORING) as ScoringSettings;
+    const scoring = parseScoringSettings(league.scoringSettings);
 
     // Group stat lines by player, keeping only last 5
     const linesByPlayer: Record<string, typeof statLines> = {};
