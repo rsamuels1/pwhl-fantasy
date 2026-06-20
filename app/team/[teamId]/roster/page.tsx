@@ -213,7 +213,7 @@ export default async function TeamRosterPage({ params, searchParams }: Props) {
         WHERE ft."leagueId" = ${leagueId}
       )
     GROUP BY p.id, p."firstName", p."lastName", p.position, t.abbreviation, p."teamId"
-    ORDER BY (COALESCE(SUM(sl.goals), 0) + COALESCE(SUM(sl.assists), 0)) DESC, p."lastName"
+    ORDER BY p."lastName"
   `;
 
   // Batch query: period games for all FA PWHL teams — used for games-remaining badge and lock status

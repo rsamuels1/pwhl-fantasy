@@ -63,12 +63,13 @@ async function undoWaiverTransaction(
     return NextResponse.json({ error: "No waiver transaction found to undo" }, { status: 404 });
   }
 
-  const data = lastEvent.data as { playerId?: string; slot?: string };
-  const playerId = data.playerId as string | undefined;
+  const playerId = lastEvent.playerId as string | undefined;
 
   if (!playerId) {
     return NextResponse.json({ error: "Cannot determine player from transaction record" }, { status: 422 });
   }
+
+  const eventData = lastEvent.data as { slot?: string };
 
   try {
     // Wrap roster entry change and event deletion in a transaction for atomicity
@@ -97,7 +98,7 @@ async function undoWaiverTransaction(
           data: {
             fantasyTeamId: teamId,
             playerId,
-            slot: (data.slot as any) ?? "BENCH",
+            slot: (eventData.slot as any) ?? "BENCH",
             acquired: new Date(),
           },
         });

@@ -73,7 +73,7 @@ const POS_COLORS: Record<string, string> = {
 
 type Tab = "roster" | "freeAgents";
 type ViewMode = "cards" | "table";
-type SortKey = "name" | "pts" | "goals" | "assists" | "ppp" | "shots" | "hits" | "blocks" | "wins" | "savePct" | "goalsAgainst" | "fp" | "gamesThisPeriod";
+type SortKey = "name" | "pts" | "goals" | "assists" | "ppp" | "shots" | "hits" | "blocks" | "wins" | "savePct" | "goalsAgainst" | "fp" | "gamesThisPeriod" | "gp" | "shutouts";
 
 // ── main component ────────────────────────────────────────────────────────────
 
@@ -152,6 +152,7 @@ export default function RosterManager({
       }
       setRoster((prev) => prev.filter((p) => p.playerId !== dropPlayerId));
       setSuccessMsg(`${player?.name ?? "Player"} dropped.`);
+      router.refresh();
     });
   }
 
@@ -358,7 +359,7 @@ export default function RosterManager({
       {slottingPlayer && (
         <AddAndSlotModal
           player={slottingPlayer}
-          activeRoster={initialRoster.filter((e) => e.slot !== "BENCH" && e.slot !== "IR")}
+          activeRoster={roster.filter((e) => e.slot !== "BENCH" && e.slot !== "IR")}
           rosterSettings={rosterSettings}
           teamId={teamId}
           leagueId={leagueId}
@@ -538,16 +539,16 @@ function ColHeader({ isGoalie, readonly, sortKey, sortAsc, onSort }: {
       <span>Player</span>
       {isGoalie ? (
         <>
-          <SortTh label="GP" k="fp" />
+          <SortTh label="GP" k="gp" />
           <SortTh label="W" k="wins" />
           <SortTh label="SV%" k="savePct" />
           <SortTh label="GA" k="goalsAgainst" />
-          <SortTh label="SO" k="fp" />
+          <SortTh label="SO" k="shutouts" />
           <SortTh label="FPts" k="fp" />
         </>
       ) : (
         <>
-          <SortTh label="GP" k="fp" />
+          <SortTh label="GP" k="gp" />
           <SortTh label="G" k="goals" />
           <SortTh label="A" k="assists" />
           <SortTh label="PTS" k="pts" />
@@ -666,16 +667,16 @@ function FaColHeader({ isGoalie, sortKey, sortAsc, onSort }: {
       <SortTh label="Wk" k="gamesThisPeriod" title="Games remaining this period" />
       {isGoalie ? (
         <>
-          <SortTh label="GP" k="fp" />
+          <SortTh label="GP" k="gp" />
           <SortTh label="W" k="wins" />
           <SortTh label="SV%" k="savePct" />
           <SortTh label="GA" k="goalsAgainst" />
-          <SortTh label="SO" k="fp" />
+          <SortTh label="SO" k="shutouts" />
           <SortTh label="FPts" k="fp" />
         </>
       ) : (
         <>
-          <SortTh label="GP" k="fp" />
+          <SortTh label="GP" k="gp" />
           <SortTh label="G" k="goals" />
           <SortTh label="A" k="assists" />
           <SortTh label="PTS" k="pts" />
@@ -817,6 +818,7 @@ function getSortValue(fa: FreeAgentRow, key: SortKey): number {
   const s = fa.stats;
   if (!s) return -Infinity;
   if (key === "fp") return s.fantasyPoints;
+  if (key === "gp") return s.gp ?? 0;
   if ("points" in s) {
     const sk = s as SkaterStats;
     if (key === "pts") return sk.points;
@@ -832,6 +834,7 @@ function getSortValue(fa: FreeAgentRow, key: SortKey): number {
     if (key === "wins") return gk.wins;
     if (key === "savePct") return gk.savePct ?? -1;
     if (key === "goalsAgainst") return gk.goalsAgainst;
+    if (key === "shutouts") return gk.shutouts ?? 0;
   }
   return s.fantasyPoints;
 }

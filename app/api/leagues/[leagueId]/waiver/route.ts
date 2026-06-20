@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { apiRequireAuth } from "@/lib/auth";
+import { apiRequireAuth, apiRequireLeagueMember } from "@/lib/auth";
 import type { RosterSettings } from "@/lib/lineup";
 import { emitEvent } from "@/lib/services/activity";
 
@@ -26,6 +26,9 @@ export async function POST(
   const { leagueId } = await params;
   const auth = await apiRequireAuth(req);
   if (auth instanceof NextResponse) return auth;
+
+  const member = await apiRequireLeagueMember(leagueId, auth.id);
+  if (member instanceof NextResponse) return member;
 
   const body = await req.json() as { teamId?: string; addPlayerId?: string; dropPlayerId?: string };
   const { teamId, addPlayerId, dropPlayerId } = body;
@@ -120,6 +123,9 @@ export async function DELETE(
   const { leagueId } = await params;
   const auth = await apiRequireAuth(req);
   if (auth instanceof NextResponse) return auth;
+
+  const member = await apiRequireLeagueMember(leagueId, auth.id);
+  if (member instanceof NextResponse) return member;
 
   const body = await req.json() as { teamId?: string; dropPlayerId?: string };
   const { teamId, dropPlayerId } = body;
