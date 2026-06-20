@@ -213,16 +213,21 @@ describe("computeOptimalLineup", () => {
       makePlayer({ playerId: "p7", position: "FORWARD", projectedFp: 3, gamesThisPeriod: 2, eligibleSlots: ["FORWARD", "UTIL", "BENCH"] }),
     ];
     const result = computeOptimalLineup(roster, SETTINGS);
-    // Sort order by FP desc, then games desc: p2(20,3) > p1(20,0) > p4(10,1) > p6(8,1) > p3(5,0) > p7(3,2) > p5(5,0)
-    // p2 has same FP as p1 but more games remaining → p2 ranks higher in the sort
-    expect(result.get("p2")).toBe("FORWARD"); // Ranked #1, gets FORWARD slot 1
-    expect(result.get("p1")).toBe("FORWARD"); // Ranked #2, gets FORWARD slot 2
-    // p3 (5 FP, 0 games) is ranked #5 → gets FORWARD slot 3
-    expect(result.get("p3")).toBe("FORWARD");
-    // p7 (3 FP, 2 games despite more games) is ranked below p3 by FP → gets UTIL slot
-    expect(result.get("p7")).toBe("UTIL");
-    // p4 goes to DEFENSE
+    // Sort order prioritizes games-remaining first, then by FP desc:
+    // Players with games: p2(20,3) > p4(10,1) > p6(8,1) > p7(3,2)
+    // Players with 0 games: p1(20,0) > p3(5,0) > p5(5,0)
+    // p2 has most FP + games → gets FORWARD slot 1
+    expect(result.get("p2")).toBe("FORWARD");
+    // p4 has games and good FP → gets DEFENSE slot 1
     expect(result.get("p4")).toBe("DEFENSE");
+    // p6 is goalie with games → gets GOALIE slot
+    expect(result.get("p6")).toBe("GOALIE");
+    // p7 has games remaining (2) even though lower FP → gets FORWARD slot 2
+    expect(result.get("p7")).toBe("FORWARD");
+    // p1 (20 FP, 0 games) is demoted below p7 due to no games → gets FORWARD slot 3
+    expect(result.get("p1")).toBe("FORWARD");
+    // p3 (5 FP, 0 games) goes to UTIL since FORWARD is full
+    expect(result.get("p3")).toBe("UTIL");
   });
 
   it("uses games tiebreaker when equal-FP players compete for limited slots", () => {

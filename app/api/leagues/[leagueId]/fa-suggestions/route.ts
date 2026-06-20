@@ -3,6 +3,7 @@ import { apiRequireAuth, apiRequireLeagueMember } from "@/lib/auth";
 import { scoreStatLine } from "@/lib/scoring";
 import type { ScoringSettings } from "@/lib/scoring";
 import { parseScoringSettings } from "@/lib/scoring/settings";
+import { getDevNowFromRequest } from "@/lib/devTime";
 import type { Position } from "@prisma/client";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
@@ -60,12 +61,13 @@ export async function GET(
         firstName: true,
         lastName: true,
         position: true,
-        team: { select: { abbreviation: true } },
+        team: { select: { id: true, abbreviation: true } },
       },
     });
 
     // Fetch recent stat lines for projection (last 90 days)
-    const ninetyDaysAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
+    const nowMs = getDevNowFromRequest(req);
+    const ninetyDaysAgo = new Date(nowMs - 90 * 24 * 60 * 60 * 1000);
     const statLines = await prisma.statLine.findMany({
       where: {
         playerId: { in: unrosteredPlayers.map((p) => p.id) },
@@ -95,6 +97,31 @@ export async function GET(
       positionMap[p.id] = p.position as Position;
     }
 
+    // Compute games remaining for each PWHL team
+    const pwhlTeamIds = [...new Set(
+      unrosteredPlayers.map((p) => p.team?.id).filter((id): id is string => !!id)
+    )];
+    const futureGames = await prisma.game.findMany({
+      where: {
+        season: league.season,
+        startsAt: { gt: new Date(nowMs) },
+        OR: [
+          { homeTeamId: { in: pwhlTeamIds } },
+          { awayTeamId: { in: pwhlTeamIds } },
+        ],
+      },
+      select: { homeTeamId: true, awayTeamId: true },
+    });
+    const gamesRemainingMap = new Map<string, number>();
+    for (const game of futureGames) {
+      if (pwhlTeamIds.includes(game.homeTeamId)) {
+        gamesRemainingMap.set(game.homeTeamId, (gamesRemainingMap.get(game.homeTeamId) ?? 0) + 1);
+      }
+      if (pwhlTeamIds.includes(game.awayTeamId)) {
+        gamesRemainingMap.set(game.awayTeamId, (gamesRemainingMap.get(game.awayTeamId) ?? 0) + 1);
+      }
+    }
+
     const suggestions = unrosteredPlayers
       .map((player) => {
         const lines = linesByPlayer[player.id] ?? [];
@@ -105,6 +132,7 @@ export async function GET(
           0
         );
         const avgFpPerGame = Math.round((totalFp / lines.length) * 100) / 100;
+        const gamesThisPeriod = player.team?.id ? (gamesRemainingMap.get(player.team.id) ?? 0) : 0;
 
         return {
           playerId: player.id,
@@ -113,9 +141,11 @@ export async function GET(
           position: player.position,
           projectedFp: avgFpPerGame,
           avgFpPerGame,
+          gamesThisPeriod,
         };
       })
       .filter((s): s is NonNullable<typeof s> => s !== null)
+      .filter((s) => s.gamesThisPeriod > 0 || s.gamesThisPeriod === null)
       .sort((a, b) => b.projectedFp - a.projectedFp)
       .slice(0, 10);
 

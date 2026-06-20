@@ -187,12 +187,15 @@ export async function startPlayoffs(
     orderBy: { startsAt: "asc" },
   });
 
-  // Playoff starts one week after the last regular season game
+  // Playoff starts one week after the last regular season game (unless replay mode,
+  // where we anchor to the actual last game to keep playoff periods within available data)
   if (games.length === 0) {
     throw new Error("No games available to determine playoff start date");
   }
   const lastGame = games[games.length - 1];
-  const playoffStartsAt = new Date(lastGame.startsAt.getTime() + 7 * 24 * 60 * 60 * 1000);
+  const playoffStartsAt = league.isReplay
+    ? lastGame.startsAt
+    : new Date(lastGame.startsAt.getTime() + 7 * 24 * 60 * 60 * 1000);
 
   const playoffPeriods = derivePlayoffPeriods(
     playoffStartsAt,

@@ -839,8 +839,8 @@
             </div>
 
             <div class="task-row">
-              <span class="task-check">○</span>
-              <span style="color: #ccc"><strong style="color:#f5c842">Priority 2 — League-Wide Matchup Storylines (#11)</strong> · ~50K · <em>Spec: <code>docs/02-engineering/matchup-storylines-spec.md</code></em> — <code>getLeagueStorylines()</code> service + <code>/api/leagues/[leagueId]/storylines</code> route + <code>StorylinesCard</code> on league overview sidebar. Ships: closest matchup, biggest blowout, weekly point leader, biggest rank climber, top scoring player. No schema changes.</span>
+              <span class="task-check">✓</span>
+              <span style="color: #ccc"><strong style="color:#22c55e">Priority 2 — League-Wide Matchup Storylines (#11)</strong> · ✅ SHIPPED · <em>Spec: <code>docs/02-engineering/matchup-storylines-spec.md</code></em> — <code>computeWeeklyStorylines()</code> + <code>emitWeeklyStorylines()</code> in <code>lib/services/storyline-service.ts</code>; <code>LEAGUE_STORYLINE</code> EventType; <code>components/WeekHighlights.tsx</code> on league overview; emitted fire-and-forget from <code>advanceSeason()</code> in <code>lib/season/index.ts</code>; 173-line test suite in <code>tests/storyline.test.ts</code>. Storylines: closest_match, high_score, player_standout.</span>
             </div>
 
             <div class="task-row">
@@ -1253,11 +1253,11 @@
                     <td>4</td>
                   </tr>
 
-                  <tr class="backlog-row" data-status="partial" data-crit="medium">
+                  <tr class="backlog-row" data-status="done" data-crit="medium">
                     <td><span class="crit-dot crit-medium"></span></td>
                     <td>#11</td>
                     <td>Matchup Storylines</td>
-                    <td><span class="status partial">PARTIAL</span></td>
+                    <td><span class="status done">DONE</span></td>
                     <td>~50K</td>
                     <td>7</td>
                   </tr>

@@ -133,11 +133,10 @@ export default function RosterManager({
       setPendingAdd(null);
       setDropForAdd(null);
       setSuccessMsg(`${addedFa?.name ?? "Player"} added to your roster.`);
+      router.refresh();
       // Show Add & Slot modal for unlocked players; locked players go straight to bench
       if (addedFa && !addedFa.isLocked) {
         setSlottingPlayer(addedFa);
-      } else {
-        router.refresh();
       }
     });
   }

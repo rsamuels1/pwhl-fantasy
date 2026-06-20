@@ -337,23 +337,43 @@ enum NotificationType {
 }
 
 model FeedbackSubmission {
-  id        String        @id @default(cuid())
-  userId    String
-  leagueId  String?
-  type      FeedbackType
-  body      String        @db.Text
-  url       String?
-  createdAt DateTime      @default(now())
-  user      User          @relation(fields: [userId], references: [id])
-  league    FantasyLeague? @relation(fields: [leagueId], references: [id])
+  id          String         @id @default(cuid())
+  userId      String
+  leagueId    String?
+  type        FeedbackType
+  body        String         @db.Text
+  url         String?
+  status      FeedbackStatus @default(OPEN)
+  createdAt   DateTime       @default(now())
+  user        User           @relation(fields: [userId], references: [id])
+  league      FantasyLeague? @relation(fields: [leagueId], references: [id])
+  backlogItem BacklogItem?
 
   @@index([createdAt])
+}
+
+model BacklogItem {
+  id         String              @id @default(cuid())
+  feedbackId String?             @unique
+  title      String
+  userStory  String              @db.Text
+  priority   String              @default("P2")
+  category   String              @default("FEATURE")
+  createdAt  DateTime            @default(now())
+  feedback   FeedbackSubmission? @relation(fields: [feedbackId], references: [id])
 }
 
 enum FeedbackType {
   BUG
   SUGGESTION
   OTHER
+}
+
+enum FeedbackStatus {
+  OPEN
+  IN_BACKLOG
+  RESOLVED
+  DISMISSED
 }
 
 enum BetaStatus {

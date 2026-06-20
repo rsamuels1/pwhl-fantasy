@@ -121,7 +121,13 @@ export function computeOptimalLineup(
   // When both players have projections, rank by projected FP.
   // When only one has a projection, that one wins.
   // When neither has a projection (between-weeks), fall back to games remaining this period.
+  // Players with 0 games remaining are always demoted below those with games available.
   const sorted = moveable.sort((a, b) => {
+    // First tier: players with games remaining rank above those without
+    const aHasGames = (a.gamesThisPeriod ?? 1) > 0;
+    const bHasGames = (b.gamesThisPeriod ?? 1) > 0;
+    if (aHasGames !== bHasGames) return aHasGames ? -1 : 1;
+
     const aFp = a.projectedFp ?? null;
     const bFp = b.projectedFp ?? null;
     if (aFp !== null && bFp !== null) return bFp - aFp;

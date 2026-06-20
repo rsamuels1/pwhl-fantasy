@@ -543,22 +543,30 @@ Dependencies:
 
 ## 11. Matchup Storylines
 
-Sprint: 7 (league-wide storylines)
+Sprint: 7
 
-Status: Partially Implemented
+Status: ✅ DONE
 
 Per-team storyline chip ("🔥 X is leading your team…") and a weekly recap card are live.
-League-wide auto-generated storylines are scheduled for Sprint 7.
+League-wide storylines shipped in Sprint 7: `computeWeeklyStorylines()` + `emitWeeklyStorylines()`
+in `lib/services/storyline-service.ts`; `LEAGUE_STORYLINE` event type in `prisma/schema.prisma`;
+`components/WeekHighlights.tsx` renders cards on the league overview; storylines emitted after
+each week scores via `advanceSeason()` in `lib/season/index.ts` (fire-and-forget); 173-line
+test suite in `tests/storyline.test.ts`. Note: the spec called for a standalone
+`GET /api/leagues/[leagueId]/storylines` route — storylines are instead fetched server-side
+directly in `app/league/[leagueId]/page.tsx` via `leagueEventModel.findMany`, which is
+architecturally equivalent and avoids an extra HTTP round trip.
 
 Features:
 
-- Biggest upset — not built (league-wide)
-- Closest matchup — not built (league-wide)
-- League leader highlights — partial (activity feed)
+- Closest matchup ✅ (smallest margin across scored matchups for the week)
+- Weekly point leader / high score ✅ (highest single-team score)
+- Top scoring player ✅ (player standout — player with most FP from active roster slots)
+- League leader highlights ✅ (activity feed + WeekHighlights card on overview)
 
 Acceptance Criteria:
 
-- Automatically generated league insights (per-team done; league-wide TODO)
+- Automatically generated league insights ✅ (both per-team chip and league-wide WeekHighlights card)
 
 ---
 

@@ -67,7 +67,7 @@ export default async function PlayoffsPage({
   const playoffCutoff = cutoffIdx >= 0 ? cutoffIdx : null;
 
   const ps = (league.playoffSettings ?? {}) as { teamsInPlayoff?: number; topSeedsWithBye?: number };
-  const teamsInPlayoff = ps.teamsInPlayoff ?? 6;
+  const teamsInPlayoff = ps.teamsInPlayoff ?? 4;
   const topSeedsWithBye = ps.topSeedsWithBye ?? 0;
 
   // Season progress stats for the race banner

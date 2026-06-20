@@ -164,6 +164,9 @@ export default async function TeamLineupPage({ params }: Props) {
   // Next period for projections — always the first UPCOMING period (may be next week even during an active week)
   const nextPeriod = seasonState.periods.find((p) => p.status === "UPCOMING")?.period ?? null;
 
+  // Projection period: use nextPeriod, or fall back to playoff period if we have one
+  const projectionPeriod = nextPeriod ?? (periodForGames?.week ? periodForGames : null);
+
   const pwhlTeamIds = [...new Set(
     fullTeam.roster.map((e) => e.player.team?.id).filter((id): id is string => !!id)
   )];
@@ -204,7 +207,7 @@ export default async function TeamLineupPage({ params }: Props) {
         })
       : Promise.resolve([] as RawStatLine[]),
     // Projection: last 90 days of stat lines (batch, single round-trip)
-    nextPeriod && playerIds.length > 0
+    projectionPeriod && playerIds.length > 0
       ? prisma.statLine.findMany({
           where: {
             playerId: { in: playerIds },
@@ -214,11 +217,11 @@ export default async function TeamLineupPage({ params }: Props) {
           select: STAT_SELECT,
         })
       : Promise.resolve([] as RawStatLine[]),
-    // Games scheduled in the next period for PWHL teams on this roster
-    nextPeriod && pwhlTeamIds.length > 0
+    // Games scheduled in the next/playoff period for PWHL teams on this roster
+    projectionPeriod && pwhlTeamIds.length > 0
       ? prisma.game.findMany({
           where: {
-            startsAt: { gte: nextPeriod.startsAt, lt: nextPeriod.endsAt },
+            startsAt: { gte: projectionPeriod.startsAt, lt: projectionPeriod.endsAt },
             OR: [{ homeTeamId: { in: pwhlTeamIds } }, { awayTeamId: { in: pwhlTeamIds } }],
           },
           select: { homeTeamId: true, awayTeamId: true },
@@ -367,7 +370,7 @@ export default async function TeamLineupPage({ params }: Props) {
       lastWeekLabel={lastWeekLabel}
       thisWeekStats={thisWeekStats}
       thisWeekLabel={thisWeekLabel}
-      projectedStats={nextPeriod ? projectedStats : undefined}
+      projectedStats={projectionPeriod ? projectedStats : undefined}
       nextWeekLabel={nextWeekLabel}
       projectionsAvailable={projectionsAvailable}
     />

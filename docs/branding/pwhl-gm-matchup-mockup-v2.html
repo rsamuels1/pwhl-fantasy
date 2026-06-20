@@ -1,0 +1,2109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PWHL GM — My Matchup (v2 Mockup)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@700;800&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ─────────────────────────────────────────────
+       DESIGN TOKENS
+       All brand colors defined here. Update once, applies everywhere.
+    ───────────────────────────────────────────── */
+    :root {
+      --navy:              #0b111f;
+      --navy-mid:          #111827;
+      --navy-card:         rgba(255,255,255,0.04);
+      --navy-card-border:  rgba(148,163,184,0.14);
+      --navy-card-hover:   rgba(255,255,255,0.06);
+
+      --indigo:            #6366f1;
+      --indigo-light:      #818cf8;
+      --indigo-text:       #a5b4fc;
+      --indigo-dim:        rgba(99,102,241,0.15);
+      --indigo-border:     rgba(99,102,241,0.3);
+      --indigo-glow:       rgba(99,102,241,0.12);
+
+      --green:             #34d399;
+      --green-light:       #6ee7b7;
+      --green-dim:         rgba(52,211,153,0.10);
+      --green-border:      rgba(52,211,153,0.25);
+
+      --red:               #ef4444;
+      --red-light:         #f87171;
+      --red-dim:           rgba(239,68,68,0.10);
+      --red-border:        rgba(239,68,68,0.25);
+
+      --amber:             #f59e0b;
+      --amber-light:       #fbbf24;
+      --amber-dim:         rgba(245,158,11,0.08);
+      --amber-border:      rgba(245,158,11,0.25);
+
+      --text-primary:      #e2e8f0;
+      --text-secondary:    #cbd5e1;
+      --text-muted:        #64748b;
+      --text-dim:          #475569;
+      --text-deep:         #334155;
+
+      --pos-fwd:           #60a5fa;
+      --pos-def:           #34d399;
+      --pos-goal:          #f59e0b;
+      --pos-util:          #a78bfa;
+
+      --radius-card:       20px;
+      --radius-sm:         8px;
+      --radius-pill:       999px;
+
+      /* Typography scale */
+      --font-display:      'Syne', sans-serif;
+      --font-mono:         'DM Mono', monospace;
+      --font-body:         'Inter', sans-serif;
+    }
+
+    /* ─────────────────────────────────────────────
+       RESET & BASE
+    ───────────────────────────────────────────── */
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+
+    body {
+      font-family: var(--font-body);
+      background: var(--navy);
+      color: var(--text-primary);
+      line-height: 1.5;
+      min-height: 100vh;
+      /* Subtle radial glow behind content — feels like a lit ice surface */
+      background-image:
+        radial-gradient(ellipse 80% 50% at 50% -10%, rgba(99,102,241,0.07) 0%, transparent 70%),
+        radial-gradient(ellipse 60% 40% at 80% 90%, rgba(6,182,212,0.04) 0%, transparent 60%);
+    }
+
+    /* ─────────────────────────────────────────────
+       STICKY HEADER
+       Frosted glass effect. Never competes with content.
+    ───────────────────────────────────────────── */
+    .site-header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(11,17,31,0.92);
+      backdrop-filter: blur(16px) saturate(1.4);
+      border-bottom: 1px solid var(--navy-card-border);
+    }
+
+    .site-header__inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      height: 56px;
+    }
+
+    /* Logo lockup */
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      text-decoration: none;
+      flex-shrink: 0;
+    }
+
+    .logo__shield {
+      width: 28px;
+      height: 28px;
+    }
+
+    .logo__wordmark {
+      font-family: var(--font-display);
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--text-primary);
+      letter-spacing: -0.01em;
+    }
+
+    /* Team nav tabs — the primary wayfinding within a franchise */
+    .team-nav {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      margin-left: 8px;
+      flex: 1;
+    }
+
+    .team-nav__link {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-muted);
+      text-decoration: none;
+      padding: 6px 12px;
+      border-radius: 6px;
+      transition: color 0.15s, background 0.15s;
+      white-space: nowrap;
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+    }
+
+    .team-nav__link:hover { color: var(--text-secondary); background: var(--navy-card); }
+
+    .team-nav__link.is-active {
+      color: var(--text-primary);
+      background: var(--indigo-dim);
+      font-weight: 600;
+    }
+
+    .team-nav__league {
+      margin-left: auto;
+      font-size: 12px;
+      color: var(--text-muted);
+      padding: 6px 12px;
+      border: 1px solid var(--navy-card-border);
+      border-radius: 6px;
+      text-decoration: none;
+      transition: color 0.15s, border-color 0.15s;
+    }
+
+    .team-nav__league:hover { color: var(--indigo-text); border-color: var(--indigo-border); }
+
+    /* ─────────────────────────────────────────────
+       MAIN CONTAINER
+    ───────────────────────────────────────────── */
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* ─────────────────────────────────────────────
+       CARD BASE
+       Every surface inherits this.
+    ───────────────────────────────────────────── */
+    .card {
+      background: var(--navy-card);
+      border: 1px solid var(--navy-card-border);
+      border-radius: var(--radius-card);
+      padding: 20px;
+    }
+
+    .card-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 16px;
+      letter-spacing: -0.01em;
+    }
+
+    /* ─────────────────────────────────────────────
+       SECTION 0 — LAST WEEK RECAP
+       Compact strip. Color signals result at a glance.
+       Rationale: users want to know if they won before
+       they look at the current week.
+    ───────────────────────────────────────────── */
+    .recap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      padding: 13px 16px;
+      border-radius: 14px;
+      border: 1px solid var(--green-border);
+      background: var(--green-dim);
+    }
+
+    .recap.recap--loss {
+      border-color: var(--red-border);
+      background: var(--red-dim);
+    }
+
+    .recap__badge {
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 3px 9px;
+      border-radius: var(--radius-pill);
+      background: rgba(52,211,153,0.15);
+      color: var(--green);
+      flex-shrink: 0;
+    }
+
+    .recap--loss .recap__badge {
+      background: rgba(239,68,68,0.15);
+      color: var(--red-light);
+    }
+
+    .recap__score {
+      font-family: var(--font-mono);
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--text-primary);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .recap__meta {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .recap__note {
+      font-size: 12px;
+      color: var(--green-light);
+      margin-left: auto;
+    }
+
+    .recap--loss .recap__note { color: var(--red-light); }
+
+    /* ─────────────────────────────────────────────
+       SECTION 1 — LINEUP ALERT BANNER
+       Red alert. Actionable. Should demand attention.
+       44px min-height for touch targets.
+    ───────────────────────────────────────────── */
+    .alert-strip {
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      padding: 10px 16px;
+      border-radius: 12px;
+      border: 1px solid var(--red-border);
+      background: var(--red-dim);
+    }
+
+    .alert-strip__body {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .alert-strip__dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--red-light);
+      flex-shrink: 0;
+      animation: pulse-dot 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    .alert-strip__label {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--red-light);
+    }
+
+    .alert-strip__desc {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .alert-strip--amber {
+      border-color: var(--amber-border);
+      background: var(--amber-dim);
+    }
+
+    .alert-strip--amber .alert-strip__dot { background: var(--amber-light); }
+    .alert-strip--amber .alert-strip__label { color: var(--amber-light); }
+
+    .pill-link {
+      display: inline-flex;
+      align-items: center;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 6px 14px;
+      border-radius: var(--radius-pill);
+      text-decoration: none;
+      flex-shrink: 0;
+      min-height: 32px;
+      transition: background 0.15s;
+    }
+
+    .pill-link--red {
+      background: rgba(239,68,68,0.15);
+      color: var(--red-light);
+      border: 1px solid var(--red-border);
+    }
+
+    .pill-link--red:hover { background: rgba(239,68,68,0.25); }
+
+    .pill-link--amber {
+      background: rgba(245,158,11,0.15);
+      color: var(--amber-light);
+      border: 1px solid var(--amber-border);
+    }
+
+    .pill-link--amber:hover { background: rgba(245,158,11,0.25); }
+
+    .pill-link--indigo {
+      background: var(--indigo-dim);
+      color: var(--indigo-text);
+      border: 1px solid var(--indigo-border);
+    }
+
+    .pill-link--indigo:hover { background: rgba(99,102,241,0.22); }
+
+    /* ─────────────────────────────────────────────
+       SECTION 3 — MATCHUP / ANALYSIS TABS
+       Pill-style. Active tab signals primary context.
+    ───────────────────────────────────────────── */
+    .tabs {
+      display: flex;
+      gap: 0;
+      border-bottom: 1px solid var(--navy-card-border);
+      margin-bottom: 4px;
+    }
+
+    .tab-btn {
+      padding: 10px 20px;
+      font-size: 14px;
+      font-weight: 400;
+      color: var(--text-muted);
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      cursor: pointer;
+      margin-bottom: -1px;
+      transition: color 0.15s, border-color 0.15s, font-weight 0.1s;
+      min-height: 44px;
+    }
+
+    .tab-btn.is-active {
+      color: var(--text-primary);
+      font-weight: 600;
+      border-bottom-color: var(--indigo-light);
+    }
+
+    .tab-btn:hover:not(.is-active) { color: var(--text-secondary); }
+
+    /* ─────────────────────────────────────────────
+       SECTION 4A — DUEL HERO (1v1 / Playoff)
+       The hero is the page's centerpiece. Big scores,
+       unmistakable state at a glance.
+       Rationale: user's first question is "am I winning?"
+    ───────────────────────────────────────────── */
+    .hero {
+      border-radius: 24px;
+      padding: 24px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Winning state: indigo glow */
+    .hero--winning {
+      background: rgba(99,102,241,0.07);
+      border: 1px solid rgba(99,102,241,0.28);
+      box-shadow: 0 0 40px rgba(99,102,241,0.06), inset 0 1px 0 rgba(255,255,255,0.04);
+    }
+
+    /* Losing state: red-tinted */
+    .hero--losing {
+      background: rgba(239,68,68,0.06);
+      border: 1px solid rgba(239,68,68,0.2);
+    }
+
+    /* Upcoming state: amber */
+    .hero--upcoming {
+      background: rgba(245,158,11,0.06);
+      border: 1px solid rgba(245,158,11,0.2);
+    }
+
+    /* Subtle diagonal grid texture */
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: repeating-linear-gradient(
+        45deg,
+        transparent,
+        transparent 32px,
+        rgba(255,255,255,0.012) 32px,
+        rgba(255,255,255,0.012) 33px
+      );
+      pointer-events: none;
+    }
+
+    .hero__meta-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 6px;
+      flex-wrap: wrap;
+    }
+
+    .hero__meta-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .hero__period {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .badge {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 2px 8px;
+      border-radius: var(--radius-pill);
+    }
+
+    .badge--playoff { background: rgba(99,102,241,0.18); color: var(--indigo-text); }
+    .badge--upcoming { background: rgba(245,158,11,0.15); color: var(--amber-light); }
+    .badge--vtf { background: rgba(148,163,184,0.12); color: #94a3b8; }
+
+    .hero__live {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .live-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--green);
+      animation: live-pulse 1.8s ease-in-out infinite;
+    }
+
+    @keyframes live-pulse {
+      0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(52,211,153,0.4); }
+      50% { opacity: 0.8; box-shadow: 0 0 0 4px rgba(52,211,153,0); }
+    }
+
+    .hero__series {
+      font-size: 12px;
+      color: var(--text-dim);
+      margin-bottom: 20px;
+    }
+
+    .hero__scores {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .hero__team { }
+
+    .hero__team-name {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    /* Score uses DM Mono for crisp numeric rendering — looks like a scoreboard */
+    .hero__score {
+      font-family: var(--font-mono);
+      font-size: clamp(36px, 7vw, 52px);
+      font-weight: 500;
+      line-height: 1;
+      color: var(--text-primary);
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -0.02em;
+    }
+
+    .hero__score--opp {
+      color: var(--text-dim);
+    }
+
+    .hero__score--dash {
+      color: var(--text-deep);
+    }
+
+    .hero__proj {
+      font-size: 12px;
+      color: var(--text-dim);
+      margin-top: 5px;
+    }
+
+    .hero__divider {
+      text-align: center;
+    }
+
+    .hero__status-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--indigo-text);
+      margin-bottom: 4px;
+    }
+
+    .hero__status-label--losing { color: var(--red-light); }
+    .hero__status-label--tied { color: var(--text-muted); }
+    .hero__status-label--upcoming { color: var(--text-dim); }
+
+    .hero__gap {
+      font-family: var(--font-mono);
+      font-size: 20px;
+      font-weight: 500;
+      color: var(--indigo-light);
+    }
+
+    .hero__gap--losing { color: var(--red-light); }
+
+    /* Win probability bar */
+    .prob-bar-wrap { }
+
+    .prob-bar {
+      height: 5px;
+      border-radius: var(--radius-pill);
+      background: rgba(255,255,255,0.07);
+      overflow: hidden;
+      margin-bottom: 6px;
+    }
+
+    .prob-bar__fill {
+      height: 100%;
+      border-radius: var(--radius-pill);
+      background: var(--indigo);
+      transition: width 0.6s cubic-bezier(.22,1,.36,1);
+    }
+
+    .prob-bar__fill--losing { background: var(--red); }
+
+    .prob-bar__labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .prob-bar__labels span:first-child { color: var(--indigo-light); font-weight: 600; }
+    .prob-bar__labels--losing span:last-child { color: var(--red-light); font-weight: 600; }
+
+    /* Set lineup CTA for upcoming */
+    .hero__cta {
+      margin-top: 4px;
+    }
+
+    .btn-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      font-weight: 700;
+      padding: 10px 20px;
+      border-radius: 12px;
+      text-decoration: none;
+      border: 1px solid var(--amber-border);
+      background: rgba(245,158,11,0.12);
+      color: var(--amber-light);
+      transition: background 0.15s, transform 0.1s;
+      min-height: 44px;
+    }
+
+    .btn-cta:hover { background: rgba(245,158,11,0.2); transform: translateY(-1px); }
+
+    /* ─────────────────────────────────────────────
+       SECTION 4B — FIELD HERO (VTF regular season)
+       Shows weekly rank vs the whole field.
+       Right side collapses to W-L record + standings table.
+    ───────────────────────────────────────────── */
+    .field-standings {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      margin-top: 8px;
+    }
+
+    .field-row {
+      display: grid;
+      grid-template-columns: 20px 1fr auto;
+      gap: 8px;
+      align-items: center;
+      padding: 5px 8px;
+      border-radius: 6px;
+      font-size: 13px;
+    }
+
+    .field-row--me {
+      background: rgba(99,102,241,0.1);
+    }
+
+    .field-row__rank { font-size: 11px; color: var(--text-dim); font-weight: 700; }
+    .field-row__name { color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .field-row--me .field-row__name { color: var(--indigo-text); font-weight: 700; }
+    .field-row__score { font-family: var(--font-mono); font-size: 13px; font-weight: 500; color: var(--text-dim); font-variant-numeric: tabular-nums; }
+    .field-row--me .field-row__score { color: var(--text-primary); }
+
+    .vtf-record {
+      font-family: var(--font-mono);
+      font-size: 28px;
+      font-weight: 500;
+      color: var(--indigo-light);
+      letter-spacing: -0.02em;
+      margin-bottom: 4px;
+    }
+
+    /* ─────────────────────────────────────────────
+       SECTION 5 — STORYLINE CHIP
+       Green accent. Single sentence. Max impact.
+    ───────────────────────────────────────────── */
+    .storyline {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 16px;
+      border-radius: 12px;
+      background: var(--green-dim);
+      border: 1px solid var(--green-border);
+      font-size: 13px;
+      color: var(--green-light);
+    }
+
+    .storyline__icon {
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+
+    .storyline strong { color: var(--green); }
+
+    /* ─────────────────────────────────────────────
+       2-COLUMN GRID (used by multiple sections)
+    ───────────────────────────────────────────── */
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    /* ─────────────────────────────────────────────
+       SECTION 6 — PLAYING TONIGHT
+       Grouped by game. Each game has a header row
+       then players. Gives schedule context at a glance.
+    ───────────────────────────────────────────── */
+    .game-group { margin-bottom: 12px; }
+    .game-group:last-child { margin-bottom: 0; }
+
+    .game-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 4px 0 8px;
+      border-bottom: 1px solid rgba(148,163,184,0.08);
+      margin-bottom: 6px;
+    }
+
+    .game-header__matchup {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-muted);
+      letter-spacing: 0.04em;
+    }
+
+    .game-header__time {
+      font-size: 11px;
+      color: var(--text-dim);
+    }
+
+    .tonight-player {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 10px;
+      border-radius: 8px;
+      background: rgba(99,102,241,0.04);
+      border: 1px solid rgba(99,102,241,0.08);
+      margin-bottom: 4px;
+    }
+
+    .tonight-player__left { display: flex; align-items: center; gap: 8px; }
+
+    .tonight-player__name {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .pos-tag {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 5px;
+      border-radius: 4px;
+    }
+
+    .pos-tag--F { background: rgba(96,165,250,0.15); color: var(--pos-fwd); }
+    .pos-tag--D { background: rgba(52,211,153,0.12); color: var(--pos-def); }
+    .pos-tag--G { background: rgba(245,158,11,0.15); color: var(--pos-goal); }
+
+    .slot-tag {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--text-deep);
+      padding: 2px 5px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.05);
+    }
+
+    .tonight-player__proj {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--indigo-text);
+      font-weight: 500;
+    }
+
+    /* ─────────────────────────────────────────────
+       SECTION 7 — SWING PLAYERS
+       Compact. Shows who can swing the outcome.
+    ───────────────────────────────────────────── */
+    .swing-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 9px 10px;
+      border-radius: 8px;
+      background: rgba(255,255,255,0.02);
+      margin-bottom: 4px;
+    }
+
+    .swing-row__name {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .swing-row__team {
+      font-size: 11px;
+      font-weight: 600;
+      margin-top: 2px;
+    }
+
+    .swing-row__team--mine { color: var(--indigo-light); }
+    .swing-row__team--opp  { color: var(--amber); }
+
+    .swing-row__impact {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--text-muted);
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    /* ─────────────────────────────────────────────
+       SECTION 8 — TOP PERFORMERS / UNDERPERFORMING
+    ───────────────────────────────────────────── */
+    .performer-row {
+      margin-bottom: 12px;
+    }
+
+    .performer-row:last-child { margin-bottom: 0; }
+
+    .performer-row__top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 4px;
+    }
+
+    .performer-row__name-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .performer-row__name {
+      font-size: 14px;
+      color: var(--text-primary);
+    }
+
+    .pos-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .pos-dot--F { background: var(--pos-fwd); }
+    .pos-dot--D { background: var(--pos-def); }
+    .pos-dot--G { background: var(--pos-goal); }
+
+    .performer-row__fp {
+      font-family: var(--font-mono);
+      font-size: 14px;
+      font-weight: 500;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .performer-row__fp--top { color: var(--green); }
+    .performer-row__fp--low { color: var(--red-light); }
+
+    .stat-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 3px;
+    }
+
+    .stat-chip {
+      font-size: 10px;
+      padding: 1px 6px;
+      border-radius: var(--radius-pill);
+    }
+
+    .stat-chip--pos { background: rgba(52,211,153,0.1); color: var(--green); }
+    .stat-chip--neg { background: rgba(248,113,113,0.1); color: var(--red-light); }
+
+    /* ─────────────────────────────────────────────
+       SECTION 9 — LEAGUE LEADERS
+    ───────────────────────────────────────────── */
+    .league-sub-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+    }
+
+    .league-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 10px;
+      border-radius: 8px;
+      margin-bottom: 4px;
+    }
+
+    .league-row--mine {
+      background: rgba(99,102,241,0.08);
+      border-left: 2px solid rgba(99,102,241,0.4);
+    }
+
+    .league-row__rank {
+      width: 16px;
+      font-size: 12px;
+      font-weight: 800;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    .league-row__info { flex: 1; min-width: 0; }
+
+    .league-row__player {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-primary);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .league-row--mine .league-row__player { color: var(--indigo-text); }
+
+    .league-row__team {
+      font-size: 11px;
+      color: var(--text-dim);
+      margin-top: 1px;
+    }
+
+    .league-row__fp {
+      font-family: var(--font-mono);
+      font-size: 14px;
+      font-weight: 500;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .league-row__fp--top { color: var(--green); }
+    .league-row__fp--low { color: var(--red-light); }
+
+    /* ─────────────────────────────────────────────
+       SECTION 10 — ROSTER BREAKDOWN
+       Compact table. Slot badges color-coded by position.
+    ───────────────────────────────────────────── */
+    .roster-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+
+    .roster-col-headers {
+      display: grid;
+      grid-template-columns: 36px 1fr 34px 52px;
+      gap: 8px;
+      padding: 0 0 6px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      color: var(--text-deep);
+      border-bottom: 1px solid rgba(148,163,184,0.08);
+      margin-bottom: 4px;
+    }
+
+    .roster-row {
+      display: grid;
+      grid-template-columns: 36px 1fr 34px 52px;
+      gap: 8px;
+      align-items: center;
+      padding: 9px 0;
+      border-top: 1px solid rgba(148,163,184,0.05);
+    }
+
+    .roster-row:first-child { border-top: none; }
+
+    .slot-badge {
+      font-size: 10px;
+      font-weight: 700;
+      text-align: center;
+      padding: 3px 0;
+      border-radius: 5px;
+      width: 30px;
+    }
+
+    .slot-badge--F  { background: rgba(96,165,250,0.15); color: var(--pos-fwd); }
+    .slot-badge--D  { background: rgba(52,211,153,0.12); color: var(--pos-def); }
+    .slot-badge--G  { background: rgba(245,158,11,0.15); color: var(--pos-goal); }
+    .slot-badge--UTIL { background: rgba(167,139,250,0.15); color: var(--pos-util); }
+    .slot-badge--BN { background: rgba(148,163,184,0.1); color: var(--text-dim); }
+
+    .roster-player__name {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .roster-player__meta {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      margin-top: 1px;
+    }
+
+    .roster-player__team {
+      font-size: 10px;
+      color: var(--text-dim);
+    }
+
+    .games-badge {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 1px 5px;
+      border-radius: 4px;
+    }
+
+    .games-badge--has { background: rgba(99,102,241,0.12); color: var(--indigo-light); }
+    .games-badge--zero { background: rgba(239,68,68,0.12); color: var(--red-light); }
+
+    .fp-cell {
+      text-align: right;
+      font-family: var(--font-mono);
+      font-size: 15px;
+      font-weight: 500;
+      font-variant-numeric: tabular-nums;
+      color: var(--text-primary);
+    }
+
+    .fp-cell--zero { color: var(--text-dim); }
+
+    .games-left-cell {
+      text-align: center;
+    }
+
+    .roster-total {
+      display: grid;
+      grid-template-columns: 36px 1fr 34px 52px;
+      gap: 8px;
+      padding: 10px 0 0;
+      border-top: 1px solid rgba(148,163,184,0.12);
+      margin-top: 2px;
+    }
+
+    .roster-total__label {
+      font-size: 12px;
+      color: var(--text-dim);
+      font-weight: 600;
+      grid-column: 2;
+    }
+
+    .roster-total__fp {
+      text-align: right;
+      font-family: var(--font-mono);
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-primary);
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* ─────────────────────────────────────────────
+       SECTION 11 — RIVAL BADGE
+    ───────────────────────────────────────────── */
+    .rival-header {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .rival-name {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .rival-series {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .h2h-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    .h2h-table th {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--text-deep);
+      text-align: left;
+      padding: 0 0 8px;
+    }
+
+    .h2h-table th:last-child { text-align: right; }
+
+    .h2h-table td {
+      padding: 7px 0;
+      color: var(--text-secondary);
+      border-top: 1px solid rgba(148,163,184,0.06);
+    }
+
+    .h2h-table td:last-child { text-align: right; }
+
+    .h2h-result {
+      font-weight: 700;
+      font-size: 11px;
+      padding: 2px 7px;
+      border-radius: var(--radius-pill);
+    }
+
+    .h2h-result--W { background: rgba(52,211,153,0.12); color: var(--green); }
+    .h2h-result--L { background: rgba(239,68,68,0.1); color: var(--red-light); }
+
+    /* ─────────────────────────────────────────────
+       SECTION 12 — LEAGUE ACTIVITY
+       Minimal. Text-forward. Time stamps are secondary.
+    ───────────────────────────────────────────── */
+    .activity-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+
+    .activity-see-all {
+      font-size: 12px;
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+
+    .activity-see-all:hover { color: var(--indigo-text); }
+
+    .activity-list { list-style: none; }
+
+    .activity-item {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 0;
+      font-size: 13px;
+      border-top: 1px solid rgba(148,163,184,0.06);
+    }
+
+    .activity-item:first-child { border-top: none; }
+
+    .activity-desc { color: var(--text-secondary); line-height: 1.5; }
+    .activity-time { font-size: 11px; color: var(--text-dim); flex-shrink: 0; margin-top: 1px; }
+
+    /* ─────────────────────────────────────────────
+       SECTION DIVIDER (for demo variant sections)
+    ───────────────────────────────────────────── */
+    .demo-section-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--amber);
+      background: rgba(245,158,11,0.08);
+      border: 1px solid rgba(245,158,11,0.2);
+      border-radius: 8px;
+      padding: 6px 12px;
+      text-align: center;
+    }
+
+    /* ─────────────────────────────────────────────
+       DESIGN NOTES (outside app chrome)
+    ───────────────────────────────────────────── */
+    .design-notes {
+      max-width: 1100px;
+      margin: 48px auto 0;
+      padding: 24px;
+      border-top: 1px solid rgba(148,163,184,0.1);
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.7;
+    }
+
+    .design-notes h2 {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-secondary);
+      margin-bottom: 12px;
+    }
+
+    .design-notes h3 {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-dim);
+      margin: 16px 0 6px;
+    }
+
+    .design-notes ul { padding-left: 16px; }
+    .design-notes li { margin-bottom: 4px; }
+
+    /* ─────────────────────────────────────────────
+       RESPONSIVE
+       900px = team nav collapses, hero scores stack,
+       two-column grids collapse, roster scrolls.
+    ───────────────────────────────────────────── */
+    @media (max-width: 900px) {
+      .team-nav__link:not(.is-active):not(:nth-child(-n+4)) { display: none; }
+
+      .hero__scores {
+        grid-template-columns: 1fr;
+        text-align: center;
+        gap: 12px;
+      }
+
+      .hero__divider { display: none; }
+
+      .hero__team { text-align: center; }
+
+      .two-col { grid-template-columns: 1fr; }
+
+      .roster-col-headers,
+      .roster-row,
+      .roster-total { overflow-x: auto; }
+    }
+
+    @media (max-width: 600px) {
+      .container { padding: 12px; gap: 10px; }
+
+      .site-header__inner { padding: 0 12px; }
+
+      .hero { padding: 16px; }
+
+      .hero__score { font-size: clamp(28px, 10vw, 40px); }
+
+      .card { padding: 16px; }
+
+      .team-nav { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ═══════════════════════════════════════════
+       STICKY HEADER
+       Shield logo + PWHL GM wordmark + franchise nav.
+       Rationale: nav is team-scoped, not league-scoped.
+       "League ↗" is an escape hatch to communal views.
+  ═══════════════════════════════════════════ -->
+  <header class="site-header">
+    <div class="site-header__inner">
+      <!-- Logo -->
+      <a href="#" class="logo">
+        <svg class="logo__shield" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="sg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#6366f1"/>
+              <stop offset="100%" stop-color="#4f46e5"/>
+            </linearGradient>
+          </defs>
+          <path d="M14 1.5L5.5 5.5V13C5.5 20 14 25.5 14 25.5C14 25.5 22.5 20 22.5 13V5.5L14 1.5Z"
+            fill="url(#sg)" stroke="rgba(99,102,241,0.4)" stroke-width="0.75"/>
+          <!-- Geometric ice-cut detail -->
+          <path d="M9 12L11.5 9.5L14 12L16.5 9.5L19 12" stroke="rgba(255,255,255,0.35)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          <path d="M11 15.5L14 17.5L17 15.5" stroke="rgba(255,255,255,0.25)" stroke-width="1" stroke-linecap="round" fill="none"/>
+        </svg>
+        <span class="logo__wordmark">PWHL GM</span>
+      </a>
+
+      <!-- Franchise nav tabs -->
+      <nav class="team-nav" aria-label="Franchise navigation">
+        <a href="#" class="team-nav__link is-active">Matchup</a>
+        <a href="#" class="team-nav__link">Lineup</a>
+        <a href="#" class="team-nav__link">Roster</a>
+        <a href="#" class="team-nav__link">Schedule</a>
+        <a href="#" class="team-nav__link">Standings</a>
+        <a href="#" class="team-nav__league">League ↗</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- ═══════════════════════════════════════════
+       MAIN CONTENT — ACTIVE WEEK STATE (Primary view)
+       This is what a manager sees mid-week, currently
+       winning a playoff matchup.
+  ═══════════════════════════════════════════ -->
+  <main class="container" aria-label="My Matchup — Active week">
+
+    <!-- ── SECTION 0: Last week recap ─────────────
+         Positioned first because users want to know
+         "how did I do last week" before engaging with
+         the current week. Keeps it compact — just enough
+         to reward or contextualize without distraction.
+    ──────────────────────────────────────────── -->
+    <div class="recap" role="status" aria-label="Last week result">
+      <span class="recap__badge">Win · Wk 6</span>
+      <span class="recap__score">48.2 pts</span>
+      <span class="recap__meta">#2 of 8 this week</span>
+      <span class="recap__meta">Lacasse led with 14.2 pts</span>
+      <span class="recap__note" style="margin-left: auto;">You had the league-high score this week</span>
+    </div>
+
+    <!-- ── SECTION 1: Lineup alert ─────────────────
+         Red. Urgent. Compact. Actionable.
+         Only appears when active starters have 0 scheduled
+         games left in the period — a real money mistake.
+    ──────────────────────────────────────────── -->
+    <div class="alert-strip" role="alert">
+      <div class="alert-strip__body">
+        <span class="alert-strip__dot"></span>
+        <span class="alert-strip__label">Lineup action needed</span>
+        <span class="alert-strip__desc">— Rattray, J. and Carpenter have no games remaining this period</span>
+      </div>
+      <a href="#" class="pill-link pill-link--red">Fix lineup</a>
+    </div>
+
+    <!-- ── SECTION 3: Tabs ─────────────────────────
+         Two tabs: Matchup (default, shown here) and
+         Analysis (player trends, FA upgrades, position
+         group breakdowns). Thin underline signals active.
+    ──────────────────────────────────────────── -->
+    <div>
+      <div class="tabs" role="tablist">
+        <button class="tab-btn is-active" role="tab" aria-selected="true">Matchup</button>
+        <button class="tab-btn" role="tab" aria-selected="false">Analysis</button>
+      </div>
+    </div>
+
+    <!-- ── SECTION 4A: DuelHero (1v1 Playoff) ──────
+         The primary hero for playoff / 1v1 matchups.
+         Three-column layout: my score | status | opponent.
+         Win probability bar lives below the score grid.
+         Rationale: score first, context second, probability last.
+         The "WINNING +7.6" center column is the instant answer
+         to "am I ahead?" — visible without reading full scores.
+    ──────────────────────────────────────────── -->
+    <div class="hero hero--winning" role="region" aria-label="Current matchup — Semifinal">
+      <!-- Top row: period label + badges + live indicator -->
+      <div class="hero__meta-row">
+        <div class="hero__meta-left">
+          <span class="hero__period">Semifinal · Nov 18 – Nov 24</span>
+          <span class="badge badge--playoff">Playoff</span>
+          <a href="#" style="font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: var(--radius-pill); background: rgba(99,102,241,0.1); color: #818cf8; border: 1px solid rgba(99,102,241,0.2); text-decoration: none;">View bracket</a>
+        </div>
+        <!-- Live pulse: signals scores are live-updating -->
+        <div class="hero__live">
+          <span class="live-dot"></span>
+          <span>updated 45s ago</span>
+        </div>
+      </div>
+
+      <!-- Series context: gives matchup history at a glance -->
+      <div class="hero__series">Season series vs Montreal Royals: <strong style="color: #94a3b8;">2–1</strong></div>
+
+      <!-- Score grid: my team | gap divider | opponent -->
+      <div class="hero__scores">
+        <div class="hero__team">
+          <div class="hero__team-name">Toronto Pioneers</div>
+          <div class="hero__score">52.4</div>
+          <div class="hero__proj">proj 58.1</div>
+        </div>
+
+        <div class="hero__divider">
+          <div class="hero__status-label">Winning</div>
+          <div class="hero__gap">+7.6</div>
+        </div>
+
+        <div class="hero__team">
+          <div class="hero__team-name">Montreal Royals</div>
+          <div class="hero__score hero__score--opp">44.8</div>
+          <div class="hero__proj">proj 46.2</div>
+        </div>
+      </div>
+
+      <!-- Win probability bar: single continuous fill -->
+      <div class="prob-bar-wrap">
+        <div class="prob-bar">
+          <div class="prob-bar__fill" style="width: 68%;"></div>
+        </div>
+        <div class="prob-bar__labels">
+          <span>Toronto Pioneers 68%</span>
+          <span>32% Montreal Royals</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── SECTION 5: Storyline chip ──────────────
+         Green accent chip. Max 1 line. Celebrates the
+         week's narrative without burying it in a table.
+    ──────────────────────────────────────────── -->
+    <div class="storyline">
+      <span class="storyline__icon">&#x1F525;</span>
+      <span><strong>Lacasse</strong> is leading your team with <strong>14.2 pts</strong> this week</span>
+    </div>
+
+    <!-- ── SECTION 6: Playing Tonight ─────────────
+         Grouped by game so managers see the schedule context.
+         Projected points help decide last-minute swaps.
+         Only shown during ACTIVE periods.
+    ──────────────────────────────────────────── -->
+    <div class="card">
+      <h2 class="card-title">Playing tonight</h2>
+
+      <!-- Game group 1 -->
+      <div class="game-group">
+        <div class="game-header">
+          <span class="game-header__matchup">BOS @ MTL</span>
+          <span class="game-header__time">7:00 PM ET</span>
+        </div>
+        <div class="tonight-player">
+          <div class="tonight-player__left">
+            <span class="tonight-player__name">Lacasse, A.</span>
+            <span class="pos-tag pos-tag--F">F</span>
+            <span class="slot-tag">F</span>
+          </div>
+          <span class="tonight-player__proj">8.4 proj</span>
+        </div>
+        <div class="tonight-player">
+          <div class="tonight-player__left">
+            <span class="tonight-player__name">Harvey-Pinard, R.</span>
+            <span class="pos-tag pos-tag--F">F</span>
+            <span class="slot-tag">UTIL</span>
+          </div>
+          <span class="tonight-player__proj">5.1 proj</span>
+        </div>
+      </div>
+
+      <!-- Game group 2 -->
+      <div class="game-group">
+        <div class="game-header">
+          <span class="game-header__matchup">OTT @ TOR</span>
+          <span class="game-header__time">7:30 PM ET</span>
+        </div>
+        <div class="tonight-player">
+          <div class="tonight-player__left">
+            <span class="tonight-player__name">Gosselin, E.</span>
+            <span class="pos-tag pos-tag--D">D</span>
+            <span class="slot-tag">D</span>
+          </div>
+          <span class="tonight-player__proj">4.8 proj</span>
+        </div>
+        <div class="tonight-player">
+          <div class="tonight-player__left">
+            <span class="tonight-player__name">Carpenter, A.</span>
+            <span class="pos-tag pos-tag--G">G</span>
+            <span class="slot-tag">G</span>
+          </div>
+          <span class="tonight-player__proj">6.2 proj</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── SECTION 7: Swing players ───────────────
+         Shown ONLY in 1v1 (playoff) active matchups.
+         These are players whose remaining games could
+         flip the result either way — highest leverage action.
+    ──────────────────────────────────────────── -->
+    <div class="card">
+      <h2 class="card-title">Swing players</h2>
+      <div class="swing-row">
+        <div>
+          <div class="swing-row__name">Bettez, G.</div>
+          <div class="swing-row__team swing-row__team--mine">Your player</div>
+        </div>
+        <div class="swing-row__impact">4.2 pts · 2G left</div>
+      </div>
+      <div class="swing-row">
+        <div>
+          <div class="swing-row__name">Knight, E.</div>
+          <div class="swing-row__team swing-row__team--opp">Opponent</div>
+        </div>
+        <div class="swing-row__impact">3.8 pts · 1G left</div>
+      </div>
+      <div class="swing-row">
+        <div>
+          <div class="swing-row__name">Sloan, M.</div>
+          <div class="swing-row__team swing-row__team--opp">Opponent</div>
+        </div>
+        <div class="swing-row__impact">2.9 pts · 2G left</div>
+      </div>
+    </div>
+
+    <!-- ── SECTION 8: Top performers / Underperforming
+         Side-by-side. Green vs red. Fast answer to
+         "who helped me" and "who let me down."
+    ──────────────────────────────────────────── -->
+    <div class="two-col">
+      <div class="card">
+        <h2 class="card-title">Top performers</h2>
+        <div class="performer-row">
+          <div class="performer-row__top">
+            <div class="performer-row__name-group">
+              <span class="pos-dot pos-dot--F"></span>
+              <span class="performer-row__name">Lacasse, A.</span>
+            </div>
+            <span class="performer-row__fp performer-row__fp--top">14.2</span>
+          </div>
+          <div class="stat-chips">
+            <span class="stat-chip stat-chip--pos">G ×2</span>
+            <span class="stat-chip stat-chip--pos">A</span>
+            <span class="stat-chip stat-chip--pos">PPP</span>
+          </div>
+        </div>
+        <div class="performer-row">
+          <div class="performer-row__top">
+            <div class="performer-row__name-group">
+              <span class="pos-dot pos-dot--D"></span>
+              <span class="performer-row__name">Gosselin, E.</span>
+            </div>
+            <span class="performer-row__fp performer-row__fp--top">9.6</span>
+          </div>
+          <div class="stat-chips">
+            <span class="stat-chip stat-chip--pos">A ×2</span>
+            <span class="stat-chip stat-chip--pos">PPP</span>
+            <span class="stat-chip stat-chip--pos">BLK ×3</span>
+          </div>
+        </div>
+        <div class="performer-row">
+          <div class="performer-row__top">
+            <div class="performer-row__name-group">
+              <span class="pos-dot pos-dot--G"></span>
+              <span class="performer-row__name">Carpenter, A.</span>
+            </div>
+            <span class="performer-row__fp performer-row__fp--top">8.5</span>
+          </div>
+          <div class="stat-chips">
+            <span class="stat-chip stat-chip--pos">W</span>
+            <span class="stat-chip stat-chip--pos">SO</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2 class="card-title">Underperforming</h2>
+        <div class="performer-row">
+          <div class="performer-row__top">
+            <div class="performer-row__name-group">
+              <span class="pos-dot pos-dot--F"></span>
+              <span class="performer-row__name">Rattray, J.</span>
+            </div>
+            <span class="performer-row__fp performer-row__fp--low">0.0</span>
+          </div>
+          <div class="stat-chips">
+            <span class="stat-chip stat-chip--neg">0 games</span>
+          </div>
+        </div>
+        <div class="performer-row">
+          <div class="performer-row__top">
+            <div class="performer-row__name-group">
+              <span class="pos-dot pos-dot--F"></span>
+              <span class="performer-row__name">Harvey-Pinard, R.</span>
+            </div>
+            <span class="performer-row__fp performer-row__fp--low">1.5</span>
+          </div>
+          <div class="stat-chips">
+            <span class="stat-chip stat-chip--neg">A</span>
+          </div>
+        </div>
+        <div class="performer-row">
+          <div class="performer-row__top">
+            <div class="performer-row__name-group">
+              <span class="pos-dot pos-dot--F"></span>
+              <span class="performer-row__name">Barron, M.</span>
+            </div>
+            <span class="performer-row__fp performer-row__fp--low">2.0</span>
+          </div>
+          <div class="stat-chips">
+            <span class="stat-chip stat-chip--neg">A</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── SECTION 9: League leaders ──────────────
+         Shows who's hot across the whole league.
+         My player gets indigo highlight so I can
+         spot my contribution instantly.
+    ──────────────────────────────────────────── -->
+    <div class="card">
+      <h2 class="card-title">League leaders · Week 7</h2>
+      <div class="two-col">
+        <div>
+          <div class="league-sub-label">Scoring leaders</div>
+          <div class="league-row">
+            <span class="league-row__rank" style="color:#f59e0b;">1</span>
+            <div class="league-row__info">
+              <div class="league-row__player">Lacasse, A.</div>
+              <div class="league-row__team">Toronto Pioneers</div>
+            </div>
+            <span class="league-row__fp league-row__fp--top">14.2</span>
+          </div>
+          <div class="league-row league-row--mine">
+            <span class="league-row__rank" style="color:#94a3b8;">2</span>
+            <div class="league-row__info">
+              <div class="league-row__player">Gosselin, E.</div>
+              <div class="league-row__team">Toronto Pioneers · <span style="color:#6366f1; font-weight:700;">YOU</span></div>
+            </div>
+            <span class="league-row__fp league-row__fp--top">9.6</span>
+          </div>
+          <div class="league-row">
+            <span class="league-row__rank" style="color:#475569;">3</span>
+            <div class="league-row__info">
+              <div class="league-row__player">Fassi, A-R.</div>
+              <div class="league-row__team">Montreal Royals</div>
+            </div>
+            <span class="league-row__fp league-row__fp--top">9.0</span>
+          </div>
+          <div class="league-row">
+            <span class="league-row__rank" style="color:#475569;">4</span>
+            <div class="league-row__info">
+              <div class="league-row__player">Knight, E.</div>
+              <div class="league-row__team">Ottawa Surge</div>
+            </div>
+            <span class="league-row__fp league-row__fp--top">8.8</span>
+          </div>
+          <div class="league-row">
+            <span class="league-row__rank" style="color:#475569;">5</span>
+            <div class="league-row__info">
+              <div class="league-row__player">Bettez, G.</div>
+              <div class="league-row__team">Boston Fleet</div>
+            </div>
+            <span class="league-row__fp league-row__fp--top">7.9</span>
+          </div>
+        </div>
+
+        <div>
+          <div class="league-sub-label">Underperforming</div>
+          <div class="league-row league-row--mine">
+            <span class="league-row__rank" style="color:#475569;">1</span>
+            <div class="league-row__info">
+              <div class="league-row__player">Rattray, J.</div>
+              <div class="league-row__team">Toronto Pioneers · <span style="color:#6366f1; font-weight:700;">YOU</span></div>
+            </div>
+            <span class="league-row__fp league-row__fp--low">0.0</span>
+          </div>
+          <div class="league-row">
+            <span class="league-row__rank" style="color:#475569;">2</span>
+            <div class="league-row__info">
+              <div class="league-row__player">Sloan, M.</div>
+              <div class="league-row__team">Montreal Royals</div>
+            </div>
+            <span class="league-row__fp league-row__fp--low">0.5</span>
+          </div>
+          <div class="league-row">
+            <span class="league-row__rank" style="color:#475569;">3</span>
+            <div class="league-row__info">
+              <div class="league-row__player">Harvey-Pinard, R.</div>
+              <div class="league-row__team">Calgary Charge</div>
+            </div>
+            <span class="league-row__fp league-row__fp--low">1.5</span>
+          </div>
+          <div class="league-row">
+            <span class="league-row__rank" style="color:#475569;">4</span>
+            <div class="league-row__info">
+              <div class="league-row__player">Barron, M.</div>
+              <div class="league-row__team">Winnipeg Frost</div>
+            </div>
+            <span class="league-row__fp league-row__fp--low">2.0</span>
+          </div>
+          <div class="league-row">
+            <span class="league-row__rank" style="color:#475569;">5</span>
+            <div class="league-row__info">
+              <div class="league-row__player">Stacey, M.</div>
+              <div class="league-row__team">Minnesota Freeze</div>
+            </div>
+            <span class="league-row__fp league-row__fp--low">2.2</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── SECTION 10: Roster breakdown ───────────
+         Full roster for both teams. Compact table with
+         slot badges, stat chips, and games-remaining
+         badges. My team has full detail; opponent is
+         leaner (no stat chips, no games badge).
+         Edit lineup link is prominent but not intrusive.
+    ──────────────────────────────────────────── -->
+    <div class="two-col">
+      <!-- My team roster -->
+      <div class="card">
+        <div class="roster-header">
+          <h2 class="card-title" style="margin-bottom:0;">Toronto Pioneers</h2>
+          <a href="#" class="pill-link pill-link--indigo" style="font-size:11px; padding: 5px 11px;">Edit lineup</a>
+        </div>
+
+        <div class="roster-col-headers">
+          <span>Slot</span><span>Player</span><span style="text-align:center;">Left</span><span style="text-align:right;">FPts</span>
+        </div>
+
+        <!-- Active: Forwards -->
+        <div class="roster-row">
+          <span class="slot-badge slot-badge--F">F</span>
+          <div>
+            <div class="roster-player__name">Lacasse, A.</div>
+            <div class="roster-player__meta">
+              <span class="roster-player__team">BOS · F</span>
+              <span class="games-badge games-badge--has">1G</span>
+            </div>
+            <div class="stat-chips" style="margin-top: 3px;">
+              <span class="stat-chip stat-chip--pos">G ×2</span>
+              <span class="stat-chip stat-chip--pos">A</span>
+            </div>
+          </div>
+          <div class="games-left-cell"><span class="games-badge games-badge--has">2G</span></div>
+          <div class="fp-cell">14.2</div>
+        </div>
+
+        <div class="roster-row">
+          <span class="slot-badge slot-badge--F">F</span>
+          <div>
+            <div class="roster-player__name">Harvey-Pinard, R.</div>
+            <div class="roster-player__meta">
+              <span class="roster-player__team">MTL · F</span>
+            </div>
+          </div>
+          <div class="games-left-cell"><span class="games-badge games-badge--has">1G</span></div>
+          <div class="fp-cell fp-cell--zero">1.5</div>
+        </div>
+
+        <div class="roster-row">
+          <span class="slot-badge slot-badge--F">F</span>
+          <div>
+            <div class="roster-player__name">Rattray, J.</div>
+            <div class="roster-player__meta">
+              <span class="roster-player__team">MIN · F</span>
+              <span class="games-badge games-badge--zero">0</span>
+            </div>
+          </div>
+          <div class="games-left-cell"><span class="games-badge games-badge--zero">0</span></div>
+          <div class="fp-cell fp-cell--zero">—</div>
+        </div>
+
+        <div class="roster-row">
+          <span class="slot-badge slot-badge--D">D</span>
+          <div>
+            <div class="roster-player__name">Gosselin, E.</div>
+            <div class="roster-player__meta"><span class="roster-player__team">TOR · D</span></div>
+            <div class="stat-chips" style="margin-top: 3px;">
+              <span class="stat-chip stat-chip--pos">A ×2</span>
+              <span class="stat-chip stat-chip--pos">PPP</span>
+            </div>
+          </div>
+          <div class="games-left-cell"><span class="games-badge games-badge--has">2G</span></div>
+          <div class="fp-cell">9.6</div>
+        </div>
+
+        <div class="roster-row">
+          <span class="slot-badge slot-badge--D">D</span>
+          <div>
+            <div class="roster-player__name">Barron, M.</div>
+            <div class="roster-player__meta"><span class="roster-player__team">WPG · D</span></div>
+          </div>
+          <div class="games-left-cell"><span class="games-badge games-badge--has">1G</span></div>
+          <div class="fp-cell fp-cell--zero">2.0</div>
+        </div>
+
+        <div class="roster-row">
+          <span class="slot-badge slot-badge--G">G</span>
+          <div>
+            <div class="roster-player__name">Carpenter, A.</div>
+            <div class="roster-player__meta"><span class="roster-player__team">OTT · G</span></div>
+            <div class="stat-chips" style="margin-top: 3px;">
+              <span class="stat-chip stat-chip--pos">W</span>
+              <span class="stat-chip stat-chip--pos">SO</span>
+            </div>
+          </div>
+          <div class="games-left-cell"><span class="games-badge games-badge--has">1G</span></div>
+          <div class="fp-cell">8.5</div>
+        </div>
+
+        <div class="roster-row">
+          <span class="slot-badge slot-badge--UTIL">UTIL</span>
+          <div>
+            <div class="roster-player__name">Bettez, G.</div>
+            <div class="roster-player__meta"><span class="roster-player__team">BOS · F</span></div>
+          </div>
+          <div class="games-left-cell"><span class="games-badge games-badge--has">2G</span></div>
+          <div class="fp-cell">4.9</div>
+        </div>
+
+        <div class="roster-total">
+          <span></span>
+          <span class="roster-total__label">Total</span>
+          <span></span>
+          <span class="roster-total__fp">40.7</span>
+        </div>
+      </div>
+
+      <!-- Opponent roster -->
+      <div class="card">
+        <div class="roster-header">
+          <h2 class="card-title" style="margin-bottom:0;">Montreal Royals</h2>
+        </div>
+
+        <div class="roster-col-headers">
+          <span>Slot</span><span>Player</span><span style="text-align:center;"></span><span style="text-align:right;">FPts</span>
+        </div>
+
+        <div class="roster-row">
+          <span class="slot-badge slot-badge--F">F</span>
+          <div><div class="roster-player__name">Knight, E.</div><div class="roster-player__meta"><span class="roster-player__team">OTT · F</span></div></div>
+          <div></div>
+          <div class="fp-cell">8.8</div>
+        </div>
+        <div class="roster-row">
+          <span class="slot-badge slot-badge--F">F</span>
+          <div><div class="roster-player__name">Nurse, S.</div><div class="roster-player__meta"><span class="roster-player__team">MTL · F</span></div></div>
+          <div></div>
+          <div class="fp-cell">6.2</div>
+        </div>
+        <div class="roster-row">
+          <span class="slot-badge slot-badge--F">F</span>
+          <div><div class="roster-player__name">Jenner, B.</div><div class="roster-player__meta"><span class="roster-player__team">TOR · F</span></div></div>
+          <div></div>
+          <div class="fp-cell">5.5</div>
+        </div>
+        <div class="roster-row">
+          <span class="slot-badge slot-badge--D">D</span>
+          <div><div class="roster-player__name">Sloan, M.</div><div class="roster-player__meta"><span class="roster-player__team">MTL · D</span></div></div>
+          <div></div>
+          <div class="fp-cell fp-cell--zero">0.5</div>
+        </div>
+        <div class="roster-row">
+          <span class="slot-badge slot-badge--D">D</span>
+          <div><div class="roster-player__name">Poulin, M-P.</div><div class="roster-player__meta"><span class="roster-player__team">BOS · D</span></div></div>
+          <div></div>
+          <div class="fp-cell">5.8</div>
+        </div>
+        <div class="roster-row">
+          <span class="slot-badge slot-badge--G">G</span>
+          <div><div class="roster-player__name">Fassi, A-R.</div><div class="roster-player__meta"><span class="roster-player__team">MTL · G</span></div></div>
+          <div></div>
+          <div class="fp-cell">9.0</div>
+        </div>
+        <div class="roster-row">
+          <span class="slot-badge slot-badge--UTIL">UTIL</span>
+          <div><div class="roster-player__name">Rule, B.</div><div class="roster-player__meta"><span class="roster-player__team">MIN · D</span></div></div>
+          <div></div>
+          <div class="fp-cell">4.6</div>
+        </div>
+
+        <div class="roster-total">
+          <span></span>
+          <span class="roster-total__label">Total</span>
+          <span></span>
+          <span class="roster-total__fp">40.4</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── SECTION 11: Rival badge ─────────────────
+         Compact card. H2H history gives this matchup
+         emotional context — it's not just a score,
+         it's a rivalry.
+    ──────────────────────────────────────────── -->
+    <div class="card">
+      <div class="rival-header">
+        <span style="font-size:11px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--text-muted);">Your rival</span>
+        <span class="rival-name">Montreal Royals</span>
+        <span class="rival-series">· Season series 2–1</span>
+      </div>
+      <table class="h2h-table">
+        <thead>
+          <tr>
+            <th>Week</th>
+            <th>Result</th>
+            <th>Your score</th>
+            <th>Theirs</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Wk 7 (current)</td>
+            <td><span class="h2h-result h2h-result--W">W</span></td>
+            <td>52.4</td>
+            <td>44.8</td>
+          </tr>
+          <tr>
+            <td>Wk 4</td>
+            <td><span class="h2h-result h2h-result--W">W</span></td>
+            <td>61.3</td>
+            <td>54.7</td>
+          </tr>
+          <tr>
+            <td>Wk 2</td>
+            <td><span class="h2h-result h2h-result--L">L</span></td>
+            <td>38.9</td>
+            <td>47.2</td>
+          </tr>
+          <tr>
+            <td>Wk 6 (last season)</td>
+            <td><span class="h2h-result h2h-result--W">W</span></td>
+            <td>55.0</td>
+            <td>49.1</td>
+          </tr>
+          <tr>
+            <td>Wk 3 (last season)</td>
+            <td><span class="h2h-result h2h-result--L">L</span></td>
+            <td>42.1</td>
+            <td>60.3</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ── SECTION 12: League activity ────────────
+         Chronological. Text-forward. This is background
+         context, not primary action — positioned last.
+    ──────────────────────────────────────────── -->
+    <div class="card">
+      <div class="activity-header">
+        <h2 class="card-title" style="margin-bottom:0;">League activity</h2>
+        <a href="#" class="activity-see-all">See all</a>
+      </div>
+      <ul class="activity-list">
+        <li class="activity-item">
+          <span class="activity-desc">Ottawa Surge added Nurse, S. from waivers</span>
+          <span class="activity-time">2h ago</span>
+        </li>
+        <li class="activity-item">
+          <span class="activity-desc">Calgary Charge scored 58.1 pts — league-high this week</span>
+          <span class="activity-time">4h ago</span>
+        </li>
+        <li class="activity-item">
+          <span class="activity-desc">Commissioner: "Great Semifinal matchups this week — should be a tight finish."</span>
+          <span class="activity-time">1d ago</span>
+        </li>
+        <li class="activity-item">
+          <span class="activity-desc">Boston Fleet clinched playoff spot — eliminated Winnipeg Frost</span>
+          <span class="activity-time">2d ago</span>
+        </li>
+        <li class="activity-item">
+          <span class="activity-desc">Toronto Pioneers set lineup for Week 7 Semifinal</span>
+          <span class="activity-time">3d ago</span>
+        </li>
+      </ul>
+    </div>
+
+    <!-- ═══════════════════════════════════════════
+         VARIANT A: REGULAR SEASON FIELD HERO (VTF)
+         Shown here as a demo variant.
+         In production, only one hero variant renders.
+    ═══════════════════════════════════════════ -->
+    <div class="demo-section-label">VARIANT — Regular season field mode (VTF hero, active week)</div>
+
+    <!-- 4B: FieldHero — vs-the-field scoring -->
+    <div class="hero hero--winning" role="region" aria-label="Current matchup — VTF regular season">
+      <div class="hero__meta-row">
+        <div class="hero__meta-left">
+          <span class="hero__period">Week 5 · Nov 4 – Nov 10</span>
+          <span class="badge badge--vtf">vs Field</span>
+        </div>
+        <div class="hero__live">
+          <span class="live-dot"></span>
+          <span>updated 2m ago</span>
+        </div>
+      </div>
+
+      <!-- VTF: left score + right W-L record instead of opponent score -->
+      <div class="hero__scores" style="grid-template-columns: 1fr 1fr; gap: 24px;">
+        <div class="hero__team">
+          <div class="hero__team-name">Toronto Pioneers</div>
+          <div class="hero__score">44.3</div>
+          <div class="hero__proj">proj 52.0</div>
+        </div>
+        <div class="hero__team" style="text-align: right;">
+          <div class="hero__team-name" style="text-align:right;">vs field</div>
+          <div class="vtf-record">4–2</div>
+          <div class="hero__proj">#3 of 8 this week</div>
+        </div>
+      </div>
+
+      <!-- Field standings mini-table -->
+      <div style="margin-top: 16px;">
+        <div style="font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px;">This week's standings</div>
+        <div class="field-standings">
+          <div class="field-row">
+            <span class="field-row__rank">1</span>
+            <span class="field-row__name">Calgary Charge</span>
+            <span class="field-row__score">58.1</span>
+          </div>
+          <div class="field-row">
+            <span class="field-row__rank">2</span>
+            <span class="field-row__name">Boston Fleet</span>
+            <span class="field-row__score">50.4</span>
+          </div>
+          <div class="field-row field-row--me">
+            <span class="field-row__rank">3</span>
+            <span class="field-row__name">Toronto Pioneers <span style="font-size:10px; color:#6366f1; font-weight:700;">YOU</span></span>
+            <span class="field-row__score">44.3</span>
+          </div>
+          <div class="field-row">
+            <span class="field-row__rank">4</span>
+            <span class="field-row__name">Montreal Royals</span>
+            <span class="field-row__score">41.9</span>
+          </div>
+          <div class="field-row">
+            <span class="field-row__rank">5</span>
+            <span class="field-row__name">Ottawa Surge</span>
+            <span class="field-row__score">39.2</span>
+          </div>
+          <div class="field-row">
+            <span class="field-row__rank">6</span>
+            <span class="field-row__name">Minnesota Freeze</span>
+            <span class="field-row__score">36.8</span>
+          </div>
+          <div class="field-row">
+            <span class="field-row__rank">7</span>
+            <span class="field-row__name">Winnipeg Frost</span>
+            <span class="field-row__score">34.1</span>
+          </div>
+          <div class="field-row">
+            <span class="field-row__rank">8</span>
+            <span class="field-row__name">Detroit Storm</span>
+            <span class="field-row__score">29.5</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════
+         VARIANT B: UPCOMING WEEK STATE
+         What a manager sees between scoring periods.
+         No live scores. Lineup nudge + upcoming hero.
+    ═══════════════════════════════════════════ -->
+    <div class="demo-section-label">VARIANT — Upcoming week state (between scoring periods)</div>
+
+    <!-- Between-weeks lineup nudge -->
+    <div class="alert-strip alert-strip--amber" role="status">
+      <div class="alert-strip__body">
+        <span class="alert-strip__dot" style="background: var(--amber-light);"></span>
+        <span class="alert-strip__label" style="color: var(--amber-light);">Week 8 is coming up</span>
+        <span class="alert-strip__desc">— set your lineup before games begin</span>
+      </div>
+      <a href="#" class="pill-link pill-link--amber">Set lineup</a>
+    </div>
+
+    <!-- Upcoming DuelHero: scores are dashes, CTA is prominent -->
+    <div class="hero hero--upcoming" role="region" aria-label="Next matchup — upcoming">
+      <div class="hero__meta-row">
+        <div class="hero__meta-left">
+          <span class="hero__period">Final · Nov 25 – Dec 1</span>
+          <span class="badge badge--playoff">Playoff</span>
+          <span class="badge badge--upcoming">Upcoming</span>
+        </div>
+      </div>
+      <div class="hero__series">Season series vs Calgary Charge: <strong style="color:#94a3b8;">1–1</strong></div>
+
+      <div class="hero__scores">
+        <div class="hero__team">
+          <div class="hero__team-name">Toronto Pioneers</div>
+          <!-- Em-dash for upcoming scores: no data yet -->
+          <div class="hero__score hero__score--dash">—</div>
+          <div class="hero__proj">proj 54.3</div>
+        </div>
+        <div class="hero__divider">
+          <div class="hero__status-label hero__status-label--upcoming">vs</div>
+        </div>
+        <div class="hero__team" style="text-align:right;">
+          <div class="hero__team-name" style="text-align:right;">Calgary Charge</div>
+          <div class="hero__score hero__score--dash" style="text-align:right;">—</div>
+          <div class="hero__proj" style="text-align:right;">proj 49.8</div>
+        </div>
+      </div>
+
+      <div class="hero__cta">
+        <a href="#" class="btn-cta">Set lineup for the Final</a>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ═══════════════════════════════════════════
+       DESIGN NOTES LEGEND (outside app chrome)
+       Explains decisions for developers & designers.
+  ═══════════════════════════════════════════ -->
+  <section class="design-notes" aria-label="Design notes">
+    <h2>Design Notes — My Matchup v2</h2>
+
+    <h3>Breakpoints</h3>
+    <ul>
+      <li><strong>&gt;900px (desktop):</strong> Two-column grids for top performers, roster breakdown, league leaders. Hero scores in three-column layout. Full nav visible.</li>
+      <li><strong>600–900px (tablet):</strong> Two-column grids collapse to single column. Hero scores stack vertically. Nav compresses to show only first 4 tabs.</li>
+      <li><strong>&lt;600px (mobile):</strong> Full single column. Hero font size clamps down. Nav is hidden (relies on mobile bottom nav from league layout). Cards have reduced padding (16px). Roster tables scroll horizontally.</li>
+    </ul>
+
+    <h3>State variants shown in this mockup</h3>
+    <ul>
+      <li><strong>Active week / DuelHero:</strong> The primary state — playoff 1v1, currently winning. Shows: recap, alert, hero with live pulse, storyline, playing tonight, swing players, performers, league leaders, roster tables, rival H2H, activity.</li>
+      <li><strong>VTF FieldHero (Variant A):</strong> Regular season mode. Score on the left; W-L record vs field on the right; full 8-team standings table below scores. No opponent roster card shown (VTF has no single opponent).</li>
+      <li><strong>Upcoming week (Variant B):</strong> Between scoring periods. Amber nudge strip shown. Hero uses em-dashes for scores. Win probability bar hidden. CTA button replaces live score context.</li>
+    </ul>
+
+    <h3>Visual decisions</h3>
+    <ul>
+      <li><strong>DM Mono for scores:</strong> Monospaced numeric font prevents score width jumping as digits change during live updates. Tabular-nums fallback for body text.</li>
+      <li><strong>Syne for wordmark only:</strong> High-weight geometric sans creates authority without competing with data-dense content.</li>
+      <li><strong>No emoji in section headers:</strong> Per brand brief — professional sports management aesthetic, not arcade fantasy. Emoji retained only in the storyline chip and recap strip where personality is intentional.</li>
+      <li><strong>Slot badge color system:</strong> F=blue / D=green / G=amber / UTIL=purple / BN=muted. Consistent with lineup page and draft room so managers develop muscle memory across the app.</li>
+      <li><strong>Games-remaining badge:</strong> Red "0" is urgent; indigo "NG" is informational. Only shown on MY team's roster (opponent games badge is irrelevant to the manager's decision-making).</li>
+      <li><strong>Stat breakdown chips:</strong> Only shown on my team's active players in the roster table. Compact pills communicate what happened without a full stat table. Opponent chips omitted — focus stays on my team's performance.</li>
+      <li><strong>Subtle diagonal grid texture in hero:</strong> Evokes scoreboards and arena jumbotrons without being literal. Very low opacity so it doesn't compete with numeric content.</li>
+      <li><strong>44px minimum touch targets:</strong> All pill-links, tab buttons, and nav links meet this threshold for mobile usability.</li>
+    </ul>
+
+    <h3>Missing from this mockup (in-code features not shown)</h3>
+    <ul>
+      <li>Champion card (gold-tinted, shown only when playoffStatus=COMPLETE and I won)</li>
+      <li>Eliminated card (shown when I lost in playoffs and no more matchups)</li>
+      <li>Playoff-pending card (between playoff rounds)</li>
+      <li>Replay simulator controls (only visible to commissioners/founders on replay leagues)</li>
+      <li>InlineLineupEditor (replaces read-only RosterTable in the upcoming state — click-to-swap directly on this page)</li>
+      <li>LiveScoreRefresh client component (triggers router.refresh() every 60s with "Live · updated Ns ago" pulse)</li>
+    </ul>
+  </section>
+
+</body>
+</html>

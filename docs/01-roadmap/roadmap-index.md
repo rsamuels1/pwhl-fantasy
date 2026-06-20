@@ -63,6 +63,7 @@ Implemented systems include:
 - Beta Feedback Infrastructure (`#36`) — in-app feedback widget (`components/FeedbackWidget.tsx`) mounted on all authenticated layouts; `POST /api/feedback` persists submissions; `GET /api/founder/feedback` + Founder Console feed table; `PATCH /api/founder/leagues/[leagueId]/beta-status`; `FeedbackSubmission` model + `FeedbackType` / `BetaStatus` enums + `betaStatus` on `FantasyLeague`
 - Pre-Beta Code Audit + P0/P1 Fixes (`#37`) — staff-engineer-level audit complete (`docs/04-operations/pre-beta-audit.md`); all P0 + P1 findings resolved: renewal atomicity (`$transaction`), draft pick P2002 handling, `onTimeout()` re-entrancy guard, force-move play-lock enforcement (both paths), playoff scoring documented, undo-waiver P2002 → 409. Go/No-Go: ✅ GREEN
 - Waiver Wire System (`#5`) — full waiver layer on top of instant add/drop: rolling priority order (reverse VP-standings), 48h waiver window for dropped players, daily batch processing. Schema: `WaiverEntry` / `WaiverClaim` / `WaiverPriority` models + `WaiverStatus` enum + 4 new `EventType` values + `waiverWindowHours` on `FantasyLeague`. Service: `lib/services/waiver-service.ts` (`initializeWaiverPriority`, `enterWaiverWire`, `submitClaim`, `processWaivers`). UI: `WaiverWirePanel.tsx` in roster page "Waiver Wire" tab; "On Waivers" badge in FA table. Ops: `scripts/process-waivers.ts` cron script + founder console trigger. 13 new tests (174 total). FAAB deferred to Sprint 7.
+- League-Wide Matchup Storylines (`#11`) — auto-generated weekly highlight cards on the league overview after each week scores. `lib/services/storyline-service.ts`: `computeWeeklyStorylines()` (pure, tested) + `emitWeeklyStorylines()` (IO, fire-and-forget from `advanceSeason()`). Three storyline types: `closest_match`, `high_score`, `player_standout`. `LEAGUE_STORYLINE` EventType in schema. `components/WeekHighlights.tsx` renders cards server-side on `/league/[leagueId]/`. 173-line test suite in `tests/storyline.test.ts`.
 
 These systems should be considered core platform functionality.
 
@@ -104,7 +105,7 @@ MVP proves a league can go **Create → Invite → Draft → Set Lineups → Com
 
 ## What To Build Next
 
-Sprint 6 is complete (7/7). Sprint 7 is in progress (1/4 items done — #39 Replay Sim V2 UX shipped; #38 Replay V2 deferred). Sprint 8 (Beta Hardening) is in progress — P0+P1 fixes shipped Jun 20 ahead of schedule; 7/14 items done. Remaining: Vercel cron wiring, load test, integration test, P2 notifications, UX polish.
+Sprint 6 is complete (7/7). Sprint 7 is in progress (2/4 items done — #11 Storylines shipped; #39 Replay Sim V2 UX shipped; #38 Replay V2 deferred). Sprint 8 (Beta Hardening) is in progress — P0+P1 fixes shipped Jun 20 ahead of schedule; 7/14 items done. Remaining: Vercel cron wiring, load test, integration test, P2 notifications, UX polish.
 
 **Shipped (Sprint 6 — all complete):**
 - **League Onboarding (#2)** · ✅ Welcome flow, 6-step wizard, manager draft prep guide; `User.onboardingCompletedAt` schema field. (Sprint 3)
@@ -141,8 +142,8 @@ card #40 (`roadmap-features.md`) and sprint plan (`roadmap-sprints.md`).
 1. **Trade System (#7)** · ~130K · Sprint 7 · Priority 1
    Spec: `docs/02-engineering/trade-spec.md`. Pulled up from backlog June 2026 — higher priority than League History/HoF for the launch period. Trade proposal/review/approval flow, commissioner review gate, trade history, 3 new notification types. Schema: `Trade`/`TradeOffer` tables. Unblocks trade-suggestion CTA in Team Analysis (#25).
 
-2. **League-Wide Matchup Storylines (#11)** · ~50K · Sprint 7
-   Spec: `docs/02-engineering/matchup-storylines-spec.md`. `getLeagueStorylines()` service + league overview sidebar card. Closest matchup, point leader, biggest climber. No schema changes.
+2. **League-Wide Matchup Storylines (#11)** · ✅ DONE · Sprint 7
+   `lib/services/storyline-service.ts` (`computeWeeklyStorylines`, `emitWeeklyStorylines`); `LEAGUE_STORYLINE` EventType; `components/WeekHighlights.tsx` on league overview; emitted fire-and-forget from `advanceSeason()`; tested in `tests/storyline.test.ts`.
 
 3. **FAAB (#6)** · ~80K · Sprint 7 — gated on waiver cron (P0-1) being live in production.
    Blind-bid acquisition on top of Sprint 6 waiver system. Depends on #5 (complete) and on

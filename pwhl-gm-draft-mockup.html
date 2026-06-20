@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PWHL GM — Draft Room</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --navy: #0b111f;
+            --navy-light: #1a202c;
+            --purple: #6366f1;
+            --purple-dark: #4f46e5;
+            --white: #f8fafc;
+            --gray: #cbd5e1;
+            --gray-dark: #64748b;
+            --accent: #06b6d4;
+            --success: #22c55e;
+            --warning: #f97316;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #0b111f 0%, #1a1f2e 50%, #0f1419 100%);
+            color: var(--white);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Header */
+        header {
+            position: sticky;
+            top: 0;
+            width: 100%;
+            background: rgba(11, 17, 31, 0.98);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(99, 102, 241, 0.2);
+            padding: 1rem 2rem;
+            z-index: 100;
+        }
+
+        .header-content {
+            max-width: 1600px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-weight: 700;
+            font-size: 1.25rem;
+            text-decoration: none;
+            color: var(--white);
+        }
+
+        .shield-logo {
+            width: 32px;
+            height: 32px;
+        }
+
+        .draft-title {
+            flex: 1;
+            text-align: center;
+            font-size: 1rem;
+            color: var(--gray);
+        }
+
+        .controls {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn-small {
+            padding: 0.5rem 1rem;
+            background: rgba(99, 102, 241, 0.2);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            color: var(--white);
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .btn-small:hover {
+            background: rgba(99, 102, 241, 0.3);
+            border-color: var(--purple);
+        }
+
+        .btn-small.active {
+            background: var(--purple);
+            border-color: var(--purple);
+        }
+
+        /* Main Container */
+        .draft-container {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 1.5rem;
+            padding: 2rem;
+            max-width: 1600px;
+            margin: 0 auto;
+            min-height: calc(100vh - 80px);
+        }
+
+        /* Clock Section */
+        .clock-section {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(79, 70, 229, 0.1) 100%);
+            border: 2px solid rgba(99, 102, 241, 0.4);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            text-align: center;
+            animation: clockPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes clockPulse {
+            0%, 100% {
+                box-shadow: 0 0 20px rgba(99, 102, 241, 0.2);
+            }
+            50% {
+                box-shadow: 0 0 40px rgba(99, 102, 241, 0.4);
+            }
+        }
+
+        .clock-label {
+            font-size: 0.9rem;
+            color: var(--gray);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.5rem;
+        }
+
+        .clock-display {
+            font-size: 3.5rem;
+            font-weight: 900;
+            color: var(--white);
+            font-family: 'Courier New', monospace;
+            margin-bottom: 1rem;
+            text-shadow: 0 4px 20px rgba(99, 102, 241, 0.3);
+        }
+
+        .on-clock-team {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--accent);
+            margin-bottom: 1.5rem;
+        }
+
+        .clock-controls {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+        }
+
+        .btn-control {
+            padding: 0.75rem 1.5rem;
+            background: var(--purple);
+            border: none;
+            color: white;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-control:hover {
+            background: var(--purple-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3);
+        }
+
+        .btn-control.pause {
+            background: var(--warning);
+        }
+
+        .btn-control.pause:hover {
+            background: #ea580c;
+        }
+
+        /* Pick Board */
+        .pick-board {
+            background: rgba(26, 32, 44, 0.4);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .board-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: var(--white);
+        }
+
+        .pick-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .pick-cell {
+            aspect-ratio: 1;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.2) 0%, rgba(79, 70, 229, 0.1) 100%);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .pick-cell:hover {
+            border-color: var(--purple);
+            background: rgba(99, 102, 241, 0.3);
+        }
+
+        .pick-cell.current {
+            border: 2px solid var(--accent);
+            box-shadow: 0 0 30px rgba(6, 182, 212, 0.5);
+            animation: currentPulse 1s ease-in-out infinite;
+        }
+
+        @keyframes currentPulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+        }
+
+        .pick-number {
+            font-size: 0.75rem;
+            color: var(--gray-dark);
+            font-weight: 600;
+        }
+
+        .pick-name {
+            font-size: 0.9rem;
+            font-weight: 700;
+            text-align: center;
+            color: var(--white);
+            margin-top: 0.25rem;
+        }
+
+        .pick-team {
+            font-size: 0.65rem;
+            color: var(--gray);
+            margin-top: 0.25rem;
+        }
+
+        .empty-pick {
+            color: var(--gray-dark);
+            font-style: italic;
+        }
+
+        /* Available Players */
+        .available-section {
+            background: rgba(26, 32, 44, 0.4);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .section-title {
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: var(--white);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 0.75rem;
+            background: rgba(99, 102, 241, 0.1);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            border-radius: 6px;
+            color: var(--white);
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+        }
+
+        .search-input::placeholder {
+            color: var(--gray-dark);
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--purple);
+            background: rgba(99, 102, 241, 0.15);
+        }
+
+        .position-filters {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 0.4rem 0.8rem;
+            background: rgba(99, 102, 241, 0.1);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            color: var(--gray);
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .filter-btn:hover,
+        .filter-btn.active {
+            background: var(--purple);
+            border-color: var(--purple);
+            color: white;
+        }
+
+        .player-list {
+            list-style: none;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .player-item {
+            padding: 0.75rem;
+            background: rgba(99, 102, 241, 0.05);
+            border-left: 3px solid transparent;
+            margin-bottom: 0.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .player-item:hover {
+            background: rgba(99, 102, 241, 0.15);
+            border-left-color: var(--purple);
+        }
+
+        .player-name {
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--white);
+        }
+
+        .player-stats {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.75rem;
+            color: var(--gray);
+            margin-top: 0.25rem;
+        }
+
+        .star-btn {
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            cursor: pointer;
+            opacity: 0.6;
+            transition: opacity 0.3s ease;
+        }
+
+        .star-btn:hover {
+            opacity: 1;
+        }
+
+        .star-btn.starred {
+            opacity: 1;
+        }
+
+        /* Recent Picks */
+        .recent-picks {
+            background: rgba(26, 32, 44, 0.4);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+
+        .pick-timeline {
+            list-style: none;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .pick-entry {
+            padding: 0.75rem 0;
+            border-bottom: 1px solid rgba(99, 102, 241, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9rem;
+        }
+
+        .pick-entry:last-child {
+            border-bottom: none;
+        }
+
+        .pick-round {
+            color: var(--gray-dark);
+            font-weight: 600;
+            min-width: 40px;
+        }
+
+        .pick-info {
+            flex: 1;
+            margin-left: 1rem;
+        }
+
+        .pick-player {
+            font-weight: 600;
+            color: var(--white);
+        }
+
+        .pick-by {
+            font-size: 0.8rem;
+            color: var(--gray);
+        }
+
+        .auto-badge {
+            background: rgba(249, 115, 22, 0.2);
+            color: var(--warning);
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        /* Right Sidebar */
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .sidebar-card {
+            background: rgba(26, 32, 44, 0.4);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+
+        .needs-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .need-slot {
+            background: rgba(99, 102, 241, 0.05);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            border-radius: 8px;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .need-slot.filled {
+            background: rgba(34, 197, 94, 0.1);
+            border-color: var(--success);
+        }
+
+        .need-slot.critical {
+            background: rgba(249, 115, 22, 0.1);
+            border-color: var(--warning);
+            animation: criticalPulse 1s ease-in-out infinite;
+        }
+
+        @keyframes criticalPulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.7;
+            }
+        }
+
+        .need-position {
+            font-size: 0.85rem;
+            color: var(--gray);
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .need-count {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--white);
+        }
+
+        .my-picks-list {
+            list-style: none;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .my-pick-item {
+            padding: 0.75rem 0;
+            border-bottom: 1px solid rgba(99, 102, 241, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9rem;
+        }
+
+        .my-pick-item:last-child {
+            border-bottom: none;
+        }
+
+        .pick-pos {
+            background: var(--purple);
+            color: white;
+            padding: 0.25rem 0.6rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            min-width: 35px;
+            text-align: center;
+        }
+
+        .pick-player-name {
+            flex: 1;
+            margin-left: 0.75rem;
+            font-weight: 600;
+            color: var(--white);
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .draft-container {
+                grid-template-columns: 1fr;
+            }
+
+            .pick-grid {
+                grid-template-columns: repeat(auto-fill, minmax(50px, 1fr));
+                gap: 0.75rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .clock-display {
+                font-size: 2.5rem;
+            }
+
+            .pick-grid {
+                grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
+                gap: 0.5rem;
+            }
+
+            .pick-cell {
+                border-radius: 6px;
+            }
+
+            .needs-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        /* Scrollbar styling */
+        .player-list::-webkit-scrollbar,
+        .pick-timeline::-webkit-scrollbar,
+        .my-picks-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .player-list::-webkit-scrollbar-track,
+        .pick-timeline::-webkit-scrollbar-track,
+        .my-picks-list::-webkit-scrollbar-track {
+            background: rgba(99, 102, 241, 0.05);
+            border-radius: 3px;
+        }
+
+        .player-list::-webkit-scrollbar-thumb,
+        .pick-timeline::-webkit-scrollbar-thumb,
+        .my-picks-list::-webkit-scrollbar-thumb {
+            background: rgba(99, 102, 241, 0.3);
+            border-radius: 3px;
+        }
+
+        .player-list::-webkit-scrollbar-thumb:hover,
+        .pick-timeline::-webkit-scrollbar-thumb:hover,
+        .my-picks-list::-webkit-scrollbar-thumb:hover {
+            background: var(--purple);
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="header-content">
+            <a href="#" class="logo">
+                <svg class="shield-logo" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="shieldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#6366f1;stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:#4f46e5;stop-opacity:1" />
+                        </linearGradient>
+                    </defs>
+                    <path d="M20 2L8 8V18C8 28 20 36 20 36C20 36 32 28 32 18V8L20 2Z" fill="url(#shieldGrad)" stroke="rgba(99,102,241,0.3)" stroke-width="1"/>
+                    <text x="20" y="24" font-size="14" font-weight="bold" fill="white" text-anchor="middle" dominant-baseline="middle">GM</text>
+                </svg>
+                PWHL GM
+            </a>
+            <div class="draft-title">Toronto Pioneers Draft Room</div>
+            <div class="controls">
+                <button class="btn-small">Spectate</button>
+                <button class="btn-small">Help</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="draft-container">
+        <div>
+            <!-- Clock Section -->
+            <div class="clock-section">
+                <div class="clock-label">Time Remaining</div>
+                <div class="clock-display">00:27</div>
+                <div class="on-clock-team">🎯 Boston Blades — On The Clock</div>
+                <div class="clock-controls">
+                    <button class="btn-control">Start Draft</button>
+                    <button class="btn-control pause">Pause</button>
+                </div>
+            </div>
+
+            <!-- Pick Board -->
+            <div class="pick-board">
+                <div class="board-title">Pick Board</div>
+                <div class="pick-grid">
+                    <!-- Round 1 -->
+                    <div class="pick-cell"><div class="pick-number">1</div><div class="pick-name">Matthews</div><div class="pick-team">TOR</div></div>
+                    <div class="pick-cell"><div class="pick-number">2</div><div class="pick-name">Power</div><div class="pick-team">BOS</div></div>
+                    <div class="pick-cell current"><div class="pick-number">3</div><div class="pick-name"></div><div class="empty-pick">—</div></div>
+                    <div class="pick-cell"><div class="pick-number">4</div><div class="pick-name">Knight</div><div class="pick-team">MTL</div></div>
+                    <div class="pick-cell"><div class="pick-number">5</div><div class="pick-name">Jones</div><div class="pick-team">OTT</div></div>
+                    <div class="pick-cell"><div class="pick-number">6</div><div class="pick-name">Ryker</div><div class="pick-team">CGY</div></div>
+                    <div class="pick-cell"><div class="pick-number">7</div><div class="pick-name">Barron</div><div class="pick-team">WPG</div></div>
+                    <div class="pick-cell"><div class="pick-number">8</div><div class="pick-name">Bush</div><div class="pick-team">EDM</div></div>
+                    <!-- Round 2 (reverse) -->
+                    <div class="pick-cell"><div class="pick-number">9</div><div class="pick-name">Markstrom</div><div class="pick-team">EDM</div></div>
+                    <div class="pick-cell"><div class="pick-number">10</div><div class="pick-name">Nurse</div><div class="pick-team">WPG</div></div>
+                    <div class="pick-cell"><div class="pick-number">11</div><div class="pick-name">Gurianov</div><div class="pick-team">CGY</div></div>
+                    <div class="pick-cell"><div class="pick-number">12</div><div class="pick-name">Sloan</div><div class="pick-team">OTT</div></div>
+                    <div class="pick-cell"><div class="pick-number">13</div><div class="pick-name">Harrer</div><div class="pick-team">MTL</div></div>
+                </div>
+            </div>
+
+            <!-- Available Players -->
+            <div class="available-section">
+                <div class="section-title">📋 Available Players</div>
+                <input type="text" class="search-input" placeholder="Search players...">
+                <div class="position-filters">
+                    <button class="filter-btn">All</button>
+                    <button class="filter-btn active">F</button>
+                    <button class="filter-btn">D</button>
+                    <button class="filter-btn">G</button>
+                </div>
+                <ul class="player-list">
+                    <li class="player-item">
+                        <div>
+                            <div class="player-name">Moccasin, Natalie</div>
+                            <div class="player-stats">F • TOR • Age 24</div>
+                        </div>
+                        <button class="star-btn">☆</button>
+                    </li>
+                    <li class="player-item">
+                        <div>
+                            <div class="player-name">Lacasse, Alexie</div>
+                            <div class="player-stats">F • BOS • Age 23</div>
+                        </div>
+                        <button class="star-btn starred">★</button>
+                    </li>
+                    <li class="player-item">
+                        <div>
+                            <div class="player-name">Krejci, Karolina</div>
+                            <div class="player-stats">D • MTL • Age 25</div>
+                        </div>
+                        <button class="star-btn">☆</button>
+                    </li>
+                    <li class="player-item">
+                        <div>
+                            <div class="player-name">Szabó, Petra</div>
+                            <div class="player-stats">F • OTT • Age 22</div>
+                        </div>
+                        <button class="star-btn">☆</button>
+                    </li>
+                    <li class="player-item">
+                        <div>
+                            <div class="player-name">Lamoureux, Monique</div>
+                            <div class="player-stats">F • EDM • Age 34</div>
+                        </div>
+                        <button class="star-btn">☆</button>
+                    </li>
+                    <li class="player-item">
+                        <div>
+                            <div class="player-name">Tatar, Tessa</div>
+                            <div class="player-stats">F • CGY • Age 26</div>
+                        </div>
+                        <button class="star-btn">☆</button>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Right Sidebar -->
+        <div class="sidebar">
+            <!-- Needs Panel -->
+            <div class="sidebar-card">
+                <div class="section-title">📊 Roster Needs</div>
+                <div class="needs-grid">
+                    <div class="need-slot filled">
+                        <div class="need-position">F</div>
+                        <div class="need-count">3/3</div>
+                    </div>
+                    <div class="need-slot critical">
+                        <div class="need-position">D</div>
+                        <div class="need-count">1/2</div>
+                    </div>
+                    <div class="need-slot filled">
+                        <div class="need-position">G</div>
+                        <div class="need-count">1/1</div>
+                    </div>
+                    <div class="need-slot critical">
+                        <div class="need-position">UTIL</div>
+                        <div class="need-count">0/1</div>
+                    </div>
+                    <div class="need-slot">
+                        <div class="need-position">BENCH</div>
+                        <div class="need-count">5/6</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- My Picks -->
+            <div class="sidebar-card">
+                <div class="section-title">🎯 Your Picks</div>
+                <ul class="my-picks-list">
+                    <li class="my-pick-item">
+                        <span class="pick-pos">F</span>
+                        <span class="pick-player-name">Matthews, Auston</span>
+                    </li>
+                    <li class="my-pick-item">
+                        <span class="pick-pos">F</span>
+                        <span class="pick-player-name">Lacasse, Alexie</span>
+                    </li>
+                    <li class="my-pick-item">
+                        <span class="pick-pos">D</span>
+                        <span class="pick-player-name">Krejci, Karolina</span>
+                    </li>
+                    <li class="my-pick-item">
+                        <span class="pick-pos">G</span>
+                        <span class="pick-player-name">Markstrom, Jacob</span>
+                    </li>
+                    <li class="my-pick-item">
+                        <span class="pick-pos">F</span>
+                        <span class="pick-player-name">Szabó, Petra</span>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Recent Picks -->
+            <div class="sidebar-card" style="flex: 1; overflow-y: auto;">
+                <div class="section-title">📜 Recent Picks</div>
+                <ul class="pick-timeline">
+                    <li class="pick-entry">
+                        <div class="pick-round">8</div>
+                        <div class="pick-info">
+                            <div class="pick-player">Bush, Dominik</div>
+                            <div class="pick-by">EDM</div>
+                        </div>
+                    </li>
+                    <li class="pick-entry">
+                        <div class="pick-round">7</div>
+                        <div class="pick-info">
+                            <div class="pick-player">Barron, Morgan</div>
+                            <div class="pick-by">WPG</div>
+                        </div>
+                    </li>
+                    <li class="pick-entry">
+                        <div class="pick-round">6</div>
+                        <div class="pick-info">
+                            <div class="pick-player">Ryker, Kendall</div>
+                            <div class="pick-by">CGY</div>
+                        </div>
+                    </li>
+                    <li class="pick-entry">
+                        <div class="pick-round">5</div>
+                        <div class="pick-info">
+                            <div class="pick-player">Jones, Abigail</div>
+                            <div class="pick-by">OTT <span class="auto-badge">AUTO</span></div>
+                        </div>
+                    </li>
+                    <li class="pick-entry">
+                        <div class="pick-round">4</div>
+                        <div class="pick-info">
+                            <div class="pick-player">Knight, Emily</div>
+                            <div class="pick-by">MTL</div>
+                        </div>
+                    </li>
+                    <li class="pick-entry">
+                        <div class="pick-round">3</div>
+                        <div class="pick-info">
+                            <div class="pick-player">Power, Alex</div>
+                            <div class="pick-by">BOS</div>
+                        </div>
+                    </li>
+                    <li class="pick-entry">
+                        <div class="pick-round">2</div>
+                        <div class="pick-info">
+                            <div class="pick-player">Matthews, Auston</div>
+                            <div class="pick-by">TOR</div>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Interactive star button
+        document.querySelectorAll('.star-btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                this.classList.toggle('starred');
+                this.textContent = this.classList.contains('starred') ? '★' : '☆';
+            });
+        });
+
+        // Position filter
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+
+        // Clock countdown simulation
+        let seconds = 27;
+        setInterval(() => {
+            seconds--;
+            if (seconds < 0) seconds = 30;
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            document.querySelector('.clock-display').textContent =
+                `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+        }, 1000);
+
+        // Pick grid animation on load
+        document.querySelectorAll('.pick-cell').forEach((cell, index) => {
+            cell.style.animation = `slideUp 0.6s ease-out ${index * 0.05}s both`;
+        });
+
+        // Add slideUp animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideUp {
+                from {
+                    opacity: 0;
+                    transform: translateY(20px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

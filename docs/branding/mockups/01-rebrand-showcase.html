@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PWHL GM — Professional Women's Hockey Management</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --navy: #0b111f;
+            --navy-light: #1a202c;
+            --purple: #6366f1;
+            --purple-dark: #4f46e5;
+            --white: #f8fafc;
+            --gray: #cbd5e1;
+            --gray-dark: #64748b;
+            --accent: #06b6d4;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #0b111f 0%, #1a1f2e 50%, #0f1419 100%);
+            color: var(--white);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Header */
+        header {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: rgba(11, 17, 31, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(99, 102, 241, 0.2);
+            padding: 1rem 2rem;
+            z-index: 100;
+            animation: headerSlide 0.6s ease-out;
+        }
+
+        @keyframes headerSlide {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-weight: 700;
+            font-size: 1.25rem;
+            text-decoration: none;
+            color: var(--white);
+            transition: opacity 0.3s ease;
+        }
+
+        .logo:hover {
+            opacity: 0.8;
+        }
+
+        .shield-logo {
+            width: 32px;
+            height: 32px;
+            animation: shieldPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes shieldPulse {
+            0%, 100% {
+                box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.3);
+            }
+            50% {
+                box-shadow: 0 0 0 8px rgba(99, 102, 241, 0);
+            }
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--gray);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.3s ease;
+            position: relative;
+        }
+
+        .nav-links a:hover {
+            color: var(--purple);
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--purple);
+            transition: width 0.3s ease;
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+
+        /* Hero Section */
+        .hero {
+            margin-top: 80px;
+            padding: 6rem 2rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -20%;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+            animation: float 20s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0px);
+            }
+            50% {
+                transform: translateY(30px);
+            }
+        }
+
+        .hero-content {
+            max-width: 900px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+            animation: heroFade 0.8s ease-out;
+        }
+
+        @keyframes heroFade {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .hero-badge {
+            display: inline-block;
+            background: rgba(99, 102, 241, 0.1);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            color: var(--purple);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            margin-bottom: 1.5rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(135deg, var(--white) 0%, var(--gray) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero p {
+            font-size: 1.25rem;
+            color: var(--gray);
+            margin-bottom: 2rem;
+            line-height: 1.8;
+        }
+
+        .cta-group {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            animation: ctaSlide 0.8s ease-out 0.2s both;
+        }
+
+        @keyframes ctaSlide {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .btn {
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--purple) 0%, var(--purple-dark) 100%);
+            color: white;
+            box-shadow: 0 10px 30px rgba(99, 102, 241, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(99, 102, 241, 0.4);
+        }
+
+        .btn-secondary {
+            background: rgba(99, 102, 241, 0.1);
+            color: var(--purple);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(99, 102, 241, 0.2);
+            border-color: var(--purple);
+        }
+
+        /* Sections */
+        section {
+            padding: 4rem 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .section-header h2 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: var(--white);
+        }
+
+        .section-header p {
+            color: var(--gray);
+            font-size: 1.1rem;
+        }
+
+        /* Dashboard Section */
+        .franchises-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .franchise-card {
+            background: linear-gradient(135deg, rgba(26, 32, 44, 0.6) 0%, rgba(15, 20, 25, 0.6) 100%);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            border-radius: 12px;
+            padding: 2rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            animation: cardSlide 0.6s ease-out both;
+        }
+
+        .franchise-card:nth-child(1) { animation-delay: 0s; }
+        .franchise-card:nth-child(2) { animation-delay: 0.1s; }
+        .franchise-card:nth-child(3) { animation-delay: 0.2s; }
+
+        @keyframes cardSlide {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .franchise-card:hover {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(79, 70, 229, 0.1) 100%);
+            border-color: rgba(99, 102, 241, 0.5);
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(99, 102, 241, 0.2);
+        }
+
+        .franchise-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 1.5rem;
+        }
+
+        .franchise-name {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--white);
+        }
+
+        .franchise-badge {
+            background: rgba(6, 182, 212, 0.2);
+            color: var(--accent);
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .franchise-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .stat {
+            padding: 1rem;
+            background: rgba(99, 102, 241, 0.05);
+            border-radius: 8px;
+            border-left: 3px solid var(--purple);
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--gray-dark);
+            margin-bottom: 0.25rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--white);
+        }
+
+        .matchup-preview {
+            background: rgba(99, 102, 241, 0.1);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            border-radius: 8px;
+            padding: 1rem;
+            text-align: center;
+            margin-top: 1rem;
+        }
+
+        .matchup-score {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--white);
+            margin-bottom: 0.5rem;
+        }
+
+        .matchup-label {
+            font-size: 0.85rem;
+            color: var(--gray);
+        }
+
+        /* Standings Section */
+        .standings-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 2rem;
+        }
+
+        .standings-table thead {
+            border-bottom: 2px solid rgba(99, 102, 241, 0.3);
+        }
+
+        .standings-table th {
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            color: var(--gray);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .standings-table td {
+            padding: 1.25rem 1rem;
+            border-bottom: 1px solid rgba(99, 102, 241, 0.1);
+            color: var(--white);
+        }
+
+        .standings-table tbody tr {
+            transition: background 0.3s ease;
+        }
+
+        .standings-table tbody tr:hover {
+            background: rgba(99, 102, 241, 0.05);
+        }
+
+        .rank {
+            font-weight: 700;
+            color: var(--purple);
+        }
+
+        .team-name {
+            font-weight: 600;
+        }
+
+        .clinched-badge {
+            background: rgba(34, 197, 94, 0.2);
+            color: #22c55e;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .elimination-badge {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        /* Comparison Section */
+        .comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .comparison-col {
+            padding: 2rem;
+            border-radius: 12px;
+        }
+
+        .before {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        .after {
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.2);
+        }
+
+        .comparison-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .comparison-list {
+            list-style: none;
+        }
+
+        .comparison-list li {
+            padding: 0.75rem 0;
+            color: var(--gray);
+            font-size: 0.95rem;
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .comparison-list li::before {
+            content: '→';
+            font-weight: 700;
+            color: var(--gray-dark);
+            flex-shrink: 0;
+        }
+
+        .after .comparison-list li::before {
+            content: '✓';
+            color: #22c55e;
+        }
+
+        /* Feature Grid */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .feature-box {
+            padding: 2rem;
+            background: rgba(99, 102, 241, 0.05);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .feature-box:hover {
+            border-color: var(--purple);
+            background: rgba(99, 102, 241, 0.1);
+        }
+
+        .feature-icon {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .feature-title {
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+            color: var(--white);
+        }
+
+        .feature-text {
+            color: var(--gray);
+            font-size: 0.95rem;
+        }
+
+        /* Footer */
+        footer {
+            border-top: 1px solid rgba(99, 102, 241, 0.2);
+            padding: 2rem;
+            text-align: center;
+            color: var(--gray-dark);
+            margin-top: 4rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .hero p {
+                font-size: 1rem;
+            }
+
+            .nav-links {
+                gap: 1rem;
+                font-size: 0.8rem;
+            }
+
+            .comparison {
+                grid-template-columns: 1fr;
+            }
+
+            .standings-table {
+                font-size: 0.9rem;
+            }
+
+            .standings-table th,
+            .standings-table td {
+                padding: 0.75rem;
+            }
+        }
+
+        /* Scroll animations */
+        .fade-in {
+            opacity: 0;
+            animation: fadeInUp 0.6s ease-out forwards;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .reveal-text {
+            overflow: hidden;
+        }
+
+        .reveal-text span {
+            display: inline-block;
+            animation: slideUp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(100%);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="header-content">
+            <a href="#" class="logo">
+                <svg class="shield-logo" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="shieldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#6366f1;stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:#4f46e5;stop-opacity:1" />
+                        </linearGradient>
+                    </defs>
+                    <path d="M20 2L8 8V18C8 28 20 36 20 36C20 36 32 28 32 18V8L20 2Z" fill="url(#shieldGrad)" stroke="rgba(99,102,241,0.3)" stroke-width="1"/>
+                    <text x="20" y="24" font-size="14" font-weight="bold" fill="white" text-anchor="middle" dominant-baseline="middle">GM</text>
+                </svg>
+                PWHL GM
+            </a>
+            <nav>
+                <ul class="nav-links">
+                    <li><a href="#franchises">Franchises</a></li>
+                    <li><a href="#standings">Standings</a></li>
+                    <li><a href="#positioning">Positioning</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <div class="hero-badge">PROFESSIONAL WOMEN'S HOCKEY MANAGEMENT</div>
+            <h1>Think Like a GM.</h1>
+            <p>Build your roster. Set your strategy. Lead your franchise to championship glory through an entire PWHL season.</p>
+            <div class="cta-group">
+                <button class="btn btn-primary">Create Your Franchise</button>
+                <button class="btn btn-secondary">View Standings</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Your Franchises Section -->
+    <section id="franchises">
+        <div class="section-header">
+            <h2>Your Franchises</h2>
+            <p>Manage multiple rosters and compete across multiple leagues</p>
+        </div>
+
+        <div class="franchises-grid">
+            <div class="franchise-card">
+                <div class="franchise-header">
+                    <div class="franchise-name">Toronto Pioneers</div>
+                    <div class="franchise-badge">ACTIVE</div>
+                </div>
+                <div class="franchise-stats">
+                    <div class="stat">
+                        <div class="stat-label">Standing</div>
+                        <div class="stat-value">2nd</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-label">Record</div>
+                        <div class="stat-value">6-1-1</div>
+                    </div>
+                </div>
+                <div class="matchup-preview">
+                    <div class="matchup-score">47.2 — 44.8</div>
+                    <div class="matchup-label">vs. Montreal Royals (This Week)</div>
+                </div>
+            </div>
+
+            <div class="franchise-card">
+                <div class="franchise-header">
+                    <div class="franchise-name">Boston Blades</div>
+                    <div class="franchise-badge">ACTIVE</div>
+                </div>
+                <div class="franchise-stats">
+                    <div class="stat">
+                        <div class="stat-label">Standing</div>
+                        <div class="stat-value">4th</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-label">Record</div>
+                        <div class="stat-value">4-3-1</div>
+                    </div>
+                </div>
+                <div class="matchup-preview">
+                    <div class="matchup-score">38.5 — 42.1</div>
+                    <div class="matchup-label">vs. Ottawa Strike (This Week)</div>
+                </div>
+            </div>
+
+            <div class="franchise-card">
+                <div class="franchise-header">
+                    <div class="franchise-name">Vancouver Vipers</div>
+                    <div class="franchise-badge">REPLAY</div>
+                </div>
+                <div class="franchise-stats">
+                    <div class="stat">
+                        <div class="stat-label">Standing</div>
+                        <div class="stat-value">1st</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-label">Record</div>
+                        <div class="stat-value">10-2-0</div>
+                    </div>
+                </div>
+                <div class="matchup-preview">
+                    <div class="matchup-score">Championship Won</div>
+                    <div class="matchup-label">Final Season 2025-26</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Standings Section -->
+    <section id="standings">
+        <div class="section-header">
+            <h2>Current Standings</h2>
+            <p>Playoff race updates from this week's matchups</p>
+        </div>
+
+        <table class="standings-table">
+            <thead>
+                <tr>
+                    <th style="width: 5%">Rank</th>
+                    <th style="width: 30%">Franchise</th>
+                    <th>W–L–T</th>
+                    <th>Points</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="rank">1</td>
+                    <td class="team-name">Toronto Pioneers</td>
+                    <td>7–2–1</td>
+                    <td>15 pts</td>
+                    <td><span class="clinched-badge">CLINCHED</span></td>
+                </tr>
+                <tr>
+                    <td class="rank">2</td>
+                    <td class="team-name">Boston Blades</td>
+                    <td>6–3–1</td>
+                    <td>13 pts</td>
+                    <td><span style="color: var(--accent)">In</span></td>
+                </tr>
+                <tr>
+                    <td class="rank">3</td>
+                    <td class="team-name">Montreal Royals</td>
+                    <td>5–4–1</td>
+                    <td>11 pts</td>
+                    <td><span style="color: var(--accent)">In</span></td>
+                </tr>
+                <tr>
+                    <td class="rank">4</td>
+                    <td class="team-name">Ottawa Strike</td>
+                    <td>4–5–1</td>
+                    <td>9 pts</td>
+                    <td><span style="color: var(--gray)">Bubble</span></td>
+                </tr>
+                <tr>
+                    <td class="rank">5</td>
+                    <td class="team-name">Calgary Surge</td>
+                    <td>3–6–1</td>
+                    <td>7 pts</td>
+                    <td><span style="color: var(--gray)">Out</span></td>
+                </tr>
+                <tr>
+                    <td class="rank">6</td>
+                    <td class="team-name">Winnipeg Fury</td>
+                    <td>2–7–1</td>
+                    <td>5 pts</td>
+                    <td><span class="elimination-badge">ELIMINATED</span></td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <!-- Positioning Section -->
+    <section id="positioning">
+        <div class="section-header">
+            <h2>Brand Transformation</h2>
+            <p>From "Fantasy" to "Professional Management"</p>
+        </div>
+
+        <div class="comparison">
+            <div class="comparison-col before">
+                <div class="comparison-title">
+                    ❌ Before: PWHL Fantasy
+                </div>
+                <ul class="comparison-list">
+                    <li>Fantasy Team</li>
+                    <li>Fantasy Sports</li>
+                    <li>Draft your team</li>
+                    <li>Fantasy points</li>
+                    <li>Fantasy app</li>
+                    <li>Games/betting aesthetic</li>
+                    <li>HF monogram</li>
+                </ul>
+            </div>
+
+            <div class="comparison-col after">
+                <div class="comparison-title">
+                    ✓ After: PWHL GM
+                </div>
+                <ul class="comparison-list">
+                    <li>Franchise</li>
+                    <li>Professional Management</li>
+                    <li>Build your roster</li>
+                    <li>Championship points</li>
+                    <li>Management platform</li>
+                    <li>Executive dashboard</li>
+                    <li>Shield + GM logo</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="features-grid">
+            <div class="feature-box">
+                <div class="feature-icon">🛡️</div>
+                <div class="feature-title">Professional Shield Logo</div>
+                <div class="feature-text">Modern shield with GM monogram. Communicates authority, competition, and championship culture.</div>
+            </div>
+
+            <div class="feature-box">
+                <div class="feature-icon">🎯</div>
+                <div class="feature-title">Strategic Positioning</div>
+                <div class="feature-text">Users are General Managers, not players. Every feature reinforces running a hockey organization.</div>
+            </div>
+
+            <div class="feature-box">
+                <div class="feature-icon">💼</div>
+                <div class="feature-title">Front Office Tools</div>
+                <div class="feature-text">Commissioner features rebranded as "Front Office" — admin panels become executive dashboards.</div>
+            </div>
+
+            <div class="feature-box">
+                <div class="feature-icon">🏆</div>
+                <div class="feature-title">Championship Focus</div>
+                <div class="feature-text">Emphasis on playoffs, standings, and rivalry. The destination is always a championship title.</div>
+            </div>
+
+            <div class="feature-box">
+                <div class="feature-icon">🎨</div>
+                <div class="feature-title">Premium Color System</div>
+                <div class="feature-text">Deep purple + dark navy + white. Professional sports league aesthetic, not DFS/betting vibes.</div>
+            </div>
+
+            <div class="feature-box">
+                <div class="feature-icon">📱</div>
+                <div class="feature-title">Official-Ready Branding</div>
+                <div class="feature-text">This identity is polished enough for official PWHL partnerships and media collaborations.</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <p>&copy; 2026 PWHL General Manager. Professional Women's Hockey League. Built for championship competitors.</p>
+    </footer>
+
+    <script>
+        // Smooth animations on scroll
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('fade-in');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.1 });
+
+        document.querySelectorAll('.franchise-card, .feature-box').forEach(el => {
+            observer.observe(el);
+        });
+
+        // Interactive button feedback
+        document.querySelectorAll('.btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                const ripple = document.createElement('span');
+                const rect = this.getBoundingClientRect();
+                const size = Math.max(rect.width, rect.height);
+                const x = e.clientX - rect.left - size / 2;
+                const y = e.clientY - rect.top - size / 2;
+
+                ripple.style.width = ripple.style.height = size + 'px';
+                ripple.style.left = x + 'px';
+                ripple.style.top = y + 'px';
+                ripple.style.position = 'absolute';
+                ripple.style.background = 'rgba(255, 255, 255, 0.5)';
+                ripple.style.borderRadius = '50%';
+                ripple.style.pointerEvents = 'none';
+                ripple.style.animation = 'ripple 0.6s ease-out';
+
+                this.style.position = 'relative';
+                this.style.overflow = 'hidden';
+                this.appendChild(ripple);
+
+                setTimeout(() => ripple.remove(), 600);
+            });
+        });
+
+        // Add ripple animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes ripple {
+                to {
+                    transform: scale(4);
+                    opacity: 0;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Scroll to section from nav
+        document.querySelectorAll('.nav-links a').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const target = document.querySelector(link.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth' });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
