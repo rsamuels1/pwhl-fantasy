@@ -5,9 +5,26 @@ import { getDevNow } from "@/lib/devTime";
 import { getReplayNow } from "@/lib/replayTime";
 import { getRoundLabel } from "@/lib/playoffs/brackets";
 import { calculatePlayoffRounds } from "@/lib/playoffs/lifecycle";
+import { getBracket, PlayoffNotStartedError } from "@/lib/services/playoff-service";
 
 function fmtDate(d: Date) {
   return new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" }).format(d);
+}
+
+async function getTeamSeeds(leagueId: string): Promise<Map<string, number>> {
+  try {
+    const bracket = await getBracket(leagueId, prisma);
+    const seedMap = new Map<string, number>();
+    for (const seededTeam of bracket.bracket.seededTeams) {
+      seedMap.set(seededTeam.fantasyTeamId, seededTeam.seed);
+    }
+    return seedMap;
+  } catch (error) {
+    if (error instanceof PlayoffNotStartedError) {
+      return new Map();
+    }
+    throw error;
+  }
 }
 
 export default async function MatchupsPage({ params }: { params: Promise<{ leagueId: string }> }) {
@@ -30,6 +47,9 @@ export default async function MatchupsPage({ params }: { params: Promise<{ leagu
 
   const regularMatchups = matchups.filter((m) => !m.isPlayoff);
   const playoffMatchups = matchups.filter((m) => m.isPlayoff);
+
+  // Fetch playoff seeds
+  const teamSeeds = await getTeamSeeds(leagueId);
 
   // Group regular season by week
   const byWeek = new Map<number, typeof regularMatchups>();
@@ -57,6 +77,9 @@ export default async function MatchupsPage({ params }: { params: Promise<{ leagu
     : regularMatchups.length > 0
     ? Math.min(...regularMatchups.map((m) => m.week))
     : null;
+
+  // Find the first playoff matchup info for the divider
+  const firstPlayoffMatchup = playoffMatchups.length > 0 ? playoffMatchups[0] : null;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
@@ -174,10 +197,33 @@ export default async function MatchupsPage({ params }: { params: Promise<{ leagu
         })
       )}
 
+      {/* Playoff start divider */}
+      {playoffMatchups.length > 0 && firstPlayoffMatchup && (
+        <div style={{
+          ...card,
+          background: "rgba(217, 119, 6, 0.08)",
+          border: "2px solid rgba(217, 119, 6, 0.3)",
+          padding: "16px 20px",
+          marginTop: 8,
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }}>
+            <span style={{ fontSize: 16, fontWeight: 700, color: "#fdba74" }}>🏆 Playoffs Begin</span>
+          </div>
+          <div style={{ fontSize: 12, color: "#94a3b8" }}>
+            <div style={{ marginBottom: 6 }}>
+              {fmtDate(new Date(firstPlayoffMatchup.startsAt))} – {fmtDate(new Date(firstPlayoffMatchup.endsAt))}
+            </div>
+            <div style={{ fontSize: 11, color: "#64748b" }}>
+              Single-elimination · Best seed wins ties
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Playoffs */}
       {playoffMatchups.length > 0 && (
         <section style={card}>
-          <h2 style={{ fontSize: 16, fontWeight: 700, margin: "0 0 14px", color: "#e2e8f0" }}>Playoffs</h2>
+          <h2 style={{ fontSize: 16, fontWeight: 700, margin: "0 0 14px", color: "#e2e8f0" }}>Playoff Rounds</h2>
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             {Array.from({ length: totalPlayoffRounds }, (_, i) => {
               const round = i + 1;
@@ -190,10 +236,32 @@ export default async function MatchupsPage({ params }: { params: Promise<{ leagu
 
               return (
                 <div key={round}>
-                  {/* Round header */}
-                  <div style={{ marginBottom: 12, display: "flex", alignItems: "center", gap: 10 }}>
-                    <span style={{ fontSize: 14, fontWeight: 700, color: "#e2e8f0" }}>{roundName}</span>
-                    <span style={{ fontSize: 11, color: "#475569" }}>{dateRange}</span>
+                  {/* Round header with seed matchup info */}
+                  <div style={{ marginBottom: 12 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
+                      <span style={{ fontSize: 14, fontWeight: 700, color: "#e2e8f0" }}>{roundName}</span>
+                      <span style={{ fontSize: 11, color: "#475569" }}>{dateRange}</span>
+                    </div>
+                    {round === 1 && totalPlayoffRounds > 1 && (
+                      <div style={{ fontSize: 11, color: "#64748b" }}>
+                        Semifinals: (1 vs 4, 2 vs 3)
+                      </div>
+                    )}
+                    {round === 1 && totalPlayoffRounds === 1 && (
+                      <div style={{ fontSize: 11, color: "#64748b" }}>
+                        Championship Match
+                      </div>
+                    )}
+                    {round > 1 && round === totalPlayoffRounds && (
+                      <div style={{ fontSize: 11, color: "#64748b" }}>
+                        Championship: Winners advance
+                      </div>
+                    )}
+                    {round > 1 && round < totalPlayoffRounds && (
+                      <div style={{ fontSize: 11, color: "#64748b" }}>
+                        Round {round}: Winners advance
+                      </div>
+                    )}
                   </div>
                   {/* Matchups in this round */}
                   <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
@@ -202,6 +270,8 @@ export default async function MatchupsPage({ params }: { params: Promise<{ leagu
                       const homeWon = scored && m.homeScore! > m.awayScore!;
                       const awayWon = scored && m.awayScore! > m.homeScore!;
                       const isMyMatchup = m.homeTeamId === myTeam.id || m.awayTeamId === myTeam.id;
+                      const homeSeed = teamSeeds.get(m.homeTeamId);
+                      const awaySeed = teamSeeds.get(m.awayTeamId);
 
                       return (
                         <div key={m.id} style={{
@@ -211,12 +281,19 @@ export default async function MatchupsPage({ params }: { params: Promise<{ leagu
                           gap: "4px 10px",
                           padding: "10px 14px",
                           borderRadius: 10,
-                          background: isMyMatchup ? "rgba(99,102,241,0.08)" : "rgba(255,255,255,0.02)",
-                          border: isMyMatchup ? "1px solid rgba(99,102,241,0.3)" : "1px solid rgba(148,163,184,0.06)",
+                          background: isMyMatchup ? "rgba(99,102,241,0.08)" : "rgba(217, 119, 6, 0.04)",
+                          border: isMyMatchup ? "1px solid rgba(99,102,241,0.3)" : "1px solid rgba(217, 119, 6, 0.15)",
                         }}>
                           <div style={{ textAlign: "right", minWidth: 0 }}>
-                            <div style={{ fontSize: 13, fontWeight: 500, color: "#94a3b8", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                              {m.homeTeam.name}
+                            <div style={{ display: "flex", alignItems: "baseline", gap: 6, justifyContent: "flex-end" }}>
+                              <div style={{ fontSize: 13, fontWeight: 500, color: "#94a3b8", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                {m.homeTeam.name}
+                              </div>
+                              {homeSeed && (
+                                <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 6px", borderRadius: 3, background: "rgba(217, 119, 6, 0.2)", color: "#fdba74" }}>
+                                  {homeSeed}
+                                </span>
+                              )}
                             </div>
                             {scored && (
                               <div style={{ fontSize: 17, fontWeight: 800, color: homeWon ? "#e2e8f0" : "#475569", fontVariantNumeric: "tabular-nums" }}>
@@ -230,8 +307,15 @@ export default async function MatchupsPage({ params }: { params: Promise<{ leagu
                             </div>
                           </div>
                           <div style={{ textAlign: "left", minWidth: 0 }}>
-                            <div style={{ fontSize: 13, fontWeight: 500, color: "#94a3b8", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                              {m.awayTeam.name}
+                            <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
+                              {awaySeed && (
+                                <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 6px", borderRadius: 3, background: "rgba(217, 119, 6, 0.2)", color: "#fdba74" }}>
+                                  {awaySeed}
+                                </span>
+                              )}
+                              <div style={{ fontSize: 13, fontWeight: 500, color: "#94a3b8", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                {m.awayTeam.name}
+                              </div>
                             </div>
                             {scored && (
                               <div style={{ fontSize: 17, fontWeight: 800, color: awayWon ? "#e2e8f0" : "#475569", fontVariantNumeric: "tabular-nums" }}>
