@@ -127,6 +127,8 @@ model FantasyLeague {
   scoringVersion          Int                      @default(1)
   pwhlPlayoffStartsAt     DateTime?
   waiverWindowHours       Int                      @default(48)
+  tradeReviewHours        Int                      @default(24)
+  requireCommissionerTradeApproval Boolean         @default(false)
   createdAt               DateTime                 @default(now())
   updatedAt               DateTime                 @updatedAt
   draft                   Draft?
@@ -142,6 +144,7 @@ model FantasyLeague {
   waiverEntries           WaiverEntry[]
   waiverClaims            WaiverClaim[]
   waiverPriority          WaiverPriority[]
+  trades                  Trade[]
 
   @@index([status])
 }
@@ -334,6 +337,12 @@ enum NotificationType {
   DRAFT_STARTING
   ON_THE_CLOCK
   LINEUP_INCOMPLETE
+  TRADE_RECEIVED
+  TRADE_ACCEPTED
+  TRADE_REJECTED
+  TRADE_EXECUTED
+  TRADE_VETOED
+  TRADE_REVIEW_PENDING
 }
 
 model FeedbackSubmission {
@@ -455,4 +464,45 @@ model WaiverPriority {
 
   @@id([leagueId, fantasyTeamId])
   @@unique([leagueId, priority])
+}
+
+enum TradeStatus {
+  PROPOSED
+  COUNTERED
+  ACCEPTED
+  PENDING_REVIEW
+  EXECUTED
+  REVERSED
+  REJECTED
+  CANCELLED
+  EXPIRED
+}
+
+model Trade {
+  id               String        @id @default(cuid())
+  leagueId         String
+  proposingTeamId  String
+  receivingTeamId  String
+  status           TradeStatus   @default(PROPOSED)
+  message          String?
+  counterOfId      String?
+  reviewEndsAt     DateTime?
+  executedAt       DateTime?
+  resolvedReason   String?
+  createdAt        DateTime      @default(now())
+  league           FantasyLeague @relation(fields: [leagueId], references: [id])
+  items            TradeItem[]
+
+  @@index([leagueId, status])
+}
+
+model TradeItem {
+  id         String @id @default(cuid())
+  tradeId    String
+  fromTeamId String
+  toTeamId   String
+  playerId   String
+  trade      Trade  @relation(fields: [tradeId], references: [id])
+
+  @@index([tradeId])
 }

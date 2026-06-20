@@ -13,11 +13,6 @@ export async function GET(req: NextRequest) {
         include: {
           user: { select: { email: true } },
         },
-        select: {
-          type: true,
-          body: true,
-          user: true,
-        },
       },
     },
   });

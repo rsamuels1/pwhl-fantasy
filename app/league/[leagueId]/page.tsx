@@ -11,7 +11,6 @@ import { getReplayNow } from "@/lib/replayTime";
 import Link from "next/link";
 import AnnouncementForm from "@/components/AnnouncementForm";
 import { VpExplainer } from "@/components/VpExplainer";
-import ReplaySimulatorControls from "@/components/ReplaySimulatorControls";
 import WeekHighlights from "@/components/WeekHighlights";
 import type { Storyline } from "@/lib/services/storyline-service";
 
@@ -764,18 +763,6 @@ export default async function LeagueOverviewPage({
         </div>
       </div>
 
-      {/* Replay simulator sticky footer (for commissioners/founders of replay leagues) */}
-      {league.isReplay && (isCommissioner || isFounder(user.email)) && (
-        <ReplaySimulatorControls
-          leagueId={leagueId}
-          seasonState={seasonState}
-          nowMs={nowMs}
-          isCommissioner={isCommissioner}
-          isFounder={isFounder(user.email)}
-          placement="sticky-footer"
-          playoffStatus={league.playoffStatus}
-        />
-      )}
     </div>
   );
 }

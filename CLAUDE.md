@@ -173,6 +173,7 @@ survives DB resets and schema migrations.
    - Founder Operations Console ✅ (`app/founder/` — dashboard, league explorer, league detail with sim controls, throwaway season validator; `FOUNDER_EMAILS` env-var auth gate; API routes under `app/api/founder/`; no schema change)
    - Auto-Set Lineup ✅ (`computeOptimalLineup()` in `lib/lineup.ts`; staged save model — "Auto-set" purple button in `LineupManager.tsx`, pending diff shown before persisting; `beforeunload` guard; playoff period fallback for games-remaining badges during playoffs; `GET /api/leagues/[leagueId]/fa-suggestions` returns top 10 unrostered players by projected FP; spec: `docs/02-engineering/auto-set-lineup-spec.md`; commits: 3e6bbd0, f83468f, 1f06c9a)
    - Beta Feedback Infrastructure ✅ (spec: `docs/02-engineering/beta-feedback-spec.md`; schema: `FeedbackSubmission` model + `FeedbackType` enum `BUG|SUGGESTION|OTHER` + `BetaStatus` enum `NONE|INVITED|ACCEPTED|ACTIVE|RENEWED` + `betaStatus BetaStatus @default(NONE)` on `FantasyLeague`; widget: `components/FeedbackWidget.tsx` — fixed bottom-right button opens a Bug/Suggestion/Other modal rendered via `ReactDOM.createPortal` into `document.body`, mounted in league layout, team layout, and founder layout; API routes: `POST /api/feedback` auth-gated writes `FeedbackSubmission` rows, `GET /api/founder/feedback` returns last 100 submissions, `PATCH /api/founder/leagues/[leagueId]/beta-status` updates cohort status; Founder Console: `app/founder/feedback/page.tsx` feed table + "Feedback" nav link in `app/founder/layout.tsx` + "Beta" tab with betaStatus dropdown in `app/founder/leagues/[leagueId]/LeagueDetailTabs.tsx`)
+   - **Trade System** ✅ (`lib/trades/engine.ts` pure 9-state machine + `applyTrade`; `lib/services/trade-service.ts`; schema: `Trade`/`TradeItem` models + `TradeStatus` enum + `tradeReviewHours`/`requireCommissionerTradeApproval` on `FantasyLeague` + 6 new `NotificationType` values; 7 API routes under `/api/leagues/[leagueId]/trades/`; Trade Center at `/league/[leagueId]/trades`; Propose flow at `.../trades/new`; Trade Settings in admin panel; "Trades" in league nav; 22 tests in `tests/trade.test.ts`; spec: `docs/02-engineering/trade-spec.md`)
 7. Public launch ~early Nov, drafts ~1 week before opener
 
 ## Draft room UI (`app/draft/[leagueId]/`)
@@ -269,6 +270,46 @@ Called by: all three commissioner API routes, and `lib/draft/server.ts` after PA
 - `pwhlPlayoffStartsAt DateTime?` — when set, `startSeason()` calls `validateSeasonBoundary()` and throws if any period ends after this date
 - 7 new `EventType` enum values (see audit service above)
 
+## Trade system (`lib/trades/engine.ts`, `lib/services/trade-service.ts`)
+
+The trade system follows the same pure-engine + service-layer pattern as the draft.
+
+**Engine (`lib/trades/engine.ts`):** pure, no IO. Key exports:
+- `canTransitionTo(current, next, actorRole)` — declarative state-machine guard; `actorRole` is `"proposer" | "receiver" | "commissioner"`.
+- `applyTrade(items, proposingRoster, receivingRoster, proposingTeamId?, receivingTeamId?)` — moves players between rosters (incoming players land on BENCH). Auto-derives team IDs from roster membership when not explicitly provided. Called both for post-trade legality simulation in `_validate()` and for actual roster mutation in the service.
+- `validateTradeProposal` / `validateTradeExecution` — both call the same `_validate()` which runs: stale check first (returns `"STALE"` immediately), then both-sides check, then play-lock check, then roster-legality simulation via `applyTrade` + `checkRosterLegal`.
+
+**Service (`lib/services/trade-service.ts`):** error classes `TradeValidationError`, `TradeNotFoundError`, `TradeTransitionError`. Functions: `proposeTrade`, `acceptTrade`, `rejectTrade`, `counterTrade`, `cancelTrade`, `reviewTrade`, `executeTrade`, `processExpiredTrades`, `getTradesForTeam`, `getTrade`, `getLeagueTrades`. All notifications fire-and-forget (`void … .catch(() => {})`).
+
+**Counter-offer flow:** modeled as a new `Trade` row with `counterOfId` linking back to the original. Original flips to `COUNTERED` status atomically in the same `$transaction`.
+
+**Commissioner review:** `acceptTrade` checks `tradeReviewHours > 0 || requireCommissionerTradeApproval` and routes to `PENDING_REVIEW` or calls `executeTrade` directly.
+
+**Trade deadline:** `proposeTrade` and `executeTrade` both block when `league.playoffStatus !== "NOT_STARTED"`.
+
+**Schema additions:**
+- `TradeStatus` enum (9 values: PROPOSED, COUNTERED, ACCEPTED, PENDING_REVIEW, EXECUTED, REVERSED, REJECTED, CANCELLED, EXPIRED)
+- `Trade` model (`leagueId`, `proposingTeamId`, `receivingTeamId`, `status`, `message?`, `counterOfId?`, `reviewEndsAt?`, `executedAt?`, `resolvedReason?`)
+- `TradeItem` model (`tradeId`, `fromTeamId`, `toTeamId`, `playerId`)
+- `tradeReviewHours Int @default(24)` on `FantasyLeague`
+- `requireCommissionerTradeApproval Boolean @default(false)` on `FantasyLeague`
+- 6 new `NotificationType` values (TRADE_RECEIVED, TRADE_ACCEPTED, TRADE_REJECTED, TRADE_EXECUTED, TRADE_VETOED, TRADE_REVIEW_PENDING)
+
+**API routes** (all under `app/api/leagues/[leagueId]/trades/`):
+- `GET /trades` — list trades for the requesting team (incoming + sent) or league history
+- `POST /trades` — propose a new trade; body `{ receivingTeamId, items, message? }`
+- `GET /trades/[tradeId]` — trade detail
+- `POST /trades/[tradeId]/accept` — receiver accepts
+- `POST /trades/[tradeId]/reject` — receiver rejects
+- `POST /trades/[tradeId]/counter` — receiver counters; body `{ items, message? }`
+- `POST /trades/[tradeId]/cancel` — proposer cancels
+- `POST /trades/[tradeId]/review` — commissioner approves/vetoes; body `{ action: "approve" | "veto" }`
+- `PUT /trade-settings` — commissioner updates `tradeReviewHours` and `requireCommissionerTradeApproval`
+
+**UI:** Trade Center at `/league/[leagueId]/trades` (Incoming / Sent / League History tabs); Propose flow at `.../trades/new`; Trade detail at `.../trades/[tradeId]`. Trade Settings and Pending Review list in admin panel. "Trades" nav link in league layout.
+
+**Tests:** 22 tests in `tests/trade.test.ts` (8 state-machine, 6 proposal validation, 2 execution validation, 3 apply-trade, 3 transition negative cases via implicit coverage in terminal-state test).
+
 ## Analytics (`lib/analytics/index.ts`)
 
 `trackEvent(e: AnalyticsEvent): void` — V1 writes `console.log("[ANALYTICS]", ...)`. Designed to swap to PostHog/Plausible by replacing the function body only; call sites are unchanged. All callers wrap in `try { } catch {}` — fire-and-forget, never blocks responses.
@@ -290,7 +331,7 @@ Called by: all three commissioner API routes, and `lib/draft/server.ts` after PA
 
 **`opts` fields:** `{ title?: string, teamId?: string, body?: string, actionUrl?: string, dedupeKey?: string }`. `title` defaults to `""` when omitted. Scheduled triggers must supply a `dedupeKey` for idempotent delivery.
 
-**`NotificationType` enum:** `DRAFT_STARTING` | `ON_THE_CLOCK` | `LINEUP_INCOMPLETE`
+**`NotificationType` enum:** `DRAFT_STARTING` | `ON_THE_CLOCK` | `LINEUP_INCOMPLETE` | `TRADE_RECEIVED` | `TRADE_ACCEPTED` | `TRADE_REJECTED` | `TRADE_EXECUTED` | `TRADE_VETOED` | `TRADE_REVIEW_PENDING`
 
 **Schema models:** `Notification` (id, userId, leagueId?, teamId?, type, title String, body?, actionUrl?, dedupeKey?, data Json, readAt DateTime?, createdAt — `@@unique([userId,type,dedupeKey])`) and `NotificationPreference` (userId, leagueId, type, enabled — `@@unique([userId, leagueId, type])`).
 

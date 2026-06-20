@@ -829,13 +829,13 @@
             <div style="font-weight: 700; font-size: 1rem;">Sprint 7 · "Retention Layer"</div>
             <div style="font-size: 0.8rem; color: #888; margin-top: 0.2rem;">Goal: Multi-season story + engagement surfaces · P2 · Jun 23 – Jul 6, 2026</div>
           </div>
-          <span class="status current">● IN FLIGHT (2/3 + AUDIT)</span>
+          <span class="status done">✅ COMPLETE (3/3)</span>
         </div>
         <div>
 
             <div class="task-row">
-              <span class="task-check">○</span>
-              <span style="color: #ccc"><strong style="color:#f5c842">Priority 1 — Trade System (#7)</strong> · ~130K · <em>Spec: <code>docs/02-engineering/trade-spec.md</code></em> — pulled up from backlog June 2026; higher priority than League History/HoF for the launch period. Trade proposal / review / approval flow; commissioner review gate (optional); trade history in Transaction feed. Schema: <code>Trade</code> / <code>TradeOffer</code> tables; 3 new notification types; full audit log. Unblocks trade-suggestion CTA in Team Analysis (#25).</span>
+              <span class="task-check">✓</span>
+              <span style="color: #ccc"><strong style="color:#22c55e">Priority 1 — Trade System (#7)</strong> · ✅ SHIPPED · <em>Spec: <code>docs/02-engineering/trade-spec.md</code></em> — Multi-player two-team trade proposals; full 9-state machine (PROPOSED/COUNTERED/ACCEPTED/PENDING_REVIEW/EXECUTED/REVERSED/REJECTED/CANCELLED/EXPIRED); counter-offer flow; commissioner veto window + approval mode; roster legality at propose+execute; play-lock parity; stale deal detection; trade deadline gating. Schema: <code>Trade</code>/<code>TradeItem</code> models; <code>TradeStatus</code> enum; <code>tradeReviewHours</code>/<code>requireCommissionerTradeApproval</code> on <code>FantasyLeague</code>; 6 new <code>NotificationType</code> values. Service: <code>lib/services/trade-service.ts</code>. Engine: <code>lib/trades/engine.ts</code>. API: 7 routes under <code>/api/leagues/[leagueId]/trades/</code>. UI: Trade Center + Propose flow + detail page + Trade Settings in admin. Nav: "Trades" link in league layout. Tests: 22 in <code>tests/trade.test.ts</code> (202 total).</span>
             </div>
 
             <div class="task-row">

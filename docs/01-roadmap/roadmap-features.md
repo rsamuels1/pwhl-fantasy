@@ -450,34 +450,39 @@ Dependencies:
 
 ---
 
-## 7. Trade System
+## 7. Trade System ✅
 
-Status: Not Implemented — Sprint 7 (Priority 1)
+Status: Complete — Sprint 7
 
-Sprint: 7 — pulled up from backlog June 2026; higher priority than League History/HoF for the launch period
+Sprint: 7 — shipped June 2026
 
-Estimated tokens: ~130K (new domain — schema tables, API routes, proposal/review/approval UI; plan a dedicated session)
+Features implemented:
 
-Note: Moved from backlog to Sprint 7 Priority 1 as of June 2026. Trade System is a large,
-self-contained new domain (~130K tokens, new `Trade`/`TradeOffer` schema tables,
-proposal/accept/reject flow, commissioner review gate, 3 new notification types, full audit
-log). Team Analysis trade-suggestion CTA (#25) is unblocked once this ships.
+- Multi-player two-team trade proposals with message
+- Full state machine: PROPOSED → ACCEPTED → PENDING_REVIEW → EXECUTED (or REJECTED/CANCELLED/COUNTERED/EXPIRED/REVERSED)
+- Counter-offer flow (new Trade row linked via `counterOfId`)
+- Commissioner veto window (`tradeReviewHours`, `requireCommissionerTradeApproval` on `FantasyLeague`)
+- Roster legality enforced at propose AND execute (position eligibility + slot capacity)
+- Play-lock parity: players who have played in active scoring period cannot be traded
+- Stale deal detection: re-validates at execution — auto-fails with STALE if player no longer on expected team
+- Trade deadline: blocked once playoffs begin
+- 6 notification types: `TRADE_RECEIVED`, `TRADE_ACCEPTED`, `TRADE_REJECTED`, `TRADE_EXECUTED`, `TRADE_VETOED`, `TRADE_REVIEW_PENDING`
+- Analytics: `trade_proposed`, `trade_responded`, `trade_executed`, `trade_vetoed`
+- Activity feed: TRADE events emitted for both teams at execution
+- Trade Center UI at `/league/[leagueId]/trades` (Incoming / Sent / League History tabs)
+- Propose Trade flow at `/league/[leagueId]/trades/new` with live player picker
+- Trade detail page with approve/veto/accept/reject/cancel actions
+- Trade Settings section in admin panel (review hours, commissioner approval toggle)
+- Pending Review list in admin panel for commissioner action
+- "Trades" link in league nav
+- 22 tests in `tests/trade.test.ts` covering engine validation, state machine, and roster apply
 
-Features:
-
-- Trade proposals
-- Trade review
-- Commissioner approval
-- Trade history
-
-Acceptance Criteria:
-
-- Managers can exchange players
-- Transactions recorded
-
-Dependencies:
-
-- Transaction system
+Schema additions:
+- `Trade` model with `TradeStatus` enum (9 states)
+- `TradeItem` model
+- `tradeReviewHours Int @default(24)` on `FantasyLeague`
+- `requireCommissionerTradeApproval Boolean @default(false)` on `FantasyLeague`
+- 6 new `NotificationType` values
 
 ---
 

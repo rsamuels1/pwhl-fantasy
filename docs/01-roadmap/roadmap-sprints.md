@@ -493,7 +493,7 @@ Items below are acknowledged but have no sprint assignment. They become candidat
 | Sprint 4 — Product Polish | ✅ COMPLETE (Jun 13, 2026) | NT-002 LINEUP_INCOMPLETE ✅ · #01 commissioner dashboard ✅ · #17 rivalries ✅ · VP standings fix ✅ · playoff mode + replay support ✅ |
 | Sprint 5 — Validation + Beta Operations | ✅ COMPLETE | Replay gap fix ✅ · sim-to-playoffs ✅ · draft cert ✅ · founder dashboard ✅ · playoff experience UX ✅ · commissioner workflow validation ✅ |
 | Sprint 6 — Engagement + Transactions | ✅ COMPLETE | Auto-set lineup ✅ · FA schedule awareness + add & slot ✅ · beta feedback infrastructure ✅ · code audit + all P0/P1 fixes ✅ · team analysis ✅ · waiver priority + processing ✅ |
-| Sprint 7 — Retention Layer | ⏳ IN PROGRESS (2/3) | Storylines (#11) ✅ · Replay Sim V2 UX (#39) ✅ · Trade System (#7) · FAAB (#6) deferred to post-launch backlog · #38 DEFERRED · #31 Player Legacy deferred to backlog |
+| Sprint 7 — Retention Layer | ✅ COMPLETE | Storylines (#11) ✅ · Replay Sim V2 UX (#39) ✅ · Trade System (#7) ✅ · FAAB (#6) deferred to post-launch backlog · #38 DEFERRED · #31 Player Legacy deferred to backlog |
 | Sprint 8 — Beta Hardening | ✅ COMPLETE (14/14 done) | P0+P1 audit fixes shipped Jun 20 (ahead of schedule) · 7 beta bug fixes shipped commit b465423: playoff period anchoring, auto-set during playoffs, roster refresh, lineup sort, FA suggestions sim-date fix, bracket default (6→4) |
 
 ---

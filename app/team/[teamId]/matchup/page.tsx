@@ -14,8 +14,6 @@ import { getReplayNow } from "@/lib/replayTime";
 import { getRival } from "@/lib/playoffs/seeding";
 import { RivalBadge } from "@/components/RivalBadge";
 import { HeadToHeadHistory } from "@/components/HeadToHeadHistory";
-import ReplaySimulatorControls from "@/components/ReplaySimulatorControls";
-import { getSeasonState } from "@/lib/season";
 
 export default async function TeamMatchupPage({
   params,
@@ -45,15 +43,6 @@ export default async function TeamMatchupPage({
     }),
   ]);
 
-  // Fetch season state and playoff status for replay controls (if needed)
-  const leagueForSeason = await prisma.fantasyLeague.findUnique({
-    where: { id: leagueId },
-    select: { isReplay: true, commissionerId: true, playoffStatus: true },
-  });
-  const seasonState = leagueForSeason?.isReplay
-    ? await getSeasonState(leagueId, nowMs, prisma)
-    : null;
-  const playoffStatusValue = leagueForSeason?.playoffStatus ?? "NOT_STARTED";
   const { activeMatchup, remainingPlayers, topPerformers, disappointments, lineupAlerts, lastResult, leagueActivity, leagueTopPerformers, leagueDisappointments, eliminationInfo, championInfo, playoffPending } = dashboard;
 
   // Fetch teams and matchups for rival badge
@@ -206,20 +195,7 @@ export default async function TeamMatchupPage({
         </div>
       )}
 
-      {/* ── 1a. Replay simulator controls (for commissioners/founders) ── */}
-      {leagueForSeason?.isReplay && seasonState && (leagueForSeason.commissionerId === user.id || isFounder(user.email)) && (
-        <ReplaySimulatorControls
-          leagueId={leagueId}
-          seasonState={seasonState}
-          nowMs={nowMs}
-          isCommissioner={leagueForSeason.commissionerId === user.id}
-          isFounder={isFounder(user.email)}
-          placement="inline-panel"
-          playoffStatus={playoffStatusValue}
-        />
-      )}
-
-      {/* ── 1b. Between-weeks lineup nudge ── */}
+      {/* ── 1a. Between-weeks lineup nudge ── */}
       {activeMatchup?.status === "upcoming" && (activeMatchup.myPlayers.length < activeSlotCount) && (
         <div style={{
           background: "rgba(245,158,11,0.07)",

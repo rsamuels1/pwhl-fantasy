@@ -3,12 +3,9 @@ import type { ReactNode } from "react";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
-import DevTimeClear from "@/components/DevTimeClear";
 import BottomNav from "@/components/BottomNav";
-import ReplayDayBar from "@/components/ReplayDayBar";
 import NotificationBell from "@/components/NotificationBell";
 import FeedbackWidget from "@/components/FeedbackWidget";
-import { getGameDays, currentDayNumber, nextGameDay, prevGameDay } from "@/lib/replay/gameDays";
 
 interface LeagueLayoutProps {
   children: ReactNode;
@@ -19,19 +16,13 @@ export default async function LeagueLayout({ children, params }: LeagueLayoutPro
   const { leagueId } = await params;
   const basePath = `/league/${leagueId}`;
 
-  const cookieStore = await cookies();
-  const simDateRaw = (process.env.NODE_ENV !== "production" || process.env.ALLOW_SIM_DATE === "true")
-    ? cookieStore.get("pwhl_dev_sim_date")?.value ?? null
-    : null;
-
   const [user, leagueAndDraft] = await Promise.all([
     getCurrentUser(),
     prisma.fantasyLeague.findUnique({
       where: { id: leagueId },
       select: {
         commissionerId: true, name: true, isReplay: true,
-        replayCurrentDate: true, season: true, status: true,
-        playoffStatus: true,
+        status: true, playoffStatus: true,
         draft: { select: { status: true } },
       },
     }),
@@ -39,36 +30,6 @@ export default async function LeagueLayout({ children, params }: LeagueLayoutPro
 
   const league = leagueAndDraft;
   const isCommissioner = !!user && user.id === league?.commissionerId;
-
-  // Replay day navigation — show for any replay league state after draft completes
-  let replayDayProps: null | {
-    dayNumber: number;
-    totalDays: number;
-    currentDate: string | null;
-    hasNextDay: boolean;
-    canStartSeason: boolean;
-    playoffStatus: string;
-    leagueStatus: string;
-  } = null;
-  const isDraftComplete = league?.draft?.status === "COMPLETE";
-  const isReplayVisible = league?.isReplay && isCommissioner &&
-    (isDraftComplete || league?.status === "IN_SEASON" || league?.status === "COMPLETE");
-  if (isReplayVisible) {
-    const inSeason = league!.status === "IN_SEASON" || league!.status === "COMPLETE";
-    const gameDays = inSeason ? await getGameDays(league!.season, prisma) : [];
-    const replayMs = league!.replayCurrentDate?.getTime() ?? gameDays[0]?.getTime() ?? Date.now();
-    const dayNumber = inSeason ? currentDayNumber(replayMs, gameDays) : 0;
-    const lastDay = inSeason ? prevGameDay(replayMs, gameDays) : null;
-    replayDayProps = {
-      dayNumber,
-      totalDays: gameDays.length,
-      currentDate: lastDay ? lastDay.toISOString().slice(0, 10) : null,
-      hasNextDay: inSeason ? nextGameDay(replayMs, gameDays) !== null : false,
-      canStartSeason: isDraftComplete && league!.status !== "IN_SEASON" && league!.status !== "COMPLETE",
-      playoffStatus: league!.playoffStatus ?? "NOT_STARTED",
-      leagueStatus: league!.status,
-    };
-  }
 
   const [myTeam, unreadCount] = await Promise.all([
     user
@@ -85,7 +46,9 @@ export default async function LeagueLayout({ children, params }: LeagueLayoutPro
     { label: "Schedule", href: `${basePath}/matchups` },
     { label: "Playoffs", href: `${basePath}/bracket` },
     { label: "Rosters", href: `${basePath}/roster` },
+    { label: "Trades", href: `${basePath}/trades` },
     { label: "Transactions", href: `${basePath}/transactions` },
+    ...(league?.isReplay && isCommissioner ? [{ label: "Sim →", href: `${basePath}/sim` }] : []),
   ];
   const adminItem = isCommissioner
     ? { label: "⚙ Settings", href: `${basePath}/admin` }
@@ -126,30 +89,6 @@ export default async function LeagueLayout({ children, params }: LeagueLayoutPro
           </div>
         </header>
 
-        {replayDayProps && (
-          <ReplayDayBar
-            leagueId={leagueId}
-            dayNumber={replayDayProps.dayNumber}
-            totalDays={replayDayProps.totalDays}
-            currentDate={replayDayProps.currentDate}
-            hasNextDay={replayDayProps.hasNextDay}
-            canStartSeason={replayDayProps.canStartSeason}
-            playoffStatus={replayDayProps.playoffStatus}
-            leagueStatus={replayDayProps.leagueStatus}
-          />
-        )}
-
-        {simDateRaw && !league?.isReplay && (
-          <div style={{
-            fontSize: 12, color: "#fbbf24",
-            background: "rgba(251,191,36,0.08)", border: "1px solid rgba(251,191,36,0.2)",
-            borderRadius: 8, padding: "6px 12px", marginBottom: 12,
-            display: "flex", alignItems: "center", gap: 10,
-          }}>
-            <span>⚠ Dev mode · Simulated: {new Date(simDateRaw).toLocaleString()}</span>
-            <DevTimeClear />
-          </div>
-        )}
 
         <nav
           style={{

@@ -13,7 +13,8 @@ import AnnouncementForm from "@/components/AnnouncementForm";
 import { RenewLeagueForm } from "@/components/RenewLeagueForm";
 import { CommissionerRecoveryTools } from "@/components/CommissionerRecoveryTools";
 import { LeagueSettingsEditor } from "@/components/LeagueSettingsEditor";
-import SeasonView from "../season/SeasonView";
+import TradeSettingsForm from "@/components/TradeSettingsForm";
+import PendingTradeReviewList from "@/components/PendingTradeReviewList";
 
 const COMMISSIONER_EVENT_TYPES = [
   "COMMISSIONER_FORCE_MOVE",
@@ -55,6 +56,24 @@ export default async function AdminPage({ params, searchParams }: Props) {
   });
 
   if (!league) notFound();
+
+  // Pending-review trades (commissioner needs to act)
+  const pendingTrades = await prisma.trade.findMany({
+    where: { leagueId, status: { in: ["PENDING_REVIEW", "ACCEPTED"] } },
+    include: {
+      items: true,
+    },
+    orderBy: { createdAt: "asc" },
+  });
+
+  // Batch-load player names for pending trades
+  const pendingPlayerIds = [...new Set(pendingTrades.flatMap((t) => t.items.map((i) => i.playerId)))];
+  const pendingPlayers = pendingPlayerIds.length > 0
+    ? await prisma.player.findMany({
+        where: { id: { in: pendingPlayerIds } },
+        select: { id: true, firstName: true, lastName: true },
+      })
+    : [];
 
   // Fetch audit log for commissioner actions (last 50)
   const auditLog = await prisma.leagueEvent.findMany({
@@ -422,13 +441,33 @@ export default async function AdminPage({ params, searchParams }: Props) {
       <section style={panelStyle}>
         <h2 style={{ fontSize: 18, marginBottom: 16 }}>Season management</h2>
         {draftDone ? (
-          <SeasonView
-            leagueId={leagueId}
-            initialState={state}
-            isDev={isDev}
-            isReplay={league.isReplay}
-            replayCurrentDate={league.replayCurrentDate?.toISOString()}
-          />
+          league.isReplay ? (
+            <div>
+              <p style={{ color: "#94a3b8", fontSize: 14, marginBottom: 12 }}>
+                Use the <strong>Sim →</strong> page to manage replay league progression.
+              </p>
+              <Link
+                href={`/league/${leagueId}/sim`}
+                style={{
+                  display: "inline-block",
+                  padding: "10px 14px",
+                  background: "rgba(99, 102, 241, 0.15)",
+                  border: "1px solid rgba(99, 102, 241, 0.3)",
+                  borderRadius: 8,
+                  color: "#a5b4fc",
+                  textDecoration: "none",
+                  fontSize: 13,
+                  fontWeight: 600,
+                }}
+              >
+                Go to Sim →
+              </Link>
+            </div>
+          ) : (
+            <p style={{ color: "#94a3b8", fontSize: 14 }}>
+              Live season — players advance automatically through the PWHL schedule.
+            </p>
+          )
         ) : (
           <p style={{ color: "#94a3b8", fontSize: 14 }}>
             Season controls become available after the draft is complete.
@@ -471,6 +510,39 @@ export default async function AdminPage({ params, searchParams }: Props) {
             teams={teamRows}
             isDraftPaused={isDraftPaused}
             isInSeason={league.status === "IN_SEASON"}
+          />
+        </section>
+      )}
+
+      {/* ── Trade settings ── */}
+      {draftDone && (
+        <section style={panelStyle}>
+          <h2 style={{ fontSize: 18, marginBottom: 8 }}>Trade settings</h2>
+          <p style={{ color: "#94a3b8", fontSize: 14, marginBottom: 16 }}>
+            Control how trades are processed in your league. Changes take effect for new trades immediately.
+          </p>
+          <TradeSettingsForm
+            leagueId={leagueId}
+            tradeReviewHours={league.tradeReviewHours}
+            requireCommissionerTradeApproval={league.requireCommissionerTradeApproval}
+          />
+        </section>
+      )}
+
+      {/* ── Pending trade review ── */}
+      {pendingTrades.length > 0 && (
+        <section style={{ ...panelStyle, border: "1px solid rgba(251,191,36,0.25)" }}>
+          <h2 style={{ fontSize: 18, marginBottom: 8, color: "#fbbf24" }}>
+            Trades pending review ({pendingTrades.length})
+          </h2>
+          <p style={{ color: "#94a3b8", fontSize: 14, marginBottom: 16 }}>
+            These trades have been accepted but require your review before executing.
+          </p>
+          <PendingTradeReviewList
+            leagueId={leagueId}
+            trades={pendingTrades}
+            playerNames={Object.fromEntries(pendingPlayers.map((p) => [p.id, `${p.firstName} ${p.lastName}`]))}
+            teamNames={Object.fromEntries(league.teams.map((t) => [t.id, t.name]))}
           />
         </section>
       )}

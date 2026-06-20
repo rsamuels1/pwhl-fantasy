@@ -1,7 +1,16 @@
 import { PrismaClient, Prisma } from "@prisma/client";
 import { getSeasonState } from "@/lib/season";
 
-export type NotificationType = "DRAFT_STARTING" | "ON_THE_CLOCK" | "LINEUP_INCOMPLETE";
+export type NotificationType =
+  | "DRAFT_STARTING"
+  | "ON_THE_CLOCK"
+  | "LINEUP_INCOMPLETE"
+  | "TRADE_RECEIVED"
+  | "TRADE_ACCEPTED"
+  | "TRADE_REJECTED"
+  | "TRADE_EXECUTED"
+  | "TRADE_VETOED"
+  | "TRADE_REVIEW_PENDING";
 
 export async function createNotification(
   userId: string,

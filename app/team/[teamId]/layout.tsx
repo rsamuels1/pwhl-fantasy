@@ -2,7 +2,6 @@ import type { ReactNode } from "react";
 import { cookies } from "next/headers";
 import { requireAuth, requireTeamOwner } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import DevTimeClear from "@/components/DevTimeClear";
 import TeamNav from "./TeamNav";
 import BottomNav from "@/components/BottomNav";
 import Link from "next/link";
@@ -42,10 +41,6 @@ export default async function TeamLayout({ children, params }: TeamLayoutProps) 
         },
         orderBy: { round: "desc" },
       });
-
-  const simDateRaw = (process.env.NODE_ENV !== "production" || process.env.ALLOW_SIM_DATE === "true")
-    ? cookieStore.get("pwhl_dev_sim_date")?.value ?? null
-    : null;
 
   return (
     <div style={{ minHeight: "100vh", background: "#0f1117", color: "#e2e8f0" }}>
@@ -89,17 +84,6 @@ export default async function TeamLayout({ children, params }: TeamLayoutProps) 
           playoffStatus={team.league.playoffStatus ?? "NOT_STARTED"}
         />
 
-        {simDateRaw && (
-          <div style={{
-            fontSize: 12, color: "#fbbf24",
-            background: "rgba(251,191,36,0.08)", border: "1px solid rgba(251,191,36,0.2)",
-            borderRadius: 8, padding: "6px 12px", marginBottom: 16,
-            display: "flex", alignItems: "center", gap: 10,
-          }}>
-            <span>⚠ Dev mode · Simulated: {new Date(simDateRaw).toLocaleString()}</span>
-            <DevTimeClear />
-          </div>
-        )}
 
         <main className="bottom-nav-pad" style={{ paddingBottom: 40 }}>{children}</main>
       </div>

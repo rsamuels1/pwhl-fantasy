@@ -19,6 +19,7 @@ export default async function FounderLayout({ children }: { children: React.Reac
           <Link href="/founder/leagues" style={{ color: "#9ca3af" }}>Leagues</Link>
           <Link href="/founder/simulate" style={{ color: "#9ca3af" }}>Simulate</Link>
           <Link href="/founder/feedback" style={{ color: "#9ca3af" }}>Feedback</Link>
+          <Link href="/founder/backlog" style={{ color: "#9ca3af" }}>Backlog</Link>
         </nav>
         <div style={{ marginLeft: "auto" }}>
           <Link href="/dashboard" style={{ color: "#6b7280", fontSize: "0.8rem" }}>← App</Link>
