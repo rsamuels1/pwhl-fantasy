@@ -135,6 +135,9 @@ export interface DashboardData {
   eliminationInfo?: { round: number; roundLabel: string } | null;
   championInfo?: ChampionInfo | null;
   playoffPending?: boolean;
+  // Populated when the active period has no stats yet (SETUP phase) — shows last complete week's stats
+  myPlayersLastWeek: PlayerMatchupRow[] | null;
+  lastWeekLabel: string | null;
 }
 
 // ── main ──────────────────────────────────────────────────────────────────────
@@ -178,6 +181,8 @@ export async function getDashboardData(
     leagueActivity,
     leagueTopPerformers: [],
     leagueDisappointments: [],
+    myPlayersLastWeek: null,
+    lastWeekLabel: null,
   };
 
   if (!displayPeriod) {
@@ -362,7 +367,7 @@ export async function getDashboardData(
   }
 
   const sorted = [...myDetailed.players].sort((a, b) => b.points - a.points);
-  const topPerformers: PlayerPerfSummary[] = sorted.slice(0, 3).map((p) => ({
+  const topPerformers: PlayerPerfSummary[] = sorted.filter((p) => p.points > 0).slice(0, 3).map((p) => ({
     playerId: p.playerId, name: p.name, position: p.position, points: p.points, statBreakdown: p.statBreakdown,
   }));
   const disappointments: PlayerPerfSummary[] = [...myDetailed.players]
@@ -377,6 +382,35 @@ export async function getDashboardData(
   ]);
 
   const myPlayers = withGames(myDetailed.players);
+
+  // When no games have been played yet in the active period (SETUP phase: replayCurrentDate = period.startsAt),
+  // the stat query returns an empty range [startsAt, startsAt). Fall back to the last complete period's stats
+  // so the matchup page shows meaningful data instead of all 0s.
+  let myPlayersLastWeek: PlayerMatchupRow[] | null = null;
+  let lastWeekLabel: string | null = null;
+  if (myDetailed.players.length > 0 && myDetailed.players.every((p) => p.gameCount === 0)) {
+    const lastComplete = [...seasonState.periods].reverse().find((ps) => ps.status === "COMPLETE");
+    if (lastComplete) {
+      const lastWeekDetailed = await computeTeamScoreDetailed(
+        myTeamId, lastComplete.period, scoringSettings, prisma
+      );
+      if (lastWeekDetailed.players.some((p) => p.points > 0)) {
+        myPlayersLastWeek = lastWeekDetailed.players.map((p) => ({
+          playerId: p.playerId,
+          name: p.name,
+          position: p.position,
+          slot: p.slot,
+          teamAbbr: p.teamAbbr,
+          gamesThisPeriod: null,
+          points: p.points,
+          gameCount: p.gameCount,
+          statBreakdown: p.statBreakdown,
+        }));
+        lastWeekLabel = `Week ${lastComplete.period.week}`;
+      }
+    }
+  }
+
   const lineupAlerts: LineupAlert[] = myDetailed.players
     .filter((p) => {
       if (p.slot === "BENCH" || p.slot === "IR") return false;
@@ -434,6 +468,8 @@ export async function getDashboardData(
     leagueActivity,
     leagueTopPerformers,
     leagueDisappointments,
+    myPlayersLastWeek,
+    lastWeekLabel,
   };
 }
 
@@ -459,6 +495,8 @@ async function getPlayoffDashboardData(
     leagueActivity,
     leagueTopPerformers: [],
     leagueDisappointments: [],
+    myPlayersLastWeek: null,
+    lastWeekLabel: null,
   };
 
   // P1-A: When playoffs are complete, determine the champion from the final-round matchup.
@@ -746,6 +784,8 @@ async function getPlayoffDashboardData(
     leagueActivity,
     leagueTopPerformers: [],
     leagueDisappointments: [],
+    myPlayersLastWeek: null,
+    lastWeekLabel: null,
   };
 }
 

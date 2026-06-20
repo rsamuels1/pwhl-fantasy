@@ -103,7 +103,7 @@ export default function LineupManager({
   const [justSaved, setJustSaved] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [statsView, setStatsView] = useState<StatsView>(
-    thisWeekLabel ? "thisWeek" : (nextWeekLabel ? "projected" : "season")
+    (nextWeekLabel && projectionsAvailable) ? "projected" : (thisWeekLabel ? "thisWeek" : "season")
   );
 
   const selected = selectedId ? roster.find((p) => p.playerId === selectedId) ?? null : null;

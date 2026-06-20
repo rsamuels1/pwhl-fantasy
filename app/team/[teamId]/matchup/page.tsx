@@ -43,7 +43,7 @@ export default async function TeamMatchupPage({
     }),
   ]);
 
-  const { activeMatchup, remainingPlayers, topPerformers, disappointments, lineupAlerts, lastResult, leagueActivity, leagueTopPerformers, leagueDisappointments, eliminationInfo, championInfo, playoffPending } = dashboard;
+  const { activeMatchup, remainingPlayers, topPerformers, disappointments, lineupAlerts, lastResult, leagueActivity, leagueTopPerformers, leagueDisappointments, eliminationInfo, championInfo, playoffPending, myPlayersLastWeek, lastWeekLabel } = dashboard;
 
   // Fetch teams and matchups for rival badge
   const [allTeams, allMatchups] = await Promise.all([
@@ -565,6 +565,19 @@ export default async function TeamMatchupPage({
             </Card>
           )}
         </div>
+      )}
+
+      {/* ── 6b. Last week's stats (shown during SETUP phase when current week has no data yet) ── */}
+      {lastWeekLabel && myPlayersLastWeek && myPlayersLastWeek.length > 0 && (
+        <Card>
+          <h2 style={{ ...sectionHead, marginBottom: 14 }}>
+            {lastWeekLabel} · final
+            <span style={{ fontWeight: 400, fontSize: 12, color: "#64748b", marginLeft: 8 }}>
+              This week&apos;s stats will appear after simulating
+            </span>
+          </h2>
+          <RosterTable players={myPlayersLastWeek} />
+        </Card>
       )}
 
       {/* ── 7. League activity ── */}
