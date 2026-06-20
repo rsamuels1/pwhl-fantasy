@@ -3,8 +3,10 @@ import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { requireAuth, requireTeamOwner, isFounder } from "@/lib/auth";
 import { getDashboardData, type ActiveMatchup, type PlayerMatchupRow, type WeeklyRecap, type LeaguePerformerRow, type ChampionInfo } from "@/lib/services/dashboard";
+import { getTeamAnalysis } from "@/lib/services/analysis-service";
 import InlineLineupEditor, { type LineupPlayer } from "./InlineLineupEditor";
 import LiveScoreRefresh from "@/components/LiveScoreRefresh";
+import MatchupTabs from "@/components/MatchupTabs";
 import { getSwingPlayers } from "@/lib/matchups/swingPlayers";
 import { parseScoringSettings } from "@/lib/scoring/settings";
 import { getDevNow } from "@/lib/devTime";
@@ -35,7 +37,13 @@ export default async function TeamMatchupPage({
   const rs = (league.rosterSettings as Record<string, number>) ?? {};
   const activeSlotCount = (rs.forward ?? 3) + (rs.defense ?? 2) + (rs.goalie ?? 1) + (rs.util ?? 1);
   const nowMs = getReplayNow(league, await getDevNow());
-  const dashboard = await getDashboardData(leagueId, teamId, nowMs, prisma);
+  const [dashboard, analysis] = await Promise.all([
+    getDashboardData(leagueId, teamId, nowMs, prisma),
+    getTeamAnalysis(leagueId, teamId, nowMs, prisma).catch((err: unknown) => {
+      console.error("[matchup] getTeamAnalysis failed:", err);
+      return null;
+    }),
+  ]);
 
   // Fetch season state and playoff status for replay controls (if needed)
   const leagueForSeason = await prisma.fantasyLeague.findUnique({
@@ -315,6 +323,9 @@ export default async function TeamMatchupPage({
           </p>
         </Card>
       )}
+
+      {/* ── Tabs: Matchup / Analysis ── */}
+      <MatchupTabs analysis={analysis}>
 
       {/* ── 2. Rival badge and H2H history ── */}
       {rival && (
@@ -599,6 +610,8 @@ export default async function TeamMatchupPage({
           </div>
         </Card>
       )}
+
+      </MatchupTabs>
     </div>
   );
 }

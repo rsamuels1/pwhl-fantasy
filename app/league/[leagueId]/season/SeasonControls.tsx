@@ -61,11 +61,10 @@ export default function SeasonControls({ leagueId, periods, onResult, isReplay, 
         },
       }));
 
-      // For dev mode: set cookie to the exact date provided (no auto-jump).
-      // Caller is responsible for setting the correct target date.
       let finalCookieDate = new Date(dateToUse).toISOString();
+      let successMessage = data.message ?? "Done.";
 
-      // Special case: on "start season", jump to 9am of first week
+      // On "start season", jump to 9am of first week
       if (action === "start" && newPeriods.length > 0) {
         const d = new Date(newPeriods[0].period.startsAt);
         d.setHours(9, 0, 0, 0);
@@ -73,6 +72,21 @@ export default function SeasonControls({ leagueId, periods, onResult, isReplay, 
           ? d : new Date(newPeriods[0].period.startsAt.getTime() + 5_000);
         finalCookieDate = morning.toISOString();
         setSimulatedDate(morning.toISOString().slice(0, 16));
+      }
+
+      // On "End week N" / "Sim to playoffs" (advance with an explicit date):
+      // jump to 9am of the next period so the app wakes up cleanly at week start.
+      // "Advance to date" (no overrideDate) keeps the user's chosen date unchanged.
+      if (action === "advance" && overrideDate !== undefined) {
+        const nextPeriod = newPeriods.find((p) => p.status === "ACTIVE" || p.status === "UPCOMING");
+        if (nextPeriod) {
+          const d = new Date(nextPeriod.period.startsAt);
+          d.setHours(9, 0, 0, 0);
+          finalCookieDate = d.getTime() >= nextPeriod.period.startsAt.getTime()
+            ? d.toISOString()
+            : new Date(nextPeriod.period.startsAt.getTime() + 5_000).toISOString();
+          successMessage = `${data.message ?? "Scored."} Week ${nextPeriod.period.week} is now active.`;
+        }
       }
 
       if (isReplay) {
@@ -84,7 +98,7 @@ export default function SeasonControls({ leagueId, periods, onResult, isReplay, 
         setSimulatedDate(new Date(finalCookieDate).toISOString().slice(0, 16));
       }
 
-      onResult(data.state, data.message ?? "Done.");
+      onResult(data.state, successMessage);
     }
   }
 

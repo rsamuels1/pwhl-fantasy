@@ -3,6 +3,7 @@
 import { useState, useTransition, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import AddAndSlotModal from "@/components/AddAndSlotModal";
+import WaiverWirePanel from "@/components/WaiverWirePanel";
 
 export type Position = "FORWARD" | "DEFENSE" | "GOALIE";
 
@@ -27,6 +28,7 @@ export interface FreeAgentRow {
   pwhlTeamId?: string | null;
   gamesThisPeriod?: number | null;
   isLocked?: boolean;
+  isOnWaivers?: boolean;
 }
 
 export interface SkaterStats {
@@ -71,7 +73,7 @@ const POS_COLORS: Record<string, string> = {
   FORWARD: "#60a5fa", DEFENSE: "#34d399", GOALIE: "#f59e0b",
 };
 
-type Tab = "roster" | "freeAgents";
+type Tab = "roster" | "freeAgents" | "waiverWire";
 type ViewMode = "cards" | "table";
 type SortKey = "name" | "pts" | "goals" | "assists" | "ppp" | "shots" | "hits" | "blocks" | "wins" | "savePct" | "goalsAgainst" | "fp" | "gamesThisPeriod" | "gp" | "shutouts";
 
@@ -116,9 +118,15 @@ export default function RosterManager({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ teamId, addPlayerId, dropPlayerId }),
       });
-      const data = await res.json() as { roster?: RosterPlayerRow[]; error?: string };
+      const data = await res.json() as { roster?: RosterPlayerRow[]; error?: string; onWaivers?: boolean };
       if (!res.ok || data.error) {
-        setError(data.error ?? "Failed to add player.");
+        if (data.onWaivers) {
+          // Player is on waivers — redirect manager to the waiver wire tab
+          setError("This player is on waivers — use the Waiver Wire tab to submit a claim.");
+          setTab("waiverWire");
+        } else {
+          setError(data.error ?? "Failed to add player.");
+        }
         return;
       }
       const addedFa = freeAgents.find((p) => p.playerId === addPlayerId);
@@ -258,8 +266,12 @@ export default function RosterManager({
 
       {/* ── Own-team tabs (hidden when viewing another team) ── */}
       {isOwnRoster && (
-        <div style={{ display: "flex", gap: 4, background: "rgba(255,255,255,0.04)", borderRadius: 10, padding: 3, width: "fit-content" }}>
-          {([["roster", `${teamName} (${roster.length}/${maxRosterSize})`], ["freeAgents", `Free Agents (${freeAgents.filter(p => !rosterIds.has(p.playerId)).length})`]] as [Tab, string][]).map(([t, label]) => (
+        <div style={{ display: "flex", gap: 4, background: "rgba(255,255,255,0.04)", borderRadius: 10, padding: 3, width: "fit-content", flexWrap: "wrap" }}>
+          {([
+            ["roster", `${teamName} (${roster.length}/${maxRosterSize})`],
+            ["freeAgents", `Free Agents (${freeAgents.filter(p => !rosterIds.has(p.playerId)).length})`],
+            ["waiverWire", "Waiver Wire"],
+          ] as [Tab, string][]).map(([t, label]) => (
             <button key={t} onClick={() => setTab(t)} style={{
               padding: "7px 16px", borderRadius: 8, border: "none", cursor: "pointer",
               fontSize: 13, fontWeight: 600,
@@ -364,6 +376,17 @@ export default function RosterManager({
           teamId={teamId}
           leagueId={leagueId}
           onComplete={() => { setSlottingPlayer(null); router.refresh(); }}
+          currentRosterSize={roster.length + 1}
+          maxRosterSize={maxRosterSize}
+        />
+      )}
+
+      {/* ── WAIVER WIRE TAB (own team only) ── */}
+      {isOwnRoster && tab === "waiverWire" && (
+        <WaiverWirePanel
+          leagueId={leagueId}
+          teamId={teamId}
+          rosterPlayers={roster.map((r) => ({ entryId: r.entryId, playerId: r.playerId, name: r.name, slot: r.slot }))}
         />
       )}
 
@@ -428,6 +451,7 @@ export default function RosterManager({
                   onConfirmAddDrop={() => { if (dropForAdd) handleAdd(fa.playerId, dropForAdd); }}
                   onCancel={() => { setPendingAdd(null); setDropForAdd(null); }}
                   disabled={isPending}
+                  onSwitchToWaivers={() => setTab("waiverWire")}
                 />
               ))
             )}
@@ -695,11 +719,12 @@ function FaColHeader({ isGoalie, sortKey, sortAsc, onSort }: {
 // ── Free agent row ─────────────────────────────────────────────────────────────
 
 function FaRow({ player, index, isFull, rosterPlayers, pendingAdd, dropForAdd,
-  onSelectAdd, onSelectDrop, onConfirmAddDrop, onCancel, disabled }: {
+  onSelectAdd, onSelectDrop, onConfirmAddDrop, onCancel, disabled, onSwitchToWaivers }: {
   player: FreeAgentRow; index: number; isFull: boolean;
   rosterPlayers: RosterPlayerRow[]; pendingAdd: string | null; dropForAdd: string | null;
   onSelectAdd: () => void; onSelectDrop: (id: string) => void;
   onConfirmAddDrop: () => void; onCancel: () => void; disabled: boolean;
+  onSwitchToWaivers?: () => void;
 }) {
   const isGoalie = player.position === "GOALIE";
   const s = player.stats;
@@ -724,6 +749,11 @@ function FaRow({ player, index, isFull, rosterPlayers, pendingAdd, dropForAdd,
             {player.position[0]}
           </span>
           {player.teamAbbr && <span style={{ fontSize: 10, color: "#475569", flexShrink: 0 }}>{player.teamAbbr}</span>}
+          {player.isOnWaivers && (
+            <span title="Player is on waivers — submit a claim from the Waiver Wire tab" style={{ fontSize: 9, fontWeight: 700, padding: "2px 5px", borderRadius: 4, background: "rgba(100,116,139,0.2)", color: "#64748b", flexShrink: 0 }}>
+              On Waivers
+            </span>
+          )}
         </div>
 
         {/* Games remaining this period badge */}
@@ -763,7 +793,15 @@ function FaRow({ player, index, isFull, rosterPlayers, pendingAdd, dropForAdd,
           </>
         )}
 
-        {isThisPending && isFull ? (
+        {player.isOnWaivers ? (
+          <button
+            onClick={onSwitchToWaivers}
+            title="Player is on waivers — submit a claim from the Waiver Wire tab"
+            style={{ ...smallBtn("#64748b"), fontSize: 10 }}
+          >
+            Claim
+          </button>
+        ) : isThisPending && isFull ? (
           <button onClick={onCancel} style={smallBtn("#64748b")}>Cancel</button>
         ) : (
           <button

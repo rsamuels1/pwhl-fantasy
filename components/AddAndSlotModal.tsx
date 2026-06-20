@@ -37,13 +37,23 @@ interface Props {
   teamId: string;
   leagueId: string;
   onComplete: () => void;
+  /** Total number of players on the roster after the add (pre-refresh). */
+  currentRosterSize?: number;
+  maxRosterSize?: number;
 }
 
 export default function AddAndSlotModal({
   player, activeRoster, rosterSettings, teamId, leagueId, onComplete,
+  currentRosterSize, maxRosterSize,
 }: Props) {
   const [slotting, setSlotting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // If the roster is full (all slots occupied including bench), show a blocking message.
+  const isRosterFull =
+    maxRosterSize !== undefined &&
+    currentRosterSize !== undefined &&
+    currentRosterSize > maxRosterSize;
 
   const eligibleSlotTypes = ACTIVE_SLOTS_BY_POSITION[player.position] ?? [];
 
@@ -57,9 +67,9 @@ export default function AddAndSlotModal({
     }
   }
 
-  // Auto-dismiss after 2s when no slots are available
+  // Auto-dismiss after 2s when no slots are available (and roster is not over-full)
   useEffect(() => {
-    if (slotOptions.length === 0) {
+    if (!isRosterFull && slotOptions.length === 0) {
       const t = setTimeout(() => onComplete(), 2000);
       return () => clearTimeout(t);
     }
@@ -128,8 +138,20 @@ export default function AddAndSlotModal({
           </div>
         </div>
 
+        {/* Roster full — user must drop someone before slotting */}
+        {isRosterFull && (
+          <div style={{
+            padding: "12px 14px", borderRadius: 10,
+            background: "rgba(248,113,113,0.08)",
+            border: "1px solid rgba(248,113,113,0.2)",
+            color: "#f87171", fontSize: 13,
+          }}>
+            Your roster is full ({maxRosterSize} players). Drop a player first before adding {player.name}.
+          </div>
+        )}
+
         {/* No slots available */}
-        {slotOptions.length === 0 && (
+        {!isRosterFull && slotOptions.length === 0 && (
           <div style={{
             padding: "12px 14px", borderRadius: 10,
             background: "rgba(100,116,139,0.1)",
@@ -141,7 +163,7 @@ export default function AddAndSlotModal({
         )}
 
         {/* Slot options */}
-        {slotOptions.length > 0 && (
+        {!isRosterFull && slotOptions.length > 0 && (
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             <div style={{
               fontSize: 11, fontWeight: 700, textTransform: "uppercase",
@@ -204,7 +226,7 @@ export default function AddAndSlotModal({
         )}
 
         {/* Bench for now */}
-        {slotOptions.length > 0 && (
+        {!isRosterFull && slotOptions.length > 0 && (
           <button
             onClick={onComplete}
             disabled={slotting}

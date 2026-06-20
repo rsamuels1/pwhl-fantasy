@@ -97,6 +97,21 @@ export function LeagueDetailTabs({ leagueId, league, standings, seasonState, dra
     });
   }
 
+  async function processWaivers() {
+    setSimResult(null);
+    setSimError(null);
+    startTransition(async () => {
+      try {
+        const res = await fetch(`/api/leagues/${leagueId}/waivers/process`, { method: "POST" });
+        const data = await res.json() as { awarded?: number; denied?: number; expired?: number; error?: string };
+        if (!res.ok) throw new Error(data.error ?? "Unknown error");
+        setSimResult(`Waivers processed — Awarded: ${data.awarded ?? 0}  Denied: ${data.denied ?? 0}  Expired: ${data.expired ?? 0}`);
+      } catch (e) {
+        setSimError(e instanceof Error ? e.message : "Failed");
+      }
+    });
+  }
+
   async function startPlayoffs() {
     setSimResult(null);
     setSimError(null);
@@ -303,6 +318,13 @@ export function LeagueDetailTabs({ leagueId, league, standings, seasonState, dra
                       Start Playoffs
                     </button>
                   )}
+                  <button
+                    onClick={processWaivers}
+                    disabled={isPending}
+                    style={{ background: "#1a2020", border: "1px solid #2d4040", borderRadius: "4px", padding: "0.5rem 1rem", color: "#67e8f9", fontFamily: "monospace", fontSize: "0.82rem", cursor: "pointer", opacity: isPending ? 0.5 : 1 }}
+                  >
+                    Process Waivers
+                  </button>
                 </div>
                 {isPending && <div style={{ marginTop: "0.5rem", color: "#888", fontSize: "0.8rem" }}>Running…</div>}
                 {simResult && <div style={{ marginTop: "0.5rem", color: "#22c55e", fontSize: "0.82rem" }}>✓ {simResult}</div>}

@@ -311,6 +311,60 @@ Acceptance Criteria:
 
 ---
 
+## 40. Beta Hardening
+
+Sprint: 8
+
+Priority: P0/P1 — beta launch gate
+
+Status: P0 + P1 items DONE (shipped Jun 20, ahead of schedule); Sprint 8 remaining scope is integration/load testing, Vercel cron wiring, P2 notifications, and UX polish.
+
+Goal: Close the gap between "code-complete" and "production-ready for real users." Sprint 8 is a dedicated hardening week. The P0 and P1 findings from the staff-level code audit (Sprint 6's #37) were resolved immediately after Sprint 6 — ahead of the Sprint 8 window.
+
+Verdict from audit: **GO TO BETA** — no showstoppers.
+
+**P0 items — DONE (shipped Jun 20):**
+
+- **P0-1/P0-4 Waiver cron** ✅ — `app/api/cron/process-waivers/route.ts` iterates all `IN_SEASON` leagues; calls `processWaivers()`. `vercel.json` cron entry at `0 8 * * *` (08:00 UTC = 03:00 ET). Auth-gated by `CRON_SECRET` header in production; open in dev via `ALLOW_SEASON_ADVANCE`. Ops: `CRON_SECRET` env var must be set in Vercel.
+- **P0-2 Auto-set projection safety** ✅ — projection fetch in `lineup/page.tsx` wrapped in try/catch; `projectionsAvailable: boolean` prop passed to `LineupManager`; Auto-set button disabled with tooltip and "Matchup Proj" tab disabled when unavailable.
+- **P0-3 Waiver priority init** ✅ — verified: `lib/draft/server.ts` calls `startSeason()` unconditionally for all leagues. No code change required.
+
+**P1 items — DONE (shipped Jun 20):**
+
+- **P1-A Analysis tab error state** ✅ — `getTeamAnalysis()` failure returns `null`; `AnalysisTab` renders "Analysis data unavailable. Try refreshing." when `null`.
+- **P1-B Auto-set between-weeks UX** ✅ — `computeOptimalLineup()` sort in `lib/lineup.ts` falls back to `gamesThisPeriod` when all `projectedFp` are `null`.
+- **P1-C Add/Slot capacity validation** ✅ — `components/AddAndSlotModal.tsx` shows "roster is full, drop a player first" and hides slot picker at max roster size.
+- **P1-E Waiver cancel confirmation** ✅ — `components/WaiverWirePanel.tsx` two-step inline confirm ("Confirm cancel?" + "Keep").
+- **P1-F Analysis scoring settings freshness** ✅ — verified: `lib/services/analysis-service.ts` already fetches fresh `scoringSettings` on every call. No code change required.
+- **P1-D Schedule badge timezone** — open; small UX polish deferred to Sprint 8 proper.
+
+**Test status (Jun 20):** 174/174 tests pass. Zero new TypeScript errors.
+
+**P2 items (address before public launch):**
+
+- **P2-A No cron for `LINEUP_INCOMPLETE` notifications** — the check fires on dashboard page load only, not on a schedule. Real beta users may not visit the dashboard and will miss lineup deadline warnings.
+- **P2-B No notification when waiver claim is awarded/denied** — managers have no in-app signal when their claim resolves. Add `WAIVER_CLAIM_AWARDED` / `WAIVER_CLAIM_DENIED` notification types wired from `processWaivers()`.
+- **P2-C Analysis queries not indexed for scale** — acceptable post-launch; flag for production monitoring.
+
+**Remaining Sprint 8 hardening work (Jul 7–13):**
+
+- P1-D schedule badge timezone (~0.25h)
+- End-to-end integration test: full season sim with waivers + scoring across multiple leagues simultaneously.
+- Vercel cron wiring: confirm `CRON_SECRET` set in Vercel staging; `check-incomplete-lineups` entry added to `vercel.json`; both crons confirmed firing before beta invite.
+- Load test: 10+ concurrent leagues drafting/scoring simultaneously.
+- P2-A/B notification gaps (can slip to first post-beta fix if time-constrained).
+- Final UX polish: error messages, empty states, and tooltips standardised across all surfaces.
+
+Acceptance Criteria:
+
+- P0-1: ✅ Vercel cron confirmed live; `processWaivers()` runs automatically at 03:00 ET across all IN_SEASON leagues. `CRON_SECRET` env var confirmed set in Vercel before public launch.
+- P0-2: ✅ Auto-set button disabled and error state shown when projections are unavailable.
+- P1 items A, B, C, E, F: ✅ resolved. P1-D: open (Sprint 8).
+- Load test passes: 10+ concurrent leagues draft and score without data corruption.
+- Integration test: full season with waivers resolves correctly end-to-end.
+
+---
+
 # Phase 2: Fantasy Essentials
 
 Goal: Reach feature parity with major fantasy platforms.
@@ -321,29 +375,43 @@ Priority: HIGH
 
 ## 5. Waiver Wire System
 
-Status: Partially Implemented — Sprint 6
+Status: ✅ DONE — Sprint 6
 
-Estimated tokens: ~110K (new schema columns, waiver service, processing job, commissioner UI)
+Estimated tokens: ~110K (new schema, waiver service, processing job, commissioner UI)
 
-Immediate free-agent add/drop ships today (`POST /api/leagues/[leagueId]/waiver` +
-roster page free-agent panel; roster-size enforced; emits a `LeagueEvent`). What's
-missing is the actual *waiver* layer.
+**What shipped:**
 
-Remaining:
+- **Schema** — 3 new models: `WaiverEntry` (48h window per player per league), `WaiverClaim` (one row per team claim), `WaiverPriority` (rolling reverse-standings order); `WaiverStatus` enum (`PENDING` / `AWARDED` / `DENIED` / `CANCELLED`); 4 new `EventType` values (`WAIVER_CLAIM_SUBMITTED` / `WAIVER_CLAIM_AWARDED` / `WAIVER_CLAIM_DENIED` / `WAIVER_CLAIM_CANCELLED`); `waiverWindowHours Int @default(48)` on `FantasyLeague`.
+- **Service** (`lib/services/waiver-service.ts`) — `initializeWaiverPriority()` (reverse VP-standings order; falls back to reverse draft order pre-season); `enterWaiverWire()` (idempotent upsert; called after every DROP); `getPlayerWaiverStatus()` (checks active waiver window); `submitClaim()` (validates + snapshots priority at submission); `processWaivers()` (idempotent batch processor; awards to lowest-priority-number claimant, moves winner to last, denies all others).
+- **API routes** — `GET/POST/DELETE /api/leagues/[leagueId]/waivers` (wire state, submit claim, cancel claim); `POST /api/leagues/[leagueId]/waivers/process` (commissioner-only manual trigger).
+- **Modified waiver/drop route** (`app/api/leagues/[leagueId]/waiver/route.ts`) — POST checks waiver status and returns 409 if player is on waivers; DELETE calls `enterWaiverWire()` after dropping.
+- **UI** — `components/WaiverWirePanel.tsx`: wire table (player, pos, team, countdown), pending claims with cancel, priority order panel. Integrated as "Waiver Wire" tab in `app/team/[teamId]/roster/RosterManager.tsx`. "On Waivers" badge in free-agent table; redirect toast when blocked.
+- **Ops** — `scripts/process-waivers.ts` cron script with `--dry-run` / `--league` flags; "Process Waivers" button in founder console (`app/founder/leagues/[leagueId]/LeagueDetailTabs.tsx`).
+- **Season integration** — `startSeason()` in `lib/season/index.ts` now calls `initializeWaiverPriority()`.
+- **Transaction feed** — "Waivers" filter tab in `TransactionFeed.tsx`; four new event types enriched in `lib/services/activity.ts`.
+- **Tests** — 13 new tests in `tests/waiver.test.ts`; all passing (174 total). Zero new TypeScript errors.
 
-- Waiver priority ordering
-- Waiver processing jobs (batched claim resolution)
-- Commissioner waiver settings
+**Scoped out (explicitly deferred):**
+
+- FAAB (Free Agent Acquisition Budget) — that is feature #6, a separate Sprint 7 item.
+- Waiver priority customization (static vs. rolling) — defaulting to rolling for now; revisit if commissioners request it.
+
+**Production cron — RESOLVED (Jun 20):**
+
+`app/api/cron/process-waivers/route.ts` ships the production trigger. The handler iterates all
+`IN_SEASON` leagues and calls `processWaivers()`. `vercel.json` schedules it at `0 8 * * *`
+(08:00 UTC = 03:00 ET daily). Auth-gated by `CRON_SECRET` header in production; open in dev
+via `ALLOW_SEASON_ADVANCE`. Ops: `CRON_SECRET` env var must be set in Vercel before public launch.
 
 Acceptance Criteria:
 
 - Players can be claimed ✅ (immediate add/drop)
-- Claims process correctly (priority/batched resolution still TODO)
-- Replay leagues supported
+- Claims process correctly via rolling priority and 48h window ✅
+- Replay leagues supported ✅
 
 Dependencies:
 
-- Transaction system
+- Transaction system ✅
 
 ---
 
@@ -366,20 +434,23 @@ Acceptance Criteria:
 
 Dependencies:
 
-- Waiver system
+- Waiver system (#5) — complete
+- Waiver cron (P0-1 in Sprint 8) — must be live before FAAB is meaningful. If managers submit FAAB bids but `processWaivers()` never runs automatically, bids will accumulate without resolution. Ship FAAB after the cron is confirmed live in production.
 
 ---
 
 ## 7. Trade System
 
-Status: Not Implemented — DEFERRED (lowest priority / someday maybe)
+Status: Not Implemented — Sprint 7 (Priority 1)
 
-Sprint: None — moved to backlog as of June 2026
+Sprint: 7 — pulled up from backlog June 2026; higher priority than League History/HoF for the launch period
 
 Estimated tokens: ~130K (new domain — schema tables, API routes, proposal/review/approval UI; plan a dedicated session)
 
-Note: Deprioritized June 2026. Beta cohort is small enough for out-of-band trades. Revisit
-only if founding commissioners surface strong demand before public launch.
+Note: Moved from backlog to Sprint 7 Priority 1 as of June 2026. Trade System is a large,
+self-contained new domain (~130K tokens, new `Trade`/`TradeOffer` schema tables,
+proposal/accept/reject flow, commissioner review gate, 3 new notification types, full audit
+log). Team Analysis trade-suggestion CTA (#25) is unblocked once this ships.
 
 Features:
 
@@ -592,51 +663,43 @@ Sprint: 6
 
 Priority: HIGH (trade-suggestion portion gated by Trade System #7)
 
-Status: Not Implemented
+Status: ✅ DONE
 
 Estimated tokens: ~85K (new page, per-position-group aggregation queries; all reads on existing data)
 
 Goal: add an "Analysis" tab to the matchup dashboard that turns the team's data into
 actionable advice.
 
-Features:
+What shipped:
 
-- What's working / what's not — flag over- and under-performing rostered players vs their
-  projection and vs replacement level.
-- Position-group trend breakdown — week-over-week fantasy output by position group (F / D / G)
-  vs league average, so the manager can see where they keep losing (e.g. "your defense has
-  been bottom-3 for three straight weeks").
-- Free-agent recommendations — rank available free agents by projected FPTS, weighted toward
-  the team's weakest position group ("consider adding X over your benched Y").
-- Trade suggestions — propose mutually beneficial trades by matching this team's surplus/
-  deficit position groups against other teams' rosters.
+- **`lib/services/analysis-service.ts`** — `getTeamAnalysis()` with 4 DB queries: computes
+  player hot/cold/on-track/new trends (rolling 5-game avg vs season avg), position-group FP
+  per week vs league median, and FA upgrade cards for the single weakest position group.
+- **`app/api/leagues/[leagueId]/analysis/route.ts`** — GET handler with `apiRequireLeagueMember` auth.
+- **`components/MatchupTabs.tsx`** — "use client" tab switcher (Matchup | Analysis); page.tsx
+  stays a server component.
+- **`components/AnalysisTab.tsx`** — three-section display: Player Trends table, Position Groups
+  table with amber "WEAK" highlight, FA Upgrade cards.
+- **`app/team/[teamId]/matchup/page.tsx`** (modified) — `getDashboardData` and `getTeamAnalysis`
+  run in parallel via `Promise.all`; matchup content wrapped in `<MatchupTabs>`; hero, alerts,
+  and replay controls stay always-visible above tabs.
 
-Implementation notes:
+Scoped out (not shipped):
 
-- Trend data: aggregate scored `Matchup` / `StatLine` history per scoring period, bucketed by
-  position group, compared against league per-week averages. Cache per period — it only changes
-  when a week is scored.
-- Free-agent ranking reuses the roster page's free-agent query + season-aggregate FP, scored
-  with the league's scoring settings, then ranked by projected FPTS for the weakest group.
-- "What's working" = actual FP vs the `projectPlayer` baseline per rostered player over recent
-  weeks.
-- Trade suggestions depend on the Trade System (#7) — ship the analysis + free-agent half first;
-  a suggestion can pre-fill a trade proposal once #7 lands.
-- Move heavy aggregation to a background job / cached table as history grows (see Background Jobs).
-- Degrade gracefully early in a season when there's little history yet.
+- **Trade suggestions** — deferred until Trade System (#7, Sprint 7) ships.
 
 Acceptance Criteria:
 
-- Matchup dashboard has an Analysis tab.
-- Position-group trend view shows weekly output vs league baseline.
-- Free-agent recommendations ranked by fit + projection.
-- Trade suggestions generated (once Trade System exists).
+- ✅ Matchup dashboard has an Analysis tab.
+- ✅ Position-group trend view shows weekly output vs league baseline.
+- ✅ Free-agent recommendations ranked by fit + projection.
+- Trade suggestions — deferred (requires Trade System #7).
 
 Dependencies:
 
-- Projections engine (exists)
-- Scored matchup / stat history (exists)
-- Trade System (#7) — trade-suggestion portion only
+- Projections engine (exists) ✅
+- Scored matchup / stat history (exists) ✅
+- Trade System (#7) — trade-suggestion portion only (deferred)
 
 ---
 
@@ -884,11 +947,11 @@ Priority: MEDIUM
 
 ## 33. Multi-Season League Architecture (`parentLeagueId`)
 
-Sprint: 2 (schema + renewal); Sprint 7 (history/UX layer)
+Sprint: 2 (schema + renewal); Sprint 9 (history/UX layer — moved from Sprint 7 to make room for Trade System)
 
 Priority: P1 — foundational; unlocks the entire retention layer
 
-Status: Schema + renewal shipped Sprint 2 (MS-001/002/003/004 ✅); history views (Sprint 7)
+Status: Schema + renewal shipped Sprint 2 (MS-001/002/003/004 ✅); history views (Sprint 9)
 
 Spec: `docs/06-architecture/implement-parentleagueid.md` (Story MS-001)
 
@@ -923,7 +986,7 @@ Dependencies / unlocks:
 
 - Pairs with MS-002 `rulesVersion` and MS-003 `scoringVersion`.
 - Prerequisite for Season Renewal (MS-004, `docs/season-renewal-system.md`), League History
-  (MS-005), League Hall of Fame (#18), Player Legacy (#31), and Keeper/Dynasty (#19/#20).
+  (MS-005, Sprint 9), League Hall of Fame (#18, Sprint 9), Player Legacy (#31), and Keeper/Dynasty (#19/#20).
 
 ---
 
@@ -965,7 +1028,7 @@ Acceptance Criteria:
 
 ## 18. League Hall of Fame
 
-Sprint: 7 (combined with #33 — see League History & Hall of Fame)
+Sprint: 9 (combined with #33 — moved from Sprint 7 to Sprint 9 tail to make room for Trade System)
 
 Status: Not Implemented
 
@@ -1109,6 +1172,366 @@ Features:
 Acceptance Criteria:
 
 - Trends displayed on player pages
+
+---
+
+# Phase 8: Rebranding — PWHL Fantasy → PWHL GM
+
+Goal: Reposition the product from "fantasy sports" framing to "professional sports management." Ship the planned PWHL GM identity after MVP is stable and initial users have drafted.
+
+Priority: P1 (post-MVP; execute before public launch or immediately after, depending on beta feedback)
+
+Strategy: Ship incrementally, not all at once. Copy-and-naming changes first (lowest risk, immediate identity shift), then logo and visual token upgrades, then page-level redesigns. Pages can be upgraded one at a time without blocking each other.
+
+References:
+- Brand strategy: `docs/branding/01-branding-brief.md`
+- Gap analysis: `docs/branding/02-brand-assessment.md`
+- Terminology reference: `docs/branding/03-terminology-guide.md`
+- Execution checklist: `docs/branding/04-implementation-checklist.md`
+- Mockups: `docs/branding/mockups/01-rebrand-showcase.html`, `02-draft-room.html`, `03-my-matchup.html`
+- v2 matchup mockup: `docs/branding/pwhl-gm-matchup-mockup-v2.html`
+
+---
+
+## REBRAND-001. Core Identity — Name, Logo, and Hero
+
+Sprint: 9
+
+Priority: P1
+
+Status: Not Implemented
+
+Points: 5
+
+Goal: Establish the PWHL GM brand in the highest-visibility surfaces. These are text substitutions and one SVG asset — zero product risk.
+
+What this includes:
+
+- Global product name replace: "PWHL Fantasy" → "PWHL GM" across all `.tsx` files, `app/layout.tsx` `<title>`, meta description, nav header wordmark
+- New `components/LogoShield.tsx`: shield + GM SVG (purple gradient fill, white GM text, 32px at nav, scales to 512px); replace "HF" placeholder in `app/layout.tsx` `.site-brand span`
+- `public/favicon.ico` and `public/manifest.json` icons updated to shield logo
+- Home page hero rewrite in `app/page.tsx`:
+  - Eyebrow: "PWHL Fantasy Hockey" → "PWHL General Manager"
+  - Headline: "Draft your team. Set your lineup. Win every week." → "Think Like a GM."
+  - Sub-copy: management platform framing per `02-brand-assessment.md` §2.3
+  - "How it works" steps: "Create League / Draft Players / Set Your Lineup / Win Matchups" → "Form Your League / Scout & Draft / Manage Your Roster / Lead Your Franchise"
+  - Hero CTA: "Ready to build your team?" → "Ready to run your franchise?"
+- Hero eyebrow color: `--green (#22c55e)` → `--accent (#6366f1)` in `.hero-eyebrow` CSS class
+
+Files: `app/layout.tsx`, `app/page.tsx`, `public/favicon.ico`, `public/manifest.json`, `components/LogoShield.tsx` (new)
+
+Acceptance Criteria:
+
+- Browser tab reads "PWHL GM" on every page
+- Shield + GM logo renders at 32px in header, 16px as favicon, without layout shift
+- Home page hero displays "Think Like a GM." headline
+- Hero eyebrow is indigo, not green
+- "How it works" steps use management language
+- `npm test` passes — no logic regressions
+- Mobile: logo + hero text readable at 390px width
+
+Related Mockups: `docs/branding/mockups/01-rebrand-showcase.html`, `docs/branding/mockups/02-draft-room.html`
+
+---
+
+## REBRAND-002. Voice Consistency — Welcome Flow, Dashboard, Login, Admin Nav
+
+Sprint: 9
+
+Priority: P1
+
+Status: Not Implemented
+
+Points: 3
+
+Goal: Reinforce the GM/executive framing on the highest-traffic secondary surfaces after the core identity lands. These are copy-only changes — no UI structure changes.
+
+What this includes:
+
+- `components/WelcomeFlow.tsx`: title "Welcome to PWHL Fantasy" → "Welcome to PWHL GM"; eyebrow "Fantasy hockey for the PWHL" → "Think Like a GM."; 3 orientation card descriptions rewritten in management framing (see `04-implementation-checklist.md` Phase 2)
+- `app/dashboard/page.tsx`: section header "Your teams" → "Your Franchises"
+- `app/login/page.tsx`: left-column pitch copy rewritten per `02-brand-assessment.md` §2.6
+- `app/league/[leagueId]/layout.tsx`: admin nav label "Admin" → "Front Office"
+- `app/register/page.tsx`: any "PWHL Fantasy" references updated to "PWHL GM"
+- `app/invite/[leagueId]/page.tsx`: any "PWHL Fantasy" references updated
+
+Files: `components/WelcomeFlow.tsx`, `app/dashboard/page.tsx`, `app/login/page.tsx`, `app/league/[leagueId]/layout.tsx`, `app/register/page.tsx`, `app/invite/[leagueId]/page.tsx`
+
+Acceptance Criteria:
+
+- New user sees "Welcome to PWHL GM" on first dashboard visit
+- Dashboard heading reads "Your Franchises"
+- Login page pitch uses management/franchise language
+- League nav shows "Front Office" for commissioners (replacing "Admin")
+- All "PWHL Fantasy" strings removed from user-visible copy on these pages
+- Text does not overflow on 390px mobile at any breakpoint
+
+Depends On: REBRAND-001 (name is already updated globally before voice consistency pass)
+
+Related Mockups: `docs/branding/mockups/01-rebrand-showcase.html`
+
+---
+
+## REBRAND-003. Detail Polish — "Fantasy" Modifier Removal and Docs
+
+Sprint: 9
+
+Priority: P2
+
+Status: Not Implemented
+
+Points: 3
+
+Goal: Remove remaining "fantasy" modifiers from UI labels and update internal documentation. Lowest-risk items; can run in the same PR as REBRAND-002 or as a follow-up.
+
+What this includes:
+
+- `app/team/[teamId]/roster/RosterManager.tsx`: "fantasy pts" label → "pts"
+- `app/league/[leagueId]/roster/page.tsx`: any "fantasy" language in headers/descriptions
+- `app/api/leagues/[leagueId]/teams/[teamId]/owner/route.ts`: check for "fantasy" strings in user-facing responses
+- `app/draft/[leagueId]/DraftRoom.tsx`: draft room header "PWHL Fantasy Draft" → "PWHL GM — Draft Room" (if present)
+- `app/leagues/page.tsx`: any "PWHL Fantasy" references
+- `CLAUDE.md` section headers and descriptions: update product name references; add link to `docs/branding/03-terminology-guide.md` as the copy standard for future development
+- `README.md`: update product name references
+- Verify analytics event metadata does not surface "fantasy" strings to external tools
+
+Files: `app/team/[teamId]/roster/RosterManager.tsx`, `app/league/[leagueId]/roster/page.tsx`, `app/draft/[leagueId]/DraftRoom.tsx`, `app/leagues/page.tsx`, `CLAUDE.md`, `README.md`
+
+Acceptance Criteria:
+
+- No "fantasy pts" label visible anywhere in the live app UI
+- Draft room header uses "PWHL GM" branding
+- `CLAUDE.md` references "PWHL GM" as product name
+- Full test suite passes (`npm test`, `npx tsc --noEmit`)
+- Manual QA: full user journey produces zero "PWHL Fantasy" strings on user-visible surfaces
+
+Depends On: REBRAND-001
+
+---
+
+## REBRAND-004. Design Token System Upgrade
+
+Sprint: 9
+
+Priority: P2
+
+Status: Not Implemented
+
+Points: 5
+
+Goal: Upgrade `app/globals.css` to the richer token vocabulary shown in `pwhl-gm-matchup-mockup-v2.html`. This unlocks consistent card surfaces, typography scale, and subtle background glows across the redesigned pages in REBRAND-005/006/007. Component pages can reference these tokens without one-off inline values.
+
+What this includes:
+
+- Extend `:root` in `app/globals.css` to add the v2 token set:
+  - Card surfaces: `--navy-card`, `--navy-card-border`, `--navy-card-hover`
+  - Indigo variants: `--indigo`, `--indigo-light`, `--indigo-text`, `--indigo-dim`, `--indigo-border`, `--indigo-glow`
+  - Semantic state colors: `--green-dim`, `--green-border`, `--red-dim`, `--red-border`, `--amber-dim`, `--amber-border`
+  - Position colors: `--pos-fwd (#60a5fa)`, `--pos-def (#34d399)`, `--pos-goal (#f59e0b)`, `--pos-util (#a78bfa)`
+  - Text scale: `--text-primary`, `--text-secondary`, `--text-muted`, `--text-dim`
+  - Shape tokens: `--radius-card (20px)`, `--radius-sm (8px)`, `--radius-pill (999px)`
+  - Typography: add Google Fonts import for Syne (display headlines, 700/800) and DM Mono (stats/scores); `--font-display`, `--font-mono`, `--font-body` vars
+- Body background: add the subtle radial glow from v2 (`rgba(99,102,241,0.07)` ellipse at top, `rgba(6,182,212,0.04)` at bottom-right) — gives the "lit ice surface" feel
+- Header: add `backdrop-filter: blur(16px) saturate(1.4)` to `.top-nav` / `.site-header` to match v2 frosted glass effect
+- All existing tokens remain in place and aliased — `--accent` stays, now also accessible as `--indigo`. No regressions.
+- Wire `--font-display` to the `<h1>` and hero headline elements in `app/page.tsx` and `app/layout.tsx`
+
+Files: `app/globals.css`, `app/layout.tsx` (font import), `app/page.tsx` (headline font)
+
+Acceptance Criteria:
+
+- All new CSS tokens are defined in `:root` and documented with a comment block
+- Existing pages load without visual regressions (existing components that don't use new tokens are unaffected)
+- Syne font renders on home page hero headline and display headings
+- Body background shows the subtle indigo glow at top
+- Header has frosted glass blur effect
+- Position color tokens render correctly when used in the matchup page roster breakdown (spot-check)
+- `npx tsc --noEmit` clean; `npm test` passes
+
+Related Mockups: `docs/branding/pwhl-gm-matchup-mockup-v2.html` (token definitions at top of `<style>` block)
+
+Blocks: REBRAND-005, REBRAND-006, REBRAND-007 (pages reference new tokens)
+
+---
+
+## REBRAND-005. Matchup Page Visual Redesign
+
+Sprint: 9
+
+Priority: P2
+
+Status: Not Implemented
+
+Points: 8
+
+Goal: Bring the matchup page (`app/team/[teamId]/matchup/`) up to the v2 mockup standard. This is the highest-traffic in-season page — the most important page to redesign after the core identity lands.
+
+What this includes:
+
+- **Score hero (`MatchupHero` / `DuelHero` / `FieldHero`)**: upgrade to v2 card style — `--navy-card` background, `--indigo-border` ring, Syne font for score display, rounded corners at `--radius-card`; win probability bar uses `--indigo` fill with `--navy-card` track
+- **Storyline chip**: use pill style with `--indigo-dim` background and `--indigo-text` color; Syne font for player name
+- **Playing Tonight section**: player rows use `--navy-card` surface; position tags use `--pos-fwd/def/goal/util` color tokens
+- **Swing Players section**: card grid with `--navy-card` background, `--radius-card` corners; "swing" label uses `--amber` token
+- **Roster Breakdown**: both-team comparison cards; position column uses color tokens; FP column uses `--font-mono` (DM Mono) for score values
+- **Lineup alert strip**: keep red/amber semantic colors; upgrade background to `--red-dim` / `--amber-dim` with matching border tokens
+- **Analysis tab** (`components/AnalysisTab.tsx`): upgrade table rows to `--navy-card` style; WEAK highlight uses `--amber-dim` background + `--amber-border`
+- **Mobile (≤640px)**: stacked single-column; score hero score values `clamp(32px, 8vw, 52px)`; all touch targets remain ≥44px
+- **No server/data changes** — this is purely the visual layer of existing components
+
+Files: `app/team/[teamId]/matchup/page.tsx` (CSS classes), `components/MatchupTabs.tsx`, `components/AnalysisTab.tsx`, any inline styles in matchup-related components
+
+Acceptance Criteria:
+
+- Matchup hero score uses Syne display font at ≥52px on desktop
+- Win probability bar uses indigo fill with correct dark track
+- Position tags on roster rows use color-coded tokens (blue F, green D, amber G, purple UTIL)
+- FP values in stat columns use DM Mono font
+- Visual parity with `docs/branding/mockups/03-my-matchup.html` and `docs/branding/pwhl-gm-matchup-mockup-v2.html` at 1280px desktop viewport
+- Mobile (390px): hero scores, roster rows, and analysis tab all display without overflow
+- `npm test` passes; no TypeScript errors
+
+Depends On: REBRAND-004 (token system)
+
+Related Mockups: `docs/branding/mockups/03-my-matchup.html`, `docs/branding/pwhl-gm-matchup-mockup-v2.html`
+
+---
+
+## REBRAND-006. Draft Room Visual Redesign
+
+Sprint: 9
+
+Priority: P2
+
+Status: Not Implemented
+
+Points: 8
+
+Goal: Bring the draft room (`app/draft/[leagueId]/`) up to the mockup standard. The draft is the highest-stakes session in the product — it needs to feel polished and professional.
+
+What this includes:
+
+- **Header**: shield logo replaces "HF" (covered by REBRAND-001); draft title centered in header; team name + "On the Clock" chip in accent color; clock uses `--font-mono` (DM Mono) for the countdown number
+- **PickBoard grid**: cells use `--navy-card` surface; drafted cells use team color indicator or indigo fill; current pick cell has `--indigo-border` glow ring
+- **PlayerPanel** (Available tab): table rows use `--navy-card` on hover; position filter pills use `--navy-card` base, `--indigo` active state; stat column headers use `--text-muted`; FP and stat values use `--font-mono`
+- **PlayerPanel** (Queue tab): draggable rows with `--navy-card` surface; pick button uses `--indigo` fill
+- **NeedsPanel**: slot rows use position color tokens for the badge; filled slots use `--green-dim` background; 1-remaining uses `--amber-dim`
+- **TeamSpreadPanel**: team abbreviation chips color-coded using existing concentration logic; 3-player threshold amber (`--amber`), 4+ red (`--red`)
+- **RecentPicks**: picks list uses `--navy-card` rows with DM Mono for pick number; auto-pick gets `--text-muted` styling
+- **Mobile (≤900px)**: existing tabbed layout (PickBoard / Available / Queue / Needs) is preserved; upgrade tab bar to use `--indigo` active underline; each tab content uses new card styles
+- **No WebSocket or logic changes** — purely visual layer
+
+Files: `app/draft/[leagueId]/DraftRoom.tsx`, `app/draft/[leagueId]/page.tsx` (CSS class updates only), any inline styles in draft room components
+
+Acceptance Criteria:
+
+- Draft clock countdown uses DM Mono font
+- PickBoard shows `--indigo-border` glow on current pick cell
+- NeedsPanel slot rows color-code by position using token values
+- PlayerPanel Available tab: position filter pills have correct active/inactive states
+- Visual parity with `docs/branding/mockups/02-draft-room.html` at 1440px desktop viewport
+- Mobile (900px): tab bar active state uses `--indigo` underline; all content legible without overflow
+- Draft functions identically — WebSocket connection, picks, clock, auto-pick all unaffected
+- `npm test` passes; no TypeScript errors
+
+Depends On: REBRAND-004 (token system), REBRAND-001 (logo in header)
+
+Related Mockups: `docs/branding/mockups/02-draft-room.html`
+
+---
+
+## REBRAND-007. Secondary Pages — Lineup, Roster, Standings, Bracket
+
+Sprint: 9
+
+Priority: P3
+
+Status: Not Implemented
+
+Points: 8
+
+Goal: Apply the v2 visual language to the remaining core pages. These are lower-traffic than the matchup page and draft room but are still part of the weekly loop. Can be executed as a single pass after REBRAND-005 and REBRAND-006 land.
+
+What this includes:
+
+- **Lineup page** (`app/team/[teamId]/lineup/`):
+  - `LineupManager.tsx`: active slot cards use `--navy-card` background, `--indigo-border` ring on selected player
+  - Bench section uses subtler `--navy-card` with reduced opacity border
+  - Lock indicator (🔒) uses `--text-muted`; "Played" badge uses `--green-dim` / `--green-border`
+  - Games-remaining badge uses `--indigo-dim` fill with `--indigo-text`
+  - Stats toggle tab bar uses `--navy-card` base, `--indigo` active underline (not background fill)
+  - Zero-games warning banner: `--amber-dim` background, `--amber-border` border
+  - Auto-set button: upgrade to Syne font label "Auto-Set" at 14px; keep purple fill
+
+- **Roster page** (`app/team/[teamId]/roster/`):
+  - `RosterManager.tsx`: table rows use `--navy-card-hover` on hover; column headers use `--text-muted`; FP column values use `--font-mono`
+  - "On Waivers" badge: `--amber-dim` background
+  - Drop/Add buttons: keep existing size; update border-radius to `--radius-sm`
+  - WaiverWirePanel: countdown chip uses `--amber` color; awarded claim chip uses `--green-dim`
+
+- **Standings page** (`app/league/[leagueId]/standings/`):
+  - Table rows: highlighted user row uses `--indigo-dim` background; clinched row uses `--green-dim`; eliminated row uses `--red-dim`
+  - Clinched/eliminated chips use semantic color tokens
+  - Column headers: `--font-mono` for numeric columns (VP, FP, W-L-T)
+
+- **Bracket page** (`app/league/[leagueId]/bracket/`):
+  - Matchup cards: `--navy-card` background, `--radius-card` corners
+  - Champion card: `--indigo-glow` background glow
+  - Round labels: Syne font
+
+- **League Overview** (`app/league/[leagueId]/`):
+  - Race table: cards use `--navy-card` surface; bubble row uses `--amber-dim` left border accent
+  - Compact matchup row: score values use `--font-mono`
+  - Commissioner action strip: upgrade to `--amber-dim` background with `--amber-border`
+
+Files: `app/team/[teamId]/lineup/LineupManager.tsx`, `app/team/[teamId]/roster/RosterManager.tsx`, `app/league/[leagueId]/standings/page.tsx`, `app/league/[leagueId]/bracket/page.tsx`, `app/league/[leagueId]/page.tsx`, `components/WaiverWirePanel.tsx`
+
+Acceptance Criteria:
+
+- Lineup page: selected player card has indigo border ring; lock indicator visible without competing with card content
+- Roster page: FP values in table use DM Mono; "On Waivers" badge is amber-tinted
+- Standings: user's own row highlighted in indigo-dim; clinch/elim chips use green/red token colors
+- Bracket: champion card has indigo glow; round labels use Syne font
+- All pages pass mobile check at 390px: no overflow, touch targets ≥44px
+- `npm test` passes; no TypeScript errors; `npx tsc --noEmit` clean
+
+Depends On: REBRAND-004 (token system)
+Blocks: None
+
+---
+
+## REBRAND-008. QA Sprint — Full User Journey Verification
+
+Sprint: 9
+
+Priority: P1
+
+Status: Not Implemented
+
+Points: 3
+
+Goal: Verify no regressions after all rebrand PRs land. Run the manual testing path from `docs/branding/04-implementation-checklist.md` Phase 4, plus automated suite. This is a coordination and validation story, not a development story — one session with a test checklist.
+
+What this includes:
+
+- Execute the 30-minute manual testing path (Phase 4 of `04-implementation-checklist.md`): home → login → welcome flow → dashboard → create league → draft room → matchup → standings → admin panel
+- Verify mobile breakpoints: 390px iPhone-class, 768px tablet, 1280px desktop
+- Check no "PWHL Fantasy" strings remain visible in the app UI (browser DevTools text search)
+- Check no "HF" placeholder logo remains visible
+- Verify all tests pass: `npm test`, `npx tsc --noEmit`
+- Monitor error logs for 24h post-deploy
+
+Files: No code changes — this is a QA execution story
+
+Acceptance Criteria:
+
+- Full user journey completes without functional regressions
+- Zero "PWHL Fantasy" strings visible on any user-facing surface
+- Shield + GM logo visible in header and favicon on all pages
+- All tests pass; no TypeScript errors
+- Zero JS console errors on the critical path pages (home, login, dashboard, draft, matchup)
+- Post-deploy monitoring shows no spike in error logs
+
+Depends On: REBRAND-001 through REBRAND-007 all merged
 
 ---
 

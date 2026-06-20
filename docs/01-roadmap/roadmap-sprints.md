@@ -131,10 +131,10 @@ Closed all in-progress feature gaps and carry-forwards before beta.
 
 **Exit:** commissioner can run a league start-to-finish with no engineering help; founder can monitor platform health without DB access; founding commissioner cohort can be invited. ✅ ACHIEVED
 
-## Sprint 6 — "Engagement + Transactions" · ~2 wks · Track F · P1 ← CURRENT
+## Sprint 6 — "Engagement + Transactions" · ~2 wks · Track F · P1 · ✅ COMPLETE
 
-Goal: Ship the features founding commissioners will notice during the closed beta. All five
-items here are read-heavy or isolated new domains — none touch the draft or standings core.
+Goal: Ship the features founding commissioners will notice during the closed beta. All items
+here are read-heavy or isolated new domains — none touch the draft or standings core.
 
 **Shipped (Sprint 6):**
 
@@ -177,37 +177,30 @@ items here are read-heavy or isolated new domains — none touch the draft or st
   - **Test mock $transaction** (`tests/renewal.test.ts`) — mock Prisma object now implements `$transaction` callback pattern, fixing 9 failing renewal tests.
   Result: replay feature works end-to-end — draft completes → matchups auto-generate → weeks score correctly via simulator.
 
-**Remaining Sprint 6:**
+- **Team Analysis & Insights (#25)** ✅
+  `lib/services/analysis-service.ts` — `getTeamAnalysis()` with 4 DB queries; player hot/cold/on-track/new trends (rolling 5-game avg vs season avg); position-group FP per week vs league median; FA upgrade cards for weakest group. `app/api/leagues/[leagueId]/analysis/route.ts` — GET with `apiRequireLeagueMember`. `components/MatchupTabs.tsx` — tab switcher (Matchup | Analysis). `components/AnalysisTab.tsx` — Player Trends table, Position Groups table (amber WEAK highlight), FA Upgrade cards. `app/team/[teamId]/matchup/page.tsx` modified: `getDashboardData` + `getTeamAnalysis` run in parallel via `Promise.all`; hero/alerts/replay controls stay above tabs. Trade suggestions scoped out — deferred until Trade System (#7) ships.
 
-**Priority 4 — Team Analysis & Insights (#25)** · ~85K
-Spec: `docs/02-engineering/team-analysis-spec.md`
-New "Analysis" tab on the matchup page. Player hot/cold verdicts vs projection baseline;
-position-group trend vs league median (last 4 weeks); top 3 FA upgrade suggestions for the
-weakest group. All reads on existing data. Trade suggestion CTA deferred until Trade System
-(#7) ships.
+- **Priority 5 — Waiver Priority + Processing (#5)** ✅ · ~110K
+  Spec: `docs/02-engineering/waiver-spec.md`
+  Schema: `WaiverEntry`, `WaiverClaim`, `WaiverPriority` models; `WaiverStatus` enum; 4 new `EventType` values; `waiverWindowHours Int @default(48)` on `FantasyLeague`. Service: `lib/services/waiver-service.ts` — `initializeWaiverPriority()` (reverse VP-standings; pre-season falls back to reverse draft order); `enterWaiverWire()` (idempotent upsert after every DROP); `getPlayerWaiverStatus()`; `submitClaim()` (priority snapshot); `processWaivers()` (idempotent batch processor). API: `GET/POST/DELETE /api/leagues/[leagueId]/waivers`; `POST .../waivers/process` (commissioner-only). UI: `components/WaiverWirePanel.tsx` — wire table, pending claims, priority panel; "Waiver Wire" tab in `RosterManager.tsx`; "On Waivers" badge in FA table. Ops: `scripts/process-waivers.ts` cron script; "Process Waivers" button in founder console. Season: `startSeason()` now calls `initializeWaiverPriority()`. Transactions: "Waivers" filter tab in `TransactionFeed.tsx`; 4 new event types in `lib/services/activity.ts`. Tests: 13 new tests in `tests/waiver.test.ts` (174 total). FAAB and priority customization (static vs. rolling) explicitly deferred to Sprint 7.
 
-**Priority 5 — Waiver Priority + Processing (#5)** · ~110K
-Spec: `docs/02-engineering/waiver-spec.md`
-The fairness layer on top of existing instant add/drop: rolling priority order, 48h waiver
-window for dropped players, daily batch processing at 03:00 ET. `WaiverClaim` +
-`WaiverPriority` schema tables; `processWaivers()` idempotent service; claim submission +
-status UI on the roster page. Commissioner controls reuse existing recovery tools.
-
-**Exit:** founding commissioners can auto-set lineups ✅, see their weekly performance history ✅, add a FA with immediate slot-in flow ✅, submit feedback visible in founder console ✅, code audit complete with P0 findings resolved, and team analysis shipped.
+**Exit:** founding commissioners can auto-set lineups ✅, see their weekly performance history ✅, add a FA with immediate slot-in flow ✅, submit feedback visible in founder console ✅, code audit complete with P0 findings resolved ✅, team analysis shipped ✅, waiver priority + batch processing live ✅. 7/7 items complete.
 
 ---
 
-## Sprint 7 — "Retention Layer" · ~2 wks · Track F · P2
+## Sprint 7 — "Retention Layer" · ~2 wks · Track F · P2 ← CURRENT
 
 Goal: Cement the multi-season story before the season ends. These features build on the
 schema foundation laid in Sprint 2 (parentLeagueId, rulesVersion, scoringVersion) and the
 engagement surfaces from Sprint 6.
 
-**Priority 1 — League History & Hall of Fame (#33 / #18)** · ~50K
-Spec: `docs/02-engineering/league-history-spec.md`
-New `/league/[leagueId]/history` page walking the `parentLeagueId` chain. Past season cards:
-champion, top-4 standings. Hall of Fame section: all past champions + two all-time records
-(highest single-week FP, most VP in a season). Nav tab hidden in season 1. No schema changes.
+**Priority 1 — Trade System (#7)** · ~130K
+Spec: `docs/02-engineering/trade-spec.md`
+Pulled up from backlog June 2026 — higher priority than League History/HoF for the launch
+period. Full trade proposal/review/approval flow: managers propose trades, league displays
+pending trades for both parties to accept/reject, commissioner review gate (optional),
+trade history in Transaction feed. Schema: `Trade` / `TradeOffer` tables. 3 new notification
+types. Full audit log. Trade-suggestion CTA in Team Analysis (#25) unblocked once this ships.
 
 **Priority 2 — League-Wide Matchup Storylines (#11)** · ~50K
 Spec: `docs/02-engineering/matchup-storylines-spec.md`
@@ -219,6 +212,10 @@ leader, biggest rank climber, top scoring player. No schema changes.
 Blind-bid acquisition budget layered on top of the Sprint 6 waiver system. Commissioner enables
 per league; managers submit sealed bids with claims; highest bid wins ties broken by waiver
 priority. Depends on Waiver System (#5) being complete.
+
+**Dependency note:** FAAB is only meaningful in production if the waiver cron (P0-1) is live.
+If `processWaivers()` never runs automatically, bids will accumulate without resolution. The
+waiver cron is a Sprint 8 item; confirm it is deployed before enabling FAAB in any live league.
 
 **Priority 4 — Player Legacy & Cross-Season Tracking (#31)** · ~95K
 `/profile` page with career history (all leagues/seasons, FP totals, championship count). Global
@@ -265,10 +262,199 @@ Email channel for `LINEUP_INCOMPLETE`, `TRADE_RECEIVED`, and `WAIVER_RESULT` not
 Uses the existing `Notification` / `NotificationPreference` models. Integration with a transactional
 email provider (e.g. Resend). Deferred from Sprint 3 — add only if beta feedback surfaces it as P1.
 
-**Exit:** founding commissioners can view their league history; the league overview shows weekly
-storylines; leagues with active waivers can use FAAB; replay commissioners can run accelerated
-simulations with progress visibility. The platform is retention-ready for the 2027-28 off-season
-renewal window.
+**PLAYOFF-AUDIT-001 — Playoff System Verification** · ~3.5h · Added Sprint 7 · P0 for beta readiness
+Triggered by: Sprint 7 feedback-and-audit session (2026-06-20).
+Spec: `docs/02-engineering/playoff-system-spec.md`
+
+Confirmed bug (P1, fix during Sprint 7):
+- **PLAYOFF-BUG-001** · Bracket page race banner shows "6 teams qualify" for default leagues.
+  Root cause: `teamsInPlayoff ?? 6` fallback on line 70 of `app/league/[leagueId]/bracket/page.tsx`.
+  Fix: change `?? 6` to `?? 4`. ~30 min.
+
+Open questions to verify before beta invites:
+- **Q1** · Does `computeVpStandings` filter `isPlayoff = true` matchups? If not, playoff scores
+  distort the tie-breaking seed order used in round 2+. Check `lib/scoring/vp.ts`. ~30 min.
+- **Q2** · Does `PlayoffBracket` component handle null/bye slots correctly? Verify via
+  `simulate-season.ts` end-to-end run with `topSeedsWithBye > 0`. ~1h.
+- **Full checklist run**: run `npx tsx scripts/simulate-season.ts` end-to-end, confirm bracket
+  page shows correct scores for all rounds, champion card renders, eliminated teams see
+  elimination notice. ~2h.
+
+Acceptance criteria (must pass before beta invites):
+- AC-001: `simulate-season.ts` completes with correct champion and no errors.
+- AC-002: Bracket page shows "4 teams qualify" for default leagues (PLAYOFF-BUG-001 fixed).
+- AC-003: Eliminated team's franchise page shows elimination notice, not active matchup.
+- AC-004: Commissioner can start playoffs, advance all rounds, reach champion card without help.
+- AC-005: `tsc --noEmit` passes; `npm test` passes including `tests/playoffs.test.ts`.
+
+**Exit:** trade system is live for beta commissioners; the league overview shows weekly
+storylines; leagues with active waivers can use FAAB; playoff system verified end-to-end.
+The platform is ready for the 2027-28 off-season renewal window.
+
+---
+
+## Sprint 8 — "Beta Hardening" · ~1 wk · Jul 7–13, 2026 · Track V+F · P0/P1
+
+Goal: Close the gap between code-complete and production-ready before the founding commissioner
+cohort is invited. This is the integration and production-readiness work that unit tests cannot
+catch. Based on the staff-level code audit findings from Sprint 6 (#37).
+
+**Audit verdict: GO TO BETA.** No showstoppers. ~8h of P0/P1 fixes needed.
+
+**Note: All P0 and P1 items were applied immediately after Sprint 6 completion — ahead of the
+Sprint 8 schedule. See "Shipped early (Jun 20, ahead of schedule)" below.**
+
+**Shipped early (Jun 20, ahead of schedule):** ✅
+
+1. **Waiver cron (P0-1, P0-4)** ✅ · Shipped Jun 20 — `app/api/cron/process-waivers/route.ts`
+   POST handler; iterates all `IN_SEASON` leagues; calls `processWaivers()`. Auth-gated by
+   `CRON_SECRET` header in production; open in dev via `ALLOW_SEASON_ADVANCE`. New
+   `vercel.json` with cron entry at `0 8 * * *` (08:00 UTC = 03:00 ET daily).
+   Ops note: `CRON_SECRET` env var must be set in Vercel before public launch.
+
+2. **Auto-set projection safety (P0-2)** ✅ · Shipped Jun 20 — projection fetch in
+   `app/team/[teamId]/lineup/page.tsx` wrapped in try/catch; `projectionsAvailable: boolean`
+   passed to `LineupManager`. Auto-set button disabled with tooltip when
+   `!projectionsAvailable`; "Matchup Proj" stats tab also disabled.
+
+3. **Verify waiver priority init (P0-3)** ✅ · Verified Jun 20 — `lib/draft/server.ts`
+   already calls `startSeason()` unconditionally for all leagues. No code change needed.
+
+4. **Analysis tab error state (P1-A)** ✅ · Shipped Jun 20 — `getTeamAnalysis()` failure
+   now returns `null` instead of crashing; `AnalysisTab` renders
+   "Analysis data unavailable. Try refreshing." when `null`.
+
+5. **Auto-set between-weeks UX (P1-B)** ✅ · Shipped Jun 20 — `computeOptimalLineup()`
+   sort in `lib/lineup.ts` now falls back to `gamesThisPeriod` when all `projectedFp` are
+   `null`, giving a useful ordering between weeks.
+
+6. **Add/Slot capacity validation (P1-C)** ✅ · Shipped Jun 20 — `components/AddAndSlotModal.tsx`
+   now shows "roster is full, drop a player first" and hides the slot picker when at max
+   roster size.
+
+7. **Waiver cancel confirmation (P1-E)** ✅ · Shipped Jun 20 — `components/WaiverWirePanel.tsx`
+   two-step inline confirm: "Confirm cancel?" + "Keep" — no accidental tap destroys a claim.
+
+8. **Analysis scoring settings freshness (P1-F)** ✅ · Verified Jun 20 — `lib/services/analysis-service.ts`
+   already fetches fresh `scoringSettings` on every call. No code change needed.
+
+**Test status at time of P0/P1 fixes:** 174/174 tests pass. Zero new TypeScript errors.
+
+**P1-D (schedule badge timezone note) — still open:** Add "ET" label or tooltip to
+games-remaining badges. Small UX polish; deferred to Sprint 8 proper.
+
+**Remaining Sprint 8 scope (Jul 7–13, 2026):**
+
+9. **End-to-end integration test** — full season simulation with waivers + FAAB scoring
+    across 3+ leagues simultaneously; verify no data corruption.
+
+10. **Vercel cron wiring** — confirm `CRON_SECRET` env var is set in Vercel staging; confirm
+    `process-waivers` fires at 03:00 ET; `check-incomplete-lineups` entry added to
+    `vercel.json`. Both must fire in staging before beta invite goes out.
+
+11. **Load test** — 10+ concurrent leagues drafting/scoring simultaneously. Goal: zero
+    dropped picks, no duplicate-pick errors, no waiver-priority corruption.
+
+12. **P2 notification gaps (deferred to post-beta if time constrained):**
+    - P2-A: cron for `LINEUP_INCOMPLETE` notifications (currently fires on dashboard load only)
+    - P2-B: `WAIVER_CLAIM_AWARDED` / `WAIVER_CLAIM_DENIED` notification types wired from `processWaivers()`
+
+13. **P1-D schedule badge timezone** · ~0.25h — add "ET" label or tooltip to games-remaining badges.
+
+14. **Final UX polish** — error messages, empty states, and tooltips standardised across all
+    surfaces; audit any remaining raw error strings visible to users.
+
+**Estimated effort:** ~40h / 1 week (P0/P1 fixes already done; remaining is integration/load test + P2/polish)
+
+**Progress: 7/14 items done (all P0 + P1 shipped early Jun 20)**
+
+**Exit:** Vercel cron confirmed live with `CRON_SECRET` set; load test passed with 10+
+concurrent leagues; integration test clean; founding commissioner beta invites go out.
+
+---
+
+## Sprint 9 — "PWHL GM Rebrand" · ~2 wks · Track F · P1/P2
+
+Goal: Execute the planned PWHL Fantasy → PWHL GM rebrand. All strategy, mockups, copy, and implementation checklists are finalized in `docs/branding/`. This sprint ships the identity layer — names, logo, voice consistency, design tokens, and page-level visual upgrades — without touching any product logic.
+
+**Trigger criteria (all must be true before starting):**
+- Sprint 8 Beta Hardening complete and beta invites sent
+- No P0 bugs open
+- Founding commissioners have completed at least one draft
+- Team has capacity for a polish sprint
+
+**Sprint capacity:** ~40 points across 8 stories
+
+**P1 — Minimum shippable rebrand (~8 hours, matches `BRANDING-DEFERRED.md` estimate):**
+
+**Priority 1 — REBRAND-001: Core Identity (Name, Logo, Hero)** · 5 pts · P1
+`docs/branding/04-implementation-checklist.md` Phase 1. Global "PWHL Fantasy" → "PWHL GM" find-replace across all `.tsx` files; new `components/LogoShield.tsx` shield+GM SVG (purple gradient, white GM text, 32px nav / 512px PWA); `public/favicon.ico` and `public/manifest.json` updated; home page hero rewrite ("Think Like a GM.", management sub-copy, "How it works" steps reframed); hero eyebrow color `--green` → `--accent`.
+Files: `app/layout.tsx`, `app/page.tsx`, `public/favicon.ico`, `public/manifest.json`, `components/LogoShield.tsx` (new). Zero logic changes.
+
+**Priority 2 — REBRAND-002: Voice Consistency** · 3 pts · P1
+`04-implementation-checklist.md` Phase 2. Welcome flow title/eyebrow/card descriptions; dashboard "Your Franchises"; login pitch copy; admin nav "Admin" → "Front Office"; invite and register page copy.
+Files: `components/WelcomeFlow.tsx`, `app/dashboard/page.tsx`, `app/login/page.tsx`, `app/league/[leagueId]/layout.tsx`, `app/register/page.tsx`, `app/invite/[leagueId]/page.tsx`.
+
+**Priority 3 — REBRAND-003: Detail Polish ("Fantasy" Modifiers + Docs)** · 3 pts · P2
+`04-implementation-checklist.md` Phase 3. Remove "fantasy pts" from `RosterManager.tsx`; update draft room header to "PWHL GM — Draft Room"; "PWHL Fantasy" strings in `app/leagues/page.tsx`; `CLAUDE.md` and `README.md` product name updates; link `03-terminology-guide.md` from `CLAUDE.md`.
+Files: `app/team/[teamId]/roster/RosterManager.tsx`, `app/draft/[leagueId]/DraftRoom.tsx`, `app/league/[leagueId]/roster/page.tsx`, `app/leagues/page.tsx`, `CLAUDE.md`, `README.md`.
+
+**Priority 4 — REBRAND-008: QA Sprint** · 3 pts · P1
+Run the manual testing path from `04-implementation-checklist.md` Phase 4 after all P1 PRs merge. Verify: no "PWHL Fantasy" strings in live UI; no "HF" placeholder visible; shield logo in header and favicon; full user journey (home → login → dashboard → draft → matchup → standings → admin); mobile at 390px; `npm test` and `npx tsc --noEmit` pass. Monitor error logs 24h post-deploy.
+
+**P2 — Visual redesign layer (depends on REBRAND-004 token foundation):**
+
+**Priority 5 — REBRAND-004: Design Token System Upgrade** · 5 pts · P2
+Extend `app/globals.css` `:root` with the v2 token vocabulary from `docs/branding/pwhl-gm-matchup-mockup-v2.html`: card surface tokens (`--navy-card`, `--navy-card-border`, `--navy-card-hover`), indigo variant palette (`--indigo-dim`, `--indigo-border`, `--indigo-glow`, `--indigo-text`), semantic state dim+border tokens (amber/red/green), position color tokens (`--pos-fwd/def/goal/util`), text scale (`--text-primary/secondary/muted/dim`), shape tokens (`--radius-card`, `--radius-sm`, `--radius-pill`). Add Google Fonts import for Syne (display headings, 700/800) and DM Mono (stats/scores); wire `--font-display` and `--font-mono` vars. Add subtle radial glow to body background; add `backdrop-filter: blur(16px) saturate(1.4)` to site header. All existing tokens remain; no regressions.
+Files: `app/globals.css`, `app/layout.tsx` (font import).
+Blocks: REBRAND-005, 006, 007.
+
+**Priority 6 — REBRAND-005: Matchup Page Visual Redesign** · 8 pts · P2
+Upgrade `app/team/[teamId]/matchup/` to v2 design standard: Syne font on hero score numbers, DM Mono for FP values in stat columns, `--navy-card` surface on all card sections, position color tokens (`--pos-fwd/def/goal/util`) on roster player rows, indigo win-probability bar fill, amber swing-players label, `--radius-card` corners throughout. Analysis tab (`components/AnalysisTab.tsx`): navy-card table rows, amber WEAK highlight uses `--amber-dim`/`--amber-border`. No server or data changes. Visual parity with `docs/branding/mockups/03-my-matchup.html` at 1280px desktop and 390px mobile.
+Depends On: REBRAND-004.
+
+**Priority 7 — REBRAND-006: Draft Room Visual Redesign** · 8 pts · P2
+Upgrade `app/draft/[leagueId]/DraftRoom.tsx` to mockup standard: DM Mono countdown clock, `--indigo-border` glow ring on current pick cell, position-color coded NeedsPanel slot rows, green/amber concentration fills in `TeamSpreadPanel`, `--navy-card` hover rows in `PlayerPanel`, `--indigo` active position-filter pills. Mobile tabbed layout preserved; visual upgrade only. No WebSocket or logic changes. Visual parity with `docs/branding/mockups/02-draft-room.html` at 1440px desktop.
+Depends On: REBRAND-004, REBRAND-001.
+
+**P3 — Secondary pages (lower priority, can defer to Sprint 10):**
+
+**Priority 8 — REBRAND-007: Secondary Pages (Lineup, Roster, Standings, Bracket, Overview)** · 8 pts · P3
+Apply v2 visual language to remaining weekly-loop pages. Lineup (`LineupManager.tsx`): selected player `--indigo-border` ring, games-remaining `--indigo-dim` badge, zero-games warning `--amber-dim` background. Roster (`RosterManager.tsx`): DM Mono FP values, `--amber-dim` waiver badge. Standings: user row `--indigo-dim`, clinch `--green-dim`, elim `--red-dim` chips. Bracket: champion card `--indigo-glow`, round labels Syne font. League overview: race table `--navy-card`, commissioner strip `--amber-dim`.
+Depends On: REBRAND-004.
+
+**Priority 9 — League History & Hall of Fame (#33 / #18)** · ~50K · P3
+Spec: `docs/02-engineering/league-history-spec.md`
+Moved from Sprint 7 Priority 1 to end of Sprint 9 — pushed to make room for Trade System
+in Sprint 7. New `/league/[leagueId]/history` page walking the `parentLeagueId` chain. Past
+season cards: champion, top-4 standings. Hall of Fame section: all past champions + two
+all-time records (highest single-week FP, most VP in a season). Nav tab hidden in season 1.
+No schema changes. Meaningful only after at least one completed and renewed season; ship the
+page skeleton now and let it fill in naturally.
+
+**Sprint 9 Point Totals:**
+| Story | Points | Priority | Depends On |
+|---|---|---|---|
+| REBRAND-001: Core Identity | 5 | P1 | — |
+| REBRAND-002: Voice Consistency | 3 | P1 | REBRAND-001 global pass done |
+| REBRAND-003: Detail Polish | 3 | P2 | REBRAND-001 |
+| REBRAND-008: QA Sprint | 3 | P1 | All P1s merged |
+| REBRAND-004: Design Tokens | 5 | P2 | — |
+| REBRAND-005: Matchup Page | 8 | P2 | REBRAND-004 |
+| REBRAND-006: Draft Room | 8 | P2 | REBRAND-004, REBRAND-001 |
+| REBRAND-007: Secondary Pages | 8 | P3 | REBRAND-004 |
+| League History & HoF (#33/#18) | ~50K | P3 | Sprint 2 (parentLeagueId chain); Trade System (#7) |
+| **Total** | **43 pts + HoF** | — | — |
+
+**Minimum shippable rebrand (P1 stories only):** REBRAND-001 + REBRAND-002 + REBRAND-008 = 11 points · ~8 hours. Ships name, logo, and voice consistency as planned in `BRANDING-DEFERRED.md`. REBRAND-003 (3 pts) is low-risk detail polish that can run same-day. Visual redesign stories (P2/P3) follow as a second pass.
+
+**Dependency order for parallel execution:**
+- REBRAND-001, 002, 003 can run in parallel (all copy/text)
+- REBRAND-008 runs last (QA after everything merges)
+- REBRAND-004 is independent of copy stories; can run in parallel with 001–003
+- REBRAND-005, 006, 007 can run in parallel with each other after REBRAND-004 merges
+
+**Exit:** The product is visibly "PWHL GM" across all user-facing surfaces. Shield logo in browser tab. "Think Like a GM." on the home page. "Your Franchises" on the dashboard. "Front Office" in commissioner nav. Matchup and draft room pages match the approved mockups at 1280px desktop and 390px mobile. All tests green. Zero "PWHL Fantasy" strings in the live UI. League History/HoF page skeleton live (fills in after first season renewal).
 
 ---
 
@@ -277,16 +463,9 @@ renewal window.
 Items in this section have been explicitly deprioritized and pulled from the sprint plan.
 They are candidates for a future season roadmap, not the current build cycle.
 
-**Trade System (#7)** · ~130K · LOWEST PRIORITY — SOMEDAY MAYBE
-Spec: `docs/02-engineering/trade-spec.md`
-Deprioritized as of June 2026. Trade System is a large, self-contained new domain (~130K
-tokens, new `Trade`/`TradeOffer` schema tables, proposal/accept/reject flow, commissioner
-review gate, 3 new notification types, full audit log). The beta cohort is small enough that
-informal trades can happen out-of-band. Revisit only if founding commissioners surface demand
-strong enough to justify the implementation cost before public launch.
-
-Team Analysis trade-suggestion CTA (`#25`) remains deferred as well — it was gated on Trade
-System being complete.
+**Note:** Trade System (#7) was moved from this backlog to Sprint 7 (Priority 1) as of June
+2026 — it is higher priority than League History/HoF for the upcoming launch period. Team
+Analysis trade-suggestion CTA (#25) is now unblocked once Trade System ships.
 
 ---
 
@@ -319,20 +498,21 @@ Items below are acknowledged but have no sprint assignment. They become candidat
 | Sprint 0 — Implementation Alignment | ✅ COMPLETE (Jun 12, 2026) | Rosters / VP / Playoffs flipped FAIL → PASS |
 | Sprint 1 — Season Validation | ✅ COMPLETE (Jun 12, 2026) | Full season simulates, 114 tests pass, confidence 85–90% |
 | Sprint 2 — Commissioner + Platform Foundation | ✅ COMPLETE (Jun 2026) | Commissioner recovery tools, multi-season schema, analytics (6 events), VP education; 130 tests pass |
+| Sprint 9 — PWHL GM Rebrand | Planned | 8 stories · 43 pts · P1 name+logo+voice; P2 tokens+page redesigns; P3 secondary pages |
 | Sprint 3 — Beta Readiness | ✅ COMPLETE (Jun 13, 2026) | Onboarding ✅, error handling ✅, mobile ✅, NT-001 ✅, draft notifications ✅, transaction history ✅, IA-011 ✅ |
 | Sprint 4 — Product Polish | ✅ COMPLETE (Jun 13, 2026) | NT-002 LINEUP_INCOMPLETE ✅ · #01 commissioner dashboard ✅ · #17 rivalries ✅ · VP standings fix ✅ · playoff mode + replay support ✅ |
 | Sprint 5 — Validation + Beta Operations | ✅ COMPLETE | Replay gap fix ✅ · sim-to-playoffs ✅ · draft cert ✅ · founder dashboard ✅ · playoff experience UX ✅ · commissioner workflow validation ✅ |
-| Sprint 6 — Engagement + Transactions | ⏳ IN PROGRESS | Auto-set lineup ✅ · FA schedule awareness + add & slot ✅ · beta feedback infrastructure ✅ · code audit + all P0/P1 fixes ✅ · team analysis · waiver priority |
-| Sprint 7 — Retention Layer | ⏳ PLANNED | League history + HoF · storylines · FAAB · player legacy · Replay Sim V2 (#38) |
+| Sprint 6 — Engagement + Transactions | ✅ COMPLETE | Auto-set lineup ✅ · FA schedule awareness + add & slot ✅ · beta feedback infrastructure ✅ · code audit + all P0/P1 fixes ✅ · team analysis ✅ · waiver priority + processing ✅ |
+| Sprint 7 — Retention Layer | ⏳ IN PROGRESS (0/4) | Trade System (#7) · storylines · FAAB (gated on waiver cron) · player legacy · Replay Sim V2 (#38) DEFERRED |
+| Sprint 8 — Beta Hardening | ⏳ IN PROGRESS (7/14 done) | P0+P1 audit fixes shipped Jun 20 (ahead of schedule) · remaining: Vercel cron wiring, load test, integration test, P2 notifications, UX polish |
 
 ---
 
 # MVP Launch Timeline & Beyond
 
-**Anchor:** today is June 13, 2026. The PWHL 2026-27 opener is ~Nov 2026, with fantasy drafts
+**Anchor:** today is June 19, 2026. The PWHL 2026-27 opener is ~Nov 2026, with fantasy drafts
 ~1 week prior (~late Oct 2026). That real date is the natural public-launch target — MVP must
-be drafting-ready before it. Dates below assume ~2-week sprints, solo + Claude. They are
-estimates, not commitments.
+be drafting-ready before it. Dates below are estimates, not commitments.
 
 | Window | Milestone |
 |---|---|
@@ -341,20 +521,24 @@ estimates, not commitments.
 | **Jun–Jul 2026** | Sprint 2 — commissioner recovery + platform foundation + analytics ✅ |
 | **Jun–Jul 2026** | Sprint 3 — onboarding ✅, error handling ✅, mobile ✅, notifications (draft ✅), IA-011 ✅ COMPLETE |
 | **Jun 13, 2026** | NT-002 LINEUP_INCOMPLETE notification shipped (`checkAndEmitScheduledNotifications` on dashboard load) ✅ |
-| **Jun 13, 2026** | Sprint 4 — commissioner dashboard gaps ✅, rivalries ✅, playoff mode ✅, VP fix ✅ **COMPLETE** |
-| **Late Aug 2026** | Sprint 5 — draft cert, founder dashboard, playoff UX ✅ complete; commissioner workflow validation + weekly perf dashboard pending |
-| **Mid–Late Aug 2026** | Sprint 6 — auto-set lineup ✅ · FA schedule awareness ✅ · beta feedback infrastructure ✅ shipped; team analysis, waivers remaining ← current |
-| **Early Sep 2026** | **MVP code-complete — all launch gates pass** |
-| **Sep – mid Oct 2026** | Closed beta: founding commissioners run replay + small live test leagues; fix findings |
+| **Jun 13, 2026** | Sprint 4 — commissioner dashboard gaps ✅, rivalries ✅, playoff mode ✅, VP fix ✅ COMPLETE |
+| **Jun 2026** | Sprint 5 — draft cert, founder dashboard, playoff UX COMPLETE ✅ |
+| **Jun 2026** | Sprint 6 — auto-set lineup ✅ · FA schedule awareness ✅ · beta feedback infrastructure ✅ · team analysis ✅ · waiver system ✅ · code audit ✅ COMPLETE |
+| **Jun 20, 2026** | P0+P1 audit fixes shipped — waiver cron (`vercel.json` + route), auto-set safety, analysis error state, add/slot capacity, waiver cancel confirm ✅ (all ahead of Sprint 8 schedule) |
+| **Jun 23 – Jul 6, 2026** | Sprint 7 — Trade System (#7) · storylines · FAAB · player legacy (League History/HoF → Sprint 9; Replay V2 #38 deferred) |
+| **Jul 7–13, 2026** | Sprint 8 — Beta Hardening: P1 fixes, Vercel crons, load test, integration test |
+| **Jul 14, 2026** | **Beta invites to founding commissioners** |
+| **Sep 1–30, 2026** | Beta feedback cycle: founding commissioners run replay + live test leagues; fix findings |
 | **Late Oct 2026** | **PUBLIC LAUNCH** — real leagues draft ~1 week before the opener |
 | **Nov 2026** | First live regular season on the platform |
 
-**Risk buffer:** if a sprint slips, the Sep–Oct beta window absorbs ~3–4 weeks before the hard
-late-Oct draft date. Earliest *credible* MVP code-complete is early Sep 2026; the latest safe
-code-complete before public drafts is early Oct 2026.
+**Risk buffer:** All P0 and P1 audit fixes shipped Jun 20, ahead of the Sprint 8 schedule.
+Sprint 8 (Jul 7–13) is now focused on Vercel cron wiring (`CRON_SECRET` env var must be set),
+load testing, integration testing, P2 notification gaps, and UX polish. The beta invite date of
+Jul 14 remains the target; it is now lower risk given the P0 fixes are already applied.
 
 ## Beyond MVP
 
-- **Q4 2026 (in-season):** Waivers → FAAB; engagement surfaces (#25 analysis, #29 performance dashboard, #30 playoff UX) while the first live season runs. Trade System deprioritized — revisit if demand warrants.
-- **Off-season — winter/spring 2027:** Multi-Season UX layer — League History views, Hall of Fame, Player Legacy. The schema foundation (parentLeagueId, rulesVersion, scoringVersion) was laid in Sprint 2, so this is purely the product surface. Growth/retention analytics dashboards (AN-002/003) and referral loop. Target: 2027-28 leagues renew in-place and keep their history.
+- **Q4 2026 (in-season):** Waivers → FAAB; engagement surfaces (#25 analysis, #29 performance dashboard, #30 playoff UX) while the first live season runs. Trade System shipped Sprint 7.
+- **Off-season — winter/spring 2027:** League History/HoF page ships Sprint 9 skeleton; fills in naturally after first season renewal. Player Legacy (`#31`). The schema foundation (parentLeagueId, rulesVersion, scoringVersion) was laid in Sprint 2, so this is purely the product surface. Growth/retention analytics dashboards (AN-002/003) and referral loop. Target: 2027-28 leagues renew in-place and keep their history.
 - **2027-28 season:** Advanced formats (keeper, then dynasty), real-time push scoring + push notifications, and player trends. Native apps and AI features (draft assistant, weekly recaps, trade evaluator) remain Phase 5 "future expansion" — revisit once retention metrics justify them.

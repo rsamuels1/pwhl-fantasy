@@ -12,7 +12,8 @@ export interface RosterEntryWithProjection {
   lockedAt: string | null;
   hasPlayedThisPeriod: boolean;
   eligibleSlots: LineupSlot[];
-  projectedFp?: number;
+  projectedFp?: number | null;
+  gamesThisPeriod?: number | null;
 }
 
 export interface RosterSettings {
@@ -115,11 +116,22 @@ export function computeOptimalLineup(
   );
   const moveable = roster.filter((p) => !locked.has(p.playerId) && !pinnedActive.has(p.playerId));
 
-  // Sort moveable players descending by projected FP (with name as tiebreaker for determinism)
+  // Sort moveable players descending by projected FP, with games-remaining tiebreaker.
+  // Treats null projectedFp differently from 0: null means "no projection data available".
+  // When both players have projections, rank by projected FP.
+  // When only one has a projection, that one wins.
+  // When neither has a projection (between-weeks), fall back to games remaining this period.
   const sorted = moveable.sort((a, b) => {
-    const fpDiff = (b.projectedFp ?? 0) - (a.projectedFp ?? 0);
-    if (fpDiff !== 0) return fpDiff;
-    // Tiebreaker: would need player name, but we don't have it here, so just use playerId
+    const aFp = a.projectedFp ?? null;
+    const bFp = b.projectedFp ?? null;
+    if (aFp !== null && bFp !== null) return bFp - aFp;
+    if (aFp !== null) return -1;
+    if (bFp !== null) return 1;
+    // Neither has projections — fall back to games remaining
+    const aGames = a.gamesThisPeriod ?? 0;
+    const bGames = b.gamesThisPeriod ?? 0;
+    if (bGames !== aGames) return bGames - aGames;
+    // Final tiebreaker: playerId for determinism
     return a.playerId.localeCompare(b.playerId);
   });
 

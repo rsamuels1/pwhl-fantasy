@@ -3,6 +3,8 @@ import { prisma } from "@/lib/db";
 import { apiRequireAuth, apiRequireLeagueMember } from "@/lib/auth";
 import type { RosterSettings } from "@/lib/lineup";
 import { emitEvent } from "@/lib/services/activity";
+import { getDevNowFromRequest } from "@/lib/devTime";
+import { getPlayerWaiverStatus, enterWaiverWire } from "@/lib/services/waiver-service";
 
 function maxRosterSize(settings: RosterSettings): number {
   return (
@@ -50,6 +52,20 @@ export async function POST(
   });
   if (alreadyRostered) {
     return NextResponse.json({ error: "Player is already on a roster in this league." }, { status: 409 });
+  }
+
+  // Check if the player is on the waiver wire — if so, require a claim instead.
+  const nowMs = getDevNowFromRequest(req);
+  const waiverStatus = await getPlayerWaiverStatus(leagueId, addPlayerId, nowMs, prisma);
+  if (waiverStatus.isOnWaivers) {
+    return NextResponse.json(
+      {
+        error: "Player is on waivers. Submit a claim from the Waiver Wire tab.",
+        onWaivers: true,
+        expiresAt: waiverStatus.expiresAt,
+      },
+      { status: 409 }
+    );
   }
 
   const settings = (team.league.rosterSettings ?? {}) as RosterSettings;
@@ -152,6 +168,13 @@ export async function DELETE(
   }).catch(() => null);
 
   await prisma.rosterEntry.delete({ where: { id: entry.id } });
+
+  // Place the dropped player on the waiver wire.
+  const league = await prisma.fantasyLeague.findUnique({
+    where: { id: leagueId },
+    select: { waiverWindowHours: true },
+  });
+  void enterWaiverWire(leagueId, dropPlayerId, league?.waiverWindowHours ?? 48, prisma).catch(() => {});
 
   if (dropTeam && dropPlayer) {
     emitEvent({ leagueId, teamId, playerId: dropPlayerId, type: "PLAYER_DROP",

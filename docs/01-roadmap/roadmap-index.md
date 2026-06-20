@@ -1,6 +1,6 @@
 # PWHL Fantasy Product Roadmap — Index
 
-Last Updated: June 14, 2026
+Last Updated: June 20, 2026
 
 ---
 
@@ -62,6 +62,7 @@ Implemented systems include:
 - FA Schedule Awareness + Add & Slot (`#35`) — games-remaining "Wk" badge on every FA row (roster page); `AddAndSlotModal` lets managers immediately slot a new pickup into an active position after adding; locked FAs skip the modal
 - Beta Feedback Infrastructure (`#36`) — in-app feedback widget (`components/FeedbackWidget.tsx`) mounted on all authenticated layouts; `POST /api/feedback` persists submissions; `GET /api/founder/feedback` + Founder Console feed table; `PATCH /api/founder/leagues/[leagueId]/beta-status`; `FeedbackSubmission` model + `FeedbackType` / `BetaStatus` enums + `betaStatus` on `FantasyLeague`
 - Pre-Beta Code Audit + P0/P1 Fixes (`#37`) — staff-engineer-level audit complete (`docs/04-operations/pre-beta-audit.md`); all P0 + P1 findings resolved: renewal atomicity (`$transaction`), draft pick P2002 handling, `onTimeout()` re-entrancy guard, force-move play-lock enforcement (both paths), playoff scoring documented, undo-waiver P2002 → 409. Go/No-Go: ✅ GREEN
+- Waiver Wire System (`#5`) — full waiver layer on top of instant add/drop: rolling priority order (reverse VP-standings), 48h waiver window for dropped players, daily batch processing. Schema: `WaiverEntry` / `WaiverClaim` / `WaiverPriority` models + `WaiverStatus` enum + 4 new `EventType` values + `waiverWindowHours` on `FantasyLeague`. Service: `lib/services/waiver-service.ts` (`initializeWaiverPriority`, `enterWaiverWire`, `submitClaim`, `processWaivers`). UI: `WaiverWirePanel.tsx` in roster page "Waiver Wire" tab; "On Waivers" badge in FA table. Ops: `scripts/process-waivers.ts` cron script + founder console trigger. 13 new tests (174 total). FAAB deferred to Sprint 7.
 
 These systems should be considered core platform functionality.
 
@@ -79,13 +80,13 @@ Snapshot of launch-blocking areas. **Confidence to launch: ~95%.**
 | Weekly matchups | ✅ PASS | — |
 | VP standings | ✅ PASS | — |
 | Weekly lineup lock | ✅ PASS | — |
-| Playoffs | ✅ PASS | — |
+| Playoffs | ⚠ PASS (AUDIT PENDING) | PLAYOFF-BUG-001 confirmed (bracket shows "6 teams qualify" for default leagues — fix is 1 line); Q1/Q2 verification needed before beta |
 | Commissioner tools | ✅ PASS | force move, undo transaction, replace manager, audit log all shipped |
 | Notifications | ✅ PASS | all 3 MVP-critical types shipped (draft starting, on the clock, lineup incomplete) |
 | Analytics | ✅ PASS | 6 events instrumented |
 | End-to-end season sim | ✅ PASS | — |
 
-**Remaining soft blockers:** none — all MVP gates green. Ready to invite founding commissioners.
+**Remaining soft blockers:** PLAYOFF-BUG-001 (1-line fix) + playoff system audit checklist (PLAYOFF-AUDIT-001). See `docs/02-engineering/playoff-system-spec.md`.
 
 ---
 
@@ -103,57 +104,82 @@ MVP proves a league can go **Create → Invite → Draft → Set Lineups → Com
 
 ## What To Build Next
 
-The list below is sequenced by **token efficiency** — each feature's estimated Claude Pro context cost is shown so sessions can be batched optimally.
+Sprint 6 is complete (7/7). Sprint 7 is in progress (1/4 items done — #39 Replay Sim V2 UX shipped; #38 Replay V2 deferred). Sprint 8 (Beta Hardening) is in progress — P0+P1 fixes shipped Jun 20 ahead of schedule; 7/14 items done. Remaining: Vercel cron wiring, load test, integration test, P2 notifications, UX polish.
 
-**Token sizing:** CLAUDE.md + system overhead uses ~15K tokens of fixed cost per session. Claude Pro's 200K context window fits 2–3 quick-win features or one heavy lift per session comfortably.
-
-### Quick wins (< 45K tokens — batch 2–3 per session)
-
-1. **Commissioner Workflow Validation** · ~15K · Sprint 5 · ✅ COMPLETE
-   Async params fixed in 4 routes; null-check guard in undo-transaction; runbook updated with VP values, playoff UI path, season renewal steps, reconnect backoff, champion banner, and per-tool detail. Findings in `docs/02-engineering/commissioner-workflow-validation-plan.md`.
-
-### Quick wins (< 45K tokens — batch 2–3 per session)
-
-2. **Code Review & Pre-Beta Audit (#37)** · Sprint 6 (current)
-   Staff-engineer-level audit before beta opens. Focus: architectural issues, duplicate logic, state machine correctness, test gaps, operational risks. Output: prioritized findings doc in `docs/04-operations/` or `docs/02-engineering/` with P0/P1/P2 labels. P0 findings must resolve before beta invites.
-
-### Standard sessions (60–90K tokens — one feature per session)
-
-3. **Team Analysis & Insights (#25)** · ~85K · Sprint 6
-   Spec: `docs/02-engineering/team-analysis-spec.md`. New Analysis tab on the matchup page. Player trends + position-group vs league median + FA suggestions. Trade suggestion CTA removed — gated on Trade System (#7), which is now deferred.
-
-4. **Waiver Priority + Processing (#5)** · ~110K · Sprint 6
-   Spec: `docs/02-engineering/waiver-spec.md`. Rolling priority, 48h window, daily batch processing. `WaiverClaim` + `WaiverPriority` tables.
-
-**Shipped:**
+**Shipped (Sprint 6 — all complete):**
 - **League Onboarding (#2)** · ✅ Welcome flow, 6-step wizard, manager draft prep guide; `User.onboardingCompletedAt` schema field. (Sprint 3)
 - **Transaction History (#8)** · ✅ Paginated API + page with type/team filters, replay guard, infinite scroll. (Sprint 3)
 - **Auto-Set Lineup (#34)** · ✅ `computeOptimalLineup()`, staged save model, FA suggestions API, playoff period fallback. (Sprint 6)
 - **FA Schedule Awareness + Add & Slot (#35)** · ✅ Games-remaining badge on FA panel; `AddAndSlotModal` for immediate active-slot pickup; locked FAs skip modal; bonus lineup nudge + alert fixes. (Sprint 6, commit 6a6b40f)
 - **Beta Feedback Infrastructure (#36)** · ✅ `components/FeedbackWidget.tsx` on all authenticated layouts; `POST /api/feedback`; Founder Console feed + per-league beta status management; `FeedbackSubmission` / `FeedbackType` / `BetaStatus` schema additions. (Sprint 6)
 - **Replay League Bug Fix** · ✅ Auto-start season after draft completes, fix simulator endpoint routing, update test mocks. Replay feature now works end-to-end. (Sprint 6, commit 52ea547)
+- **Team Analysis & Insights (#25)** · ✅ `lib/services/analysis-service.ts` (`getTeamAnalysis()`); `components/MatchupTabs.tsx` + `AnalysisTab.tsx`; `app/api/leagues/[leagueId]/analysis/route.ts`; player hot/cold trends, position-group vs league median, FA upgrade cards for weakest group. Trade suggestions scoped out (deferred to Trade System #7). (Sprint 6)
+- **Waiver Wire System (#5)** · ✅ Rolling priority order, 48h waiver window, batch processing. `WaiverEntry` / `WaiverClaim` / `WaiverPriority` schema; `lib/services/waiver-service.ts`; `WaiverWirePanel.tsx` in roster page; cron script + founder console trigger; 13 new tests (174 total). FAAB deferred to Sprint 7. (Sprint 6)
 - **Replay Season Simulator v2 — UX Overhaul (#39)** · ✅ Week-by-week progression with lineup pause points; persistent controls on league overview (sticky footer) + commissioner matchup page (inline panel); smart button set based on season state; no schema changes. (Sprint 7, commit 5f501c8)
 
-**Sprint 7 (retention layer):**
+**Immediate — P0 + P1 fixes: RESOLVED ✅ (shipped Jun 20, ahead of Sprint 8 schedule)**
 
-8. **League History & Hall of Fame (#33/#18)** · ~50K · Sprint 7
-   Spec: `docs/02-engineering/league-history-spec.md`. `/league/[leagueId]/history` page walking `parentLeagueId` chain. Past season cards + Hall of Fame. No schema changes.
+The staff-level code audit (Sprint 6, #37) returned a GO TO BETA verdict with ~8h of P0/P1 fixes
+required before real users are invited. All items were applied immediately after Sprint 6 completion:
 
-9. **League-Wide Matchup Storylines (#11)** · ~50K · Sprint 7
+- **P0-1 Waiver cron** ✅ — `app/api/cron/process-waivers/route.ts` + `vercel.json` cron at 03:00 ET daily. Auth-gated by `CRON_SECRET` header. Ops: env var must be confirmed set in Vercel before launch.
+- **P0-2 Auto-set projection safety** ✅ — projection fetch error-handled in `lineup/page.tsx`; `projectionsAvailable` prop disables button when unavailable.
+- **P0-3** ✅ — verified: `startSeason()` calls `initializeWaiverPriority()` for all leagues. No change.
+- **P1-A** ✅ — `AnalysisTab` shows "Analysis data unavailable. Try refreshing." on null.
+- **P1-B** ✅ — `computeOptimalLineup()` falls back to `gamesThisPeriod` when `projectedFp` all null.
+- **P1-C** ✅ — `AddAndSlotModal` shows "roster is full, drop a player first" at capacity.
+- **P1-E** ✅ — `WaiverWirePanel` two-step inline confirm before cancel.
+- **P1-F** ✅ — verified: `getTeamAnalysis()` already fetches fresh `scoringSettings`. No change.
+- **174/174 tests pass.** Zero new TypeScript errors.
+
+Remaining Sprint 8 scope (Jul 7–13): P1-D schedule badge timezone, Vercel cron wiring (`CRON_SECRET`
+confirmed), load test, integration test, P2 notification gaps, UX polish. Full details in feature
+card #40 (`roadmap-features.md`) and sprint plan (`roadmap-sprints.md`).
+
+**Sprint 7 — Retention Layer (current):**
+
+1. **Trade System (#7)** · ~130K · Sprint 7 · Priority 1
+   Spec: `docs/02-engineering/trade-spec.md`. Pulled up from backlog June 2026 — higher priority than League History/HoF for the launch period. Trade proposal/review/approval flow, commissioner review gate, trade history, 3 new notification types. Schema: `Trade`/`TradeOffer` tables. Unblocks trade-suggestion CTA in Team Analysis (#25).
+
+2. **League-Wide Matchup Storylines (#11)** · ~50K · Sprint 7
    Spec: `docs/02-engineering/matchup-storylines-spec.md`. `getLeagueStorylines()` service + league overview sidebar card. Closest matchup, point leader, biggest climber. No schema changes.
 
-10. **FAAB (#6)** · ~80K · Sprint 7
-    Blind-bid acquisition on top of Sprint 6 waiver system. Depends on #5.
+3. **FAAB (#6)** · ~80K · Sprint 7 — gated on waiver cron (P0-1) being live in production.
+   Blind-bid acquisition on top of Sprint 6 waiver system. Depends on #5 (complete) and on
+   the automated `processWaivers()` trigger being deployed so bids resolve without manual intervention.
 
-11. **Player Legacy (#31)** · ~95K · Sprint 7
-    `/profile` page with career history and global leaderboard. Meaningful only after first completed+renewed season; ship skeleton now.
+4. **Player Legacy (#31)** · ~95K · Sprint 7
+   `/profile` page with career history and global leaderboard. Meaningful only after first completed+renewed season; ship skeleton now.
 
-12. **Replay Simulation Accelerated Playback (#38)** · ~90K · Sprint 7 (DEFERRED)
-    Configurable playback speed (N days per click or auto-advance timer), jump-to-week shortcut, replay progress summary card, notification trigger points. Builds on `isReplay` / `replayCurrentDate` / `getReplayNow()`. Deferred in favor of #39 (UX overhaul), which ships the core week-boundary pausing experience first. Accelerated playback can be layered on top post-launch.
+5. **Replay Simulation Accelerated Playback (#38)** · DEFERRED — superseded by #39 (UX Overhaul, shipped Sprint 7).
 
-**Deferred / lowest priority:** **Trade System (#7)** · ~130K — deprioritized June 2026. Beta cohort is small enough for out-of-band trades; revisit only if founding commissioners surface strong demand. Spec exists at `docs/02-engineering/trade-spec.md` when ready.
+**Sprint 8 — Beta Hardening (Jul 7–13, 2026) — IN PROGRESS (7/14 done):**
 
-**Deferred to post-Sprint-7 backlog:** Growth analytics (GR-001/002/003/004) · real-time push scoring · push notifications · multi-season historical library (#12) · player trends (#23) · keeper/dynasty (#19/#20) · native apps / AI features. See `docs/01-roadmap/roadmap-sprints.md` for full backlog list.
+P0 + P1 audit fixes shipped Jun 20 (ahead of schedule). Remaining scope:
+
+1. ~~P0 waiver cron~~ ✅ done Jun 20
+2. ~~P1 UX fixes (A/B/C/E/F)~~ ✅ done Jun 20
+3. P1-D: schedule badge timezone note (~0.25h) — open
+4. Vercel cron wiring: confirm `CRON_SECRET` set in staging; `check-incomplete-lineups` entry in `vercel.json`; both crons firing before beta invite
+5. Load test: 10+ concurrent leagues drafting/scoring simultaneously
+6. End-to-end integration test: full season with waivers + FAAB scoring across 3+ leagues
+7. P2 notification gaps: lineup-incomplete cron trigger, waiver claim awarded/denied notifications
+8. Final UX polish: error messages, empty states, tooltips standardised
+
+**Exit from Sprint 8:** founding commissioner beta invites go out (target Jul 14, 2026).
+
+**Sprint 9 — PWHL GM Rebrand (post-Beta Hardening):**
+
+All brand strategy, gap analysis, terminology guide, implementation checklist, and 3 interactive mockups are finalized in `docs/branding/`. No development-velocity cost was incurred during MVP sprints, as planned in `docs/branding/BRANDING-DEFERRED.md`. Trigger: Sprint 8 complete and founding commissioners have completed at least one draft.
+
+- **P1 (min shippable, ~8h):** REBRAND-001 (name + logo + hero) · REBRAND-002 (voice consistency) · REBRAND-008 (QA sprint)
+- **P2 (visual redesign, ~16h more):** REBRAND-003 (detail polish + docs) · REBRAND-004 (design tokens) · REBRAND-005 (matchup page) · REBRAND-006 (draft room)
+- **P3 (secondary pages):** REBRAND-007 (lineup, roster, standings, bracket, overview)
+- **P3 (tail):** League History & Hall of Fame (#33/#18) · ~50K — moved from Sprint 7; skeleton page ships here, fills in after first season renewal. Spec: `docs/02-engineering/league-history-spec.md`.
+
+Total sprint: 43 rebrand points + League History/HoF tail item. P1-only minimum: 11 points (~8 hours as per original plan).
+
+**Deferred to post-Sprint-9 backlog:** Growth analytics (GR-001/002/003/004) · real-time push scoring · push notifications · multi-season historical library (#12) · player trends (#23) · keeper/dynasty (#19/#20) · native apps / AI features. See `docs/01-roadmap/roadmap-sprints.md` for full backlog list.
 
 ---
 

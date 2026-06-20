@@ -16,7 +16,12 @@ export type LeagueEventType =
   | "PLAYOFF_CLINCH"
   | "PLAYOFF_ELIMINATION"
   | "CHAMPIONSHIP_WON"
-  | "MAJOR_PERFORMANCE";
+  | "MAJOR_PERFORMANCE"
+  | "WAIVER_CLAIM_SUBMITTED"
+  | "WAIVER_CLAIM_AWARDED"
+  | "WAIVER_CLAIM_DENIED"
+  | "WAIVER_CLAIM_CANCELLED"
+  | "LEAGUE_STORYLINE";
 
 export async function getLeagueActivity(
   leagueId: string,

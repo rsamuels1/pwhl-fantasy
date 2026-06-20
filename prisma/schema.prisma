@@ -37,6 +37,7 @@ model Player {
   team          Team?         @relation(fields: [teamId], references: [id])
   rosterEntries RosterEntry[]
   statLines     StatLine[]
+  waiverEntries WaiverEntry[]
 
   @@index([teamId])
   @@index([lastName, firstName])
@@ -125,6 +126,7 @@ model FantasyLeague {
   rulesVersion            Int                      @default(1)
   scoringVersion          Int                      @default(1)
   pwhlPlayoffStartsAt     DateTime?
+  waiverWindowHours       Int                      @default(48)
   createdAt               DateTime                 @default(now())
   updatedAt               DateTime                 @updatedAt
   draft                   Draft?
@@ -137,6 +139,9 @@ model FantasyLeague {
   parentLeague            FantasyLeague?           @relation("LeagueLineage", fields: [parentLeagueId], references: [id])
   childLeagues            FantasyLeague[]          @relation("LeagueLineage")
   feedbackSubmissions     FeedbackSubmission[]
+  waiverEntries           WaiverEntry[]
+  waiverClaims            WaiverClaim[]
+  waiverPriority          WaiverPriority[]
 
   @@index([status])
 }
@@ -149,12 +154,14 @@ model FantasyTeam {
   draftOrder   Int?
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
-  draftPicks   DraftPick[]
-  league       FantasyLeague @relation(fields: [leagueId], references: [id])
-  owner        User          @relation(fields: [ownerId], references: [id])
-  awayMatchups Matchup[]     @relation("AwayFantasyTeam")
-  homeMatchups Matchup[]     @relation("HomeFantasyTeam")
-  roster       RosterEntry[]
+  draftPicks      DraftPick[]
+  league          FantasyLeague  @relation(fields: [leagueId], references: [id])
+  owner           User           @relation(fields: [ownerId], references: [id])
+  awayMatchups    Matchup[]      @relation("AwayFantasyTeam")
+  homeMatchups    Matchup[]      @relation("HomeFantasyTeam")
+  roster          RosterEntry[]
+  waiverClaims    WaiverClaim[]
+  waiverPriority  WaiverPriority[]
 
   @@unique([leagueId, ownerId])
   @@index([leagueId])
@@ -374,4 +381,58 @@ enum EventType {
   COMMISSIONER_DRAFT_RESUMED
   COMMISSIONER_ANNOUNCEMENT
   COMMISSIONER_SETTINGS_CHANGED
+  WAIVER_CLAIM_SUBMITTED
+  WAIVER_CLAIM_AWARDED
+  WAIVER_CLAIM_DENIED
+  WAIVER_CLAIM_CANCELLED
+  LEAGUE_STORYLINE
+}
+
+enum WaiverStatus {
+  PENDING
+  AWARDED
+  DENIED
+  CANCELLED
+}
+
+model WaiverEntry {
+  id        String        @id @default(cuid())
+  leagueId  String
+  playerId  String
+  expiresAt DateTime
+  createdAt DateTime      @default(now())
+  league    FantasyLeague @relation(fields: [leagueId], references: [id])
+  player    Player        @relation(fields: [playerId], references: [id])
+
+  @@unique([leagueId, playerId])
+  @@index([leagueId, expiresAt])
+}
+
+model WaiverClaim {
+  id               String        @id @default(cuid())
+  leagueId         String
+  fantasyTeamId    String
+  addPlayerId      String
+  dropPlayerId     String?
+  prioritySnapshot Int
+  status           WaiverStatus  @default(PENDING)
+  processedAt      DateTime?
+  createdAt        DateTime      @default(now())
+  league           FantasyLeague @relation(fields: [leagueId], references: [id])
+  fantasyTeam      FantasyTeam   @relation(fields: [fantasyTeamId], references: [id])
+
+  @@unique([leagueId, fantasyTeamId, addPlayerId])
+  @@index([leagueId, status, addPlayerId])
+}
+
+model WaiverPriority {
+  leagueId      String
+  fantasyTeamId String
+  priority      Int
+  updatedAt     DateTime      @default(now()) @updatedAt
+  league        FantasyLeague @relation(fields: [leagueId], references: [id])
+  fantasyTeam   FantasyTeam   @relation(fields: [fantasyTeamId], references: [id])
+
+  @@id([leagueId, fantasyTeamId])
+  @@unique([leagueId, priority])
 }

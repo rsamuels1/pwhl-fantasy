@@ -12,6 +12,8 @@ import Link from "next/link";
 import AnnouncementForm from "@/components/AnnouncementForm";
 import { VpExplainer } from "@/components/VpExplainer";
 import ReplaySimulatorControls from "@/components/ReplaySimulatorControls";
+import WeekHighlights from "@/components/WeekHighlights";
+import type { Storyline } from "@/lib/services/storyline-service";
 
 export default async function LeagueOverviewPage({
   params,
@@ -147,6 +149,41 @@ export default async function LeagueOverviewPage({
       }
     }
   }
+
+  // ── Storylines for the most recently scored regular-season week ──
+  const leagueEventModel = (prisma as unknown as Record<string, unknown>).leagueEvent as
+    | typeof prisma.leagueEvent
+    | undefined;
+  const latestScoredMatchup = leagueEventModel
+    ? await prisma.matchup.findFirst({
+        where: { leagueId, homeScore: { not: null }, isPlayoff: false },
+        orderBy: { week: "desc" },
+        select: { week: true },
+      })
+    : null;
+
+  const storylineRows =
+    latestScoredMatchup && leagueEventModel
+      ? await leagueEventModel
+          .findMany({
+            where: { leagueId, type: "LEAGUE_STORYLINE" },
+            orderBy: { createdAt: "asc" as const },
+            take: 20,
+          })
+          .then((rows) =>
+            rows
+              .filter((r) => (r.data as Record<string, unknown>)?.week === latestScoredMatchup.week)
+              .slice(0, 3)
+          )
+      : [];
+
+  const storylines: Storyline[] = storylineRows.map(
+    (r) => r.data as unknown as Storyline
+  );
+
+  // Build a label for the highlights week (e.g. "Week 3")
+  const highlightsWeekLabel =
+    latestScoredMatchup ? `Week ${latestScoredMatchup.week}` : "";
 
   // Commissioner action strip
   let commishAction: { label: string; sublabel: string; href: string } | null = null;
@@ -530,6 +567,11 @@ export default async function LeagueOverviewPage({
             </>
           )}
 
+          {/* ── Week highlights ── */}
+          {league.status === "IN_SEASON" && storylines.length > 0 && (
+            <WeekHighlights storylines={storylines} weekLabel={highlightsWeekLabel} />
+          )}
+
           {/* ── All matchups this week — compact / secondary ── */}
           {thisWeekMatchups.length > 0 && (
             <section style={card}>
@@ -703,6 +745,7 @@ export default async function LeagueOverviewPage({
                   const ICONS: Record<string, string> = {
                     PLAYER_ADD: "➕", PLAYER_DROP: "➖", DRAFT_PICK: "🎯",
                     PLAYOFF_QUALIFICATION: "🏒", MAJOR_PERFORMANCE: "⭐",
+                    LEAGUE_STORYLINE: "📊",
                   };
                   return (
                     <div key={evt.id} style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "flex-start" }}>

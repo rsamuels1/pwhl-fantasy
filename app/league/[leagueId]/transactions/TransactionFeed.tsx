@@ -20,11 +20,16 @@ const TYPE_ICONS: Record<string, string> = {
   TRADE: "🔄",
   PLAYOFF_QUALIFICATION: "🏒",
   MAJOR_PERFORMANCE: "⭐",
+  WAIVER_CLAIM_SUBMITTED: "📋",
+  WAIVER_CLAIM_AWARDED: "✅",
+  WAIVER_CLAIM_DENIED: "❌",
+  WAIVER_CLAIM_CANCELLED: "✕",
 };
 
 const TYPE_GROUPS: { label: string; types: string | null }[] = [
   { label: "All", types: null },
   { label: "Adds/Drops", types: "PLAYER_ADD,PLAYER_DROP" },
+  { label: "Waivers", types: "WAIVER_CLAIM_SUBMITTED,WAIVER_CLAIM_AWARDED,WAIVER_CLAIM_DENIED,WAIVER_CLAIM_CANCELLED" },
   { label: "Draft", types: "DRAFT_PICK" },
   { label: "Trades", types: "TRADE" },
   { label: "Commissioner", types: "COMMISSIONER_FORCE_MOVE,COMMISSIONER_UNDO_TRANSACTION,COMMISSIONER_REPLACE_MANAGER,COMMISSIONER_DRAFT_PAUSED,COMMISSIONER_DRAFT_RESUMED,COMMISSIONER_ANNOUNCEMENT,COMMISSIONER_SETTINGS_CHANGED" },

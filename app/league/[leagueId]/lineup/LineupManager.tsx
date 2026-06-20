@@ -61,6 +61,8 @@ interface Props {
   thisWeekLabel: string | null; // e.g. "Week 4 (Dec 12 – Dec 19)"
   projectedStats?: Record<string, ProjectedStatsRow | null>;
   nextWeekLabel?: string | null;
+  /** False when projection computation failed server-side — disables Auto-set button */
+  projectionsAvailable?: boolean;
 }
 
 const ACTIVE_SLOTS: SlotType[] = ["FORWARD", "DEFENSE", "GOALIE", "UTIL"];
@@ -90,7 +92,7 @@ function buildActiveSeats(settings: RosterSettings): Array<{ slot: SlotType; ind
 export default function LineupManager({
   leagueId, teamId, teamName, initialRoster, rosterSettings,
   seasonStats, lastWeekStats, lastWeekLabel, thisWeekStats, thisWeekLabel,
-  projectedStats, nextWeekLabel,
+  projectedStats, nextWeekLabel, projectionsAvailable = true,
 }: Props) {
   const [roster, setRoster] = useState<RosterEntryRow[]>(initialRoster);
   const [savedRoster, setSavedRoster] = useState<RosterEntryRow[]>(initialRoster);
@@ -169,11 +171,14 @@ export default function LineupManager({
   }
 
   function autoSet() {
-    if (!projectedStats) return;
+    if (!projectionsAvailable) return;
     setError(null);
     setHasEverEdited(true);
 
-    // Convert roster to format expected by computeOptimalLineup
+    // Convert roster to format expected by computeOptimalLineup.
+    // Pass null for projectedFp when no projection data exists so computeOptimalLineup
+    // can distinguish "no projection" (null) from "projected 0 pts" and fall back to
+    // games-remaining ranking when projections are universally unavailable (between weeks).
     const rosterForOptimizer = roster.map((p) => ({
       playerId: p.playerId,
       position: p.position,
@@ -182,7 +187,8 @@ export default function LineupManager({
       lockedAt: p.lockedAt,
       hasPlayedThisPeriod: p.hasPlayedThisPeriod,
       eligibleSlots: p.eligibleSlots,
-      projectedFp: projectedStats[p.playerId]?.projectedFp || seasonStats[p.playerId]?.fantasyPoints || 0,
+      projectedFp: projectedStats?.[p.playerId]?.projectedFp ?? null,
+      gamesThisPeriod: p.gamesThisPeriod ?? 0,
     }));
 
     const optimalAssignment = computeOptimalLineup(rosterForOptimizer, rosterSettings);
@@ -358,21 +364,31 @@ export default function LineupManager({
 
         <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
           {/* Auto-set Lineup button */}
-          <button
-            onClick={() => autoSet()}
-            disabled={!projectedStats || isSaving}
-            title={!projectedStats ? "Projections not available" : "Optimize lineup by projected points"}
-            style={{
-              minHeight: 36, padding: "0 14px", borderRadius: 8, border: "none", cursor: projectedStats && !isSaving ? "pointer" : "default",
-              fontSize: 12, fontWeight: 700,
-              background: projectedStats && !isSaving ? "rgba(168,85,247,0.2)" : "rgba(255,255,255,0.05)",
-              color: projectedStats && !isSaving ? "#d8b4fe" : "#64748b",
-              transition: "background 0.2s, color 0.2s",
-              opacity: !projectedStats || isSaving ? 0.5 : 1,
-            }}
-          >
-            Auto-set
-          </button>
+          {(() => {
+            const autoSetDisabled = !projectedStats || !projectionsAvailable || isSaving;
+            const autoSetTitle = !projectionsAvailable
+              ? "Projections unavailable — try refreshing"
+              : !projectedStats
+              ? "Projections not available"
+              : "Optimize lineup by projected points";
+            return (
+              <button
+                onClick={() => autoSet()}
+                disabled={autoSetDisabled}
+                title={autoSetTitle}
+                style={{
+                  minHeight: 36, padding: "0 14px", borderRadius: 8, border: "none", cursor: !autoSetDisabled ? "pointer" : "default",
+                  fontSize: 12, fontWeight: 700,
+                  background: !autoSetDisabled ? "rgba(168,85,247,0.2)" : "rgba(255,255,255,0.05)",
+                  color: !autoSetDisabled ? "#d8b4fe" : "#64748b",
+                  transition: "background 0.2s, color 0.2s",
+                  opacity: autoSetDisabled ? 0.5 : 1,
+                }}
+              >
+                Auto-set
+              </button>
+            );
+          })()}
 
           {/* Save Lineup button */}
           <button
@@ -394,7 +410,7 @@ export default function LineupManager({
           <div style={{ display: "flex", gap: 4, background: "rgba(255,255,255,0.05)", borderRadius: 8, padding: 3 }}>
             {tabOptions.map((view) => {
               const label = view === "projected" ? "Matchup Proj" : view === "season" ? "Season" : view === "lastWeek" ? "Last week" : "This week";
-              const disabled = (view === "thisWeek" && !thisWeekLabel) || (view === "projected" && !nextWeekLabel);
+              const disabled = (view === "thisWeek" && !thisWeekLabel) || (view === "projected" && (!nextWeekLabel || !projectionsAvailable));
               return (
                 <button
                   key={view}

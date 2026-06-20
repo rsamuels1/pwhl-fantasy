@@ -4,6 +4,7 @@ import { requireAuth, requireTeamOwner } from "@/lib/auth";
 import { scoreStatLine, DEFAULT_SCORING } from "@/lib/scoring";
 import type { ScoringSettings } from "@/lib/scoring";
 import { getDevNow } from "@/lib/devTime";
+import { getReplayNow } from "@/lib/replayTime";
 import { getSeasonState } from "@/lib/season";
 import RosterManager from "./RosterManager";
 import type { RosterPlayerRow, FreeAgentRow, SkaterStats, GoalieStats } from "./RosterManager";
@@ -70,7 +71,7 @@ export default async function TeamRosterPage({ params, searchParams }: Props) {
   const team = await prisma.fantasyTeam.findUnique({
     where: { id: teamId },
     include: {
-      league: { select: { id: true, rosterSettings: true, scoringSettings: true, season: true } },
+      league: { select: { id: true, rosterSettings: true, scoringSettings: true, season: true, isReplay: true, replayCurrentDate: true, playoffStatus: true } },
       roster: {
         include: { player: { include: { team: { select: { abbreviation: true } } } } },
         orderBy: { slot: "asc" },
@@ -81,12 +82,36 @@ export default async function TeamRosterPage({ params, searchParams }: Props) {
 
   const leagueId = team.league.id;
   const settings = (team.league.rosterSettings ?? {}) as RosterSettings;
-  const nowMs = await getDevNow();
+  const devNow = await getDevNow();
+  const nowMs = getReplayNow(
+    { isReplay: team.league.isReplay ?? false, replayCurrentDate: team.league.replayCurrentDate ?? null },
+    devNow
+  );
   const now = new Date(nowMs);
   const seasonState = await getSeasonState(leagueId, nowMs, prisma);
-  const activePeriod = seasonState.activePeriod;
+  const activePeriod = seasonState.periods.find((p) => p.status === "ACTIVE")?.period ?? null;
   const upcomingPeriod = seasonState.periods.find((p) => p.status === "UPCOMING")?.period ?? null;
-  const periodForGames = activePeriod ?? upcomingPeriod;
+  let periodForGames = activePeriod ?? upcomingPeriod;
+
+  // Playoff fallback: if no regular-season period active/upcoming,
+  // use the current playoff matchup window so FA games-remaining is correct.
+  if (periodForGames === null && team.league.playoffStatus !== "NOT_STARTED") {
+    const playoffMatchup = await prisma.matchup.findFirst({
+      where: {
+        leagueId,
+        isPlayoff: true,
+        homeScore: null, // not yet scored
+      },
+      orderBy: { startsAt: "asc" },
+    });
+    if (playoffMatchup) {
+      periodForGames = {
+        week: playoffMatchup.week,
+        startsAt: playoffMatchup.startsAt,
+        endsAt: playoffMatchup.endsAt,
+      };
+    }
+  }
   const scoring = (
     team.league.scoringSettings && typeof team.league.scoringSettings === "object" &&
     "skater" in (team.league.scoringSettings as object)
@@ -242,6 +267,13 @@ export default async function TeamRosterPage({ params, searchParams }: Props) {
   const sk = scoring.skater;
   const gk = scoring.goalie;
 
+  // Batch query: which free agents are currently on the waiver wire?
+  const waiverEntries = await prisma.waiverEntry.findMany({
+    where: { leagueId, expiresAt: { gt: now } },
+    select: { playerId: true },
+  });
+  const waiverPlayerIds = new Set(waiverEntries.map((e) => e.playerId));
+
   const freeAgents: FreeAgentRow[] = faRows.map((r) => {
     const gp = Number(r.gp);
     const position = r.position as FreeAgentRow["position"];
@@ -261,6 +293,7 @@ export default async function TeamRosterPage({ params, searchParams }: Props) {
         gamesThisPeriod: periodForGames ? (gamesRemaining.get(r.pwhlTeamId ?? "") ?? 0) : null,
         isLocked: lockedTeamIds.has(r.pwhlTeamId ?? ""),
         stats: gp === 0 ? null : { gp, wins, saves, goalsAgainst: ga, shutouts, savePct: totalFaced > 0 ? saves / totalFaced : null, fantasyPoints } as GoalieStats,
+        isOnWaivers: waiverPlayerIds.has(r.id),
       };
     }
     const goals = Number(r.goals);
@@ -284,6 +317,7 @@ export default async function TeamRosterPage({ params, searchParams }: Props) {
       pwhlTeamId: r.pwhlTeamId,
       gamesThisPeriod: periodForGames ? (gamesRemaining.get(r.pwhlTeamId ?? "") ?? 0) : null,
       isLocked: lockedTeamIds.has(r.pwhlTeamId ?? ""),
+      isOnWaivers: waiverPlayerIds.has(r.id),
       stats: gp === 0 ? null : { gp, goals, assists, points: goals + assists, plusMinus, ppp, shots, hits, blocks, fantasyPoints } as SkaterStats,
     };
   });

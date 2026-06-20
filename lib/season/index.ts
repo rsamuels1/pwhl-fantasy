@@ -10,6 +10,8 @@ import { scoreVpWeek } from "@/lib/scoring/vp";
 import { parseScoringSettings } from "@/lib/scoring/settings";
 import { computeSeasonState, pendingWeeks, validateSeasonBoundary, type SeasonState } from "./lifecycle";
 import { startPlayoffs } from "@/lib/services/playoff-service";
+import { initializeWaiverPriority } from "@/lib/services/waiver-service";
+import { emitWeeklyStorylines } from "@/lib/services/storyline-service";
 
 // Load everything needed for the lifecycle engine from the DB, then run the pure engine.
 export async function getSeasonState(
@@ -86,6 +88,9 @@ export async function startSeason(leagueId: string, prisma: PrismaClient): Promi
     await generateVtfMatchups(leagueId, league.season, prisma);
   }
 
+  // Initialize waiver priority (reverse VP standings; pre-season falls back to reverse draft order).
+  await initializeWaiverPriority(leagueId, prisma);
+
   await prisma.fantasyLeague.update({
     where: { id: leagueId },
     data: { status: "IN_SEASON" },
@@ -118,6 +123,8 @@ export async function advanceSeason(
       await scoreVtfWeek(leagueId, period.week, period, prisma);
     }
     scoredWeeks.push(period.week);
+    // Emit storylines after scoring — fire-and-forget, never blocks the advance.
+    void emitWeeklyStorylines(leagueId, period.week, period.startsAt, period.endsAt, prisma).catch(() => {});
   }
 
   let playoffError: string | undefined;

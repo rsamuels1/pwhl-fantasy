@@ -169,6 +169,7 @@ export default async function TeamLineupPage({ params }: Props) {
   )];
 
   const isReplay = fullTeam.league.isReplay;
+  let projectionsAvailable = true;
   const [seasonLines, lastWeekLines, thisWeekLines, projectionLines, nextPeriodGames, periodGames] = await Promise.all([
     playerIds.length > 0
       ? prisma.statLine.findMany({
@@ -298,39 +299,45 @@ export default async function TeamLineupPage({ params }: Props) {
   }
 
   // Compute projected stats: rolling avg FP/game × games in next period
-  const gamesInNextPeriod = new Map<string, number>();
-  for (const g of nextPeriodGames) {
-    gamesInNextPeriod.set(g.homeTeamId, (gamesInNextPeriod.get(g.homeTeamId) ?? 0) + 1);
-    gamesInNextPeriod.set(g.awayTeamId, (gamesInNextPeriod.get(g.awayTeamId) ?? 0) + 1);
-  }
-  // Group by player, keep only the last 5 (query is DESC)
-  const linesByPlayer: Record<string, RawStatLine[]> = {};
-  for (const l of projectionLines) {
-    linesByPlayer[l.playerId] = linesByPlayer[l.playerId] ?? [];
-    if (linesByPlayer[l.playerId].length < 5) linesByPlayer[l.playerId].push(l);
-  }
-  const projectedStats: Record<string, { projectedFp: number; avgFpPerGame: number; games: number } | null> = {};
-  if (nextPeriod) {
-    for (const entry of fullTeam.roster) {
-      const pTeamId = entry.player.team?.id ?? null;
-      const games = pTeamId ? (gamesInNextPeriod.get(pTeamId) ?? 0) : 0;
-      const lines = linesByPlayer[entry.playerId] ?? [];
-      if (lines.length === 0) { projectedStats[entry.playerId] = null; continue; }
-      const totalFp = lines.reduce(
-        (sum, l) => sum + scoreStatLine(l, entry.player.position as Position, scoring), 0
-      );
-      const avgFpPerGame = Math.round((totalFp / lines.length) * 100) / 100;
-      projectedStats[entry.playerId] = {
-        projectedFp: Math.round(avgFpPerGame * games * 100) / 100,
-        avgFpPerGame,
-        games,
-      };
+  let projectedStats: Record<string, { projectedFp: number; avgFpPerGame: number; games: number } | null> = {};
+  try {
+    const gamesInNextPeriod = new Map<string, number>();
+    for (const g of nextPeriodGames) {
+      gamesInNextPeriod.set(g.homeTeamId, (gamesInNextPeriod.get(g.homeTeamId) ?? 0) + 1);
+      gamesInNextPeriod.set(g.awayTeamId, (gamesInNextPeriod.get(g.awayTeamId) ?? 0) + 1);
     }
+    // Group by player, keep only the last 5 (query is DESC)
+    const linesByPlayer: Record<string, RawStatLine[]> = {};
+    for (const l of projectionLines) {
+      linesByPlayer[l.playerId] = linesByPlayer[l.playerId] ?? [];
+      if (linesByPlayer[l.playerId].length < 5) linesByPlayer[l.playerId].push(l);
+    }
+    if (nextPeriod) {
+      for (const entry of fullTeam.roster) {
+        const pTeamId = entry.player.team?.id ?? null;
+        const games = pTeamId ? (gamesInNextPeriod.get(pTeamId) ?? 0) : 0;
+        const lines = linesByPlayer[entry.playerId] ?? [];
+        if (lines.length === 0) { projectedStats[entry.playerId] = null; continue; }
+        const totalFp = lines.reduce(
+          (sum, l) => sum + scoreStatLine(l, entry.player.position as Position, scoring), 0
+        );
+        const avgFpPerGame = Math.round((totalFp / lines.length) * 100) / 100;
+        projectedStats[entry.playerId] = {
+          projectedFp: Math.round(avgFpPerGame * games * 100) / 100,
+          avgFpPerGame,
+          games,
+        };
+      }
+    }
+  } catch (err) {
+    console.error("[lineup] projection computation failed:", err);
+    projectionsAvailable = false;
+    projectedStats = {};
   }
 
   const roster: RosterEntryRow[] = fullTeam.roster.map((entry) => {
     const pTeamId = entry.player.team?.id ?? null;
-    const locked = lockTime(pTeamId, periodGames, nowMs, periodForGames?.startsAt.getTime());
+    const locked = lockTime(pTeamId, periodGames, nowMs, activePeriod?.startsAt.getTime());
     return {
       id: entry.id,
       playerId: entry.playerId,
@@ -362,6 +369,7 @@ export default async function TeamLineupPage({ params }: Props) {
       thisWeekLabel={thisWeekLabel}
       projectedStats={nextPeriod ? projectedStats : undefined}
       nextWeekLabel={nextWeekLabel}
+      projectionsAvailable={projectionsAvailable}
     />
   );
 }
