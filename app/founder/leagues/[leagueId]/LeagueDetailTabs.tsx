@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import type { StandingRow } from "@/lib/services/standings-service";
 
 interface DraftPick {
@@ -70,6 +71,7 @@ type Tab = typeof TABS[number];
 const BETA_STATUSES = ["NONE", "INVITED", "ACCEPTED", "ACTIVE", "RENEWED"] as const;
 
 export function LeagueDetailTabs({ leagueId, league, standings, seasonState, draft, teams }: Props) {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<Tab>("Config");
   const [simResult, setSimResult] = useState<string | null>(null);
   const [simError, setSimError] = useState<string | null>(null);
@@ -77,6 +79,27 @@ export function LeagueDetailTabs({ leagueId, league, standings, seasonState, dra
   const [betaStatus, setBetaStatus] = useState(league.betaStatus);
   const [betaSaved, setBetaSaved] = useState(false);
   const [betaError, setBetaError] = useState<string | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  async function handleDelete() {
+    setIsDeleting(true);
+    setDeleteError(null);
+    try {
+      const res = await fetch(`/api/founder/leagues/${leagueId}`, { method: "DELETE" });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setDeleteError((data as { error?: string }).error ?? "Delete failed");
+        setIsDeleting(false);
+        return;
+      }
+      router.push("/founder/leagues");
+    } catch {
+      setDeleteError("Network error. Please try again.");
+      setIsDeleting(false);
+    }
+  }
 
   async function simulate(action: "scoreNextWeek" | "scoreAll") {
     setSimResult(null);
@@ -165,6 +188,40 @@ export function LeagueDetailTabs({ leagueId, league, standings, seasonState, dra
 
       {activeTab === "Config" && (
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+          {/* Danger zone */}
+          <div style={{ gridColumn: "1 / -1", background: "rgba(239,68,68,0.07)", border: "1px solid rgba(239,68,68,0.25)", borderRadius: 6, padding: "0.75rem 1rem", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+            <div>
+              <div style={{ fontSize: "0.8rem", fontWeight: 700, color: "#f87171", marginBottom: 2 }}>Delete League</div>
+              <div style={{ fontSize: "0.75rem", color: "#666" }}>Permanently removes all teams, rosters, matchups, draft picks, and trades. Irreversible.</div>
+              {deleteError && <div style={{ fontSize: "0.75rem", color: "#f87171", marginTop: 4 }}>{deleteError}</div>}
+            </div>
+            {!deleteConfirm ? (
+              <button
+                onClick={() => setDeleteConfirm(true)}
+                style={{ padding: "0.4rem 0.9rem", background: "transparent", border: "1px solid rgba(239,68,68,0.5)", color: "#f87171", borderRadius: 4, fontSize: "0.8rem", cursor: "pointer", whiteSpace: "nowrap" }}
+              >
+                Delete league
+              </button>
+            ) : (
+              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                <span style={{ fontSize: "0.78rem", color: "#f87171" }}>Are you sure?</span>
+                <button
+                  onClick={handleDelete}
+                  disabled={isDeleting}
+                  style={{ padding: "0.4rem 0.9rem", background: "#ef4444", border: "none", color: "#fff", borderRadius: 4, fontSize: "0.8rem", fontWeight: 700, cursor: isDeleting ? "not-allowed" : "pointer", opacity: isDeleting ? 0.6 : 1 }}
+                >
+                  {isDeleting ? "Deleting…" : "Yes, delete"}
+                </button>
+                <button
+                  onClick={() => setDeleteConfirm(false)}
+                  style={{ padding: "0.4rem 0.9rem", background: "transparent", border: "1px solid #333", color: "#666", borderRadius: 4, fontSize: "0.8rem", cursor: "pointer" }}
+                >
+                  Cancel
+                </button>
+              </div>
+            )}
+          </div>
+
           <Section title="League Info">
             <Row label="Name" value={league.name} />
             <Row label="Season" value={league.season} />
