@@ -81,6 +81,14 @@ export default async function MatchupsPage({ params }: { params: Promise<{ leagu
   // Find the first playoff matchup info for the divider
   const firstPlayoffMatchup = playoffMatchups.length > 0 ? playoffMatchups[0] : null;
 
+  // Expected playoff start: day after last regular-season week ends
+  const lastRegularMatchup = regularMatchups.length > 0
+    ? regularMatchups.reduce((a, b) => (new Date(b.endsAt) > new Date(a.endsAt) ? b : a))
+    : null;
+  const expectedPlayoffStart = lastRegularMatchup
+    ? new Date(new Date(lastRegularMatchup.endsAt).getTime() + 24 * 60 * 60 * 1000)
+    : null;
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
 
@@ -198,7 +206,7 @@ export default async function MatchupsPage({ params }: { params: Promise<{ leagu
       )}
 
       {/* Playoff start divider */}
-      {playoffMatchups.length > 0 && firstPlayoffMatchup && (
+      {(playoffMatchups.length > 0 || (league.playoffStatus === "NOT_STARTED" && expectedPlayoffStart)) && (
         <div style={{
           ...card,
           background: "rgba(217, 119, 6, 0.08)",
@@ -211,7 +219,12 @@ export default async function MatchupsPage({ params }: { params: Promise<{ leagu
           </div>
           <div style={{ fontSize: 12, color: "#94a3b8" }}>
             <div style={{ marginBottom: 6 }}>
-              {fmtDate(new Date(firstPlayoffMatchup.startsAt))} – {fmtDate(new Date(firstPlayoffMatchup.endsAt))}
+              {(() => {
+                const dividerDate = firstPlayoffMatchup
+                  ? new Date(firstPlayoffMatchup.startsAt)
+                  : expectedPlayoffStart!;
+                return `${fmtDate(dividerDate)} – ${fmtDate(new Date(dividerDate.getTime() + 7 * 24 * 60 * 60 * 1000))}`;
+              })()}
             </div>
             <div style={{ fontSize: 11, color: "#64748b" }}>
               Single-elimination · Best seed wins ties

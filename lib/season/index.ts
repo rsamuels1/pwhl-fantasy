@@ -12,6 +12,7 @@ import { computeSeasonState, pendingWeeks, validateSeasonBoundary, type SeasonSt
 import { startPlayoffs } from "@/lib/services/playoff-service";
 import { initializeWaiverPriority } from "@/lib/services/waiver-service";
 import { emitWeeklyStorylines } from "@/lib/services/storyline-service";
+import { calculatePlayoffRounds, getPlayoffSettings } from "@/lib/playoffs/lifecycle";
 
 // Load everything needed for the lifecycle engine from the DB, then run the pure engine.
 export async function getSeasonState(
@@ -83,7 +84,9 @@ export async function startSeason(leagueId: string, prisma: PrismaClient): Promi
   // VP mode uses 1v1 round-robin matchups; VTF uses all-vs-all.
   const scoringMode = league.scoringMode ?? "VTF";
   if (scoringMode === "VP") {
-    await generateMatchups(leagueId, league.season, prisma);
+    const ps = getPlayoffSettings(league.playoffSettings as Parameters<typeof getPlayoffSettings>[0]);
+    const playoffRounds = calculatePlayoffRounds(ps.teamsInPlayoff);
+    await generateMatchups(leagueId, league.season, prisma, { reservePlayoffWeeks: playoffRounds });
   } else {
     await generateVtfMatchups(leagueId, league.season, prisma);
   }

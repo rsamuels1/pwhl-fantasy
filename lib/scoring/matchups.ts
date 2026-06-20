@@ -261,7 +261,7 @@ export async function generateMatchups(
   leagueId: string,
   season: string,
   prisma: PrismaClient,
-  options?: { startAt?: Date }
+  options?: { startAt?: Date; reservePlayoffWeeks?: number }
 ): Promise<ScoringPeriod[]> {
   const league = await prisma.fantasyLeague.findUniqueOrThrow({
     where: { id: leagueId },
@@ -279,6 +279,10 @@ export async function generateMatchups(
   if (periods.length === 0) throw new Error(`No games found for season ${season}`);
   if (options?.startAt) {
     periods = shiftPeriodsToStart(periods, options.startAt);
+  }
+  if (options?.reservePlayoffWeeks && options.reservePlayoffWeeks > 0) {
+    periods = periods.slice(0, periods.length - options.reservePlayoffWeeks);
+    if (periods.length === 0) throw new Error("reservePlayoffWeeks exceeds total game weeks");
   }
 
   const schedule = roundRobinPairs(teamIds.length, periods.length);
