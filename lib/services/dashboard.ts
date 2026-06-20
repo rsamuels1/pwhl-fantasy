@@ -973,7 +973,7 @@ async function getLeaguePerformers(
     };
   });
 
-  const top = [...rows].sort((a, b) => b.points - a.points).slice(0, 5);
+  const top = [...rows].filter((r) => r.gamesPlayed > 0).sort((a, b) => b.points - a.points).slice(0, 5);
   const disappointing = [...rows]
     .filter((r) => r.gamesPlayed > 0)
     .sort((a, b) => a.points - b.points)
