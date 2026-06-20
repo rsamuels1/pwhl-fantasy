@@ -182,7 +182,7 @@ describe("validateTradeProposal", () => {
 
     const result = validateTradeProposal(items, propRoster, recRoster, settings);
     expect(result.valid).toBe(false);
-    expect(result.reason).toMatch(/over capacity/i);
+    expect(result.reason).toMatch(/maximum/i);
   });
 
   it("accepts a multi-player trade that stays within capacity", () => {

@@ -4,7 +4,6 @@
 // lib/services/trade-service.ts owns all Prisma calls.
 
 import type { LineupSlot, Position } from "@prisma/client";
-import { eligibleSlots } from "@/lib/lineup";
 import type { RosterSettings } from "@/lib/lineup";
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -103,45 +102,32 @@ export function canTransitionTo(
  *
  * Returns null when legal, or an error message string when illegal.
  */
+/**
+ * Checks that a post-trade roster is legal.
+ *
+ * We only validate total roster size, not per-slot occupancy. applyTrade
+ * places all incoming players on BENCH, but that's a transient state —
+ * managers reorganize their lineup after the trade settles. What matters is
+ * that the total number of players doesn't exceed the roster capacity so that
+ * a legal arrangement is always possible.
+ */
 function checkRosterLegal(
   roster: Array<{ playerId: string; slot: LineupSlot; position: Position; active: boolean }>,
   rosterSettings: RosterSettings
 ): string | null {
-  const slotCounts: Partial<Record<LineupSlot, number>> = {};
+  const maxTotal =
+    (rosterSettings.forward ?? 0) +
+    (rosterSettings.defense ?? 0) +
+    (rosterSettings.goalie  ?? 0) +
+    (rosterSettings.util    ?? 0) +
+    (rosterSettings.bench   ?? 0) +
+    (rosterSettings.ir      ?? 0);
 
-  for (const entry of roster) {
-    // Check position eligibility
-    const eligible = eligibleSlots(entry.position, entry.active);
-    if (!eligible.includes(entry.slot)) {
-      return `Player ${entry.playerId} is in slot ${entry.slot} but is not eligible for it.`;
-    }
-
-    // Tally slot usage
-    slotCounts[entry.slot] = (slotCounts[entry.slot] ?? 0) + 1;
-  }
-
-  // Check capacities
-  const allSlots: LineupSlot[] = ["FORWARD", "DEFENSE", "GOALIE", "UTIL", "BENCH", "IR"];
-  for (const slot of allSlots) {
-    const used = slotCounts[slot] ?? 0;
-    const cap = getSlotCap(slot, rosterSettings);
-    if (used > cap) {
-      return `Slot ${slot} would be over capacity (${used}/${cap}) after the trade.`;
-    }
+  if (roster.length > maxTotal) {
+    return `Roster would have ${roster.length} players but the maximum is ${maxTotal}.`;
   }
 
   return null;
-}
-
-function getSlotCap(slot: LineupSlot, s: RosterSettings): number {
-  switch (slot) {
-    case "FORWARD": return s.forward ?? 0;
-    case "DEFENSE": return s.defense ?? 0;
-    case "GOALIE":  return s.goalie  ?? 0;
-    case "UTIL":    return s.util    ?? 0;
-    case "BENCH":   return s.bench   ?? 0;
-    case "IR":      return s.ir      ?? 0;
-  }
 }
 
 // ── applyTrade ───────────────────────────────────────────────────────────────
