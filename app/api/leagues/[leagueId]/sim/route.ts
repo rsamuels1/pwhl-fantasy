@@ -53,6 +53,19 @@ export async function POST(
     if (action === "start") {
       // PRE_SEASON → SETUP: start the season
       await startSeason(leagueId, prisma);
+
+      // Fetch the first period to set replayCurrentDate
+      const { getSeasonState } = await import("@/lib/season");
+      const state = await getSeasonState(leagueId, nowMs, prisma);
+      const firstPeriod = state.periods[0];
+
+      if (firstPeriod) {
+        await prisma.fantasyLeague.update({
+          where: { id: leagueId },
+          data: { replayCurrentDate: firstPeriod.period.startsAt },
+        });
+      }
+
       return NextResponse.json({ ok: true, phase: "SETUP" });
     }
 
