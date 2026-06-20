@@ -107,6 +107,19 @@ export async function POST(
       });
     }
 
+    // Return playoff errors to caller so commissioners know if bracket generation failed
+    if (result.playoffError) {
+      return NextResponse.json({
+        simulatedDate: new Date(nowMs).toISOString(),
+        scoredWeeks: result.scoredWeeks,
+        message: result.scoredWeeks.length > 0
+          ? `Scored week(s) ${result.scoredWeeks.join(", ")}.`
+          : `No periods due at simulated date ${new Date(nowMs).toISOString()}.`,
+        error: `Playoff initialization failed: ${result.playoffError}`,
+        state,
+      }, { status: 500 });
+    }
+
     return NextResponse.json({
       simulatedDate: new Date(nowMs).toISOString(),
       scoredWeeks: result.scoredWeeks,

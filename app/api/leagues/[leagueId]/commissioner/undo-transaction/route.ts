@@ -70,49 +70,57 @@ async function undoWaiverTransaction(
     return NextResponse.json({ error: "Cannot determine player from transaction record" }, { status: 422 });
   }
 
-  if (lastEvent.type === "PLAYER_ADD") {
-    // Reverse an add: remove the roster entry if the player is still on this team
-    const entry = await db.rosterEntry.findFirst({
-      where: { fantasyTeamId: teamId, playerId },
+  try {
+    // Wrap roster entry change and event deletion in a transaction for atomicity
+    await db.$transaction(async (tx) => {
+      if (lastEvent.type === "PLAYER_ADD") {
+        // Reverse an add: remove the roster entry if the player is still on this team
+        const entry = await tx.rosterEntry.findFirst({
+          where: { fantasyTeamId: teamId, playerId },
+        });
+        if (!entry) {
+          throw new Error("Player is no longer on this team — undo would create a conflict");
+        }
+        await tx.rosterEntry.delete({ where: { id: entry.id } });
+      } else {
+        // Reverse a drop: add the player back — first check they haven't been picked up
+        const onAnotherTeam = await tx.rosterEntry.findFirst({
+          where: {
+            playerId,
+            fantasyTeam: { leagueId },
+          },
+        });
+        if (onAnotherTeam) {
+          throw new Error("Player was picked up by another team — undo would create a conflict");
+        }
+        await tx.rosterEntry.create({
+          data: {
+            fantasyTeamId: teamId,
+            playerId,
+            slot: (data.slot as any) ?? "BENCH",
+            acquired: new Date(),
+          },
+        });
+      }
+
+      // Delete the event so it doesn't appear as undoable again
+      await leagueEventModel.delete({ where: { id: lastEvent.id } });
     });
-    if (!entry) {
-      return NextResponse.json({ error: "Player is no longer on this team — undo would create a conflict" }, { status: 409 });
+  } catch (e: unknown) {
+    const message = (e as { message?: string })?.message || String(e);
+    if (message.includes("Player is no longer on this team")) {
+      return NextResponse.json({ error: message }, { status: 409 });
     }
-    await db.rosterEntry.delete({ where: { id: entry.id } });
-  } else {
-    // Reverse a drop: add the player back — first check they haven't been picked up
-    const onAnotherTeam = await db.rosterEntry.findFirst({
-      where: {
-        playerId,
-        fantasyTeam: { leagueId },
-      },
-    });
-    if (onAnotherTeam) {
+    if (message.includes("Player was picked up by another team")) {
+      return NextResponse.json({ error: message }, { status: 409 });
+    }
+    if ((e as { code?: string })?.code === "P2002") {
       return NextResponse.json({
-        error: "Player was picked up by another team — undo would create a conflict",
+        error: "Player is already on this team — undo would create a duplicate entry",
       }, { status: 409 });
     }
-    try {
-      await db.rosterEntry.create({
-        data: {
-          fantasyTeamId: teamId,
-          playerId,
-          slot: (data.slot as any) ?? "BENCH",
-          acquired: new Date(),
-        },
-      });
-    } catch (e: unknown) {
-      if ((e as { code?: string })?.code === "P2002") {
-        return NextResponse.json({
-          error: "Player is already on this team — undo would create a duplicate entry",
-        }, { status: 409 });
-      }
-      throw e;
-    }
+    throw e;
   }
-
-  // Delete the event so it doesn't appear as undoable again
-  await leagueEventModel.delete({ where: { id: lastEvent.id } });
 
   await logCommissionerAction(leagueId, commissionerId, "COMMISSIONER_UNDO_TRANSACTION", {
     target: teamId,

@@ -328,14 +328,15 @@ class DraftRoom {
             where: { id: this.state.draftId },
             data: { status: "COMPLETE", completedAt: new Date() },
           });
-          // Auto-start season for replay leagues so matchup rows exist immediately
+          // Auto-start season so matchup rows exist immediately
           const league = await prisma.fantasyLeague.findUnique({
             where: { id: this.leagueId },
             select: { isReplay: true },
           });
-          if (league?.isReplay) {
-            try {
-              await startSeason(this.leagueId, prisma);
+          try {
+            await startSeason(this.leagueId, prisma);
+            // For replay leagues, set replayCurrentDate to the first period's start
+            if (league?.isReplay) {
               const state = await getSeasonState(this.leagueId, Date.now(), prisma);
               const firstPeriod = state.periods[0];
               if (firstPeriod) {
@@ -344,9 +345,9 @@ class DraftRoom {
                   data: { replayCurrentDate: new Date(firstPeriod.startsAt) },
                 });
               }
-            } catch (e) {
-              console.error("[draft] auto-startSeason failed for replay league", e);
             }
+          } catch (e) {
+            console.error("[draft] auto-startSeason failed", e);
           }
           try { trackEvent({ event: "draft_completed", leagueId: this.leagueId }); } catch {}
           break;

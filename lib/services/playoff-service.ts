@@ -143,6 +143,10 @@ export async function startPlayoffs(
     include: { teams: true },
   });
 
+  if (league.scoringMode !== "VP") {
+    throw new Error("Playoffs require VP scoring mode.");
+  }
+
   if (league.playoffStatus !== "NOT_STARTED") {
     throw new Error(`Playoffs already ${league.playoffStatus.toLowerCase()}`);
   }

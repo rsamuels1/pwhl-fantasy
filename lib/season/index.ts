@@ -100,7 +100,7 @@ export async function advanceSeason(
   leagueId: string,
   nowMs: number,
   prisma: PrismaClient
-): Promise<{ scoredWeeks: number[] }> {
+): Promise<{ scoredWeeks: number[]; playoffError?: string }> {
   const league = await prisma.fantasyLeague.findUniqueOrThrow({
     where: { id: leagueId },
   });
@@ -120,6 +120,7 @@ export async function advanceSeason(
     scoredWeeks.push(period.week);
   }
 
+  let playoffError: string | undefined;
   // Advance FantasyLeague.status based on the post-scoring state.
   if (due.length > 0) {
     const updated = await getSeasonState(leagueId, nowMs, prisma);
@@ -130,9 +131,13 @@ export async function advanceSeason(
       });
       // Auto-initialize playoffs. startPlayoffs() is a no-op when
       // playoffStatus !== "NOT_STARTED", so this is safe to call unconditionally.
-      await startPlayoffs(leagueId, prisma).catch((err: Error) => {
-        console.error("[advanceSeason] auto-startPlayoffs failed:", err.message);
-      });
+      try {
+        await startPlayoffs(leagueId, prisma);
+      } catch (err) {
+        const errMsg = err instanceof Error ? err.message : String(err);
+        console.error("[advanceSeason] auto-startPlayoffs failed:", errMsg);
+        playoffError = errMsg;
+      }
     } else if (updated.lifecycleStatus === "IN_PROGRESS") {
       await prisma.fantasyLeague.update({
         where: { id: leagueId },
@@ -141,5 +146,5 @@ export async function advanceSeason(
     }
   }
 
-  return { scoredWeeks };
+  return { scoredWeeks, playoffError };
 }
