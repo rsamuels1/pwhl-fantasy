@@ -170,6 +170,13 @@ items here are read-heavy or isolated new domains — none touch the draft or st
   - **Playoff scoring documented** (`advance-playoff-round/route.ts`) — header comment clarifies 1v1 raw-FP scoring model vs VTF/VP regular-season scoring.
   - **Undo-waiver P2002 handling** (`commissioner/undo-transaction/route.ts`) — P2002 on PLAYER_DROP reversal now returns a clean 409 instead of an unhandled 500.
 
+- **Replay league matchup generation & scoring** ✅ (commit 52ea547)
+  Root cause audit uncovered three issues breaking the replay feature entirely:
+  - **Auto-start season after draft** (`lib/draft/server.ts`) — COMPLETE effect now calls `startSeason()` to generate initial `Matchup` rows and sets `replayCurrentDate` to first period's start. Without this, no matchups existed in DB so the matchup page always showed "No matchups scheduled".
+  - **Fix endpoint routing** (`components/ReplaySimulatorControls.tsx`) — both "advance" and "set-date" actions now correctly POST to `/season/advance` (was inverted: advance routed to `/season` which ignored `simulatedDate` body). Fixes the bug where the simulator was reading wall-clock time instead of the request body's simulated date, causing scoring to never happen.
+  - **Test mock $transaction** (`tests/renewal.test.ts`) — mock Prisma object now implements `$transaction` callback pattern, fixing 9 failing renewal tests.
+  Result: replay feature works end-to-end — draft completes → matchups auto-generate → weeks score correctly via simulator.
+
 **Remaining Sprint 6:**
 
 **Priority 4 — Team Analysis & Insights (#25)** · ~85K
