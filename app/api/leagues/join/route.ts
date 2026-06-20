@@ -68,6 +68,7 @@ export async function POST(req: NextRequest) {
         leagueId,
         ownerId: owner.id,
         draftOrder,
+        isBot: ownerEmail.endsWith(".local"),
       },
     });
 
