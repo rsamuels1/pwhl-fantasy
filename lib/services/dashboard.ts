@@ -376,10 +376,24 @@ export async function getDashboardData(
     .slice(0, 3)
     .map((p) => ({ playerId: p.playerId, name: p.name, position: p.position, points: p.points, statBreakdown: p.statBreakdown }));
 
-  const [remainingPlayers, { top: leagueTopPerformers, disappointing: leagueDisappointments }] = await Promise.all([
+  const [remainingPlayers, leaguePerformersResult] = await Promise.all([
     getRemainingPlayersTonight(myTeamId, scoringSettings, prisma, nowMs),
     getLeaguePerformers(leagueId, myTeamId, displayPeriod, scoringSettings, prisma, nowMs),
   ]);
+
+  // When current period has no stat lines (e.g. SETUP phase where replayCurrentDate === period.startsAt),
+  // fall back to the last completed period so League leaders still shows meaningful data.
+  let { top: leagueTopPerformers, disappointing: leagueDisappointments } = leaguePerformersResult;
+  if (leagueTopPerformers.length === 0) {
+    const lastComplete = [...seasonState.periods].reverse().find((ps) => ps.status === "COMPLETE");
+    if (lastComplete) {
+      const fallback = await getLeaguePerformers(
+        leagueId, myTeamId, lastComplete.period, scoringSettings, prisma, lastComplete.period.endsAt.getTime() + 1
+      );
+      leagueTopPerformers = fallback.top;
+      leagueDisappointments = fallback.disappointing;
+    }
+  }
 
   const myPlayers = withGames(myDetailed.players);
 
@@ -974,6 +988,7 @@ async function getLeaguePerformers(
   });
 
   const top = [...rows].filter((r) => r.gamesPlayed > 0).sort((a, b) => b.points - a.points).slice(0, 5);
+  // Note: top may be empty when the period query range is empty (e.g. SETUP phase); callers handle fallback.
   const disappointing = [...rows]
     .filter((r) => r.gamesPlayed > 0)
     .sort((a, b) => a.points - b.points)
