@@ -77,10 +77,7 @@ export default function ReplaySimulatorControls({
     setError(null);
     try {
       const isoDate = new Date(dateStr).toISOString();
-      const endpoint =
-        action === "advance"
-          ? `/api/leagues/${leagueId}/season`
-          : `/api/leagues/${leagueId}/season/advance`;
+      const endpoint = `/api/leagues/${leagueId}/season/advance`;
 
       const payload =
         action === "advance"

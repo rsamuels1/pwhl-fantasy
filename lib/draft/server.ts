@@ -17,6 +17,7 @@ import { emitEvent, type LeagueEventType } from "../services/activity";
 import { trackEvent } from "../analytics";
 import { logCommissionerAction, type CommissionerEventType } from "../services/audit-service";
 import { createNotification } from "../services/notification-service";
+import { startSeason, getSeasonState } from "../season/index";
 
 const prisma = new PrismaClient();
 
@@ -327,6 +328,26 @@ class DraftRoom {
             where: { id: this.state.draftId },
             data: { status: "COMPLETE", completedAt: new Date() },
           });
+          // Auto-start season for replay leagues so matchup rows exist immediately
+          const league = await prisma.fantasyLeague.findUnique({
+            where: { id: this.leagueId },
+            select: { isReplay: true },
+          });
+          if (league?.isReplay) {
+            try {
+              await startSeason(this.leagueId, prisma);
+              const state = await getSeasonState(this.leagueId, Date.now(), prisma);
+              const firstPeriod = state.periods[0];
+              if (firstPeriod) {
+                await prisma.fantasyLeague.update({
+                  where: { id: this.leagueId },
+                  data: { replayCurrentDate: new Date(firstPeriod.startsAt) },
+                });
+              }
+            } catch (e) {
+              console.error("[draft] auto-startSeason failed for replay league", e);
+            }
+          }
           try { trackEvent({ event: "draft_completed", leagueId: this.leagueId }); } catch {}
           break;
       }

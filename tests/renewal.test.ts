@@ -49,7 +49,7 @@ function makeLeague(overrides: Partial<{
 
 function makePrisma(league: ReturnType<typeof makeLeague>) {
   const created: Record<string, unknown>[] = [];
-  return {
+  const prismaObj = {
     fantasyLeague: {
       findUniqueOrThrow: vi.fn().mockResolvedValue(league),
       create: vi.fn().mockImplementation(({ data }: { data: Record<string, unknown> }) => {
@@ -59,6 +59,13 @@ function makePrisma(league: ReturnType<typeof makeLeague>) {
       }),
     },
     _created: created,
+  };
+  return {
+    ...prismaObj,
+    $transaction: vi.fn().mockImplementation(async (fn) => {
+      if (typeof fn === "function") return fn(prismaObj);
+      return Promise.all(fn);
+    }),
   } as unknown as Parameters<typeof renewLeague>[2];
 }
 
