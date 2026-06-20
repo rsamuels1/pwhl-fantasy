@@ -182,20 +182,24 @@ export async function startPlayoffs(
   const bracket = generateBracket(leagueId, seededTeams, playoffSettings);
   const totalRounds = calculatePlayoffRounds(playoffSettings.teamsInPlayoff);
 
-  const games = await prisma.game.findMany({
-    where: { season: league.season },
-    orderBy: { startsAt: "asc" },
+  const regularSeasonMatchups = await prisma.matchup.findMany({
+    where: { leagueId, isPlayoff: false },
+    orderBy: { week: "desc" },
   });
 
-  // Playoff starts one week after the last regular season game (unless replay mode,
-  // where we anchor to the actual last game to keep playoff periods within available data)
-  if (games.length === 0) {
-    throw new Error("No games available to determine playoff start date");
+  // Find the last regular season week and when it ends
+  if (regularSeasonMatchups.length === 0) {
+    throw new Error("No regular season matchups found to determine playoff start date");
   }
-  const lastGame = games[games.length - 1];
-  const playoffStartsAt = league.isReplay
-    ? lastGame.startsAt
-    : new Date(lastGame.startsAt.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+  const lastRegularSeasonWeek = Math.max(...regularSeasonMatchups.map((m) => m.week));
+  const lastWeekMatchups = regularSeasonMatchups.filter((m) => m.week === lastRegularSeasonWeek);
+  const lastWeekEndDate = new Date(
+    Math.max(...lastWeekMatchups.map((m) => new Date(m.endsAt).getTime()))
+  );
+
+  // Playoff starts the day after the last regular season week ends
+  const playoffStartsAt = new Date(lastWeekEndDate.getTime() + 24 * 60 * 60 * 1000);
 
   const playoffPeriods = derivePlayoffPeriods(
     playoffStartsAt,
