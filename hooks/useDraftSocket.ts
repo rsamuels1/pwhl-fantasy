@@ -49,7 +49,8 @@ export function useDraftSocket(leagueId: string, teamId: string): DraftSocket {
   }, []);
 
   useEffect(() => {
-    // Reset reconnect state when leagueId/teamId changes.
+    // Reset state when leagueId/teamId changes.
+    setEvicted(false);
     shouldReconnectRef.current = true;
     reconnectDelayRef.current = 1000;
 
