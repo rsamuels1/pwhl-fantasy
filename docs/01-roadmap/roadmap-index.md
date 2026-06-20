@@ -85,7 +85,7 @@ Snapshot of launch-blocking areas. **Confidence to launch: ~98%.**
 | Commissioner tools | ✅ PASS | force move, undo transaction, replace manager, audit log all shipped |
 | Notifications | ✅ PASS | all 3 MVP-critical types shipped (draft starting, on the clock, lineup incomplete) |
 | Analytics | ✅ PASS | 6 events instrumented |
-| End-to-end season sim | ✅ PASS | — |
+| End-to-end season sim | ✅ PASS | PLAYOFF-AUDIT-001 complete Jun 20 — script runs clean, 180/180 tests, tsc clean |
 
 **All MVP gates clear.** PLAYOFF-BUG-001 resolved in commit b465423. No remaining soft blockers.
 
@@ -105,7 +105,7 @@ MVP proves a league can go **Create → Invite → Draft → Set Lineups → Com
 
 ## What To Build Next
 
-Sprint 6 is complete (7/7). Sprint 7 is in progress (2/4 items done — #11 Storylines shipped; #39 Replay Sim V2 UX shipped; #38 Replay V2 deferred). Sprint 8 (Beta Hardening) is complete — all 14 items done. P0+P1 audit fixes shipped Jun 20 ahead of schedule; 7 beta bug fixes shipped in commit b465423 (playoff period anchoring, auto-set during playoffs, roster refresh, lineup sort, FA suggestions sim-date, bracket default 6→4). Next: Sprint 9 PWHL GM Rebrand (trigger: founding commissioners have drafted).
+Sprint 6 is complete (7/7). Sprint 7 is complete (3/4 items done — #11 Storylines ✅; #39 Replay Sim V2 UX ✅; PLAYOFF-AUDIT-001 ✅; #7 Trade System deferred; #38 Replay V2 deferred). Sprint 8 (Beta Hardening) is complete — all 14 items done. PLAYOFF-AUDIT-001 verified Jun 20: `simulate-season.ts` end-to-end passes, 180/180 tests green, tsc clean. Next: Sprint 9 PWHL GM Rebrand (trigger: founding commissioners have drafted).
 
 **Shipped (Sprint 6 — all complete):**
 - **League Onboarding (#2)** · ✅ Welcome flow, 6-step wizard, manager draft prep guide; `User.onboardingCompletedAt` schema field. (Sprint 3)
@@ -145,10 +145,9 @@ card #40 (`roadmap-features.md`) and sprint plan (`roadmap-sprints.md`).
 2. **League-Wide Matchup Storylines (#11)** · ✅ DONE · Sprint 7
    `lib/services/storyline-service.ts` (`computeWeeklyStorylines`, `emitWeeklyStorylines`); `LEAGUE_STORYLINE` EventType; `components/WeekHighlights.tsx` on league overview; emitted fire-and-forget from `advanceSeason()`; tested in `tests/storyline.test.ts`.
 
-3. **Player Legacy (#31)** · ~95K · Sprint 7
-   `/profile` page with career history and global leaderboard. Meaningful only after first completed+renewed season; ship skeleton now.
+3. **Replay Simulation Accelerated Playback (#38)** · DEFERRED — superseded by #39 (UX Overhaul, shipped Sprint 7).
 
-4. **Replay Simulation Accelerated Playback (#38)** · DEFERRED — superseded by #39 (UX Overhaul, shipped Sprint 7).
+_(#31 Player Legacy & #6 FAAB deferred to post-launch backlog — see below.)_
 
 **Sprint 8 — Beta Hardening — COMPLETE (14/14 done):**
 

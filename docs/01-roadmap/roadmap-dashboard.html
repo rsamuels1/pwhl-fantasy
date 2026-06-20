@@ -848,9 +848,9 @@
               <span style="color: #ccc"><strong style="color:#22c55e">Priority 3 — Replay Season Simulator v2 UX Overhaul (#39)</strong> · ✅ SHIPPED — week-boundary pauses; persistent controls on league overview (sticky footer) + commissioner matchup page (inline panel); smart button set based on season state; no schema changes. Shipped June 14, 2026.</span>
             </div>
 
-            <div class="task-row">
-              <span class="task-check">○</span>
-              <span style="color: #ccc"><strong style="color:#aaa">Priority 4 — Player Legacy &amp; Cross-Season Tracking (#31)</strong> · ~95K — <code>/profile</code> page with career history across all leagues and seasons; global leaderboard by career FP or championship count. Meaningful after first completed + renewed season; ship skeleton now and let it fill in. <code>UserCareerStats</code> cached table is post-season work.</span>
+            <div class="task-row" style="opacity: 0.45; text-decoration: line-through; text-decoration-color: #555;">
+              <span class="task-check" style="color: #555">–</span>
+              <span style="color: #555"><strong>Player Legacy &amp; Cross-Season Tracking (#31)</strong> — DEFERRED post-launch. Removed from Sprint 7 (was Priority 4). Requires at least one completed + renewed season to be meaningful; not useful until 2027-28. Moved to backlog.</span>
             </div>
 
             <div class="task-row" style="opacity: 0.45; text-decoration: line-through; text-decoration-color: #555;">
@@ -868,13 +868,12 @@
               <span style="color: #888"><em>Stretch: Email Notifications · ~50K — email channel for <code>LINEUP_INCOMPLETE</code>, <code>TRADE_RECEIVED</code>, and <code>WAIVER_RESULT</code> notification types. Transactional email provider (e.g. Resend). Add only if beta feedback surfaces as P1.</em></span>
             </div>
 
-            <div class="task-row" style="border-top: 1px solid rgba(245,158,11,0.2); padding-top: 0.5rem; margin-top: 0.5rem;">
-              <span class="task-check" style="color: #f59e0b">!</span>
-              <span style="color: #ccc"><strong style="color:#f59e0b">PLAYOFF-AUDIT-001 — Playoff System Verification</strong> · ~3.5h · Added 2026-06-20 · Spec: <code>docs/02-engineering/playoff-system-spec.md</code><br>
-              <strong style="color:#ef4444">PLAYOFF-BUG-001 (P1):</strong> <code>app/league/[leagueId]/bracket/page.tsx</code> line 70: <code>teamsInPlayoff ?? 6</code> should be <code>?? 4</code> — race banner shows "6 teams qualify" for default leagues (fix: 1 line, ~30 min).<br>
-              <strong style="color:#f59e0b">Q1 (verify):</strong> does <code>computeVpStandings()</code> filter <code>isPlayoff: true</code> matchups? If not, playoff scores distort round-2 tie-breaking. Check <code>lib/scoring/vp.ts</code>.<br>
-              <strong style="color:#f59e0b">Q2 (verify):</strong> run <code>npx tsx scripts/simulate-season.ts</code> end-to-end; confirm bracket hydration shows correct scores and champion card renders.<br>
-              All 5 ACs must pass before beta invites: simulate-season completes; bracket shows "4 teams qualify"; eliminated teams see elimination notice; commissioner can run playoffs start-to-finish; tsc + tests green.</span>
+            <div class="task-row" style="border-top: 1px solid rgba(34,197,94,0.2); padding-top: 0.5rem; margin-top: 0.5rem;">
+              <span class="task-check">✓</span>
+              <span style="color: #888"><strong style="color:#22c55e">PLAYOFF-AUDIT-001 — Playoff System Verification</strong> · ✅ COMPLETE 2026-06-20 · Spec: <code>docs/02-engineering/playoff-system-spec.md</code><br>
+              <strong style="color:#22c55e">PLAYOFF-BUG-001:</strong> Already fixed (commit b465423) — <code>?? 4</code> confirmed at bracket/page.tsx line 70.<br>
+              <strong style="color:#22c55e">Q1:</strong> <code>computeVpStandings()</code> correctly filters <code>isPlayoff: true</code> at lines 159, 188, 218 of <code>lib/scoring/vp.ts</code>.<br>
+              <strong style="color:#22c55e">Q2:</strong> <code>simulate-season.ts</code> runs end-to-end — 🏆 Northern Lights (37VP, 13-7-0). Three script bugs fixed (round-2 populate, cleanup FK, tsc). 180/180 tests pass; <code>tsc --noEmit</code> clean.</span>
             </div>
 
         </div>

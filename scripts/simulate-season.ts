@@ -225,26 +225,58 @@ async function scorePlayoffRound(
 }
 
 // Wire up next-round matchup with the winners from the previous round.
+// Mirrors populateOrCreateNextRound in advance-playoff-round/route.ts: updates an
+// existing placeholder if present, otherwise creates a new matchup row with dates
+// shifted from the previous round.
 async function populateNextRound(
   leagueId: string,
   round: number,
   winnerIds: string[]
 ): Promise<void> {
   if (DRY_RUN) return;
-  // Find the placeholder matchup for the next round
-  const placeholder = await prisma.matchup.findFirst({
-    where: { leagueId, isPlayoff: true, round, homeTeamId: "" },
-  });
-  if (!placeholder) {
-    // May have been created with a specific pair already — nothing to do
-    return;
-  }
   if (winnerIds.length < 2) {
     throw new Error(`Need at least 2 winners to fill round ${round} — got ${winnerIds.length}`);
   }
-  await prisma.matchup.update({
-    where: { id: placeholder.id },
-    data: { homeTeamId: winnerIds[0], awayTeamId: winnerIds[1] },
+
+  // Update existing matchup for this round (placeholder or pre-created)
+  const existing = await prisma.matchup.findFirst({
+    where: { leagueId, isPlayoff: true, round },
+  });
+  if (existing) {
+    await prisma.matchup.update({
+      where: { id: existing.id },
+      data: { homeTeamId: winnerIds[0], awayTeamId: winnerIds[1] },
+    });
+    return;
+  }
+
+  // No pre-created row — create fresh, shifting dates from the previous round.
+  const prevRound = await prisma.matchup.findFirst({
+    where: { leagueId, isPlayoff: true, round: round - 1 },
+  });
+  if (!prevRound) return;
+
+  const duration = prevRound.endsAt.getTime() - prevRound.startsAt.getTime();
+  const startsAt = new Date(prevRound.endsAt);
+  const endsAt = new Date(startsAt.getTime() + duration);
+
+  const maxWeekRow = await prisma.matchup.aggregate({
+    where: { leagueId, isPlayoff: false },
+    _max: { week: true },
+  });
+  const maxRegularWeek = maxWeekRow._max.week ?? 0;
+
+  await prisma.matchup.create({
+    data: {
+      leagueId,
+      week: maxRegularWeek + round,
+      homeTeamId: winnerIds[0],
+      awayTeamId: winnerIds[1],
+      startsAt,
+      endsAt,
+      isPlayoff: true,
+      round,
+    },
   });
 }
 
@@ -279,6 +311,8 @@ async function main() {
     if (prior && !DRY_RUN) {
       await prisma.draftPick.deleteMany({ where: { draft: { leagueId: prior.id } } });
       await prisma.rosterEntry.deleteMany({ where: { fantasyTeam: { leagueId: prior.id } } });
+      await (prisma as any).waiverPriority?.deleteMany({ where: { leagueId: prior.id } });
+      await (prisma as any).waiverClaim?.deleteMany({ where: { leagueId: prior.id } });
       await prisma.draft.deleteMany({ where: { leagueId: prior.id } });
       await prisma.matchup.deleteMany({ where: { leagueId: prior.id } });
       await prisma.fantasyTeam.deleteMany({ where: { leagueId: prior.id } });

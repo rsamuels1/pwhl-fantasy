@@ -342,7 +342,7 @@ class DraftRoom {
               if (firstPeriod) {
                 await prisma.fantasyLeague.update({
                   where: { id: this.leagueId },
-                  data: { replayCurrentDate: new Date(firstPeriod.startsAt) },
+                  data: { replayCurrentDate: new Date(firstPeriod.period.startsAt) },
                 });
               }
             }
