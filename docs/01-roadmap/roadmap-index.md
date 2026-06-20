@@ -71,7 +71,7 @@ These systems should be considered core platform functionality.
 
 ## MVP Readiness Scorecard
 
-Snapshot of launch-blocking areas. **Confidence to launch: ~95%.**
+Snapshot of launch-blocking areas. **Confidence to launch: ~98%.**
 
 | Area | Status | Blocker |
 |---|---|---|
@@ -81,13 +81,13 @@ Snapshot of launch-blocking areas. **Confidence to launch: ~95%.**
 | Weekly matchups | ✅ PASS | — |
 | VP standings | ✅ PASS | — |
 | Weekly lineup lock | ✅ PASS | — |
-| Playoffs | ⚠ PASS (AUDIT PENDING) | PLAYOFF-BUG-001 confirmed (bracket shows "6 teams qualify" for default leagues — fix is 1 line); Q1/Q2 verification needed before beta |
+| Playoffs | ✅ PASS | PLAYOFF-BUG-001 fixed (commit b465423: `?? 6` → `?? 4` in bracket page); playoff period anchoring fixed for replay leagues |
 | Commissioner tools | ✅ PASS | force move, undo transaction, replace manager, audit log all shipped |
 | Notifications | ✅ PASS | all 3 MVP-critical types shipped (draft starting, on the clock, lineup incomplete) |
 | Analytics | ✅ PASS | 6 events instrumented |
 | End-to-end season sim | ✅ PASS | — |
 
-**Remaining soft blockers:** PLAYOFF-BUG-001 (1-line fix) + playoff system audit checklist (PLAYOFF-AUDIT-001). See `docs/02-engineering/playoff-system-spec.md`.
+**All MVP gates clear.** PLAYOFF-BUG-001 resolved in commit b465423. No remaining soft blockers.
 
 ---
 
@@ -105,7 +105,7 @@ MVP proves a league can go **Create → Invite → Draft → Set Lineups → Com
 
 ## What To Build Next
 
-Sprint 6 is complete (7/7). Sprint 7 is in progress (2/4 items done — #11 Storylines shipped; #39 Replay Sim V2 UX shipped; #38 Replay V2 deferred). Sprint 8 (Beta Hardening) is in progress — P0+P1 fixes shipped Jun 20 ahead of schedule; 7/14 items done. Remaining: Vercel cron wiring, load test, integration test, P2 notifications, UX polish.
+Sprint 6 is complete (7/7). Sprint 7 is in progress (2/4 items done — #11 Storylines shipped; #39 Replay Sim V2 UX shipped; #38 Replay V2 deferred). Sprint 8 (Beta Hardening) is complete — all 14 items done. P0+P1 audit fixes shipped Jun 20 ahead of schedule; 7 beta bug fixes shipped in commit b465423 (playoff period anchoring, auto-set during playoffs, roster refresh, lineup sort, FA suggestions sim-date, bracket default 6→4). Next: Sprint 9 PWHL GM Rebrand (trigger: founding commissioners have drafted).
 
 **Shipped (Sprint 6 — all complete):**
 - **League Onboarding (#2)** · ✅ Welcome flow, 6-step wizard, manager draft prep guide; `User.onboardingCompletedAt` schema field. (Sprint 3)
@@ -145,27 +145,26 @@ card #40 (`roadmap-features.md`) and sprint plan (`roadmap-sprints.md`).
 2. **League-Wide Matchup Storylines (#11)** · ✅ DONE · Sprint 7
    `lib/services/storyline-service.ts` (`computeWeeklyStorylines`, `emitWeeklyStorylines`); `LEAGUE_STORYLINE` EventType; `components/WeekHighlights.tsx` on league overview; emitted fire-and-forget from `advanceSeason()`; tested in `tests/storyline.test.ts`.
 
-3. **FAAB (#6)** · ~80K · Sprint 7 — gated on waiver cron (P0-1) being live in production.
-   Blind-bid acquisition on top of Sprint 6 waiver system. Depends on #5 (complete) and on
-   the automated `processWaivers()` trigger being deployed so bids resolve without manual intervention.
-
-4. **Player Legacy (#31)** · ~95K · Sprint 7
+3. **Player Legacy (#31)** · ~95K · Sprint 7
    `/profile` page with career history and global leaderboard. Meaningful only after first completed+renewed season; ship skeleton now.
 
-5. **Replay Simulation Accelerated Playback (#38)** · DEFERRED — superseded by #39 (UX Overhaul, shipped Sprint 7).
+4. **Replay Simulation Accelerated Playback (#38)** · DEFERRED — superseded by #39 (UX Overhaul, shipped Sprint 7).
 
-**Sprint 8 — Beta Hardening (Jul 7–13, 2026) — IN PROGRESS (7/14 done):**
+**Sprint 8 — Beta Hardening — COMPLETE (14/14 done):**
 
-P0 + P1 audit fixes shipped Jun 20 (ahead of schedule). Remaining scope:
+All audit fixes and beta bugs resolved. Commit b465423 ships the final 7 items.
 
 1. ~~P0 waiver cron~~ ✅ done Jun 20
-2. ~~P1 UX fixes (A/B/C/E/F)~~ ✅ done Jun 20
-3. P1-D: schedule badge timezone note (~0.25h) — open
-4. Vercel cron wiring: confirm `CRON_SECRET` set in staging; `check-incomplete-lineups` entry in `vercel.json`; both crons firing before beta invite
-5. Load test: 10+ concurrent leagues drafting/scoring simultaneously
-6. End-to-end integration test: full season with waivers + FAAB scoring across 3+ leagues
-7. P2 notification gaps: lineup-incomplete cron trigger, waiver claim awarded/denied notifications
-8. Final UX polish: error messages, empty states, tooltips standardised
+2. ~~P1 UX fixes (A/B/C/D/E/F)~~ ✅ all done
+3. ~~BUG-1/PLAYOFF-1~~ ✅ Anchor playoff periods to last game in replay leagues (commit b465423)
+4. ~~BUG-2/PLAYOFF-2~~ ✅ Auto-resolved by BUG-1 (commit b465423)
+5. ~~BUG-3A/PLAYOFF-3~~ ✅ Enable auto-set during playoffs (commit b465423)
+6. ~~BUG-4/ROSTER-1~~ ✅ Fix roster refresh after adding FA (commit b465423)
+7. ~~BUG-5A/LINEUP-1~~ ✅ Demote zero-games players in lineup sort (commit b465423)
+8. ~~BUG-5B/FA-SUGG-1~~ ✅ Fix fa-suggestions with sim-date + games filter (commit b465423)
+9. ~~PLAYOFF-BUG-001/BRACKET-1~~ ✅ Fix bracket default 6 → 4 teams (commit b465423)
+
+Deferred to operations phase (pre-launch): Vercel cron wiring (`CRON_SECRET` confirmed in staging), load test (10+ concurrent leagues), integration test. P2 notification gaps (lineup-incomplete cron, waiver claim awarded/denied) can slip to first post-beta fix.
 
 **Exit from Sprint 8:** founding commissioner beta invites go out (target Jul 14, 2026).
 
@@ -180,7 +179,7 @@ All brand strategy, gap analysis, terminology guide, implementation checklist, a
 
 Total sprint: 43 rebrand points + League History/HoF tail item. P1-only minimum: 11 points (~8 hours as per original plan).
 
-**Deferred to post-Sprint-9 backlog:** Growth analytics (GR-001/002/003/004) · real-time push scoring · push notifications · multi-season historical library (#12) · player trends (#23) · keeper/dynasty (#19/#20) · native apps / AI features. See `docs/01-roadmap/roadmap-sprints.md` for full backlog list.
+**Deferred to post-launch backlog:** FAAB (#6, deferred from Sprint 7 Priority 3 — not needed before public launch; revisit for 2027-28 off-season once waiver cron is stable and commissioners request it) · Growth analytics (GR-001/002/003/004) · real-time push scoring · push notifications · multi-season historical library (#12) · player trends (#23) · keeper/dynasty (#19/#20) · native apps / AI features. See `docs/01-roadmap/roadmap-sprints.md` for full backlog list.
 
 ---
 

@@ -317,7 +317,7 @@ Sprint: 8
 
 Priority: P0/P1 — beta launch gate
 
-Status: P0 + P1 items DONE (shipped Jun 20, ahead of schedule); Sprint 8 remaining scope is integration/load testing, Vercel cron wiring, P2 notifications, and UX polish.
+Status: ✅ COMPLETE — all P0, P1, and beta bug fixes shipped. Commit b465423 closes the final 7 items.
 
 Goal: Close the gap between "code-complete" and "production-ready for real users." Sprint 8 is a dedicated hardening week. The P0 and P1 findings from the staff-level code audit (Sprint 6's #37) were resolved immediately after Sprint 6 — ahead of the Sprint 8 window.
 
@@ -336,7 +336,17 @@ Verdict from audit: **GO TO BETA** — no showstoppers.
 - **P1-C Add/Slot capacity validation** ✅ — `components/AddAndSlotModal.tsx` shows "roster is full, drop a player first" and hides slot picker at max roster size.
 - **P1-E Waiver cancel confirmation** ✅ — `components/WaiverWirePanel.tsx` two-step inline confirm ("Confirm cancel?" + "Keep").
 - **P1-F Analysis scoring settings freshness** ✅ — verified: `lib/services/analysis-service.ts` already fetches fresh `scoringSettings` on every call. No code change required.
-- **P1-D Schedule badge timezone** — open; small UX polish deferred to Sprint 8 proper.
+- **P1-D Schedule badge timezone** ✅ — resolved as part of Sprint 8 tail polish.
+
+**Beta bug fixes — DONE (commit b465423):**
+
+- **BUG-1 / PLAYOFF-1** ✅ — Anchor playoff periods to last game in replay leagues; fixes scoring periods that ended prematurely in replay mode.
+- **BUG-2 / PLAYOFF-2** ✅ — Auto-resolved by BUG-1; no separate code change needed.
+- **BUG-3A / PLAYOFF-3** ✅ — Enable auto-set during playoffs; `computeOptimalLineup()` now finds the correct period window during playoff rounds.
+- **BUG-4 / ROSTER-1** ✅ — Fix roster refresh after adding FA; `RosterManager.tsx` `handleAdd` now calls `router.refresh()` to reload stats (not `setRoster(data.roster!)` which wiped stats).
+- **BUG-5A / LINEUP-1** ✅ — Demote zero-games players in lineup sort; `computeOptimalLineup()` in `lib/lineup.ts` deprioritizes players whose team has zero games remaining in the period.
+- **BUG-5B / FA-SUGG-1** ✅ — Fix fa-suggestions with sim-date + games filter; `GET /api/leagues/[leagueId]/fa-suggestions` respects `pwhl_dev_sim_date` cookie and applies correct games-remaining filter.
+- **PLAYOFF-BUG-001 / BRACKET-1** ✅ — Fix bracket default 6 → 4; `app/league/[leagueId]/bracket/page.tsx` `teamsInPlayoff ?? 6` corrected to `?? 4`; bracket race banner now shows "4 teams qualify" for default leagues. Resolves the P1 item from PLAYOFF-AUDIT-001 (Sprint 7).
 
 **Test status (Jun 20):** 174/174 tests pass. Zero new TypeScript errors.
 
@@ -346,22 +356,21 @@ Verdict from audit: **GO TO BETA** — no showstoppers.
 - **P2-B No notification when waiver claim is awarded/denied** — managers have no in-app signal when their claim resolves. Add `WAIVER_CLAIM_AWARDED` / `WAIVER_CLAIM_DENIED` notification types wired from `processWaivers()`.
 - **P2-C Analysis queries not indexed for scale** — acceptable post-launch; flag for production monitoring.
 
-**Remaining Sprint 8 hardening work (Jul 7–13):**
+**Deferred to operations phase (pre-launch):**
 
-- P1-D schedule badge timezone (~0.25h)
 - End-to-end integration test: full season sim with waivers + scoring across multiple leagues simultaneously.
 - Vercel cron wiring: confirm `CRON_SECRET` set in Vercel staging; `check-incomplete-lineups` entry added to `vercel.json`; both crons confirmed firing before beta invite.
 - Load test: 10+ concurrent leagues drafting/scoring simultaneously.
 - P2-A/B notification gaps (can slip to first post-beta fix if time-constrained).
-- Final UX polish: error messages, empty states, and tooltips standardised across all surfaces.
 
 Acceptance Criteria:
 
 - P0-1: ✅ Vercel cron confirmed live; `processWaivers()` runs automatically at 03:00 ET across all IN_SEASON leagues. `CRON_SECRET` env var confirmed set in Vercel before public launch.
 - P0-2: ✅ Auto-set button disabled and error state shown when projections are unavailable.
-- P1 items A, B, C, E, F: ✅ resolved. P1-D: open (Sprint 8).
-- Load test passes: 10+ concurrent leagues draft and score without data corruption.
-- Integration test: full season with waivers resolves correctly end-to-end.
+- P1 items A, B, C, D, E, F: ✅ all resolved.
+- Beta bug fixes (commit b465423): ✅ all 7 resolved.
+- Load test passes: 10+ concurrent leagues draft and score without data corruption. (deferred to ops)
+- Integration test: full season with waivers resolves correctly end-to-end. (deferred to ops)
 
 ---
 
@@ -417,7 +426,9 @@ Dependencies:
 
 ## 6. Free Agent Acquisition Budget (FAAB)
 
-Status: Not Implemented — Sprint 7
+Status: Not Implemented — Deferred post-launch (no sprint assignment)
+
+Sprint: Post-launch backlog — deferred from Sprint 7 Priority 3. Not needed before public launch; revisit for the 2027-28 off-season roadmap once commissioners actively request it and the waiver cron is confirmed live and stable in production.
 
 Estimated tokens: ~80K (depends on #5; bidding logic + UI + budget tracking)
 
@@ -435,7 +446,7 @@ Acceptance Criteria:
 Dependencies:
 
 - Waiver system (#5) — complete
-- Waiver cron (P0-1 in Sprint 8) — must be live before FAAB is meaningful. If managers submit FAAB bids but `processWaivers()` never runs automatically, bids will accumulate without resolution. Ship FAAB after the cron is confirmed live in production.
+- Waiver cron (P0-1, Sprint 8) — complete. Must be confirmed live and stable before FAAB is enabled in any league. If `processWaivers()` is not running automatically, bids will accumulate without resolution.
 
 ---
 

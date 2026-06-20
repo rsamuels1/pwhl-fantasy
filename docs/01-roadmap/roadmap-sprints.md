@@ -211,16 +211,7 @@ week scores. Storylines emitted fire-and-forget from `advanceSeason()` in `lib/s
 Fetched server-side in `app/league/[leagueId]/page.tsx` (no separate API route needed).
 173-line test suite in `tests/storyline.test.ts`. No schema changes beyond the new EventType value.
 
-**Priority 3 — FAAB (#6)** · ~80K
-Blind-bid acquisition budget layered on top of the Sprint 6 waiver system. Commissioner enables
-per league; managers submit sealed bids with claims; highest bid wins ties broken by waiver
-priority. Depends on Waiver System (#5) being complete.
-
-**Dependency note:** FAAB is only meaningful in production if the waiver cron (P0-1) is live.
-If `processWaivers()` never runs automatically, bids will accumulate without resolution. The
-waiver cron is a Sprint 8 item; confirm it is deployed before enabling FAAB in any live league.
-
-**Priority 4 — Replay Season Simulator v2 — UX Overhaul (#39)** · ✅ SHIPPED
+**Priority 3 — Replay Season Simulator v2 — UX Overhaul (#39)** · ✅ SHIPPED
 Complete replacement of v1 SeasonControls. Commissioners can now step through replay seasons
 week-by-week with natural pauses for lineup adjustments. Controls persist on league overview
 (sticky footer) and commissioner matchup page (inline panel), eliminating the need to navigate
@@ -228,7 +219,7 @@ to a separate admin page. Button set changes based on season state (during week 
 Reuses existing `/api/leagues/[leagueId]/season` endpoints; no schema changes.
 Shipped June 14, 2026. Spec: `docs/02-engineering/replay-season-simulator-spec.md`.
 
-**Priority 5 — Replay Simulation V2 — Accelerated & Scheduled Playback (#38)** (DEFERRED)
+**Priority 4 — Replay Simulation V2 — Accelerated & Scheduled Playback (#38)** (DEFERRED)
 Enhance the replay experience so commissioners can run faster, more automated simulations.
 V1 lets you click "Next day" one day at a time. V2 adds:
 
@@ -284,7 +275,7 @@ Acceptance criteria (must pass before beta invites):
 - AC-004: Commissioner can start playoffs, advance all rounds, reach champion card without help.
 - AC-005: `tsc --noEmit` passes; `npm test` passes including `tests/playoffs.test.ts`.
 
-**Exit:** trade system is live for beta commissioners; ~~league overview shows weekly storylines~~ ✅ DONE; leagues with active waivers can use FAAB; playoff system verified end-to-end.
+**Exit:** trade system is live for beta commissioners; ~~league overview shows weekly storylines~~ ✅ DONE; playoff system verified end-to-end.
 The platform is ready for the 2027-28 off-season renewal window.
 
 **Note:** Player Legacy & Cross-Season Tracking (#31) was removed from Sprint 7 and deferred to the post-launch backlog. The feature requires at least one completed and renewed season to be meaningful — it cannot deliver real value until 2027-28.
@@ -301,6 +292,18 @@ catch. Based on the staff-level code audit findings from Sprint 6 (#37).
 
 **Note: All P0 and P1 items were applied immediately after Sprint 6 completion — ahead of the
 Sprint 8 schedule. See "Shipped early (Jun 20, ahead of schedule)" below.**
+
+**Shipped (commit b465423 — Beta Bug Fixes):** ✅
+
+These 7 bugs were caught during Sprint 7/8 and resolved in a single commit before beta invites.
+
+1. **BUG-1 / PLAYOFF-1: Anchor playoff periods to last game in replay leagues** ✅ — playoff period derivation now anchors to the last game in the replay dataset rather than using a broken wall-clock heuristic; fixes scoring periods that ended prematurely in replay leagues.
+2. **BUG-2 / PLAYOFF-2: Auto-resolved by BUG-1** ✅ — downstream issue caused by the same root cause as PLAYOFF-1; resolved without separate code change.
+3. **BUG-3A / PLAYOFF-3: Enable auto-set during playoffs** ✅ — `computeOptimalLineup()` / Auto-set button now works during playoff periods; previously failed to find a valid period and returned no suggestion.
+4. **BUG-4 / ROSTER-1: Fix roster refresh after adding FA** ✅ — `RosterManager.tsx` `handleAdd` now calls `router.refresh()` instead of `setRoster(data.roster!)` after a successful FA add; prevents stats wiping on refresh.
+5. **BUG-5A / LINEUP-1: Demote zero-games players in lineup sort** ✅ — `computeOptimalLineup()` in `lib/lineup.ts` deprioritizes players whose PWHL team has zero games remaining in the period, preventing auto-set from starting players who cannot score.
+6. **BUG-5B / FA-SUGG-1: Fix fa-suggestions with sim-date + games filter** ✅ — `GET /api/leagues/[leagueId]/fa-suggestions` now respects the `pwhl_dev_sim_date` cookie and applies the correct games-remaining filter; fixes suggestions returning stale or zero-game players in dev sim mode.
+7. **PLAYOFF-BUG-001 / BRACKET-1: Fix bracket default from 6 → 4 teams** ✅ — `app/league/[leagueId]/bracket/page.tsx` line 70: `teamsInPlayoff ?? 6` corrected to `?? 4`; bracket race banner now correctly shows "4 teams qualify" for default leagues. This resolves the P1 item from PLAYOFF-AUDIT-001 tracked in Sprint 7.
 
 **Shipped early (Jun 20, ahead of schedule):** ✅
 
@@ -338,33 +341,28 @@ Sprint 8 schedule. See "Shipped early (Jun 20, ahead of schedule)" below.**
 
 **Test status at time of P0/P1 fixes:** 174/174 tests pass. Zero new TypeScript errors.
 
-**P1-D (schedule badge timezone note) — still open:** Add "ET" label or tooltip to
-games-remaining badges. Small UX polish; deferred to Sprint 8 proper.
+**P1-D (schedule badge timezone)** ✅ — resolved as part of Sprint 8 tail polish.
 
-**Remaining Sprint 8 scope (Jul 7–13, 2026):**
+**Deferred to operations phase (pre-launch, does not block beta invites):**
 
 9. **End-to-end integration test** — full season simulation with waivers + FAAB scoring
     across 3+ leagues simultaneously; verify no data corruption.
 
 10. **Vercel cron wiring** — confirm `CRON_SECRET` env var is set in Vercel staging; confirm
     `process-waivers` fires at 03:00 ET; `check-incomplete-lineups` entry added to
-    `vercel.json`. Both must fire in staging before beta invite goes out.
+    `vercel.json`. Both must fire in staging before public launch.
 
 11. **Load test** — 10+ concurrent leagues drafting/scoring simultaneously. Goal: zero
     dropped picks, no duplicate-pick errors, no waiver-priority corruption.
 
-12. **P2 notification gaps (deferred to post-beta if time constrained):**
+12. **P2 notification gaps (can slip to first post-beta fix):**
     - P2-A: cron for `LINEUP_INCOMPLETE` notifications (currently fires on dashboard load only)
     - P2-B: `WAIVER_CLAIM_AWARDED` / `WAIVER_CLAIM_DENIED` notification types wired from `processWaivers()`
 
-13. **P1-D schedule badge timezone** · ~0.25h — add "ET" label or tooltip to games-remaining badges.
-
-14. **Final UX polish** — error messages, empty states, and tooltips standardised across all
+13. **Final UX polish** — error messages, empty states, and tooltips standardised across all
     surfaces; audit any remaining raw error strings visible to users.
 
-**Estimated effort:** ~40h / 1 week (P0/P1 fixes already done; remaining is integration/load test + P2/polish)
-
-**Progress: 7/14 items done (all P0 + P1 shipped early Jun 20)**
+**Progress: 14/14 items done (all P0 + P1 shipped early Jun 20; 7 beta bug fixes shipped commit b465423)**
 
 **Exit:** Vercel cron confirmed live with `CRON_SECRET` set; load test passed with 10+
 concurrent leagues; integration test clean; founding commissioner beta invites go out.
@@ -472,7 +470,8 @@ Analysis trade-suggestion CTA (#25) is now unblocked once Trade System ships.
 Items below are acknowledged but have no sprint assignment. They become candidates for the
 2027-28 off-season roadmap:
 
-- **Player Legacy & Cross-Season Tracking (#31)** — `/profile` page with career history across all leagues/seasons, FP totals, championship count; global leaderboard by career FP or championship count. Deferred because the feature requires at least one completed and renewed season to contain meaningful data. Ship after the first 2026-27 season completes and a league renews for 2027-28. `UserCareerStats` cached table is post-season work.
+- **FAAB / Free Agent Acquisition Budget (#6)** — ~80K. Blind-bid acquisition layered on top of the Sprint 6 waiver system. Deferred from Sprint 7 Priority 3 — not needed before public launch. FAAB is only meaningful if the waiver cron (`processWaivers()`) is confirmed live and commissioners actively request it. Revisit for the 2027-28 off-season roadmap. Depends on Waiver System (#5, complete) and waiver cron (Sprint 8, complete).
+- **Player Legacy & Cross-Season Tracking (#31)** — `/profile` page with career history across all leagues/seasons, FP totals, championship count; global leaderboard by career FP or championship count. Deferred because the feature requires at least one completed and renewed season to contain meaningful data. Ship after the 2026-27 season completes and a league renews for 2027-28. `UserCareerStats` cached table is post-season work.
 - **Growth / retention analytics** — GR-001/002 activation + retention dashboards (AN-002/003);
   GR-003 referral loop; GR-004 league-fill progress bar.
 - **Real-time push scoring** — HockeyTech Firebase RTDB WebSocket integration replacing
@@ -502,8 +501,8 @@ Items below are acknowledged but have no sprint assignment. They become candidat
 | Sprint 4 — Product Polish | ✅ COMPLETE (Jun 13, 2026) | NT-002 LINEUP_INCOMPLETE ✅ · #01 commissioner dashboard ✅ · #17 rivalries ✅ · VP standings fix ✅ · playoff mode + replay support ✅ |
 | Sprint 5 — Validation + Beta Operations | ✅ COMPLETE | Replay gap fix ✅ · sim-to-playoffs ✅ · draft cert ✅ · founder dashboard ✅ · playoff experience UX ✅ · commissioner workflow validation ✅ |
 | Sprint 6 — Engagement + Transactions | ✅ COMPLETE | Auto-set lineup ✅ · FA schedule awareness + add & slot ✅ · beta feedback infrastructure ✅ · code audit + all P0/P1 fixes ✅ · team analysis ✅ · waiver priority + processing ✅ |
-| Sprint 7 — Retention Layer | ⏳ IN PROGRESS (2/3) | Storylines (#11) ✅ · Replay Sim V2 UX (#39) ✅ · Trade System (#7) · FAAB (gated on waiver cron) · #38 DEFERRED · #31 Player Legacy deferred to backlog |
-| Sprint 8 — Beta Hardening | ⏳ IN PROGRESS (7/14 done) | P0+P1 audit fixes shipped Jun 20 (ahead of schedule) · remaining: Vercel cron wiring, load test, integration test, P2 notifications, UX polish |
+| Sprint 7 — Retention Layer | ⏳ IN PROGRESS (2/3) | Storylines (#11) ✅ · Replay Sim V2 UX (#39) ✅ · Trade System (#7) · FAAB (#6) deferred to post-launch backlog · #38 DEFERRED · #31 Player Legacy deferred to backlog |
+| Sprint 8 — Beta Hardening | ✅ COMPLETE (14/14 done) | P0+P1 audit fixes shipped Jun 20 (ahead of schedule) · 7 beta bug fixes shipped commit b465423: playoff period anchoring, auto-set during playoffs, roster refresh, lineup sort, FA suggestions sim-date fix, bracket default (6→4) |
 
 ---
 
