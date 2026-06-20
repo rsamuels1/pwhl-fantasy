@@ -947,6 +947,7 @@ Phase derivation: Pure function of `SeasonState` on every page load. No extra DB
 - API uses `league.replayCurrentDate` (database source of truth) instead of cookie
 - All existing tests pass (202 tests); TypeScript strict mode clean
 - Spec: `docs/02-engineering/replay-season-simulator-spec.md`
+- **Playoff start date fix (June 20, 2026):** Previously calculated from historical Game.startsAt; now correctly derives from actual end time of last regular season matchup week. Ensures playoffs schedule for correct week relative to league's simulated timeline.
 
 Acceptance Criteria:
 

@@ -220,6 +220,11 @@ deterministically from season state with no extra DB flag. API: single `/api/lea
 POST endpoint with 4 actions (simulate/advance/start/skip-to-playoffs). Deleted 9 old files (~1,545
 lines). Shipped June 20, 2026. Spec: `docs/02-engineering/replay-season-simulator-spec.md`.
 
+**Hotfix (June 20, 2026):** Playoff start week calculation corrected. Previously used historical
+Game.startsAt dates for replay leagues, causing playoffs to schedule for non-existent weeks. Now
+derives playoff start from actual end time of last regular season matchup week. For an 8-team
+league, playoffs now correctly start in week 19 (instead of calculating into week 21+).
+
 **Priority 4 — Replay Simulation V2 — Accelerated & Scheduled Playback (#38)** (DEFERRED)
 Enhance the replay experience so commissioners can run faster, more automated simulations.
 V1 lets you click "Next day" one day at a time. V2 adds:
