@@ -211,13 +211,14 @@ week scores. Storylines emitted fire-and-forget from `advanceSeason()` in `lib/s
 Fetched server-side in `app/league/[leagueId]/page.tsx` (no separate API route needed).
 173-line test suite in `tests/storyline.test.ts`. No schema changes beyond the new EventType value.
 
-**Priority 3 — Replay Season Simulator v2 — UX Overhaul (#39)** · ✅ SHIPPED
-Complete replacement of v1 SeasonControls. Commissioners can now step through replay seasons
-week-by-week with natural pauses for lineup adjustments. Controls persist on league overview
-(sticky footer) and commissioner matchup page (inline panel), eliminating the need to navigate
-to a separate admin page. Button set changes based on season state (during week vs between weeks).
-Reuses existing `/api/leagues/[leagueId]/season` endpoints; no schema changes.
-Shipped June 14, 2026. Spec: `docs/02-engineering/replay-season-simulator-spec.md`.
+**Priority 3 — GM Command Center — Replay Simulator Rebuild (#39)** · ✅ SHIPPED
+Complete rebuild of the replay simulator, replacing the scattered 3-surface model (sticky footer +
+inline panel + admin page) with a single dedicated `/league/[leagueId]/sim` route modeled on sports
+franchise games (Madden, etc.). Five explicit phases drive the UX: PRE_SEASON → SETUP → RECAP →
+SEASON_COMPLETE → PLAYOFFS. Commissioners progress with one clear action per phase; phases derive
+deterministically from season state with no extra DB flag. API: single `/api/leagues/[leagueId]/sim`
+POST endpoint with 4 actions (simulate/advance/start/skip-to-playoffs). Deleted 9 old files (~1,545
+lines). Shipped June 20, 2026. Spec: `docs/02-engineering/replay-season-simulator-spec.md`.
 
 **Priority 4 — Replay Simulation V2 — Accelerated & Scheduled Playback (#38)** (DEFERRED)
 Enhance the replay experience so commissioners can run faster, more automated simulations.

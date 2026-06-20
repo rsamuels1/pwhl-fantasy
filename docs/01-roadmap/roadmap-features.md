@@ -889,44 +889,76 @@ Acceptance Criteria:
 
 ---
 
-## 39. Replay Season Simulator v2 — Week-by-Week Progression UX
+## 39. GM Command Center — Replay Season Simulator Rebuild
 
-Sprint: 7
+Sprint: 7–8
 
 Priority: MEDIUM
 
 Status: ✅ Implemented
 
-Goal: Improve the replay season experience by pausing at week boundaries and making simulator controls accessible from the league overview and commissioner matchup page. Commissioners can now step through a replay season week-by-week with natural moments to adjust lineups before the next week begins.
+Goal: Replace the scattered 3-surface replay simulator (sticky footer, inline panel, admin page) with a single dedicated "GM Command Center" experience modeled on sports franchise games (Madden, Front Office Football). Commissioners progress through explicit phases with one clear action per phase.
 
-Builds on: `isReplay` / `replayCurrentDate` / `getReplayNow()` / existing `/api/leagues/[leagueId]/season` endpoints.
+Previous v2 (June 14, 2026): Day-by-day and week-by-week buttons on sticky footer + inline panel. Over-engineered, confusing UX.
 
-Features:
+**Current v3 (June 20, 2026 — Rebuild Complete):**
 
-- **Week-boundary pauses** — When a matchup week is scored, the simulator pauses at the week boundary, giving commissioners a clear moment to adjust lineups before starting the next week. No automatic jump to the next week's games.
-- **Persistent simulator controls** — `ReplaySimulatorControls` component renders on `/league/[leagueId]/` (sticky footer at bottom of viewport) and `/team/[teamId]/matchup/` (inline panel above matchup hero). Only commissioners see these controls.
-- **Smart button set** — Buttons change based on season state:
-  - **During a week:** "+1 Day" (step forward 24h), "End Week Now" (score and pause at next week boundary), "Jump to date" (arbitrary date picker)
-  - **Between weeks:** "Start Week N" (begin the week), "Skip to Playoffs" (score all remaining regular-season weeks), "Jump to date"
-  - **During playoffs:** All buttons disabled (playoff advancement via existing season admin page)
-- **Date picker modal** — "Jump to date" opens a date picker allowing commissioners to jump to any ISO date; weeks between the current date and jump target are auto-scored in one operation.
+Route: `/league/[leagueId]/sim` (commissioner-only, 404 for non-commissioners or non-replay leagues)
 
-Implementation notes:
+**5-Phase State Machine (all deterministic):**
+
+1. **PRE_SEASON** — No periods started → "▶ Start Season" button
+2. **SETUP** — Active period exists → "⚡ Simulate Week N" button + lineup editor link
+3. **RECAP** — Last period scored, next period upcoming (no active) → "▶ Start Week N+1" button + results display
+4. **SEASON_COMPLETE** — All periods scored → "▶ Start Playoffs" button
+5. **PLAYOFFS** — playoff status IN_PROGRESS → link to bracket view
+
+Phase derivation: Pure function of `SeasonState` on every page load. No extra DB flag needed. RECAP phase emerges naturally after simulation.
+
+**Architecture:**
+
+- `app/league/[leagueId]/sim/page.tsx` — Server page with auth, phase derivation, data fetching
+- `components/sim/GMCommandCenter.tsx` — Client phase router + transient loading overlay
+- `components/sim/WeekSetup.tsx` — SETUP phase UI (lineup summary, matchup preview, simulate button)
+- `components/sim/WeekRecap.tsx` — RECAP phase UI (WIN/LOSS/TIE hero, scores, activity, next week button)
+- `components/sim/SeasonComplete.tsx` — SEASON_COMPLETE phase (start playoffs)
+- `components/sim/PlayoffsPanel.tsx` — PLAYOFFS phase (link to bracket)
+- `app/api/leagues/[leagueId]/sim/route.ts` — POST endpoint with 4 actions:
+  - `"simulate"` — score active week, move to RECAP
+  - `"advance"` — start next week, move to SETUP
+  - `"start"` — start season, move to SETUP
+  - `"skip-to-playoffs"` — bypass remaining regular season
+
+**Deleted (v1 + v2 cleanup):**
+
+- `components/ReplayDayBar.tsx` — day-by-day bar in league layout
+- `components/ReplaySimulatorControls.tsx` — 574-line sticky footer + inline panel
+- `components/DevTimeClear.tsx` — dev cookie clear button
+- `app/league/[leagueId]/season/SeasonControls.tsx` — control panel with dev labels
+- `app/league/[leagueId]/season/SeasonView.tsx` — client wrapper
+- `app/api/leagues/[leagueId]/replay/advance-day/route.ts`
+- `app/api/leagues/[leagueId]/replay/restart/route.ts`
+- `app/api/leagues/[leagueId]/simulate/route.ts`
+- `lib/replay/gameDays.ts`
+
+**Implementation notes:**
 
 - No schema changes; reuses existing `isReplay` and `replayCurrentDate` columns
-- No new API routes; reuses existing `/api/leagues/[leagueId]/season` POST (with `action: "advance"`) and `/season/advance` endpoints
-- All existing tests pass (154 tests); TypeScript strict mode clean; production build successful
-- Old `SeasonControls.tsx` (v1) on `/league/[leagueId]/season/` page remains but is superseded; can be deprecated/removed in future refactor once v2 is validated in production
+- API uses `league.replayCurrentDate` (database source of truth) instead of cookie
+- All existing tests pass (202 tests); TypeScript strict mode clean
+- Spec: `docs/02-engineering/replay-season-simulator-spec.md`
 
 Acceptance Criteria:
 
-- ✅ Sticky footer visible on league overview when `isReplay && isCommissioner`
-- ✅ Inline panel visible on commissioner matchup page above `MatchupHero`
-- ✅ Button set changes correctly based on `SeasonState` (ACTIVE vs between-weeks)
-- ✅ "Start Week" advances to week start; "End Week" scores and pauses; "+1 Day" steps 24h
-- ✅ "Jump to date" opens modal, auto-scores skipped weeks
-- ✅ All buttons disabled during `playoffStatus === "IN_PROGRESS"` with informational tooltip
-- ✅ Regular team owners never see simulator controls
+- ✅ Phase derivation works for all 5 phases
+- ✅ PRE_SEASON → SETUP transition on "Start Season"
+- ✅ SETUP → RECAP transition on "Simulate Week"
+- ✅ RECAP → SETUP transition on "Start Week N+1"
+- ✅ SEASON_COMPLETE → PLAYOFFS transition on "Start Playoffs"
+- ✅ Non-commissioners see 404 at `/league/[id]/sim`
+- ✅ Non-replay leagues see 404 at `/league/[id]/sim`
+- ✅ All other pages respect sim date correctly (lineup, matchup, standings, etc.)
+- ✅ Full end-to-end flow: Start Season → Simulate weeks → Complete season → Start Playoffs
 
 ---
 
