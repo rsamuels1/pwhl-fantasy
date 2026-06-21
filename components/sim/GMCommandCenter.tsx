@@ -22,7 +22,7 @@ interface Matchup {
 }
 
 interface Props {
-  phase: "PRE_SEASON" | "SETUP" | "RECAP" | "SEASON_COMPLETE" | "PLAYOFFS";
+  phase: "PRE_SEASON" | "SETUP" | "RECAP" | "SEASON_COMPLETE" | "PLAYOFFS" | "PLAYOFFS_COMPLETE";
   leagueId: string;
   league: FantasyLeague & { name: string };
   state: SeasonState;
@@ -61,6 +61,7 @@ export default function GMCommandCenter({
     RECAP: "Recap",
     SEASON_COMPLETE: "Season Complete",
     PLAYOFFS: "Playoffs",
+    PLAYOFFS_COMPLETE: "Playoffs Complete",
   }[phase];
 
   const handleSimulate = async () => {
@@ -295,6 +296,42 @@ export default function GMCommandCenter({
           currentRound={currentPlayoffRound}
           totalRounds={totalPlayoffRounds}
         />
+      )}
+
+      {phase === "PLAYOFFS_COMPLETE" && (
+        <div
+          style={{
+            background: "rgba(34, 197, 94, 0.1)",
+            border: "1px solid rgba(34, 197, 94, 0.3)",
+            borderRadius: 12,
+            padding: 32,
+            textAlign: "center",
+          }}
+        >
+          <h2 style={{ fontSize: 24, fontWeight: 700, marginTop: 0, marginBottom: 12 }}>
+            🏆 Season Champions Crowned!
+          </h2>
+          <p style={{ color: "#94a3b8", marginBottom: 24 }}>
+            The playoff tournament is complete. View the final bracket and standings.
+          </p>
+          <a
+            href={`/league/${leagueId}/bracket`}
+            style={{
+              display: "inline-block",
+              padding: "12px 24px",
+              background: "#22c55e",
+              color: "#fff",
+              border: "none",
+              borderRadius: 6,
+              fontSize: 14,
+              fontWeight: 600,
+              cursor: "pointer",
+              textDecoration: "none",
+            }}
+          >
+            View Final Bracket →
+          </a>
+        </div>
       )}
     </div>
   );

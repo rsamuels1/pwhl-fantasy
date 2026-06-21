@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-A fantasy sports web app for the **PWHL (Professional Women's Hockey League)**, targeting
+**PWHL GM** — a fantasy sports web app for the **PWHL (Professional Women's Hockey League)**, targeting
 the **2026-27 season** (12 teams after the Detroit/Hamilton/Las Vegas/San Jose expansion).
 Users create leagues, draft real PWHL players the week before the season opener, set
 lineups, and compete in weekly head-to-head matchups scored from real game stats.
@@ -174,6 +174,12 @@ survives DB resets and schema migrations.
    - Auto-Set Lineup ✅ (`computeOptimalLineup()` in `lib/lineup.ts`; staged save model — "Auto-set" purple button in `LineupManager.tsx`, pending diff shown before persisting; `beforeunload` guard; playoff period fallback for games-remaining badges during playoffs; `GET /api/leagues/[leagueId]/fa-suggestions` returns top 10 unrostered players by projected FP; spec: `docs/02-engineering/auto-set-lineup-spec.md`; commits: 3e6bbd0, f83468f, 1f06c9a)
    - Beta Feedback Infrastructure ✅ (spec: `docs/02-engineering/beta-feedback-spec.md`; schema: `FeedbackSubmission` model + `FeedbackType` enum `BUG|SUGGESTION|OTHER` + `BetaStatus` enum `NONE|INVITED|ACCEPTED|ACTIVE|RENEWED` + `betaStatus BetaStatus @default(NONE)` on `FantasyLeague`; widget: `components/FeedbackWidget.tsx` — fixed bottom-right button opens a Bug/Suggestion/Other modal rendered via `ReactDOM.createPortal` into `document.body`, mounted in league layout, team layout, and founder layout; API routes: `POST /api/feedback` auth-gated writes `FeedbackSubmission` rows, `GET /api/founder/feedback` returns last 100 submissions, `PATCH /api/founder/leagues/[leagueId]/beta-status` updates cohort status; Founder Console: `app/founder/feedback/page.tsx` feed table + "Feedback" nav link in `app/founder/layout.tsx` + "Beta" tab with betaStatus dropdown in `app/founder/leagues/[leagueId]/LeagueDetailTabs.tsx`)
    - **Trade System** ✅ (`lib/trades/engine.ts` pure 9-state machine + `applyTrade`; `lib/services/trade-service.ts`; schema: `Trade`/`TradeItem` models + `TradeStatus` enum + `tradeReviewHours`/`requireCommissionerTradeApproval` on `FantasyLeague` + 6 new `NotificationType` values; 7 API routes under `/api/leagues/[leagueId]/trades/`; Trade Center at `/league/[leagueId]/trades`; Propose flow at `.../trades/new`; Trade Settings in admin panel; "Trades" in league nav; 22 tests in `tests/trade.test.ts`; spec: `docs/02-engineering/trade-spec.md`)
+   - **PWHL GM Rebrand — Sprint 9** ✅ (REBRAND-001/002/003/004/005 shipped; see `docs/branding/`):
+     - REBRAND-001: `components/LogoShield.tsx`; "PWHL GM" global rename; home page hero rewrite ("Think Like a GM."); `app/layout.tsx`, `app/page.tsx`
+     - REBRAND-002: "Your Franchises" dashboard; "Front Office" nav; welcome flow + login/register/invite copy
+     - REBRAND-003: draft room header "PWHL GM — Draft Room"; fantasy pts → FP terminology; CLAUDE.md + README product name
+     - REBRAND-004: `app/globals.css` design tokens (`--accent*`, `--card`, `--font-body/stats`, `.rebrand-card`, `.pos-badge`, `.alert-amber`, `.chip-*`, `.font-stats`)
+     - REBRAND-005: Matchup page IA restructure (Z1–Z9 render order, `RosterStatusWidget`, Analysis promoted to `/team/[teamId]/analysis`); BUG-MATCHUP-001 fix (`isSetupPhase` flag — hero shows "—" not "0.0 vs 0.0" in SETUP phase)
 7. Public launch ~early Nov, drafts ~1 week before opener
 
 ## Draft room UI (`app/draft/[leagueId]/`)
@@ -693,15 +699,20 @@ and `/team/*` routes.
 
 The primary in-season landing page ("Fantasy Home"), team-scoped. No team picker — auth enforces ownership.
 
-**What it shows:**
-- **Lineup alert strip** — red banner at very top when active starters have `gamesThisPeriod === 0 AND gameCount === 0` (never played, no scheduled games left). Does NOT flag players who already scored.
-- **Between-weeks lineup nudge** — amber banner shown when `activeMatchup.status === "upcoming"`, between the lineup-alert strip and the recap card. Prompts manager to set their lineup for the coming week and links to the lineup page with projected scores. Auto-disappears when the period goes ACTIVE.
-- **`MatchupHero`** — 52px/900-weight scores color-coded (indigo=winning, red=trailing, amber=upcoming), win probability bar below scores, lead gap in accent color, "Set lineup →" CTA when upcoming.
-- **Storyline chip** — "🔥 [Player] is leading your team with X.X pts this week" when `topPerformers[0].points > 0`.
-- **Playing tonight** — always rendered during active periods (empty state: "No starters playing tonight"). Uses `getRemainingPlayersTonight(nowMs)`.
-- **Swing players** — active roster players whose remaining games could flip the result. Only shown for active matchups, not upcoming.
-- **Roster breakdown** — both teams with per-player stat chips and games-remaining badges.
-- **League activity feed** — draft picks, major performances.
+**Section render order (Z1–Z9, single flat page — no tab switcher):**
+- **Z1: Lineup alert strip** — red banner when active starters have `gamesThisPeriod === 0 AND gameCount === 0`. Does NOT flag players who already scored.
+- **Z2: MatchupHero** (`FieldHero` / `DuelHero`) — scores, win-probability bar, "Set lineup →" CTA when upcoming. Shows "—" instead of 0.0 during SETUP phase (`isSetupPhase` flag), with amber "No games yet" badge.
+- **Z3: Live situation grid (active periods only)** — 2-column: left = Playing Tonight + Swing Players; right = `RosterStatusWidget` (lineup fill count, lock state, projected FP, "Adjust lineup →").
+- **Z3b: RosterStatusWidget only (upcoming periods)** — full-width when no live situation to show.
+- **Z4: Rival badge + H2H history** — if rival exists.
+- **Z5: Recap card (last result)** — most recent completed matchup, compact.
+- **Z6: Roster tables** — both teams. Uses `InlineLineupEditor` for own team when upcoming.
+- **Z6b: Last week's stats (SETUP phase fallback)** — shown when `lastWeekLabel && myPlayersLastWeek.length > 0`.
+- **Z7: Storyline chip + Top/Underperforming performers** — shown when `topPerformers.length > 0` or `disappointments.length > 0`.
+- **Z8: League leaders this week** — active periods only, when `leagueTopPerformers.length > 0`.
+- **Z9: League activity feed** — full-width bottom.
+
+**`isSetupPhase` flag:** `ActiveMatchup.isSetupPhase?: boolean` — set in `lib/services/dashboard.ts` when the period is technically active (`status === "active"`) but all roster players have `gameCount === 0` (zero stat lines so far). Both heroes use `hideScore = isUpcoming || isSetupPhase` — shows "—" instead of 0.0. Prevents the "0.0 vs 0.0 · Tied" display during replay SETUP phase and real-world week start before any games tip off.
 
 **Key modules:**
 - `lib/scoring/index.ts` — `scoreStatLineDetailed()` returns `{ total, breakdown[] }` with
@@ -924,7 +935,7 @@ Matchup, Lineup, and Roster are NOT in the league nav — they live in the team 
 
 The team layout (`app/team/[teamId]/layout.tsx`) renders a persistent tab bar via
 `TeamNav.tsx` (client component, uses `usePathname()` for active state). Tabs:
-**Matchup · Lineup · Roster · Schedule · Standings** (league standings page), plus a `"League ↗"`
+**Matchup · Lineup · Rosters · Trades · Standings · Performance · Analysis** (conditionally + **Playoffs** when `playoffStatus !== "NOT_STARTED"`), plus a `"{leagueName} ↗"`
 escape hatch on the right. Active tab has white text + 2px indigo underline; inactive tabs are muted
 gray. Standings links to `/league/[leagueId]/standings` since standings are league-scoped.
 

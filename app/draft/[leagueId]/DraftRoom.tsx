@@ -89,14 +89,17 @@ function TopBar({
   return (
     <header style={styles.topBar}>
       <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-        <span style={{ fontWeight: 700, fontSize: 15 }}>PWHL Fantasy Draft</span>
-        <span style={{ color: "var(--muted)", fontSize: 12 }}>
+        <span style={{ fontWeight: 700, fontSize: 15 }}>PWHL GM — Draft Room</span>
+        <span style={{ color: "var(--dim)", fontSize: 12 }}>
           {teamNames[teamId] ?? `…${teamId.slice(-6)}`}
         </span>
         {onClockTeamId && draft?.status === "IN_PROGRESS" && (
-          <span style={{ fontSize: 12, color: isMyTurn ? "var(--green)" : "var(--muted)" }}>
-            {isMyTurn ? "Your pick!" : `On clock: ${teamNames[onClockTeamId] ?? "…" + onClockTeamId.slice(-6)}`}
-          </span>
+          <div style={{ display: "flex", flexDirection: "column" }}>
+            <span style={{ fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--dim)", fontWeight: 600 }}>On the clock</span>
+            <span style={{ fontSize: 17, fontWeight: 700, color: isMyTurn ? "#c9b6ff" : "var(--text)" }}>
+              {isMyTurn ? "Your pick!" : (teamNames[onClockTeamId] ?? "…" + onClockTeamId.slice(-6))}
+            </span>
+          </div>
         )}
       </div>
 
@@ -196,7 +199,7 @@ function PickBoard({
 
   return (
     <div style={styles.card}>
-      <div style={styles.cardTitle}>Pick Board</div>
+      <div style={styles.cardTitle}><span className="section-accent" />Pick Board</div>
       <div style={{ overflowX: "auto" }}>
         <table style={styles.table}>
           <tbody>
@@ -219,13 +222,17 @@ function PickBoard({
                       style={{
                         ...styles.pickCell,
                         background: isOnClock
-                          ? "var(--accent)"
+                          ? "var(--accent-dim)"
                           : pick
                           ? isMe
-                            ? "rgba(34,197,94,0.15)"
-                            : "var(--surface)"
-                          : "transparent",
-                        border: `1px solid ${isOnClock ? "var(--accent)" : isMe ? "rgba(34,197,94,0.3)" : "var(--border)"}`,
+                            ? "var(--card)"
+                            : "var(--card)"
+                          : "rgba(150,160,200,0.03)",
+                        border: isOnClock
+                          ? "2px solid var(--accent)"
+                          : pick
+                          ? "1px solid var(--border)"
+                          : "1px solid rgba(150,160,200,0.07)",
                         opacity: pick && !isMe ? 0.65 : 1,
                       }}
                       title={
@@ -234,10 +241,10 @@ function PickBoard({
                           : `#${slot.overall} — ${teamNames[slot.fantasyTeamId] ?? slot.fantasyTeamId}`
                       }
                     >
-                      <div style={{ fontSize: 9, color: isOnClock ? "#fff" : "var(--muted)" }}>
+                      <div className="font-stats" style={{ fontSize: 9, color: isOnClock ? "#c9b6ff" : "var(--faint)" }}>
                         #{slot.overall}
                       </div>
-                      <div style={{ fontSize: 10, fontWeight: isMe ? 700 : 400, color: isOnClock ? "#fff" : "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 46 }}>
+                      <div style={{ fontSize: 11, fontWeight: isMe ? 700 : 400, color: isOnClock ? "var(--text)" : pick ? "var(--text)" : "var(--faint)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 46 }}>
                         {playerLabel
                           ? playerLabel.split(" ").slice(-1)[0]
                           : isOnClock
@@ -275,7 +282,7 @@ function RecentPicks({
   if (recent.length === 0) return null;
   return (
     <div style={styles.card}>
-      <div style={styles.cardTitle}>Recent Picks</div>
+      <div style={styles.cardTitle}><span className="section-accent" />Recent Picks</div>
       <div>
         {recent.map((p) => (
           <div key={p.overall} style={styles.recentRow}>
@@ -316,7 +323,7 @@ function MyPicks({
 
   return (
     <div style={styles.card}>
-      <div style={styles.cardTitle}>My Roster ({myPicks.length})</div>
+      <div style={styles.cardTitle}><span className="section-accent" />Your Picks ({myPicks.length})</div>
       {myPicks.length === 0 ? (
         <p style={{ color: "var(--muted)", fontSize: 12 }}>No picks yet.</p>
       ) : (
@@ -400,7 +407,7 @@ function TeamSpreadPanel({
 
   return (
     <div style={styles.card}>
-      <div style={styles.cardTitle}>Team Spread</div>
+      <div style={styles.cardTitle}><span className="section-accent" />Team Spread</div>
       {rows.length === 0 ? (
         <div style={{ fontSize: 12, color: "var(--muted)" }}>No picks yet</div>
       ) : (
@@ -443,7 +450,7 @@ function NeedsPanel({
 
   return (
     <div style={styles.card}>
-      <div style={styles.cardTitle}>Roster Needs</div>
+      <div style={styles.cardTitle}><span className="section-accent" />Roster Needs</div>
       <div style={{ marginBottom: 8, fontSize: 12, color: "var(--muted)" }}>
         {totalDrafted} / {draftSlots} picks made
       </div>
@@ -451,19 +458,27 @@ function NeedsPanel({
         const have = filled[slot] ?? 0;
         const remaining = Math.max(0, need - have);
         const done = remaining === 0;
+        const critical = !done && remaining <= 1;
+        const rowBg = done
+          ? "rgba(95,169,140,0.09)"
+          : critical
+          ? "rgba(214,169,78,0.08)"
+          : "var(--card)";
+        const rowBorder = done
+          ? "1px solid rgba(95,169,140,0.32)"
+          : critical
+          ? "1px solid rgba(214,169,78,0.30)"
+          : "1px solid var(--border)";
+        const countColor = done ? "#7fc2a6" : critical ? "#e3c989" : "var(--text)";
         return (
-          <div key={slot} style={{ display: "flex", alignItems: "center", gap: 8, padding: "4px 0", borderBottom: "1px solid var(--border)", fontSize: 12 }}>
-            <span style={{ flex: 1, color: done ? "var(--muted)" : "var(--text)" }}>
+          <div key={slot} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 10px", borderRadius: 6, marginBottom: 4, background: rowBg, border: rowBorder, fontSize: 12 }}>
+            <span className="font-stats" style={{ flex: 1, fontSize: 13, fontWeight: 600, color: done ? "#7fc2a6" : critical ? "#e3c989" : "var(--text)" }}>
               {SLOT_LABELS[slot] ?? slot}
             </span>
-            <span style={{
-              color: done ? "var(--green)" : remaining <= 1 ? "var(--clock-warn)" : "var(--text)",
-              fontWeight: 600,
-              fontVariantNumeric: "tabular-nums",
-            }}>
+            <span style={{ color: countColor, fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>
               {have}/{need}
             </span>
-            {done && <span style={{ fontSize: 10, color: "var(--green)" }}>✓</span>}
+            {done && <span style={{ fontSize: 10, color: "#7fc2a6" }}>✓</span>}
           </div>
         );
       })}
@@ -790,21 +805,17 @@ function PlayerPanel({
 }
 
 function PosTag({ pos }: { pos: string }) {
-  const colors: Record<string, string> = {
-    FORWARD: "#3b82f6",
-    DEFENSE: "#8b5cf6",
-    GOALIE: "#f59e0b",
-  };
   return (
     <span
       style={{
-        background: colors[pos] ?? "#64748b",
+        background: "rgba(91,33,182,0.6)",
         color: "#fff",
-        borderRadius: 3,
-        padding: "1px 5px",
-        fontSize: 10,
-        fontWeight: 600,
+        borderRadius: 5,
+        padding: "3px 7px",
+        fontSize: 9.5,
+        fontWeight: 700,
         letterSpacing: 0.5,
+        flexShrink: 0,
       }}
     >
       {pos === "FORWARD" ? "F" : pos === "DEFENSE" ? "D" : "G"}
@@ -1124,7 +1135,7 @@ const styles = {
     justifyContent: "space-between",
     padding: "0 20px",
     height: 52,
-    background: "var(--surface)",
+    background: "var(--card)",
     borderBottom: "1px solid var(--border)",
     flexShrink: 0,
     gap: 12,
@@ -1133,6 +1144,7 @@ const styles = {
     fontSize: 22,
     fontWeight: 700,
     fontVariantNumeric: "tabular-nums",
+    fontFamily: "var(--font-stats)",
     border: "2px solid",
     borderRadius: 8,
     padding: "2px 10px",
@@ -1150,7 +1162,7 @@ const styles = {
     fontSize: 13,
   },
   btnSecondary: {
-    background: "var(--surface)",
+    background: "rgba(150,160,200,0.08)",
     color: "var(--text)",
     border: "1px solid var(--border)",
     borderRadius: 6,
@@ -1188,13 +1200,13 @@ const styles = {
     justifyContent: "center" as const,
     fontSize: 15,
     lineHeight: 1,
-    color: "var(--accent-strong)",
+    color: "var(--accent)",
     cursor: "pointer" as const,
   },
   tab: {
     border: "none",
-    borderRadius: 5,
-    padding: "5px 12px",
+    borderRadius: 999,
+    padding: "5px 14px",
     fontSize: 12,
     fontWeight: 600,
     cursor: "pointer" as const,
@@ -1228,17 +1240,20 @@ const styles = {
     overflowY: "auto" as const,
   },
   card: {
-    background: "var(--surface)",
+    background: "var(--card)",
     border: "1px solid var(--border)",
     borderRadius: 8,
     padding: "12px 14px",
   },
   cardTitle: {
+    display: "flex",
+    alignItems: "center",
+    gap: 8,
     fontSize: 11,
-    fontWeight: 600,
-    letterSpacing: 1,
+    fontWeight: 700,
+    letterSpacing: "0.14em",
     textTransform: "uppercase" as const,
-    color: "var(--muted)",
+    color: "var(--dim)",
     marginBottom: 10,
   },
   table: {
@@ -1248,14 +1263,19 @@ const styles = {
   th: {
     textAlign: "left" as const,
     padding: "4px 6px",
-    fontWeight: 500,
+    fontWeight: 700,
+    fontSize: 11,
+    letterSpacing: "0.06em",
+    color: "var(--faint)",
+    textTransform: "uppercase" as const,
   },
   roundLabel: {
     fontSize: 11,
-    color: "var(--muted)",
+    color: "var(--dim)",
     paddingRight: 8,
     whiteSpace: "nowrap" as const,
     fontWeight: 600,
+    fontFamily: "var(--font-stats)",
   },
   pickCell: {
     width: 48,
@@ -1269,12 +1289,15 @@ const styles = {
     display: "flex",
     alignItems: "center",
     gap: 6,
-    padding: "5px 0",
-    borderBottom: "1px solid var(--border)",
+    padding: "10px 12px",
+    borderRadius: 8,
+    background: "rgba(150,160,200,0.04)",
+    marginBottom: 4,
     fontSize: 12,
   },
   playerRow: {
     borderBottom: "1px solid var(--border)",
+    cursor: "pointer",
   },
   yourPickBanner: {
     background: "var(--accent)",
@@ -1308,9 +1331,9 @@ const styles = {
   },
   input: {
     flex: 1,
-    background: "var(--bg)",
+    background: "rgba(150,160,200,0.06)",
     border: "1px solid var(--border)",
-    borderRadius: 6,
+    borderRadius: 10,
     padding: "6px 10px",
     color: "var(--text)",
     outline: "none",

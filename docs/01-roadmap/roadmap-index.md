@@ -105,7 +105,7 @@ MVP proves a league can go **Create → Invite → Draft → Set Lineups → Com
 
 ## What To Build Next
 
-Sprint 6 is complete (7/7). Sprint 7 is complete (3/4 items done — #11 Storylines ✅; #39 Replay Sim V2 UX ✅; PLAYOFF-AUDIT-001 ✅; #7 Trade System deferred; #38 Replay V2 deferred). Sprint 8 (Beta Hardening) is complete — all 14 items done. PLAYOFF-AUDIT-001 verified Jun 20: `simulate-season.ts` end-to-end passes, 180/180 tests green, tsc clean. Next: Sprint 9 PWHL GM Rebrand (trigger: founding commissioners have drafted).
+Sprint 6 is complete (7/7). Sprint 7 is complete (3/4 items done — #11 Storylines ✅; #39 Replay Sim V2 UX ✅; PLAYOFF-AUDIT-001 ✅; #7 Trade System deferred; #38 Replay V2 deferred). Sprint 8 (Beta Hardening) is complete — all 14 items done. Sprint 9 (PWHL GM Rebrand) is IN PROGRESS: REBRAND-001/002/003/004/005 shipped (name, logo, voice, design tokens, matchup IA + Analysis tab); REBRAND-006 (Draft Room visual), REBRAND-007 (Secondary Pages), REBRAND-008 (QA) remain.
 
 **Shipped (Sprint 6 — all complete):**
 - **League Onboarding (#2)** · ✅ Welcome flow, 6-step wizard, manager draft prep guide; `User.onboardingCompletedAt` schema field. (Sprint 3)
@@ -172,11 +172,12 @@ Deferred to operations phase (pre-launch): Vercel cron wiring (`CRON_SECRET` con
 All brand strategy, gap analysis, terminology guide, implementation checklist, and 3 interactive mockups are finalized in `docs/branding/`. No development-velocity cost was incurred during MVP sprints, as planned in `docs/branding/BRANDING-DEFERRED.md`. Trigger: Sprint 8 complete and founding commissioners have completed at least one draft.
 
 - **P1 (min shippable, ~8h):** REBRAND-001 (name + logo + hero) · REBRAND-002 (voice consistency) · REBRAND-008 (QA sprint)
+- **P1 (beta bug fixes):** BF-001 (draft room false eviction) · BF-002 (performance tab week number mismatch)
 - **P2 (visual redesign, ~16h more):** REBRAND-003 (detail polish + docs) · REBRAND-004 (design tokens) · REBRAND-005 (matchup page) · REBRAND-006 (draft room)
 - **P3 (secondary pages):** REBRAND-007 (lineup, roster, standings, bracket, overview)
 - **P3 (tail):** League History & Hall of Fame (#33/#18) · ~50K — moved from Sprint 7; skeleton page ships here, fills in after first season renewal. Spec: `docs/02-engineering/league-history-spec.md`.
 
-Total sprint: 43 rebrand points + League History/HoF tail item. P1-only minimum: 11 points (~8 hours as per original plan).
+Total sprint: 43 rebrand points + League History/HoF tail item + 2 P1 beta bug fixes. P1-only minimum: 11 points (~8 hours as per original plan).
 
 **Deferred to post-launch backlog:** FAAB (#6, deferred from Sprint 7 Priority 3 — not needed before public launch; revisit for 2027-28 off-season once waiver cron is stable and commissioners request it) · Growth analytics (GR-001/002/003/004) · real-time push scoring · push notifications · multi-season historical library (#12) · player trends (#23) · keeper/dynasty (#19/#20) · native apps / AI features. See `docs/01-roadmap/roadmap-sprints.md` for full backlog list.
 

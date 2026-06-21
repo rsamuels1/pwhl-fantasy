@@ -1,4 +1,4 @@
-# PWHL Fantasy
+# PWHL GM
 
 A fantasy sports web app for the Professional Women's Hockey League, targeting the
 2026-27 season (12 teams). Create leagues, draft real players the week before the

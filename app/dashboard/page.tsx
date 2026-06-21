@@ -235,7 +235,7 @@ export default async function DashboardPage() {
             </>
           ) : (
             <>
-              <p className="hero-eyebrow">PWHL Fantasy</p>
+              <p className="hero-eyebrow">PWHL GM</p>
               <h1 style={{ margin: "8px 0 0" }}>Welcome, {user.displayName}.</h1>
               <p className="hero-text" style={{ marginTop: 8 }}>Join a league or create one to get started.</p>
               <div className="hero-actions" style={{ marginTop: 20 }}>
@@ -278,7 +278,7 @@ export default async function DashboardPage() {
         {/* ── Your teams ── */}
         {hasTeams && (
           <section>
-            <div className="panel-headline" style={{ marginBottom: 14 }}>Your teams</div>
+            <div className="panel-headline" style={{ marginBottom: 14 }}>Your Franchises</div>
             <div className="grid-2" style={{ gap: 16 }}>
               {teams.map((team, i) => {
                 const summary = summaries[i];

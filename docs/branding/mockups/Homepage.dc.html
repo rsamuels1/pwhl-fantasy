@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=Saira+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#0b1020;}
+::selection{background:rgba(124,58,237,0.40);color:#fff;}
+a{text-decoration:none;color:inherit;}
+*::-webkit-scrollbar{width:8px;height:8px;}
+*::-webkit-scrollbar-thumb{background:rgba(124,58,237,0.30);border-radius:8px;}
+*::-webkit-scrollbar-track{background:transparent;}
+</style>
+</helmet>
+
+<div data-screen-label="Homepage" style="min-height:100vh;font-family:Archivo,sans-serif;color:#f3f5fb;background:radial-gradient(1200px 720px at 78% -6%,rgba(124,58,237,0.18),transparent 58%),linear-gradient(168deg,#0b1020 0%,#0a0e1a 55%,#0c0f1d 100%);overflow:hidden;">
+
+  <!-- HEADER -->
+  <header style="position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-content:space-between;gap:24px;padding:14px 36px;background:rgba(10,14,26,0.82);backdrop-filter:blur(14px);border-bottom:1px solid rgba(150,160,200,0.10);">
+    <div style="display:flex;align-items:center;gap:13px;">
+      <svg width="34" height="34" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs><linearGradient id="hg1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7c3aed"/><stop offset="1" stop-color="#4c1d95"/></linearGradient></defs>
+        <path d="M24 3 L41 9.5 V25 C41 36 24 45 24 45 C24 45 7 36 7 25 V9.5 Z" fill="url(#hg1)" stroke="rgba(167,139,250,0.55)" stroke-width="1.2"/>
+        <path d="M14 14 L30 8.5" stroke="rgba(199,210,224,0.45)" stroke-width="1.3" stroke-linecap="round"/>
+        <path d="M11 22 L24 17" stroke="rgba(167,139,250,0.55)" stroke-width="1.3" stroke-linecap="round"/>
+        <path d="M24 30 L37 21" stroke="rgba(199,210,224,0.35)" stroke-width="1.3" stroke-linecap="round"/>
+      </svg>
+      <div style="display:flex;flex-direction:column;line-height:1.12;">
+        <span style="font-weight:800;font-size:15px;letter-spacing:0.05em;color:#f3f5fb;">PWHL GM</span>
+        <span style="font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:#6f788e;">General Manager</span>
+      </div>
+    </div>
+    <nav style="display:flex;gap:26px;align-items:center;">
+      <span style="font-size:13px;color:#8b93a7;cursor:pointer;">Features</span>
+      <span style="font-size:13px;color:#8b93a7;cursor:pointer;">How it works</span>
+      <span style="font-size:13px;color:#8b93a7;cursor:pointer;">Leagues</span>
+      <span style="font-size:13px;color:#8b93a7;cursor:pointer;">Pricing</span>
+      <span style="font-size:13px;font-weight:600;color:#e7eaf3;cursor:pointer;">Sign in</span>
+      <a href="League Dashboard.dc.html" style="background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;padding:9px 17px;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;">Start your franchise</a>
+    </nav>
+  </header>
+
+  <!-- HERO -->
+  <section style="max-width:1240px;margin:0 auto;padding:62px 36px 24px;display:grid;grid-template-columns: {{ heroCols }};gap:54px;align-items:center;">
+    <div>
+      <span style="display:inline-flex;align-items:center;gap:8px;font-size:11px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#c9b6ff;background:rgba(124,58,237,0.14);border:1px solid rgba(124,58,237,0.30);border-radius:30px;padding:7px 14px;">
+        <span style="width:6px;height:6px;border-radius:50%;background:#a78bfa;"></span>Fantasy hockey for the PWHL
+      </span>
+      <h1 style="font-size:64px;line-height:0.98;font-weight:900;letter-spacing:-0.03em;margin:22px 0 0;color:#f6f7fb;">Think Like<br>a GM.</h1>
+      <p style="font-size:17px;line-height:1.6;color:#aab2c8;max-width:480px;margin:20px 0 0;">Don't just draft a team — run a front office. Build rosters, set lineups, work the wire, and make the calls that win championships in the Professional Women's Hockey League.</p>
+      <div style="display:flex;gap:13px;align-items:center;margin-top:30px;flex-wrap:wrap;">
+        <a href="League Dashboard.dc.html" style="background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;padding:14px 24px;border-radius:11px;font-size:15px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:9px;">
+          Start your franchise
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg>
+        </a>
+        <button style="background:rgba(150,160,200,0.06);border:1px solid rgba(150,160,200,0.18);color:#e7eaf3;padding:14px 22px;border-radius:11px;font-size:15px;font-weight:600;font-family:Archivo;cursor:pointer;display:inline-flex;align-items:center;gap:9px;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+          Watch the 90-second tour
+        </button>
+      </div>
+      <div style="display:flex;align-items:center;gap:18px;margin-top:26px;font-size:12.5px;color:#6f788e;">
+        <span style="display:inline-flex;align-items:center;gap:7px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5fa98c" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>Free to play</span>
+        <span style="display:inline-flex;align-items:center;gap:7px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5fa98c" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>No gambling, pure strategy</span>
+      </div>
+    </div>
+
+    <!-- PRODUCT PREVIEW -->
+    <sc-if value="{{ showPreview }}" hint-placeholder-val="{{ true }}">
+    <div style="position:relative;">
+      <div style="position:absolute;inset:-30px -30px -30px -10px;background:radial-gradient(420px 360px at 70% 30%,rgba(124,58,237,0.22),transparent 70%);filter:blur(8px);"></div>
+      <div style="position:relative;background:linear-gradient(160deg,#121829,#0e1322);border:1px solid rgba(150,160,200,0.14);border-radius:18px;padding:16px;box-shadow:0 40px 90px -40px rgba(0,0,0,0.8);">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:4px 6px 13px;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span style="font-size:11px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#a78bfa;">Your Matchup</span>
+            <span style="font-size:10px;font-weight:600;color:#c9b6ff;display:inline-flex;align-items:center;gap:5px;"><span style="width:6px;height:6px;border-radius:50%;background:#a78bfa;"></span>Live</span>
+          </div>
+          <span style="font-size:10.5px;color:#6f788e;">Week 7</span>
+        </div>
+        <div style="background:linear-gradient(135deg,#1b1346 0%,#121829 70%);border:1px solid rgba(124,58,237,0.30);border-radius:14px;padding:18px 20px;">
+          <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:14px;align-items:center;">
+            <div style="text-align:center;">
+              <div style="font-size:12px;font-weight:700;color:#f3f5fb;margin-bottom:7px;">Northwind</div>
+              <div style="font-family:'Saira Condensed';font-weight:700;font-size:46px;line-height:0.8;color:#f3f5fb;">48.2</div>
+              <div style="font-size:10.5px;color:#7fc2a6;margin-top:6px;font-weight:600;">52% win</div>
+            </div>
+            <div style="font-size:11px;color:#6f788e;font-weight:600;letter-spacing:0.08em;">VS</div>
+            <div style="text-align:center;">
+              <div style="font-size:12px;font-weight:700;color:#e7eaf3;margin-bottom:7px;">Granite City</div>
+              <div style="font-family:'Saira Condensed';font-weight:700;font-size:46px;line-height:0.8;color:#c7d2e0;">44.8</div>
+              <div style="font-size:10.5px;color:#8b93a7;margin-top:6px;font-weight:600;">48% win</div>
+            </div>
+          </div>
+        </div>
+        <div style="margin-top:12px;background:rgba(150,160,200,0.04);border:1px solid rgba(150,160,200,0.10);border-radius:12px;padding:13px 15px;">
+          <div style="display:flex;align-items:center;gap:9px;margin-bottom:11px;">
+            <span style="width:3px;height:13px;border-radius:2px;background:linear-gradient(#a78bfa,#6d28d9);"></span>
+            <span style="font-size:10.5px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#c7d2e0;">Standings</span>
+          </div>
+          <sc-for list="{{ miniStandings }}" as="r" hint-placeholder-count="4">
+            <div style="display:grid;grid-template-columns:20px 1fr 44px;align-items:center;gap:10px;padding:7px 9px;border-radius:8px;margin-bottom:3px; {{ r.rowStyle }}">
+              <span style="font-family:'Saira Condensed';font-size:13px;font-weight:600;color: {{ r.rankColor }};">{{ r.rank }}</span>
+              <span style="font-size:12px;font-weight:600;color: {{ r.nameColor }};">{{ r.name }}</span>
+              <span style="text-align:right;font-family:'Saira Condensed';font-size:15px;font-weight:700;color: {{ r.vpColor }};">{{ r.vp }}</span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+    </sc-if>
+  </section>
+
+  <!-- TRUST STRIP -->
+  <section style="max-width:1240px;margin:0 auto;padding:30px 36px 8px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap;padding:20px 28px;background:rgba(150,160,200,0.04);border:1px solid rgba(150,160,200,0.10);border-radius:16px;">
+      <span style="font-size:11px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:#6f788e;">A real front office, not a points game</span>
+      <div style="display:flex;gap:40px;flex-wrap:wrap;">
+        <sc-for list="{{ pillars }}" as="p" hint-placeholder-count="4">
+          <div>
+            <div style="font-family:'Saira Condensed';font-size:26px;font-weight:700;color:#f3f5fb;line-height:1;">{{ p.stat }}</div>
+            <div style="font-size:11.5px;color:#8b93a7;margin-top:4px;">{{ p.label }}</div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section style="max-width:1240px;margin:0 auto;padding:56px 36px 8px;">
+    <div style="display:flex;align-items:baseline;gap:13px;margin-bottom:8px;">
+      <span style="width:3px;height:16px;border-radius:2px;background:linear-gradient(#a78bfa,#6d28d9);"></span>
+      <span style="font-size:12px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:#c7d2e0;">What you run</span>
+    </div>
+    <h2 style="font-size:34px;font-weight:800;letter-spacing:-0.02em;max-width:620px;line-height:1.1;">Every decision a real GM makes — in your hands.</h2>
+
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:34px;">
+      <sc-for list="{{ features }}" as="f" hint-placeholder-count="6">
+        <div style="background:#121829;border:1px solid rgba(150,160,200,0.10);border-radius:16px;padding:24px;">
+          <span style="display:inline-flex;width:42px;height:42px;border-radius:11px;background:rgba(124,58,237,0.12);border:1px solid rgba(124,58,237,0.24);align-items:center;justify-content:center;color:#a78bfa;">{{ f.icon }}</span>
+          <div style="font-size:16.5px;font-weight:700;color:#f3f5fb;margin-top:16px;">{{ f.title }}</div>
+          <div style="font-size:13px;color:#9aa3bd;line-height:1.6;margin-top:8px;">{{ f.body }}</div>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section style="max-width:1240px;margin:0 auto;padding:56px 36px 8px;">
+    <div style="display:flex;align-items:baseline;gap:13px;margin-bottom:8px;">
+      <span style="width:3px;height:16px;border-radius:2px;background:linear-gradient(#a78bfa,#6d28d9);"></span>
+      <span style="font-size:12px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:#c7d2e0;">How it works</span>
+    </div>
+    <h2 style="font-size:34px;font-weight:800;letter-spacing:-0.02em;max-width:620px;line-height:1.1;">From draft night to a championship banner.</h2>
+
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:34px;">
+      <sc-for list="{{ steps }}" as="s" hint-placeholder-count="3">
+        <div style="position:relative;background:linear-gradient(160deg,rgba(124,58,237,0.08),rgba(150,160,200,0.02));border:1px solid rgba(150,160,200,0.12);border-radius:16px;padding:26px 24px;">
+          <div style="font-family:'Saira Condensed';font-size:40px;font-weight:700;color:rgba(167,139,250,0.45);line-height:0.8;">{{ s.num }}</div>
+          <div style="font-size:17px;font-weight:700;color:#f3f5fb;margin-top:14px;">{{ s.title }}</div>
+          <div style="font-size:13px;color:#9aa3bd;line-height:1.6;margin-top:8px;">{{ s.body }}</div>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+
+  <!-- CTA BAND -->
+  <section style="max-width:1240px;margin:0 auto;padding:60px 36px 70px;">
+    <div style="position:relative;overflow:hidden;background:linear-gradient(135deg,#1b1346 0%,#241657 50%,#121829 100%);border:1px solid rgba(124,58,237,0.34);border-radius:22px;padding:54px 48px;text-align:center;">
+      <div style="position:absolute;inset:0;background:radial-gradient(600px 300px at 50% -20%,rgba(124,58,237,0.30),transparent 70%);"></div>
+      <div style="position:relative;">
+        <h2 style="font-size:40px;font-weight:900;letter-spacing:-0.02em;line-height:1.05;">Your franchise is waiting.</h2>
+        <p style="font-size:16px;color:#c5cadb;max-width:460px;margin:14px auto 0;line-height:1.6;">Start a league with friends or join a public one. Draft tonight, compete all season.</p>
+        <a href="League Dashboard.dc.html" style="display:inline-flex;align-items:center;gap:9px;margin-top:28px;background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;padding:15px 28px;border-radius:12px;font-size:15.5px;font-weight:700;cursor:pointer;">
+          Start your franchise
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg>
+        </a>
+        <div style="font-size:12px;color:#8b93a7;margin-top:16px;">Free to play · Think Like a GM.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer style="border-top:1px solid rgba(150,160,200,0.10);">
+    <div style="max-width:1240px;margin:0 auto;padding:32px 36px;display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap;">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <svg width="26" height="26" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M24 3 L41 9.5 V25 C41 36 24 45 24 45 C24 45 7 36 7 25 V9.5 Z" fill="url(#hg1)" stroke="rgba(167,139,250,0.55)" stroke-width="1.2"/>
+          <path d="M14 14 L30 8.5" stroke="rgba(199,210,224,0.45)" stroke-width="1.3" stroke-linecap="round"/>
+          <path d="M11 22 L24 17" stroke="rgba(167,139,250,0.55)" stroke-width="1.3" stroke-linecap="round"/>
+        </svg>
+        <div style="font-size:12px;color:#6f788e;line-height:1.5;">PWHL General Manager · Think Like a GM.<br>Not affiliated with the PWHL. Fan-built fantasy product.</div>
+      </div>
+      <div style="display:flex;gap:26px;font-size:12.5px;color:#8b93a7;">
+        <span style="cursor:pointer;">Features</span>
+        <span style="cursor:pointer;">Leagues</span>
+        <span style="cursor:pointer;">Support</span>
+        <span style="cursor:pointer;">Privacy</span>
+      </div>
+    </div>
+  </footer>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1240,&quot;height&quot;:2200},&quot;heroLayout&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Split&quot;,&quot;Centered&quot;],&quot;default&quot;:&quot;Split&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;showPreview&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;}}">
+class Component extends DCLogic {
+  icon(kind) {
+    const wrap = (inner) => React.createElement('svg', { width: 20, height: 20, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round' }, inner);
+    const p = (d) => React.createElement('path', { d, key: d });
+    if (kind === 'draft') return wrap([p('M12 2v6'), p('M12 8 8 5'), p('M12 8l4-3'), React.createElement('rect',{key:'r',x:4,y:8,width:16,height:13,rx:2}), p('M9 13h6')]);
+    if (kind === 'roster') return wrap([React.createElement('circle',{key:'c',cx:9,cy:8,r:3}), p('M3 20a6 6 0 0 1 12 0'), p('M16 4a3 3 0 0 1 0 6'), p('M18.5 20a5.5 5.5 0 0 0-3-4.9')]);
+    if (kind === 'lineup') return wrap([React.createElement('rect',{key:'r',x:3,y:4,width:18,height:16,rx:2}), p('M3 10h18'), p('M9 4v16')]);
+    if (kind === 'wire') return wrap([p('M16 3h5v5'), p('M21 3l-7 7'), p('M8 21H3v-5'), p('M3 21l7-7')]);
+    if (kind === 'trophy') return wrap([p('M8 21h8'), p('M12 17v4'), p('M7 4h10v5a5 5 0 0 1-10 0z'), p('M7 6H4v1a3 3 0 0 0 3 3'), p('M17 6h3v1a3 3 0 0 1-3 3')]);
+    if (kind === 'commish') return wrap([React.createElement('circle',{key:'c',cx:12,cy:12,r:3}), p('M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z')]);
+    return wrap([p('M12 20h9'), p('M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z')]);
+  }
+
+  renderVals() {
+    const split = (this.props.heroLayout ?? 'Split') === 'Split';
+    const showPreview = (this.props.showPreview ?? true) && split;
+
+    const mini = [
+      { rank: 1, name: 'Northwind', vp: 16, you: true },
+      { rank: 2, name: 'Granite City', vp: 15 },
+      { rank: 3, name: 'Harbour City', vp: 13 },
+      { rank: 4, name: 'Steel & Co', vp: 12 }
+    ].map(r => ({
+      rank: r.rank, name: r.name, vp: r.vp,
+      rowStyle: r.you ? 'background:rgba(124,58,237,0.12);border:1px solid rgba(124,58,237,0.28);' : 'background:transparent;border:1px solid transparent;',
+      rankColor: r.you ? '#c9b6ff' : '#6f788e',
+      nameColor: r.you ? '#f3f5fb' : '#dfe3ee',
+      vpColor: r.you ? '#c9b6ff' : '#c7d2e0'
+    }));
+
+    const features = [
+      { icon: this.icon('draft'), title: 'Live snake & auction drafts', body: 'Run a real draft room with a clock, queue, and player board. Build your foundation pick by pick.' },
+      { icon: this.icon('roster'), title: 'Build & manage rosters', body: 'Forwards, defense, goalies, bench and IR. Shape a roster with real PWHL depth and positions.' },
+      { icon: this.icon('lineup'), title: 'Set your weekly lineup', body: 'Start the right skaters, ride the hot goalie, and lock in before puck drop every game night.' },
+      { icon: this.icon('wire'), title: 'Trades & the waiver wire', body: 'Negotiate deals, claim breakouts off waivers, and out-maneuver your league all season long.' },
+      { icon: this.icon('trophy'), title: 'Standings & playoffs', body: 'Climb the table on Victory Points, clinch a seed, and chase a championship banner.' },
+      { icon: this.icon('commish'), title: 'Commissioner tools', body: 'Run your league your way — scoring, schedule, rules and approvals from one front office.' }
+    ];
+
+    const steps = [
+      { num: '01', title: 'Create or join a league', body: 'Start a private league with friends or jump into a public one. Invite up to your league size in seconds.' },
+      { num: '02', title: 'Draft your franchise', body: 'Hit the draft room and build a roster of PWHL players from across all teams in the league.' },
+      { num: '03', title: 'Manage & compete', body: 'Set lineups, work the wire, make trades, and climb the standings toward the playoffs.' }
+    ];
+
+    const pillars = [
+      { stat: 'Draft', label: 'Build from scratch' },
+      { stat: 'Manage', label: 'Lineups & trades' },
+      { stat: 'Compete', label: 'Standings & playoffs' },
+      { stat: 'Win', label: 'Championship banners' }
+    ];
+
+    return {
+      heroCols: split ? '1.05fr 0.95fr' : '1fr',
+      showPreview,
+      miniStandings: mini,
+      features, steps, pillars
+    };
+  }
+}
+</script>
+</body>
+</html>

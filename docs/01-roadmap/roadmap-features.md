@@ -374,6 +374,75 @@ Acceptance Criteria:
 
 ---
 
+## BF-001. Fix False "Duplicate Tab" Eviction in Draft Room
+
+Sprint: 9
+
+Priority: P1 — blocks founding commissioners from entering the draft room
+
+Status: Not Implemented
+
+Source: Beta feedback submission `cmqn6ppib0037ayqco2pgk62g` (2026-06-21). User reports receiving the "You opened the draft in another tab / Switch to that tab to continue drafting." screen on first load, with no other tabs open.
+
+**Root cause hypothesis:** The server sends close code 4001 when a new WebSocket connection for the same `(leagueId, teamId)` pair evicts an older one. If a prior connection from the same browser session didn't cleanly close before the next navigation (stale socket left in the server's `sockets` map), a fresh page load will evict itself. This can happen on a hard refresh, a router navigation that unmounts and remounts `DraftRoom`, or a mobile browser backgrounding the tab.
+
+**What the code does today:**
+- `lib/draft/server.ts:77` closes any existing socket for `(leagueId, teamId)` with code 4001 before registering the new one.
+- `hooks/useDraftSocket.ts:100–103`: on close code 4001, `shouldReconnectRef.current = false` and `setEvicted(true)` — rendering the "another tab" screen permanently.
+- The reconnect backoff in `onclose` is skipped entirely when evicted.
+
+**Fix options (in order of preference):**
+1. On code 4001, wait 500ms and attempt one silent reconnect before showing the eviction screen — if the eviction was self-caused (stale prior socket), the reconnect will succeed and the manager lands normally.
+2. Add a session identifier (e.g. `tabId` generated once and stored in `sessionStorage`) to the JOIN message; the server only evicts if the `tabId` differs from the stored one.
+3. Show an actionable error: "Having trouble connecting? [Rejoin draft]" link instead of the dead-end "Switch to that tab" message.
+
+The most conservative fix is option 3 (no server change); option 1 is recommended as it handles the false-positive case transparently.
+
+User story: As a manager trying to open the draft room, I want to reach the live draft on first load so that I'm not locked out of my own draft by a stale connection.
+
+Acceptance Criteria:
+- AC-001: Opening `/draft/<leagueId>?team=<teamId>` in a fresh browser tab (no other draft tabs open) reaches the draft room, not the eviction screen.
+- AC-002: Opening the draft room in a second tab while a first tab is active still shows the eviction screen in the second tab.
+- AC-003: Hard-refreshing an existing draft tab reconnects successfully (no eviction screen).
+- AC-004: `tsc --noEmit` clean; existing 180 tests still pass.
+
+Effort: Backend S · Frontend S · Testing S
+
+---
+
+## BF-002. Performance Tab Shows "Week 1" When Season Is Already Mid-Season
+
+Sprint: 9
+
+Priority: P1 — misinformation during the live season loop
+
+Status: Not Implemented
+
+Source: Beta feedback submission `cmqmn2ffl0001rdpgj8tt1c2z` (2026-06-20). User reports: "The Performance tab says it's Week 1, but the badge at the top says Week 11." User also flags the tab name as unclear.
+
+**Two issues in one report:**
+
+**Issue A — Week number mismatch:**
+The "Week {weekNumber} of {totalWeeks}" badge in `GMCommandCenter.tsx` (line 55, 170) derives `weekNumber` as `activePeriod?.week || nextPeriod?.week || 1`. The fallback `|| 1` fires when the GM Command Center is rendered in SETUP phase (between weeks, no active period) even if the season is mid-year. The `nextPeriod` prop is passed from `app/league/[leagueId]/sim/page.tsx` — if that prop is incorrectly null or stale, the badge falls back to 1. Separately, the Performance tab itself always shows rows in reverse-chronological order via `weeklyPerf.reverse()` in the service; the first visible row should be the most recent (highest) week, not Week 1.
+
+**Issue B — Tab name clarity:**
+User says the tab name "Performance" is not obviously about their fantasy points history. The tab lives at `/team/[teamId]/schedule` (renamed from "PWHL Schedule" to "Performance" in Sprint 6). A more descriptive name like "Season Stats" or "My Season" would reduce confusion. This is a P2 polish item — fix the week number bug first.
+
+User stories:
+- As a manager on the Performance tab mid-season, I want the week badge to reflect the current week so I'm not confused about where in the season I am.
+- As a manager, I want the nav tab label to clearly describe what the page shows so I don't have to guess.
+
+Acceptance Criteria:
+- AC-001: The "Week N of M" badge in the GM Command Center header shows the correct current week number at all phases (SETUP between weeks, ACTIVE mid-week, RECAP after week ends, mid-season).
+- AC-002: When `activePeriod` is null (between weeks), the badge shows the last completed week number, not 1.
+- AC-003: The Performance tab's week rows are ordered most-recent-first; the first visible row matches the badge.
+- AC-004: (P2) Tab label review: confirm whether "Performance" is the clearest option or if "My Season" / "Season Stats" is better; update `TeamNav.tsx` accordingly. Can be deferred to Sprint 9 polish pass.
+- AC-005: `tsc --noEmit` clean; 180 tests pass.
+
+Effort: Backend XS · Frontend S · Testing XS
+
+---
+
 # Phase 2: Fantasy Essentials
 
 Goal: Reach feature parity with major fantasy platforms.

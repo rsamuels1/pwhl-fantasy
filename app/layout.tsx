@@ -2,23 +2,28 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import "./globals.css";
 import { getCurrentUser } from "@/lib/auth";
+import { LogoWordmark } from "@/components/LogoShield";
 
 export const metadata: Metadata = {
-  title: "PWHL Fantasy",
-  description: "Fantasy hockey for the Professional Women's Hockey League",
+  title: "PWHL GM",
+  description: "Run a front office. Draft players, set lineups, and compete for a championship in the Professional Women's Hockey League.",
 };
+
+const SVG_FAVICON = `data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='%237c3aed'/><stop offset='1' stop-color='%234c1d95'/></linearGradient></defs><path d='M24 3 L41 9.5 V25 C41 36 24 45 24 45 C24 45 7 36 7 25 V9.5 Z' fill='url(%23g)'/></svg>`;
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const user = await getCurrentUser().catch(() => null);
 
   return (
     <html lang="en">
+      <head>
+        <link rel="icon" type="image/svg+xml" href={SVG_FAVICON} />
+      </head>
       <body className="app-shell">
         <div className="page-width">
           <header className="top-nav">
             <Link href="/" className="site-brand">
-              <span>HF</span>
-              PWHL Fantasy
+              <LogoWordmark />
             </Link>
             <nav className="nav-links">
               <Link href="/" className="nav-link">Home</Link>

@@ -503,7 +503,7 @@ function PlayerCard({ player, onDrop, disabled }: {
       </div>
       <div>
         <div style={{ fontSize: 22, fontWeight: 800, color: "#6366f1", lineHeight: 1 }}>{s ? s.fantasyPoints.toFixed(1) : "—"}</div>
-        <div style={{ fontSize: 10, color: "#475569", marginTop: 2 }}>fantasy pts</div>
+        <div style={{ fontSize: 10, color: "#475569", marginTop: 2 }}>pts</div>
       </div>
       <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
         {chips.map((c) => (

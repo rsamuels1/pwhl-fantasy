@@ -68,7 +68,7 @@ export default function RegisterPage() {
         <div style={pitchStyle} className="login-pitch">
           <div style={{ marginBottom: 24 }}>
             <p style={{ fontSize: 12, fontWeight: 700, color: "#6366f1", textTransform: "uppercase", letterSpacing: "1px", marginBottom: 10 }}>
-              PWHL Fantasy
+              PWHL GM
             </p>
             <h1 style={{ fontSize: "clamp(1.6rem, 4vw, 2.4rem)", fontWeight: 800, lineHeight: 1.15, margin: 0, color: "#f1f5f9" }}>
               Join the league.<br />Pick your team.

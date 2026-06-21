@@ -285,7 +285,7 @@ async function populateNextRound(
 // ---------------------------------------------------------------------------
 
 async function main() {
-  console.log("\n=== PWHL Fantasy Season Simulation ===");
+  console.log("\n=== PWHL GM Season Simulation ===");
   if (DRY_RUN) console.log("(dry-run mode — no DB writes)\n");
 
   // 1. Verify fixture

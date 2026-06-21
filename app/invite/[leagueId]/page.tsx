@@ -52,7 +52,7 @@ export default async function InvitePage({ params }: Props) {
             {league.name}
           </h1>
           <p style={{ color: "#94a3b8", margin: "0 0 16px", fontSize: 14 }}>
-            PWHL Fantasy · Season {league.season}
+            PWHL GM · Season {league.season}
           </p>
           <div style={{ display: "flex", justifyContent: "center", gap: 24 }}>
             <div style={{ textAlign: "center" }}>

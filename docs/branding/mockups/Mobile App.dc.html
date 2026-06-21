@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=Saira+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#e7e5df;}
+*::-webkit-scrollbar{width:9px;height:9px;}
+*::-webkit-scrollbar-thumb{background:rgba(124,58,237,0.30);border-radius:8px;}
+*::-webkit-scrollbar-track{background:transparent;}
+</style>
+</helmet>
+
+<div style="width:max-content;min-width:100%;min-height:100vh;box-sizing:border-box;padding:48px;background:radial-gradient(900px 500px at 30% 0%,#efeef0,#e7e5df 70%);font-family:Archivo,sans-serif;">
+
+  <div style="margin-bottom:34px;max-width:760px;">
+    <div style="display:flex;align-items:center;gap:11px;margin-bottom:10px;">
+      <svg width="30" height="30" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs><linearGradient id="bg1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7c3aed"/><stop offset="1" stop-color="#4c1d95"/></linearGradient></defs>
+        <path d="M24 3 L41 9.5 V25 C41 36 24 45 24 45 C24 45 7 36 7 25 V9.5 Z" fill="url(#bg1)" stroke="rgba(167,139,250,0.55)" stroke-width="1.2"/>
+        <path d="M14 14 L30 8.5" stroke="rgba(199,210,224,0.55)" stroke-width="1.4" stroke-linecap="round"/>
+        <path d="M11 22 L24 17" stroke="rgba(167,139,250,0.7)" stroke-width="1.4" stroke-linecap="round"/>
+      </svg>
+      <span style="font-size:13px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;color:#3a2b63;">PWHL GM · Mobile</span>
+    </div>
+    <h1 style="font-size:30px;font-weight:800;letter-spacing:-0.02em;color:#1c1630;">The front office in your pocket</h1>
+    <p style="font-size:15px;color:#6a6478;margin-top:8px;line-height:1.55;">Four core screens of the iOS app — same strategic, premium system as the web product. Manage your franchise from draft night through the playoffs.</p>
+  </div>
+
+  <div style="display:flex;gap:46px;align-items:flex-start;">
+
+    <!-- ============ HOME ============ -->
+    <div style="flex:none;">
+      <div style="font-size:12px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#6a6478;margin-bottom:14px;">01 · Home</div>
+      <x-import component="IOSDevice" from="./ios-frame.jsx" dark="{{ true }}" hint-size="402px,874px">
+        <div style="height:100%;display:flex;flex-direction:column;font-family:Archivo,sans-serif;color:#f3f5fb;background:linear-gradient(168deg,#0b1020 0%,#0a0e1a 55%,#0c0f1d 100%);">
+          <div style="flex:1;overflow:auto;padding:60px 16px 14px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+              <div>
+                <div style="font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#6f788e;">Frostbelt Keeper</div>
+                <div style="font-size:21px;font-weight:800;letter-spacing:-0.01em;margin-top:2px;">Good evening, GM</div>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <span style="font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#c9b6ff;background:rgba(124,58,237,0.16);border:1px solid rgba(124,58,237,0.32);border-radius:7px;padding:5px 9px;">Wk 7</span>
+                <span style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#7c3aed,#4c1d95);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;">N</span>
+              </div>
+            </div>
+
+            <a href="My Matchup.dc.html" style="display:block;border-radius:16px;background:linear-gradient(135deg,#1b1346 0%,#121829 70%);border:1px solid rgba(124,58,237,0.30);padding:18px 18px 16px;">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+                <span style="font-size:10.5px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:#a78bfa;">Your Matchup</span>
+                <span style="font-size:10px;font-weight:600;color:#c9b6ff;display:flex;align-items:center;gap:5px;"><span style="width:6px;height:6px;border-radius:50%;background:#a78bfa;"></span>Live</span>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:center;">
+                <div style="text-align:center;">
+                  <div style="font-size:12px;font-weight:700;margin-bottom:5px;">Northwind</div>
+                  <div style="font-family:'Saira Condensed';font-weight:700;font-size:42px;line-height:0.8;">48.2</div>
+                  <div style="font-size:10px;color:#7fc2a6;margin-top:5px;font-weight:600;">52% win</div>
+                </div>
+                <div style="font-size:11px;color:#6f788e;font-weight:600;">VS</div>
+                <div style="text-align:center;">
+                  <div style="font-size:12px;font-weight:700;color:#e7eaf3;margin-bottom:5px;">Granite City</div>
+                  <div style="font-family:'Saira Condensed';font-weight:700;font-size:42px;line-height:0.8;color:#c7d2e0;">44.8</div>
+                  <div style="font-size:10px;color:#8b93a7;margin-top:5px;font-weight:600;">48% win</div>
+                </div>
+              </div>
+              <div style="margin-top:14px;border-top:1px solid rgba(150,160,200,0.10);padding-top:11px;font-size:11px;color:#8b93a7;display:flex;justify-content:space-between;">
+                <span>5 of 7 starters left tonight</span><span style="color:#c9b6ff;font-weight:700;">View →</span>
+              </div>
+            </a>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px;">
+              <button style="background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;border:none;padding:13px;border-radius:12px;font-weight:700;font-size:13px;font-family:Archivo;display:flex;align-items:center;justify-content:center;gap:7px;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M9 4v16"/></svg>Set Lineup
+              </button>
+              <button style="background:rgba(150,160,200,0.06);color:#e7eaf3;border:1px solid rgba(150,160,200,0.16);padding:13px;border-radius:12px;font-weight:600;font-size:13px;font-family:Archivo;display:flex;align-items:center;justify-content:center;gap:7px;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M16 3h5v5M21 3l-7 7M8 21H3v-5M3 21l7-7"/></svg>Wire
+              </button>
+            </div>
+
+            <div style="background:#121829;border:1px solid rgba(150,160,200,0.10);border-radius:14px;padding:14px 15px;margin-top:12px;">
+              <div style="display:flex;align-items:center;gap:9px;margin-bottom:11px;">
+                <span style="width:3px;height:13px;border-radius:2px;background:linear-gradient(#a78bfa,#6d28d9);"></span>
+                <span style="font-size:10.5px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#c7d2e0;">Standings</span>
+                <span style="margin-left:auto;font-size:11px;color:#c9b6ff;font-weight:600;">Full →</span>
+              </div>
+              <sc-for list="{{ standings }}" as="r" hint-placeholder-count="4">
+                <div style="display:grid;grid-template-columns:20px 1fr 56px 38px;align-items:center;gap:8px;padding:8px 9px;border-radius:9px;margin-bottom:3px; {{ r.rowStyle }}">
+                  <span style="font-family:'Saira Condensed';font-size:13px;font-weight:600;color: {{ r.rankColor }};">{{ r.rank }}</span>
+                  <span style="font-size:12.5px;font-weight:600;color: {{ r.nameColor }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ r.name }}</span>
+                  <span style="text-align:right;font-size:11px;color:#8b93a7;font-variant-numeric:tabular-nums;">{{ r.record }}</span>
+                  <span style="text-align:right;font-family:'Saira Condensed';font-size:15px;font-weight:700;color: {{ r.vpColor }};">{{ r.vp }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+          <nav style="flex:none;display:flex;justify-content:space-around;align-items:center;padding:9px 6px 24px;background:rgba(10,14,26,0.92);backdrop-filter:blur(14px);border-top:1px solid rgba(150,160,200,0.10);">
+            <div style="display:flex;flex-direction:column;align-items:center;gap:4px;color:#a78bfa;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg><span style="font-size:9.5px;font-weight:700;">Home</span></div>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:4px;color:#6f788e;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3 19 6v6c0 5-7 9-7 9s-7-4-7-9V6z"/></svg><span style="font-size:9.5px;font-weight:600;">Matchup</span></div>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:4px;color:#6f788e;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="4" width="12" height="17" rx="2"/><path d="M9 4V2h6v2M9 10h6M9 14h6"/></svg><span style="font-size:9.5px;font-weight:600;">Draft</span></div>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:4px;color:#6f788e;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M7 6H4v1a3 3 0 0 0 3 3M17 6h3v1a3 3 0 0 1-3 3"/></svg><span style="font-size:9.5px;font-weight:600;">League</span></div>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:4px;color:#6f788e;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg><span style="font-size:9.5px;font-weight:600;">More</span></div>
+          </nav>
+        </div>
+      </x-import>
+    </div>
+
+    <!-- ============ MY MATCHUP ============ -->
+    <div style="flex:none;">
+      <div style="font-size:12px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#6a6478;margin-bottom:14px;">02 · My Matchup</div>
+      <x-import component="IOSDevice" from="./ios-frame.jsx" dark="{{ true }}" hint-size="402px,874px">
+        <div style="height:100%;display:flex;flex-direction:column;font-family:Archivo,sans-serif;color:#f3f5fb;background:linear-gradient(168deg,#0b1020 0%,#0a0e1a 55%,#0c0f1d 100%);">
+          <div style="flex:1;overflow:auto;padding:60px 16px 14px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+              <div style="font-size:21px;font-weight:800;letter-spacing:-0.01em;">Week 7 Matchup</div>
+              <span style="font-size:10px;font-weight:600;color:#c9b6ff;display:flex;align-items:center;gap:5px;"><span style="width:6px;height:6px;border-radius:50%;background:#a78bfa;"></span>Live</span>
+            </div>
+
+            <div style="border-radius:16px;background:linear-gradient(135deg,#1b1346 0%,#121829 70%);border:1px solid rgba(124,58,237,0.30);padding:20px 18px;">
+              <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:center;">
+                <div style="text-align:center;">
+                  <div style="font-size:13px;font-weight:700;margin-bottom:6px;">Northwind</div>
+                  <div style="font-family:'Saira Condensed';font-weight:700;font-size:52px;line-height:0.8;">48.2</div>
+                </div>
+                <div style="font-size:11px;color:#6f788e;font-weight:600;">VS</div>
+                <div style="text-align:center;">
+                  <div style="font-size:13px;font-weight:700;color:#e7eaf3;margin-bottom:6px;">Granite City</div>
+                  <div style="font-family:'Saira Condensed';font-weight:700;font-size:52px;line-height:0.8;color:#c7d2e0;">44.8</div>
+                </div>
+              </div>
+              <div style="margin-top:16px;height:7px;border-radius:5px;background:rgba(150,160,200,0.14);overflow:hidden;display:flex;">
+                <div style="width:52%;background:linear-gradient(90deg,#a78bfa,#7c3aed);"></div>
+              </div>
+              <div style="display:flex;justify-content:space-between;margin-top:7px;font-size:10.5px;font-weight:600;"><span style="color:#c9b6ff;">52% win</span><span style="color:#8b93a7;">48% win</span></div>
+            </div>
+
+            <div style="font-size:10.5px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#6f788e;margin:18px 4px 9px;">Your Starters</div>
+            <div style="background:#121829;border:1px solid rgba(150,160,200,0.10);border-radius:14px;overflow:hidden;">
+              <sc-for list="{{ starters }}" as="p" hint-placeholder-count="6">
+                <div style="display:flex;align-items:center;gap:11px;padding:11px 14px;border-bottom:1px solid rgba(150,160,200,0.07);">
+                  <span style="width:30px;height:30px;border-radius:8px;flex:none;background: {{ p.posBg }};display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color: {{ p.posColor }};">{{ p.pos }}</span>
+                  <div style="flex:1;min-width:0;">
+                    <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ p.name }}</div>
+                    <div style="font-size:10.5px;color:#6f788e;">{{ p.team }} · {{ p.line }}</div>
+                  </div>
+                  <span style="font-size:9.5px;font-weight:700;color: {{ p.statusColor }};letter-spacing:0.04em;">{{ p.status }}</span>
+                  <span style="font-family:'Saira Condensed';font-size:19px;font-weight:700;color:#f3f5fb;width:40px;text-align:right;">{{ p.pts }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+          <nav style="flex:none;display:flex;justify-content:space-around;align-items:center;padding:9px 6px 24px;background:rgba(10,14,26,0.92);backdrop-filter:blur(14px);border-top:1px solid rgba(150,160,200,0.10);">
+            <div style="display:flex;flex-direction:column;align-items:center;gap:4px;color:#6f788e;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg><span style="font-size:9.5px;font-weight:600;">Home</span></div>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:4px;color:#a78bfa;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3 19 6v6c0 5-7 9-7 9s-7-4-7-9V6z"/></svg><span style="font-size:9.5px;font-weight:700;">Matchup</span></div>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:4px;color:#6f788e;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="4" width="12" height="17" rx="2"/><path d="M9 4V2h6v2M9 10h6M9 14h6"/></svg><span style="font-size:9.5px;font-weight:600;">Draft</span></div>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:4px;color:#6f788e;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M7 6H4v1a3 3 0 0 0 3 3M17 6h3v1a3 3 0 0 1-3 3"/></svg><span style="font-size:9.5px;font-weight:600;">League</span></div>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:4px;color:#6f788e;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg><span style="font-size:9.5px;font-weight:600;">More</span></div>
+          </nav>
+        </div>
+      </x-import>
+    </div>
+
+    <!-- ============ DRAFT ROOM ============ -->
+    <div style="flex:none;">
+      <div style="font-size:12px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#6a6478;margin-bottom:14px;">03 · Draft Room</div>
+      <x-import component="IOSDevice" from="./ios-frame.jsx" dark="{{ true }}" hint-size="402px,874px">
+        <div style="height:100%;display:flex;flex-direction:column;font-family:Archivo,sans-serif;color:#f3f5fb;background:linear-gradient(168deg,#0b1020 0%,#0a0e1a 55%,#0c0f1d 100%);">
+          <div style="flex:1;overflow:auto;padding:60px 16px 14px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+              <div>
+                <div style="font-size:21px;font-weight:800;letter-spacing:-0.01em;">Draft Room</div>
+                <div style="font-size:11px;color:#8b93a7;margin-top:2px;">Round 3 · Pick 19 of 96</div>
+              </div>
+            </div>
+
+            <div style="border-radius:16px;background:linear-gradient(135deg,#241657,#1b1346);border:1px solid rgba(124,58,237,0.40);padding:16px 18px;display:flex;align-items:center;justify-content:space-between;">
+              <div>
+                <div style="font-size:10.5px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#a78bfa;">You're on the clock</div>
+                <div style="font-size:14px;font-weight:700;margin-top:4px;color:#f3f5fb;">Pick your 3rd player</div>
+              </div>
+              <div style="text-align:center;">
+                <div style="font-family:'Saira Condensed';font-size:38px;font-weight:700;line-height:0.8;color:#fff;">0:48</div>
+                <div style="font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:#c9b6ff;margin-top:3px;">on clock</div>
+              </div>
+            </div>
+
+            <div style="font-size:10.5px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#6f788e;margin:18px 4px 9px;">Best Available</div>
+            <div style="background:#121829;border:1px solid rgba(150,160,200,0.10);border-radius:14px;overflow:hidden;">
+              <sc-for list="{{ available }}" as="p" hint-placeholder-count="5">
+                <div style="display:flex;align-items:center;gap:11px;padding:11px 13px;border-bottom:1px solid rgba(150,160,200,0.07);">
+                  <span style="font-family:'Saira Condensed';font-size:14px;font-weight:700;color:#6f788e;width:18px;">{{ p.rank }}</span>
+                  <span style="width:28px;height:28px;border-radius:8px;flex:none;background: {{ p.posBg }};display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color: {{ p.posColor }};">{{ p.pos }}</span>
+                  <div style="flex:1;min-width:0;">
+                    <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ p.name }}</div>
+                    <div style="font-size:10.5px;color:#6f788e;">{{ p.team }} · proj {{ p.proj }}</div>
+                  </div>
+                  <button style="background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;border:none;padding:8px 13px;border-radius:9px;font-size:11.5px;font-weight:700;font-family:Archivo;">Draft</button>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+          <nav style="flex:none;display:flex;justify-content:space-around;align-items:center;padding:9px 6px 24px;background:rgba(10,14,26,0.92);backdrop-filter:blur(14px);border-top:1px solid rgba(150,160,200,0.10);">
+            <div style="display:flex;flex-direction:column;align-items:center;gap:4px;color:#6f788e;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg><span style="font-size:9.5px;font-weight:600;">Home</span></div>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:4px;color:#6f788e;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3 19 6v6c0 5-7 9-7 9s-7-4-7-9V6z"/></svg><span style="font-size:9.5px;font-weight:600;">Matchup</span></div>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:4px;color:#a78bfa;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="4" width="12" height="17" rx="2"/><path d="M9 4V2h6v2M9 10h6M9 14h6"/></svg><span style="font-size:9.5px;font-weight:700;">Draft</span></div>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:4px;color:#6f788e;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M7 6H4v1a3 3 0 0 0 3 3M17 6h3v1a3 3 0 0 1-3 3"/></svg><span style="font-size:9.5px;font-weight:600;">League</span></div>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:4px;color:#6f788e;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg><span style="font-size:9.5px;font-weight:600;">More</span></div>
+          </nav>
+        </div>
+      </x-import>
+    </div>
+
+    <!-- ============ SET LINEUP ============ -->
+    <div style="flex:none;">
+      <div style="font-size:12px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#6a6478;margin-bottom:14px;">04 · Set Lineup</div>
+      <x-import component="IOSDevice" from="./ios-frame.jsx" dark="{{ true }}" hint-size="402px,874px">
+        <div style="height:100%;display:flex;flex-direction:column;font-family:Archivo,sans-serif;color:#f3f5fb;background:linear-gradient(168deg,#0b1020 0%,#0a0e1a 55%,#0c0f1d 100%);">
+          <div style="flex:1;overflow:auto;padding:60px 16px 14px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+              <div style="font-size:21px;font-weight:800;letter-spacing:-0.01em;">Set Lineup</div>
+              <span style="font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#e3c989;background:rgba(214,169,78,0.12);border:1px solid rgba(214,169,78,0.32);border-radius:7px;padding:5px 9px;">Locks 7:00</span>
+            </div>
+
+            <div style="display:flex;align-items:center;gap:11px;background:rgba(95,169,140,0.09);border:1px solid rgba(95,169,140,0.32);border-radius:12px;padding:12px 14px;margin-bottom:16px;">
+              <span style="width:30px;height:30px;border-radius:8px;background:rgba(95,169,140,0.16);display:flex;align-items:center;justify-content:center;flex:none;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5fa98c" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
+              <div><div style="font-size:11px;color:#9aa3bd;">Week 7 lineup</div><div style="font-size:13.5px;font-weight:700;color:#7fc2a6;">Valid · 7 of 7 active</div></div>
+            </div>
+
+            <div style="font-size:10.5px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#6f788e;margin:0 4px 9px;">Starters</div>
+            <div style="display:flex;flex-direction:column;gap:8px;">
+              <sc-for list="{{ lineup }}" as="s" hint-placeholder-count="6">
+                <div style="display:flex;align-items:center;gap:11px;background:#121829;border:1px solid rgba(150,160,200,0.10);border-radius:12px;padding:11px 13px;">
+                  <span style="width:34px;height:34px;border-radius:9px;flex:none;background: {{ s.posBg }};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color: {{ s.posColor }};">{{ s.slot }}</span>
+                  <div style="flex:1;min-width:0;">
+                    <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ s.name }}</div>
+                    <div style="font-size:10.5px;color:#6f788e;">{{ s.team }} · {{ s.opp }}</div>
+                  </div>
+                  <div style="text-align:right;">
+                    <div style="font-family:'Saira Condensed';font-size:16px;font-weight:700;color:#c7d2e0;">{{ s.proj }}</div>
+                    <div style="font-size:9px;letter-spacing:0.08em;text-transform:uppercase;color:#6f788e;">proj</div>
+                  </div>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6f788e" stroke-width="2"><path d="M8 9l4-4 4 4M8 15l4 4 4-4"/></svg>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+          <div style="flex:none;padding:12px 16px 26px;background:rgba(10,14,26,0.92);backdrop-filter:blur(14px);border-top:1px solid rgba(150,160,200,0.10);">
+            <button style="width:100%;background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;border:none;padding:15px;border-radius:13px;font-weight:700;font-size:15px;font-family:Archivo;">Save Lineup</button>
+          </div>
+        </div>
+      </x-import>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1900,&quot;height&quot;:1080}}">
+class Component extends DCLogic {
+  renderVals() {
+    const posStyle = (pos) => {
+      if (pos === 'G') return { posBg: 'rgba(214,169,78,0.14)', posColor: '#e3c989' };
+      if (pos === 'D') return { posBg: 'rgba(95,169,140,0.14)', posColor: '#7fc2a6' };
+      return { posBg: 'rgba(124,58,237,0.16)', posColor: '#c9b6ff' };
+    };
+
+    const standings = [
+      { rank: 1, name: 'Northwind', you: true, record: '5–1–1', vp: 16 },
+      { rank: 2, name: 'Granite City', record: '5–2–0', vp: 15 },
+      { rank: 3, name: 'Harbour City', record: '4–3–0', vp: 13 },
+      { rank: 4, name: 'Steel & Co', record: '4–3–0', vp: 12 }
+    ].map(r => ({
+      rank: r.rank, name: r.name, record: r.record, vp: r.vp,
+      rowStyle: r.you ? 'background:rgba(124,58,237,0.12);border:1px solid rgba(124,58,237,0.28);' : 'background:transparent;border:1px solid transparent;',
+      rankColor: r.you ? '#c9b6ff' : '#6f788e',
+      nameColor: r.you ? '#f3f5fb' : '#dfe3ee',
+      vpColor: r.you ? '#c9b6ff' : '#c7d2e0'
+    }));
+
+    const starters = [
+      { name: 'Sarah Fillier', pos: 'F', team: 'MTL', line: '1st line', status: 'FINAL', pts: '11.4', sc: '#6f788e' },
+      { name: 'Marie-Philip Poulin', pos: 'F', team: 'MTL', line: '1st line', status: 'LIVE', pts: '9.8', sc: '#a78bfa' },
+      { name: 'Daryl Watts', pos: 'F', team: 'TOR', line: '2nd line', status: 'LIVE', pts: '7.2', sc: '#a78bfa' },
+      { name: 'Renata Fast', pos: 'D', team: 'TOR', line: 'top pair', status: 'LIVE', pts: '8.1', sc: '#a78bfa' },
+      { name: 'Jocelyne Larocque', pos: 'D', team: 'TOR', line: '2nd pair', status: '7:30', pts: '0.0', sc: '#6f788e' },
+      { name: 'Aerin Frankel', pos: 'G', team: 'BOS', line: 'starter', status: '7:30', pts: '0.0', sc: '#6f788e' }
+    ].map(p => ({ ...p, ...posStyle(p.pos), statusColor: p.sc }));
+
+    const available = [
+      { rank: 1, name: 'Hilary Knight', pos: 'F', team: 'BOS', proj: '14.2' },
+      { rank: 2, name: 'Alex Carpenter', pos: 'F', team: 'NY', proj: '13.6' },
+      { rank: 3, name: 'Erin Ambrose', pos: 'D', team: 'MTL', proj: '11.9' },
+      { rank: 4, name: 'Emerance Maschmeyer', pos: 'G', team: 'OTT', proj: '11.1' },
+      { rank: 5, name: 'Natalie Spooner', pos: 'F', team: 'TOR', proj: '12.4' }
+    ].map(p => ({ ...p, ...posStyle(p.pos) }));
+
+    const lineup = [
+      { slot: 'F', name: 'Sarah Fillier', team: 'MTL', opp: 'vs TOR', proj: '12.1', pos: 'F' },
+      { slot: 'F', name: 'Marie-Philip Poulin', team: 'MTL', opp: 'vs TOR', proj: '11.8', pos: 'F' },
+      { slot: 'F', name: 'Daryl Watts', team: 'TOR', opp: '@ MTL', proj: '9.4', pos: 'F' },
+      { slot: 'D', name: 'Renata Fast', team: 'TOR', opp: '@ MTL', proj: '8.7', pos: 'D' },
+      { slot: 'D', name: 'Jocelyne Larocque', team: 'TOR', opp: '@ MTL', proj: '6.2', pos: 'D' },
+      { slot: 'G', name: 'Aerin Frankel', team: 'BOS', opp: 'vs OTT', proj: '10.3', pos: 'G' }
+    ].map(s => ({ ...s, ...posStyle(s.pos) }));
+
+    return { standings, starters, available, lineup };
+  }
+}
+</script>
+</body>
+</html>

@@ -75,6 +75,10 @@ export interface ActiveMatchup {
   period: ScoringPeriod;
   status: "active" | "upcoming";
   isPlayoff: boolean;
+  // True when the period is technically active but no games have been played yet.
+  // Happens in replay SETUP phase (replayCurrentDate = period.startsAt) or at
+  // real-world week start before first game tip-off. Heroes show "—" instead of 0.0.
+  isSetupPhase?: boolean;
   round?: number;
   roundLabel?: string;
   myTeam: { id: string; name: string; score: number };
@@ -455,11 +459,14 @@ export async function getDashboardData(
   const oppProj = opponentProjected as number;
   const winProb = isVpMode && opponentTeamId ? winProbability(myProj, oppProj) : 0;
 
+  const isSetupPhase = myDetailed.players.length > 0 && myDetailed.players.every((p) => p.gameCount === 0);
+
   return {
     activeMatchup: {
       week: displayPeriod.week,
       period: displayPeriod,
       status: "active",
+      isSetupPhase,
       isPlayoff: false,
       myTeam: { id: myTeamId, name: myTeamName, score: myScore },
       myProjected,
@@ -771,11 +778,14 @@ async function getPlayoffDashboardData(
     else h2hTies++;
   }
 
+  const playoffIsSetupPhase = status === "active" && myDetailed.players.length > 0 && myDetailed.players.every((p) => p.gameCount === 0);
+
   return {
     activeMatchup: {
       week: myMatchup.week,
       period,
       status: status as "active" | "upcoming",
+      isSetupPhase: playoffIsSetupPhase,
       isPlayoff: true,
       round: myMatchup.round ?? undefined,
       roundLabel,

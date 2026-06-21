@@ -12,7 +12,7 @@ interface Props {
   params: Promise<{ leagueId: string }>;
 }
 
-type SimPhase = "PRE_SEASON" | "SETUP" | "RECAP" | "SEASON_COMPLETE" | "PLAYOFFS";
+type SimPhase = "PRE_SEASON" | "SETUP" | "RECAP" | "SEASON_COMPLETE" | "PLAYOFFS" | "PLAYOFFS_COMPLETE";
 
 export default async function SimPage({ params }: Props) {
   const { leagueId } = await params;
@@ -29,7 +29,9 @@ export default async function SimPage({ params }: Props) {
   // Derive the current phase
   let phase: SimPhase;
 
-  if (league.playoffStatus === "IN_PROGRESS") {
+  if (league.playoffStatus === "COMPLETE") {
+    phase = "PLAYOFFS_COMPLETE";
+  } else if (league.playoffStatus === "IN_PROGRESS") {
     phase = "PLAYOFFS";
   } else if (state.lifecycleStatus === "COMPLETE") {
     phase = "SEASON_COMPLETE";

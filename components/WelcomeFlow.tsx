@@ -29,10 +29,10 @@ export default function WelcomeFlow() {
     }}>
       <div>
         <p style={{ fontSize: 11, fontWeight: 700, color: "#6366f1", textTransform: "uppercase", letterSpacing: "1px", margin: "0 0 8px" }}>
-          Welcome to PWHL Fantasy
+          Welcome to PWHL GM
         </p>
         <h2 style={{ margin: "0 0 6px", fontSize: "clamp(1.2rem, 3vw, 1.6rem)", fontWeight: 800 }}>
-          Fantasy hockey for the PWHL
+          Think Like a GM.
         </h2>
       </div>
 
@@ -40,15 +40,15 @@ export default function WelcomeFlow() {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 12 }}>
         <div style={infoCard}>
           <div style={cardIcon}>🏒</div>
-          <div style={cardTitle}>What this is</div>
+          <div style={cardTitle}>Your franchise, your decisions</div>
           <div style={cardBody}>
-            Draft real PWHL players. Set a weekly lineup. Compete with friends.
+            Draft real PWHL players. Set your lineup. Make trades. Run your roster like a front office.
           </div>
         </div>
 
         <div style={infoCard}>
           <div style={cardIcon}>🏆</div>
-          <div style={cardTitle}>How you win</div>
+          <div style={cardTitle}>Win with Victory Points</div>
           <div style={cardBody}>
             You earn Victory Points for winning your matchup <em>and</em> for
             being one of the top scorers each week.{" "}

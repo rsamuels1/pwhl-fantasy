@@ -11,7 +11,7 @@ export default async function LeaguesPage() {
     <main style={{ minHeight: "100vh", background: "#0f1117", color: "#e2e8f0", padding: "32px 16px" }}>
       <div style={{ maxWidth: 1040, margin: "0 auto", display: "grid", gap: 24 }}>
         <header>
-          <p style={{ color: "#22c55e", textTransform: "uppercase", letterSpacing: "0.2em", fontSize: 12, marginBottom: 12 }}>PWHL Fantasy</p>
+          <p style={{ color: "#22c55e", textTransform: "uppercase", letterSpacing: "0.2em", fontSize: 12, marginBottom: 12 }}>PWHL GM</p>
           <h1 style={{ fontSize: "clamp(2rem, 3vw, 3rem)", lineHeight: 1.05 }}>Browse active leagues</h1>
           <p style={{ color: "#94a3b8", maxWidth: 780, marginTop: 10 }}>
             Discover leagues created on the platform and jump to their dashboard if you have the ID. League privacy is minimal for this prototype.

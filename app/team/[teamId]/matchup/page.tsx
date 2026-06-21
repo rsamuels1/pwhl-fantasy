@@ -3,10 +3,8 @@ import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { requireAuth, requireTeamOwner, isFounder } from "@/lib/auth";
 import { getDashboardData, type ActiveMatchup, type PlayerMatchupRow, type WeeklyRecap, type LeaguePerformerRow, type ChampionInfo } from "@/lib/services/dashboard";
-import { getTeamAnalysis } from "@/lib/services/analysis-service";
 import InlineLineupEditor, { type LineupPlayer } from "./InlineLineupEditor";
 import LiveScoreRefresh from "@/components/LiveScoreRefresh";
-import MatchupTabs from "@/components/MatchupTabs";
 import { getSwingPlayers } from "@/lib/matchups/swingPlayers";
 import { parseScoringSettings } from "@/lib/scoring/settings";
 import { getDevNow } from "@/lib/devTime";
@@ -35,13 +33,7 @@ export default async function TeamMatchupPage({
   const rs = (league.rosterSettings as Record<string, number>) ?? {};
   const activeSlotCount = (rs.forward ?? 3) + (rs.defense ?? 2) + (rs.goalie ?? 1) + (rs.util ?? 1);
   const nowMs = getReplayNow(league, await getDevNow());
-  const [dashboard, analysis] = await Promise.all([
-    getDashboardData(leagueId, teamId, nowMs, prisma),
-    getTeamAnalysis(leagueId, teamId, nowMs, prisma).catch((err: unknown) => {
-      console.error("[matchup] getTeamAnalysis failed:", err);
-      return null;
-    }),
-  ]);
+  const dashboard = await getDashboardData(leagueId, teamId, nowMs, prisma);
 
   const { activeMatchup, remainingPlayers, topPerformers, disappointments, lineupAlerts, lastResult, leagueActivity, leagueTopPerformers, leagueDisappointments, eliminationInfo, championInfo, playoffPending, myPlayersLastWeek, lastWeekLabel } = dashboard;
 
@@ -168,27 +160,39 @@ export default async function TeamMatchupPage({
       {/* ── 1. Lineup alerts — top of page, always visible when present ── */}
       {lineupAlerts.length > 0 && (
         <div style={{
-          background: "rgba(239,68,68,0.08)",
-          border: "1px solid rgba(239,68,68,0.25)",
-          borderRadius: 14, padding: "12px 16px",
-          display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap",
+          background: "rgba(214,169,78,0.08)",
+          border: "1px solid rgba(214,169,78,0.30)",
+          borderRadius: 14, padding: "18px 20px",
+          display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 14, flexWrap: "wrap",
         }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <span style={{ fontSize: 16 }}>⚠️</span>
+          <div style={{ display: "flex", alignItems: "flex-start", gap: 14 }}>
+            <div style={{
+              width: 34, height: 34, borderRadius: 9, flexShrink: 0,
+              background: "rgba(214,169,78,0.16)", border: "1px solid rgba(214,169,78,0.40)",
+              display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16,
+            }}>⚠️</div>
             <div>
-              <div style={{ fontSize: 13, fontWeight: 700, color: "#fca5a5" }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: "var(--text)" }}>
                 Lineup action needed
               </div>
-              <div style={{ fontSize: 12, color: "#94a3b8", marginTop: 2 }}>
-                {lineupAlerts.map((a) => a.name).join(", ")}{" "}
-                {lineupAlerts.length === 1 ? "has" : "have"} no games remaining this period
+              <div style={{ fontSize: 12.5, color: "var(--muted)", marginTop: 4, lineHeight: 1.5 }}>
+                {lineupAlerts.length === 1 ? "This player has" : "These players have"} no games remaining this period
+              </div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 8 }}>
+                {lineupAlerts.map((a) => (
+                  <span key={a.playerId} style={{
+                    fontSize: 12, fontWeight: 600, color: "#e3c989",
+                    background: "rgba(214,169,78,0.12)", border: "1px solid rgba(214,169,78,0.28)",
+                    borderRadius: 7, padding: "6px 11px",
+                  }}>{a.name}</span>
+                ))}
               </div>
             </div>
           </div>
           <Link href={`/team/${teamId}/lineup`} style={{
             fontSize: 12, fontWeight: 700, padding: "6px 14px", borderRadius: 8,
-            background: "rgba(239,68,68,0.15)", color: "#fca5a5",
-            border: "1px solid rgba(239,68,68,0.3)", textDecoration: "none", flexShrink: 0,
+            background: "rgba(214,169,78,0.15)", color: "#e3c989",
+            border: "1px solid rgba(214,169,78,0.30)", textDecoration: "none", flexShrink: 0,
           }}>
             Fix lineup →
           </Link>
@@ -198,33 +202,30 @@ export default async function TeamMatchupPage({
       {/* ── 1a. Between-weeks lineup nudge ── */}
       {activeMatchup?.status === "upcoming" && (activeMatchup.myPlayers.length < activeSlotCount) && (
         <div style={{
-          background: "rgba(245,158,11,0.07)",
-          border: "1px solid rgba(245,158,11,0.25)",
-          borderRadius: 14, padding: "12px 16px",
+          background: "rgba(214,169,78,0.08)",
+          border: "1px solid rgba(214,169,78,0.30)",
+          borderRadius: 14, padding: "18px 20px",
           display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap",
         }}>
           <div>
-            <div style={{ fontSize: 13, fontWeight: 700, color: "#fbbf24" }}>
+            <div style={{ fontSize: 14, fontWeight: 700, color: "var(--text)" }}>
               {activeMatchup.isPlayoff && activeMatchup.roundLabel
                 ? `${activeMatchup.roundLabel} is coming up`
                 : `Week ${activeMatchup.week} is coming up`}
             </div>
-            <div style={{ fontSize: 12, color: "#94a3b8", marginTop: 2 }}>
+            <div style={{ fontSize: 12.5, color: "var(--muted)", marginTop: 4, lineHeight: 1.5 }}>
               Set your lineup before games begin — check projected scores on the lineup page.
             </div>
           </div>
           <Link href={`/team/${teamId}/lineup`} style={{
             fontSize: 12, fontWeight: 700, padding: "6px 14px", borderRadius: 8,
-            background: "rgba(245,158,11,0.15)", color: "#fbbf24",
-            border: "1px solid rgba(245,158,11,0.3)", textDecoration: "none", flexShrink: 0,
+            background: "rgba(214,169,78,0.15)", color: "#e3c989",
+            border: "1px solid rgba(214,169,78,0.30)", textDecoration: "none", flexShrink: 0,
           }}>
             Set lineup →
           </Link>
         </div>
       )}
-
-      {/* ── 1c. Last week recap ── */}
-      {lastResult && <RecapCard recap={lastResult} />}
 
       {/* ── 2. Matchup hero ── */}
       {activeMatchup ? (
@@ -300,10 +301,123 @@ export default async function TeamMatchupPage({
         </Card>
       )}
 
-      {/* ── Tabs: Matchup / Analysis ── */}
-      <MatchupTabs analysis={analysis}>
+      {/* ── Z3. Live situation grid: Playing Tonight + Swing (left) | Roster Status (right) ── */}
+      {activeMatchup?.status === "active" && (
+        <div className="matchup-2col" style={{ alignItems: "start" }}>
+          {/* Left: Playing Tonight + Swing Players */}
+          <div style={{ display: "grid", gap: 12 }}>
+            <Card>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <span className="section-accent" />
+                  <h2 style={sectionHead}>Playing tonight</h2>
+                </div>
+                {remainingPlayers.length > 0 && (
+                  <span style={{ fontSize: 12, color: "var(--faint)" }}>
+                    {remainingPlayers.reduce((s, p) => s + p.projectedPoints, 0).toFixed(1)} pts projected
+                  </span>
+                )}
+              </div>
+              {remainingPlayers.length === 0 ? (
+                <p style={{ color: "var(--faint)", fontSize: 13, margin: 0 }}>
+                  No starters playing tonight — check the schedule for upcoming games.
+                </p>
+              ) : (() => {
+                const byGame = new Map<string, typeof remainingPlayers>();
+                for (const p of remainingPlayers) {
+                  const key = `${p.homeTeamAbbr}@${p.awayTeamAbbr}`;
+                  if (!byGame.has(key)) byGame.set(key, []);
+                  byGame.get(key)!.push(p);
+                }
+                return (
+                  <div style={{ display: "grid", gap: 12 }}>
+                    {[...byGame.entries()].map(([gameKey, players]) => {
+                      const rep = players[0];
+                      const slotLabel = (slot: string) =>
+                        slot === "FORWARD" ? "F" : slot === "DEFENSE" ? "D" : slot === "GOALIE" ? "G" : slot === "UTIL" ? "UTIL" : "BN";
+                      return (
+                        <div key={gameKey}>
+                          <div style={{
+                            display: "flex", alignItems: "center", justifyContent: "space-between",
+                            marginBottom: 6, padding: "4px 0",
+                            borderBottom: "1px solid var(--border)",
+                          }}>
+                            <span style={{ fontSize: 12, fontWeight: 700, color: "var(--muted)", letterSpacing: "0.04em" }}>
+                              {rep.homeTeamAbbr} @ {rep.awayTeamAbbr}
+                            </span>
+                            <span className="font-stats" style={{ fontSize: 11, color: "var(--muted)", background: "rgba(150,160,200,0.08)", padding: "2px 7px", borderRadius: 7 }}>
+                              {formatTime(rep.gameStartsAt)}
+                            </span>
+                          </div>
+                          <div style={{ display: "grid", gap: 4 }}>
+                            {players.map((p) => (
+                              <div key={p.playerId} style={{
+                                display: "flex", alignItems: "center", justifyContent: "space-between",
+                                padding: "12px 14px", borderRadius: 8,
+                                background: "rgba(150,160,200,0.04)",
+                                borderLeft: "3px solid var(--accent-deep)",
+                              }}>
+                                <div>
+                                  <span style={{ fontWeight: 600, fontSize: 14, color: "var(--text)" }}>{p.name}</span>
+                                  <span style={{ marginLeft: 8, fontSize: 11, color: "var(--dim)" }}>
+                                    {p.position[0]} · {slotLabel(p.slot)}
+                                  </span>
+                                </div>
+                                <span className="font-stats" style={{ fontSize: 12, color: "#c9b6ff", fontWeight: 600 }}>
+                                  {p.projectedPoints.toFixed(1)} proj
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })()}
+            </Card>
 
-      {/* ── 2. Rival badge and H2H history ── */}
+            {swingPlayers.length > 0 && (
+              <Card>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+                  <span className="section-accent" />
+                  <h2 style={sectionHead}>Swing players</h2>
+                  <span style={{ fontSize: 11, color: "var(--faint)", marginLeft: 4 }}>players who could flip the result</span>
+                </div>
+                <div style={{ display: "grid", gap: 6 }}>
+                  {swingPlayers.map((p) => (
+                    <div key={p.playerId} style={{
+                      display: "flex", alignItems: "center", justifyContent: "space-between",
+                      gap: 8, padding: "13px 15px", borderRadius: 10,
+                      background: "rgba(150,160,200,0.04)", border: "1px solid var(--border)",
+                    }}>
+                      <div style={{ minWidth: 0, flex: 1 }}>
+                        <span style={{ fontWeight: 600, fontSize: 14, color: "var(--text)", display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.name}</span>
+                        <span style={{ fontSize: 11, color: p.team === "mine" ? "#c9b6ff" : "var(--dim)" }}>
+                          {p.team === "mine" ? "Your player" : "Opponent"}
+                        </span>
+                      </div>
+                      <span className="font-stats" style={{ fontSize: 19, fontWeight: 700, flexShrink: 0, color: p.team === "mine" ? "#5fa98c" : "#c2776c" }}>
+                        {p.projectedImpact > 0 ? "+" : ""}{p.projectedImpact.toFixed(1)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </Card>
+            )}
+          </div>
+
+          {/* Right: Roster Status widget */}
+          <RosterStatusWidget matchup={activeMatchup} activeSlotCount={activeSlotCount} teamId={teamId} />
+        </div>
+      )}
+
+      {/* ── Z3b. Roster Status widget (upcoming state, full width) ── */}
+      {activeMatchup?.status === "upcoming" && (
+        <RosterStatusWidget matchup={activeMatchup} activeSlotCount={activeSlotCount} teamId={teamId} />
+      )}
+
+      {/* ── Z4. Rival badge and H2H history ── */}
       {rival && (
         <Card>
           <RivalBadge rival={rival} compact={false} />
@@ -319,113 +433,72 @@ export default async function TeamMatchupPage({
         </Card>
       )}
 
-      {/* ── 3. Playing tonight — always shown during active periods ── */}
-      {activeMatchup?.status === "active" && (
-        <Card>
-          <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 14 }}>
-            <h2 style={sectionHead}>Playing tonight</h2>
-            {remainingPlayers.length > 0 && (
-              <span style={{ fontSize: 12, color: "#475569" }}>
-                {remainingPlayers.reduce((s, p) => s + p.projectedPoints, 0).toFixed(1)} pts projected
-              </span>
-            )}
-          </div>
-          {remainingPlayers.length === 0 ? (
-            <p style={{ color: "#475569", fontSize: 13, margin: 0 }}>
-              No starters playing tonight — check the schedule for upcoming games.
-            </p>
-          ) : (() => {
-            // Group players by game (homeAbbr@awayAbbr key)
-            const byGame = new Map<string, typeof remainingPlayers>();
-            for (const p of remainingPlayers) {
-              const key = `${p.homeTeamAbbr}@${p.awayTeamAbbr}`;
-              if (!byGame.has(key)) byGame.set(key, []);
-              byGame.get(key)!.push(p);
-            }
-            return (
-              <div style={{ display: "grid", gap: 12 }}>
-                {[...byGame.entries()].map(([gameKey, players]) => {
-                  const rep = players[0];
-                  const slotLabel = (slot: string) =>
-                    slot === "FORWARD" ? "F" : slot === "DEFENSE" ? "D" : slot === "GOALIE" ? "G" : slot === "UTIL" ? "UTIL" : "BN";
-                  return (
-                    <div key={gameKey}>
-                      {/* Game header */}
-                      <div style={{
-                        display: "flex", alignItems: "center", justifyContent: "space-between",
-                        marginBottom: 6, padding: "4px 0",
-                        borderBottom: "1px solid rgba(148,163,184,0.1)",
-                      }}>
-                        <span style={{ fontSize: 12, fontWeight: 700, color: "#94a3b8", letterSpacing: "0.04em" }}>
-                          {rep.homeTeamAbbr} @ {rep.awayTeamAbbr}
-                        </span>
-                        <span style={{ fontSize: 11, color: "#475569" }}>
-                          {formatTime(rep.gameStartsAt)}
-                        </span>
-                      </div>
-                      {/* Players in this game */}
-                      <div style={{ display: "grid", gap: 4 }}>
-                        {players.map((p) => (
-                          <div key={p.playerId} style={{
-                            display: "flex", alignItems: "center", justifyContent: "space-between",
-                            padding: "7px 10px", borderRadius: 7,
-                            background: "rgba(99,102,241,0.05)",
-                            border: "1px solid rgba(99,102,241,0.1)",
-                          }}>
-                            <div>
-                              <span style={{ fontWeight: 600, fontSize: 14 }}>{p.name}</span>
-                              <span style={{ marginLeft: 8, fontSize: 11, color: "#64748b" }}>
-                                {p.position[0]} · {slotLabel(p.slot)}
-                              </span>
-                            </div>
-                            <span style={{ fontSize: 12, color: "#818cf8", fontWeight: 600 }}>
-                              {p.projectedPoints.toFixed(1)} proj
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            );
-          })()}
-        </Card>
-      )}
+      {/* ── Z5. Last week recap (moved below live situation) ── */}
+      {lastResult && <RecapCard recap={lastResult} />}
 
-      {/* ── 4. Swing players (active only, when present) ── */}
-      {swingPlayers.length > 0 && (
-        <Card>
-          <h2 style={{ ...sectionHead, marginBottom: 12 }}>Swing players</h2>
-          <div style={{ display: "grid", gap: 6 }}>
-            {swingPlayers.map((p) => (
-              <div key={p.playerId} style={{
-                display: "flex", alignItems: "center", justifyContent: "space-between",
-                gap: 8, padding: "8px 10px", borderRadius: 8,
-                background: "rgba(255,255,255,0.02)",
-              }}>
-                <div style={{ minWidth: 0, flex: 1 }}>
-                  <span style={{ fontWeight: 600, fontSize: 14, display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.name}</span>
-                  <span style={{
-                    fontSize: 11,
-                    color: p.team === "mine" ? "#818cf8" : "#f59e0b",
-                  }}>
-                    {p.team === "mine" ? "Your player" : "Opponent"}
+      {/* ── Z6. Rosters ── */}
+      {activeMatchup && (
+        <div className="matchup-2col">
+          <Card>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <span className="section-accent" style={{ background: "linear-gradient(180deg, #a78bfa, var(--accent-deep))" }} />
+                <h2 style={sectionHead}>{activeMatchup.myTeam.name}</h2>
+                {activeMatchup.status === "active" && (
+                  <span className="font-stats" style={{ fontSize: 17, color: "#c9b6ff", fontWeight: 700 }}>
+                    {activeMatchup.myTeam.score.toFixed(1)}
                   </span>
-                </div>
-                <span style={{ fontSize: 12, color: "#94a3b8", flexShrink: 0 }}>
-                  {p.projectedImpact.toFixed(1)} pts · {p.gamesRemaining}G left
-                </span>
+                )}
               </div>
-            ))}
-          </div>
+              <Link href={`/team/${teamId}/lineup`} style={editLink}>
+                {activeMatchup.status === "upcoming" ? "Full lineup →" : "Edit lineup →"}
+              </Link>
+            </div>
+            {activeMatchup.status === "upcoming" ? (
+              <InlineLineupEditor
+                leagueId={leagueId}
+                teamId={teamId}
+                active={activeMatchup.myPlayers.map((p) => ({ ...p, slot: p.slot }))}
+                bench={benchPlayers}
+              />
+            ) : (
+              <RosterTable players={activeMatchup.myPlayers} isMyTeam />
+            )}
+          </Card>
+
+          {activeMatchup.opponentTeam && (
+            <Card>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
+                <span className="section-accent" style={{ background: "linear-gradient(180deg, #5b6480, #3a4258)" }} />
+                <h2 style={sectionHead}>{activeMatchup.opponentTeam.name}</h2>
+                {activeMatchup.status === "active" && (
+                  <span className="font-stats" style={{ fontSize: 17, color: "var(--muted)", fontWeight: 700 }}>
+                    {activeMatchup.opponentTeam.score.toFixed(1)}
+                  </span>
+                )}
+              </div>
+              <RosterTable players={activeMatchup.opponentPlayers} />
+            </Card>
+          )}
+        </div>
+      )}
+
+      {/* ── Z6b. Last week's stats (SETUP phase fallback) ── */}
+      {lastWeekLabel && myPlayersLastWeek && myPlayersLastWeek.length > 0 && (
+        <Card>
+          <h2 style={{ ...sectionHead, marginBottom: 14 }}>
+            {lastWeekLabel} · final
+            <span style={{ fontWeight: 400, fontSize: 12, color: "#64748b", marginLeft: 8 }}>
+              This week&apos;s stats will appear after simulating
+            </span>
+          </h2>
+          <RosterTable players={myPlayersLastWeek} />
         </Card>
       )}
 
-      {/* ── 5. Weekly storyline + top performers ── */}
+      {/* ── Z7. Top performers + Underperforming ── */}
       {(topPerformers.length > 0 || disappointments.length > 0) && (
         <>
-          {/* Storyline chip */}
           {topPerformers[0] && topPerformers[0].points > 0 && (
             <div style={{
               padding: "10px 16px", borderRadius: 10,
@@ -443,7 +516,6 @@ export default async function TeamMatchupPage({
               </span>
             </div>
           )}
-
           <div className="matchup-2col">
             {topPerformers.length > 0 && (
               <Card>
@@ -507,7 +579,7 @@ export default async function TeamMatchupPage({
         </>
       )}
 
-      {/* ── 5b. League leaders this week ── */}
+      {/* ── Z8. League leaders this week ── */}
       {activeMatchup?.status === "active" && leagueTopPerformers.length > 0 && (
         <Card>
           <h2 style={{ ...sectionHead, marginBottom: 14 }}>
@@ -534,73 +606,33 @@ export default async function TeamMatchupPage({
         </Card>
       )}
 
-      {/* ── 6. Rosters ── */}
-      {activeMatchup && (
-        <div className="matchup-2col">
-          {/* My team — inline editor when upcoming, read-only table when active */}
-          <Card>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-              <h2 style={sectionHead}>{activeMatchup.myTeam.name}</h2>
-              <Link href={`/team/${teamId}/lineup`} style={editLink}>
-                {activeMatchup.status === "upcoming" ? "Full lineup →" : "Edit lineup →"}
-              </Link>
-            </div>
-            {activeMatchup.status === "upcoming" ? (
-              <InlineLineupEditor
-                leagueId={leagueId}
-                teamId={teamId}
-                active={activeMatchup.myPlayers.map((p) => ({ ...p, slot: p.slot }))}
-                bench={benchPlayers}
-              />
-            ) : (
-              <RosterTable players={activeMatchup.myPlayers} />
-            )}
-          </Card>
-
-          {/* Opponent roster — 1v1 (playoff) only. VTF surfaces the field in the hero. */}
-          {activeMatchup.opponentTeam && (
-            <Card>
-              <h2 style={{ ...sectionHead, marginBottom: 14 }}>{activeMatchup.opponentTeam.name}</h2>
-              <RosterTable players={activeMatchup.opponentPlayers} />
-            </Card>
-          )}
-        </div>
-      )}
-
-      {/* ── 6b. Last week's stats (shown during SETUP phase when current week has no data yet) ── */}
-      {lastWeekLabel && myPlayersLastWeek && myPlayersLastWeek.length > 0 && (
-        <Card>
-          <h2 style={{ ...sectionHead, marginBottom: 14 }}>
-            {lastWeekLabel} · final
-            <span style={{ fontWeight: 400, fontSize: 12, color: "#64748b", marginLeft: 8 }}>
-              This week&apos;s stats will appear after simulating
-            </span>
-          </h2>
-          <RosterTable players={myPlayersLastWeek} />
-        </Card>
-      )}
-
-      {/* ── 7. League activity ── */}
+      {/* ── Z9. League activity ── */}
       {leagueActivity.length > 0 && (
         <Card>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-            <h2 style={{ ...sectionHead, margin: 0 }}>League activity</h2>
-            <Link href={`/league/${leagueId}`} style={{ fontSize: 12, color: "#64748b", textDecoration: "none" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span className="section-accent" />
+              <h2 style={sectionHead}>League activity</h2>
+            </div>
+            <Link href={`/league/${leagueId}`} style={{ fontSize: 12, color: "var(--faint)", textDecoration: "none" }}>
               See all →
             </Link>
           </div>
-          <div style={{ display: "grid", gap: 10 }}>
+          <div>
             {leagueActivity.map((event) => (
-              <div key={event.id} style={{ display: "flex", justifyContent: "space-between", gap: 12, fontSize: 13 }}>
-                <span style={{ color: "#cbd5e1", lineHeight: 1.5 }}>{event.description}</span>
-                <span style={{ color: "#475569", flexShrink: 0, fontSize: 11 }}>{formatRelative(event.createdAt, nowMs)}</span>
+              <div key={event.id} style={{ display: "flex", justifyContent: "space-between", gap: 12, borderBottom: "1px solid rgba(150,160,200,0.07)", padding: "12px 0" }}>
+                <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+                  <div style={{ width: 30, height: 30, borderRadius: 8, flexShrink: 0, background: "var(--accent-dim)", border: "1px solid rgba(124,58,237,0.22)", display: "flex", alignItems: "center", justifyContent: "center", color: "#a78bfa", fontSize: 13 }}>
+                    ⚡
+                  </div>
+                  <span style={{ fontSize: 13, color: "var(--text)", lineHeight: 1.45 }}>{event.description}</span>
+                </div>
+                <span style={{ color: "var(--faint)", flexShrink: 0, fontSize: 11 }}>{formatRelative(event.createdAt, nowMs)}</span>
               </div>
             ))}
           </div>
         </Card>
       )}
-
-      </MatchupTabs>
     </div>
   );
 }
@@ -625,12 +657,79 @@ function formatRelative(d: Date, nowMs: number) {
 function Card({ children }: { children: React.ReactNode }) {
   return (
     <div style={{
-      background: "rgba(255,255,255,0.04)",
-      border: "1px solid rgba(148,163,184,0.14)",
-      borderRadius: 20, padding: 20,
+      background: "var(--card)",
+      border: "1px solid var(--border)",
+      borderRadius: 16, padding: "18px 20px",
     }}>
       {children}
     </div>
+  );
+}
+
+function RosterStatusWidget({
+  matchup,
+  activeSlotCount,
+  teamId,
+}: {
+  matchup: ActiveMatchup;
+  activeSlotCount: number;
+  teamId: string;
+}) {
+  const starters = matchup.myPlayers.filter((p) => p.slot !== "BENCH" && p.slot !== "IR");
+  const lockedCount = starters.filter((p) => p.gameCount > 0).length;
+  const filledCount = starters.length;
+  const hasIssues = filledCount < activeSlotCount;
+  const isUpcoming = matchup.status === "upcoming";
+
+  const lockLabel = lockedCount > 0
+    ? `🔒 ${lockedCount} of ${filledCount} starters locked`
+    : isUpcoming
+      ? "Lineup not yet locked"
+      : "No starters locked yet";
+
+  const lockColor = lockedCount > 0 ? "#94a3b8" : "#475569";
+
+  const statusLabel = hasIssues
+    ? `⚠ ${filledCount}/${activeSlotCount} starters set`
+    : `✓ ${filledCount}/${activeSlotCount} starters`;
+  const statusColor = hasIssues ? "#fbbf24" : "#34d399";
+
+  return (
+    <Card>
+      <h2 style={{ ...sectionHead, marginBottom: 14 }}>Roster status</h2>
+      <div style={{ display: "grid", gap: 10 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 13 }}>
+          <span style={{ color: "#94a3b8" }}>Lineup</span>
+          <span style={{ fontWeight: 700, color: statusColor }}>{statusLabel}</span>
+        </div>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 13 }}>
+          <span style={{ color: "#94a3b8" }}>Lock state</span>
+          <span style={{ fontWeight: 600, color: lockColor, fontSize: 12 }}>{lockLabel}</span>
+        </div>
+        {matchup.myProjected > 0 && (
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 13 }}>
+            <span style={{ color: "#94a3b8" }}>Projected</span>
+            <span style={{ fontWeight: 700, color: "#818cf8" }}>{matchup.myProjected.toFixed(1)} FP</span>
+          </div>
+        )}
+        {matchup.opponentTeam && matchup.opponentProjected > 0 && (
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 13 }}>
+            <span style={{ color: "#94a3b8" }}>Opp. projected</span>
+            <span style={{ fontWeight: 700, color: "#64748b" }}>{matchup.opponentProjected.toFixed(1)} FP</span>
+          </div>
+        )}
+      </div>
+      <div style={{ marginTop: 16 }}>
+        <Link href={`/team/${teamId}/lineup`} style={{
+          display: "block", textAlign: "center",
+          fontSize: 13, fontWeight: 700, padding: "9px 0", borderRadius: 10,
+          background: "rgba(99,102,241,0.12)", color: "#a5b4fc",
+          border: "1px solid rgba(99,102,241,0.25)", textDecoration: "none",
+        }}>
+          Adjust lineup →
+        </Link>
+      </div>
+    </Card>
   );
 }
 
@@ -744,7 +843,8 @@ function LeaguePerformerItem({ player, rank, variant }: { player: LeaguePerforme
 }
 
 const sectionHead: React.CSSProperties = {
-  fontSize: 15, fontWeight: 700, margin: 0, color: "#e2e8f0",
+  fontSize: 12, fontWeight: 700, margin: 0, color: "var(--dim)",
+  letterSpacing: "0.14em", textTransform: "uppercase",
 };
 
 const editLink: React.CSSProperties = {
@@ -776,6 +876,7 @@ function heroPeriodLabel(matchup: ActiveMatchup) {
 // ── VTF (regular season): rank my team against the field ────────────────────────
 function FieldHero({ matchup, teamId }: { matchup: ActiveMatchup; teamId: string }) {
   const isUpcoming = matchup.status === "upcoming";
+  const hideScore = isUpcoming || !!matchup.isSetupPhase;
   const periodLabel = heroPeriodLabel(matchup);
   const standings = matchup.weeklyStandings;
   const myRank = standings.findIndex((s) => s.teamId === matchup.myTeam.id) + 1;
@@ -783,47 +884,42 @@ function FieldHero({ matchup, teamId }: { matchup: ActiveMatchup; teamId: string
   const { wins, losses, ties } = matchup.myRecord;
   const winningRecord = wins > losses;
 
-  const accentColor = isUpcoming ? "#f59e0b" : winningRecord ? "#6366f1" : losses > wins ? "#ef4444" : "#94a3b8";
-  const accentBg = isUpcoming ? "rgba(245,158,11,0.08)" : winningRecord ? "rgba(99,102,241,0.1)" : losses > wins ? "rgba(239,68,68,0.08)" : "rgba(148,163,184,0.05)";
-
   return (
-    <div style={{ background: accentBg, border: `1px solid ${accentColor}40`, borderRadius: 24, padding: "24px 24px 20px" }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-          <span style={{ fontSize: 12, color: "#64748b" }}>{matchup.isPlayoff && matchup.roundLabel ? matchup.roundLabel : `Week ${matchup.week}`} · {periodLabel}</span>
-          {isUpcoming && (
-            <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 20, background: "rgba(245,158,11,0.15)", color: "#f59e0b" }}>Upcoming</span>
-          )}
-        </div>
-        {!isUpcoming && <LiveScoreRefresh />}
+    <div style={{ background: "linear-gradient(135deg, #1b1346 0%, var(--card) 70%)", border: "1px solid var(--accent-border)", borderRadius: 20, padding: "30px 32px" }}>
+      <div style={{ fontSize: 11, letterSpacing: "0.18em", textTransform: "uppercase", color: "var(--dim)", fontWeight: 600, textAlign: "center", marginBottom: 26 }}>
+        {matchup.isPlayoff && matchup.roundLabel ? matchup.roundLabel : `Week ${matchup.week}`}
+        {" · "}{periodLabel}
+        {isUpcoming && <span style={{ marginLeft: 10, color: "#e3c989", background: "rgba(214,169,78,0.15)", padding: "1px 8px", borderRadius: 20, fontSize: 10 }}>Upcoming</span>}
+        {!isUpcoming && matchup.isSetupPhase && <span style={{ marginLeft: 10, color: "#e3c989", background: "rgba(214,169,78,0.15)", padding: "1px 8px", borderRadius: 20, fontSize: 10 }}>No games yet</span>}
+        {!hideScore && <span style={{ marginLeft: 12 }}><LiveScoreRefresh /></span>}
       </div>
 
       {/* My score + field record */}
-      <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 12, marginBottom: isUpcoming ? 4 : 18 }}>
+      <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 12, marginBottom: hideScore ? 4 : 18 }}>
         <div>
-          <div style={{ fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>
-            {matchup.myTeam.name}
+          <div style={{ fontSize: 11, letterSpacing: "0.06em", color: "#a78bfa", fontWeight: 700, textTransform: "uppercase", marginBottom: 4 }}>
+            You
           </div>
-          <div style={{ fontSize: isUpcoming ? "clamp(24px, 6vw, 32px)" : "clamp(28px, 8vw, 52px)", fontWeight: 900, lineHeight: 1, color: isUpcoming ? "#475569" : "#e2e8f0", fontVariantNumeric: "tabular-nums" }}>
-            {isUpcoming ? "—" : matchup.myTeam.score.toFixed(1)}
+          <div className="font-stats" style={{ fontSize: hideScore ? "clamp(24px, 6vw, 32px)" : "clamp(48px, 6vw, 64px)", fontWeight: 700, lineHeight: 0.8, color: hideScore ? "var(--dim)" : "var(--text)" }}>
+            {hideScore ? "—" : matchup.myTeam.score.toFixed(1)}
           </div>
-          <div style={{ fontSize: 12, color: "#475569", marginTop: 4 }}>proj {matchup.myProjected.toFixed(1)}</div>
+          <div style={{ fontSize: 12, color: "var(--faint)", marginTop: 6 }}>proj {matchup.myProjected.toFixed(1)}</div>
         </div>
-        {!isUpcoming && (
+        {!hideScore && (
           <div style={{ textAlign: "right" }}>
-            <div style={{ fontSize: 11, color: "#64748b", marginBottom: 2 }}>vs field</div>
-            <div style={{ fontSize: 22, fontWeight: 800, color: accentColor }}>
+            <div style={{ fontSize: 11, color: "var(--faint)", marginBottom: 2 }}>vs field</div>
+            <div className="font-stats" style={{ fontSize: 22, fontWeight: 800, color: winningRecord ? "#a78bfa" : losses > wins ? "#c2776c" : "var(--muted)" }}>
               {wins}–{losses}{ties > 0 ? `–${ties}` : ""}
             </div>
             {myRank > 0 && (
-              <div style={{ fontSize: 11, color: "#64748b", marginTop: 2 }}>#{myRank} of {total} this week</div>
+              <div style={{ fontSize: 11, color: "var(--faint)", marginTop: 2 }}>#{myRank} of {total} this week</div>
             )}
           </div>
         )}
       </div>
 
       {/* Field standings (active only) */}
-      {!isUpcoming && (
+      {!hideScore && (
         <div style={{ display: "grid", gap: 2 }}>
           {standings.map((s, i) => {
             const isMe = s.teamId === matchup.myTeam.id;
@@ -831,13 +927,13 @@ function FieldHero({ matchup, teamId }: { matchup: ActiveMatchup; teamId: string
               <div key={s.teamId} style={{
                 display: "grid", gridTemplateColumns: "20px 1fr auto", gap: 8, alignItems: "center",
                 padding: "5px 8px", borderRadius: 6,
-                background: isMe ? "rgba(99,102,241,0.1)" : "transparent",
+                background: isMe ? "var(--accent-dim)" : "transparent",
               }}>
-                <span style={{ fontSize: 11, color: "#475569", fontWeight: 700 }}>{i + 1}</span>
-                <span style={{ fontSize: 13, fontWeight: isMe ? 700 : 400, color: isMe ? "#a5b4fc" : "#cbd5e1", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                  {s.name}{isMe && <span style={{ marginLeft: 6, fontSize: 10, color: "#6366f1" }}>YOU</span>}
+                <span style={{ fontSize: 11, color: "var(--faint)", fontWeight: 700 }}>{i + 1}</span>
+                <span style={{ fontSize: 13, fontWeight: isMe ? 700 : 400, color: isMe ? "#c9b6ff" : "var(--muted)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  {s.name}{isMe && <span style={{ marginLeft: 6, fontSize: 10, color: "#a78bfa" }}>YOU</span>}
                 </span>
-                <span style={{ fontSize: 13, fontWeight: 700, color: isMe ? "#e2e8f0" : "#64748b", fontVariantNumeric: "tabular-nums" }}>
+                <span className="font-stats" style={{ fontSize: 13, fontWeight: 700, color: isMe ? "var(--text)" : "var(--dim)" }}>
                   {s.score.toFixed(1)}
                 </span>
               </div>
@@ -846,11 +942,11 @@ function FieldHero({ matchup, teamId }: { matchup: ActiveMatchup; teamId: string
         </div>
       )}
 
-      {isUpcoming && (
+      {hideScore && (
         <div style={{ marginTop: 4 }}>
           <Link href={`/team/${teamId}/lineup`} style={{
             display: "inline-block", fontSize: 13, fontWeight: 700, padding: "8px 18px", borderRadius: 10,
-            background: "rgba(245,158,11,0.15)", color: "#fbbf24", border: "1px solid rgba(245,158,11,0.3)", textDecoration: "none",
+            background: "rgba(214,169,78,0.15)", color: "#e3c989", border: "1px solid rgba(214,169,78,0.30)", textDecoration: "none",
           }}>
             Set lineup →
           </Link>
@@ -870,100 +966,90 @@ function DuelHero({
   leagueId: string;
 }) {
   const isUpcoming = matchup.status === "upcoming";
+  const hideScore = isUpcoming || !!matchup.isSetupPhase;
   const myLead = matchup.myTeam.score - opponent.score;
   const winPct = Math.round(matchup.winProbability * 100);
   const oppPct = 100 - winPct;
   const periodLabel = heroPeriodLabel(matchup);
 
-  const iWinning = !isUpcoming && myLead > 0;
-  const tied = !isUpcoming && myLead === 0;
-  const accentColor = isUpcoming ? "#f59e0b" : iWinning ? "#6366f1" : tied ? "#94a3b8" : "#ef4444";
-  const accentBg = isUpcoming ? "rgba(245,158,11,0.08)" : iWinning ? "rgba(99,102,241,0.1)" : tied ? "rgba(148,163,184,0.05)" : "rgba(239,68,68,0.08)";
+  const iWinning = !hideScore && myLead > 0;
+  const tied = !hideScore && myLead === 0;
   const seriesGames = matchup.rivalry.wins + matchup.rivalry.losses + matchup.rivalry.ties;
 
   return (
-    <div style={{ background: accentBg, border: `1px solid ${accentColor}40`, borderRadius: 24, padding: "24px 24px 20px" }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 8, flexWrap: "wrap" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-          <span style={{ fontSize: 12, color: "#64748b" }}>{periodLabel}</span>
-          {matchup.isPlayoff && matchup.roundLabel && (
-            <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 20, background: "rgba(99,102,241,0.18)", color: "#a5b4fc" }}>{matchup.roundLabel}</span>
-          )}
-          {matchup.isPlayoff && (
-            <Link href={`/league/${leagueId}/bracket`} style={{
-              fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 20,
-              background: "rgba(99,102,241,0.1)", color: "#818cf8",
-              border: "1px solid rgba(99,102,241,0.2)", textDecoration: "none",
-            }}>
-              View bracket →
-            </Link>
-          )}
-          {isUpcoming && (
-            <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 20, background: "rgba(245,158,11,0.15)", color: "#f59e0b" }}>Upcoming</span>
-          )}
-        </div>
-        {!isUpcoming && <LiveScoreRefresh />}
+    <div style={{ background: "linear-gradient(135deg, #1b1346 0%, var(--card) 70%)", border: "1px solid var(--accent-border)", borderRadius: 20, padding: "30px 32px" }}>
+      <div style={{ fontSize: 11, letterSpacing: "0.18em", textTransform: "uppercase", color: "var(--dim)", fontWeight: 600, textAlign: "center", marginBottom: 26 }}>
+        {matchup.isPlayoff && matchup.roundLabel ? matchup.roundLabel : `Week ${matchup.week}`}
+        {" · "}{periodLabel}
+        {!hideScore && <span style={{ marginLeft: 12 }}><LiveScoreRefresh /></span>}
       </div>
 
-      {seriesGames > 0 ? (
-        <div style={{ fontSize: 11, color: "#64748b", marginBottom: 16 }}>
+      {seriesGames > 0 && (
+        <div style={{ fontSize: 11, color: "var(--faint)", marginBottom: 12, textAlign: "center" }}>
           Season series vs {opponent.name}:{" "}
-          <span style={{ fontWeight: 700, color: "#94a3b8" }}>
+          <span style={{ fontWeight: 700, color: "var(--muted)" }}>
             {matchup.rivalry.wins}–{matchup.rivalry.losses}{matchup.rivalry.ties > 0 ? `–${matchup.rivalry.ties}` : ""}
           </span>
         </div>
-      ) : (
-        <div style={{ marginBottom: 16 }} />
       )}
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", alignItems: "center", gap: 12, marginBottom: 20 }}>
         <div>
-          <div style={{ fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>{matchup.myTeam.name}</div>
-          <div style={{ fontSize: isUpcoming ? "clamp(24px, 6vw, 32px)" : "clamp(28px, 8vw, 52px)", fontWeight: 900, lineHeight: 1, color: isUpcoming ? "#475569" : "#e2e8f0", fontVariantNumeric: "tabular-nums" }}>
-            {isUpcoming ? "—" : matchup.myTeam.score.toFixed(1)}
+          <div style={{ fontSize: 11, letterSpacing: "0.06em", color: "#a78bfa", fontWeight: 700, textTransform: "uppercase", marginBottom: 4 }}>You</div>
+          <div className="font-stats" style={{ fontSize: "clamp(48px, 6vw, 64px)", fontWeight: 700, lineHeight: 0.8, color: hideScore ? "var(--dim)" : (iWinning ? "var(--text)" : "var(--muted)") }}>
+            {hideScore ? "—" : matchup.myTeam.score.toFixed(1)}
           </div>
-          <div style={{ fontSize: 12, color: "#475569", marginTop: 4 }}>proj {matchup.myProjected.toFixed(1)}</div>
+          <div style={{ fontSize: 12, color: "var(--faint)", marginTop: 6 }}>proj {matchup.myProjected.toFixed(1)}</div>
         </div>
-        <div style={{ textAlign: "center" }}>
-          {isUpcoming ? (
-            <span style={{ fontSize: 13, fontWeight: 700, color: "#475569" }}>vs</span>
-          ) : (
-            <div>
-              <div style={{ fontSize: 11, fontWeight: 700, color: accentColor, textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                {tied ? "Tied" : iWinning ? "Winning" : "Trailing"}
-              </div>
-              <div style={{ fontSize: 13, fontWeight: 800, color: accentColor, marginTop: 2 }}>{tied ? "—" : `${Math.abs(myLead).toFixed(1)}`}</div>
+        <div style={{ textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+          <div style={{ width: 1, height: 54, background: "rgba(150,160,200,0.18)" }} />
+          {!hideScore && (
+            <div style={{ fontSize: 11, fontWeight: 700, color: iWinning ? "#a78bfa" : tied ? "var(--dim)" : "var(--faint)", textTransform: "uppercase", letterSpacing: "0.05em", marginTop: 4 }}>
+              {tied ? "Tied" : iWinning ? `+${Math.abs(myLead).toFixed(1)}` : `-${Math.abs(myLead).toFixed(1)}`}
             </div>
           )}
         </div>
         <div style={{ textAlign: "right" }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>{opponent.name}</div>
-          <div style={{ fontSize: isUpcoming ? "clamp(24px, 6vw, 32px)" : "clamp(28px, 8vw, 52px)", fontWeight: 900, lineHeight: 1, color: isUpcoming ? "#475569" : "#94a3b8", fontVariantNumeric: "tabular-nums" }}>
-            {isUpcoming ? "—" : opponent.score.toFixed(1)}
+          <div style={{ fontSize: 11, letterSpacing: "0.06em", color: "var(--dim)", fontWeight: 700, textTransform: "uppercase", marginBottom: 4 }}>Opp</div>
+          <div className="font-stats" style={{ fontSize: "clamp(48px, 6vw, 64px)", fontWeight: 700, lineHeight: 0.8, color: hideScore ? "var(--dim)" : "var(--muted)" }}>
+            {hideScore ? "—" : opponent.score.toFixed(1)}
           </div>
-          <div style={{ fontSize: 12, color: "#475569", marginTop: 4 }}>proj {matchup.opponentProjected.toFixed(1)}</div>
+          <div style={{ fontSize: 12, color: "var(--faint)", marginTop: 6 }}>proj {matchup.opponentProjected.toFixed(1)}</div>
         </div>
       </div>
 
-      {!isUpcoming && (
-        <div>
-          <div style={{ height: 6, borderRadius: 999, background: "rgba(255,255,255,0.07)", overflow: "hidden", marginBottom: 6 }}>
-            <div style={{ height: "100%", width: `${winPct}%`, background: winPct >= 50 ? "#6366f1" : "#ef4444", borderRadius: 999, transition: "width 0.4s" }} />
+      {!hideScore && (
+        <div style={{ background: "rgba(10,14,26,0.45)", border: "1px solid var(--border)", borderRadius: 13, padding: "16px 18px", marginTop: 8 }}>
+          <div style={{ fontSize: 10, letterSpacing: "0.16em", textTransform: "uppercase", color: "var(--dim)", fontWeight: 600, marginBottom: 10 }}>Win probability</div>
+          <div style={{ height: 9, borderRadius: 999, background: "rgba(150,160,200,0.16)", overflow: "hidden", marginBottom: 8 }}>
+            <div style={{ height: "100%", width: `${winPct}%`, background: "linear-gradient(90deg, var(--accent-deep), #a78bfa)", borderRadius: 999, transition: "width 0.4s" }} />
           </div>
-          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11 }}>
-            <span style={{ color: winPct >= 50 ? "#818cf8" : "#64748b", fontWeight: winPct >= 50 ? 700 : 400 }}>{matchup.myTeam.name} {winPct}%</span>
-            <span style={{ color: oppPct > winPct ? "#818cf8" : "#64748b", fontWeight: oppPct > winPct ? 700 : 400 }}>{oppPct}% {opponent.name}</span>
+          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, fontWeight: 600 }}>
+            <span style={{ color: winPct >= 50 ? "#c9b6ff" : "var(--dim)" }}>{matchup.myTeam.name} {winPct}%</span>
+            <span style={{ color: oppPct > winPct ? "#c9b6ff" : "var(--dim)" }}>{oppPct}% {opponent.name}</span>
           </div>
         </div>
       )}
 
-      {isUpcoming && (
+      {hideScore && (
         <div style={{ marginTop: 4 }}>
           <Link href={`/team/${teamId}/lineup`} style={{
             display: "inline-block", fontSize: 13, fontWeight: 700, padding: "8px 18px", borderRadius: 10,
-            background: "rgba(245,158,11,0.15)", color: "#fbbf24", border: "1px solid rgba(245,158,11,0.3)", textDecoration: "none",
+            background: "rgba(214,169,78,0.15)", color: "#e3c989", border: "1px solid rgba(214,169,78,0.30)", textDecoration: "none",
           }}>
             Set lineup →
+          </Link>
+        </div>
+      )}
+
+      {matchup.isPlayoff && (
+        <div style={{ marginTop: 14, textAlign: "center" }}>
+          <Link href={`/league/${leagueId}/bracket`} style={{
+            fontSize: 11, fontWeight: 600, padding: "4px 12px", borderRadius: 20,
+            background: "var(--accent-dim)", color: "#c9b6ff",
+            border: "1px solid var(--accent-border)", textDecoration: "none",
+          }}>
+            View bracket →
           </Link>
         </div>
       )}
@@ -984,95 +1070,96 @@ const SLOT_COLORS: Record<string, string> = {
   UTIL: "#a78bfa", BENCH: "#64748b", IR: "#ef4444",
 };
 
-function RosterTable({ players }: { players: PlayerMatchupRow[] }) {
+function RosterTable({ players, isMyTeam }: { players: PlayerMatchupRow[]; isMyTeam?: boolean }) {
   if (players.length === 0) {
-    return <p style={{ color: "#64748b", fontSize: 13, margin: 0 }}>No active players yet.</p>;
+    return <p style={{ color: "var(--faint)", fontSize: 13, margin: 0 }}>No active players yet.</p>;
   }
   return (
-    <div style={{ display: "flex", flexDirection: "column" }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
       {/* Column headers */}
       <div style={{
-        display: "grid", gridTemplateColumns: "40px 1fr 36px 56px",
-        gap: 8, padding: "0 0 6px",
-        fontSize: 10, fontWeight: 700, letterSpacing: "0.07em",
-        textTransform: "uppercase", color: "#334155",
-        borderBottom: "1px solid rgba(148,163,184,0.08)",
+        display: "grid", gridTemplateColumns: "44px 1fr 36px 56px",
+        gap: 8, padding: "0 12px 6px",
+        fontSize: 10, fontWeight: 700, letterSpacing: "0.10em",
+        textTransform: "uppercase", color: "var(--faint)",
+        borderBottom: "1px solid var(--border)",
         marginBottom: 4,
       }}>
         <span>Slot</span><span>Player</span><span style={{ textAlign: "center" }}>Left</span><span style={{ textAlign: "right" }}>FPts</span>
       </div>
 
-      {players.map((p, i) => (
-        <div key={p.playerId} style={{
-          display: "grid", gridTemplateColumns: "40px 1fr 36px 56px",
-          gap: 8, padding: "9px 0", alignItems: "center",
-          borderTop: i === 0 ? "none" : "1px solid rgba(148,163,184,0.05)",
-        }}>
-          <span style={{
-            fontSize: 10, fontWeight: 700, textAlign: "center",
-            padding: "3px 0", borderRadius: 5, width: 32,
-            background: `${SLOT_COLORS[p.slot] ?? "#64748b"}20`,
-            color: SLOT_COLORS[p.slot] ?? "#64748b",
-          }}>
-            {SLOT_LABELS[p.slot] ?? p.slot}
-          </span>
-
-          <div style={{ minWidth: 0 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 5, flexWrap: "wrap" }}>
-              <span style={{ fontWeight: 600, fontSize: 13, color: "#e2e8f0", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                {p.name}
-              </span>
-              <span style={{ fontSize: 10, fontWeight: 700, color: POS_COLORS[p.position] ?? "#94a3b8", flexShrink: 0 }}>
-                {p.position[0]}
-              </span>
-              {p.teamAbbr && <span style={{ fontSize: 10, color: "#475569", flexShrink: 0 }}>{p.teamAbbr}</span>}
-            </div>
-            {p.statBreakdown.length > 0 && (
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 3, marginTop: 3 }}>
-                {p.statBreakdown.map((b) => (
-                  <span key={b.label} style={{
-                    fontSize: 10, padding: "1px 6px", borderRadius: 999,
-                    background: b.points >= 0 ? "rgba(52,211,153,0.1)" : "rgba(248,113,113,0.1)",
-                    color: b.points >= 0 ? "#34d399" : "#f87171",
-                  }}>
-                    {b.label}{b.stat > 1 ? ` ×${b.stat}` : ""}
-                  </span>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <div style={{ textAlign: "center" }}>
-            {p.gamesThisPeriod !== null ? (
-              <span style={{
-                fontSize: 10, fontWeight: 700,
-                padding: "2px 5px", borderRadius: 4,
-                background: p.gamesThisPeriod === 0 ? "rgba(239,68,68,0.12)" : "rgba(99,102,241,0.12)",
-                color: p.gamesThisPeriod === 0 ? "#f87171" : "#818cf8",
-              }}>
-                {p.gamesThisPeriod === 0 ? "0" : `${p.gamesThisPeriod}G`}
-              </span>
-            ) : (
-              <span style={{ color: "#334155", fontSize: 10 }}>—</span>
-            )}
-          </div>
-
-          <div style={{ textAlign: "right" }}>
-            <span style={{ fontSize: 15, fontWeight: 700, color: p.points > 0 ? "#e2e8f0" : "#475569", fontVariantNumeric: "tabular-nums" }}>
-              {p.gameCount === 0 && p.points === 0 ? "—" : p.points.toFixed(1)}
+      {players.map((p) => {
+        const isBench = p.slot === "BENCH" || p.slot === "IR";
+        const rowStyle: React.CSSProperties = isBench
+          ? { background: "rgba(150,160,200,0.02)", border: "1px solid rgba(150,160,200,0.06)", opacity: 0.62, borderRadius: 10, padding: "11px 12px" }
+          : isMyTeam
+            ? { background: "var(--accent-dim)", border: "1px solid var(--accent-border)", borderRadius: 10, padding: "11px 12px" }
+            : { background: "rgba(150,160,200,0.04)", border: "1px solid var(--border)", borderRadius: 10, padding: "11px 12px" };
+        return (
+          <div key={p.playerId} style={{ display: "grid", gridTemplateColumns: "44px 1fr 36px 56px", gap: 8, alignItems: "center", ...rowStyle }}>
+            <span style={{
+              fontSize: 9.5, fontWeight: 700, textAlign: "center",
+              padding: "3px 7px", borderRadius: 5,
+              background: "rgba(91,33,182,0.6)", color: "#fff",
+            }}>
+              {SLOT_LABELS[p.slot] ?? p.slot}
             </span>
+
+            <div style={{ minWidth: 0 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 5, flexWrap: "wrap" }}>
+                <span style={{ fontWeight: 600, fontSize: 13, color: "var(--text)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                  {p.name}
+                </span>
+                {p.teamAbbr && <span style={{ fontSize: 10, color: "var(--faint)", flexShrink: 0 }}>{p.teamAbbr}</span>}
+              </div>
+              {p.statBreakdown.length > 0 && (
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 3, marginTop: 3 }}>
+                  {p.statBreakdown.map((b) => (
+                    <span key={b.label} style={{
+                      fontSize: 10, padding: "1px 6px", borderRadius: 999,
+                      background: b.points >= 0 ? "rgba(52,211,153,0.1)" : "rgba(248,113,113,0.1)",
+                      color: b.points >= 0 ? "#34d399" : "#f87171",
+                    }}>
+                      {b.label}{b.stat > 1 ? ` ×${b.stat}` : ""}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div style={{ textAlign: "center" }}>
+              {p.gamesThisPeriod !== null ? (
+                <span className="font-stats" style={{
+                  fontSize: 10, fontWeight: 700,
+                  padding: "2px 5px", borderRadius: 4,
+                  background: p.gamesThisPeriod === 0 ? "rgba(239,68,68,0.12)" : "var(--accent-dim)",
+                  color: p.gamesThisPeriod === 0 ? "#f87171" : "#c9b6ff",
+                  border: p.gamesThisPeriod > 0 ? "1px solid var(--accent-border)" : undefined,
+                }}>
+                  {p.gamesThisPeriod === 0 ? "0" : `${p.gamesThisPeriod}G`}
+                </span>
+              ) : (
+                <span style={{ color: "var(--faint)", fontSize: 10 }}>—</span>
+              )}
+            </div>
+
+            <div style={{ textAlign: "right" }}>
+              <span className="font-stats" style={{ fontSize: 18, fontWeight: 700, color: p.points > 0 ? (isMyTeam ? "var(--muted)" : "var(--text)") : "var(--dim)" }}>
+                {p.gameCount === 0 && p.points === 0 ? "—" : p.points.toFixed(1)}
+              </span>
+            </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
 
       {/* Total row */}
       <div style={{
-        display: "grid", gridTemplateColumns: "40px 1fr 36px 56px",
-        gap: 8, padding: "10px 0 0",
-        borderTop: "1px solid rgba(148,163,184,0.12)", marginTop: 2,
+        display: "grid", gridTemplateColumns: "44px 1fr 36px 56px",
+        gap: 8, padding: "10px 12px 0",
+        borderTop: "1px solid var(--border)", marginTop: 2,
       }}>
-        <span /><span style={{ fontSize: 12, color: "#475569", fontWeight: 600 }}>Total</span><span />
-        <span style={{ textAlign: "right", fontSize: 15, fontWeight: 800, color: "#e2e8f0", fontVariantNumeric: "tabular-nums" }}>
+        <span /><span style={{ fontSize: 12, color: "var(--dim)", fontWeight: 600 }}>Total</span><span />
+        <span className="font-stats" style={{ textAlign: "right", fontSize: 15, fontWeight: 800, color: "var(--text)" }}>
           {players.reduce((s, p) => s + p.points, 0).toFixed(1)}
         </span>
       </div>

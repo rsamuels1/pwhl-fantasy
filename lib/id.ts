@@ -1,6 +1,6 @@
 /**
  * Generate a short, human-readable ID from a name.
- * Example: "PWHL Fantasy League" -> "pwhl-fantasy-abc1"
+ * Example: "PWHL GM League" -> "pwhl-gm-abc1"
  */
 export function generateShortId(name: string): string {
   // Slugify: lowercase, remove special chars, replace spaces with hyphens

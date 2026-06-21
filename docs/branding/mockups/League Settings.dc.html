@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=Saira+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#0b1020;}
+::selection{background:rgba(124,58,237,0.40);color:#fff;}
+a{text-decoration:none;color:inherit;}
+input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0;}
+*::-webkit-scrollbar{width:8px;height:8px;}
+*::-webkit-scrollbar-thumb{background:rgba(124,58,237,0.30);border-radius:8px;}
+*::-webkit-scrollbar-track{background:transparent;}
+</style>
+</helmet>
+<div style="min-height:100vh;font-family:Archivo,sans-serif;color:#f3f5fb;background:linear-gradient(168deg,#0b1020 0%,#0a0e1a 55%,#0c0f1d 100%);">
+
+  <header style="position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-content:space-between;gap:24px;padding:13px 28px;background:rgba(10,14,26,0.82);backdrop-filter:blur(14px);border-bottom:1px solid rgba(150,160,200,0.10);">
+    <div style="display:flex;align-items:center;gap:14px;">
+      <sc-if value="{{ isIcecut }}" hint-placeholder-val="{{ true }}">
+        <svg width="34" height="34" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs><linearGradient id="icg4" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7c3aed"/><stop offset="1" stop-color="#4c1d95"/></linearGradient></defs>
+          <path d="M24 3 L41 9.5 V25 C41 36 24 45 24 45 C24 45 7 36 7 25 V9.5 Z" fill="url(#icg4)" stroke="rgba(167,139,250,0.55)" stroke-width="1.2"/>
+          <path d="M14 14 L30 8.5" stroke="rgba(199,210,224,0.45)" stroke-width="1.3" stroke-linecap="round"/>
+          <path d="M11 22 L24 17" stroke="rgba(167,139,250,0.55)" stroke-width="1.3" stroke-linecap="round"/>
+          <path d="M24 30 L37 21" stroke="rgba(199,210,224,0.35)" stroke-width="1.3" stroke-linecap="round"/>
+        </svg>
+      </sc-if>
+      <sc-if value="{{ isMonogram }}" hint-placeholder-val="{{ false }}">
+        <svg width="34" height="34" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs><linearGradient id="mcg4" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6d28d9"/><stop offset="1" stop-color="#4c1d95"/></linearGradient></defs>
+          <path d="M24 3 L41 9.5 V25 C41 36 24 45 24 45 C24 45 7 36 7 25 V9.5 Z" fill="url(#mcg4)" stroke="rgba(167,139,250,0.5)" stroke-width="1.2"/>
+          <path d="M24 6 L38 11.3 V24.6 C38 33.6 24 41 24 41 C24 41 10 33.6 10 24.6 V11.3 Z" fill="none" stroke="rgba(167,139,250,0.30)" stroke-width="0.8"/>
+          <text x="24" y="29" font-family="Archivo, sans-serif" font-size="15" font-weight="800" fill="#ffffff" text-anchor="middle" letter-spacing="0.5">GM</text>
+        </svg>
+      </sc-if>
+      <div style="display:flex;flex-direction:column;line-height:1.12;">
+        <span style="font-weight:800;font-size:15px;letter-spacing:0.05em;color:#f3f5fb;">PWHL GM</span>
+        <span style="font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:#6f788e;">League</span>
+      </div>
+    </div>
+    <nav style="display:flex;gap:24px;align-items:center;">
+      <a href="League Dashboard.dc.html" style="font-size:13px;color:#8b93a7;cursor:pointer;">Overview</a>
+      <span style="font-size:13px;color:#8b93a7;cursor:pointer;">Standings</span>
+      <span style="font-size:13px;color:#8b93a7;cursor:pointer;">Schedule</span>
+      <span style="font-size:13px;color:#8b93a7;cursor:pointer;">Bracket</span>
+      <span style="font-size:13px;color:#8b93a7;cursor:pointer;">Rosters</span>
+      <span style="font-size:13px;font-weight:700;color:#f3f5fb;border-bottom:2px solid #a78bfa;padding-bottom:3px;display:flex;align-items:center;gap:5px;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg>
+        Settings
+      </span>
+    </nav>
+  </header>
+
+  <div style="max-width:1080px;margin:0 auto;padding:24px 28px 96px;">
+
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:18px;flex-wrap:wrap;margin-bottom:24px;">
+      <div>
+        <h1 style="font-size:26px;font-weight:800;letter-spacing:-0.02em;color:#f6f7fb;">League Settings</h1>
+        <div style="font-size:13px;color:#8b93a7;margin-top:5px;max-width:540px;line-height:1.5;">Configure draft format, scoring, roster structure, and playoffs for <strong style="color:#c7d2e0;">Frostbelt Keeper League</strong>.</div>
+      </div>
+      <span style="font-size:11px;font-weight:600;color:#7fc2a6;background:rgba(95,169,140,0.10);border:1px solid rgba(95,169,140,0.30);border-radius:8px;padding:8px 12px;display:flex;align-items:center;gap:6px;white-space:nowrap;">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#5fa98c" stroke-width="2.4"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg>
+        Commissioner access
+      </span>
+    </div>
+
+    <section style="background:#121829;border:1px solid rgba(150,160,200,0.10);border-radius:16px;padding:20px 22px;margin-bottom:18px;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+        <span style="width:3px;height:15px;border-radius:2px;background:linear-gradient(#a78bfa,#6d28d9);"></span>
+        <span style="font-size:12px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:#c7d2e0;">Basic Settings</span>
+      </div>
+      <div style="font-size:12px;color:#6f788e;margin-bottom:18px;margin-left:13px;">Format is locked once the season is in progress.</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:13px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;background:rgba(150,160,200,0.04);border:1px solid rgba(150,160,200,0.10);border-radius:11px;padding:14px 16px;">
+          <div><div style="font-size:11px;color:#8b93a7;letter-spacing:0.04em;margin-bottom:3px;">Season</div><div style="font-size:14.5px;font-weight:600;color:#eef1f8;">2025-26</div></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;background:rgba(150,160,200,0.04);border:1px solid rgba(150,160,200,0.10);border-radius:11px;padding:14px 16px;">
+          <div><div style="font-size:11px;color:#8b93a7;letter-spacing:0.04em;margin-bottom:3px;">Status</div><div style="font-size:14.5px;font-weight:600;color:#eef1f8;">In season</div></div>
+          <span style="width:9px;height:9px;border-radius:50%;background:#5fa98c;box-shadow:0 0 0 4px rgba(95,169,140,0.14);"></span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;background:rgba(150,160,200,0.04);border:1px solid rgba(150,160,200,0.10);border-radius:11px;padding:14px 16px;">
+          <div><div style="font-size:11px;color:#8b93a7;letter-spacing:0.04em;margin-bottom:3px;">Draft type</div><div style="font-size:14.5px;font-weight:600;color:#eef1f8;">Snake</div></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;background:rgba(150,160,200,0.04);border:1px solid rgba(150,160,200,0.10);border-radius:11px;padding:14px 16px;">
+          <div><div style="font-size:11px;color:#8b93a7;letter-spacing:0.04em;margin-bottom:3px;">Max franchises</div><div style="font-size:14.5px;font-weight:600;color:#eef1f8;">8</div></div>
+        </div>
+      </div>
+    </section>
+
+    <section style="background:#121829;border:1px solid rgba(150,160,200,0.10);border-radius:16px;padding:20px 22px;margin-bottom:18px;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+        <span style="width:3px;height:15px;border-radius:2px;background:linear-gradient(#a78bfa,#6d28d9);"></span>
+        <span style="font-size:12px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:#c7d2e0;">Scoring · Skaters</span>
+      </div>
+      <div style="font-size:12px;color:#6f788e;margin-bottom:18px;margin-left:13px;">Fantasy points awarded per stat, per game.</div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;">
+        <sc-for list="{{ skater }}" as="st" hint-placeholder-count="8">
+          <div style="background:rgba(150,160,200,0.04);border:1px solid rgba(150,160,200,0.10);border-radius:12px;padding:13px 14px;">
+            <div style="font-size:11px;color:#9aa3bd;letter-spacing:0.03em;margin-bottom:10px;min-height:26px;">{{ st.label }}</div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <button onClick="{{ st.dec }}" style="width:28px;height:28px;border-radius:8px;background:rgba(124,58,237,0.12);border:1px solid rgba(124,58,237,0.26);color:#c9b6ff;font-size:17px;font-weight:700;cursor:pointer;line-height:1;font-family:Archivo;flex:0 0 auto;">−</button>
+              <input value="{{ st.value }}" onInput="{{ st.set }}" type="text" inputmode="decimal" style="flex:1;min-width:0;width:100%;text-align:center;background:transparent;border:none;color:#f3f5fb;font-family:'Saira Condensed';font-weight:700;font-size:22px;outline:none;" />
+              <button onClick="{{ st.inc }}" style="width:28px;height:28px;border-radius:8px;background:rgba(124,58,237,0.12);border:1px solid rgba(124,58,237,0.26);color:#c9b6ff;font-size:17px;font-weight:700;cursor:pointer;line-height:1;font-family:Archivo;flex:0 0 auto;">+</button>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </section>
+
+    <section style="background:#121829;border:1px solid rgba(150,160,200,0.10);border-radius:16px;padding:20px 22px;margin-bottom:18px;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+        <span style="width:3px;height:15px;border-radius:2px;background:linear-gradient(#a78bfa,#6d28d9);"></span>
+        <span style="font-size:12px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:#c7d2e0;">Scoring · Goalies</span>
+      </div>
+      <div style="font-size:12px;color:#6f788e;margin-bottom:18px;margin-left:13px;">Goaltender scoring is tracked on a separate line.</div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;">
+        <sc-for list="{{ goalie }}" as="g" hint-placeholder-count="4">
+          <div style="background:rgba(150,160,200,0.04);border:1px solid rgba(150,160,200,0.10);border-radius:12px;padding:13px 14px;">
+            <div style="font-size:11px;color:#9aa3bd;letter-spacing:0.03em;margin-bottom:10px;min-height:26px;">{{ g.label }}</div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <button onClick="{{ g.dec }}" style="width:28px;height:28px;border-radius:8px;background:rgba(124,58,237,0.12);border:1px solid rgba(124,58,237,0.26);color:#c9b6ff;font-size:17px;font-weight:700;cursor:pointer;line-height:1;font-family:Archivo;flex:0 0 auto;">−</button>
+              <input value="{{ g.value }}" onInput="{{ g.set }}" type="text" inputmode="decimal" style="flex:1;min-width:0;width:100%;text-align:center;background:transparent;border:none;color:#f3f5fb;font-family:'Saira Condensed';font-weight:700;font-size:22px;outline:none;" />
+              <button onClick="{{ g.inc }}" style="width:28px;height:28px;border-radius:8px;background:rgba(124,58,237,0.12);border:1px solid rgba(124,58,237,0.26);color:#c9b6ff;font-size:17px;font-weight:700;cursor:pointer;line-height:1;font-family:Archivo;flex:0 0 auto;">+</button>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </section>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px;align-items:start;">
+      <section style="background:#121829;border:1px solid rgba(150,160,200,0.10);border-radius:16px;padding:20px 22px;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+          <span style="width:3px;height:15px;border-radius:2px;background:linear-gradient(#a78bfa,#6d28d9);"></span>
+          <span style="font-size:12px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:#c7d2e0;">Roster Structure</span>
+        </div>
+        <div style="font-size:12px;color:#6f788e;margin-bottom:18px;margin-left:13px;">Starting slots plus bench and injured reserve.</div>
+        <sc-for list="{{ roster }}" as="r" hint-placeholder-count="6">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid rgba(150,160,200,0.07);">
+            <div><div style="font-size:13.5px;font-weight:600;color:#eef1f8;">{{ r.label }}</div><div style="font-size:11px;color:#6f788e;margin-top:1px;">{{ r.note }}</div></div>
+            <div style="display:flex;align-items:center;gap:11px;">
+              <button onClick="{{ r.dec }}" style="width:30px;height:30px;border-radius:8px;background:rgba(124,58,237,0.12);border:1px solid rgba(124,58,237,0.26);color:#c9b6ff;font-size:18px;font-weight:700;cursor:pointer;line-height:1;font-family:Archivo;">−</button>
+              <span style="font-family:'Saira Condensed';font-weight:700;font-size:22px;color:#f3f5fb;min-width:24px;text-align:center;">{{ r.value }}</span>
+              <button onClick="{{ r.inc }}" style="width:30px;height:30px;border-radius:8px;background:rgba(124,58,237,0.12);border:1px solid rgba(124,58,237,0.26);color:#c9b6ff;font-size:18px;font-weight:700;cursor:pointer;line-height:1;font-family:Archivo;">+</button>
+            </div>
+          </div>
+        </sc-for>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:15px;background:rgba(124,58,237,0.08);border:1px solid rgba(124,58,237,0.20);border-radius:10px;padding:12px 15px;">
+          <span style="font-size:12px;font-weight:600;letter-spacing:0.04em;color:#c9b6ff;text-transform:uppercase;">Total roster size</span>
+          <span style="font-family:'Saira Condensed';font-weight:700;font-size:24px;color:#f3f5fb;">{{ rosterTotal }}</span>
+        </div>
+      </section>
+
+      <section style="background:#121829;border:1px solid rgba(150,160,200,0.10);border-radius:16px;padding:20px 22px;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+          <span style="width:3px;height:15px;border-radius:2px;background:linear-gradient(#a78bfa,#6d28d9);"></span>
+          <span style="font-size:12px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:#c7d2e0;">Playoffs</span>
+        </div>
+        <div style="font-size:12px;color:#6f788e;margin-bottom:18px;margin-left:13px;">How the postseason bracket is built.</div>
+
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 0;border-bottom:1px solid rgba(150,160,200,0.07);">
+          <div><div style="font-size:13.5px;font-weight:600;color:#eef1f8;">Teams in playoff</div><div style="font-size:11px;color:#6f788e;margin-top:1px;">Out of 8 franchises</div></div>
+          <div style="display:flex;align-items:center;gap:11px;">
+            <button onClick="{{ decPlayoffTeams }}" style="width:30px;height:30px;border-radius:8px;background:rgba(124,58,237,0.12);border:1px solid rgba(124,58,237,0.26);color:#c9b6ff;font-size:18px;font-weight:700;cursor:pointer;line-height:1;font-family:Archivo;">−</button>
+            <span style="font-family:'Saira Condensed';font-weight:700;font-size:22px;color:#f3f5fb;min-width:24px;text-align:center;">{{ playoffTeams }}</span>
+            <button onClick="{{ incPlayoffTeams }}" style="width:30px;height:30px;border-radius:8px;background:rgba(124,58,237,0.12);border:1px solid rgba(124,58,237,0.26);color:#c9b6ff;font-size:18px;font-weight:700;cursor:pointer;line-height:1;font-family:Archivo;">+</button>
+          </div>
+        </div>
+
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 0;border-bottom:1px solid rgba(150,160,200,0.07);">
+          <div><div style="font-size:13.5px;font-weight:600;color:#eef1f8;">Top seeds with bye</div><div style="font-size:11px;color:#6f788e;margin-top:1px;">Skip the first round</div></div>
+          <div style="display:flex;align-items:center;gap:11px;">
+            <button onClick="{{ decByes }}" style="width:30px;height:30px;border-radius:8px;background:rgba(124,58,237,0.12);border:1px solid rgba(124,58,237,0.26);color:#c9b6ff;font-size:18px;font-weight:700;cursor:pointer;line-height:1;font-family:Archivo;">−</button>
+            <span style="font-family:'Saira Condensed';font-weight:700;font-size:22px;color:#f3f5fb;min-width:24px;text-align:center;">{{ byes }}</span>
+            <button onClick="{{ incByes }}" style="width:30px;height:30px;border-radius:8px;background:rgba(124,58,237,0.12);border:1px solid rgba(124,58,237,0.26);color:#c9b6ff;font-size:18px;font-weight:700;cursor:pointer;line-height:1;font-family:Archivo;">+</button>
+          </div>
+        </div>
+
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 0;border-bottom:1px solid rgba(150,160,200,0.07);">
+          <div><div style="font-size:13.5px;font-weight:600;color:#eef1f8;">Round length</div><div style="font-size:11px;color:#6f788e;margin-top:1px;">Game periods scored per round</div></div>
+          <div style="display:flex;align-items:center;gap:11px;">
+            <button onClick="{{ decPeriods }}" style="width:30px;height:30px;border-radius:8px;background:rgba(124,58,237,0.12);border:1px solid rgba(124,58,237,0.26);color:#c9b6ff;font-size:18px;font-weight:700;cursor:pointer;line-height:1;font-family:Archivo;">−</button>
+            <span style="font-family:'Saira Condensed';font-weight:700;font-size:22px;color:#f3f5fb;min-width:24px;text-align:center;">{{ periods }}</span>
+            <button onClick="{{ incPeriods }}" style="width:30px;height:30px;border-radius:8px;background:rgba(124,58,237,0.12);border:1px solid rgba(124,58,237,0.26);color:#c9b6ff;font-size:18px;font-weight:700;cursor:pointer;line-height:1;font-family:Archivo;">+</button>
+          </div>
+        </div>
+
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 0 4px;">
+          <div><div style="font-size:13.5px;font-weight:600;color:#eef1f8;">Higher seed wins ties</div><div style="font-size:11px;color:#6f788e;margin-top:1px;">Break tied matchups by seed</div></div>
+          <button onClick="{{ toggleTies }}" style="width:46px;height:26px;border-radius:99px;border:none;cursor:pointer;position:relative;transition:background .2s;background: {{ tiesBg }};">
+            <span style="position:absolute;top:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:left .2s;left: {{ tiesKnob }};"></span>
+          </button>
+        </div>
+      </section>
+    </div>
+
+    <section style="background:#121829;border:1px solid rgba(214,169,78,0.20);border-radius:16px;padding:20px 22px;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+        <span style="width:3px;height:15px;border-radius:2px;background:linear-gradient(#d6a94e,#a07a2a);"></span>
+        <span style="font-size:12px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:#e3c989;">Commissioner Tools</span>
+      </div>
+      <div style="font-size:12px;color:#6f788e;margin-bottom:18px;margin-left:13px;">League-wide actions. Use with care during an active season.</div>
+      <div style="display:flex;gap:11px;flex-wrap:wrap;">
+        <button style="background:rgba(150,160,200,0.06);border:1px solid rgba(150,160,200,0.16);color:#e7eaf3;padding:11px 16px;border-radius:10px;font-size:12.5px;font-weight:600;font-family:Archivo;cursor:pointer;">Advance week</button>
+        <button style="background:rgba(150,160,200,0.06);border:1px solid rgba(150,160,200,0.16);color:#e7eaf3;padding:11px 16px;border-radius:10px;font-size:12.5px;font-weight:600;font-family:Archivo;cursor:pointer;">Recalculate scores</button>
+        <button style="background:rgba(150,160,200,0.06);border:1px solid rgba(150,160,200,0.16);color:#e7eaf3;padding:11px 16px;border-radius:10px;font-size:12.5px;font-weight:600;font-family:Archivo;cursor:pointer;">Post announcement</button>
+        <button style="background:rgba(214,169,78,0.10);border:1px solid rgba(214,169,78,0.32);color:#e3c989;padding:11px 16px;border-radius:10px;font-size:12.5px;font-weight:600;font-family:Archivo;cursor:pointer;">Start playoffs</button>
+      </div>
+    </section>
+  </div>
+
+  <sc-if value="{{ dirty }}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed;left:0;right:0;bottom:0;z-index:60;display:flex;align-items:center;justify-content:center;padding:14px;">
+      <div style="display:flex;align-items:center;gap:18px;background:rgba(18,24,41,0.96);backdrop-filter:blur(12px);border:1px solid rgba(124,58,237,0.40);border-radius:14px;padding:12px 14px 12px 20px;box-shadow:0 12px 40px rgba(0,0,0,0.5);">
+        <span style="font-size:13px;color:#e7eaf3;font-weight:500;display:flex;align-items:center;gap:9px;"><span style="width:8px;height:8px;border-radius:50%;background:#d6a94e;"></span>You have unsaved changes</span>
+        <div style="display:flex;gap:9px;">
+          <button onClick="{{ reset }}" style="background:transparent;border:1px solid rgba(150,160,200,0.22);color:#aab2c8;padding:10px 16px;border-radius:9px;font-weight:600;font-size:13px;font-family:Archivo;cursor:pointer;">Discard</button>
+          <button onClick="{{ save }}" style="background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;border:none;padding:10px 20px;border-radius:9px;font-weight:700;font-size:13px;font-family:Archivo;cursor:pointer;" style-hover="background:linear-gradient(135deg,#8b4bf5,#7c3aed);">Save changes</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1080,&quot;height&quot;:1240},&quot;logoVariant&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;icecut&quot;,&quot;monogram&quot;],&quot;default&quot;:&quot;icecut&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.defaults = {
+      skater: { goal: 3, assist: 2, shot: 0.5, block: 0.25, hit: 0.25, plusMinus: 1, penaltyMinute: -0.5, powerPlayPoint: 0.5 },
+      goalie: { win: 4, save: 0.2, shutout: 3, goalAgainst: -1 },
+      roster: { forward: 2, defense: 2, goalie: 1, util: 1, bench: 6, ir: 1 },
+      playoffTeams: 6, byes: 2, periods: 2, ties: true
+    };
+    this.state = { ...JSON.parse(JSON.stringify(this.defaults)), dirty: false };
+  }
+
+  patch(updater) {
+    this.setState(s => {
+      const next = updater(s);
+      return { ...next, dirty: true };
+    });
+  }
+
+  setSkater(key, v) { this.patch(s => ({ skater: { ...s.skater, [key]: v } })); }
+  setGoalie(key, v) { this.patch(s => ({ goalie: { ...s.goalie, [key]: v } })); }
+  setRoster(key, v) { this.patch(s => ({ roster: { ...s.roster, [key]: Math.max(0, v) } })); }
+
+  round2(n) { return Math.round(n * 100) / 100; }
+
+  renderVals() {
+    const s = this.state;
+    const variant = this.props.logoVariant ?? 'icecut';
+    const fmt = (n) => (n > 0 ? '+' : '') + (Number.isInteger(n) ? n : n.toFixed(2).replace(/0+$/, '').replace(/\.$/, ''));
+
+    const skLabels = {
+      goal: 'Goal', assist: 'Assist', shot: 'Shot on goal', block: 'Blocked shot',
+      hit: 'Hit', plusMinus: 'Plus / minus', penaltyMinute: 'Penalty minute', powerPlayPoint: 'Power-play point'
+    };
+    const skater = Object.keys(this.defaults.skater).map(k => ({
+      key: k, label: skLabels[k], value: fmt(s.skater[k]),
+      inc: () => this.setSkater(k, this.round2(s.skater[k] + 0.25)),
+      dec: () => this.setSkater(k, this.round2(s.skater[k] - 0.25)),
+      set: (e) => { const v = parseFloat(e.target.value); if (!isNaN(v)) this.setSkater(k, v); }
+    }));
+
+    const gLabels = { win: 'Win', save: 'Save', shutout: 'Shutout', goalAgainst: 'Goal against' };
+    const goalie = Object.keys(this.defaults.goalie).map(k => ({
+      key: k, label: gLabels[k], value: fmt(s.goalie[k]),
+      inc: () => this.setGoalie(k, this.round2(s.goalie[k] + 0.25)),
+      dec: () => this.setGoalie(k, this.round2(s.goalie[k] - 0.25)),
+      set: (e) => { const v = parseFloat(e.target.value); if (!isNaN(v)) this.setGoalie(k, v); }
+    }));
+
+    const rLabels = {
+      forward: ['Forward', 'F'], defense: ['Defense', 'D'], goalie: ['Goalie', 'G'],
+      util: ['Utility', 'Any skater'], bench: ['Bench', 'Reserves'], ir: ['Injured reserve', 'IR-eligible only']
+    };
+    const roster = Object.keys(this.defaults.roster).map(k => ({
+      key: k, label: rLabels[k][0], note: rLabels[k][1], value: s.roster[k],
+      inc: () => this.setRoster(k, s.roster[k] + 1),
+      dec: () => this.setRoster(k, s.roster[k] - 1)
+    }));
+    const rosterTotal = Object.values(s.roster).reduce((a, b) => a + b, 0);
+
+    return {
+      isIcecut: variant === 'icecut', isMonogram: variant === 'monogram',
+      skater, goalie, roster, rosterTotal,
+      playoffTeams: s.playoffTeams, byes: s.byes, periods: s.periods,
+      incPlayoffTeams: () => this.patch(st => ({ playoffTeams: Math.min(8, st.playoffTeams + 1) })),
+      decPlayoffTeams: () => this.patch(st => ({ playoffTeams: Math.max(2, st.playoffTeams - 1) })),
+      incByes: () => this.patch(st => ({ byes: Math.min(4, st.byes + 1) })),
+      decByes: () => this.patch(st => ({ byes: Math.max(0, st.byes - 1) })),
+      incPeriods: () => this.patch(st => ({ periods: Math.min(3, st.periods + 1) })),
+      decPeriods: () => this.patch(st => ({ periods: Math.max(1, st.periods - 1) })),
+      toggleTies: () => this.patch(st => ({ ties: !st.ties })),
+      tiesBg: s.ties ? '#6d28d9' : 'rgba(150,160,200,0.20)',
+      tiesKnob: s.ties ? '23px' : '3px',
+      dirty: s.dirty,
+      save: () => this.setState({ dirty: false }),
+      reset: () => this.setState({ ...JSON.parse(JSON.stringify(this.defaults)), dirty: false })
+    };
+  }
+}
+</script>
+</body>
+</html>

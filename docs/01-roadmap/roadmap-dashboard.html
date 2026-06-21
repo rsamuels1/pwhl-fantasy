@@ -1040,8 +1040,22 @@
               <span style="color: #888"><em><strong style="color:#6b7280">League History &amp; Hall of Fame (#33/#18) (P3, ~50K)</strong> — moved from Sprint 7 Priority 1 to Sprint 9 tail to make room for Trade System. Spec: <code>docs/02-engineering/league-history-spec.md</code>. New <code>/league/[leagueId]/history</code> page walking <code>parentLeagueId</code> chain. Past season cards: champion, top-4 standings. Hall of Fame: all past champions + two all-time records. Nav tab hidden in season 1. No schema changes. Ship skeleton now; fills in after first season renewal.</em></span>
             </div>
 
+            <div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid rgba(148,163,184,0.12);">
+              <div style="font-size: 0.8rem; font-weight: 700; color: #818cf8; text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 10px;">Beta Bug Fixes — added Jun 21, 2026</div>
+
+              <div style="margin-bottom: 8px;">
+                <span style="color: #f87171"><strong>BF-001 (P1) — Draft Room False Eviction</strong></span>
+                <span style="color: #cbd5e1; font-size: 0.85rem; margin-left: 6px;">Source: beta feedback cmqn6ppib0037ayqco2pgk62g. Manager sees "You opened the draft in another tab" on first load with no other tabs open. Root cause: stale WebSocket entry in server's <code>sockets</code> map from prior navigation evicts the fresh connection (code 4001) before it can establish. Fix: attempt one silent reconnect after 500ms on code 4001 before locking the eviction screen; or add an actionable "Rejoin draft" button as fallback. Files: <code>hooks/useDraftSocket.ts</code>, <code>app/draft/[leagueId]/DraftRoom.tsx</code>.</span>
+              </div>
+
+              <div>
+                <span style="color: #f87171"><strong>BF-002 (P1) — Performance Tab Week Number Shows "Week 1" Mid-Season</strong></span>
+                <span style="color: #cbd5e1; font-size: 0.85rem; margin-left: 6px;">Source: beta feedback cmqmn2ffl0001rdpgj8tt1c2z. Issue A: "Week N of M" badge in GM Command Center falls back to 1 (line 55: <code>activePeriod?.week || nextPeriod?.week || 1</code>) when between weeks mid-season. Fix: derive from last completed week when active period is null. Issue B (P2): tab label "Performance" unclear — user suggests renaming to something more descriptive. Files: <code>components/sim/GMCommandCenter.tsx</code>, <code>app/team/[teamId]/schedule/page.tsx</code>, <code>components/TeamNav.tsx</code>.</span>
+              </div>
+            </div>
+
         </div>
-        <div class="exit-criteria"><strong>Exit:</strong> Product is visibly "PWHL GM." Shield logo in browser tab. "Think Like a GM." on home page. "Your Franchises" on dashboard. "Front Office" in commissioner nav. Matchup + draft room match approved mockups at 1280px + 390px. All tests green. Zero "PWHL Fantasy" strings in live UI. League History/HoF skeleton page live.</div>
+        <div class="exit-criteria"><strong>Exit:</strong> Product is visibly "PWHL GM." Shield logo in browser tab. "Think Like a GM." on home page. "Your Franchises" on dashboard. "Front Office" in commissioner nav. Matchup + draft room match approved mockups at 1280px + 390px. BF-001 + BF-002 resolved. All tests green. Zero "PWHL Fantasy" strings in live UI. League History/HoF skeleton page live.</div>
       </div>
 
   </div>

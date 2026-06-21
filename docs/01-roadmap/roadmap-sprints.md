@@ -367,7 +367,7 @@ concurrent leagues; integration test clean; founding commissioner beta invites g
 
 ---
 
-## Sprint 9 — "PWHL GM Rebrand" · ~2 wks · Track F · P1/P2
+## Sprint 9 — "PWHL GM Rebrand" · ~2 wks · Track F · P1/P2 · ✅ IN PROGRESS
 
 Goal: Execute the planned PWHL Fantasy → PWHL GM rebrand. All strategy, mockups, copy, and implementation checklists are finalized in `docs/branding/`. This sprint ships the identity layer — names, logo, voice consistency, design tokens, and page-level visual upgrades — without touching any product logic.
 
@@ -381,15 +381,15 @@ Goal: Execute the planned PWHL Fantasy → PWHL GM rebrand. All strategy, mockup
 
 **P1 — Minimum shippable rebrand (~8 hours, matches `BRANDING-DEFERRED.md` estimate):**
 
-**Priority 1 — REBRAND-001: Core Identity (Name, Logo, Hero)** · 5 pts · P1
+**Priority 1 — REBRAND-001: Core Identity (Name, Logo, Hero)** · 5 pts · P1 · ✅ SHIPPED
 `docs/branding/04-implementation-checklist.md` Phase 1. Global "PWHL Fantasy" → "PWHL GM" find-replace across all `.tsx` files; new `components/LogoShield.tsx` shield+GM SVG (purple gradient, white GM text, 32px nav / 512px PWA); `public/favicon.ico` and `public/manifest.json` updated; home page hero rewrite ("Think Like a GM.", management sub-copy, "How it works" steps reframed); hero eyebrow color `--green` → `--accent`.
 Files: `app/layout.tsx`, `app/page.tsx`, `public/favicon.ico`, `public/manifest.json`, `components/LogoShield.tsx` (new). Zero logic changes.
 
-**Priority 2 — REBRAND-002: Voice Consistency** · 3 pts · P1
+**Priority 2 — REBRAND-002: Voice Consistency** · 3 pts · P1 · ✅ SHIPPED
 `04-implementation-checklist.md` Phase 2. Welcome flow title/eyebrow/card descriptions; dashboard "Your Franchises"; login pitch copy; admin nav "Admin" → "Front Office"; invite and register page copy.
 Files: `components/WelcomeFlow.tsx`, `app/dashboard/page.tsx`, `app/login/page.tsx`, `app/league/[leagueId]/layout.tsx`, `app/register/page.tsx`, `app/invite/[leagueId]/page.tsx`.
 
-**Priority 3 — REBRAND-003: Detail Polish ("Fantasy" Modifiers + Docs)** · 3 pts · P2
+**Priority 3 — REBRAND-003: Detail Polish ("Fantasy" Modifiers + Docs)** · 3 pts · P2 · ✅ SHIPPED
 `04-implementation-checklist.md` Phase 3. Remove "fantasy pts" from `RosterManager.tsx`; update draft room header to "PWHL GM — Draft Room"; "PWHL Fantasy" strings in `app/leagues/page.tsx`; `CLAUDE.md` and `README.md` product name updates; link `03-terminology-guide.md` from `CLAUDE.md`.
 Files: `app/team/[teamId]/roster/RosterManager.tsx`, `app/draft/[leagueId]/DraftRoom.tsx`, `app/league/[leagueId]/roster/page.tsx`, `app/leagues/page.tsx`, `CLAUDE.md`, `README.md`.
 
@@ -398,13 +398,17 @@ Run the manual testing path from `04-implementation-checklist.md` Phase 4 after 
 
 **P2 — Visual redesign layer (depends on REBRAND-004 token foundation):**
 
-**Priority 5 — REBRAND-004: Design Token System Upgrade** · 5 pts · P2
-Extend `app/globals.css` `:root` with the v2 token vocabulary from `docs/branding/pwhl-gm-matchup-mockup-v2.html`: card surface tokens (`--navy-card`, `--navy-card-border`, `--navy-card-hover`), indigo variant palette (`--indigo-dim`, `--indigo-border`, `--indigo-glow`, `--indigo-text`), semantic state dim+border tokens (amber/red/green), position color tokens (`--pos-fwd/def/goal/util`), text scale (`--text-primary/secondary/muted/dim`), shape tokens (`--radius-card`, `--radius-sm`, `--radius-pill`). Add Google Fonts import for Syne (display headings, 700/800) and DM Mono (stats/scores); wire `--font-display` and `--font-mono` vars. Add subtle radial glow to body background; add `backdrop-filter: blur(16px) saturate(1.4)` to site header. All existing tokens remain; no regressions.
-Files: `app/globals.css`, `app/layout.tsx` (font import).
-Blocks: REBRAND-005, 006, 007.
+**Priority 5 — REBRAND-004: Design Token System Upgrade** · 5 pts · P2 · ✅ SHIPPED
+Extend `app/globals.css` `:root` with the v2 token vocabulary: Archivo + Saira Condensed font vars (`--font-body`, `--font-stats`); `--card`, `--accent`/`--accent-strong`/`--accent-deep`/`--accent-dim`/`--accent-border`/`--accent-glow` palette; `--text`, `--muted`, `--dim`, `--faint`, `--border` text/border scale; `.rebrand-card`, `.pos-badge`, `.alert-amber`, `.chip-clinched/eliminated/in`, `.section-header/label`, `.section-accent` utility classes; `.font-stats` for DM Mono stats; `.draft-player-row:hover`, `.bracket-champion` component tokens. Existing tokens (`--bg`, `--panel`, `--surface`, etc.) retained for backwards compat. All existing breakpoints preserved.
+Files: `app/globals.css`.
 
-**Priority 6 — REBRAND-005: Matchup Page Visual Redesign** · 8 pts · P2
-Upgrade `app/team/[teamId]/matchup/` to v2 design standard: Syne font on hero score numbers, DM Mono for FP values in stat columns, `--navy-card` surface on all card sections, position color tokens (`--pos-fwd/def/goal/util`) on roster player rows, indigo win-probability bar fill, amber swing-players label, `--radius-card` corners throughout. Analysis tab (`components/AnalysisTab.tsx`): navy-card table rows, amber WEAK highlight uses `--amber-dim`/`--amber-border`. No server or data changes. Visual parity with `docs/branding/mockups/03-my-matchup.html` at 1280px desktop and 390px mobile.
+**Priority 6 — REBRAND-005: Matchup Page IA + Visual Redesign** · 8 pts · P2 · ✅ SHIPPED
+Shipped June 20, 2026. Two related changes bundled:
+
+**BUG-MATCHUP-001 fix:** `lib/services/dashboard.ts` — added `isSetupPhase?: boolean` to `ActiveMatchup` interface; set to `true` when all roster players have `gameCount === 0` in the current active period (both regular-season and playoff paths). `app/team/[teamId]/matchup/page.tsx` — `FieldHero` and `DuelHero` both use `hideScore = isUpcoming || isSetupPhase`; show "—" instead of "0.0 vs 0.0" during SETUP phase; show amber "No games yet" badge; suppress win-probability bar and live-score poller. Fixes the 0 vs 0 hero score that appeared whenever `replayCurrentDate = period.startsAt` (replay SETUP) or at real-world week start before the first game tips off.
+
+**Matchup page IA restructure (REBRAND-005 + REBRAND-007):** Removed `<MatchupTabs>` tab switcher; promoted Analysis to its own TeamNav tab and route. New render order (Z1–Z9): Lineup Alert → MatchupHero → Live Situation Grid (2-col: Playing Tonight + Swing left | new `RosterStatusWidget` right) → Rival Badge → Recap Card → Rosters → SETUP Fallback Stats → Top/Underperforming Performers → League Leaders → Activity Feed. New inline `RosterStatusWidget` component (no new data fetch): shows lineup fill count, lock state, projected FP, and "Adjust lineup →" CTA. Between-weeks nudge absorbed into RosterStatusWidget. Analysis tab (`components/AnalysisTab.tsx`) extracted to `app/team/[teamId]/analysis/page.tsx` as a standalone server-component route. `components/MatchupTabs.tsx` no longer used from matchup page. TeamNav gains "Analysis" tab pointing to `/team/${teamId}/analysis`.
+Files: `app/team/[teamId]/matchup/page.tsx`, `lib/services/dashboard.ts`, `app/team/[teamId]/analysis/page.tsx` (new), `app/team/[teamId]/TeamNav.tsx`.
 Depends On: REBRAND-004.
 
 **Priority 7 — REBRAND-006: Draft Room Visual Redesign** · 8 pts · P2
@@ -426,6 +430,16 @@ all-time records (highest single-week FP, most VP in a season). Nav tab hidden i
 No schema changes. Meaningful only after at least one completed and renewed season; ship the
 page skeleton now and let it fill in naturally.
 
+**Beta Bug Fixes (added from founding-commissioner feedback, Jun 21, 2026):**
+
+- **BF-001 — Draft Room False Eviction** · P1 · S
+  Source: Feedback `cmqn6ppib0037ayqco2pgk62g`. Manager saw "You opened the draft in another tab" on first load with no other tabs open. Root cause: stale WebSocket from a prior navigation leaves a dead entry in the server's `sockets` map; when the same `(leagueId, teamId)` reconnects the server evicts it with code 4001 before the stale one has timed out. Fix: on 4001, attempt one silent reconnect after 500ms before locking the eviction screen. Fallback: show an actionable "Rejoin draft" button instead of the dead-end message.
+  Files: `hooks/useDraftSocket.ts` (reconnect on 4001 path), `app/draft/[leagueId]/DraftRoom.tsx` (eviction UI).
+
+- **BF-002 — Performance Tab Week Number Shows "Week 1" Mid-Season** · P1 · S
+  Source: Feedback `cmqmn2ffl0001rdpgj8tt1c2z`. Two issues: (A) "Week N of M" badge in `GMCommandCenter.tsx` falls back to `1` when no active period is found (SETUP/between-weeks phases), even mid-season — fix by deriving from the last completed week when the active period is null. (B) Tab label "Performance" is confusing — P2 rename to "My Season" or "Season Stats" in `TeamNav.tsx`.
+  Files: `components/sim/GMCommandCenter.tsx` (line 55 weekNumber derivation), `app/team/[teamId]/schedule/page.tsx`, `components/TeamNav.tsx` (tab label, P2).
+
 **Sprint 9 Point Totals:**
 | Story | Points | Priority | Depends On |
 |---|---|---|---|
@@ -438,7 +452,9 @@ page skeleton now and let it fill in naturally.
 | REBRAND-006: Draft Room | 8 | P2 | REBRAND-004, REBRAND-001 |
 | REBRAND-007: Secondary Pages | 8 | P3 | REBRAND-004 |
 | League History & HoF (#33/#18) | ~50K | P3 | Sprint 2 (parentLeagueId chain); Trade System (#7) |
-| **Total** | **43 pts + HoF** | — | — |
+| **BF-001: Draft Room False Eviction** | S | P1 | — |
+| **BF-002: Performance Tab Week Number** | S | P1 | — |
+| **Total** | **43 pts + HoF + 2 bug fixes** | — | — |
 
 **Minimum shippable rebrand (P1 stories only):** REBRAND-001 + REBRAND-002 + REBRAND-008 = 11 points · ~8 hours. Ships name, logo, and voice consistency as planned in `BRANDING-DEFERRED.md`. REBRAND-003 (3 pts) is low-risk detail polish that can run same-day. Visual redesign stories (P2/P3) follow as a second pass.
 

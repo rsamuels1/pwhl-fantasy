@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=Saira+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#0b1020;}
+::selection{background:rgba(124,58,237,0.40);color:#fff;}
+@keyframes dfFade{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+*::-webkit-scrollbar{width:8px;height:8px;}
+*::-webkit-scrollbar-thumb{background:rgba(124,58,237,0.30);border-radius:8px;}
+*::-webkit-scrollbar-track{background:transparent;}
+</style>
+</helmet>
+<div style="min-height:100vh;font-family:Archivo,sans-serif;color:#f3f5fb;background:linear-gradient(168deg,#0b1020 0%,#0a0e1a 55%,#0c0f1d 100%);">
+
+  <header style="position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-content:space-between;gap:24px;padding:13px 28px;background:rgba(10,14,26,0.82);backdrop-filter:blur(14px);border-bottom:1px solid rgba(150,160,200,0.10);">
+    <div style="display:flex;align-items:center;gap:14px;">
+      <sc-if value="{{ isIcecut }}" hint-placeholder-val="{{ true }}">
+        <svg width="34" height="34" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="icg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7c3aed"/><stop offset="1" stop-color="#4c1d95"/></linearGradient>
+          </defs>
+          <path d="M24 3 L41 9.5 V25 C41 36 24 45 24 45 C24 45 7 36 7 25 V9.5 Z" fill="url(#icg)" stroke="rgba(167,139,250,0.55)" stroke-width="1.2"/>
+          <path d="M24 3 L41 9.5 V25 C41 36 24 45 24 45 C24 45 7 36 7 25 V9.5 Z" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="0.5" transform="translate(0,1.5)"/>
+          <path d="M14 14 L30 8.5" stroke="rgba(199,210,224,0.45)" stroke-width="1.3" stroke-linecap="round"/>
+          <path d="M11 22 L24 17" stroke="rgba(167,139,250,0.55)" stroke-width="1.3" stroke-linecap="round"/>
+          <path d="M24 30 L37 21" stroke="rgba(199,210,224,0.35)" stroke-width="1.3" stroke-linecap="round"/>
+        </svg>
+      </sc-if>
+      <sc-if value="{{ isMonogram }}" hint-placeholder-val="{{ false }}">
+        <svg width="34" height="34" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="mcg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6d28d9"/><stop offset="1" stop-color="#4c1d95"/></linearGradient>
+          </defs>
+          <path d="M24 3 L41 9.5 V25 C41 36 24 45 24 45 C24 45 7 36 7 25 V9.5 Z" fill="url(#mcg)" stroke="rgba(167,139,250,0.5)" stroke-width="1.2"/>
+          <path d="M24 6 L38 11.3 V24.6 C38 33.6 24 41 24 41 C24 41 10 33.6 10 24.6 V11.3 Z" fill="none" stroke="rgba(167,139,250,0.30)" stroke-width="0.8"/>
+          <text x="24" y="29" font-family="Archivo, sans-serif" font-size="15" font-weight="800" fill="#ffffff" text-anchor="middle" letter-spacing="0.5">GM</text>
+        </svg>
+      </sc-if>
+      <div style="display:flex;flex-direction:column;line-height:1.12;">
+        <span style="font-weight:800;font-size:15px;letter-spacing:0.05em;color:#f3f5fb;">PWHL GM</span>
+        <span style="font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:#6f788e;">Draft Room</span>
+      </div>
+      <div style="width:1px;height:30px;background:rgba(150,160,200,0.14);margin:0 8px;"></div>
+      <div style="display:flex;flex-direction:column;line-height:1.18;">
+        <span style="font-size:13px;font-weight:600;color:#e7eaf3;">Northwind</span>
+        <span style="font-size:10px;color:#6f788e;letter-spacing:0.04em;">Spring 2026 Snake Draft</span>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <button style="background:transparent;border:1px solid rgba(150,160,200,0.18);color:#aab2c8;padding:8px 14px;border-radius:9px;font-size:12.5px;font-weight:600;font-family:Archivo;cursor:pointer;" style-hover="background:rgba(150,160,200,0.08);color:#e7eaf3;">Spectate</button>
+      <button style="background:transparent;border:1px solid rgba(150,160,200,0.18);color:#aab2c8;padding:8px 14px;border-radius:9px;font-size:12.5px;font-weight:600;font-family:Archivo;cursor:pointer;" style-hover="background:rgba(150,160,200,0.08);color:#e7eaf3;">Settings</button>
+    </div>
+  </header>
+
+  <div style="max-width:1480px;margin:0 auto;padding:22px 28px 44px;display:grid;grid-template-columns:1fr 348px;gap:22px;align-items:start;">
+
+    <div style="display:flex;flex-direction:column;gap:18px;min-width:0;">
+
+      <section style="display:flex;flex-wrap:wrap;align-items:center;gap:18px 22px;padding:20px 24px;border-radius:18px;background:linear-gradient(135deg,#1b1346 0%,#141a2e 72%);border:1px solid rgba(124,58,237,0.32);box-shadow:inset 0 1px 0 rgba(167,139,250,0.12);">
+        <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;flex:0 0 auto;">
+          <div style="font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:#9aa3bd;">Time Left</div>
+          <div style="font-family:'Saira Condensed',sans-serif;font-weight:700;font-size:54px;line-height:0.85;color:#f3f5fb;font-variant-numeric:tabular-nums;letter-spacing:0.01em;">{{ clockText }}</div>
+          <div style="width:128px;height:4px;border-radius:99px;background:rgba(150,160,200,0.16);overflow:hidden;"><div style="height:100%;border-radius:99px;background:linear-gradient(90deg,#7c3aed,#a78bfa);width: {{ clockPct }}%;transition:width .4s linear;"></div></div>
+        </div>
+        <div style="flex:1 1 250px;min-width:240px;padding:0 22px;border-left:1px solid rgba(150,160,200,0.12);">
+          <div style="font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:#a78bfa;font-weight:700;margin-bottom:8px;">On The Clock</div>
+          <div style="display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;">
+            <span style="font-size:24px;font-weight:800;color:#f3f5fb;letter-spacing:-0.01em;">{{ onClockName }}</span>
+            <span style="font-size:12px;color:#8b93a7;font-family:'Saira Condensed';letter-spacing:0.03em;">Pick {{ pickLabel }} · {{ overall }} overall</span>
+          </div>
+          <div style="margin-top:10px;font-size:12.5px;color:#aab2c8;line-height:1.55;">Roster needs <strong style="color:#e7eaf3;font-weight:700;">{{ needSummary }}</strong>. Best available fits at <strong style="color:#e7eaf3;font-weight:700;">{{ topPos }}</strong>.</div>
+        </div>
+        <div style="display:flex;flex-direction:column;justify-content:center;gap:9px;flex:1 1 200px;min-width:190px;">
+          <sc-if value="{{ onClockIsYou }}" hint-placeholder-val="{{ true }}">
+            <button onClick="{{ draft }}" style="background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;border:none;padding:14px 18px;border-radius:12px;font-weight:700;font-size:14px;font-family:Archivo;cursor:pointer;letter-spacing:0.01em;box-shadow:0 8px 22px rgba(124,58,237,0.38);" style-hover="background:linear-gradient(135deg,#8b4bf5,#7c3aed);">Draft {{ selectedLabel }}</button>
+            <div style="font-size:11px;color:#8b93a7;text-align:center;line-height:1.4;">{{ actionHint }}</div>
+          </sc-if>
+          <sc-if value="{{ pickSubmitted }}" hint-placeholder-val="{{ false }}">
+            <div style="background:rgba(95,169,140,0.12);color:#7fc2a6;border:1px solid rgba(95,169,140,0.40);padding:14px 18px;border-radius:12px;font-weight:700;font-size:14px;text-align:center;">Pick submitted ✓</div>
+            <div style="font-size:11px;color:#8b93a7;text-align:center;">{{ actionHint }}</div>
+          </sc-if>
+        </div>
+      </section>
+
+      <section style="background:#121829;border:1px solid rgba(150,160,200,0.10);border-radius:16px;padding:18px 20px;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:15px;">
+          <span style="width:3px;height:15px;border-radius:2px;background:linear-gradient(#a78bfa,#6d28d9);"></span>
+          <span style="font-size:12px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:#c7d2e0;">Round 4</span>
+          <span style="font-size:11px;color:#6f788e;letter-spacing:0.04em;">Snake · 8 general managers</span>
+        </div>
+        <div style="display:flex;gap:11px;overflow-x:auto;padding-bottom:4px;">
+          <sc-for list="{{ round4 }}" as="chip" hint-placeholder-count="8">
+            <div style="flex:0 0 132px;padding:12px 13px;border-radius:13px; {{ chip.cardStyle }}">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:9px;">
+                <span style="font-family:'Saira Condensed';font-weight:600;font-size:13px;color:#8b93a7;">{{ chip.label }}</span>
+                <span style="font-size:9.5px;color:#6f788e;letter-spacing:0.03em;max-width:64px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ chip.mgr }}</span>
+              </div>
+              <div style="font-weight:700;font-size:14px;color: {{ chip.statusColor }};letter-spacing:-0.01em;">{{ chip.statusText }}</div>
+              <div style="font-size:10px;color:#6f788e;margin-top:2px;letter-spacing:0.04em;min-height:13px;">{{ chip.nameText }}</div>
+            </div>
+          </sc-for>
+        </div>
+      </section>
+
+      <section style="background:#121829;border:1px solid rgba(150,160,200,0.10);border-radius:16px;padding:18px 20px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span style="width:3px;height:15px;border-radius:2px;background:linear-gradient(#a78bfa,#6d28d9);"></span>
+            <span style="font-size:12px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:#c7d2e0;">Available Players</span>
+            <span style="font-size:11px;color:#6f788e;font-family:'Saira Condensed';">{{ availCount }} remaining</span>
+          </div>
+          <div style="font-size:11px;color:#8b93a7;border:1px solid rgba(150,160,200,0.16);border-radius:8px;padding:6px 11px;letter-spacing:0.03em;">Sort · Projection</div>
+        </div>
+        <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;">
+          <input value="{{ query }}" onInput="{{ onSearch }}" placeholder="Search players…" style="flex:1;min-width:200px;background:rgba(150,160,200,0.06);border:1px solid rgba(150,160,200,0.14);border-radius:10px;color:#f3f5fb;font-family:Archivo;font-size:13px;padding:10px 13px;outline:none;" />
+          <div style="display:flex;gap:7px;">
+            <sc-for list="{{ filters }}" as="f" hint-placeholder-count="4">
+              <button onClick="{{ f.set }}" style="padding:9px 15px;border-radius:9px;font-size:12px;font-weight:700;font-family:Archivo;cursor:pointer; {{ f.btnStyle }}">{{ f.label }}</button>
+            </sc-for>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:34px 1fr auto 30px;align-items:center;gap:14px;padding:0 14px 8px;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:#5b6480;border-bottom:1px solid rgba(150,160,200,0.08);">
+          <span></span><span>Player</span><span>Proj</span><span></span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:7px;margin-top:9px;max-height:430px;overflow-y:auto;padding-right:4px;">
+          <sc-for list="{{ filtered }}" as="p" hint-placeholder-count="8">
+            <div onClick="{{ p.select }}" style="display:grid;grid-template-columns:34px 1fr auto 30px;align-items:center;gap:14px;padding:10px 14px;border-radius:11px;cursor:pointer;transition:background .15s; {{ p.rowStyle }}">
+              <span style="width:34px;height:34px;border-radius:9px;background:rgba(124,58,237,0.16);border:1px solid rgba(167,139,250,0.25);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#c9b6ff;letter-spacing:0.02em;">{{ p.initials }}</span>
+              <span style="display:flex;flex-direction:column;min-width:0;">
+                <span style="font-size:13.5px;font-weight:600;color:#eef1f8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ p.nameDisp }}</span>
+                <span style="font-size:11px;color:#828ba0;margin-top:1px;letter-spacing:0.02em;">{{ p.metaDisp }}</span>
+              </span>
+              <sc-if value="{{ showProjections }}" hint-placeholder-val="{{ true }}">
+                <span style="font-family:'Saira Condensed';font-weight:700;font-size:18px;color:#c7d2e0;font-variant-numeric:tabular-nums;">{{ p.projDisp }}</span>
+              </sc-if>
+              <button onClick="{{ p.toggleStar }}" style="background:none;border:none;cursor:pointer;font-size:17px;line-height:1;color: {{ p.starColor }};padding:0;">{{ p.starGlyph }}</button>
+            </div>
+          </sc-for>
+        </div>
+      </section>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:18px;">
+
+      <section style="background:#121829;border:1px solid rgba(150,160,200,0.10);border-radius:16px;padding:18px 20px;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+          <span style="width:3px;height:15px;border-radius:2px;background:linear-gradient(#a78bfa,#6d28d9);"></span>
+          <span style="font-size:12px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:#c7d2e0;">Roster Needs</span>
+        </div>
+        <sc-for list="{{ needs }}" as="n" hint-placeholder-count="5">
+          <div style="margin-bottom:13px;">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;">
+              <span style="font-size:12px;font-weight:600;letter-spacing:0.06em;color:#aab2c8;">{{ n.pos }}</span>
+              <span style="font-family:'Saira Condensed';font-size:14px;font-weight:600;color: {{ n.color }};">{{ n.label }}</span>
+            </div>
+            <div style="height:6px;border-radius:99px;background:rgba(150,160,200,0.10);overflow:hidden;"><div style="height:100%;border-radius:99px;width: {{ n.pct }}%;background: {{ n.color }};transition:width .4s;"></div></div>
+          </div>
+        </sc-for>
+      </section>
+
+      <section style="background:#121829;border:1px solid rgba(150,160,200,0.10);border-radius:16px;padding:18px 20px;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+          <span style="width:3px;height:15px;border-radius:2px;background:linear-gradient(#a78bfa,#6d28d9);"></span>
+          <span style="font-size:12px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:#c7d2e0;">Your Picks</span>
+        </div>
+        <sc-for list="{{ myPicks }}" as="pick" hint-placeholder-count="3">
+          <div style="display:grid;grid-template-columns:36px 30px 1fr auto;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid rgba(150,160,200,0.07);">
+            <span style="font-family:'Saira Condensed';font-size:12px;color:#6f788e;">{{ pick.label }}</span>
+            <span style="font-size:9.5px;font-weight:700;color:#fff;background:#5b21b6;border-radius:5px;padding:3px 0;text-align:center;width:28px;letter-spacing:0.04em;">{{ pick.pos }}</span>
+            <span style="display:flex;flex-direction:column;min-width:0;"><span style="font-size:12.5px;font-weight:600;color:#e7eaf3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ pick.nameDisp }}</span><span style="font-size:10px;color:#6f788e;letter-spacing:0.04em;">{{ pick.team }}</span></span>
+            <span style="font-family:'Saira Condensed';font-weight:600;font-size:15px;color:#c7d2e0;">{{ pick.projDisp }}</span>
+          </div>
+        </sc-for>
+      </section>
+
+      <section style="background:#121829;border:1px solid rgba(150,160,200,0.10);border-radius:16px;padding:18px 20px;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+          <span style="width:3px;height:15px;border-radius:2px;background:linear-gradient(#a78bfa,#6d28d9);"></span>
+          <span style="font-size:12px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:#c7d2e0;">Recent Picks</span>
+        </div>
+        <div style="display:flex;flex-direction:column;max-height:320px;overflow-y:auto;padding-right:4px;">
+          <sc-for list="{{ recent }}" as="r" hint-placeholder-count="6">
+            <div style="display:grid;grid-template-columns:38px 1fr auto;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid rgba(150,160,200,0.07);">
+              <span style="font-family:'Saira Condensed';font-size:12px;color:#6f788e;">{{ r.label }}</span>
+              <span style="display:flex;flex-direction:column;min-width:0;"><span style="font-size:12.5px;font-weight:600;color:#e7eaf3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ r.nameDisp }}</span><span style="font-size:10px;color:#6f788e;letter-spacing:0.03em;">{{ r.sub }}</span></span>
+              <sc-if value="{{ r.auto }}" hint-placeholder-val="{{ false }}">
+                <span style="font-size:9px;font-weight:700;letter-spacing:0.08em;color:#a78bfa;background:rgba(124,58,237,0.14);border:1px solid rgba(124,58,237,0.30);border-radius:5px;padding:3px 7px;">AUTO</span>
+              </sc-if>
+            </div>
+          </sc-for>
+        </div>
+      </section>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1480,&quot;height&quot;:920},&quot;logoVariant&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;icecut&quot;,&quot;monogram&quot;],&quot;default&quot;:&quot;icecut&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;pickClock&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:45,&quot;min&quot;:15,&quot;max&quot;:120,&quot;tsType&quot;:&quot;number&quot;},&quot;showProjections&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;}}">
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    const clk = this.props.pickClock ?? 45;
+    this.state = {
+      seconds: clk, total: clk, running: true,
+      query: '', filter: 'All', selectedId: null,
+      onClockIsYou: true, onClockName: 'Northwind \u00b7 You',
+      available: [
+        { id: 1, last: 'Spooner', first: 'Natalie', pos: 'F', team: 'TOR', age: 27, proj: 16.4, starred: false },
+        { id: 2, last: 'Knight', first: 'Hilary', pos: 'F', team: 'BOS', age: 35, proj: 15.8, starred: true },
+        { id: 3, last: 'Carpenter', first: 'Alex', pos: 'F', team: 'NY', age: 31, proj: 15.1, starred: false },
+        { id: 4, last: 'Heise', first: 'Taylor', pos: 'F', team: 'MIN', age: 25, proj: 14.6, starred: false },
+        { id: 5, last: 'Fillier', first: 'Sarah', pos: 'F', team: 'NY', age: 24, proj: 14.4, starred: false },
+        { id: 6, last: 'Watts', first: 'Daryl', pos: 'F', team: 'OTT', age: 25, proj: 13.7, starred: false },
+        { id: 7, last: 'Coyne Schofield', first: 'Kendall', pos: 'F', team: 'MIN', age: 33, proj: 13.4, starred: false },
+        { id: 8, last: 'Stacey', first: 'Laura', pos: 'F', team: 'MTL', age: 31, proj: 13.2, starred: false },
+        { id: 9, last: 'Ambrose', first: 'Erin', pos: 'D', team: 'MTL', age: 30, proj: 12.9, starred: true },
+        { id: 10, last: 'Shelton', first: 'Ella', pos: 'D', team: 'NY', age: 27, proj: 12.2, starred: false },
+        { id: 11, last: 'Jaques', first: 'Sophie', pos: 'D', team: 'MIN', age: 25, proj: 11.8, starred: false },
+        { id: 12, last: 'Keller', first: 'Megan', pos: 'D', team: 'BOS', age: 29, proj: 11.1, starred: false },
+        { id: 13, last: 'Desbiens', first: 'Ann-Ren\u00e9e', pos: 'G', team: 'MTL', age: 31, proj: 9.9, starred: false },
+        { id: 14, last: 'Maschmeyer', first: 'Emerance', pos: 'G', team: 'OTT', age: 31, proj: 9.6, starred: false }
+      ],
+      myPicks: [
+        { label: '1.03', pos: 'F', last: 'Nurse', first: 'Sarah', team: 'TOR', proj: 14.0 },
+        { label: '2.06', pos: 'D', last: 'Fast', first: 'Renata', team: 'TOR', proj: 8.5 },
+        { label: '3.03', pos: 'G', last: 'Frankel', first: 'Aerin', team: 'BOS', proj: 6.3 }
+      ],
+      needs: [
+        { pos: 'F', have: 1, req: 3 }, { pos: 'D', have: 1, req: 2 },
+        { pos: 'G', have: 1, req: 1 }, { pos: 'UTIL', have: 0, req: 1 },
+        { pos: 'BENCH', have: 0, req: 6 }
+      ],
+      round4: [
+        { label: '4.01', mgr: 'Granite City', state: 'done', last: 'Larocque', team: 'TOR' },
+        { label: '4.02', mgr: 'Harbour City', state: 'done', last: 'Zumwinkle', team: 'MIN' },
+        { label: '4.03', mgr: 'Northwind', you: true, state: 'current' },
+        { label: '4.04', mgr: 'Steel & Co', state: 'upcoming' },
+        { label: '4.05', mgr: 'Riverside', state: 'upcoming' },
+        { label: '4.06', mgr: 'Highmark', state: 'upcoming' },
+        { label: '4.07', mgr: 'Capital', state: 'upcoming' },
+        { label: '4.08', mgr: 'Ironside', state: 'upcoming' }
+      ],
+      recent: [
+        { label: '4.02', last: 'Zumwinkle', first: 'Grace', team: 'MIN', mgr: 'Harbour City', auto: false },
+        { label: '4.01', last: 'Larocque', first: 'Jocelyne', team: 'TOR', mgr: 'Granite City', auto: false },
+        { label: '3.08', last: 'Rooney', first: 'Maddie', team: 'MIN', mgr: 'Ironside', auto: true },
+        { label: '3.07', last: 'Stecklein', first: 'Lee', team: 'MIN', mgr: 'Capital', auto: false },
+        { label: '3.06', last: 'Compher', first: 'Jesse', team: 'BOS', mgr: 'Highmark', auto: false },
+        { label: '3.05', last: 'Schroeder', first: 'Corinne', team: 'NY', mgr: 'Riverside', auto: false },
+        { label: '3.04', last: 'Campbell', first: 'Kristen', team: 'TOR', mgr: 'Steel & Co', auto: false },
+        { label: '3.03', last: 'Frankel', first: 'Aerin', team: 'BOS', mgr: 'Northwind', auto: false }
+      ]
+    };
+  }
+
+  componentDidMount() {
+    this.timer = setInterval(() => {
+      this.setState(s => {
+        if (!s.running) return null;
+        let n = s.seconds - 1;
+        if (n < 0) n = s.total;
+        return { seconds: n };
+      });
+    }, 1000);
+  }
+  componentWillUnmount() { clearInterval(this.timer); }
+
+  toggleStar(id) {
+    this.setState(s => ({ available: s.available.map(p => p.id === id ? { ...p, starred: !p.starred } : p) }));
+  }
+
+  bumpNeed(needs, pos) {
+    let done = false;
+    let out = needs.map(n => {
+      if (!done && n.pos === pos && n.have < n.req) { done = true; return { ...n, have: n.have + 1 }; }
+      return n;
+    });
+    if (!done) out = out.map(n => { if (!done && n.pos === 'UTIL' && n.have < n.req) { done = true; return { ...n, have: n.have + 1 }; } return n; });
+    if (!done) out = out.map(n => { if (!done && n.pos === 'BENCH' && n.have < n.req) { done = true; return { ...n, have: n.have + 1 }; } return n; });
+    return out;
+  }
+
+  draft() {
+    const s = this.state;
+    if (!s.onClockIsYou) return;
+    const pl = s.available.find(p => p.id === s.selectedId) || [...s.available].sort((a, b) => b.proj - a.proj)[0];
+    if (!pl) return;
+    const available = s.available.filter(p => p.id !== pl.id);
+    const myPicks = [...s.myPicks, { label: '4.03', pos: pl.pos, last: pl.last, first: pl.first, team: pl.team, proj: pl.proj }];
+    const needs = this.bumpNeed(s.needs, pl.pos);
+    const round4 = s.round4.map(c => {
+      if (c.you) return { ...c, state: 'done', last: pl.last, team: pl.team };
+      if (c.label === '4.04') return { ...c, state: 'current' };
+      return c;
+    });
+    const recent = [{ label: '4.03', last: pl.last, first: pl.first, team: pl.team, mgr: 'Northwind', auto: false }, ...s.recent];
+    this.setState({ available, myPicks, needs, round4, recent, onClockIsYou: false, onClockName: 'Steel & Co', selectedId: null, seconds: s.total });
+  }
+
+  renderVals() {
+    const s = this.state;
+    const variant = this.props.logoVariant ?? 'icecut';
+    const showProjections = this.props.showProjections ?? true;
+    const posWord = { F: 'forward', D: 'defense', G: 'goaltending', UTIL: 'utility' };
+
+    const mm = String(Math.floor(s.seconds / 60)).padStart(2, '0');
+    const ss = String(s.seconds % 60).padStart(2, '0');
+    const clockText = mm + ':' + ss;
+    const clockPct = s.total ? Math.round((s.seconds / s.total) * 100) : 0;
+
+    const sorted = [...s.available].sort((a, b) => b.proj - a.proj);
+    const q = s.query.trim().toLowerCase();
+    const filtered = sorted
+      .filter(p => (s.filter === 'All' || p.pos === s.filter) && (q === '' || (p.last + ' ' + p.first).toLowerCase().includes(q)))
+      .map(p => {
+        const selected = p.id === s.selectedId;
+        return {
+          ...p,
+          initials: (p.first[0] + p.last[0]).toUpperCase(),
+          nameDisp: p.last + ', ' + p.first,
+          metaDisp: p.pos + '  \u00b7  ' + p.team + '  \u00b7  ' + p.age,
+          projDisp: p.proj.toFixed(1),
+          rowStyle: selected
+            ? 'background:rgba(124,58,237,0.16);border:1px solid rgba(167,139,250,0.45);'
+            : 'background:rgba(150,160,200,0.04);border:1px solid rgba(150,160,200,0.07);',
+          select: () => this.setState({ selectedId: p.id }),
+          toggleStar: (e) => { e.stopPropagation(); this.toggleStar(p.id); },
+          starGlyph: p.starred ? '\u2605' : '\u2606',
+          starColor: p.starred ? '#d6a94e' : '#5b6480'
+        };
+      });
+
+    const filters = ['All', 'F', 'D', 'G'].map(f => ({
+      label: f,
+      set: () => this.setState({ filter: f }),
+      btnStyle: s.filter === f
+        ? 'background:#6d28d9;border:1px solid #6d28d9;color:#fff;'
+        : 'background:rgba(150,160,200,0.06);border:1px solid rgba(150,160,200,0.12);color:#aab2c8;'
+    }));
+
+    const needs = s.needs.map(n => {
+      const full = n.have >= n.req;
+      const color = full ? '#5fa98c' : (n.have === 0 ? '#d6a94e' : '#a78bfa');
+      return { pos: n.pos, label: n.have + '/' + n.req, pct: Math.min(100, Math.round((n.have / n.req) * 100)), color };
+    });
+
+    const gaps = s.needs.filter(n => n.have < n.req && n.pos !== 'BENCH' && n.pos !== 'G').map(n => posWord[n.pos] || n.pos.toLowerCase());
+    const needSummary = gaps.length ? gaps.join(' / ') : 'bench';
+
+    const sel = s.available.find(p => p.id === s.selectedId);
+    const selectedLabel = sel ? (sel.last + ', ' + sel.first[0] + '.') : 'Best Available';
+    const topPos = posWord[sorted[0] ? sorted[0].pos : 'F'];
+
+    const round4 = s.round4.map(c => {
+      let cardStyle, statusText, statusColor, nameText = '';
+      if (c.state === 'current') {
+        cardStyle = 'background:linear-gradient(135deg,#2a1a63,#1a1240);border:1px solid rgba(167,139,250,0.55);box-shadow:0 0 0 1px rgba(167,139,250,0.12);';
+        statusText = 'On the Clock'; statusColor = '#c9b6ff';
+      } else if (c.state === 'done') {
+        cardStyle = 'background:rgba(150,160,200,0.05);border:1px solid rgba(150,160,200,0.10);';
+        statusText = c.last; statusColor = '#e7eaf3'; nameText = c.team;
+      } else {
+        cardStyle = 'background:rgba(150,160,200,0.02);border:1px dashed rgba(150,160,200,0.14);';
+        statusText = '\u2014'; statusColor = '#5b6480';
+      }
+      return { label: c.label, mgr: c.mgr, cardStyle, statusText, statusColor, nameText };
+    });
+
+    const myPicks = s.myPicks.map(p => ({ label: p.label, pos: p.pos, nameDisp: p.last + ', ' + p.first, team: p.team, projDisp: p.proj.toFixed(1) }));
+    const recent = s.recent.map(r => ({ label: r.label, nameDisp: r.last + ', ' + r.first, sub: r.mgr + '  \u00b7  ' + r.team, auto: r.auto }));
+
+    return {
+      isIcecut: variant === 'icecut', isMonogram: variant === 'monogram',
+      clockText, clockPct,
+      onClockName: s.onClockName, onClockIsYou: s.onClockIsYou, pickSubmitted: !s.onClockIsYou,
+      pickLabel: '4.03', overall: '#27',
+      needSummary, topPos,
+      selectedLabel, draft: () => this.draft(),
+      actionHint: s.onClockIsYou ? 'Pick the highlighted player or take the best available' : 'Your pick is in \u2014 Steel & Co is up',
+      availCount: s.available.length,
+      query: s.query, onSearch: (e) => this.setState({ query: e.target.value }),
+      filters, filtered, showProjections,
+      needs, myPicks, recent, round4
+    };
+  }
+}
+</script>
+</body>
+</html>

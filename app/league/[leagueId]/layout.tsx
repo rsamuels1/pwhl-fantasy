@@ -6,6 +6,7 @@ import { getCurrentUser } from "@/lib/auth";
 import BottomNav from "@/components/BottomNav";
 import NotificationBell from "@/components/NotificationBell";
 import FeedbackWidget from "@/components/FeedbackWidget";
+import { LogoShield } from "@/components/LogoShield";
 
 interface LeagueLayoutProps {
   children: ReactNode;
@@ -51,7 +52,7 @@ export default async function LeagueLayout({ children, params }: LeagueLayoutPro
     ...(league?.isReplay && isCommissioner ? [{ label: "Sim →", href: `${basePath}/sim` }] : []),
   ];
   const adminItem = isCommissioner
-    ? { label: "⚙ Settings", href: `${basePath}/admin` }
+    ? { label: "⚙ Front Office", href: `${basePath}/admin` }
     : null;
 
   return (
@@ -60,10 +61,10 @@ export default async function LeagueLayout({ children, params }: LeagueLayoutPro
         <header style={{ marginBottom: 20 }}>
           <div style={{ display: "flex", flexWrap: "wrap", alignItems: "baseline", justifyContent: "space-between", gap: 12 }}>
             <div style={{ display: "flex", alignItems: "baseline", gap: 12 }}>
-              <Link href="/" style={{ color: "#fff", textDecoration: "none", fontSize: 22, fontWeight: 700 }}>
-                PWHL Fantasy
+              <Link href="/dashboard" style={{ display: "flex", alignItems: "center", opacity: 0.7, transition: "opacity 0.15s" }}>
+                <LogoShield size={22} />
               </Link>
-              <span style={{ color: "#94a3b8", fontSize: 14 }}>{league?.name ?? "League"}</span>
+              <span style={{ color: "#f3f5fb", fontSize: 17, fontWeight: 700 }}>{league?.name ?? "League"}</span>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               {user && (

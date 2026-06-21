@@ -15,17 +15,26 @@ export default async function Home() {
 
       {/* ── 1. Hero ──────────────────────────────────────────────────────────── */}
       <section style={{ textAlign: "center", padding: "64px 16px 0" }}>
-        <p className="hero-eyebrow" style={{ justifyContent: "center" }}>PWHL Fantasy Hockey</p>
-        <h1 className="hero-title" style={{ maxWidth: 760, margin: "18px auto 0", textAlign: "center" }}>
-          Draft your team.<br />Set your lineup.<br />Win every week.
+        {/* Eyebrow pill */}
+        <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "6px 14px", borderRadius: 999, background: "rgba(124,58,237,0.14)", border: "1px solid rgba(124,58,237,0.30)", marginBottom: 24 }}>
+          <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#a78bfa", display: "inline-block", flexShrink: 0 }} />
+          <span style={{ fontSize: 12, fontWeight: 700, color: "#c9b6ff", letterSpacing: "0.06em" }}>Fantasy hockey for the PWHL</span>
+        </div>
+
+        <h1 className="hero-title" style={{ maxWidth: 760, margin: "0 auto", textAlign: "center", fontWeight: 900, letterSpacing: "-0.03em" }}>
+          Think Like a GM.
         </h1>
         <p className="hero-text" style={{ maxWidth: 560, margin: "24px auto 0", textAlign: "center" }}>
-          The first fantasy platform built for PWHL fans. Draft real stars, compete in
-          head-to-head matchups, and follow every goal with something on the line.
+          Don&apos;t just draft a team — run a front office. Build rosters, set lineups, work the wire, and make the calls that win championships in the Professional Women&apos;s Hockey League.
         </p>
         <div className="hero-actions" style={{ justifyContent: "center", marginTop: 36 }}>
-          <Link href="/create-league" className="button-primary">Create League</Link>
-          <Link href="/join-league" className="button-secondary">Join League</Link>
+          <Link href="/create-league" className="button-primary">Start your franchise →</Link>
+          <Link href="/join-league" className="button-secondary">Join a league</Link>
+        </div>
+        {/* Trust strip */}
+        <div style={{ marginTop: 20, display: "flex", justifyContent: "center", gap: 20 }}>
+          <span style={{ fontSize: 13, color: "#6f788e" }}><span style={{ color: "#22c55e", marginRight: 4 }}>✓</span>Free to play</span>
+          <span style={{ fontSize: 13, color: "#6f788e" }}><span style={{ color: "#22c55e", marginRight: 4 }}>✓</span>No gambling, pure strategy</span>
         </div>
       </section>
 
@@ -51,8 +60,8 @@ export default async function Home() {
               </div>
               <div style={{ fontWeight: 700, fontSize: 15, color: "#e2e8f0", lineHeight: 1.3 }}>{p.name}</div>
               <div style={{ marginTop: 10, fontSize: 12, color: "#64748b" }}>Last season</div>
-              <div style={{ fontSize: 22, fontWeight: 800, color: "#6366f1", marginTop: 2 }}>{p.fpts}</div>
-              <div style={{ fontSize: 11, color: "#475569" }}>fantasy pts</div>
+              <div style={{ fontSize: 22, fontWeight: 800, color: "#7c3aed", marginTop: 2 }}>{p.fpts}</div>
+              <div style={{ fontSize: 11, color: "#475569" }}>pts</div>
             </div>
           ))}
         </div>
@@ -72,14 +81,14 @@ export default async function Home() {
               <div style={{ textAlign: "center", maxWidth: 180, padding: "0 16px" }}>
                 <div style={{
                   fontSize: 40, fontWeight: 900, lineHeight: 1,
-                  color: "rgba(99,102,241,0.25)", marginBottom: 12,
+                  color: "rgba(124,58,237,0.25)", marginBottom: 12,
                 }}>{i + 1}</div>
                 <div style={{ fontSize: 16, fontWeight: 700, color: "#e2e8f0", marginBottom: 8 }}>{step.label}</div>
                 <div style={{ fontSize: 13, color: "#64748b", lineHeight: 1.6 }}>{step.desc}</div>
               </div>
               {i < STEPS.length - 1 && (
                 <div style={{
-                  fontSize: 22, color: "rgba(99,102,241,0.3)",
+                  fontSize: 22, color: "rgba(124,58,237,0.3)",
                   paddingTop: 8, flexShrink: 0, alignSelf: "flex-start",
                 }}>→</div>
               )}
@@ -118,11 +127,11 @@ export default async function Home() {
             {/* Win probability bar */}
             <div style={{ marginBottom: 8 }}>
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 6 }}>
-                <span style={{ fontWeight: 700, color: "#a5b4fc" }}>Your Team 67%</span>
+                <span style={{ fontWeight: 700, color: "#a78bfa" }}>Your Team 67%</span>
                 <span style={{ color: "#64748b" }}>33% Opponents</span>
               </div>
               <div style={{ height: 8, borderRadius: 4, background: "rgba(255,255,255,0.08)", overflow: "hidden" }}>
-                <div style={{ height: "100%", width: "67%", borderRadius: 4, background: "linear-gradient(90deg, #6366f1, #818cf8)" }} />
+                <div style={{ height: "100%", width: "67%", borderRadius: 4, background: "linear-gradient(90deg, #7c3aed, #a78bfa)" }} />
               </div>
             </div>
 
@@ -147,20 +156,28 @@ export default async function Home() {
         </div>
         <div className="stat-grid">
           <div className="stat-card">
-            <strong>Live Draft Room</strong>
-            <span className="panel-text">Pick your players in real time with a snake draft, pick clock, and live board.</span>
+            <strong>Live snake draft</strong>
+            <span className="panel-text">Real draft room with a clock, queue, and board. Build your roster pick by pick.</span>
           </div>
           <div className="stat-card">
-            <strong>Weekly Head-to-Head</strong>
-            <span className="panel-text">Compete against a different opponent each week, scored from real PWHL game stats.</span>
+            <strong>Build your roster</strong>
+            <span className="panel-text">Forwards, defense, goalies, bench and utility. Real PWHL depth, real decisions.</span>
           </div>
           <div className="stat-card">
-            <strong>Playoff Bracket</strong>
-            <span className="panel-text">Top teams earn a playoff seed. Win the bracket, win the league.</span>
+            <strong>Set your weekly lineup</strong>
+            <span className="panel-text">Start the right skaters, ride the hot goalie, and lock in before puck drop.</span>
           </div>
           <div className="stat-card">
-            <strong>Waiver Wire</strong>
-            <span className="panel-text">Steal a breakout player, stash a prospect, or drop a disappointment — any week.</span>
+            <strong>Trades &amp; the waiver wire</strong>
+            <span className="panel-text">Negotiate deals, claim breakouts off waivers, and out-maneuver your league.</span>
+          </div>
+          <div className="stat-card">
+            <strong>Standings &amp; playoffs</strong>
+            <span className="panel-text">Climb the table on Victory Points, clinch a seed, and chase a championship banner.</span>
+          </div>
+          <div className="stat-card">
+            <strong>Commissioner tools</strong>
+            <span className="panel-text">Run your league your way — scoring, schedule, rules and approvals.</span>
           </div>
         </div>
       </section>
@@ -190,14 +207,14 @@ export default async function Home() {
       {/* ── 7. Final CTA ─────────────────────────────────────────────────────── */}
       <section style={{ textAlign: "center", padding: "0 16px" }}>
         <h2 style={{ fontSize: 28, fontWeight: 800, margin: "0 0 8px", color: "#e2e8f0" }}>
-          Ready to build your team?
+          Your franchise is waiting.
         </h2>
         <p style={{ color: "#64748b", marginBottom: 32 }}>
-          Free to play.
+          Start a league with friends or join a public one. Draft tonight, compete all season.
         </p>
         <div className="hero-actions" style={{ justifyContent: "center" }}>
-          <Link href="/create-league" className="button-primary">Create League</Link>
-          <Link href="/join-league" className="button-secondary">Join League</Link>
+          <Link href="/create-league" className="button-primary">Start your franchise →</Link>
+          <Link href="/join-league" className="button-secondary">Join a league</Link>
         </div>
         <p style={{ marginTop: 20, fontSize: 14 }}>
           <Link href="/login" style={{ color: "#64748b" }}>Already have an account? Log in →</Link>
@@ -223,10 +240,10 @@ const POS_COLORS: Record<string, string> = {
 };
 
 const STEPS = [
-  { label: "Create League",    desc: "Invite up to 12 friends and set your draft date." },
-  { label: "Draft Players",    desc: "Pick real PWHL stars in a live snake draft." },
-  { label: "Set Your Lineup",  desc: "Swap players each week to maximize your score." },
-  { label: "Win Matchups",     desc: "Outscore your opponent using real game stats." },
+  { label: "Form Your League",    desc: "Invite up to 12 friends and set your draft date." },
+  { label: "Scout & Draft",       desc: "Pick real PWHL stars in a live snake draft." },
+  { label: "Manage Your Roster",  desc: "Swap players each week to maximize your score." },
+  { label: "Lead Your Franchise", desc: "Outscore your opponent using real game stats." },
 ];
 
 // ── Shared styles ─────────────────────────────────────────────────────────────
