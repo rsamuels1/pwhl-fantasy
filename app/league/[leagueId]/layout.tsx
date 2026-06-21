@@ -52,7 +52,7 @@ export default async function LeagueLayout({ children, params }: LeagueLayoutPro
     ...(league?.isReplay && isCommissioner ? [{ label: "Sim →", href: `${basePath}/sim` }] : []),
   ];
   const adminItem = isCommissioner
-    ? { label: "⚙ Front Office", href: `${basePath}/admin` }
+    ? { label: "⚙ Admin", href: `${basePath}/admin` }
     : null;
 
   return (
@@ -95,30 +95,39 @@ export default async function LeagueLayout({ children, params }: LeagueLayoutPro
           style={{
             display: "flex",
             flexWrap: "wrap",
-            gap: 10,
+            gap: 0,
             marginBottom: 24,
             alignItems: "center",
+            borderBottom: "1px solid rgba(148,163,184,0.1)",
           }}
         >
-          {navItems.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                justifyContent: "center",
-                padding: "10px 14px",
-                borderRadius: 999,
-                background: "rgba(255,255,255,0.06)",
-                color: "#e2e8f0",
-                textDecoration: "none",
-                fontSize: 13,
-              }}
-            >
-              {item.label}
-            </Link>
-          ))}
+          {navItems.map((item) => {
+            const isActive = item.href === basePath ||
+              (item.href !== basePath && item.href.startsWith(basePath + "/"));
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  padding: "12px 16px",
+                  borderRadius: 0,
+                  background: "transparent",
+                  color: isActive ? "#e2e8f0" : "#64748b",
+                  textDecoration: "none",
+                  fontSize: 13,
+                  fontWeight: isActive ? 600 : 400,
+                  borderBottom: isActive ? "2px solid #6366f1" : "2px solid transparent",
+                  transition: "color 0.18s ease, border-color 0.18s ease",
+                  marginBottom: "-1px",
+                }}
+              >
+                {item.label}
+              </Link>
+            );
+          })}
           {adminItem && (
             <Link
               href={adminItem.href}
@@ -126,13 +135,17 @@ export default async function LeagueLayout({ children, params }: LeagueLayoutPro
                 display: "inline-flex",
                 alignItems: "center",
                 justifyContent: "center",
-                padding: "8px 12px",
-                borderRadius: 999,
-                border: "1px solid rgba(148,163,184,0.15)",
+                padding: "12px 16px",
+                borderRadius: 0,
+                border: "none",
+                borderBottom: "2px solid transparent",
                 color: "#64748b",
                 textDecoration: "none",
-                fontSize: 12,
+                fontSize: 13,
+                fontWeight: 400,
                 marginLeft: "auto",
+                transition: "color 0.18s ease, border-color 0.18s ease",
+                marginBottom: "-1px",
               }}
             >
               {adminItem.label}
