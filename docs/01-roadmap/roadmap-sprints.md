@@ -188,7 +188,7 @@ here are read-heavy or isolated new domains — none touch the draft or standing
 
 ---
 
-## Sprint 7 — "Retention Layer" · ~2 wks · Track F · P2 ← CURRENT
+## Sprint 7 — "Retention Layer" · ✅ COMPLETE · Track F · P2
 
 Goal: Cement the multi-season story before the season ends. These features build on the
 schema foundation laid in Sprint 2 (parentLeagueId, rulesVersion, scoringVersion) and the
@@ -280,7 +280,7 @@ The platform is ready for the 2027-28 off-season renewal window.
 
 ---
 
-## Sprint 8 — "Beta Hardening" · ~1 wk · Jul 7–13, 2026 · Track V+F · P0/P1
+## Sprint 8 — "Beta Hardening" · ✅ COMPLETE · ~1 wk · Track V+F · P0/P1
 
 Goal: Close the gap between code-complete and production-ready before the founding commissioner
 cohort is invited. This is the integration and production-readiness work that unit tests cannot
@@ -548,7 +548,7 @@ replay league without hitting any of the reported blockers.
 
 ---
 
-## Sprint 11 — "UX Polish: Vocabulary + Navigation + Wizard + Empty States" · ~2 wks · Track F · P0/P1/P2 · ◐ IN PROGRESS (11a ✅ COMPLETE · 11b PLANNED)
+## Sprint 11 — "UX Polish: Vocabulary + Navigation + Wizard + Empty States" · ✅ COMPLETE · ~2 wks · Track F · P0/P1/P2 · (11a ✅ COMPLETE · 11b ✅ COMPLETE)
 
 Goal: Address the 3 P0 vocabulary blockers from Pass 3 (design critic) plus all remaining UX audit findings
 from Pass 1, Pass 2, and Pass 4 (newcomer click-through). Three P0 items address actively misleading UI
