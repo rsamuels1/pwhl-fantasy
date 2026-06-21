@@ -40,6 +40,7 @@ export function useDraftSocket(leagueId: string, teamId: string): DraftSocket {
   const shouldReconnectRef = useRef(true);
   const reconnectDelayRef = useRef(1000); // ms; doubles each attempt, caps at 30 000
   const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const reconnectAttemptedAfter4001Ref = useRef(false); // prevents infinite loop on hard-refresh
 
   const send = useCallback((msg: ClientMessage) => {
     const ws = wsRef.current;
@@ -53,6 +54,7 @@ export function useDraftSocket(leagueId: string, teamId: string): DraftSocket {
     setEvicted(false);
     shouldReconnectRef.current = true;
     reconnectDelayRef.current = 1000;
+    reconnectAttemptedAfter4001Ref.current = false;
 
     function scheduleReconnect() {
       if (!shouldReconnectRef.current) return;
@@ -98,8 +100,15 @@ export function useDraftSocket(leagueId: string, teamId: string): DraftSocket {
 
       ws.onclose = (event: CloseEvent) => {
         if (event.code === 4001) {
-          // Evicted by server (duplicate tab). Attempt one silent reconnect 500ms later
-          // in case this was a stale socket. If the reconnect fails, eviction is permanent.
+          // Evicted by server (duplicate tab). If this is a second 4001 in quick succession,
+          // the reconnect is in an eviction loop (stale socket evicting the new connection).
+          // Render EvictedOverlay and stop. First 4001 → silent reconnect attempt.
+          if (reconnectAttemptedAfter4001Ref.current) {
+            setEvicted(true);
+            return;
+          }
+          reconnectAttemptedAfter4001Ref.current = true;
+          // Attempt one silent reconnect 500ms later in case this was a stale socket.
           reconnectTimerRef.current = setTimeout(() => {
             if (shouldReconnectRef.current) {
               connect();
