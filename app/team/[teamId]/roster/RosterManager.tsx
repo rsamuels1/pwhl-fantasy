@@ -267,18 +267,30 @@ export default function RosterManager({
       {isOwnRoster && (
         <div style={{ display: "flex", gap: 4, background: "rgba(255,255,255,0.04)", borderRadius: 10, padding: 3, width: "fit-content", flexWrap: "wrap" }}>
           {([
-            ["roster", `${teamName} (${roster.length}/${maxRosterSize})`],
-            ["freeAgents", `Free Agents (${freeAgents.filter(p => !rosterIds.has(p.playerId)).length})`],
-            ["waiverWire", "Waiver Wire"],
-          ] as [Tab, string][]).map(([t, label]) => (
-            <button key={t} onClick={() => setTab(t)} style={{
-              padding: "7px 16px", borderRadius: 8, border: "none", cursor: "pointer",
-              fontSize: 13, fontWeight: 600,
-              background: tab === t ? "rgba(99,102,241,0.3)" : "transparent",
-              color: tab === t ? "#a5b4fc" : "#64748b",
-            }}>
-              {label}
-            </button>
+            ["roster", `${teamName} (${roster.length}/${maxRosterSize})`, undefined],
+            ["freeAgents", `Free Agents (${freeAgents.filter(p => !rosterIds.has(p.playerId)).length})`, "Add players immediately with no claim period"],
+            ["waiverWire", "Waiver Wire", "Claim players subject to priority and review period"],
+          ] as [Tab, string, string | undefined][]).map(([t, label, subtitle]) => (
+            <div key={t} style={{ position: "relative" }}>
+              <button onClick={() => setTab(t)} style={{
+                padding: "7px 16px", borderRadius: 8, border: "none", cursor: "pointer",
+                fontSize: 13, fontWeight: 600,
+                background: tab === t ? "rgba(99,102,241,0.3)" : "transparent",
+                color: tab === t ? "#a5b4fc" : "#64748b",
+              }}>
+                {label}
+              </button>
+              {subtitle && (
+                <div style={{
+                  position: "absolute", bottom: "100%", left: "50%", transform: "translateX(-50%)",
+                  whiteSpace: "nowrap", fontSize: 11, color: "#94a3b8", marginBottom: 6,
+                  background: "rgba(0,0,0,0.8)", padding: "4px 8px", borderRadius: 4,
+                  opacity: 0, pointerEvents: "none", transition: "opacity 0.2s",
+                }} onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.opacity = "1"; }} onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.opacity = "0"; }}>
+                  {subtitle}
+                </div>
+              )}
+            </div>
           ))}
         </div>
       )}
@@ -392,6 +404,13 @@ export default function RosterManager({
       {/* ── FREE AGENTS TAB (own team only) ── */}
       {isOwnRoster && tab === "freeAgents" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          <div style={{
+            padding: "12px 16px", borderRadius: 12,
+            background: "rgba(99,102,241,0.08)", border: "1px solid rgba(99,102,241,0.18)",
+            fontSize: 13, color: "#cbd5e1",
+          }}>
+            <span style={{ fontWeight: 600 }}>💡 Free agents add immediately.</span> They skip the waiver review period and go straight to your roster (subject to lock rules).
+          </div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
             <input
               type="text"
