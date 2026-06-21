@@ -94,10 +94,19 @@ function TopBar({
           {teamNames[teamId] ?? `…${teamId.slice(-6)}`}
         </span>
         {onClockTeamId && draft?.status === "IN_PROGRESS" && (
-          <div style={{ display: "flex", flexDirection: "column" }}>
-            <span style={{ fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--dim)", fontWeight: 600 }}>On the clock</span>
-            <span style={{ fontSize: 17, fontWeight: 700, color: isMyTurn ? "#c9b6ff" : "var(--text)" }}>
+          <div style={{
+            display: "flex", flexDirection: "column",
+            borderLeft: "3px solid rgba(124,58,237,0.30)",
+            paddingLeft: 12,
+          }}>
+            <span style={{ fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--dim)", fontWeight: 700 }}>
+              On the clock
+            </span>
+            <span style={{ fontSize: 18, fontWeight: 700, color: isMyTurn ? "#c9b6ff" : "var(--text)", lineHeight: 1.15 }}>
               {isMyTurn ? "Your pick!" : (teamNames[onClockTeamId] ?? "…" + onClockTeamId.slice(-6))}
+            </span>
+            <span className="font-stats" style={{ fontSize: 11, color: "var(--faint)" }}>
+              Pick {draft.currentOverall} of {draft.order.length}
             </span>
           </div>
         )}
@@ -136,10 +145,18 @@ function TopBar({
 
 function Clock({ expiresAt, isMyTurn }: { expiresAt: number | null; isMyTurn: boolean }) {
   const [secs, setSecs] = useState<number | null>(null);
+  const maxSecsRef = useRef<number | null>(null);
 
   useEffect(() => {
-    if (expiresAt == null) { setSecs(null); return; }
-    const tick = () => setSecs(Math.max(0, Math.round((expiresAt - Date.now()) / 1000)));
+    if (expiresAt == null) { setSecs(null); maxSecsRef.current = null; return; }
+    maxSecsRef.current = null; // reset for new pick
+    const tick = () => {
+      const remaining = Math.max(0, Math.round((expiresAt - Date.now()) / 1000));
+      if (maxSecsRef.current === null || remaining > maxSecsRef.current) {
+        maxSecsRef.current = remaining;
+      }
+      setSecs(remaining);
+    };
     tick();
     const id = setInterval(tick, 500);
     return () => clearInterval(id);
@@ -147,15 +164,26 @@ function Clock({ expiresAt, isMyTurn }: { expiresAt: number | null; isMyTurn: bo
 
   if (secs == null) return null;
   const warn = secs <= 10;
+  const pct = maxSecsRef.current ? Math.max(0, Math.min(100, Math.round((secs / maxSecsRef.current) * 100))) : 100;
+  const numColor = warn ? "var(--clock-warn)" : isMyTurn ? "#c9b6ff" : "var(--muted)";
+  const barColor = warn ? "var(--clock-warn)" : isMyTurn ? "#7c3aed" : "#4c3a7a";
+
   return (
-    <div
-      style={{
-        ...styles.clock,
-        color: warn ? "var(--clock-warn)" : isMyTurn ? "var(--green)" : "var(--text)",
-        borderColor: warn ? "var(--clock-warn)" : isMyTurn ? "var(--green)" : "var(--border)",
-      }}
-    >
-      {secs}s
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
+      <div className="font-stats" style={{
+        fontSize: 54, fontWeight: 700, lineHeight: 0.9,
+        color: numColor, fontVariantNumeric: "tabular-nums",
+        transition: "color 0.3s",
+      }}>
+        {secs}
+      </div>
+      <div style={{ width: 128, height: 4, borderRadius: 2, background: "rgba(150,160,200,0.15)", overflow: "hidden" }}>
+        <div style={{
+          height: "100%", width: `${pct}%`, borderRadius: 2,
+          background: `linear-gradient(90deg, ${barColor}, ${warn ? "#ef4444" : "#a78bfa"})`,
+          transition: "width 0.5s linear, background 0.3s",
+        }} />
+      </div>
     </div>
   );
 }
@@ -471,26 +499,30 @@ function NeedsPanel({
         const remaining = Math.max(0, need - have);
         const done = remaining === 0;
         const critical = !done && remaining <= 1;
+        const pct = need > 0 ? Math.min(100, Math.round((have / need) * 100)) : 0;
+        const barColor = done ? "#5fa98c" : have > 0 ? "#a78bfa" : "#d6a94e";
         const rowBg = done
-          ? "rgba(95,169,140,0.09)"
+          ? "rgba(95,169,140,0.07)"
           : critical
-          ? "rgba(214,169,78,0.08)"
-          : "var(--card)";
-        const rowBorder = done
-          ? "1px solid rgba(95,169,140,0.32)"
-          : critical
-          ? "1px solid rgba(214,169,78,0.30)"
-          : "1px solid var(--border)";
-        const countColor = done ? "#7fc2a6" : critical ? "#e3c989" : "var(--text)";
+          ? "rgba(214,169,78,0.06)"
+          : "rgba(150,160,200,0.03)";
+        const countColor = done ? "#7fc2a6" : critical ? "#e3c989" : "var(--muted)";
         return (
-          <div key={slot} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 10px", borderRadius: 6, marginBottom: 4, background: rowBg, border: rowBorder, fontSize: 12 }}>
-            <span className="font-stats" style={{ flex: 1, fontSize: 13, fontWeight: 600, color: done ? "#7fc2a6" : critical ? "#e3c989" : "var(--text)" }}>
-              {SLOT_LABELS[slot] ?? slot}
-            </span>
-            <span style={{ color: countColor, fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>
-              {have}/{need}
-            </span>
-            {done && <span style={{ fontSize: 10, color: "#7fc2a6" }}>✓</span>}
+          <div key={slot} style={{ marginBottom: 6 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "7px 10px", borderRadius: 8, background: rowBg, fontSize: 12 }}>
+              <span className="font-stats" style={{ flex: 1, fontSize: 14, fontWeight: 600, color: done ? "#7fc2a6" : critical ? "#e3c989" : "var(--text)" }}>
+                {SLOT_LABELS[slot] ?? slot}
+              </span>
+              <span style={{ color: countColor, fontWeight: 700, fontVariantNumeric: "tabular-nums", fontSize: 12 }}>
+                {have}/{need}
+              </span>
+              {done && (
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#7fc2a6" strokeWidth="2.5"><path d="M20 6 9 17l-5-5"/></svg>
+              )}
+            </div>
+            <div style={{ height: 6, borderRadius: 3, background: "rgba(150,160,200,0.10)", overflow: "hidden", marginTop: 3, marginLeft: 10, marginRight: 10 }}>
+              <div style={{ height: "100%", width: `${pct}%`, background: barColor, borderRadius: 3, transition: "width 0.3s" }} />
+            </div>
           </div>
         );
       })}
@@ -712,10 +744,11 @@ function PlayerPanel({
                 {available.length === 0 ? "Loading players…" : "No players match."}
               </p>
             ) : (
-              <div style={{ overflowX: "auto", overflowY: "auto", maxHeight: "calc(100vh - 320px)" }}>
+              <div className="draft-scroll" style={{ overflowX: "auto", overflowY: "auto", maxHeight: "calc(100vh - 320px)" }}>
                 <table style={{ ...styles.table, width: "100%", minWidth: 560 }}>
                   <thead style={{ position: "sticky", top: 0, background: "var(--bg)", zIndex: 1 }}>
                     <tr style={{ color: "var(--muted)", fontSize: 11, textTransform: "uppercase" }}>
+                      <th style={{ ...styles.th, width: 44 }} />
                       <th style={styles.th}>Pos</th>
                       <th style={styles.th}>Tm</th>
                       <th style={{ ...styles.th, minWidth: 130 }}>Player</th>
@@ -736,6 +769,11 @@ function PlayerPanel({
                   <tbody>
                     {rows.map(({ player: p, stats: s }) => (
                       <tr key={p.id} className="draft-player-row" style={styles.playerRow}>
+                        <td style={{ padding: "5px 6px" }}>
+                          <span style={{ width: 34, height: 34, borderRadius: 9, background: "rgba(124,58,237,0.18)", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 800, color: "#fff", flexShrink: 0 }}>
+                            {p.name.split(" ").pop()?.charAt(0).toUpperCase() ?? "?"}
+                          </span>
+                        </td>
                         <td style={{ padding: "5px 6px" }}><PosTag pos={p.position} /></td>
                         <td style={{ padding: "5px 6px", color: "var(--muted)", fontSize: 11, whiteSpace: "nowrap" }}>{p.team ?? "FA"}</td>
                         <td style={{ padding: "5px 6px", fontSize: 13, whiteSpace: "nowrap" }}>{p.name}</td>
@@ -758,7 +796,10 @@ function PlayerPanel({
                               onClick={() => queue.includes(p.id) ? removeFromQueue(p.id) : addToQueue(p.id)}
                               title={queue.includes(p.id) ? "Remove from queue" : "Add to queue"}
                             >
-                              {queue.includes(p.id) ? "★" : "☆"}
+                              {queue.includes(p.id)
+                                ? <svg width="16" height="16" viewBox="0 0 24 24" fill="#a78bfa" stroke="#a78bfa" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                                : <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                              }
                             </button>
                           </div>
                         </td>
@@ -1071,7 +1112,7 @@ function DraftRoomContent({
       {draft && !isMobile && (
         <div style={styles.body}>
           {/* Left column: pick board + recent picks */}
-          <div style={styles.leftCol}>
+          <div className="draft-scroll" style={styles.leftCol}>
             <PickBoard
               draft={draft}
               myTeamId={teamId}
@@ -1102,7 +1143,7 @@ function DraftRoomContent({
           </div>
 
           {/* Right column: my roster + needs */}
-          <div style={styles.rightCol}>
+          <div className="draft-scroll" style={styles.rightCol}>
             <NeedsPanel
               draft={draft}
               myTeamId={teamId}
@@ -1238,6 +1279,7 @@ const styles = {
     padding: 14,
     borderRight: "1px solid var(--border)",
     overflowY: "auto" as const,
+    // applied as className="draft-scroll" on the element
   },
   centerCol: {
     flex: 1,

@@ -497,3 +497,9 @@ img { max-width: 100%; display: block; }
   border: 1px solid var(--accent-border) !important;
   box-shadow: 0 0 32px var(--accent-glow) !important;
 }
+
+/* Draft room custom scrollbar */
+.draft-scroll::-webkit-scrollbar { width: 8px; height: 8px; }
+.draft-scroll::-webkit-scrollbar-track { background: transparent; }
+.draft-scroll::-webkit-scrollbar-thumb { background: rgba(124,58,237,0.35); border-radius: 4px; }
+.draft-scroll::-webkit-scrollbar-thumb:hover { background: rgba(124,58,237,0.55); }

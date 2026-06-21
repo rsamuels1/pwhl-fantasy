@@ -431,7 +431,7 @@ Zero "PWHL Fantasy" strings in live UI; `tsc --noEmit` clean; 202/202 tests pass
 
 ---
 
-## Sprint 10 — "Beta Bug Sweep + Launch Polish" · ~1 wk · Track V+F · P0/P1 · UPCOMING
+## Sprint 10 — "Beta Bug Sweep + Launch Polish" · ~1 wk · Track V+F · P0/P1 · ✅ COMPLETE
 
 Goal: Fix every bug surfaced by the founding commissioner beta cohort before public launch. Items
 come from `FeedbackSubmission` records logged Jun 20–21, 2026, plus high-priority UX gaps from
@@ -526,6 +526,14 @@ Center page header, visible to all league members.
 Files: `app/league/[leagueId]/trades/page.tsx`
 Effort: Backend 0 / Frontend S / Testing 0
 
+**Data Operations — also shipped in Sprint 10:**
+
+- **DATA-001: 2026-27 Initial Roster Load** ✅ — Loaded pre-season rosters for all 12 teams from
+  HockeyTech season_id=10 ("2026-27 Pre-Season"). 110 player team assignments updated, 1 new player
+  created (Jessie McPherson, G, TOR). Expansion team names set to Detroit/Hamilton/Las Vegas/San Jose
+  Hockey Team. Team ID mapping (HT numeric → DB externalId) documented in CLAUDE.md.
+  Command: `npx tsx scripts/update-2026-27-rosters.ts`
+
 **Deferred from Sprint 10 to Sprint 11:**
 - BF-007 (P2) — "Performance" tab rename to "Record" (copy-only, no functional impact)
 - UX-008 (P1) — Commissioner announcement form position on league overview
@@ -540,7 +548,7 @@ replay league without hitting any of the reported blockers.
 
 ---
 
-## Sprint 11 — "UX Polish: Vocabulary + Navigation + Wizard + Empty States" · ~2 wks · Track F · P0/P1/P2 · PLANNED
+## Sprint 11 — "UX Polish: Vocabulary + Navigation + Wizard + Empty States" · ~2 wks · Track F · P0/P1/P2 · ◐ IN PROGRESS (11a ✅ COMPLETE · 11b PLANNED)
 
 Goal: Address the 3 P0 vocabulary blockers from Pass 3 (design critic) plus all remaining UX audit findings
 from Pass 1, Pass 2, and Pass 4 (newcomer click-through). Three P0 items address actively misleading UI
@@ -600,86 +608,86 @@ Files: `app/team/[teamId]/matchup/page.tsx`, `components/FieldHero.tsx`, `compon
 
 **Existing Sprint 11 Pass 1/2 UX Polish (P1/P2):**
 
-**Priority 9 — BF-007: "Performance" Tab Name Unclear to Beta Users (P2, S)**
+**Priority 9 — BF-007: "Performance" Tab Name Unclear to Beta Users (P2, S)** ✅ DONE
 (Bumped from Sprint 10 to make room for UX-018 and UX-023.) Copy-only rename: TeamNav tab
 "Performance" → "Record." Disambiguates from the "Analysis" tab and better describes the
 weekly W-L FP scorecard content.
 Files: `app/team/[teamId]/TeamNav.tsx`, `app/team/[teamId]/schedule/page.tsx`
 
-**Priority 10 — UX-008: Commissioner Announcement Form Above Standings (P1, S)**
+**Priority 10 — UX-008: Commissioner Announcement Form Above Standings (P1, S)** ✅ DONE
 (Bumped from Sprint 10.) `AnnouncementForm` currently renders as the first visible element on the
 league overview, above standings. Move it below the primary content sections.
 Files: `app/league/[leagueId]/page.tsx`
 
-**Priority 11 — UX-006: League Nav Tab Style Mismatch (P1, M)**
+**Priority 11 — UX-006: League Nav Tab Style Mismatch (P1, M)** ✅ DONE
 League nav uses dark pill/chip tabs with no visible active state. Team nav uses white text + indigo
 underline. Unify the league nav to match the team nav visual pattern.
 Files: `app/league/[leagueId]/layout.tsx`, `app/globals.css`
 
-**Priority 12 — UX-014 + UX-015: Wizard Button Detached + Hairline Progress Bar (P1, M)**
+**Priority 12 — UX-014 + UX-015: Wizard Button Detached + Hairline Progress Bar (P1, M)** ✅ DONE
 "Next →" floats outside the wizard card. Progress indicator is a 1px bar with text-only label.
 Fix: move buttons inside the card container; replace progress bar with a 6-segment filled bar using `--accent`.
 Files: `app/create-league/CreateLeagueWizard.tsx`, `app/globals.css`
 
-**Priority 13 — UX-016: Pre-Season Empty States Lack Context and Next Actions (P1, M)**
+**Priority 13 — UX-016: Pre-Season Empty States Lack Context and Next Actions (P1, M)** ✅ DONE
 All pre-season empty states look identical and offer no guidance. Add page-specific copy and a
 contextual CTA to each using the existing `EmptyState.tsx` `cta` prop.
 Files: `app/team/[teamId]/matchup/page.tsx`, `app/league/[leagueId]/standings/page.tsx`,
 `app/team/[teamId]/schedule/page.tsx`, `app/team/[teamId]/analysis/page.tsx`
 
-**Priority 14 — UX-017: Register Page Headline Contradicts "Start Your Franchise" CTA (P1, S)**
+**Priority 14 — UX-017: Register Page Headline Contradicts "Start Your Franchise" CTA (P1, S)** ✅ DONE
 Source: Pass 2. Landing page CTA says "Start your franchise →" but the register page headline
 uses "Join the league. Pick your team." — different framing breaks user's mental model.
 Update register headline to match the REBRAND-001/002 GM/franchise voice.
 Files: `app/register/page.tsx`
 
-**Priority 15 — UX-019: Free Agent Add Button Appears Pre-Draft Without Context (P1, S)**
+**Priority 15 — UX-019: Free Agent Add Button Appears Pre-Draft Without Context (P1, S)** ✅ DONE
 Source: Pass 2. Pre-draft users see 447 players with "Add" buttons and no explanation of whether
 this bypasses the draft. Add a contextual banner based on `league.status` explaining when/how
 free agent adds work.
 Files: `app/team/[teamId]/roster/RosterManager.tsx`
 
-**Priority 16 — UX-004: Nav Auth Indicator Uses Raw Display Name (P2, S)**
+**Priority 16 — UX-004: Nav Auth Indicator Uses Raw Display Name (P2, S)** ✅ DONE
 The top nav shows the user's display name as the auth link, creating a collision when a user is
 named "Commish." Replace with a fixed "Account" label or monogram avatar.
 Files: `app/layout.tsx`
 
-**Priority 17 — UX-007: "Front Office" Link Icon Implies Add, Not Settings (P2, S)**
+**Priority 17 — UX-007: "Front Office" Link Icon Implies Add, Not Settings (P2, S)** ✅ DONE
 The ⊕ symbol on the commissioner nav link implies creation. Replace with a settings/gear or
 briefcase icon and rename to "Admin" or "Commissioner Panel."
 Files: `app/league/[leagueId]/layout.tsx`
 
-**Priority 18 — UX-002: Login/Register Card Dead Zone + Faint Timing Signal (P2, M)**
+**Priority 18 — UX-002: Login/Register Card Dead Zone + Faint Timing Signal (P2, M)** ✅ DONE
 Top 35–40% of auth cards is empty space. Season timing note is nearly invisible. Reduce top
 padding; elevate timing info to a visible chip near the form title.
 Files: `app/login/page.tsx`, `app/register/page.tsx`, `app/globals.css`
 
-**Priority 19 — UX-020: "Free Agents" and "Waiver Wire" Tabs Have No Inline Explanation (P2, S)**
+**Priority 19 — UX-020: "Free Agents" and "Waiver Wire" Tabs Have No Inline Explanation (P2, S)** ✅ DONE
 Source: Pass 2. Two tabs side-by-side with no explanation of the difference. Add a short subtitle
 or inline tooltip to each tab: "immediate add" vs "claimed by priority order over 48 hours."
 Files: `app/team/[teamId]/roster/RosterManager.tsx`
 
-**Priority 20 — UX-021: Dashboard Skeleton Shows Logged-Out Nav During Hydration (P2, M)**
+**Priority 20 — UX-021: Dashboard Skeleton Shows Logged-Out Nav During Hydration (P2, M)** ✅ DONE
 Source: Pass 2. After login, the top nav briefly shows "Login" during the server→client hydration
 window. Fix auth state resolution so the nav never shows the unauthenticated state for logged-in user.
 Files: `app/layout.tsx`
 
-**Priority 21 — UX-003: Optional Field Hint Looks Like Validation Error (P2, S)**
+**Priority 21 — UX-003: Optional Field Hint Looks Like Validation Error (P2, S)** ✅ DONE
 "(optional)" hint below Display name renders as a separate paragraph, resembling an error message.
 Inline it into the `<label>` element.
 Files: `app/register/page.tsx`
 
-**Priority 22 — UX-009: Duplicate League Name on Overview Page (P2, S)**
+**Priority 22 — UX-009: Duplicate League Name on Overview Page (P2, S)** ✅ DONE
 League name appears in both the breadcrumb and a redundant `<h1>` on the overview. Remove
 the body-level `<h1>` or replace it with a contextual section label.
 Files: `app/league/[leagueId]/page.tsx`
 
-**Priority 23 — UX-005: "Front Office" Logo Subtext Has No Link (P2, S)**
+**Priority 23 — UX-005: "Front Office" Logo Subtext Has No Link (P2, S)** ✅ DONE
 The "Front Office" text under the shield logo reads like a nav item but links nowhere.
 Either remove it or wire it to the admin panel for commissioners.
 Files: `components/LogoShield.tsx`, `app/league/[leagueId]/layout.tsx`
 
-**Priority 24 — UX-013: Wizard Card Doesn't Fill Viewport (P3, S)**
+**Priority 24 — UX-013: Wizard Card Doesn't Fill Viewport (P3, S)** ✅ DONE
 Wizard card floats in ~30% of viewport with dead space below. Set `min-height: 60vh` on the
 wizard card so it feels grounded.
 Files: `app/create-league/CreateLeagueWizard.tsx`, `app/globals.css`
@@ -729,6 +737,14 @@ Analysis trade-suggestion CTA (#25) is now unblocked once Trade System ships.
 Items below are acknowledged but have no sprint assignment. They become candidates for the
 2027-28 off-season roadmap:
 
+- **DATA-002: 2026-27 Final Roster Sync** — Re-run the roster update script once contracts are
+  finalized and pre-season signings are complete. Timing: run the week prior to the first PWHL game
+  once the 2026-27 regular season schedule and opening date are announced. Also the right time to
+  run the full `npm run ingest -- --season 2026-27` once HockeyTech publishes the regular-season
+  schedule (new season_id; check `modulekit&view=seasons` to confirm). Target: all 12 teams have
+  complete 20+ player rosters.
+  Command: `npx tsx scripts/update-2026-27-rosters.ts`
+
 - **FAAB / Free Agent Acquisition Budget (#6)** — ~80K. Blind-bid acquisition layered on top of the Sprint 6 waiver system. Deferred from Sprint 7 Priority 3 — not needed before public launch. FAAB is only meaningful if the waiver cron (`processWaivers()`) is confirmed live and commissioners actively request it. Revisit for the 2027-28 off-season roadmap. Depends on Waiver System (#5, complete) and waiver cron (Sprint 8, complete).
 - **Player Legacy & Cross-Season Tracking (#31)** — `/profile` page with career history across all leagues/seasons, FP totals, championship count; global leaderboard by career FP or championship count. Deferred because the feature requires at least one completed and renewed season to contain meaningful data. Ship after the 2026-27 season completes and a league renews for 2027-28. `UserCareerStats` cached table is post-season work.
 - **Growth / retention analytics** — GR-001/002 activation + retention dashboards (AN-002/003);
@@ -762,8 +778,9 @@ Items below are acknowledged but have no sprint assignment. They become candidat
 | Sprint 6 — Engagement + Transactions | ✅ COMPLETE | Auto-set lineup ✅ · FA schedule awareness + add & slot ✅ · beta feedback infrastructure ✅ · code audit + all P0/P1 fixes ✅ · team analysis ✅ · waiver priority + processing ✅ |
 | Sprint 7 — Retention Layer | ✅ COMPLETE | Storylines (#11) ✅ · Replay Sim V2 UX (#39) ✅ · Trade System (#7) ✅ · FAAB (#6) deferred to post-launch backlog · #38 DEFERRED · #31 Player Legacy deferred to backlog |
 | Sprint 8 — Beta Hardening | ✅ COMPLETE (14/14 done) | P0+P1 audit fixes shipped Jun 20 (ahead of schedule) · 7 beta bug fixes shipped commit b465423: playoff period anchoring, auto-set during playoffs, roster refresh, lineup sort, FA suggestions sim-date fix, bracket default (6→4) |
-| Sprint 10 — Beta Bug Sweep + Launch Polish | UPCOMING | 4 bugs + 5 UX fixes: BF-003/004/005/006 + UX-001/010/011/018/023; BF-007 + UX-008 bumped to Sprint 11 |
-| Sprint 11 — UX Polish: Vocabulary + Navigation + Wizard + Empty States | PLANNED | 24 items: 3 P0 vocabulary fixes (UX-024/025/026: VTF record label, hockey-score-look-alike record, 0-0-7 bug), 5 P1 education adds (UX-027/028/029/030/031: projection labels, button hierarchy, standings tooltips, rival prominence), 16 existing P1/P2 items from Pass 1/2 audits (nav, wizard, empty states, auth). Can split into 11a (P0/P1 vocabulary) and 11b (P1/P2 polish) if needed |
+| Sprint 10 — Beta Bug Sweep + Launch Polish | ✅ COMPLETE (Jun 21, 2026) | 4 bugs + 5 UX fixes: BF-003/004/005/006 + UX-001/010/011/018/023 ✅; DATA-001 initial 2026-27 expansion roster load ✅; BF-007 + UX-008 bumped to Sprint 11 |
+| Sprint 11a — UX Polish: Vocabulary + Education (P0/P1) | ✅ COMPLETE (Jun 21, 2026) | 8 items shipped: UX-024/025/026 (VTF record label, hockey-score-look-alike record, 0-0-7 bug), UX-027/028/029/030/031 (projection labels, button hierarchy, standings tooltips, rival prominence) |
+| Sprint 11b — UX Polish: Navigation + Wizard + Empty States (P1/P2) | PLANNED | 16 items: BF-007, UX-008, UX-006, UX-014/015, UX-016, UX-017, UX-019, UX-004, UX-007, UX-002/003, UX-020/021, UX-009, UX-005, UX-013 |
 
 ---
 

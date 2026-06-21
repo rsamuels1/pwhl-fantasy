@@ -109,7 +109,7 @@ Sprint 6 is complete (7/7). Sprint 7 is complete (3/4 items done — #11 Storyli
 
 **Sprint 10 (Beta Bug Sweep + Launch Polish) is UPCOMING.** 4 bugs from founding commissioner feedback (Jun 21, 2026) plus 5 high-priority UX fixes from the Pass 1 and Pass 2 design audits: BF-003 activity feed raw type; BF-004 UTIL slot error; BF-005 draft false eviction; BF-006 zero-games bench hint; UX-001 landing trust copy; UX-010 admin CTA gate; UX-011 standings table headers; UX-018 lineup instruction pre-draft (Pass 2); UX-023 Trade Center no propose CTA (Pass 2). BF-007 and UX-008 bumped to Sprint 11. Full plan in `roadmap-sprints.md`.
 
-**Sprint 11 (UX Polish: Nav + Wizard + Empty States) is PLANNED.** 16 items from Pass 1 and Pass 2 audits: league nav alignment (UX-006), wizard layout (UX-014/015), empty state copy (UX-016), register copy mismatch (UX-017), FA context banners (UX-019/020), auth hydration nav (UX-021), plus BF-007/UX-008 bumped from Sprint 10 and the remaining Pass 1 items (UX-002–005/007/009/013). Sources: `docs/branding/Pass 1 — Design Critic.md` and `docs/branding/Pass 2 — End-User Click-Through`. Full plan in `roadmap-sprints.md`.
+**Sprint 11b (UX Polish: Nav + Wizard + Empty States) is COMPLETE.** All 16 P1/P2 items from Pass 1 and Pass 2 audits shipped: UX-002/003/004/005/006/007/008/009/013/014/015/016/017/019/020/021 plus BF-007. League nav alignment, wizard layout, empty state copy, register copy, FA context banners, auth hydration nav — all done. Full plan in `roadmap-sprints.md`.
 
 **Shipped (Sprint 6 — all complete):**
 - **League Onboarding (#2)** · ✅ Welcome flow, 6-step wizard, manager draft prep guide; `User.onboardingCompletedAt` schema field. (Sprint 3)

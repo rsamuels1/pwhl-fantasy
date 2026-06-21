@@ -1909,6 +1909,7 @@ Acceptance Criteria:
 Sprint: 11
 Priority: P2
 Effort: M
+Status: ✅ DONE
 
 As a first-time visitor on the auth page, I want the season timing information to be clearly
 visible and the form to start near the top of the card so that I'm not confronted with dead
@@ -1928,6 +1929,7 @@ Acceptance Criteria:
 Sprint: 11
 Priority: P2
 Effort: S
+Status: ✅ DONE
 
 As a new user filling in the registration form, I want the "(optional)" hint on the Display
 Name field to appear inline with the label so that I don't mistake it for a form error.
@@ -1946,6 +1948,7 @@ Acceptance Criteria:
 Sprint: 11
 Priority: P2
 Effort: S
+Status: ✅ DONE
 
 As a logged-in user, I want the nav auth indicator to use a fixed label (e.g., "Account" or
 a monogram) so that it can't visually collide with league-specific nav elements that happen
@@ -1964,6 +1967,7 @@ Acceptance Criteria:
 Sprint: 11
 Priority: P2
 Effort: S
+Status: ✅ DONE
 
 As a commissioner, I want the "Front Office" subtext in the logo area to either link to
 the admin panel or be removed so that it doesn't confuse me into thinking it's a navigation
@@ -1983,6 +1987,7 @@ Acceptance Criteria:
 Sprint: 11
 Priority: P1
 Effort: M
+Status: ✅ DONE
 
 As a user navigating between league and team pages, I want the navigation tabs to use the
 same visual language so that the app feels consistent and I can tell at a glance which page
@@ -2003,6 +2008,7 @@ Acceptance Criteria:
 Sprint: 11
 Priority: P2
 Effort: S
+Status: ✅ DONE
 
 As a commissioner, I want the nav link to my admin panel to use a settings icon (not ⊕)
 and a clear label like "Admin" so that I understand its purpose without clicking.
@@ -2018,9 +2024,10 @@ Acceptance Criteria:
 
 ## UX-008. Commissioner Announcement Form Is Above-the-Fold on League Overview
 
-Sprint: 10
+Sprint: 11
 Priority: P1
 Effort: S
+Status: ✅ DONE
 
 As a league member visiting the overview page, I want to see standings and race context first
 so that I get immediate value from the page, not a commissioner tool textarea.
@@ -2039,6 +2046,7 @@ Acceptance Criteria:
 Sprint: 11
 Priority: P2
 Effort: S
+Status: ✅ DONE
 
 As a user on the league overview, I want to see the league name once so that the page doesn't
 look like a layout mistake.
@@ -2114,6 +2122,7 @@ Files: `app/league/[leagueId]/bracket/page.tsx`, `app/league/[leagueId]/standing
 Sprint: 11
 Priority: P3
 Effort: S
+Status: ✅ DONE
 
 As a new user creating a league, I want the setup wizard to feel anchored and spacious so
 that it doesn't look like a broken layout with half the screen empty.
@@ -2131,6 +2140,7 @@ Acceptance Criteria:
 Sprint: 11
 Priority: P1
 Effort: M
+Status: ✅ DONE
 
 As a user stepping through the league creation wizard, I want the navigation buttons to be
 inside the card so that the layout feels intentional and standard.
@@ -2148,6 +2158,7 @@ Acceptance Criteria:
 Sprint: 11
 Priority: P1
 Effort: M
+Status: ✅ DONE
 
 As a user in the league creation wizard, I want a clear visual progress indicator (numbered
 dots or segmented bar) so that I know how many steps remain without counting mentally.
@@ -2167,6 +2178,7 @@ Acceptance Criteria:
 Sprint: 11
 Priority: P1
 Effort: M
+Status: ✅ DONE
 
 As a new user exploring the app before the season starts, I want each empty page to explain
 what it will show and what I should do next so that I don't think the app is broken.
@@ -2187,6 +2199,7 @@ Acceptance Criteria:
 Sprint: 11
 Priority: P1
 Effort: S
+Status: ✅ DONE
 
 As a first-time visitor who clicks "Start your franchise →" on the landing page, I want the
 register page to continue the franchise/management framing so that I'm not confused by
@@ -2224,6 +2237,7 @@ Acceptance Criteria:
 Sprint: 11
 Priority: P1
 Effort: S
+Status: ✅ DONE
 
 As a pre-draft user on the Roster page, I want to know that free agent adds are not
 available until after the draft so that I don't click "Add" and get an unexpected result
@@ -2243,6 +2257,7 @@ Acceptance Criteria:
 Sprint: 11
 Priority: P2
 Effort: S
+Status: ✅ DONE
 
 As a first-time user on the Roster page, I want to understand the difference between the
 "Free Agents" and "Waiver Wire" tabs so that I know which one to use and why.
@@ -2261,6 +2276,7 @@ Acceptance Criteria:
 Sprint: 11
 Priority: P2
 Effort: M
+Status: ✅ DONE
 
 As a user who just logged in, I want the top nav to show my auth state immediately so
 that I'm not briefly shown a "Login" link that makes me wonder if my login worked.
