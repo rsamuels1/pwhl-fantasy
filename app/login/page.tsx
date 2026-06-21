@@ -64,6 +64,9 @@ export default function LoginPage() {
             <p style={{ marginTop: 14, fontSize: 15, color: "#94a3b8", lineHeight: 1.7 }}>
               Scout players. Build a championship roster. Lead your franchise through a full PWHL season.
             </p>
+            <div style={{ marginTop: 14, padding: "8px 12px", borderRadius: 8, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(148,163,184,0.1)", fontSize: 12, color: "#475569" }}>
+              Season starts November 2026 · Draft week TBD
+            </div>
           </div>
 
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -83,9 +86,6 @@ export default function LoginPage() {
             ))}
           </div>
 
-          <div style={{ marginTop: 28, paddingTop: 20, borderTop: "1px solid rgba(255,255,255,0.06)", fontSize: 12, color: "#475569" }}>
-            Season starts November 2026 · Draft week TBD
-          </div>
         </div>
 
         {/* Right — form */}
@@ -146,7 +146,7 @@ const pageStyle: React.CSSProperties = {
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
-  padding: "32px 16px",
+  padding: "16px 16px 32px",
 };
 
 const layoutStyle: React.CSSProperties = {
