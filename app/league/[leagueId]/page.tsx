@@ -266,35 +266,6 @@ export default async function LeagueOverviewPage({
         </div>
       )}
 
-      {/* ── Commissioner announcement — display + inline edit for commissioner ── */}
-      {(league.announcement || isCommissioner) && (
-        <div style={{
-          padding: "14px 18px", borderRadius: 14,
-          background: "var(--accent-dim)", border: "1px solid var(--accent-border)",
-        }}>
-          <div style={{ display: "flex", gap: 10, alignItems: "flex-start", marginBottom: isCommissioner ? 12 : 0 }}>
-            <span style={{ fontSize: 16, flexShrink: 0 }}>📣</span>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "#c9b6ff", marginBottom: 4 }}>
-                Commissioner note
-              </div>
-              {league.announcement ? (
-                <p style={{ margin: 0, fontSize: 14, color: "var(--text)", whiteSpace: "pre-wrap", lineHeight: 1.5 }}>
-                  {league.announcement}
-                </p>
-              ) : (
-                <p style={{ margin: 0, fontSize: 13, color: "var(--faint)", fontStyle: "italic" }}>No league announcements yet.</p>
-              )}
-            </div>
-          </div>
-          {isCommissioner && (
-            <div style={{ borderTop: "1px solid var(--accent-border)", paddingTop: 12, marginTop: 4 }}>
-              <AnnouncementForm leagueId={leagueId} initial={league.announcement ?? null} />
-            </div>
-          )}
-        </div>
-      )}
-
       {/* ── Commissioner action strip ── */}
       {commishAction && (
         <div className="alert-amber" style={{
@@ -762,6 +733,35 @@ export default async function LeagueOverviewPage({
 
         </div>
       </div>
+
+      {/* ── Commissioner announcement — display + inline edit for commissioner ── (moved to bottom) */}
+      {(league.announcement || isCommissioner) && (
+        <div style={{
+          padding: "14px 18px", borderRadius: 14,
+          background: "var(--accent-dim)", border: "1px solid var(--accent-border)",
+        }}>
+          <div style={{ display: "flex", gap: 10, alignItems: "flex-start", marginBottom: isCommissioner ? 12 : 0 }}>
+            <span style={{ fontSize: 16, flexShrink: 0 }}>📣</span>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "#c9b6ff", marginBottom: 4 }}>
+                Commissioner note
+              </div>
+              {league.announcement ? (
+                <p style={{ margin: 0, fontSize: 14, color: "var(--text)", whiteSpace: "pre-wrap", lineHeight: 1.5 }}>
+                  {league.announcement}
+                </p>
+              ) : (
+                <p style={{ margin: 0, fontSize: 13, color: "var(--faint)", fontStyle: "italic" }}>No league announcements yet.</p>
+              )}
+            </div>
+          </div>
+          {isCommissioner && (
+            <div style={{ borderTop: "1px solid var(--accent-border)", paddingTop: 12, marginTop: 4 }}>
+              <AnnouncementForm leagueId={leagueId} initial={league.announcement ?? null} />
+            </div>
+          )}
+        </div>
+      )}
 
     </div>
   );
