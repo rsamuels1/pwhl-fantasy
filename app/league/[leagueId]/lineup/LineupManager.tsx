@@ -224,6 +224,15 @@ export default function LineupManager({
 
     const moves: Array<{ playerId: string; slot: SlotType; swapWithPlayerId?: string }> = [];
 
+    // Debug: log pending changes to help diagnose BF-004
+    if (process.env.NODE_ENV === "development") {
+      const changes = roster.filter((p) => {
+        const saved = savedRoster.find((s) => s.playerId === p.playerId);
+        return saved?.slot !== p.slot;
+      });
+      console.log("[DEBUG LineupManager] Pending changes:", changes.map(p => ({ name: p.name, from: savedRoster.find(s => s.playerId === p.playerId)?.slot, to: p.slot })));
+    }
+
     // Compute the diff and detect swaps
     const rosterMap = new Map(roster.map((p) => [p.playerId, p.slot]));
     const savedMap = new Map(savedRoster.map((p) => [p.playerId, p.slot]));
