@@ -512,6 +512,45 @@ export default function LineupManager({
             <span className="section-accent" />
             <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.14em", color: "var(--dim)", textTransform: "uppercase" }}>Active</span>
           </div>
+
+          {/* Starter total bar — projected view only — MOVED TO TOP */}
+          {statsView === "projected" && projectedStats && (() => {
+            const starterTotal = seatedActive.reduce((sum, { player }) => {
+              if (!player) return sum;
+              return sum + (projectedStats[player.playerId]?.projectedFp ?? 0);
+            }, 0);
+            const worstStarterProj = seatedActive.reduce((min, { player, slot }) => {
+              if (!player || slot === "GOALIE") return min;
+              const fp = projectedStats[player.playerId]?.projectedFp ?? 0;
+              return fp < min.fp ? { name: player.name, fp, slot: player.slot, eligibleSlots: player.eligibleSlots } : min;
+            }, { name: "", fp: Infinity, slot: "FORWARD" as SlotType, eligibleSlots: [] as SlotType[] });
+            const benchUpgrade = benchPlayers.reduce<{ name: string; fp: number } | null>((best, p) => {
+              const fp = projectedStats[p.playerId]?.projectedFp ?? 0;
+              if (fp <= worstStarterProj.fp) return best;
+              // Only suggest if bench player can play the worst starter's slot
+              if (!p.eligibleSlots.includes(worstStarterProj.slot)) return best;
+              // Only suggest if bench player has games remaining this period
+              if ((p.gamesThisPeriod ?? 1) === 0) return best;
+              if (!best || fp > best.fp) return { name: p.name, fp };
+              return best;
+            }, null);
+            return (
+              <div style={{
+                marginBottom: 12, padding: "8px 12px", borderRadius: 8,
+                background: "rgba(99,102,241,0.08)", border: "1px solid rgba(99,102,241,0.15)",
+                display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center",
+              }}>
+                <span style={{ fontSize: 12, color: "#94a3b8" }}>Starters projected:</span>
+                <span style={{ fontSize: 13, fontWeight: 700, color: "#fbbf24" }}>{starterTotal.toFixed(1)} pts</span>
+                {benchUpgrade && (
+                  <span style={{ fontSize: 12, color: "#64748b" }}>
+                    · Consider starting <span style={{ color: "#a5b4fc" }}>{benchUpgrade.name}</span> ({benchUpgrade.fp.toFixed(1)} proj) over {worstStarterProj.name}
+                  </span>
+                )}
+              </div>
+            );
+          })()}
+
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             {seatedActive.map(({ slot, index, player }) => {
               const isTarget = seatIsTarget(slot, player);
@@ -558,43 +597,6 @@ export default function LineupManager({
               );
             })}
           </div>
-          {/* Starter total bar — projected view only */}
-          {statsView === "projected" && projectedStats && (() => {
-            const starterTotal = seatedActive.reduce((sum, { player }) => {
-              if (!player) return sum;
-              return sum + (projectedStats[player.playerId]?.projectedFp ?? 0);
-            }, 0);
-            const worstStarterProj = seatedActive.reduce((min, { player, slot }) => {
-              if (!player || slot === "GOALIE") return min;
-              const fp = projectedStats[player.playerId]?.projectedFp ?? 0;
-              return fp < min.fp ? { name: player.name, fp, slot: player.slot, eligibleSlots: player.eligibleSlots } : min;
-            }, { name: "", fp: Infinity, slot: "FORWARD" as SlotType, eligibleSlots: [] as SlotType[] });
-            const benchUpgrade = benchPlayers.reduce<{ name: string; fp: number } | null>((best, p) => {
-              const fp = projectedStats[p.playerId]?.projectedFp ?? 0;
-              if (fp <= worstStarterProj.fp) return best;
-              // Only suggest if bench player can play the worst starter's slot
-              if (!p.eligibleSlots.includes(worstStarterProj.slot)) return best;
-              // Only suggest if bench player has games remaining this period
-              if ((p.gamesThisPeriod ?? 1) === 0) return best;
-              if (!best || fp > best.fp) return { name: p.name, fp };
-              return best;
-            }, null);
-            return (
-              <div style={{
-                marginTop: 12, padding: "8px 12px", borderRadius: 8,
-                background: "rgba(99,102,241,0.08)", border: "1px solid rgba(99,102,241,0.15)",
-                display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center",
-              }}>
-                <span style={{ fontSize: 12, color: "#94a3b8" }}>Starters projected:</span>
-                <span style={{ fontSize: 13, fontWeight: 700, color: "#fbbf24" }}>{starterTotal.toFixed(1)} pts</span>
-                {benchUpgrade && (
-                  <span style={{ fontSize: 12, color: "#64748b" }}>
-                    · Consider starting <span style={{ color: "#a5b4fc" }}>{benchUpgrade.name}</span> ({benchUpgrade.fp.toFixed(1)} proj) over {worstStarterProj.name}
-                  </span>
-                )}
-              </div>
-            );
-          })()}
         </div>
 
         {/* RIGHT: Bench + IR */}
