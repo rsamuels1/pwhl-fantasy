@@ -25,7 +25,7 @@ export default async function Home() {
           Think Like a GM.
         </h1>
         <p className="hero-text" style={{ maxWidth: 560, margin: "24px auto 0", textAlign: "center" }}>
-          Don&apos;t just draft a team — run a front office. Build rosters, set lineups, work the wire, and make the calls that win championships in the Professional Women&apos;s Hockey League.
+          Pick your roster. Set your lineup. Win your matchup. Compete every week in women&apos;s hockey&apos;s most strategic fantasy league.
         </p>
         {/* Trust strip */}
         <div style={{ marginTop: 24, display: "flex", justifyContent: "center", gap: 20 }}>
@@ -70,7 +70,8 @@ export default async function Home() {
       {/* ── 3. How It Works ──────────────────────────────────────────────────── */}
       <section className="page-width">
         <div style={{ textAlign: "center", marginBottom: 44 }}>
-          <h2 style={sectionHeading}>How it works</h2>
+          <h2 style={sectionHeading}>Get started in three steps</h2>
+          <p style={sectionSub}>Pick players. Set lineups. Compete with friends.</p>
         </div>
         <div style={{
           display: "flex", flexWrap: "wrap", gap: 0,
@@ -173,7 +174,7 @@ export default async function Home() {
           </div>
           <div className="stat-card">
             <strong>Standings &amp; playoffs</strong>
-            <span className="panel-text">Climb the table on Victory Points, clinch a seed, and chase a championship banner.</span>
+            <span className="panel-text">Climb the standings, clinch a playoff spot, and compete for a championship.</span>
           </div>
           <div className="stat-card">
             <strong>Commissioner tools</strong>
@@ -240,10 +241,9 @@ const POS_COLORS: Record<string, string> = {
 };
 
 const STEPS = [
-  { label: "Form Your League",    desc: "Invite up to 12 friends and set your draft date." },
-  { label: "Scout & Draft",       desc: "Pick real PWHL stars in a live snake draft." },
-  { label: "Manage Your Roster",  desc: "Swap players each week to maximize your score." },
-  { label: "Lead Your Franchise", desc: "Outscore your opponent using real game stats." },
+  { label: "Create a League",  desc: "Invite friends. Set your draft date. You're ready to go." },
+  { label: "Draft Players",    desc: "Pick the PWHL stars you think will score the most points." },
+  { label: "Compete Weekly",   desc: "Set your lineup, watch the games, and rack up points together." },
 ];
 
 // ── Shared styles ─────────────────────────────────────────────────────────────
