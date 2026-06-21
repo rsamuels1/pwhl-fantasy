@@ -1,7 +1,5 @@
 "use client";
 
-import { useState } from "react";
-
 interface RivalInfo {
   teamId: string;
   teamName: string;
@@ -11,15 +9,15 @@ interface RivalInfo {
 
 interface Props {
   rival: RivalInfo | null;
-  compact?: boolean; // If true, show just the badge; if false, include record detail
+  compact?: boolean; // If true, show just the badge; if false, show expanded inline
+  lastResultAgainstRival?: { won: boolean; myScore: number; oppScore: number } | null;
 }
 
-export function RivalBadge({ rival, compact = false }: Props) {
-  const [expanded, setExpanded] = useState(false);
-
+export function RivalBadge({ rival, compact = false, lastResultAgainstRival = null }: Props) {
   if (!rival) return null;
 
   const recordStr = `${rival.record.wins}-${rival.record.losses}${rival.record.ties > 0 ? `-${rival.record.ties}` : ""}`;
+  const showCelebratory = lastResultAgainstRival?.won;
 
   if (compact) {
     return (
@@ -38,15 +36,7 @@ export function RivalBadge({ rival, compact = false }: Props) {
           fontSize: 12,
           fontWeight: 600,
           color: "#fb923c",
-          cursor: "pointer",
           transition: "all 0.15s",
-        }}
-        onClick={() => setExpanded(!expanded)}
-        onMouseEnter={(e) => {
-          (e.currentTarget as HTMLElement).style.background = "rgba(251,146,60,0.15)";
-        }}
-        onMouseLeave={(e) => {
-          (e.currentTarget as HTMLElement).style.background = "rgba(251,146,60,0.1)";
         }}
         title={`Played vs ${rival.teamName} ${rival.matchupCount} times`}
       >
@@ -55,60 +45,74 @@ export function RivalBadge({ rival, compact = false }: Props) {
     );
   }
 
+  // Expanded non-compact view — always visible
   return (
-    <div style={{ display: "grid", gap: 8 }}>
-      <button
-        onClick={() => setExpanded(!expanded)}
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 8,
-          padding: "10px 12px",
-          background: "rgba(251,146,60,0.08)",
-          border: "1px solid rgba(251,146,60,0.2)",
-          borderRadius: 8,
-          fontSize: 13,
-          fontWeight: 600,
-          color: "#fb923c",
-          cursor: "pointer",
-          transition: "all 0.15s",
-        }}
-        onMouseEnter={(e) => {
-          (e.currentTarget as HTMLElement).style.background = "rgba(251,146,60,0.12)";
-        }}
-        onMouseLeave={(e) => {
-          (e.currentTarget as HTMLElement).style.background = "rgba(251,146,60,0.08)";
-        }}
-      >
-        <span>🔥 Rival: {rival.teamName}</span>
-        <span style={{ marginLeft: "auto", fontSize: 11, color: "#94a3b8" }}>
-          {expanded ? "▼" : "▶"}
-        </span>
-      </button>
+    <div
+      style={{
+        padding: "14px 16px",
+        background: showCelebratory
+          ? "linear-gradient(135deg, rgba(34,197,94,0.08), rgba(52,211,153,0.04))"
+          : "rgba(251,146,60,0.06)",
+        border: showCelebratory
+          ? "1px solid rgba(34,197,94,0.3)"
+          : "1px solid rgba(251,146,60,0.2)",
+        borderRadius: 10,
+        fontSize: 13,
+      }}
+    >
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+        <span style={{ fontSize: 20 }}>🔥</span>
+        <div>
+          <div style={{ fontSize: 14, fontWeight: 700, color: showCelebratory ? "#34d399" : "#fb923c" }}>
+            {showCelebratory ? "Rivalry Win!" : "Your rival this week"}
+          </div>
+          <div style={{ fontSize: 12, color: "#94a3b8", marginTop: 2 }}>
+            {rival.teamName}
+          </div>
+        </div>
+      </div>
 
-      {expanded && (
+      {lastResultAgainstRival && (
         <div
           style={{
-            padding: "12px 14px",
-            background: "rgba(251,146,60,0.04)",
-            border: "1px solid rgba(251,146,60,0.15)",
+            display: "flex",
+            alignItems: "center",
+            gap: 12,
+            padding: "10px 12px",
+            background: showCelebratory ? "rgba(34,197,94,0.08)" : "rgba(251,146,60,0.04)",
             borderRadius: 8,
-            fontSize: 13,
+            border: showCelebratory ? "1px solid rgba(34,197,94,0.2)" : "1px solid rgba(251,146,60,0.15)",
+            marginBottom: 10,
           }}
         >
-          <div style={{ marginBottom: 8 }}>
-            <p style={{ margin: "0 0 4px", color: "#94a3b8", fontSize: 11 }}>
-              HEAD-TO-HEAD RECORD
-            </p>
-            <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: "#e2e8f0" }}>
-              {recordStr} ({rival.matchupCount} matchups)
-            </p>
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>
+              This week
+            </div>
+            <div
+              className="font-stats"
+              style={{
+                fontSize: 18,
+                fontWeight: 700,
+                color: showCelebratory ? "#34d399" : "#e2e8f0",
+              }}
+            >
+              {lastResultAgainstRival.myScore.toFixed(1)} – {lastResultAgainstRival.oppScore.toFixed(1)}
+            </div>
           </div>
-          <p style={{ margin: 0, color: "#64748b", fontSize: 12 }}>
-            Most-played opponent in the season
-          </p>
         </div>
       )}
+
+      <div style={{ display: "grid", gap: 6 }}>
+        <div>
+          <p style={{ margin: "0 0 4px", color: "#94a3b8", fontSize: 11, fontWeight: 600, textTransform: "uppercase" }}>
+            Season Series
+          </p>
+          <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: "#e2e8f0" }}>
+            {recordStr}
+          </p>
+        </div>
+      </div>
     </div>
   );
 }

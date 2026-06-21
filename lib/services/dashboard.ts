@@ -106,6 +106,7 @@ export interface WeeklyRecap {
   result: "win" | "loss" | "tie";
   myScore: number;
   opponentScore: number;
+  opponentTeamId: string;
   opponentName: string;
   myTopPerformer: { name: string; points: number } | null;
   myRank: number | null;
@@ -941,8 +942,10 @@ async function getLastResult(
     ? getRoundLabel(last.round, calculatePlayoffRounds((last.league?.playoffSettings as any)?.teamsInPlayoff || 4))
     : undefined;
 
+  const opponentTeamId = iAmHome ? last.awayTeamId : last.homeTeamId;
+
   return {
-    week: last.week, result, myScore, opponentScore, opponentName, myTopPerformer,
+    week: last.week, result, myScore, opponentScore, opponentTeamId, opponentName, myTopPerformer,
     myRank, teamsCount: teamScores.size, closestMatchup, highestScore,
     isPlayoff, round: last.round ?? undefined, roundLabel,
   };

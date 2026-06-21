@@ -418,21 +418,32 @@ export default async function TeamMatchupPage({
         <RosterStatusWidget matchup={activeMatchup} activeSlotCount={activeSlotCount} teamId={teamId} />
       )}
 
-      {/* ── Z4. Rival badge and H2H history ── */}
-      {rival && (
-        <Card>
-          <RivalBadge rival={rival} compact={false} />
-          <div style={{ marginTop: 14 }}>
-            <HeadToHeadHistory
-              myTeamId={teamId}
-              opponentTeamId={rival.teamId}
-              opponentName={rival.teamName}
-              matchups={allMatchups}
-              limit={5}
-            />
-          </div>
-        </Card>
-      )}
+      {/* ── Z4. Rival badge — always visible, celebratory when won ── */}
+      {rival && (() => {
+        // Check if the last result was against the rival
+        let lastResultAgainstRival: { won: boolean; myScore: number; oppScore: number } | null = null;
+        if (lastResult && lastResult.opponentTeamId === rival.teamId) {
+          lastResultAgainstRival = {
+            won: lastResult.myScore > lastResult.opponentScore,
+            myScore: lastResult.myScore,
+            oppScore: lastResult.opponentScore,
+          };
+        }
+        return (
+          <Card>
+            <RivalBadge rival={rival} compact={false} lastResultAgainstRival={lastResultAgainstRival} />
+            <div style={{ marginTop: 14 }}>
+              <HeadToHeadHistory
+                myTeamId={teamId}
+                opponentTeamId={rival.teamId}
+                opponentName={rival.teamName}
+                matchups={allMatchups}
+                limit={5}
+              />
+            </div>
+          </Card>
+        );
+      })()}
 
       {/* ── Z5. Last week recap (moved below live situation) ── */}
       {lastResult && <RecapCard recap={lastResult} />}
