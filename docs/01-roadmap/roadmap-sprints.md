@@ -431,6 +431,220 @@ Zero "PWHL Fantasy" strings in live UI; `tsc --noEmit` clean; 202/202 tests pass
 
 ---
 
+## Sprint 10 — "Beta Bug Sweep + Launch Polish" · ~1 wk · Track V+F · P0/P1 · UPCOMING
+
+Goal: Fix every bug surfaced by the founding commissioner beta cohort before public launch. Items
+come from `FeedbackSubmission` records logged Jun 20–21, 2026, plus high-priority UX gaps from
+the Pass 1 and Pass 2 design audits. No new features — only bugs and critical UX fixes.
+
+**Priority 1 — BF-003: Activity Feed Shows Raw Event Type Instead of Content (P0)**
+Bug: The league activity feed displays the string "LEAGUE_STORYLINE" instead of the storyline
+headline when storyline events fire. Root cause: `lib/services/activity.ts` `getLeagueActivity()`
+reads `(e.data as Record<string, string>)?.description` but `emitWeeklyStorylines()` stores
+data as `{ week, kind, headline, detail, value }` — no `description` key. The feed renders
+`e.type` as its fallback.
+Fix: In `getLeagueActivity()`, add a case for `LEAGUE_STORYLINE` that maps `data.headline` to
+`description`, or have `emitWeeklyStorylines()` always include a `description` field in the
+emitted `data` object. The latter is safer — the feed renderer stays unchanged.
+Files: `lib/services/storyline-service.ts` (emit a `description` field in storyline data),
+or `lib/services/activity.ts` (map `headline` for `LEAGUE_STORYLINE` type).
+Effort: Backend S / Frontend 0 / Testing S
+
+**Priority 2 — BF-004: Lineup Move "UTIL Slot Is Full" When Moving to an Empty Forward Slot (P0)**
+Bug: User reports trying to move a bench forward to an empty FORWARD seat and receiving the error
+"UTIL SLOT IS FULL (1/1). Move someone out first." The `validateSlotMove()` in `lib/lineup.ts`
+checks capacity for the `targetSlot` specified in the API call body. The client-side `moveTo()`
+in `LineupManager.tsx` calls `moveTo(slot, player?.playerId)` where `slot` is the seat's slot
+(e.g. `FORWARD`). Hypothesis: when a bench forward is selected, `canMoveTo("FORWARD")` highlights
+only FORWARD and UTIL. If the UTIL seat is empty and rendered first, clicking it sends `slot: UTIL`
+— the UTIL seat may be visually adjacent to or overlapping a rendered empty FORWARD row in a way
+that confuses the user. Alternatively, there may be a seat index collision in `seatedActive` array
+construction that assigns a FORWARD player's seat the slot label "UTIL."
+Investigation needed: reproduce with the specific 3F/2D/1G/1UTIL/6BENCH roster config; trace
+`seatedActive` construction from `rosterSettings` in `LineupManager.tsx`.
+Files: `app/league/[leagueId]/lineup/LineupManager.tsx` (seat generation logic),
+`lib/lineup.ts` (`validateSlotMove` error messages), `app/api/leagues/[leagueId]/lineup/route.ts`.
+Effort: Backend S / Frontend M / Testing S
+
+**Priority 3 — BF-005: Draft Room "Opened in Another Tab" False Positive (P1)**
+Bug: User gets the "You opened the draft in another tab" screen with no other tabs open.
+The BF-001 fix in Sprint 9 added one silent reconnect on close code 4001. However: `setEvicted(true)`
+is never called in `useDraftSocket.ts` — the `evicted` state is always `false`, so the
+`EvictedOverlay` at `DraftRoom.tsx:861` cannot currently render. The user must be seeing the
+overlay from a different trigger. Investigation: search for alternate `EvictedOverlay` render paths
+or a cached/stale build that pre-dates the BF-001 fix. If the root cause is the reconnect loop
+(stale socket fires a reconnect that evicts the active tab's socket), the fix is to track a
+`reconnectAttemptedAfter4001` ref so the second 4001 within a short window (e.g. 2s) sets
+`evicted(true)` immediately instead of looping. The current code has no way to distinguish
+"I was the stale socket" from "I am the active socket that got evicted."
+Files: `hooks/useDraftSocket.ts`, `app/draft/[leagueId]/DraftRoom.tsx`.
+Effort: Backend 0 / Frontend M / Testing M
+
+**Priority 4 — BF-006: Bench Upgrade Hint References Player With Zero Games (P1)**
+Bug: The starter-total summary bar on the lineup projected view shows "Consider starting Grace
+Zumwinkle (10.8 proj) over [starter]" even though Grace has zero games remaining this matchup
+week. The bench upgrade hint in `LineupManager.tsx` finds the bench player with the highest
+`projectedFp` and compares against the lowest active starter at the same eligible position.
+It does not filter out bench players with `gamesThisPeriod === 0`.
+Fix: In the bench upgrade hint computation in `LineupManager.tsx`, filter candidates to
+`p.gamesThisPeriod > 0` before finding the best bench upgrade (or at minimum, `>= 1`).
+This is the same zero-games guard already applied to `zeroGameStarters` and `computeOptimalLineup`.
+Files: `app/league/[leagueId]/lineup/LineupManager.tsx` (starter-total bar upgrade hint
+section, approximately line 536–548).
+Effort: Backend 0 / Frontend S / Testing S
+
+**Priority 5 — UX-018: Lineup Instruction Banner Misleads Pre-Draft Users (P0, S)**
+Source: Pass 2 End-User Click-Through. Pre-draft user sees "Tap a player to select them, then
+tap where to move them" on the lineup page when every slot shows "Empty" and there are no players.
+Fix: When the roster is empty (zero `RosterEntry` rows), replace the instruction banner with:
+"Your roster is empty. Draft players first, then come back to set your lineup." with a link to
+the league overview or draft room. The swap instruction only shows when at least one player exists.
+Files: `app/team/[teamId]/lineup/LineupManager.tsx`
+Effort: Backend 0 / Frontend S / Testing S
+
+**Priority 6 — UX-001: Landing Page Trust Copy (P1, S)**
+Move "Free-to-Play, Pure Strategy" trust signal above the CTA buttons in `app/page.tsx`. Increase
+its visual weight so it reads as a headline modifier, not fine print.
+Files: `app/page.tsx`
+
+**Priority 7 — UX-010: Admin Panel CTA Visible to Non-Commissioners (P0, S)**
+The "Go to admin panel →" link in the standings empty state is shown to all members. Gate it
+to commissioner-only in `app/league/[leagueId]/standings/page.tsx` by checking `user.id === league.commissionerId`.
+Files: `app/league/[leagueId]/standings/page.tsx`
+
+**Priority 8 — UX-011: Standings Table Headers at Bottom of Bracket Page (P0, S)**
+Column headers ("W–L", "PF") appear below the data rows on the bracket/playoffs page. Fix
+`<thead>` / `<tbody>` order in `app/league/[leagueId]/bracket/page.tsx` or `components/PlayoffBracket.tsx`.
+Files: `app/league/[leagueId]/bracket/page.tsx`, `components/PlayoffBracket.tsx`
+
+**Priority 9 — UX-023: Trade Center Has No "Propose Trade" Button (P1, S)**
+Source: Pass 2 End-User Click-Through. The Trade Center page (`/league/[leagueId]/trades`) shows
+Incoming / Sent / League History tabs but has no visible CTA to start a new trade. A first-time
+user has no clear entry point to propose a trade without knowing to navigate to `.../trades/new`.
+Fix: Add a "Propose Trade →" button (linking to `/league/[leagueId]/trades/new`) in the Trade
+Center page header, visible to all league members.
+Files: `app/league/[leagueId]/trades/page.tsx`
+Effort: Backend 0 / Frontend S / Testing 0
+
+**Deferred from Sprint 10 to Sprint 11:**
+- BF-007 (P2) — "Performance" tab rename to "Record" (copy-only, no functional impact)
+- UX-008 (P1) — Commissioner announcement form position on league overview
+
+**Deferred from Sprint 10 (post-launch candidates):**
+- `FeedbackSubmission` status workflow (OPEN → TRIAGED → RESOLVED) in Founder Console
+- P2 notification gaps: `LINEUP_INCOMPLETE` cron, `WAIVER_CLAIM_AWARDED`/`DENIED` from `processWaivers()`
+- Email notification channel for `LINEUP_INCOMPLETE`, `TRADE_RECEIVED`, `WAIVER_RESULT`
+
+**Exit:** all 9 items resolved (4 bugs + 5 UX fixes), `tsc --noEmit` clean, ≥202 tests pass. Beta cohort can run a full
+replay league without hitting any of the reported blockers.
+
+---
+
+## Sprint 11 — "UX Polish: Navigation + Wizard + Empty States" · ~1 wk · Track F · P1/P2 · PLANNED
+
+Goal: Address remaining UX audit findings from the Pass 1 and Pass 2 design reviews. All items
+are layout and copy changes — no schema changes, no new API routes.
+
+Sources: `docs/branding/Pass 1 — Design Critic.md` (UX-002 through UX-009, UX-013–016) and
+`docs/branding/Pass 2 — End-User Click-Through` (UX-017, UX-019, UX-020, UX-021). Also carries
+forward BF-007 and UX-008 bumped from Sprint 10.
+
+**Priority 1 — BF-007: "Performance" Tab Name Unclear to Beta Users (P2, S)**
+(Bumped from Sprint 10 to make room for UX-018 and UX-023.) Copy-only rename: TeamNav tab
+"Performance" → "Record." Disambiguates from the "Analysis" tab and better describes the
+weekly W-L FP scorecard content.
+Files: `app/team/[teamId]/TeamNav.tsx`, `app/team/[teamId]/schedule/page.tsx`
+
+**Priority 2 — UX-008: Commissioner Announcement Form Above Standings (P1, S)**
+(Bumped from Sprint 10 to make room for UX-018 and UX-023.) `AnnouncementForm` renders as the
+first visible element on the league overview, above standings and race context. Move it below
+the primary content sections.
+Files: `app/league/[leagueId]/page.tsx`
+
+**Priority 3 — UX-006: League Nav Tab Style Mismatch (P1, M)**
+League nav uses dark pill/chip tabs with no visible active state. Team nav uses white text + indigo
+underline. Unify the league nav to match the team nav visual pattern.
+Files: `app/league/[leagueId]/layout.tsx`, `app/globals.css`
+
+**Priority 4 — UX-014 + UX-015: Wizard Button Detached + Hairline Progress Bar (P1, M)**
+"Next →" floats outside the wizard card. Progress indicator is a 1px bar with text-only label.
+Fix: move buttons inside the card container; replace progress bar with a 6-segment filled bar using `--accent`.
+Files: `app/create-league/CreateLeagueWizard.tsx`, `app/globals.css`
+
+**Priority 5 — UX-016: Pre-Season Empty States Lack Context and Next Actions (P1, M)**
+All pre-season empty states look identical and offer no guidance. Add page-specific copy and a
+contextual CTA to each using the existing `EmptyState.tsx` `cta` prop.
+Files: `app/team/[teamId]/matchup/page.tsx`, `app/league/[leagueId]/standings/page.tsx`,
+`app/team/[teamId]/schedule/page.tsx`, `app/team/[teamId]/analysis/page.tsx`
+
+**Priority 6 — UX-017: Register Page Headline Contradicts "Start Your Franchise" CTA (P1, S)**
+Source: Pass 2. Landing page CTA says "Start your franchise →" but the register page headline
+uses "Join the league. Pick your team." — a different framing that breaks the user's mental model.
+Update register headline to match the REBRAND-001/002 GM/franchise voice.
+Files: `app/register/page.tsx`
+
+**Priority 7 — UX-019: Free Agent Add Button Appears Pre-Draft Without Context (P1, S)**
+Source: Pass 2. Pre-draft users see 447 players with "Add" buttons and no explanation of whether
+this bypasses the draft. Add a contextual banner based on `league.status` explaining when and how
+free agent adds work.
+Files: `app/team/[teamId]/roster/RosterManager.tsx`
+
+**Priority 8 — UX-004: Nav Auth Indicator Uses Raw Display Name (P2, S)**
+The top nav shows the user's display name as the auth link, creating a collision when a user is
+named "Commish." Replace with a fixed "Account" label or monogram avatar.
+Files: `app/layout.tsx`
+
+**Priority 9 — UX-007: "Front Office" Link Icon Implies Add, Not Settings (P2, S)**
+The ⊕ symbol on the commissioner nav link implies creation. Replace with a settings/gear or
+briefcase icon and rename to "Admin" or "Commissioner Panel."
+Files: `app/league/[leagueId]/layout.tsx`
+
+**Priority 10 — UX-002: Login/Register Card Dead Zone + Faint Timing Signal (P2, M)**
+Top 35–40% of auth cards is empty space. Season timing note is nearly invisible. Reduce top
+padding; elevate timing info to a visible chip near the form title.
+Files: `app/login/page.tsx`, `app/register/page.tsx`, `app/globals.css`
+
+**Priority 11 — UX-020: "Free Agents" and "Waiver Wire" Tabs Have No Inline Explanation (P2, S)**
+Source: Pass 2. Two tabs side by side with no explanation of the difference. Add a short subtitle
+or inline tooltip to each tab: "immediate add" vs "claimed by priority order over 48 hours."
+Files: `app/team/[teamId]/roster/RosterManager.tsx`
+
+**Priority 12 — UX-021: Dashboard Skeleton Shows Logged-Out Nav During Hydration (P2, M)**
+Source: Pass 2. After login, the top nav briefly shows "Login" during the server→client hydration
+window. Fix auth state resolution so the nav never shows the unauthenticated state for a logged-in user.
+Files: `app/layout.tsx`
+
+**Priority 13 — UX-003: Optional Field Hint Looks Like Validation Error (P2, S)**
+"(optional)" hint below Display name renders as a separate paragraph, resembling an error message.
+Inline it into the `<label>` element.
+Files: `app/register/page.tsx`
+
+**Priority 14 — UX-009: Duplicate League Name on Overview Page (P2, S)**
+League name appears in both the breadcrumb and a redundant `<h1>` on the overview. Remove
+the body-level `<h1>` or replace it with a contextual section label.
+Files: `app/league/[leagueId]/page.tsx`
+
+**Priority 15 — UX-005: "Front Office" Logo Subtext Has No Link (P2, S)**
+The "Front Office" text under the shield logo reads like a nav item but links nowhere.
+Either remove it or wire it to the admin panel for commissioners.
+Files: `components/LogoShield.tsx`, `app/league/[leagueId]/layout.tsx`
+
+**Priority 16 — UX-013: Wizard Card Doesn't Fill Viewport (P3, S)**
+Wizard card floats in ~30% of viewport with dead space below. Set `min-height: 60vh` on the
+wizard card so it feels grounded.
+Files: `app/create-league/CreateLeagueWizard.tsx`, `app/globals.css`
+
+**Deferred to Design Backlog (requires design pass before implementation):**
+- **UX-012 (L)** — Combine Standings and Bracket/Playoffs into a single "Season" page with state-aware primary content. Pre-playoffs: standings-first. During playoffs: bracket-first. Eliminates the "Regular Season badge on Playoffs page" contradiction and reduces nav items.
+- **UX-022 (P3, S)** — Team "Record" tab / league "Schedule" tab naming ambiguity. Evaluate after BF-007 and UX-006 ship; may resolve on its own.
+
+**Note:** Sprint 11 is larger than typical (~16 items) because BF-007 + UX-008 were bumped from Sprint 10 and 4 net-new Pass 2 stories were added (UX-017, UX-019, UX-020, UX-021). All items are S or M effort — no XL items. Split into two mini-sprints if needed.
+
+**Exit:** all items resolved, Design Backlog items UX-012 and UX-022 specced.
+`tsc --noEmit` clean, ≥202 tests pass.
+
+---
+
 ## Backlog / Deferred (no sprint assignment)
 
 Items in this section have been explicitly deprioritized and pulled from the sprint plan.
@@ -480,6 +694,8 @@ Items below are acknowledged but have no sprint assignment. They become candidat
 | Sprint 6 — Engagement + Transactions | ✅ COMPLETE | Auto-set lineup ✅ · FA schedule awareness + add & slot ✅ · beta feedback infrastructure ✅ · code audit + all P0/P1 fixes ✅ · team analysis ✅ · waiver priority + processing ✅ |
 | Sprint 7 — Retention Layer | ✅ COMPLETE | Storylines (#11) ✅ · Replay Sim V2 UX (#39) ✅ · Trade System (#7) ✅ · FAAB (#6) deferred to post-launch backlog · #38 DEFERRED · #31 Player Legacy deferred to backlog |
 | Sprint 8 — Beta Hardening | ✅ COMPLETE (14/14 done) | P0+P1 audit fixes shipped Jun 20 (ahead of schedule) · 7 beta bug fixes shipped commit b465423: playoff period anchoring, auto-set during playoffs, roster refresh, lineup sort, FA suggestions sim-date fix, bracket default (6→4) |
+| Sprint 10 — Beta Bug Sweep + Launch Polish | UPCOMING | 4 bugs + 5 UX fixes: BF-003/004/005/006 + UX-001/010/011/018/023; BF-007 + UX-008 bumped to Sprint 11 |
+| Sprint 11 — UX Polish: Nav + Wizard + Empty States | PLANNED | 16 items from Pass 1 + Pass 2 audits: nav alignment, wizard layout, empty state copy, auth indicator, register copy (UX-017), FA context (UX-019/020), hydration nav (UX-021), BF-007 + UX-008 from Sprint 10 |
 
 ---
 

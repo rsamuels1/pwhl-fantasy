@@ -87,7 +87,7 @@ Snapshot of launch-blocking areas. **Confidence to launch: ~98%.**
 | Analytics | ✅ PASS | 6 events instrumented |
 | End-to-end season sim | ✅ PASS | PLAYOFF-AUDIT-001 complete Jun 20 — script runs clean, 180/180 tests, tsc clean |
 
-**All MVP gates clear.** PLAYOFF-BUG-001 resolved in commit b465423. No remaining soft blockers.
+**All MVP gates clear.** PLAYOFF-BUG-001 resolved in commit b465423. Sprint 10 bug fixes (BF-003/004/005/006) are in progress — these are quality blockers, not launch blockers, but should resolve before widening the beta cohort.
 
 ---
 
@@ -106,6 +106,10 @@ MVP proves a league can go **Create → Invite → Draft → Set Lineups → Com
 ## What To Build Next
 
 Sprint 6 is complete (7/7). Sprint 7 is complete (3/4 items done — #11 Storylines ✅; #39 Replay Sim V2 UX ✅; PLAYOFF-AUDIT-001 ✅; #7 Trade System deferred; #38 Replay V2 deferred). Sprint 8 (Beta Hardening) is complete — all 14 items done. Sprint 9 (PWHL GM Rebrand) is COMPLETE — all 8 stories shipped: REBRAND-001/002/003/004/005/006/007/008 all done. The product is now fully rebranded as PWHL GM with 202/202 tests passing and zero "PWHL Fantasy" strings in the live UI.
+
+**Sprint 10 (Beta Bug Sweep + Launch Polish) is UPCOMING.** 4 bugs from founding commissioner feedback (Jun 21, 2026) plus 5 high-priority UX fixes from the Pass 1 and Pass 2 design audits: BF-003 activity feed raw type; BF-004 UTIL slot error; BF-005 draft false eviction; BF-006 zero-games bench hint; UX-001 landing trust copy; UX-010 admin CTA gate; UX-011 standings table headers; UX-018 lineup instruction pre-draft (Pass 2); UX-023 Trade Center no propose CTA (Pass 2). BF-007 and UX-008 bumped to Sprint 11. Full plan in `roadmap-sprints.md`.
+
+**Sprint 11 (UX Polish: Nav + Wizard + Empty States) is PLANNED.** 16 items from Pass 1 and Pass 2 audits: league nav alignment (UX-006), wizard layout (UX-014/015), empty state copy (UX-016), register copy mismatch (UX-017), FA context banners (UX-019/020), auth hydration nav (UX-021), plus BF-007/UX-008 bumped from Sprint 10 and the remaining Pass 1 items (UX-002–005/007/009/013). Sources: `docs/branding/Pass 1 — Design Critic.md` and `docs/branding/Pass 2 — End-User Click-Through`. Full plan in `roadmap-sprints.md`.
 
 **Shipped (Sprint 6 — all complete):**
 - **League Onboarding (#2)** · ✅ Welcome flow, 6-step wizard, manager draft prep guide; `User.onboardingCompletedAt` schema field. (Sprint 3)
@@ -166,6 +170,18 @@ All audit fixes and beta bugs resolved. Commit b465423 ships the final 7 items.
 Deferred to operations phase (pre-launch): Vercel cron wiring (`CRON_SECRET` confirmed in staging), load test (10+ concurrent leagues), integration test. P2 notification gaps (lineup-incomplete cron, waiver claim awarded/denied) can slip to first post-beta fix.
 
 **Exit from Sprint 8:** founding commissioner beta invites go out (target Jul 14, 2026).
+
+**Sprint 10 — Beta Bug Sweep + Launch Polish — UPCOMING:**
+
+5 bugs from founding commissioner beta feedback (Jun 21, 2026). All are P0/P1 priority. No new features.
+
+- **BF-003 (P0)** — Activity feed shows "LEAGUE_STORYLINE" string instead of storyline headline. `lib/services/storyline-service.ts` or `lib/services/activity.ts` fix.
+- **BF-004 (P0)** — Lineup move to empty FORWARD seat throws "UTIL SLOT IS FULL" error. Investigation in `LineupManager.tsx` seat generation + `validateSlotMove` fallback.
+- **BF-005 (P1)** — Draft room "opened in another tab" false positive on hard refresh. `useDraftSocket.ts` reconnect loop after 4001 eviction.
+- **BF-006 (P1)** — Bench upgrade hint recommends a player with zero games remaining. `LineupManager.tsx` starter-total bar filtering.
+- **BF-007 (P2)** — "Performance" tab name unclear to beta users. Copy change only: `TeamNav.tsx` + page `<h1>`.
+
+---
 
 **Sprint 9 — PWHL GM Rebrand — COMPLETE ✅:**
 

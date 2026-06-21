@@ -5,6 +5,7 @@ import { requireAuth, requireTeamOwner, isFounder } from "@/lib/auth";
 import { getDashboardData, type ActiveMatchup, type PlayerMatchupRow, type WeeklyRecap, type LeaguePerformerRow, type ChampionInfo } from "@/lib/services/dashboard";
 import InlineLineupEditor, { type LineupPlayer } from "./InlineLineupEditor";
 import LiveScoreRefresh from "@/components/LiveScoreRefresh";
+import { LogoShield } from "@/components/LogoShield";
 import { getSwingPlayers } from "@/lib/matchups/swingPlayers";
 import { parseScoringSettings } from "@/lib/scoring/settings";
 import { getDevNow } from "@/lib/devTime";
@@ -864,94 +865,114 @@ function MatchupHero({ matchup, teamId, leagueId }: { matchup: ActiveMatchup; te
     : <FieldHero matchup={matchup} teamId={teamId} />;
 }
 
-function heroPeriodLabel(matchup: ActiveMatchup) {
-  const fmt = (d: Date | string) =>
-    new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" }).format(new Date(d));
-  if (matchup.isPlayoff && matchup.roundLabel && matchup.round) {
-    return `${matchup.roundLabel} · ${fmt(matchup.period.startsAt)} – ${fmt(new Date(new Date(matchup.period.endsAt).getTime() - 1))}`;
-  }
-  return `${fmt(matchup.period.startsAt)} – ${fmt(new Date(new Date(matchup.period.endsAt).getTime() - 1))}`;
-}
-
 // ── VTF (regular season): rank my team against the field ────────────────────────
 function FieldHero({ matchup, teamId }: { matchup: ActiveMatchup; teamId: string }) {
   const isUpcoming = matchup.status === "upcoming";
   const hideScore = isUpcoming || !!matchup.isSetupPhase;
-  const periodLabel = heroPeriodLabel(matchup);
   const standings = matchup.weeklyStandings;
   const myRank = standings.findIndex((s) => s.teamId === matchup.myTeam.id) + 1;
   const total = standings.length;
   const { wins, losses, ties } = matchup.myRecord;
   const winningRecord = wins > losses;
 
+  const fmt = (d: Date | string) =>
+    new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" }).format(new Date(d));
+  const dateRange = `${fmt(matchup.period.startsAt)} – ${fmt(new Date(new Date(matchup.period.endsAt).getTime() - 1))}`;
+  const weekLabel = matchup.isPlayoff && matchup.roundLabel ? matchup.roundLabel : `Week ${matchup.week}`;
+
   return (
-    <div style={{ background: "linear-gradient(135deg, #1b1346 0%, var(--card) 70%)", border: "1px solid var(--accent-border)", borderRadius: 20, padding: "30px 32px" }}>
-      <div style={{ fontSize: 11, letterSpacing: "0.18em", textTransform: "uppercase", color: "var(--dim)", fontWeight: 600, textAlign: "center", marginBottom: 26 }}>
-        {matchup.isPlayoff && matchup.roundLabel ? matchup.roundLabel : `Week ${matchup.week}`}
-        {" · "}{periodLabel}
-        {isUpcoming && <span style={{ marginLeft: 10, color: "#e3c989", background: "rgba(214,169,78,0.15)", padding: "1px 8px", borderRadius: 20, fontSize: 10 }}>Upcoming</span>}
-        {!isUpcoming && matchup.isSetupPhase && <span style={{ marginLeft: 10, color: "#e3c989", background: "rgba(214,169,78,0.15)", padding: "1px 8px", borderRadius: 20, fontSize: 10 }}>No games yet</span>}
-        {!hideScore && <span style={{ marginLeft: 12 }}><LiveScoreRefresh /></span>}
+    <div style={{
+      position: "relative", overflow: "hidden",
+      background: "linear-gradient(135deg, #1b1346 0%, #161a36 48%, #121829 100%)",
+      border: "1px solid rgba(124,58,237,0.32)",
+      borderRadius: 22,
+      boxShadow: "0 40px 90px -45px rgba(0,0,0,0.8)",
+    }}>
+      {/* Ambient glow overlay */}
+      <div style={{ position: "absolute", inset: 0, pointerEvents: "none", background: "radial-gradient(620px 280px at 18% -20%, rgba(167,139,250,0.20), transparent 70%), radial-gradient(560px 260px at 92% 120%, rgba(124,58,237,0.16), transparent 70%)" }} />
+
+      {/* Top bar */}
+      <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, padding: "20px 26px", borderBottom: "1px solid rgba(150,160,200,0.10)" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 11 }}>
+          <LogoShield size={24} />
+          <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.16em", textTransform: "uppercase", color: "#c7d2e0" }}>
+            {weekLabel} · {dateRange}
+          </span>
+        </div>
+        {isUpcoming && (
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 8, fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "#e3c989", background: "rgba(214,169,78,0.12)", border: "1px solid rgba(214,169,78,0.32)", borderRadius: 30, padding: "6px 13px" }}>
+            Upcoming — set your lineup
+          </span>
+        )}
+        {!isUpcoming && matchup.isSetupPhase && (
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 8, fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "#e3c989", background: "rgba(214,169,78,0.12)", border: "1px solid rgba(214,169,78,0.32)", borderRadius: 30, padding: "6px 13px" }}>
+            No games yet
+          </span>
+        )}
+        {!hideScore && <LiveScoreRefresh />}
       </div>
 
-      {/* My score + field record */}
-      <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 12, marginBottom: hideScore ? 4 : 18 }}>
-        <div>
-          <div style={{ fontSize: 11, letterSpacing: "0.06em", color: "#a78bfa", fontWeight: 700, textTransform: "uppercase", marginBottom: 4 }}>
-            You
-          </div>
-          <div className="font-stats" style={{ fontSize: hideScore ? "clamp(24px, 6vw, 32px)" : "clamp(48px, 6vw, 64px)", fontWeight: 700, lineHeight: 0.8, color: hideScore ? "var(--dim)" : "var(--text)" }}>
-            {hideScore ? "—" : matchup.myTeam.score.toFixed(1)}
-          </div>
-          <div style={{ fontSize: 12, color: "var(--faint)", marginTop: 6 }}>proj {matchup.myProjected.toFixed(1)}</div>
-        </div>
-        {!hideScore && (
-          <div style={{ textAlign: "right" }}>
-            <div style={{ fontSize: 11, color: "var(--faint)", marginBottom: 2 }}>vs field</div>
-            <div className="font-stats" style={{ fontSize: 22, fontWeight: 800, color: winningRecord ? "#a78bfa" : losses > wins ? "#c2776c" : "var(--muted)" }}>
-              {wins}–{losses}{ties > 0 ? `–${ties}` : ""}
+      {/* Body */}
+      <div style={{ position: "relative", padding: "28px 30px 26px" }}>
+        {/* My score + field record */}
+        <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 12, marginBottom: hideScore ? 4 : 18 }}>
+          <div>
+            <div style={{ fontSize: 11, letterSpacing: "0.06em", color: "#a78bfa", fontWeight: 700, textTransform: "uppercase", marginBottom: 4 }}>
+              You
             </div>
-            {myRank > 0 && (
-              <div style={{ fontSize: 11, color: "var(--faint)", marginTop: 2 }}>#{myRank} of {total} this week</div>
-            )}
+            <div className="font-stats" style={{ fontSize: hideScore ? "clamp(24px, 6vw, 32px)" : "clamp(48px, 6vw, 64px)", fontWeight: 700, lineHeight: 0.8, color: hideScore ? "var(--dim)" : "var(--text)" }}>
+              {hideScore ? "—" : matchup.myTeam.score.toFixed(1)}
+            </div>
+            <div style={{ fontSize: 12, color: "var(--faint)", marginTop: 6 }}>proj {matchup.myProjected.toFixed(1)}</div>
+          </div>
+          {!hideScore && (
+            <div style={{ textAlign: "right" }}>
+              <div style={{ fontSize: 11, color: "var(--faint)", marginBottom: 2 }}>vs field</div>
+              <div className="font-stats" style={{ fontSize: 22, fontWeight: 800, color: winningRecord ? "#a78bfa" : losses > wins ? "#c2776c" : "var(--muted)" }}>
+                {wins}–{losses}{ties > 0 ? `–${ties}` : ""}
+              </div>
+              {myRank > 0 && (
+                <div style={{ fontSize: 11, color: "var(--faint)", marginTop: 2 }}>#{myRank} of {total} this week</div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Field standings (active only) */}
+        {!hideScore && (
+          <div style={{ display: "grid", gap: 2 }}>
+            {standings.map((s, i) => {
+              const isMe = s.teamId === matchup.myTeam.id;
+              return (
+                <div key={s.teamId} style={{
+                  display: "grid", gridTemplateColumns: "20px 1fr auto", gap: 8, alignItems: "center",
+                  padding: "5px 8px", borderRadius: 6,
+                  background: isMe ? "var(--accent-dim)" : "transparent",
+                }}>
+                  <span style={{ fontSize: 11, color: "var(--faint)", fontWeight: 700 }}>{i + 1}</span>
+                  <span style={{ fontSize: 13, fontWeight: isMe ? 700 : 400, color: isMe ? "#c9b6ff" : "var(--muted)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {s.name}{isMe && <span style={{ marginLeft: 6, fontSize: 10, color: "#a78bfa" }}>YOU</span>}
+                  </span>
+                  <span className="font-stats" style={{ fontSize: 13, fontWeight: 700, color: isMe ? "var(--text)" : "var(--dim)" }}>
+                    {s.score.toFixed(1)}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {hideScore && (
+          <div style={{ marginTop: 4 }}>
+            <Link href={`/team/${teamId}/lineup`} style={{
+              display: "inline-block", fontSize: 13, fontWeight: 700, padding: "8px 18px", borderRadius: 10,
+              background: "rgba(214,169,78,0.15)", color: "#e3c989", border: "1px solid rgba(214,169,78,0.30)", textDecoration: "none",
+            }}>
+              Set lineup →
+            </Link>
           </div>
         )}
       </div>
-
-      {/* Field standings (active only) */}
-      {!hideScore && (
-        <div style={{ display: "grid", gap: 2 }}>
-          {standings.map((s, i) => {
-            const isMe = s.teamId === matchup.myTeam.id;
-            return (
-              <div key={s.teamId} style={{
-                display: "grid", gridTemplateColumns: "20px 1fr auto", gap: 8, alignItems: "center",
-                padding: "5px 8px", borderRadius: 6,
-                background: isMe ? "var(--accent-dim)" : "transparent",
-              }}>
-                <span style={{ fontSize: 11, color: "var(--faint)", fontWeight: 700 }}>{i + 1}</span>
-                <span style={{ fontSize: 13, fontWeight: isMe ? 700 : 400, color: isMe ? "#c9b6ff" : "var(--muted)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                  {s.name}{isMe && <span style={{ marginLeft: 6, fontSize: 10, color: "#a78bfa" }}>YOU</span>}
-                </span>
-                <span className="font-stats" style={{ fontSize: 13, fontWeight: 700, color: isMe ? "var(--text)" : "var(--dim)" }}>
-                  {s.score.toFixed(1)}
-                </span>
-              </div>
-            );
-          })}
-        </div>
-      )}
-
-      {hideScore && (
-        <div style={{ marginTop: 4 }}>
-          <Link href={`/team/${teamId}/lineup`} style={{
-            display: "inline-block", fontSize: 13, fontWeight: 700, padding: "8px 18px", borderRadius: 10,
-            background: "rgba(214,169,78,0.15)", color: "#e3c989", border: "1px solid rgba(214,169,78,0.30)", textDecoration: "none",
-          }}>
-            Set lineup →
-          </Link>
-        </div>
-      )}
     </div>
   );
 }
@@ -966,93 +987,205 @@ function DuelHero({
   leagueId: string;
 }) {
   const isUpcoming = matchup.status === "upcoming";
-  const hideScore = isUpcoming || !!matchup.isSetupPhase;
-  const myLead = matchup.myTeam.score - opponent.score;
+  const isSetupPhase = !!matchup.isSetupPhase;
+  const showDash = isSetupPhase;
   const winPct = Math.round(matchup.winProbability * 100);
   const oppPct = 100 - winPct;
-  const periodLabel = heroPeriodLabel(matchup);
 
-  const iWinning = !hideScore && myLead > 0;
-  const tied = !hideScore && myLead === 0;
-  const seriesGames = matchup.rivalry.wins + matchup.rivalry.losses + matchup.rivalry.ties;
+  const fmt = (d: Date | string) =>
+    new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" }).format(new Date(d));
+  const dateRange = `${fmt(matchup.period.startsAt)} – ${fmt(new Date(new Date(matchup.period.endsAt).getTime() - 1))}`;
+  const weekLabel = matchup.isPlayoff && matchup.roundLabel ? matchup.roundLabel : `Week ${matchup.week}`;
+
+  // Score display: upcoming → projected FP, setup phase → "—", active → actual score
+  const myScoreDisplay = showDash ? "—" : isUpcoming ? matchup.myProjected.toFixed(1) : matchup.myTeam.score.toFixed(1);
+  const oppScoreDisplay = showDash ? "—" : isUpcoming ? matchup.opponentProjected.toFixed(1) : opponent.score.toFixed(1);
+  const scoreLabel = showDash ? "No games yet" : isUpcoming ? "Projected FP" : "Points earned";
+  const myScoreColor = showDash ? "var(--dim)" : "#f6f7fb";
+  const oppScoreColor = showDash ? "var(--dim)" : "#c7d2e0";
+
+  // Win prob margin label
+  const myProj = matchup.myTeam.score + matchup.myProjected;
+  const oppProj = opponent.score + matchup.opponentProjected;
+  const diff = Math.abs(myProj - oppProj).toFixed(1);
+  const marginLabel = myProj >= oppProj ? `+${diff} edge` : `${diff} underdog`;
+
+  // Starters with games this period
+  const startersWithGames = matchup.myPlayers.filter(
+    (p) => p.slot !== "BENCH" && p.slot !== "IR" && (p.gamesThisPeriod ?? 0) > 0
+  ).length;
+
+  // Top active scorer (active state only)
+  const topScorer = !isUpcoming && !isSetupPhase
+    ? matchup.myPlayers
+        .filter((p) => p.slot !== "BENCH" && p.slot !== "IR" && p.points > 0)
+        .sort((a, b) => b.points - a.points)[0] ?? null
+    : null;
+
+  const seriesRecord = `${matchup.rivalry.wins}–${matchup.rivalry.losses}${matchup.rivalry.ties > 0 ? `–${matchup.rivalry.ties}` : ""}`;
 
   return (
-    <div style={{ background: "linear-gradient(135deg, #1b1346 0%, var(--card) 70%)", border: "1px solid var(--accent-border)", borderRadius: 20, padding: "30px 32px" }}>
-      <div style={{ fontSize: 11, letterSpacing: "0.18em", textTransform: "uppercase", color: "var(--dim)", fontWeight: 600, textAlign: "center", marginBottom: 26 }}>
-        {matchup.isPlayoff && matchup.roundLabel ? matchup.roundLabel : `Week ${matchup.week}`}
-        {" · "}{periodLabel}
-        {!hideScore && <span style={{ marginLeft: 12 }}><LiveScoreRefresh /></span>}
-      </div>
+    <div style={{
+      position: "relative", overflow: "hidden",
+      background: "linear-gradient(135deg, #1b1346 0%, #161a36 48%, #121829 100%)",
+      border: "1px solid rgba(124,58,237,0.32)",
+      borderRadius: 22,
+      boxShadow: "0 40px 90px -45px rgba(0,0,0,0.8)",
+    }}>
+      {/* Ambient glow overlay */}
+      <div style={{ position: "absolute", inset: 0, pointerEvents: "none", background: "radial-gradient(620px 280px at 18% -20%, rgba(167,139,250,0.20), transparent 70%), radial-gradient(560px 260px at 92% 120%, rgba(124,58,237,0.16), transparent 70%)" }} />
 
-      {seriesGames > 0 && (
-        <div style={{ fontSize: 11, color: "var(--faint)", marginBottom: 12, textAlign: "center" }}>
-          Season series vs {opponent.name}:{" "}
-          <span style={{ fontWeight: 700, color: "var(--muted)" }}>
-            {matchup.rivalry.wins}–{matchup.rivalry.losses}{matchup.rivalry.ties > 0 ? `–${matchup.rivalry.ties}` : ""}
+      {/* Top bar */}
+      <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, padding: "20px 26px", borderBottom: "1px solid rgba(150,160,200,0.10)" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 11 }}>
+          <LogoShield size={24} />
+          <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.16em", textTransform: "uppercase", color: "#c7d2e0" }}>
+            {weekLabel} · {dateRange}
           </span>
         </div>
-      )}
+        {isUpcoming && (
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 8, fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "#e3c989", background: "rgba(214,169,78,0.12)", border: "1px solid rgba(214,169,78,0.32)", borderRadius: 30, padding: "6px 13px" }}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#e3c989" strokeWidth="2.4"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+            Set lineup now
+          </span>
+        )}
+        {isSetupPhase && (
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 8, fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "#e3c989", background: "rgba(214,169,78,0.12)", border: "1px solid rgba(214,169,78,0.32)", borderRadius: 30, padding: "6px 13px" }}>
+            No games yet
+          </span>
+        )}
+        {!isUpcoming && !isSetupPhase && <LiveScoreRefresh />}
+      </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", alignItems: "center", gap: 12, marginBottom: 20 }}>
-        <div>
-          <div style={{ fontSize: 11, letterSpacing: "0.06em", color: "#a78bfa", fontWeight: 700, textTransform: "uppercase", marginBottom: 4 }}>You</div>
-          <div className="font-stats" style={{ fontSize: "clamp(48px, 6vw, 64px)", fontWeight: 700, lineHeight: 0.8, color: hideScore ? "var(--dim)" : (iWinning ? "var(--text)" : "var(--muted)") }}>
-            {hideScore ? "—" : matchup.myTeam.score.toFixed(1)}
+      {/* Main 3-column grid */}
+      <div style={{ position: "relative", display: "grid", gridTemplateColumns: "1fr auto 1fr", alignItems: "center", gap: 18, padding: "30px 30px 22px" }}>
+
+        {/* YOU column */}
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 14 }}>
+          {/* Avatar + team name */}
+          <div style={{ display: "flex", alignItems: "center", gap: 13 }}>
+            <span style={{ width: 52, height: 52, borderRadius: 14, background: "linear-gradient(135deg, #7c3aed, #4c1d95)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, fontWeight: 800, color: "#fff", boxShadow: "0 8px 20px -8px rgba(124,58,237,0.8)", flexShrink: 0 }}>
+              {matchup.myTeam.name.charAt(0).toUpperCase()}
+            </span>
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <span style={{ fontSize: 19, fontWeight: 800, color: "#f6f7fb", letterSpacing: "-0.01em" }}>{matchup.myTeam.name}</span>
+                <span style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: "0.06em", color: "#c9b6ff", background: "rgba(124,58,237,0.18)", borderRadius: 5, padding: "2px 7px" }}>YOU</span>
+              </div>
+              <div style={{ fontSize: 12, color: "#9aa3bd", marginTop: 3, fontVariantNumeric: "tabular-nums" }}>
+                {matchup.myRecord.wins}–{matchup.myRecord.losses}{matchup.myRecord.ties > 0 ? `–${matchup.myRecord.ties}` : ""}
+                {seriesRecord !== "0–0" && ` · ${seriesRecord} series`}
+              </div>
+            </div>
           </div>
-          <div style={{ fontSize: 12, color: "var(--faint)", marginTop: 6 }}>proj {matchup.myProjected.toFixed(1)}</div>
-        </div>
-        <div style={{ textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
-          <div style={{ width: 1, height: 54, background: "rgba(150,160,200,0.18)" }} />
-          {!hideScore && (
-            <div style={{ fontSize: 11, fontWeight: 700, color: iWinning ? "#a78bfa" : tied ? "var(--dim)" : "var(--faint)", textTransform: "uppercase", letterSpacing: "0.05em", marginTop: 4 }}>
-              {tied ? "Tied" : iWinning ? `+${Math.abs(myLead).toFixed(1)}` : `-${Math.abs(myLead).toFixed(1)}`}
+
+          {/* Score */}
+          <div>
+            <div className="font-stats" style={{ fontSize: 72, fontWeight: 700, lineHeight: 0.82, color: myScoreColor, fontVariantNumeric: "tabular-nums" }}>
+              {myScoreDisplay}
+            </div>
+            <div style={{ fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase", color: "#6f788e", marginTop: 6 }}>
+              {scoreLabel}
+            </div>
+          </div>
+
+          {/* Top scorer chip (active state only) */}
+          {topScorer && (
+            <div style={{ display: "flex", alignItems: "center", gap: 9, background: "rgba(150,160,200,0.05)", border: "1px solid rgba(150,160,200,0.12)", borderRadius: 10, padding: "8px 12px" }}>
+              <span style={{ width: 24, height: 24, borderRadius: 7, background: "rgba(124,58,237,0.16)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontWeight: 800, color: "#c9b6ff", flexShrink: 0 }}>
+                {topScorer.slot === "GOALIE" ? "G" : topScorer.slot === "DEFENSE" ? "D" : "F"}
+              </span>
+              <span style={{ fontSize: 12, color: "#c7d2e0" }}>
+                Leading · <strong style={{ color: "#f3f5fb", fontWeight: 700 }}>{topScorer.name.split(" ").pop()}</strong>
+              </span>
+              <span className="font-stats" style={{ fontSize: 15, fontWeight: 700, color: "#a78bfa" }}>
+                {topScorer.points.toFixed(1)}
+              </span>
             </div>
           )}
         </div>
-        <div style={{ textAlign: "right" }}>
-          <div style={{ fontSize: 11, letterSpacing: "0.06em", color: "var(--dim)", fontWeight: 700, textTransform: "uppercase", marginBottom: 4 }}>Opp</div>
-          <div className="font-stats" style={{ fontSize: "clamp(48px, 6vw, 64px)", fontWeight: 700, lineHeight: 0.8, color: hideScore ? "var(--dim)" : "var(--muted)" }}>
-            {hideScore ? "—" : opponent.score.toFixed(1)}
+
+        {/* Center VS column */}
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 14, alignSelf: "stretch", justifyContent: "center" }}>
+          <div style={{ flex: 1, width: 1, background: "linear-gradient(rgba(150,160,200,0), rgba(150,160,200,0.22), rgba(150,160,200,0))", minHeight: 14 }} />
+          <div style={{ width: 46, height: 46, borderRadius: "50%", border: "1px solid rgba(167,139,250,0.4)", background: "rgba(124,58,237,0.12)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 800, letterSpacing: "0.04em", color: "#c9b6ff", flexShrink: 0 }}>
+            VS
           </div>
-          <div style={{ fontSize: 12, color: "var(--faint)", marginTop: 6 }}>proj {matchup.opponentProjected.toFixed(1)}</div>
+          <div style={{ flex: 1, width: 1, background: "linear-gradient(rgba(150,160,200,0), rgba(150,160,200,0.22), rgba(150,160,200,0))", minHeight: 14 }} />
+        </div>
+
+        {/* OPPONENT column */}
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 14, textAlign: "right" }}>
+          {/* Avatar + team name */}
+          <div style={{ display: "flex", alignItems: "center", gap: 13, flexDirection: "row-reverse" }}>
+            <span style={{ width: 52, height: 52, borderRadius: 14, background: "linear-gradient(135deg, #3a4258, #222a3d)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, fontWeight: 800, color: "#dfe3ee", flexShrink: 0 }}>
+              {opponent.name.charAt(0).toUpperCase()}
+            </span>
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, flexDirection: "row-reverse" }}>
+                <span style={{ fontSize: 19, fontWeight: 800, color: "#e7eaf3", letterSpacing: "-0.01em" }}>{opponent.name}</span>
+                <span style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: "0.06em", color: "#9aa3bd", border: "1px solid rgba(150,160,200,0.22)", borderRadius: 5, padding: "2px 7px" }}>OPP</span>
+              </div>
+              <div style={{ fontSize: 12, color: "#9aa3bd", marginTop: 3, fontVariantNumeric: "tabular-nums" }}>
+                {seriesRecord} season series
+              </div>
+            </div>
+          </div>
+
+          {/* Score */}
+          <div>
+            <div className="font-stats" style={{ fontSize: 72, fontWeight: 700, lineHeight: 0.82, color: oppScoreColor, fontVariantNumeric: "tabular-nums" }}>
+              {oppScoreDisplay}
+            </div>
+            <div style={{ fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase", color: "#6f788e", marginTop: 6 }}>
+              {scoreLabel}
+            </div>
+          </div>
+
+          {/* Spacer to match top scorer chip height when absent */}
+          {!topScorer && <div style={{ height: 40 }} />}
+          {topScorer && <div style={{ height: 40 }} />}
         </div>
       </div>
 
-      {!hideScore && (
-        <div style={{ background: "rgba(10,14,26,0.45)", border: "1px solid var(--border)", borderRadius: 13, padding: "16px 18px", marginTop: 8 }}>
-          <div style={{ fontSize: 10, letterSpacing: "0.16em", textTransform: "uppercase", color: "var(--dim)", fontWeight: 600, marginBottom: 10 }}>Win probability</div>
-          <div style={{ height: 9, borderRadius: 999, background: "rgba(150,160,200,0.16)", overflow: "hidden", marginBottom: 8 }}>
-            <div style={{ height: "100%", width: `${winPct}%`, background: "linear-gradient(90deg, var(--accent-deep), #a78bfa)", borderRadius: 999, transition: "width 0.4s" }} />
-          </div>
-          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, fontWeight: 600 }}>
-            <span style={{ color: winPct >= 50 ? "#c9b6ff" : "var(--dim)" }}>{matchup.myTeam.name} {winPct}%</span>
-            <span style={{ color: oppPct > winPct ? "#c9b6ff" : "var(--dim)" }}>{oppPct}% {opponent.name}</span>
-          </div>
+      {/* Win probability bar */}
+      <div style={{ position: "relative", padding: "0 30px 24px" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+          <span style={{ fontSize: 12, fontWeight: 700, color: "#c9b6ff", fontVariantNumeric: "tabular-nums" }}>{winPct}% win probability</span>
+          <span style={{ fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase", color: "#6f788e" }}>Projected · {marginLabel}</span>
+          <span style={{ fontSize: 12, fontWeight: 700, color: "#9aa3bd", fontVariantNumeric: "tabular-nums" }}>{oppPct}%</span>
         </div>
-      )}
+        <div style={{ height: 9, borderRadius: 6, overflow: "hidden", background: "rgba(150,160,200,0.12)" }}>
+          <div style={{ height: "100%", width: `${winPct}%`, background: "linear-gradient(90deg, #a78bfa, #7c3aed)" }} />
+        </div>
+      </div>
 
-      {hideScore && (
-        <div style={{ marginTop: 4 }}>
+      {/* Footer CTA */}
+      <div style={{ position: "relative", display: "flex", alignItems: "center", gap: 12, padding: "18px 30px 24px", borderTop: "1px solid rgba(150,160,200,0.10)", flexWrap: "wrap" }}>
+        <span style={{ flex: 1, fontSize: 12.5, color: "#8b93a7", minWidth: 160 }}>
+          {isUpcoming
+            ? <>Set your lineup before puck drop — you have <strong style={{ color: "#e3c989", fontWeight: 700 }}>{startersWithGames} starter{startersWithGames !== 1 ? "s" : ""}</strong> with games this period.</>
+            : <>{startersWithGames} starter{startersWithGames !== 1 ? "s" : ""} active this period.</>
+          }
+        </span>
+        <Link href={matchup.isPlayoff ? `/league/${leagueId}/bracket` : `/league/${leagueId}/matchups`} style={{
+          background: "rgba(150,160,200,0.06)", border: "1px solid rgba(150,160,200,0.18)", color: "#e7eaf3",
+          padding: "12px 20px", borderRadius: 11, fontSize: 14, fontWeight: 600, textDecoration: "none",
+          whiteSpace: "nowrap",
+        }}>
+          {matchup.isPlayoff ? "View bracket" : "View schedule"}
+        </Link>
+        {isUpcoming && (
           <Link href={`/team/${teamId}/lineup`} style={{
-            display: "inline-block", fontSize: 13, fontWeight: 700, padding: "8px 18px", borderRadius: 10,
-            background: "rgba(214,169,78,0.15)", color: "#e3c989", border: "1px solid rgba(214,169,78,0.30)", textDecoration: "none",
+            background: "linear-gradient(135deg, #7c3aed, #6d28d9)", color: "#fff",
+            padding: "12px 22px", borderRadius: 11, fontSize: 14, fontWeight: 700, textDecoration: "none",
+            display: "inline-flex", alignItems: "center", gap: 8, whiteSpace: "nowrap",
           }}>
-            Set lineup →
+            Set lineup
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg>
           </Link>
-        </div>
-      )}
-
-      {matchup.isPlayoff && (
-        <div style={{ marginTop: 14, textAlign: "center" }}>
-          <Link href={`/league/${leagueId}/bracket`} style={{
-            fontSize: 11, fontWeight: 600, padding: "4px 12px", borderRadius: 20,
-            background: "var(--accent-dim)", color: "#c9b6ff",
-            border: "1px solid var(--accent-border)", textDecoration: "none",
-          }}>
-            View bracket →
-          </Link>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

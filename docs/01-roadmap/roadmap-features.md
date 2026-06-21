@@ -1706,6 +1706,616 @@ Candidates:
 
 ---
 
+# Sprint 10 Bug Tickets — Beta Feedback (Jun 21, 2026)
+
+Source: `FeedbackSubmission` records from founding commissioner beta cohort.
+All bugs logged by the same founding commissioner during replay testing on Jun 21, 2026.
+
+---
+
+## BF-003. Activity Feed Shows Raw "LEAGUE_STORYLINE" Event Type
+
+Sprint: 10
+
+Priority: P0
+
+Status: OPEN
+
+Summary: The league activity feed on `/league/[leagueId]/` renders the raw string
+`"LEAGUE_STORYLINE"` for storyline entries instead of the storyline headline. Root cause:
+`getLeagueActivity()` in `lib/services/activity.ts` reads `data.description` as its fallback
+before falling back to `e.type`, but `emitWeeklyStorylines()` in
+`lib/services/storyline-service.ts` never writes a `description` field — it writes
+`{ week, kind, headline, detail, value }`.
+
+Fix options (choose one):
+- A (preferred): Add `description: storyline.headline` to the `data` object in
+  `emitWeeklyStorylines()`. No change to the activity renderer.
+- B: Add a `LEAGUE_STORYLINE` special-case in `getLeagueActivity()` that maps `data.headline`
+  → `description`.
+
+Option A is preferred because it co-locates the description with the emitter and keeps the
+renderer generic.
+
+Files: `lib/services/storyline-service.ts`
+
+Acceptance Criteria:
+- AC-001: After a week scores, the league activity feed shows the storyline headline (e.g.
+  "Closest Match: Team A vs Team B — 47.2–46.9") not the string "LEAGUE_STORYLINE".
+- AC-002: Existing storyline events already in the DB (with no `description` key) continue
+  to render gracefully — fall back to `data.headline` if `data.description` is absent.
+
+---
+
+## BF-004. Lineup Move Returns "UTIL Slot Is Full" When Moving Bench Forward to Empty Forward Seat
+
+Sprint: 10
+
+Priority: P0
+
+Status: OPEN
+
+Summary: Beta user reports: "my lineup says i need another forward, when i try to move one
+off the bench — I get this error 'UTIL SLOT IS FULL (1/1). Move someone out first' but there's
+an empty spot on the active side that I should be able to put a player into."
+
+This implies that when a bench Forward is selected and the user clicks on an empty FORWARD
+seat, the click handler is either: (a) computing the wrong `targetSlot` value (sending "UTIL"
+when the user clicked a FORWARD seat), or (b) the `seatedActive` array in `LineupManager.tsx`
+has a slot label mismatch where an empty FORWARD row is labeled as a UTIL row in the rendered
+seat data.
+
+Investigation path:
+1. In `LineupManager.tsx`, trace how `seatedActive` is constructed from `rosterSettings`.
+   Confirm that FORWARD seats come before UTIL in the array so that when iterating for render,
+   the FORWARD seats render as FORWARD rows, not UTIL rows.
+2. In `moveTo(slot, ...)`, confirm that the `slot` passed in matches the `key={slot-index}`
+   of the seat that was clicked.
+3. In `validateSlotMove`, confirm the error message correctly identifies which slot is full.
+
+Files: `app/league/[leagueId]/lineup/LineupManager.tsx`, `lib/lineup.ts`,
+`app/api/leagues/[leagueId]/lineup/route.ts`
+
+Acceptance Criteria:
+- AC-001: A bench Forward can be moved to an empty FORWARD seat without error when the FORWARD
+  slot has capacity available.
+- AC-002: The UTIL slot validation error only appears when the user attempts to move a player
+  to the UTIL slot and it is genuinely full.
+- AC-003: The fix is tested with the canonical 3F/2D/1G/1UTIL/6BN roster configuration.
+
+---
+
+## BF-005. Draft Room Shows "Opened in Another Tab" With No Other Tab Open
+
+Sprint: 10
+
+Priority: P1
+
+Status: OPEN (BF-001 partially addressed this in Sprint 9; root cause persists)
+
+Summary: Beta user opened the draft room URL and immediately saw the eviction overlay ("You
+opened the draft in another tab. Switch to that tab to continue drafting.") with no other
+draft tab open.
+
+Root cause analysis:
+- Sprint 9's BF-001 fix added one silent reconnect attempt 500ms after receiving close
+  code 4001 from the server.
+- However, `setEvicted(true)` is never called anywhere in `useDraftSocket.ts`. The `evicted`
+  state remains `false`, so the `EvictedOverlay` at `DraftRoom.tsx:861` cannot render via the
+  current code path.
+- This means the user is either hitting a cached pre-BF-001 build, or the overlay has a
+  different trigger path not yet identified.
+- Additionally: the "one reconnect on 4001" logic has a flaw — if the user's stale socket
+  fires a reconnect, that reconnect causes the server to evict the active (newly opened) tab's
+  socket with another 4001. The active tab's `onclose(4001)` then fires its own reconnect,
+  creating a loop. Neither side ever stabilizes as "the winner."
+
+Full fix: Add a `reconnectAttemptedAfter4001Ref` boolean ref. On first 4001, set it true and
+attempt one reconnect. On second 4001 (within the same effect lifecycle), call
+`setEvicted(true)` and stop reconnecting. This gives the server's last-in-wins policy time to
+settle without creating a permanent eviction loop.
+
+Files: `hooks/useDraftSocket.ts`, `app/draft/[leagueId]/DraftRoom.tsx`
+
+Acceptance Criteria:
+- AC-001: Opening the draft room in a fresh tab does not show the eviction overlay.
+- AC-002: Opening the draft room in a second tab correctly evicts the first tab (which shows
+  the overlay) while the second tab remains connected.
+- AC-003: Hard refreshing the draft room does not trigger the eviction overlay.
+
+---
+
+## BF-006. Bench Upgrade Hint Recommends Player With Zero Games Remaining
+
+Sprint: 10
+
+Priority: P1
+
+Status: OPEN
+
+Summary: The starter-total summary bar on the lineup page's "Matchup Proj" view shows
+"Consider starting [Player] (X.X proj) over [Starter]" when [Player] has zero games remaining
+in the current matchup period. The hint computes the best bench upgrade by finding the bench
+player with the highest `projectedFp` — but does not filter out players whose
+`gamesThisPeriod === 0`.
+
+Fix: In `LineupManager.tsx`, in the bench upgrade hint computation (approximately lines 536–548),
+add a `gamesThisPeriod > 0` guard when finding the best bench candidate. Mirror the same guard
+already used in `zeroGameStarters` and `computeOptimalLineup()`.
+
+Files: `app/league/[leagueId]/lineup/LineupManager.tsx` (starter-total bar section)
+
+Acceptance Criteria:
+- AC-001: The bench upgrade hint never recommends a player whose `gamesThisPeriod === 0`.
+- AC-002: When no bench player has games remaining AND projects higher than the weakest
+  starter, the hint does not appear.
+- AC-003: The fix does not affect the hint when valid upgrade candidates exist.
+
+---
+
+## BF-007. "Performance" Tab Name Unclear to Beta Users
+
+Sprint: 10
+
+Priority: P2
+
+Status: OPEN
+
+Summary: Beta user feedback: "I don't like the name of this tab cause it's not really about
+performance." The TeamNav tab links to `/team/[teamId]/schedule` but the content is a weekly
+FP scorecard and VP record — a historical results view, not a forward-looking performance
+analysis. "Performance" was an improvement over the old "PWHL Schedule" but still ambiguous.
+
+Candidate names: "Record", "History", "Scorecard", "Season Log."
+Recommended: "Record" — short, unambiguous, communicates W-L outcome tracking. Distinguishes
+cleanly from the "Analysis" tab which IS about forward-looking performance insights.
+
+Files: `app/team/[teamId]/TeamNav.tsx`, `app/team/[teamId]/schedule/page.tsx` (page `<h1>`)
+
+Acceptance Criteria:
+- AC-001: The tab label in TeamNav reads "Record" (or the approved alternative).
+- AC-002: The page `<h1>` is updated to match.
+- AC-003: No test hard-codes the old tab name in a way that would break.
+
+---
+
+# UX / Design Polish
+
+Source: `docs/branding/Pass 1 — Design Critic.md` — full-app UX audit conducted June 2026.
+Sprint assignments: Sprint 10 (P0/P1 quick wins) and Sprint 11 (P1/P2 polish).
+
+---
+
+## UX-001. Landing Page Trust Copy Position and Weight
+
+Sprint: 10
+Priority: P1
+Effort: S
+
+As a first-time visitor, I want the trust signals ("Free-to-Play, Pure Strategy") to appear
+near the headline so that I'm reassured before I reach the CTA buttons.
+
+Files: `app/page.tsx`
+
+Acceptance Criteria:
+- AC-001: Trust copy reads "Free-to-Play, Pure Strategy."
+- AC-002: Trust copy renders above or immediately adjacent to the CTA buttons, not below them.
+- AC-003: Trust copy font size is ≥ 0.95rem (not fine print).
+
+---
+
+## UX-002. Login/Register Card Dead Zone and Faint Timing Signal
+
+Sprint: 11
+Priority: P2
+Effort: M
+
+As a first-time visitor on the auth page, I want the season timing information to be clearly
+visible and the form to start near the top of the card so that I'm not confronted with dead
+space or hidden critical information.
+
+Files: `app/login/page.tsx`, `app/register/page.tsx`, `app/globals.css`
+
+Acceptance Criteria:
+- AC-001: Top padding on auth card content area is ≤ 10% of card height.
+- AC-002: "Season starts November 2026 · Draft week TBD" (or equivalent) renders as a visible
+  chip or badge near the form title, not as a faint footer.
+
+---
+
+## UX-003. Register Page Optional Field Hint Looks Like Validation Error
+
+Sprint: 11
+Priority: P2
+Effort: S
+
+As a new user filling in the registration form, I want the "(optional)" hint on the Display
+Name field to appear inline with the label so that I don't mistake it for a form error.
+
+Files: `app/register/page.tsx`, `app/globals.css`
+
+Acceptance Criteria:
+- AC-001: "(optional)" appears as a muted inline modifier within the `<label>` element, not
+  as a separate `<p>` below the field.
+- AC-002: No existing validation error styling is used for hint text.
+
+---
+
+## UX-004. Nav Auth Indicator Uses Raw Display Name
+
+Sprint: 11
+Priority: P2
+Effort: S
+
+As a logged-in user, I want the nav auth indicator to use a fixed label (e.g., "Account" or
+a monogram) so that it can't visually collide with league-specific nav elements that happen
+to share my display name.
+
+Files: `app/layout.tsx`
+
+Acceptance Criteria:
+- AC-001: The nav auth link label is fixed ("Account" or monogram), never the user's raw display name.
+- AC-002: The change does not affect the Logout link behavior.
+
+---
+
+## UX-005. "Front Office" Logo Subtext Behaves Like a Dead Nav Item
+
+Sprint: 11
+Priority: P2
+Effort: S
+
+As a commissioner, I want the "Front Office" subtext in the logo area to either link to
+the admin panel or be removed so that it doesn't confuse me into thinking it's a navigation
+item.
+
+Files: `components/LogoShield.tsx`, `app/league/[leagueId]/layout.tsx`
+
+Acceptance Criteria:
+- AC-001: Either the subtext is removed, or it links to `/league/[leagueId]/admin` for
+  commissioners and is hidden for non-commissioners.
+- AC-002: No non-commissioner user sees a non-functional "Front Office" link.
+
+---
+
+## UX-006. League Nav Tab Visual Language Differs from Team Nav
+
+Sprint: 11
+Priority: P1
+Effort: M
+
+As a user navigating between league and team pages, I want the navigation tabs to use the
+same visual language so that the app feels consistent and I can tell at a glance which page
+is active.
+
+Files: `app/league/[leagueId]/layout.tsx`, `app/globals.css`
+
+Acceptance Criteria:
+- AC-001: League nav active tab uses white text + 2px `--accent` bottom border, matching the
+  pattern in `app/team/[teamId]/TeamNav.tsx`.
+- AC-002: Inactive league nav items use muted gray text (same as team nav inactive state).
+- AC-003: No visual difference remains between the league and team nav tab patterns.
+
+---
+
+## UX-007. "Front Office" Commissioner Link Icon Implies Add, Not Settings
+
+Sprint: 11
+Priority: P2
+Effort: S
+
+As a commissioner, I want the nav link to my admin panel to use a settings icon (not ⊕)
+and a clear label like "Admin" so that I understand its purpose without clicking.
+
+Files: `app/league/[leagueId]/layout.tsx`
+
+Acceptance Criteria:
+- AC-001: The commissioner admin link icon is a settings/gear or briefcase icon, not ⊕.
+- AC-002: The label reads "Admin" or "Commissioner Panel."
+- AC-003: Non-commissioners do not see the link (already gated; verify unchanged).
+
+---
+
+## UX-008. Commissioner Announcement Form Is Above-the-Fold on League Overview
+
+Sprint: 10
+Priority: P1
+Effort: S
+
+As a league member visiting the overview page, I want to see standings and race context first
+so that I get immediate value from the page, not a commissioner tool textarea.
+
+Files: `app/league/[leagueId]/page.tsx`
+
+Acceptance Criteria:
+- AC-001: `AnnouncementForm` renders after the playoff race table and matchup sections.
+- AC-002: The commissioner can still access and edit the announcement from the overview page.
+- AC-003: No existing announcement display behavior changes.
+
+---
+
+## UX-009. Duplicate League Name on Overview Page
+
+Sprint: 11
+Priority: P2
+Effort: S
+
+As a user on the league overview, I want to see the league name once so that the page doesn't
+look like a layout mistake.
+
+Files: `app/league/[leagueId]/page.tsx`
+
+Acceptance Criteria:
+- AC-001: The league name appears in the layout breadcrumb/header only — the body-level `<h1>`
+  league name is removed or replaced with a contextual section label (e.g., "League Overview").
+
+---
+
+## UX-010. "Go to Admin Panel" CTA Visible to Non-Commissioners
+
+Sprint: 10
+Priority: P0
+Effort: S
+
+As a league member (non-commissioner), I want the standings empty state to not show me a
+link to the admin panel so that I'm not sent to a page I can't access.
+
+Files: `app/league/[leagueId]/standings/page.tsx`
+
+Acceptance Criteria:
+- AC-001: The "Go to admin panel →" CTA only renders when `user.id === league.commissionerId`.
+- AC-002: Non-commissioners see a neutral pre-season empty state with no admin link.
+
+---
+
+## UX-011. Standings Table Headers Appear at Bottom of Bracket Page
+
+Sprint: 10
+Priority: P0
+Effort: S
+
+As a user on the Bracket/Playoffs page, I want the standings table column headers to appear
+at the top so that I can read the table correctly.
+
+Files: `app/league/[leagueId]/bracket/page.tsx`, `components/PlayoffBracket.tsx`
+
+Acceptance Criteria:
+- AC-001: "W–L," "PF," and other column headers render above the data rows, not below.
+- AC-002: The fix is verified with a dev playoff simulation using the replay simulator.
+
+---
+
+## UX-012. "Regular Season" Badge on Playoffs Page Is Contradictory (Design Backlog)
+
+Sprint: Design Backlog (requires design pass before implementation)
+Priority: P2
+Effort: L
+
+As a user on the Playoffs / Bracket page, I want the page header to accurately reflect what
+phase I'm in so that I'm not confused by competing labels.
+
+Immediate fix (S, can land in Sprint 10 alongside UX-011):
+- Move the "Regular Season" badge out of the H1 line into a subtitle row.
+- Reword to "Season phase: Regular Season" or replace with "X weeks until playoffs."
+
+Longer-term (L, Design Backlog):
+- Evaluate merging the Standings page and Bracket page into a single "Season" page.
+  Pre-playoffs state: standings-primary. During playoffs: bracket-primary (matches the
+  existing redirect from `/league/[leagueId]/` to `/bracket` when `playoffStatus === IN_PROGRESS`).
+  This eliminates the contradiction and reduces top-level nav items by one.
+
+Files: `app/league/[leagueId]/bracket/page.tsx`, `app/league/[leagueId]/standings/page.tsx`,
+`app/league/[leagueId]/layout.tsx`
+
+---
+
+## UX-013. Wizard Card Doesn't Fill the Viewport
+
+Sprint: 11
+Priority: P3
+Effort: S
+
+As a new user creating a league, I want the setup wizard to feel anchored and spacious so
+that it doesn't look like a broken layout with half the screen empty.
+
+Files: `app/create-league/CreateLeagueWizard.tsx`, `app/globals.css`
+
+Acceptance Criteria:
+- AC-001: Wizard card has `min-height: 60vh` or equivalent so it fills a meaningful portion
+  of the viewport without dead space below.
+
+---
+
+## UX-014. Wizard "Next" Button Is Outside the Card Boundary
+
+Sprint: 11
+Priority: P1
+Effort: M
+
+As a user stepping through the league creation wizard, I want the navigation buttons to be
+inside the card so that the layout feels intentional and standard.
+
+Files: `app/create-league/CreateLeagueWizard.tsx`
+
+Acceptance Criteria:
+- AC-001: "Next →" and "← Back" buttons are visually inside the card container.
+- AC-002: Button click behavior is unchanged.
+
+---
+
+## UX-015. Wizard Progress Indicator Is a Hairline Bar with Text Label
+
+Sprint: 11
+Priority: P1
+Effort: M
+
+As a user in the league creation wizard, I want a clear visual progress indicator (numbered
+dots or segmented bar) so that I know how many steps remain without counting mentally.
+
+Files: `app/create-league/CreateLeagueWizard.tsx`, `app/globals.css`
+
+Acceptance Criteria:
+- AC-001: Progress indicator is a segmented bar (6 segments) or numbered dot row.
+- AC-002: The current step segment/dot is filled with `--accent`.
+- AC-003: Completed step segments/dots show a filled or checkmark state.
+- AC-004: Progress indicator is visible without scrolling.
+
+---
+
+## UX-016. Pre-Season Empty States Lack Context and Next Actions
+
+Sprint: 11
+Priority: P1
+Effort: M
+
+As a new user exploring the app before the season starts, I want each empty page to explain
+what it will show and what I should do next so that I don't think the app is broken.
+
+Files: `app/team/[teamId]/matchup/page.tsx`, `app/league/[leagueId]/standings/page.tsx`,
+`app/team/[teamId]/schedule/page.tsx`, `app/team/[teamId]/analysis/page.tsx`
+
+Acceptance Criteria:
+- AC-001: Each of the four pages above has a page-specific empty state message (not the
+  same generic text).
+- AC-002: At least one page-appropriate CTA or link is present on each empty state.
+- AC-003: `EmptyState.tsx` `cta` prop is used (not custom one-off markup).
+
+---
+
+## UX-017. Register Page Headline Contradicts "Start Your Franchise" CTA
+
+Sprint: 11
+Priority: P1
+Effort: S
+
+As a first-time visitor who clicks "Start your franchise →" on the landing page, I want the
+register page to continue the franchise/management framing so that I'm not confused by
+copy that says "Join the league. Pick your team."
+
+Files: `app/register/page.tsx`
+
+Acceptance Criteria:
+- AC-001: The register page `<h1>` does not use "Join the league" or "Pick your team" framing.
+- AC-002: The headline reads something like "Create your account to get started" or "Join PWHL GM" — consistent with the REBRAND-001/002 voice.
+- AC-003: No change to form fields or submit behavior.
+
+---
+
+## UX-018. Lineup Instruction Banner Tells User to Tap Players That Don't Exist
+
+Sprint: 10
+Priority: P0
+Effort: S
+
+As a user with an empty roster (pre-draft), I want the lineup page to tell me what to do
+next so that I'm not instructed to "tap a player to select them" when there are no players.
+
+Files: `app/team/[teamId]/lineup/LineupManager.tsx`
+
+Acceptance Criteria:
+- AC-001: When the roster is empty (zero `RosterEntry` rows), the instruction banner is replaced with: "Your roster is empty. Draft players first, then come back to set your lineup." with a link to the league overview or draft room.
+- AC-002: The click-to-swap instruction banner only appears when at least one player is on the roster.
+- AC-003: Existing interaction behavior is unchanged for users with players on their roster.
+
+---
+
+## UX-019. Free Agent Add Button Appears Pre-Draft With No Context
+
+Sprint: 11
+Priority: P1
+Effort: S
+
+As a pre-draft user on the Roster page, I want to know that free agent adds are not
+available until after the draft so that I don't click "Add" and get an unexpected result
+or cryptic error.
+
+Files: `app/team/[teamId]/roster/RosterManager.tsx`
+
+Acceptance Criteria:
+- AC-001: When `league.status === "PRE_DRAFT"`, the Free Agents tab shows a contextual banner: "Free agent adds open after the draft. Players are added by waiver claim during the season."
+- AC-002: During the season (`IN_SEASON`), the banner reads: "Players dropped within 48 hours are on waivers. Others are immediate adds."
+- AC-003: Add buttons remain visible (do not hide them); the banner provides context so a mis-click produces an understandable error.
+
+---
+
+## UX-020. "Free Agents" and "Waiver Wire" Tabs Have No Inline Explanation
+
+Sprint: 11
+Priority: P2
+Effort: S
+
+As a first-time user on the Roster page, I want to understand the difference between the
+"Free Agents" and "Waiver Wire" tabs so that I know which one to use and why.
+
+Files: `app/team/[teamId]/roster/RosterManager.tsx`
+
+Acceptance Criteria:
+- AC-001: "Free Agents" tab has a visible subtitle or inline tooltip: "Players not on any team — immediate add during the season."
+- AC-002: "Waiver Wire" tab has a visible subtitle or inline tooltip: "Recently dropped players — claimed by priority order over 48 hours."
+- AC-003: Subtitles render without layout overflow at 390px mobile.
+
+---
+
+## UX-021. Dashboard Skeleton Shows Logged-Out Nav During Hydration
+
+Sprint: 11
+Priority: P2
+Effort: M
+
+As a user who just logged in, I want the top nav to show my auth state immediately so
+that I'm not briefly shown a "Login" link that makes me wonder if my login worked.
+
+Files: `app/layout.tsx`
+
+Acceptance Criteria:
+- AC-001: After a successful login, the top nav never displays "Login" for an authenticated user — not even during the server→client hydration window.
+- AC-002: If auth state is truly unknown during render, a neutral placeholder (e.g., a skeleton chip) is shown instead of the unauthenticated "Login" link.
+- AC-003: The fix does not affect the actual login/logout flow or redirect behavior.
+
+---
+
+## UX-022. Team Nav "Record" Tab and League Nav "Schedule" Tab Sound Similar
+
+Sprint: Design Backlog
+Priority: P3
+Effort: S
+
+As a user navigating between league and team pages, I want the tab labels for the matchup
+schedule (league-level) and my weekly history (team-level) to be clearly distinct so that
+I don't explore the wrong tab first.
+
+Note: BF-007 renames the team-nav tab from "Performance" to "Record," which reduces the
+ambiguity. UX-006 (league nav tab alignment) improves visual distinction between nav zones.
+This story tracks any residual naming confusion after both of those ship. Defer to Design
+Backlog — evaluate after BF-007 and UX-006 land.
+
+Files: `app/team/[teamId]/TeamNav.tsx`, `app/league/[leagueId]/layout.tsx`
+
+Acceptance Criteria:
+- AC-001: After BF-007 and UX-006 ship, the team nav "Record" tab and league nav "Schedule" tab are clearly distinct by label, visual zone, and context.
+- AC-002: No user in a usability test confuses the two tabs for the same thing.
+
+---
+
+## UX-023. Trade Center Has No Visible CTA to Propose a Trade
+
+Sprint: 10
+Priority: P1
+Effort: S
+
+As a league member on the Trade Center page, I want a clear "Propose Trade →" button in
+the page header so that I can start a trade without hunting for the entry point.
+
+Files: `app/league/[leagueId]/trades/page.tsx`
+
+Acceptance Criteria:
+- AC-001: A "Propose Trade →" button (or equivalent) appears prominently in the Trade Center page header.
+- AC-002: The button links to `/league/[leagueId]/trades/new`.
+- AC-003: The button is visible to all league members (any manager can propose a trade).
+- AC-004: The button renders correctly on 390px mobile without overflow.
+
+---
+
 # Architectural Rules
 
 Design for the live season first. Replay is a testing tool, so:

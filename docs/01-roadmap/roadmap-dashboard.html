@@ -124,6 +124,7 @@
     .sprint-card:hover { border-color: #444; }
     .sprint-card.complete { border-color: #22c55e; }
     .sprint-card.current { border-color: #f59e0b; background: rgba(245, 158, 11, 0.05); }
+    .sprint-card.planned { border-color: #444; border-style: dashed; }
     .sprint-card .name { font-weight: 700; margin-bottom: 0.25rem; }
     .sprint-card .progress { font-size: 0.75rem; color: #888; margin-top: 0.25rem; }
 
@@ -234,7 +235,7 @@
       </div>
       <div class="stat">
         <span class="label">Sprints:</span>
-        <span class="value">9/9 done</span>
+        <span class="value">9 done · 2 upcoming</span>
       </div>
       <div class="stat">
         <span class="label">Gates:</span>
@@ -409,10 +410,16 @@
           <span class="status complete">✅ DONE</span>
         </div>
 
-        <div class="sprint-card current" onclick="switchTab('sprints')">
+        <div class="sprint-card current" onclick="switchTab('sprints'); setTimeout(() => document.getElementById('sprint-10').scrollIntoView({behavior: 'smooth'}), 100)">
           <div class="name">Sprint 10</div>
-          <div class="progress">Post-beta · League History / HoF · Public Launch Prep</div>
+          <div class="progress">Bug Sweep + UX Quick Wins · 4 bugs + 5 UX fixes</div>
           <span class="status current">● UPCOMING</span>
+        </div>
+
+        <div class="sprint-card planned" onclick="switchTab('sprints'); setTimeout(() => document.getElementById('sprint-11').scrollIntoView({behavior: 'smooth'}), 100)">
+          <div class="name">Sprint 11</div>
+          <div class="progress">UX Polish: Pass 1 + Pass 2 · 16 items</div>
+          <span class="status planned">○ PLANNED</span>
         </div>
 
     </div>
@@ -1053,6 +1060,164 @@
 
         </div>
         <div class="exit-criteria"><strong>Exit achieved:</strong> Product is visibly "PWHL GM." Shield logo in browser tab. "Think Like a GM." on home page. "Your Franchises" on dashboard. "Front Office" in commissioner nav. Matchup + draft room match approved mockups. BF-001 + BF-002 resolved. 202/202 tests green. Zero "PWHL Fantasy" strings in live UI.</div>
+      </div>
+
+      <div id="sprint-10" class="card current">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+          <div>
+            <div style="font-weight: 700; font-size: 1rem;">Sprint 10 · "Beta Bug Sweep + Launch Polish"</div>
+            <div style="font-size: 0.8rem; color: #888;">Track: V+F · ~1 wk · 4 bugs + 5 UX fixes · Source: beta feedback + Pass 1 &amp; Pass 2 design audits (Jun 21, 2026)</div>
+          </div>
+          <span class="status current">● UPCOMING</span>
+        </div>
+        <div>
+            <div class="task-row">
+              <span class="task-check">⬜</span>
+              <span style="color: #666"><strong style="color:#888">BF-003 (P0) — Activity Feed Shows Raw "LEAGUE_STORYLINE" String</strong> · <code>lib/services/storyline-service.ts</code> emits <code>{ week, kind, headline, detail, value }</code> but no <code>description</code> key; <code>getLeagueActivity()</code> falls back to <code>e.type</code>. Fix: add <code>description: storyline.headline</code> to emitted data + <code>data.headline</code> fallback in renderer for pre-fix events.</span>
+            </div>
+            <div class="task-row">
+              <span class="task-check">⬜</span>
+              <span style="color: #666"><strong style="color:#888">BF-004 (P0) — "UTIL Slot Is Full" When Moving Bench Forward to Empty Forward Seat</strong> · Beta user sees slot-full error when an empty FORWARD seat should be the target. Investigate <code>seatedActive</code> array construction in <code>LineupManager.tsx</code> and the <code>moveTo(slot)</code> parameter passed on click. Verify with 3F/2D/1G/1UTIL/6BN config.</span>
+            </div>
+            <div class="task-row">
+              <span class="task-check">⬜</span>
+              <span style="color: #666"><strong style="color:#888">BF-005 (P1) — Draft Room False Eviction on Hard Refresh (BF-001 Incomplete)</strong> · <code>setEvicted(true)</code> is never called in <code>useDraftSocket.ts</code> — the eviction overlay cannot currently render via current code path. Stale socket's 4001 reconnect evicts the newly-opened tab's socket, creating a loop. Fix: track <code>reconnectAttemptedAfter4001Ref</code>; second 4001 within lifecycle calls <code>setEvicted(true)</code> and stops reconnecting.</span>
+            </div>
+            <div class="task-row">
+              <span class="task-check">⬜</span>
+              <span style="color: #666"><strong style="color:#888">BF-006 (P1) — Bench Upgrade Hint Recommends Player With Zero Games</strong> · Starter-total summary bar on "Matchup Proj" view shows "Consider starting [Player] (X.X proj)" when that player has zero games remaining. Add <code>gamesThisPeriod &gt; 0</code> guard to the bench-upgrade candidate filter in <code>LineupManager.tsx</code> (same guard used in <code>computeOptimalLineup()</code>).</span>
+            </div>
+            <div class="task-row" style="border-top: 1px solid rgba(124,58,237,0.2); padding-top: 0.5rem; margin-top: 0.5rem;">
+              <span class="task-check" style="color: #7c3aed">+</span>
+              <span style="color: #888; font-size: 0.8rem; font-style: italic;">UX Fixes — Pass 1 Design Critic + Pass 2 End-User Click-Through audits</span>
+            </div>
+            <div class="task-row">
+              <span class="task-check">⬜</span>
+              <span style="color: #666"><strong style="color:#888">UX-001 (P1, S) — Landing Trust Copy Buried Below CTAs</strong> · Move "Free-to-Play, Pure Strategy" above the CTA button group; increase font weight so it reads as a reassurance signal, not fine print. File: <code>app/page.tsx</code></span>
+            </div>
+            <div class="task-row">
+              <span class="task-check">⬜</span>
+              <span style="color: #666"><strong style="color:#888">UX-010 (P0, S) — "Go to Admin Panel" CTA Shown to Non-Commissioners</strong> · Gate the "Go to admin panel →" link in the standings empty state to <code>user.id === league.commissionerId</code>. File: <code>app/league/[leagueId]/standings/page.tsx</code></span>
+            </div>
+            <div class="task-row">
+              <span class="task-check">⬜</span>
+              <span style="color: #666"><strong style="color:#888">UX-011 (P0, S) — Standings Table Headers at Bottom of Bracket Page</strong> · "W–L" and "PF" column headers appear below data rows. Fix <code>&lt;thead&gt;</code>/<code>&lt;tbody&gt;</code> order in <code>app/league/[leagueId]/bracket/page.tsx</code> or <code>components/PlayoffBracket.tsx</code>.</span>
+            </div>
+            <div class="task-row">
+              <span class="task-check">⬜</span>
+              <span style="color: #666"><strong style="color:#888">UX-018 (P0, S) — Lineup Instruction Banner Misleads Pre-Draft Users</strong> · Pass 2: pre-draft user sees "Tap a player to select them" with an empty roster. Replace instruction banner with: "Your roster is empty. Draft players first." + link to league overview/draft room when zero <code>RosterEntry</code> rows exist. File: <code>app/team/[teamId]/lineup/LineupManager.tsx</code></span>
+            </div>
+            <div class="task-row">
+              <span class="task-check">⬜</span>
+              <span style="color: #666"><strong style="color:#888">UX-023 (P1, S) — Trade Center Has No "Propose Trade" Button</strong> · Pass 2: Trade Center shows incoming/sent/history tabs but no visible CTA to start a trade. Add "Propose Trade →" button in page header linking to <code>/league/[leagueId]/trades/new</code>. File: <code>app/league/[leagueId]/trades/page.tsx</code></span>
+            </div>
+            <div class="task-row" style="opacity: 0.5; border-top: 1px solid #1a1a1a; padding-top: 0.5rem; margin-top: 0.5rem;">
+              <span class="task-check" style="color: #555">→</span>
+              <span style="color: #555"><em>Bumped to Sprint 11: BF-007 ("Performance" tab rename → "Record"), UX-008 (announcement form position)</em></span>
+            </div>
+        </div>
+        <div class="exit-criteria"><strong>Exit criteria:</strong> All 9 items resolved (4 bugs + 5 UX fixes), <code>tsc --noEmit</code> clean, ≥202 tests pass. Beta cohort can run a full replay league without hitting any of the reported blockers.</div>
+      </div>
+
+      <div id="sprint-11" class="card planned">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+          <div>
+            <div style="font-weight: 700; font-size: 1rem;">Sprint 11 · "UX Polish: Navigation + Wizard + Empty States"</div>
+            <div style="font-size: 0.8rem; color: #888; margin-top: 0.2rem;">Track: F · ~1–2 wks · Source: Pass 1 + Pass 2 audits · 16 items · Layout + copy only — no schema changes</div>
+          </div>
+          <span class="status planned">○ PLANNED</span>
+        </div>
+        <div>
+            <div class="task-row" style="border-bottom: 1px solid rgba(124,58,237,0.15); padding-bottom: 0.5rem; margin-bottom: 0.25rem;">
+              <span class="task-check" style="color: #7c3aed">↓</span>
+              <span style="color: #888; font-size: 0.8rem; font-style: italic;">Bumped from Sprint 10</span>
+            </div>
+            <div class="task-row">
+              <span class="task-check">○</span>
+              <span style="color: #888"><strong style="color:#666">BF-007 (P2, S) — "Performance" Tab Name Unclear to Beta Users</strong> · Rename TeamNav tab + page &lt;h1&gt; from "Performance" to "Record". Files: <code>app/team/[teamId]/TeamNav.tsx</code>, <code>app/team/[teamId]/schedule/page.tsx</code></span>
+            </div>
+            <div class="task-row">
+              <span class="task-check">○</span>
+              <span style="color: #888"><strong style="color:#666">UX-008 (P1, S) — Commissioner Announcement Form Is First Visible Element on Overview</strong> · Move <code>AnnouncementForm</code> below the playoff race table and matchup sections. File: <code>app/league/[leagueId]/page.tsx</code></span>
+            </div>
+            <div class="task-row" style="border-top: 1px solid rgba(124,58,237,0.15); padding-top: 0.5rem; margin-top: 0.25rem;">
+              <span class="task-check" style="color: #7c3aed">+</span>
+              <span style="color: #888; font-size: 0.8rem; font-style: italic;">Pass 1 — Design Critic items</span>
+            </div>
+            <div class="task-row">
+              <span class="task-check">○</span>
+              <span style="color: #888"><strong style="color:#666">UX-006 (P1, M) — League Nav Tab Style Differs from Team Nav</strong> · League nav uses dark pill/chip tabs; team nav uses white text + indigo underline. Unify league nav to match team nav pattern. Files: <code>app/league/[leagueId]/layout.tsx</code>, <code>app/globals.css</code></span>
+            </div>
+            <div class="task-row">
+              <span class="task-check">○</span>
+              <span style="color: #888"><strong style="color:#666">UX-014 (P1, M) — Wizard "Next" Button Floats Outside the Card</strong> · Move "Next →" and "← Back" buttons inside the card container. File: <code>app/create-league/CreateLeagueWizard.tsx</code></span>
+            </div>
+            <div class="task-row">
+              <span class="task-check">○</span>
+              <span style="color: #888"><strong style="color:#666">UX-015 (P1, M) — Wizard Progress Indicator Is a Hairline Bar</strong> · Replace 1px bar + text label with a 6-segment filled bar using <code>--accent</code>. File: <code>app/create-league/CreateLeagueWizard.tsx</code>, <code>app/globals.css</code></span>
+            </div>
+            <div class="task-row">
+              <span class="task-check">○</span>
+              <span style="color: #888"><strong style="color:#666">UX-016 (P1, M) — Pre-Season Empty States Have No Context or Next Action</strong> · Add page-specific copy and a CTA (using <code>EmptyState.tsx</code> <code>cta</code> prop) to matchup, standings, schedule/record, and analysis pages. Files: 4 page.tsx files.</span>
+            </div>
+            <div class="task-row" style="border-top: 1px solid rgba(124,58,237,0.15); padding-top: 0.5rem; margin-top: 0.25rem;">
+              <span class="task-check" style="color: #7c3aed">+</span>
+              <span style="color: #888; font-size: 0.8rem; font-style: italic;">Pass 2 — End-User Click-Through items</span>
+            </div>
+            <div class="task-row">
+              <span class="task-check">○</span>
+              <span style="color: #888"><strong style="color:#666">UX-017 (P1, S) — Register Page Headline Contradicts "Start Your Franchise" CTA</strong> · Landing page CTA says "Start your franchise →" but register page says "Join the league. Pick your team." Update register headline to match REBRAND-001/002 GM voice. File: <code>app/register/page.tsx</code></span>
+            </div>
+            <div class="task-row">
+              <span class="task-check">○</span>
+              <span style="color: #888"><strong style="color:#666">UX-019 (P1, S) — Free Agent Add Button Appears Pre-Draft Without Context</strong> · Pre-draft users see 447 players with "Add" buttons and no explanation. Add contextual banner based on <code>league.status</code>: "Free agent adds open after the draft." File: <code>app/team/[teamId]/roster/RosterManager.tsx</code></span>
+            </div>
+            <div class="task-row">
+              <span class="task-check">○</span>
+              <span style="color: #888"><strong style="color:#666">UX-004 (P2, S) — Nav Auth Indicator Uses Raw Display Name</strong> · Replace display name with fixed "Account" label or monogram avatar. File: <code>app/layout.tsx</code></span>
+            </div>
+            <div class="task-row">
+              <span class="task-check">○</span>
+              <span style="color: #888"><strong style="color:#666">UX-007 (P2, S) — Commissioner Link Uses ⊕ Icon (Implies "Add")</strong> · Replace with settings/gear icon; rename to "Admin." File: <code>app/league/[leagueId]/layout.tsx</code></span>
+            </div>
+            <div class="task-row">
+              <span class="task-check">○</span>
+              <span style="color: #888"><strong style="color:#666">UX-020 (P2, S) — "Free Agents" and "Waiver Wire" Tabs Have No Inline Explanation</strong> · Add subtitle to each tab: "immediate add" vs "claimed by priority order over 48 hours." File: <code>app/team/[teamId]/roster/RosterManager.tsx</code></span>
+            </div>
+            <div class="task-row">
+              <span class="task-check">○</span>
+              <span style="color: #888"><strong style="color:#666">UX-021 (P2, M) — Dashboard Skeleton Shows Logged-Out Nav During Hydration</strong> · After login, top nav briefly shows "Login" during hydration window. Fix auth state resolution in server-rendered nav so authenticated state is always correct. File: <code>app/layout.tsx</code></span>
+            </div>
+            <div class="task-row">
+              <span class="task-check">○</span>
+              <span style="color: #888"><strong style="color:#666">UX-002 (P2, M) — Auth Card Dead Zone + Faint Season Timing Signal</strong> · Reduce card top padding; elevate timing note to a visible chip near form title. Files: <code>app/login/page.tsx</code>, <code>app/register/page.tsx</code></span>
+            </div>
+            <div class="task-row">
+              <span class="task-check">○</span>
+              <span style="color: #888"><strong style="color:#666">UX-003 (P2, S) — Optional Field Hint Looks Like Validation Error</strong> · Inline "(optional)" into the <code>&lt;label&gt;</code> element on the register form. File: <code>app/register/page.tsx</code></span>
+            </div>
+            <div class="task-row">
+              <span class="task-check">○</span>
+              <span style="color: #888"><strong style="color:#666">UX-009 (P2, S) — Duplicate League Name on Overview Page</strong> · Remove or replace the body-level <code>&lt;h1&gt;</code> league name. File: <code>app/league/[leagueId]/page.tsx</code></span>
+            </div>
+            <div class="task-row">
+              <span class="task-check">○</span>
+              <span style="color: #888"><strong style="color:#666">UX-005 (P2, S) — "Front Office" Logo Subtext Is a Dead Nav Item</strong> · Remove or wire to admin panel for commissioners. Files: <code>components/LogoShield.tsx</code>, <code>app/league/[leagueId]/layout.tsx</code></span>
+            </div>
+            <div class="task-row" style="opacity: 0.5; border-top: 1px solid #1a1a1a; padding-top: 0.5rem; margin-top: 0.5rem;">
+              <span class="task-check" style="color: #555">→</span>
+              <span style="color: #555"><em>Design Backlog: UX-012 (L) — Combine Standings + Bracket into a single state-aware "Season" page. Requires design pass before implementation.</em></span>
+            </div>
+            <div class="task-row" style="opacity: 0.5;">
+              <span class="task-check" style="color: #555">→</span>
+              <span style="color: #555"><em>Design Backlog: UX-022 (P3, S) — Team "Record" vs league "Schedule" naming ambiguity. Evaluate after BF-007 + UX-006 ship.</em></span>
+            </div>
+            <div class="task-row" style="opacity: 0.5;">
+              <span class="task-check" style="color: #555">→</span>
+              <span style="color: #555"><em>UX-013 (P3, S) — Wizard card min-height so it doesn't float in dead space. Include if sprint capacity allows.</em></span>
+            </div>
+        </div>
+        <div class="exit-criteria"><strong>Exit criteria:</strong> All 16 items resolved. UX-012 and UX-022 specced in Design Backlog. <code>tsc --noEmit</code> clean, ≥202 tests pass.</div>
       </div>
 
   </div>

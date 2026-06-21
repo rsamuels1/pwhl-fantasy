@@ -311,12 +311,35 @@ export async function getDashboardData(
     .map((t) => ({ teamId: t.id, name: t.name, score: allScores.get(t.id) ?? 0 }))
     .sort((a, b) => b.score - a.score);
 
+  // VTF mode: current-week ranking vs the full field (used by FieldHero standings).
+  // VP mode: season cumulative H2H record from completed matchup rows (used by DuelHero).
   let wins = 0, losses = 0, ties = 0;
-  for (const [tid, score] of allScores) {
-    if (tid === myTeamId) continue;
-    if (myScore > score) wins++;
-    else if (myScore < score) losses++;
-    else ties++;
+  if (isVpMode) {
+    const completedMatchups = await prisma.matchup.findMany({
+      where: {
+        leagueId,
+        isPlayoff: false,
+        homeScore: { not: null },
+        awayScore: { not: null },
+        OR: [{ homeTeamId: myTeamId }, { awayTeamId: myTeamId }],
+      },
+      select: { homeTeamId: true, homeScore: true, awayScore: true },
+    });
+    for (const m of completedMatchups) {
+      const iAmHome = m.homeTeamId === myTeamId;
+      const myMatchupScore = iAmHome ? m.homeScore! : m.awayScore!;
+      const oppMatchupScore = iAmHome ? m.awayScore! : m.homeScore!;
+      if (myMatchupScore > oppMatchupScore) wins++;
+      else if (myMatchupScore < oppMatchupScore) losses++;
+      else ties++;
+    }
+  } else {
+    for (const [tid, score] of allScores) {
+      if (tid === myTeamId) continue;
+      if (myScore > score) wins++;
+      else if (myScore < score) losses++;
+      else ties++;
+    }
   }
 
   const myProjected = await projectTeamRemainingScore(
