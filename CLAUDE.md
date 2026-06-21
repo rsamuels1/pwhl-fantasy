@@ -5,7 +5,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## What this is
 
 **PWHL GM** — a fantasy sports web app for the **PWHL (Professional Women's Hockey League)**, targeting
-the **2026-27 season** (12 teams after the Detroit/Hamilton/Las Vegas/San Jose expansion).
+the **2026-27 season** (12 teams: 8 originals + Detroit Hockey Team, Hamilton Hockey Team, Las Vegas Hockey Team, San Jose Hockey Team).
 Users create leagues, draft real PWHL players the week before the season opener, set
 lineups, and compete in weekly head-to-head matchups scored from real game stats.
 
@@ -92,12 +92,24 @@ from each end before `JSON.parse`. No auth headers, no cookies, no rate-limit ob
 
 | season_id | name | playoff |
 |---|---|---|
+| 10 | 2026-27 Pre-Season | no |
 | 9 | 2026 Playoffs | yes |
 | 8 | 2025-26 Regular Season | no |
 | 6 | 2025 Playoffs | yes |
 | 5 | 2024-25 Regular Season | no |
 | 3 | 2024 Playoffs | yes |
 | 1 | 2024 Regular Season | no |
+
+**2026-27 roster notes:**
+- The expansion draft + PWHL draft occurred the week of June 21, 2026.
+- Pre-season rosters (season_id=10) reflect initial expansion draft allocations: ~10 players per expansion team, ~8–10 per original team. Full rosters will fill in as contracts are signed.
+- Expansion team names in DB: Detroit Hockey Team, Hamilton Hockey Team, Las Vegas Hockey Team, San Jose Hockey Team.
+- HockeyTech numeric team IDs → DB externalIds: 1=bos, 2=min, 3=mtl, 4=nyc, 5=ott, 6=tor, 8=sea, 9=van, 10=det, 11=ham, 12=lv, 13=sj.
+- The `ingest` script requires a schedule to be present (season_id=10 has no games yet). Use the dedicated roster update script instead:
+  ```bash
+  npx tsx scripts/update-2026-27-rosters.ts --dry-run   # preview changes
+  npx tsx scripts/update-2026-27-rosters.ts              # apply
+  ```
 
 **Stat-line gotchas:**
 - Goalie stats live in `homeTeam.goalieLog[]`, not `homeTeam.goalies[]` (the goalies array has all-zero stats).
@@ -180,6 +192,19 @@ survives DB resets and schema migrations.
      - REBRAND-003: draft room header "PWHL GM — Draft Room"; fantasy pts → FP terminology; CLAUDE.md + README product name
      - REBRAND-004: `app/globals.css` design tokens (`--accent*`, `--card`, `--font-body/stats`, `.rebrand-card`, `.pos-badge`, `.alert-amber`, `.chip-*`, `.font-stats`)
      - REBRAND-005: Matchup page IA restructure (Z1–Z9 render order, `RosterStatusWidget`, Analysis promoted to `/team/[teamId]/analysis`); BUG-MATCHUP-001 fix (`isSetupPhase` flag — hero shows "—" not "0.0 vs 0.0" in SETUP phase)
+   - **UX Polish — Sprint 11b** ✅ (16 items: UX-002/003/004/005/006/007/008/009/013/014/015/016/017/019/020/021):
+     - UX-006: League nav white text + indigo underline active state (match team nav)
+     - UX-007/005: Renamed "⊕ Front Office" → "⚙ Admin"; removed "Front Office" subtext
+     - UX-008: Moved `AnnouncementForm` below primary content on league overview
+     - UX-014/015: Wizard buttons inside card; 6-segment filled progress bar
+     - UX-016: Pre-season empty state on matchup page with "Season hasn't started" message
+     - UX-017: Register headline "Build your franchise" aligned with REBRAND-001/002
+     - UX-019: Free agent banner explaining immediate adds during season
+     - UX-020: Free Agents / Waiver Wire tabs with hover tooltips
+     - UX-002/003: Auth pages — reduced padding, season timing chip, inlined "(optional)"
+     - UX-004/021: Nav "Account" label (not display name); hydration fix prevents "Login" flash
+     - UX-009: Removed duplicate league name from body `<h1>`
+     - UX-013: Wizard card `min-height: 60vh`
 7. Public launch ~early Nov, drafts ~1 week before opener
 
 ## Draft room UI (`app/draft/[leagueId]/`)
