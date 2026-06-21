@@ -315,6 +315,7 @@ export async function emitWeeklyStorylines(
             headline: storyline.headline,
             detail: storyline.detail,
             value: storyline.value,
+            description: storyline.headline,
           },
         },
         prisma

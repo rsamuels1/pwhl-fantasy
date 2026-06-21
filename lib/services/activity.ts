@@ -37,7 +37,7 @@ export async function getLeagueActivity(
   return events.map((e) => ({
     id: e.id,
     type: e.type,
-    description: (e.data as Record<string, string>)?.description ?? e.type,
+    description: (e.data as Record<string, string>)?.description ?? (e.data as Record<string, string>)?.headline ?? e.type,
     createdAt: e.createdAt,
   }));
 }
