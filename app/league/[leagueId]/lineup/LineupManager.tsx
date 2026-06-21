@@ -808,9 +808,31 @@ function PlayerInfo({
 function ProjectedStats({ proj }: { proj: ProjectedStatsRow }) {
   return (
     <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-      <StatCell label="PROJ" value={proj.projectedFp.toFixed(1)} highlight gold />
-      <StatCell label="PPG" value={proj.avgFpPerGame.toFixed(1)} />
-      <StatCell label="GP" value={`×${proj.games}`} />
+      <div style={{ position: "relative" }}>
+        <StatCell
+          label="Proj FP"
+          value={proj.projectedFp.toFixed(1)}
+          highlight
+          gold
+          title="Projected fantasy points for this scoring period"
+        />
+      </div>
+      <div style={{ position: "relative" }}>
+        <StatCell
+          label="Avg FP/G"
+          value={proj.avgFpPerGame.toFixed(1)}
+          title="Rolling 5-game fantasy points per game average"
+        />
+      </div>
+      <div style={{ position: "relative" }}>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", minWidth: 26 }} title="Projected games for this scoring period">
+          <span style={{ fontSize: 9, color: "var(--faint)", textTransform: "uppercase", letterSpacing: 0.5 }}>Games</span>
+          <span style={{
+            fontSize: 12, fontWeight: 400,
+            color: "var(--muted)",
+          }}>×{proj.games}</span>
+        </div>
+      </div>
     </div>
   );
 }
@@ -849,11 +871,11 @@ function GoalieStats({ stats }: { stats: PlayerStatsRow }) {
   );
 }
 
-function StatCell({ label, value, highlight = false, gold = false, className }: {
-  label: string; value: string | number; highlight?: boolean; gold?: boolean; className?: string;
+function StatCell({ label, value, highlight = false, gold = false, className, title }: {
+  label: string; value: string | number; highlight?: boolean; gold?: boolean; className?: string; title?: string;
 }) {
   return (
-    <div className={className} style={{ display: "flex", flexDirection: "column", alignItems: "center", minWidth: 26 }}>
+    <div className={className} style={{ display: "flex", flexDirection: "column", alignItems: "center", minWidth: 26 }} title={title}>
       <span style={{ fontSize: 9, color: "var(--faint)", textTransform: "uppercase", letterSpacing: 0.5 }}>{label}</span>
       <span className={gold || highlight ? "font-stats" : undefined} style={{
         fontSize: 12, fontWeight: highlight ? 700 : 400,
