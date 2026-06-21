@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PWHL Fantasy · Project Tracker</title>
+  <title>PWHL GM · Project Tracker</title>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -124,7 +124,6 @@
     .sprint-card:hover { border-color: #444; }
     .sprint-card.complete { border-color: #22c55e; }
     .sprint-card.current { border-color: #f59e0b; background: rgba(245, 158, 11, 0.05); }
-    .sprint-card.planned { border-color: #444; border-style: dashed; }
     .sprint-card .name { font-weight: 700; margin-bottom: 0.25rem; }
     .sprint-card .progress { font-size: 0.75rem; color: #888; margin-top: 0.25rem; }
 
@@ -227,15 +226,15 @@
     <div class="header-right">
       <div class="stat">
         <span class="label">Current:</span>
-        <span class="value">Sprint 12</span>
+        <span class="value">Sprint 7</span>
       </div>
       <div class="stat">
-        <span class="label">Launch Target:</span>
-        <span class="value">Late Oct 2026</span>
+        <span class="label">To Beta:</span>
+        <span class="value">72 days</span>
       </div>
       <div class="stat">
         <span class="label">Sprints:</span>
-        <span class="value">12 done · Sprint 12 planned</span>
+        <span class="value">11/14</span>
       </div>
       <div class="stat">
         <span class="label">Gates:</span>
@@ -309,7 +308,7 @@
           <div class="gate-icon">✅</div>
           <div>Playoffs</div>
           <div><span class="status done">PASS</span></div>
-          <div style="font-size: 0.85rem; color: #888;">—</div>
+          <div style="font-size: 0.85rem; color: #888;">PLAYOFF-BUG-001 fixed (commit b465423: `?? 6` → `?? 4` in bracket page); playoff period anchoring fixed for replay leagues</div>
         </div>
       
         <div class="gate-row">
@@ -337,15 +336,11 @@
           <div class="gate-icon">✅</div>
           <div>End-to-end season sim</div>
           <div><span class="status done">PASS</span></div>
-          <div style="font-size: 0.85rem; color: #888;">—</div>
+          <div style="font-size: 0.85rem; color: #888;">PLAYOFF-AUDIT-001 complete Jun 20 — script runs clean, 180/180 tests, tsc clean</div>
         </div>
       
     </div>
 
-    
-      <div class="blocker-callout" style="border-color: #4caf50; background: rgba(76,175,80,0.08);">
-        <strong style="color: #4caf50;">✅ All MVP gates clear — ready to invite founding commissioners.</strong>
-      </div>
     
 
     <div class="section-header" style="margin-top: 2rem;">Sprint Overview</div>
@@ -383,57 +378,58 @@
       
         <div class="sprint-card complete" onclick="switchTab('sprints'); setTimeout(() => document.getElementById('sprint-5').scrollIntoView({behavior: 'smooth'}), 100)">
           <div class="name">Sprint 5</div>
-          <div class="progress">7/7</div>
+          <div class="progress">6/8</div>
           <span class="status complete">✅ DONE</span>
         </div>
-
+      
         <div class="sprint-card complete" onclick="switchTab('sprints'); setTimeout(() => document.getElementById('sprint-6').scrollIntoView({behavior: 'smooth'}), 100)">
           <div class="name">Sprint 6</div>
-          <div class="progress">7/7</div>
+          <div class="progress">10/10</div>
           <span class="status complete">✅ DONE</span>
         </div>
-
-        <div class="sprint-card complete" onclick="switchTab('sprints'); setTimeout(() => document.getElementById('sprint-7').scrollIntoView({behavior: 'smooth'}), 100)">
+      
+        <div class="sprint-card current" onclick="switchTab('sprints'); setTimeout(() => document.getElementById('sprint-7').scrollIntoView({behavior: 'smooth'}), 100)">
           <div class="name">Sprint 7</div>
-          <div class="progress">3/3</div>
-          <span class="status complete">✅ DONE</span>
+          <div class="progress">5/8</div>
+          <span class="status current">● LIVE</span>
         </div>
-
-        <div class="sprint-card complete" onclick="switchTab('sprints'); setTimeout(() => document.getElementById('sprint-8').scrollIntoView({behavior: 'smooth'}), 100)">
+      
+        <div class="sprint-card planned" onclick="switchTab('sprints'); setTimeout(() => document.getElementById('sprint-8').scrollIntoView({behavior: 'smooth'}), 100)">
           <div class="name">Sprint 8</div>
-          <div class="progress">14/14 · commit b465423</div>
-          <span class="status complete">✅ DONE</span>
+          <div class="progress">0/0</div>
+          <span class="status planned">○ PLAN</span>
         </div>
+      
         <div class="sprint-card complete" onclick="switchTab('sprints'); setTimeout(() => document.getElementById('sprint-9').scrollIntoView({behavior: 'smooth'}), 100)">
           <div class="name">Sprint 9</div>
-          <div class="progress">PWHL GM Rebrand · 10/10 · 202 tests</div>
+          <div class="progress">2/2</div>
           <span class="status complete">✅ DONE</span>
         </div>
-
+      
         <div class="sprint-card complete" onclick="switchTab('sprints'); setTimeout(() => document.getElementById('sprint-10').scrollIntoView({behavior: 'smooth'}), 100)">
           <div class="name">Sprint 10</div>
-          <div class="progress">Bug Sweep + UX · 9/9 · DATA-001 ✅</div>
+          <div class="progress">1/5</div>
           <span class="status complete">✅ DONE</span>
         </div>
-
+      
         <div class="sprint-card complete" onclick="switchTab('sprints'); setTimeout(() => document.getElementById('sprint-11').scrollIntoView({behavior: 'smooth'}), 100)">
-          <div class="name">Sprint 11a</div>
-          <div class="progress">Vocab + Education · 8/8 ✅</div>
+          <div class="name">Sprint 11</div>
+          <div class="progress">0/16</div>
           <span class="status complete">✅ DONE</span>
         </div>
-
-        <div class="sprint-card complete" onclick="switchTab('sprints'); setTimeout(() => document.getElementById('sprint-11').scrollIntoView({behavior: 'smooth'}), 100)">
-          <div class="name">Sprint 11b</div>
-          <div class="progress">UX Polish: Nav + Wizard + Empty States · 16/16</div>
-          <span class="status complete">✅ DONE</span>
-        </div>
-
-        <div class="sprint-card planned" onclick="switchTab('sprints'); setTimeout(() => document.getElementById('sprint-12').scrollIntoView({behavior: 'smooth'}), 100)">
+      
+        <div class="sprint-card complete" onclick="switchTab('sprints'); setTimeout(() => document.getElementById('sprint-12').scrollIntoView({behavior: 'smooth'}), 100)">
           <div class="name">Sprint 12</div>
-          <div class="progress">UX Audit + Onboarding · 14 items (6 P0 + 8 P1)</div>
-          <span class="status planned">PLANNED</span>
+          <div class="progress">5/5</div>
+          <span class="status complete">✅ DONE</span>
         </div>
-
+      
+        <div class="sprint-card planned" onclick="switchTab('sprints'); setTimeout(() => document.getElementById('sprint-13').scrollIntoView({behavior: 'smooth'}), 100)">
+          <div class="name">Sprint 13</div>
+          <div class="progress">0/4</div>
+          <span class="status planned">○ PLAN</span>
+        </div>
+      
     </div>
   </div>
 
@@ -759,604 +755,413 @@
           <span class="status complete">✅ COMPLETE</span>
         </div>
         <div>
-
+          
             <div class="task-row">
               <span class="task-check">✅</span>
-              <span style="color: #666"><strong style="color:#888">Replay gap bug fix</strong> — <code>SeasonControls.tsx</code> now falls back to the first UPCOMING period when no ACTIVE/SCORING_PENDING period exists, fixing the 21-day all-star break gap between Week 10 and Week 11 where "End week now" was a no-op. <em style="color:#22c55e">Playwright E2E verified Jun 13, 2026: after scoring Week 10, "Score week 11" correctly appeared. PASS.</em></span>
+              <span style="color: #666">Replay gap bug fix — After scoring Week 10 of the 2025-26 season the 21-day all-star break gap (Jan 31 → Feb 21) caused the "Score week N" button to disappear because `targetPeriod` only checked for ACTIVE or SCORING_PENDING periods. Added UPCOMING as a third fallback so the button correctly shows "Score week 11" and bridges the gap in one click. Fixed in `app/league/[leagueId]/season/SeasonControls.tsx`. Verified end-to-end via Playwright (Jun 13, 2026): after scoring Week 10, "Score week 11" correctly appeared across the all-star break gap. PASS.</span>
             </div>
-
+          
             <div class="task-row">
               <span class="task-check">✅</span>
-              <span style="color: #666"><strong style="color:#888">"Sim to playoffs" button</strong> — single-click button in the replay/dev season controls that scores all remaining regular-season weeks at once and advances the sim date to the start of playoffs. Eliminates the need to manually click "End week" 10+ times in replay mode. <em style="color:#22c55e">Playwright E2E verified Jun 13, 2026: scored Weeks 11–20 in one click; "Start Playoffs" appeared; 4-team bracket generated correctly (Semifinals Active, Championship TBD). No regressions. PASS.</em></span>
+              <span style="color: #666">Draft Reliability Certification — duplicate-tab handling, concurrent-league load test (8–10 leagues), reconnect stress test (10+ forced disconnects); findings documented in `docs/04-operations/commissioner-runbook.md`. MVP scorecard all green.</span>
             </div>
-
+          
             <div class="task-row">
               <span class="task-check">✅</span>
-              <span style="color: #666"><strong style="color:#888">Priority 1 — Draft Reliability Certification</strong> — duplicate-tab handling (open draft room in 2+ tabs → only one active sender); load test 8–10 concurrent leagues drafting simultaneously; reconnect stress test (kill socket, reconnect 10+ times); document findings in <code>commissioner-runbook.md</code>. <em>Outcome: MVP scorecard all green ✅ — last ⚠️ gate before inviting beta commissioners.</em></span>
+              <span style="color: #666">Founder Operations Console — `FOUNDER_EMAILS` env-var auth gate; `/founder/` dashboard (league stats, MVP gates, cross-league commissioner action feed); `/founder/leagues` searchable explorer; `/founder/leagues/[leagueId]` tabbed detail (Config · Standings · Season with sim controls · Draft); `/founder/simulate` end-to-end throwaway season validator (create → auto-draft → score all → playoffs → champion). New API routes: `POST /api/founder/leagues/[leagueId]/simulate`, `POST /api/founder/leagues/[leagueId]/start-playoffs`, `POST /api/founder/simulate-season`. No schema changes. (commit c48a1e7)</span>
             </div>
-
+          
             <div class="task-row">
               <span class="task-check">✅</span>
-              <span style="color: #666"><strong style="color:#888">Priority 2 — Playoff Experience UX (#30)</strong> ✅ COMPLETE — full playoff journey audit + 9 fixes: round-advancement API route + commissioner UI (P0-A); eliminated-team detection fix (P0-B); playoff matchup week numbers (P0-C); champion announcement card + banner (P1-A); commissioner action strip playoff awareness (P1-B); "View bracket →" link in DuelHero (P1-C); between-rounds pending state (P1-D); rich mini bracket in league overview (P2-A); async params in bracket/matchups pages (P2-B). Final pieces (commit 5df2b0c): bracket redirect when <code>playoffStatus === IN_PROGRESS</code>; <code>PLAYOFF_CLINCH</code>/<code>PLAYOFF_ELIMINATION</code>/<code>CHAMPIONSHIP_WON</code> activity events.</span>
+              <span style="color: #666">Playoff Experience UX + Journey Fixes — Full audit of the playoff user journey revealed 9 issues (3 P0 blockers, 4 P1 UX gaps, 2 P2 polish items). All fixed: new `POST /api/leagues/[leagueId]/advance-playoff-round` commissioner route with SeasonControls UI (P0-A); eliminated-team detection in `getPlayoffDashboardData` (P0-B); playoff matchup week numbers (P0-C); champion announcement card + league overview banner + `ChampionInfo` on `DashboardData` (P1-A); commissioner action strip playoff awareness (P1-B); "View bracket →" in DuelHero (P1-C); between-rounds `playoffPending` state (P1-D); rich mini bracket summary in league overview (P2-A); async params in bracket/matchups pages (P2-B). tsc clean.</span>
             </div>
-
+          
             <div class="task-row">
               <span class="task-check">✅</span>
-              <span style="color: #666"><strong style="color:#888">Priority 3 — Founder Operations Console</strong> — <code>/founder/</code> dashboard (league stats, MVP gates, cross-league commissioner action feed); <code>/founder/leagues</code> searchable explorer; <code>/founder/leagues/[leagueId]</code> tabbed detail (Config · Standings · Season with sim controls · Draft); <code>/founder/simulate</code> end-to-end throwaway season validator. New API routes: simulate, start-playoffs, simulate-season. <code>FOUNDER_EMAILS</code> env-var auth gate; no schema change. (commit c48a1e7)</span>
+              <span style="color: #666">Feature #30 Playoff Experience UX — COMPLETE (commit 5df2b0c) — final pieces: `/league/[leagueId]/` now redirects to `/bracket` when `playoffStatus === IN_PROGRESS` (bracket is the primary landing during active playoffs); `PLAYOFF_CLINCH`, `PLAYOFF_ELIMINATION`, `CHAMPIONSHIP_WON` added to `EventType` enum in `prisma/schema.prisma` and `LeagueEventType` union in `lib/services/activity.ts`; `advance-playoff-round` route emits elimination/clinch/championship activity feed events after scoring each round; TypeScript narrowing fix (`playoffStatus` local const, dead `IN_PROGRESS` commissioner branches removed from overview). Files: `prisma/schema.prisma`, `lib/services/activity.ts`, `app/api/leagues/[leagueId]/advance-playoff-round/route.ts`, `app/league/[leagueId]/page.tsx`.</span>
             </div>
-
+          
             <div class="task-row">
               <span class="task-check">✅</span>
-              <span style="color: #666"><strong style="color:#888">Priority 4 — Commissioner Workflow Validation</strong> — async params fixed in 4 routes; null-check guard in undo-transaction; runbook updated with VP values, playoff UI path, season renewal steps, reconnect backoff, champion banner, replace-manager edge case, and per-tool detail. Findings in <code>commissioner-workflow-validation-plan.md</code>.</span>
+              <span style="color: #666">Commissioner workflow validation COMPLETE — async params fixed in 4 routes; null-check guard added to undo-transaction; force-move no-op comment added; runbook updated with VP values, playoff instructions, season renewal UI path, reconnect backoff, champion banner, replace-manager edge case, and per-tool detail. Findings documented in `docs/02-engineering/commissioner-workflow-validation-plan.md`.</span>
             </div>
-
+          
             <div class="task-row">
-              <span class="task-check">✅</span>
-              <span style="color: #666"><strong style="color:#888">Priority 5 — Weekly Performance Dashboard (#29)</strong> — shipped 5757cc7; Schedule tab → Performance history; <code>lib/services/performance-service.ts</code>; per-week FP, rank chip, VP W-L-T record; no schema changes.</span>
+              <span class="task-check">○</span>
+              <span style="color: #ccc">Weekly Performance Dashboard (#29) — shipped Sprint 6; see below.</span>
             </div>
-
-            <div class="task-row" style="opacity: 0.45; text-decoration: line-through; text-decoration-color: #555;">
-              <span class="task-check" style="color: #555">–</span>
-              <span style="color: #555"><strong>Beta Feedback Infrastructure</strong> — deferred to Sprint 6+. In-app feedback widget + founding commissioner tracking. Revisit once founding commissioners are active in closed beta.</span>
+          
+            <div class="task-row">
+              <span class="task-check">○</span>
+              <span style="color: #ccc">Beta Feedback Infrastructure — deferred: cohort small enough for out-of-band channels. Revisit once founding commissioners are active.</span>
             </div>
-
+          
         </div>
-        <div class="exit-criteria"><strong>Exit:</strong> commissioner can run a league start-to-finish with no engineering help; founder can monitor platform health without DB access; founding commissioner cohort can be invited.</div>
+        <div class="exit-criteria"><strong>Exit:</strong> commissioner can run a league start-to-finish with no engineering help; founder can monitor platform health without DB access; founding commissioner cohort can be invited. ✅ ACHIEVED</div>
       </div>
     
       <div id="sprint-6" class="card complete">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
           <div>
             <div style="font-weight: 700; font-size: 1rem;">Sprint 6 · "Engagement + Transactions"</div>
-            <div style="font-size: 0.8rem; color: #888; margin-top: 0.2rem;">Goal: Features founding commissioners will notice during closed beta · P1</div>
+            <div style="font-size: 0.8rem; color: #888;">Track: F</div>
           </div>
           <span class="status complete">✅ COMPLETE</span>
         </div>
         <div>
-
+          
             <div class="task-row">
               <span class="task-check">✅</span>
-              <span style="color: #666"><strong style="color:#888">Priority 1 — Auto-Set Lineup (#34)</strong> · ~60K · <em>Spec: <code>docs/02-engineering/auto-set-lineup-spec.md</code></em> — <code>computeOptimalLineup()</code> in <code>lib/lineup.ts</code>; staged save model; "Auto-set" button (purple, disabled when no projections); <code>beforeunload</code> guard; playoff period fallback; <code>GET /api/leagues/[leagueId]/fa-suggestions</code> (top 10 unrostered by projected FP). No schema changes. (commits 3e6bbd0, f83468f, 1f06c9a)</span>
+              <span style="color: #666">Priority 1 — Auto-Set Lineup (#34) · ~60K</span>
             </div>
-
+          
             <div class="task-row">
               <span class="task-check">✅</span>
-              <span style="color: #666"><strong style="color:#888">FA Schedule Awareness + Add &amp; Slot (#35)</strong> · Commit: 6a6b40f — games-remaining "Wk" badge on every FA row in <code>app/team/[teamId]/roster/</code> (same batch query as lineup page; sortable column); <code>components/AddAndSlotModal.tsx</code> — after adding a FA, modal offers eligible active slots (F/D/G/UTIL); selecting one calls <code>PUT /api/leagues/[leagueId]/lineup</code>; "Bench for now" dismisses; locked FAs skip modal. Bonus: lineup nudge now respects roster settings slot count; dashboard alert checks <code>gamesPlayedPerTeam</code>. No schema changes.</span>
+              <span style="color: #666">Weekly Performance Dashboard (#29) (carried from Sprint 5)</span>
             </div>
-
+          
             <div class="task-row">
               <span class="task-check">✅</span>
-              <span style="color: #666"><strong style="color:#888">Beta Feedback Infrastructure</strong> · <em>Spec: <code>docs/02-engineering/beta-feedback-spec.md</code></em> — <code>components/FeedbackWidget.tsx</code>: fixed bottom-right button → modal (Bug/Suggestion/Other selector, textarea, submit) via <code>ReactDOM.createPortal</code>; mounted in league, team, and founder layouts. Schema: <code>FeedbackSubmission</code> model, <code>FeedbackType</code> enum (BUG/SUGGESTION/OTHER), <code>BetaStatus</code> enum (NONE/INVITED/ACCEPTED/ACTIVE/RENEWED), <code>betaStatus</code> on <code>FantasyLeague</code>. API: <code>POST /api/feedback</code> (auth-gated); <code>GET /api/founder/feedback</code> (last 100 submissions); <code>PATCH /api/founder/leagues/[leagueId]/beta-status</code>. Founder Console: <code>app/founder/feedback/page.tsx</code> feed table + new Beta tab in <code>LeagueDetailTabs.tsx</code> with betaStatus dropdown.</span>
+              <span style="color: #666">Wizard team-name step + join flow fix</span>
             </div>
-
+          
             <div class="task-row">
               <span class="task-check">✅</span>
-              <span style="color: #666"><strong style="color:#888">Priority 3 — Code Review &amp; Pre-Beta Audit (#37)</strong> — staff-engineer-level review complete; all P0 + P1 findings resolved. <strong style="color:#22c55e">Go/No-Go: ✅ GREEN.</strong> P0: renewal <code>$transaction</code> atomicity; draft pick P2002 handling; <code>pickInFlight</code> guard. P1: force-move play-lock (single-move + swap paths); playoff scoring model documented; undo-waiver P2002 → 409. Findings: <code>docs/04-operations/pre-beta-audit.md</code>.</span>
+              <span style="color: #666">FA Schedule Awareness + Add & Slot (#35) · Commit: 6a6b40f</span>
             </div>
-
+          
             <div class="task-row">
               <span class="task-check">✅</span>
-              <span style="color: #666"><strong style="color:#888">Team Analysis &amp; Insights (#25)</strong> · ~85K · <em>Spec: <code>docs/02-engineering/team-analysis-spec.md</code></em> — <code>lib/services/analysis-service.ts</code>: <code>getTeamAnalysis()</code> with 4 DB queries (player hot/cold trends, position-group FP vs league median, FA upgrade cards for weakest group). <code>components/MatchupTabs.tsx</code> tab switcher; <code>components/AnalysisTab.tsx</code> three-section display; <code>app/api/leagues/[leagueId]/analysis/route.ts</code> GET with auth. <code>matchup/page.tsx</code>: <code>getDashboardData</code> + <code>getTeamAnalysis</code> run in parallel via <code>Promise.all</code>; hero/alerts/replay controls stay above tabs. Trade suggestions scoped out — deferred until Trade System (#7) ships.</span>
+              <span style="color: #666">Beta Feedback Infrastructure</span>
             </div>
-
+          
             <div class="task-row">
               <span class="task-check">✅</span>
-              <span style="color: #666"><strong style="color:#888">Priority 5 — Waiver Priority + Processing (#5)</strong> · ~110K · <em>Spec: <code>docs/02-engineering/waiver-spec.md</code></em> — rolling priority order (reverse VP-standings), 48h waiver window for dropped players, batch processing. Schema: <code>WaiverEntry</code> / <code>WaiverClaim</code> / <code>WaiverPriority</code> models + <code>WaiverStatus</code> enum + 4 new <code>EventType</code> values + <code>waiverWindowHours Int @default(48)</code> on <code>FantasyLeague</code>. Service: <code>lib/services/waiver-service.ts</code> (<code>initializeWaiverPriority</code>, <code>enterWaiverWire</code>, <code>submitClaim</code>, <code>processWaivers</code>). UI: <code>components/WaiverWirePanel.tsx</code> — wire table, pending claims, priority panel; "Waiver Wire" tab in <code>RosterManager.tsx</code>; "On Waivers" badge in FA table. Ops: <code>scripts/process-waivers.ts</code> cron script + "Process Waivers" in founder console. Season: <code>startSeason()</code> calls <code>initializeWaiverPriority()</code>. 13 new tests (174 total). FAAB deferred to Sprint 7.</span>
+              <span style="color: #666">Between-weeks lineup nudge false-positive — "Week N is coming up / Set lineup before games begin" amber banner persisted on the matchup page even after the user had used Auto-Set Lineup and saved. Root cause: nudge condition was `status === "upcoming"` only, with no check for lineup state. Fix: suppress nudge when `myPlayers.length >= activeSlotCount` (forward + defense + goalie + util from `rosterSettings`). `app/team/[teamId]/matchup/page.tsx`.</span>
             </div>
-
+          
+            <div class="task-row">
+              <span class="task-check">✅</span>
+              <span style="color: #666">Priority 3 — Code Review & Pre-Beta Audit (#37) — Findings: `docs/04-operations/pre-beta-audit.md`. All P0 and P1 findings resolved. Go/No-Go: GREEN — ready to invite founding commissioners.</span>
+            </div>
+          
+            <div class="task-row">
+              <span class="task-check">✅</span>
+              <span style="color: #666">Replay league matchup generation & scoring (commit 52ea547)</span>
+            </div>
+          
+            <div class="task-row">
+              <span class="task-check">✅</span>
+              <span style="color: #666">Team Analysis & Insights (#25)</span>
+            </div>
+          
+            <div class="task-row">
+              <span class="task-check">✅</span>
+              <span style="color: #666">Priority 5 — Waiver Priority + Processing (#5) · ~110K</span>
+            </div>
+          
         </div>
-        <div class="exit-criteria"><strong>Exit:</strong> founding commissioners can auto-set lineups ✅, see weekly performance history ✅, add a FA with immediate slot-in flow ✅, submit feedback visible in founder console ✅, code audit complete with P0 findings resolved ✅, team analysis shipped ✅, waiver priority + batch processing live ✅. 7/7 complete.</div>
+        <div class="exit-criteria"><strong>Exit:</strong> founding commissioners can auto-set lineups ✅, see their weekly performance history ✅, add a FA with immediate slot-in flow ✅, submit feedback visible in founder console ✅, code audit complete with P0 findings resolved ✅, team analysis shipped ✅, waiver priority + batch processing live ✅. 7/7 items complete.</div>
       </div>
-
+    
       <div id="sprint-7" class="card current">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
           <div>
             <div style="font-weight: 700; font-size: 1rem;">Sprint 7 · "Retention Layer"</div>
-            <div style="font-size: 0.8rem; color: #888; margin-top: 0.2rem;">Goal: Multi-season story + engagement surfaces · P2 · Jun 23 – Jul 6, 2026</div>
+            <div style="font-size: 0.8rem; color: #888;">Track: F</div>
           </div>
-          <span class="status done">✅ COMPLETE (3/3)</span>
+          <span class="status current">● IN FLIGHT</span>
         </div>
         <div>
-
-            <div class="task-row">
-              <span class="task-check">✓</span>
-              <span style="color: #ccc"><strong style="color:#22c55e">Priority 1 — Trade System (#7)</strong> · ✅ SHIPPED · <em>Spec: <code>docs/02-engineering/trade-spec.md</code></em> — Multi-player two-team trade proposals; full 9-state machine (PROPOSED/COUNTERED/ACCEPTED/PENDING_REVIEW/EXECUTED/REVERSED/REJECTED/CANCELLED/EXPIRED); counter-offer flow; commissioner veto window + approval mode; roster legality at propose+execute; play-lock parity; stale deal detection; trade deadline gating. Schema: <code>Trade</code>/<code>TradeItem</code> models; <code>TradeStatus</code> enum; <code>tradeReviewHours</code>/<code>requireCommissionerTradeApproval</code> on <code>FantasyLeague</code>; 6 new <code>NotificationType</code> values. Service: <code>lib/services/trade-service.ts</code>. Engine: <code>lib/trades/engine.ts</code>. API: 7 routes under <code>/api/leagues/[leagueId]/trades/</code>. UI: Trade Center + Propose flow + detail page + Trade Settings in admin. Nav: "Trades" link in league layout. Tests: 22 in <code>tests/trade.test.ts</code> (202 total).</span>
-            </div>
-
-            <div class="task-row">
-              <span class="task-check">✓</span>
-              <span style="color: #ccc"><strong style="color:#22c55e">Priority 2 — League-Wide Matchup Storylines (#11)</strong> · ✅ SHIPPED · <em>Spec: <code>docs/02-engineering/matchup-storylines-spec.md</code></em> — <code>computeWeeklyStorylines()</code> + <code>emitWeeklyStorylines()</code> in <code>lib/services/storyline-service.ts</code>; <code>LEAGUE_STORYLINE</code> EventType; <code>components/WeekHighlights.tsx</code> on league overview; emitted fire-and-forget from <code>advanceSeason()</code> in <code>lib/season/index.ts</code>; 173-line test suite in <code>tests/storyline.test.ts</code>. Storylines: closest_match, high_score, player_standout.</span>
-            </div>
-
-            <div class="task-row">
-              <span class="task-check">✓</span>
-              <span style="color: #ccc"><strong style="color:#22c55e">Priority 3 — Replay Season Simulator v2 UX Overhaul (#39)</strong> · ✅ SHIPPED — week-boundary pauses; persistent controls on league overview (sticky footer) + commissioner matchup page (inline panel); smart button set based on season state; no schema changes. Shipped June 14, 2026.</span>
-            </div>
-
-            <div class="task-row" style="opacity: 0.45; text-decoration: line-through; text-decoration-color: #555;">
-              <span class="task-check" style="color: #555">–</span>
-              <span style="color: #555"><strong>Player Legacy &amp; Cross-Season Tracking (#31)</strong> — DEFERRED post-launch. Removed from Sprint 7 (was Priority 4). Requires at least one completed + renewed season to be meaningful; not useful until 2027-28. Moved to backlog.</span>
-            </div>
-
-            <div class="task-row" style="opacity: 0.45; text-decoration: line-through; text-decoration-color: #555;">
-              <span class="task-check" style="color: #555">–</span>
-              <span style="color: #555"><strong>FAAB (#6)</strong> — DEFERRED post-launch. Removed from Sprint 7 (was Priority 3). Not needed before public launch; revisit for 2027-28 off-season once waiver cron is confirmed stable and commissioners actively request it. Depends on Waiver System (#5, complete) + waiver cron (Sprint 8, complete).</span>
-            </div>
-
-            <div class="task-row" style="opacity: 0.45; text-decoration: line-through; text-decoration-color: #555;">
-              <span class="task-check" style="color: #555">–</span>
-              <span style="color: #555"><strong>Replay Simulation V2 (#38)</strong> — DEFERRED. Superseded by #39 (Replay UX Overhaul), which shipped in Sprint 7 and delivers the core week-boundary pausing experience. Accelerated playback (#38) can be layered on top post-launch.</span>
-            </div>
-
+          
             <div class="task-row">
               <span class="task-check">○</span>
-              <span style="color: #888"><em>Stretch: Email Notifications · ~50K — email channel for <code>LINEUP_INCOMPLETE</code>, <code>TRADE_RECEIVED</code>, and <code>WAIVER_RESULT</code> notification types. Transactional email provider (e.g. Resend). Add only if beta feedback surfaces as P1.</em></span>
+              <span style="color: #ccc">Speed control UI on the season/replay controls page (advance N days per click or timer)</span>
             </div>
-
-            <div class="task-row" style="border-top: 1px solid rgba(34,197,94,0.2); padding-top: 0.5rem; margin-top: 0.5rem;">
-              <span class="task-check">✓</span>
-              <span style="color: #888"><strong style="color:#22c55e">PLAYOFF-AUDIT-001 — Playoff System Verification</strong> · ✅ COMPLETE 2026-06-20 · Spec: <code>docs/02-engineering/playoff-system-spec.md</code><br>
-              <strong style="color:#22c55e">PLAYOFF-BUG-001:</strong> Already fixed (commit b465423) — <code>?? 4</code> confirmed at bracket/page.tsx line 70.<br>
-              <strong style="color:#22c55e">Q1:</strong> <code>computeVpStandings()</code> correctly filters <code>isPlayoff: true</code> at lines 159, 188, 218 of <code>lib/scoring/vp.ts</code>.<br>
-              <strong style="color:#22c55e">Q2:</strong> <code>simulate-season.ts</code> runs end-to-end — 🏆 Northern Lights (37VP, 13-7-0). Three script bugs fixed (round-2 populate, cleanup FK, tsc). 180/180 tests pass; <code>tsc --noEmit</code> clean.</span>
+          
+            <div class="task-row">
+              <span class="task-check">○</span>
+              <span style="color: #ccc">Replay progress summary card visible on the league overview with record, standings, top scorer</span>
             </div>
-
+          
+            <div class="task-row">
+              <span class="task-check">○</span>
+              <span style="color: #ccc">At least one notification trigger point fires during replay advancement with a dedupeKey</span>
+            </div>
+          
+            <div class="task-row">
+              <span class="task-check">✅</span>
+              <span style="color: #666">PLAYOFF-BUG-001 — Already fixed in commit b465423 (`?? 6` → `?? 4`). No code change needed.</span>
+            </div>
+          
+            <div class="task-row">
+              <span class="task-check">✅</span>
+              <span style="color: #666">Q1 — `computeVpStandings()` correctly filters `isPlayoff = true` at lines 159, 188, 218 of `lib/scoring/vp.ts`.</span>
+            </div>
+          
+            <div class="task-row">
+              <span class="task-check">✅</span>
+              <span style="color: #666">Bug A — `populateNextRound` silent no-op — Script's `populateNextRound()` only looked for</span>
+            </div>
+          
+            <div class="task-row">
+              <span class="task-check">✅</span>
+              <span style="color: #666">Bug B — cleanup FK violation — Added `waiverPriority.deleteMany` + `waiverClaim.deleteMany`</span>
+            </div>
+          
+            <div class="task-row">
+              <span class="task-check">✅</span>
+              <span style="color: #666">Bug C — tsc error in `lib/draft/server.ts` — `firstPeriod.startsAt` → `firstPeriod.period.startsAt`.</span>
+            </div>
+          
         </div>
-        <div class="exit-criteria"><strong>Exit:</strong> trade system live for beta commissioners; league overview shows weekly storylines ✅; PLAYOFF-AUDIT-001 complete and PLAYOFF-BUG-001 fixed ✅. Ready to hand off to Sprint 8 hardening.</div>
+        <div class="exit-criteria"><strong>Exit:</strong> trade system is live for beta commissioners; ~~league overview shows weekly storylines~~ ✅ DONE; ~~playoff system verified end-to-end~~ ✅ DONE (PLAYOFF-AUDIT-001 complete Jun 20).</div>
       </div>
-
-      <div id="sprint-8" class="card complete">
+    
+      <div id="sprint-8" class="card planned">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
           <div>
             <div style="font-weight: 700; font-size: 1rem;">Sprint 8 · "Beta Hardening"</div>
-            <div style="font-size: 0.8rem; color: #888; margin-top: 0.2rem;">Goal: Production-ready for beta cohort — close audit gaps, crons, load test · P0/P1 · Jul 7–13, 2026</div>
-            <div style="font-size: 0.75rem; color: #22c55e; margin-top: 0.2rem;">14/14 done · P0+P1 shipped Jun 20 · beta bug fixes commit b465423</div>
+            <div style="font-size: 0.8rem; color: #888;">Track: V</div>
           </div>
-          <span class="status complete">✅ COMPLETE</span>
+          <span class="status planned">○ PLANNED</span>
         </div>
         <div>
-
-            <div class="task-row">
-              <span class="task-check">✅</span>
-              <span style="color: #888"><strong style="color:#22c55e">P0-1/P0-4 — Waiver cron</strong> · Shipped Jun 20 — <code>app/api/cron/process-waivers/route.ts</code> iterates all IN_SEASON leagues; calls <code>processWaivers()</code>. <code>vercel.json</code> cron at 08:00 UTC (03:00 ET). Auth-gated by <code>CRON_SECRET</code> header. Ops: <code>CRON_SECRET</code> env var must be set in Vercel before public launch.</span>
-            </div>
-
-            <div class="task-row">
-              <span class="task-check">✅</span>
-              <span style="color: #888"><strong style="color:#22c55e">P0-2 — Auto-set projection safety</strong> · Shipped Jun 20 — projection fetch in <code>lineup/page.tsx</code> wrapped in try/catch; <code>projectionsAvailable: boolean</code> prop disables Auto-set button and "Matchup Proj" tab when unavailable.</span>
-            </div>
-
-            <div class="task-row">
-              <span class="task-check">✅</span>
-              <span style="color: #888"><strong style="color:#22c55e">P0-3 — Waiver priority init verified</strong> · Verified Jun 20 — <code>startSeason()</code> already calls <code>initializeWaiverPriority()</code> unconditionally. No code change needed.</span>
-            </div>
-
-            <div class="task-row">
-              <span class="task-check">✅</span>
-              <span style="color: #888"><strong style="color:#22c55e">P1-A — Analysis tab error state</strong> · Shipped Jun 20 — <code>getTeamAnalysis()</code> failure returns null; <code>AnalysisTab</code> renders "Analysis data unavailable. Try refreshing."</span>
-            </div>
-
-            <div class="task-row">
-              <span class="task-check">✅</span>
-              <span style="color: #888"><strong style="color:#22c55e">P1-B — Auto-set between-weeks UX</strong> · Shipped Jun 20 — <code>computeOptimalLineup()</code> sort in <code>lib/lineup.ts</code> falls back to <code>gamesThisPeriod</code> when all <code>projectedFp</code> are null.</span>
-            </div>
-
-            <div class="task-row">
-              <span class="task-check">✅</span>
-              <span style="color: #888"><strong style="color:#22c55e">P1-C — Add/Slot capacity validation</strong> · Shipped Jun 20 — <code>AddAndSlotModal</code> shows "roster is full, drop a player first" and hides slot picker when at max roster size.</span>
-            </div>
-
-            <div class="task-row">
-              <span class="task-check">✅</span>
-              <span style="color: #888"><strong style="color:#22c55e">P1-E — Waiver cancel confirmation</strong> · Shipped Jun 20 — <code>WaiverWirePanel.tsx</code> two-step inline confirm ("Confirm cancel?" + "Keep").</span>
-            </div>
-
-            <div class="task-row">
-              <span class="task-check">✅</span>
-              <span style="color: #888"><strong style="color:#22c55e">P1-F — Analysis scoring freshness</strong> · Verified Jun 20 — <code>getTeamAnalysis()</code> already fetches fresh <code>scoringSettings</code> on every call. No change needed.</span>
-            </div>
-
-            <div class="task-row">
-              <span class="task-check">✅</span>
-              <span style="color: #888"><strong style="color:#22c55e">P1-D — Schedule badge timezone</strong> · Resolved as part of Sprint 8 tail polish.</span>
-            </div>
-
-            <div class="task-row" style="border-top: 1px solid rgba(34,197,94,0.2); padding-top: 0.5rem; margin-top: 0.5rem;">
-              <span class="task-check" style="color: #22c55e">+</span>
-              <span style="color: #888; font-size: 0.8rem; font-style: italic;">Beta Bug Fixes — commit b465423</span>
-            </div>
-
-            <div class="task-row">
-              <span class="task-check">✅</span>
-              <span style="color: #888"><strong style="color:#22c55e">BUG-1 / PLAYOFF-1 — Anchor playoff periods to last game in replay leagues</strong> · Playoff period derivation now uses the last game in the replay dataset rather than a broken wall-clock heuristic; fixes prematurely-ended scoring periods in replay leagues. (commit b465423)</span>
-            </div>
-
-            <div class="task-row">
-              <span class="task-check">✅</span>
-              <span style="color: #888"><strong style="color:#22c55e">BUG-2 / PLAYOFF-2 — Auto-resolved by BUG-1</strong> · Downstream issue caused by the same root cause as PLAYOFF-1; no separate code change needed. (commit b465423)</span>
-            </div>
-
-            <div class="task-row">
-              <span class="task-check">✅</span>
-              <span style="color: #888"><strong style="color:#22c55e">BUG-3A / PLAYOFF-3 — Enable auto-set during playoffs</strong> · <code>computeOptimalLineup()</code> now correctly finds the active period window during playoff rounds; Auto-set button functional throughout playoffs. (commit b465423)</span>
-            </div>
-
-            <div class="task-row">
-              <span class="task-check">✅</span>
-              <span style="color: #888"><strong style="color:#22c55e">BUG-4 / ROSTER-1 — Fix roster refresh after adding FA</strong> · <code>RosterManager.tsx</code> <code>handleAdd</code> now calls <code>router.refresh()</code> instead of <code>setRoster(data.roster!)</code> after a successful FA add; prevents stats wiping on refresh. (commit b465423)</span>
-            </div>
-
-            <div class="task-row">
-              <span class="task-check">✅</span>
-              <span style="color: #888"><strong style="color:#22c55e">BUG-5A / LINEUP-1 — Demote zero-games players in lineup sort</strong> · <code>computeOptimalLineup()</code> in <code>lib/lineup.ts</code> now deprioritizes players whose PWHL team has zero games remaining in the period; prevents auto-set from starting non-scoring players. (commit b465423)</span>
-            </div>
-
-            <div class="task-row">
-              <span class="task-check">✅</span>
-              <span style="color: #888"><strong style="color:#22c55e">BUG-5B / FA-SUGG-1 — Fix fa-suggestions with sim-date + games filter</strong> · <code>GET /api/leagues/[leagueId]/fa-suggestions</code> now respects <code>pwhl_dev_sim_date</code> cookie and applies the correct games-remaining filter; fixes suggestions showing stale or zero-game players in dev sim mode. (commit b465423)</span>
-            </div>
-
-            <div class="task-row">
-              <span class="task-check">✅</span>
-              <span style="color: #888"><strong style="color:#22c55e">PLAYOFF-BUG-001 / BRACKET-1 — Fix bracket default 6 → 4 teams</strong> · <code>app/league/[leagueId]/bracket/page.tsx</code> line 70: <code>teamsInPlayoff ?? 6</code> corrected to <code>?? 4</code>; bracket race banner now correctly shows "4 teams qualify" for default leagues. Resolves the P1 item from PLAYOFF-AUDIT-001. (commit b465423)</span>
-            </div>
-
-            <div class="task-row" style="opacity: 0.5; border-top: 1px solid #1a1a1a; padding-top: 0.5rem; margin-top: 0.5rem;">
-              <span class="task-check" style="color: #555">→</span>
-              <span style="color: #555"><em>Deferred to operations phase (pre-launch): Vercel cron wiring (<code>CRON_SECRET</code> confirmed in staging), load test (10+ concurrent leagues), integration test. P2 notification gaps (lineup-incomplete cron, waiver claim awarded/denied) — can slip to first post-beta fix.</em></span>
-            </div>
-
+          
         </div>
-        <div class="exit-criteria"><strong>Exit:</strong> all 14 items done ✅ — P0+P1 audit fixes shipped Jun 20 · 7 beta bug fixes (commit b465423) · PLAYOFF-BUG-001 resolved · auto-set during playoffs enabled · roster refresh fixed · Vercel cron wiring deferred to ops phase. <strong>Founding commissioner beta invites target Jul 14, 2026.</strong></div>
+        <div class="exit-criteria"><strong>Exit:</strong> Vercel cron confirmed live with `CRON_SECRET` set; load test passed with 10+</div>
       </div>
-
+    
       <div id="sprint-9" class="card complete">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
           <div>
             <div style="font-weight: 700; font-size: 1rem;">Sprint 9 · "PWHL GM Rebrand"</div>
-            <div style="font-size: 0.8rem; color: #888; margin-top: 0.2rem;">Goal: Execute planned PWHL Fantasy → PWHL GM rebrand · 10/10 items shipped · 202/202 tests · tsc clean</div>
+            <div style="font-size: 0.8rem; color: #888;">Track: F</div>
           </div>
           <span class="status complete">✅ COMPLETE</span>
         </div>
         <div>
-
+          
             <div class="task-row">
               <span class="task-check">✅</span>
-              <span style="color: #666"><strong style="color:#888">REBRAND-001 (P1, 5 pts) — Core Identity: Name, Logo, Hero</strong> · <code>components/LogoShield.tsx</code> (new); global "PWHL Fantasy" → "PWHL GM" rename; home page hero rewrite ("Think Like a GM."); <code>public/favicon.ico</code> + <code>public/manifest.json</code> updated; hero eyebrow <code>--green</code> → <code>--accent</code>.</span>
+              <span style="color: #666">BF-001 — Draft Room False Eviction — fixed stale WebSocket self-eviction on hard refresh; one silent reconnect attempt on 4001 before showing eviction screen.</span>
             </div>
-
+          
             <div class="task-row">
               <span class="task-check">✅</span>
-              <span style="color: #666"><strong style="color:#888">REBRAND-002 (P1, 3 pts) — Voice Consistency</strong> · "Your Franchises" dashboard; "Front Office" nav; login/welcome copy rewritten in management framing; invite + register page copy updated.</span>
+              <span style="color: #666">BF-002 — Performance Tab Week Number Shows "Week 1" Mid-Season — week badge in `GMCommandCenter.tsx` now derives from last completed week when no active period exists; no longer falls back to 1 mid-season.</span>
             </div>
-
-            <div class="task-row">
-              <span class="task-check">✅</span>
-              <span style="color: #666"><strong style="color:#888">REBRAND-003 (P2, 3 pts) — Detail Polish</strong> · "fantasy pts" → "pts" in <code>RosterManager.tsx</code>; draft room header → "PWHL GM — Draft Room"; <code>CLAUDE.md</code> + <code>README.md</code> product name updated.</span>
-            </div>
-
-            <div class="task-row">
-              <span class="task-check">✅</span>
-              <span style="color: #666"><strong style="color:#888">REBRAND-004 (P2, 5 pts) — Design Token System Upgrade</strong> · Archivo + Saira Condensed fonts; deep violet <code>--accent</code> (#7c3aed); solid dark card surface (#121829); radial gradient bg; <code>.rebrand-card</code>, <code>.pos-badge</code>, <code>.alert-amber</code>, <code>.chip-*</code>, <code>.section-accent</code>, <code>.font-stats</code> utility classes. Files: <code>app/globals.css</code>.</span>
-            </div>
-
-            <div class="task-row">
-              <span class="task-check">✅</span>
-              <span style="color: #666"><strong style="color:#888">REBRAND-005 (P2, 8 pts) — Matchup Page IA + Visual Redesign</strong> · BUG-MATCHUP-001 fixed (<code>isSetupPhase</code> flag; heroes show "—" not "0.0 vs 0.0" in SETUP phase). Z1–Z9 render order; new <code>RosterStatusWidget</code>; Analysis promoted to standalone <code>/team/[teamId]/analysis/</code> route + TeamNav tab.</span>
-            </div>
-
-            <div class="task-row">
-              <span class="task-check">✅</span>
-              <span style="color: #666"><strong style="color:#888">REBRAND-006 (P2, 8 pts) — Draft Room Visual Redesign</strong> · Pick cell glow on current pick; player row hover styles; card border-radius; <code>TeamSpreadPanel</code> concentration bar polish; no WebSocket or logic changes.</span>
-            </div>
-
-            <div class="task-row">
-              <span class="task-check">✅</span>
-              <span style="color: #666"><strong style="color:#888">REBRAND-007 (P3, 8 pts) — Secondary Pages Token Pass</strong> · <code>LineupManager</code>, <code>RosterManager</code>, bracket page, <code>PlayoffBracket</code>, and league overview all updated to use new CSS vars from REBRAND-004 token system.</span>
-            </div>
-
-            <div class="task-row">
-              <span class="task-check">✅</span>
-              <span style="color: #666"><strong style="color:#888">REBRAND-008 (P1, 3 pts) — QA Pass</strong> · Zero "PWHL Fantasy" strings in live UI; <code>tsc --noEmit</code> clean; 202/202 tests pass.</span>
-            </div>
-
-            <div class="task-row">
-              <span class="task-check">✅</span>
-              <span style="color: #666"><strong style="color:#888">BF-001 (P1) — Draft Room False Eviction</strong> · Fixed stale WebSocket self-eviction on hard refresh; one silent reconnect attempt on 4001 before showing eviction screen. Files: <code>hooks/useDraftSocket.ts</code>, <code>app/draft/[leagueId]/DraftRoom.tsx</code>.</span>
-            </div>
-
-            <div class="task-row">
-              <span class="task-check">✅</span>
-              <span style="color: #666"><strong style="color:#888">BF-002 (P1) — Performance Tab Week Number Mid-Season</strong> · Week badge in <code>GMCommandCenter.tsx</code> now derives from last completed week when no active period; no longer falls back to 1 mid-season. Files: <code>components/sim/GMCommandCenter.tsx</code>, <code>app/team/[teamId]/schedule/page.tsx</code>.</span>
-            </div>
-
+          
         </div>
-        <div class="exit-criteria"><strong>Exit achieved:</strong> Product is visibly "PWHL GM." Shield logo in browser tab. "Think Like a GM." on home page. "Your Franchises" on dashboard. "Front Office" in commissioner nav. Matchup + draft room match approved mockups. BF-001 + BF-002 resolved. 202/202 tests green. Zero "PWHL Fantasy" strings in live UI.</div>
+        
       </div>
-
+    
       <div id="sprint-10" class="card complete">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
           <div>
             <div style="font-weight: 700; font-size: 1rem;">Sprint 10 · "Beta Bug Sweep + Launch Polish"</div>
-            <div style="font-size: 0.8rem; color: #888;">Track: V+F · ~1 wk · 4 bugs + 5 UX fixes · Source: beta feedback + Pass 1 &amp; Pass 2 design audits (Jun 21, 2026)</div>
+            <div style="font-size: 0.8rem; color: #888;">Track: V</div>
           </div>
           <span class="status complete">✅ COMPLETE</span>
         </div>
         <div>
+          
             <div class="task-row">
               <span class="task-check">✅</span>
-              <span style="color: #666"><strong style="color:#888">BF-003 (P0) — Activity Feed Shows Raw "LEAGUE_STORYLINE" String</strong> · <code>lib/services/storyline-service.ts</code> emits <code>{ week, kind, headline, detail, value }</code> but no <code>description</code> key; <code>getLeagueActivity()</code> falls back to <code>e.type</code>. Fix: add <code>description: storyline.headline</code> to emitted data + <code>data.headline</code> fallback in renderer for pre-fix events.</span>
+              <span style="color: #666">DATA-001: 2026-27 Initial Roster Load — Loaded pre-season rosters for all 12 teams from</span>
             </div>
+          
             <div class="task-row">
-              <span class="task-check">✅</span>
-              <span style="color: #666"><strong style="color:#888">BF-004 (P0) — "UTIL Slot Is Full" When Moving Bench Forward to Empty Forward Seat</strong> · Beta user sees slot-full error when an empty FORWARD seat should be the target. Investigate <code>seatedActive</code> array construction in <code>LineupManager.tsx</code> and the <code>moveTo(slot)</code> parameter passed on click. Verify with 3F/2D/1G/1UTIL/6BN config.</span>
+              <span class="task-check">○</span>
+              <span style="color: #ccc">BF-007 (P2) — "Performance" tab rename to "Record" (copy-only, no functional impact)</span>
             </div>
+          
             <div class="task-row">
-              <span class="task-check">✅</span>
-              <span style="color: #666"><strong style="color:#888">BF-005 (P1) — Draft Room False Eviction on Hard Refresh (BF-001 Incomplete)</strong> · <code>setEvicted(true)</code> is never called in <code>useDraftSocket.ts</code> — the eviction overlay cannot currently render via current code path. Stale socket's 4001 reconnect evicts the newly-opened tab's socket, creating a loop. Fix: track <code>reconnectAttemptedAfter4001Ref</code>; second 4001 within lifecycle calls <code>setEvicted(true)</code> and stops reconnecting.</span>
+              <span class="task-check">○</span>
+              <span style="color: #ccc">UX-008 (P1) — Commissioner announcement form position on league overview</span>
             </div>
+          
             <div class="task-row">
-              <span class="task-check">✅</span>
-              <span style="color: #666"><strong style="color:#888">BF-006 (P1) — Bench Upgrade Hint Recommends Player With Zero Games</strong> · Starter-total summary bar on "Matchup Proj" view shows "Consider starting [Player] (X.X proj)" when that player has zero games remaining. Add <code>gamesThisPeriod &gt; 0</code> guard to the bench-upgrade candidate filter in <code>LineupManager.tsx</code> (same guard used in <code>computeOptimalLineup()</code>).</span>
+              <span class="task-check">○</span>
+              <span style="color: #ccc">P2 notification gaps: `LINEUP_INCOMPLETE` cron, `WAIVER_CLAIM_AWARDED`/`DENIED` from `processWaivers()`</span>
             </div>
-            <div class="task-row" style="border-top: 1px solid rgba(124,58,237,0.2); padding-top: 0.5rem; margin-top: 0.5rem;">
-              <span class="task-check" style="color: #7c3aed">+</span>
-              <span style="color: #888; font-size: 0.8rem; font-style: italic;">UX Fixes — Pass 1 Design Critic + Pass 2 End-User Click-Through audits</span>
-            </div>
+          
             <div class="task-row">
-              <span class="task-check">✅</span>
-              <span style="color: #666"><strong style="color:#888">UX-001 (P1, S) — Landing Trust Copy Buried Below CTAs</strong> · Move "Free-to-Play, Pure Strategy" above the CTA button group; increase font weight so it reads as a reassurance signal, not fine print. File: <code>app/page.tsx</code></span>
+              <span class="task-check">○</span>
+              <span style="color: #ccc">Email notification channel for `LINEUP_INCOMPLETE`, `TRADE_RECEIVED`, `WAIVER_RESULT`</span>
             </div>
-            <div class="task-row">
-              <span class="task-check">✅</span>
-              <span style="color: #666"><strong style="color:#888">UX-010 (P0, S) — "Go to Admin Panel" CTA Shown to Non-Commissioners</strong> · Gate the "Go to admin panel →" link in the standings empty state to <code>user.id === league.commissionerId</code>. File: <code>app/league/[leagueId]/standings/page.tsx</code></span>
-            </div>
-            <div class="task-row">
-              <span class="task-check">✅</span>
-              <span style="color: #666"><strong style="color:#888">UX-011 (P0, S) — Standings Table Headers at Bottom of Bracket Page</strong> · "W–L" and "PF" column headers appear below data rows. Fix <code>&lt;thead&gt;</code>/<code>&lt;tbody&gt;</code> order in <code>app/league/[leagueId]/bracket/page.tsx</code> or <code>components/PlayoffBracket.tsx</code>.</span>
-            </div>
-            <div class="task-row">
-              <span class="task-check">✅</span>
-              <span style="color: #666"><strong style="color:#888">UX-018 (P0, S) — Lineup Instruction Banner Misleads Pre-Draft Users</strong> · Pass 2: pre-draft user sees "Tap a player to select them" with an empty roster. Replace instruction banner with: "Your roster is empty. Draft players first." + link to league overview/draft room when zero <code>RosterEntry</code> rows exist. File: <code>app/team/[teamId]/lineup/LineupManager.tsx</code></span>
-            </div>
-            <div class="task-row">
-              <span class="task-check">✅</span>
-              <span style="color: #666"><strong style="color:#888">UX-023 (P1, S) — Trade Center Has No "Propose Trade" Button</strong> · Pass 2: Trade Center shows incoming/sent/history tabs but no visible CTA to start a trade. Add "Propose Trade →" button in page header linking to <code>/league/[leagueId]/trades/new</code>. File: <code>app/league/[leagueId]/trades/page.tsx</code></span>
-            </div>
-            <div class="task-row" style="border-top: 1px solid rgba(34,197,94,0.15); padding-top: 0.5rem; margin-top: 0.5rem;">
-              <span class="task-check">✅</span>
-              <span style="color: #666"><strong style="color:#888">DATA-001 — 2026-27 Initial Expansion Roster Load</strong> · Expansion draft completed Jun 21, 2026. All 12 teams (8 originals + Detroit/Hamilton/Las Vegas/San Jose Hockey Teams) have initial rosters in DB via <code>npx tsx scripts/update-2026-27-rosters.ts</code>.</span>
-            </div>
-            <div class="task-row" style="opacity: 0.5; border-top: 1px solid #1a1a1a; padding-top: 0.5rem; margin-top: 0.5rem;">
-              <span class="task-check" style="color: #555">→</span>
-              <span style="color: #555"><em>Bumped to Sprint 11b: BF-007 ("Performance" tab rename → "Record"), UX-008 (announcement form position)</em></span>
-            </div>
+          
         </div>
-        <div class="exit-criteria"><strong>Exit criteria:</strong> ✅ All 9 items resolved (4 bugs + 5 UX fixes) + DATA-001 roster load complete. <code>tsc --noEmit</code> clean, ≥202 tests pass.</div>
+        <div class="exit-criteria"><strong>Exit:</strong> all 9 items resolved (4 bugs + 5 UX fixes), `tsc --noEmit` clean, ≥202 tests pass. Beta cohort can run a full</div>
       </div>
-
+    
       <div id="sprint-11" class="card complete">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
           <div>
-            <div style="font-weight: 700; font-size: 1rem;">Sprint 11 · "UX Polish: Vocabulary + Education + Navigation + Wizard + Empty States"</div>
-            <div style="font-size: 0.8rem; color: #888; margin-top: 0.2rem;">Track: F · Source: Pass 1–4 audits · 24 items · 11a ✅ COMPLETE (8/8) · 11b ✅ COMPLETE (16/16)</div>
+            <div style="font-weight: 700; font-size: 1rem;">Sprint 11 · "UX Polish: Vocabulary + Navigation + Wizard + Empty States"</div>
+            <div style="font-size: 0.8rem; color: #888;">Track: F</div>
           </div>
           <span class="status complete">✅ COMPLETE</span>
         </div>
         <div>
-            <div class="task-row" style="border-bottom: 1px solid rgba(34,197,94,0.15); padding-bottom: 0.5rem; margin-bottom: 0.25rem; background: rgba(34,197,94,0.03);">
-              <span class="task-check" style="color: #22c55e">✅</span>
-              <span style="color: #22c55e; font-size: 0.8rem; font-weight: 700;">Sprint 11a — P0/P1 Vocabulary + Education (8/8 COMPLETE)</span>
-            </div>
+          
             <div class="task-row">
-              <span class="task-check">✅</span>
-              <span style="color: #666"><strong style="color:#888">UX-024 (P0, S) — VTF "Record" Label Misleads New Users</strong> · Rename W–L–T label in FieldHero from "Record" to "vs. Field" or "Week record". File: <code>components/FieldHero.tsx</code></span>
+              <span class="task-check">○</span>
+              <span style="color: #ccc">UX-032 (P2, S) — "+8.3 EDGE" jargon rename to "FP lead"</span>
             </div>
+          
             <div class="task-row">
-              <span class="task-check">✅</span>
-              <span style="color: #666"><strong style="color:#888">UX-025 (P0, S) — Score Display Looks Like a Hockey Score</strong> · Style weekly fantasy point totals to read as "142.5 pts" not "4–3" game score. Files: <code>components/FieldHero.tsx</code>, <code>components/DuelHero.tsx</code></span>
+              <span class="task-check">○</span>
+              <span style="color: #ccc">UX-033 (P2, S) — "NO GAMES YET" badge explanation</span>
             </div>
+          
             <div class="task-row">
-              <span class="task-check">✅</span>
-              <span style="color: #666"><strong style="color:#888">UX-026 (P0, S) — "0–0–7" Record Display Bug</strong> · VTF record shows 0 wins, 0 losses, 7 ties pre-season. Hide record when all values are zero. File: <code>components/FieldHero.tsx</code></span>
+              <span class="task-check">○</span>
+              <span style="color: #ccc">UX-034 (P2, S) — G · G slot/position visual stutter in Playing Tonight</span>
             </div>
+          
             <div class="task-row">
-              <span class="task-check">✅</span>
-              <span style="color: #666"><strong style="color:#888">UX-027 (P1, S) — Projection Labels Not Explained Inline</strong> · Add tooltip "rolling 5-game avg × scheduled games" next to projected FP values. File: <code>app/team/[teamId]/lineup/LineupManager.tsx</code></span>
+              <span class="task-check">○</span>
+              <span style="color: #ccc">UX-035 (P3, M) — Game times hardcoded to Eastern Time; localize to user timezone</span>
             </div>
+          
             <div class="task-row">
-              <span class="task-check">✅</span>
-              <span style="color: #666"><strong style="color:#888">UX-028 (P1, S) — Auto-set Button Hierarchy Unclear</strong> · Demote Auto-set to secondary/outline style so "Save" reads as primary. File: <code>app/team/[teamId]/lineup/LineupManager.tsx</code></span>
+              <span class="task-check">○</span>
+              <span style="color: #ccc">UX-036 (P2, M) — Roster stat column headers have no tooltips for hockey newcomers</span>
             </div>
+          
             <div class="task-row">
-              <span class="task-check">✅</span>
-              <span style="color: #666"><strong style="color:#888">UX-029 (P1, S) — Standings VP Education Not On Matchup Page</strong> · Add collapsible "How scoring works" inline on matchup page. File: <code>app/team/[teamId]/matchup/page.tsx</code></span>
+              <span class="task-check">○</span>
+              <span style="color: #ccc">UX-037 (P2, S) — FPTS is rightmost (lowest priority) column; move near left</span>
             </div>
+          
             <div class="task-row">
-              <span class="task-check">✅</span>
-              <span style="color: #666"><strong style="color:#888">UX-030 (P1, S) — Rival Badge Buried Below the Fold on Mobile</strong> · Promote rival summary into DuelHero or add a pill near the score. File: <code>app/team/[teamId]/matchup/page.tsx</code></span>
+              <span class="task-check">○</span>
+              <span style="color: #ccc">UX-038 (P2, S) — "WK" games-remaining circles have no column header in FA list</span>
             </div>
+          
             <div class="task-row">
-              <span class="task-check">✅</span>
-              <span style="color: #666"><strong style="color:#888">UX-031 (P1, S) — Dashboard Action Items Don't Mention VP</strong> · Add sub-copy "VP standings update Sunday" to new-week action item. File: <code>app/dashboard/page.tsx</code></span>
+              <span class="task-check">○</span>
+              <span style="color: #ccc">UX-039 (P2, S) — "Claim" vs "Add" button distinction unexplained in FA rows</span>
             </div>
-            <div class="task-row" style="border-top: 1px solid rgba(34,197,94,0.15); border-bottom: 1px solid rgba(124,58,237,0.15); padding: 0.5rem 0; margin: 0.25rem 0; background: rgba(34,197,94,0.03);">
-              <span class="task-check" style="color: #22c55e">✅</span>
-              <span style="color: #22c55e; font-size: 0.8rem; font-weight: 700;">Sprint 11b — P1/P2 Navigation + Wizard + Empty States (16/16 COMPLETE)</span>
-            </div>
-            <div class="task-row" style="border-bottom: 1px solid rgba(124,58,237,0.15); padding-bottom: 0.5rem; margin-bottom: 0.25rem;">
-              <span class="task-check" style="color: #7c3aed">↓</span>
-              <span style="color: #888; font-size: 0.8rem; font-style: italic;">Bumped from Sprint 10</span>
-            </div>
+          
             <div class="task-row">
-              <span class="task-check">✅</span>
-              <span style="color: #666"><strong style="color:#888">BF-007 (P2, S) — "Performance" Tab Name Unclear to Beta Users</strong> · Rename TeamNav tab + page &lt;h1&gt; from "Performance" to "Record". Files: <code>app/team/[teamId]/TeamNav.tsx</code>, <code>app/team/[teamId]/schedule/page.tsx</code></span>
+              <span class="task-check">○</span>
+              <span style="color: #ccc">UX-040 (P2, S) — Standings "games back of the bubble" uses basketball idiom</span>
             </div>
+          
             <div class="task-row">
-              <span class="task-check">✅</span>
-              <span style="color: #666"><strong style="color:#888">UX-008 (P1, S) — Commissioner Announcement Form Is First Visible Element on Overview</strong> · Move <code>AnnouncementForm</code> below the playoff race table and matchup sections. File: <code>app/league/[leagueId]/page.tsx</code></span>
+              <span class="task-check">○</span>
+              <span style="color: #ccc">UX-041 (P2, S) — Analysis "vs Median" numbers have no unit label</span>
             </div>
-            <div class="task-row" style="border-top: 1px solid rgba(124,58,237,0.15); padding-top: 0.5rem; margin-top: 0.25rem;">
-              <span class="task-check" style="color: #7c3aed">+</span>
-              <span style="color: #888; font-size: 0.8rem; font-style: italic;">Pass 1 — Design Critic items</span>
-            </div>
+          
             <div class="task-row">
-              <span class="task-check">✅</span>
-              <span style="color: #666"><strong style="color:#888">UX-006 (P1, M) — League Nav Tab Style Differs from Team Nav</strong> · League nav uses dark pill/chip tabs; team nav uses white text + indigo underline. Unify league nav to match team nav pattern. Files: <code>app/league/[leagueId]/layout.tsx</code>, <code>app/globals.css</code></span>
+              <span class="task-check">○</span>
+              <span style="color: #ccc">UX-042 (P2, S) — Negative FP values in Player Trends unexplained</span>
             </div>
+          
             <div class="task-row">
-              <span class="task-check">✅</span>
-              <span style="color: #666"><strong style="color:#888">UX-014 (P1, M) — Wizard "Next" Button Floats Outside the Card</strong> · Move "Next →" and "← Back" buttons inside the card container. File: <code>app/create-league/CreateLeagueWizard.tsx</code></span>
+              <span class="task-check">○</span>
+              <span style="color: #ccc">UX-043 (P2, S) — Landing page "work the wire" jargon is opaque to newcomers</span>
             </div>
+          
             <div class="task-row">
-              <span class="task-check">✅</span>
-              <span style="color: #666"><strong style="color:#888">UX-015 (P1, M) — Wizard Progress Indicator Is a Hairline Bar</strong> · Replace 1px bar + text label with a 6-segment filled bar using <code>--accent</code>. File: <code>app/create-league/CreateLeagueWizard.tsx</code>, <code>app/globals.css</code></span>
+              <span class="task-check">○</span>
+              <span style="color: #ccc">UX-044 (P3, S) — "0-0 season series" shows before any matchup played</span>
             </div>
+          
             <div class="task-row">
-              <span class="task-check">✅</span>
-              <span style="color: #666"><strong style="color:#888">UX-016 (P1, M) — Pre-Season Empty States Have No Context or Next Action</strong> · Add page-specific copy and a CTA (using <code>EmptyState.tsx</code> <code>cta</code> prop) to matchup, standings, schedule/record, and analysis pages. Files: 4 page.tsx files.</span>
+              <span class="task-check">○</span>
+              <span style="color: #ccc">UX-045 (P2, M) — No celebration moment when rivalry matchup is won (requires `RIVALRY_WIN` notification enum; deferred unless UX-031 lands early)</span>
             </div>
-            <div class="task-row" style="border-top: 1px solid rgba(124,58,237,0.15); padding-top: 0.5rem; margin-top: 0.25rem;">
-              <span class="task-check" style="color: #7c3aed">+</span>
-              <span style="color: #888; font-size: 0.8rem; font-style: italic;">Pass 2 — End-User Click-Through items</span>
-            </div>
+          
             <div class="task-row">
-              <span class="task-check">✅</span>
-              <span style="color: #666"><strong style="color:#888">UX-017 (P1, S) — Register Page Headline Contradicts "Start Your Franchise" CTA</strong> · Landing page CTA says "Start your franchise →" but register page says "Join the league. Pick your team." Update register headline to match REBRAND-001/002 GM voice. File: <code>app/register/page.tsx</code></span>
+              <span class="task-check">○</span>
+              <span style="color: #ccc">UX-012 (L) — Combine Standings and Bracket/Playoffs into a single "Season" page with state-aware primary content. Pre-playoffs: standings-first. During playoffs: bracket-first. Eliminates the "Regular Season badge on Playoffs page" contradiction and reduces nav items.</span>
             </div>
+          
             <div class="task-row">
-              <span class="task-check">✅</span>
-              <span style="color: #666"><strong style="color:#888">UX-019 (P1, S) — Free Agent Add Button Appears Pre-Draft Without Context</strong> · Pre-draft users see 447 players with "Add" buttons and no explanation. Add contextual banner based on <code>league.status</code>: "Free agent adds open after the draft." File: <code>app/team/[teamId]/roster/RosterManager.tsx</code></span>
+              <span class="task-check">○</span>
+              <span style="color: #ccc">UX-022 (P3, S) — Team "Record" tab / league "Schedule" tab naming ambiguity. Evaluate after BF-007 and UX-006 ship; may resolve on its own.</span>
             </div>
-            <div class="task-row">
-              <span class="task-check">✅</span>
-              <span style="color: #666"><strong style="color:#888">UX-004 (P2, S) — Nav Auth Indicator Uses Raw Display Name</strong> · Replace display name with fixed "Account" label or monogram avatar. File: <code>app/layout.tsx</code></span>
-            </div>
-            <div class="task-row">
-              <span class="task-check">✅</span>
-              <span style="color: #666"><strong style="color:#888">UX-007 (P2, S) — Commissioner Link Uses ⊕ Icon (Implies "Add")</strong> · Replace with settings/gear icon; rename to "Admin." File: <code>app/league/[leagueId]/layout.tsx</code></span>
-            </div>
-            <div class="task-row">
-              <span class="task-check">✅</span>
-              <span style="color: #666"><strong style="color:#888">UX-020 (P2, S) — "Free Agents" and "Waiver Wire" Tabs Have No Inline Explanation</strong> · Add subtitle to each tab: "immediate add" vs "claimed by priority order over 48 hours." File: <code>app/team/[teamId]/roster/RosterManager.tsx</code></span>
-            </div>
-            <div class="task-row">
-              <span class="task-check">✅</span>
-              <span style="color: #666"><strong style="color:#888">UX-021 (P2, M) — Dashboard Skeleton Shows Logged-Out Nav During Hydration</strong> · After login, top nav briefly shows "Login" during hydration window. Fix auth state resolution in server-rendered nav so authenticated state is always correct. File: <code>app/layout.tsx</code></span>
-            </div>
-            <div class="task-row">
-              <span class="task-check">✅</span>
-              <span style="color: #666"><strong style="color:#888">UX-002 (P2, M) — Auth Card Dead Zone + Faint Season Timing Signal</strong> · Reduce card top padding; elevate timing note to a visible chip near form title. Files: <code>app/login/page.tsx</code>, <code>app/register/page.tsx</code></span>
-            </div>
-            <div class="task-row">
-              <span class="task-check">✅</span>
-              <span style="color: #666"><strong style="color:#888">UX-003 (P2, S) — Optional Field Hint Looks Like Validation Error</strong> · Inline "(optional)" into the <code>&lt;label&gt;</code> element on the register form. File: <code>app/register/page.tsx</code></span>
-            </div>
-            <div class="task-row">
-              <span class="task-check">✅</span>
-              <span style="color: #666"><strong style="color:#888">UX-009 (P2, S) — Duplicate League Name on Overview Page</strong> · Remove or replace the body-level <code>&lt;h1&gt;</code> league name. File: <code>app/league/[leagueId]/page.tsx</code></span>
-            </div>
-            <div class="task-row">
-              <span class="task-check">✅</span>
-              <span style="color: #666"><strong style="color:#888">UX-005 (P2, S) — "Front Office" Logo Subtext Is a Dead Nav Item</strong> · Remove or wire to admin panel for commissioners. Files: <code>components/LogoShield.tsx</code>, <code>app/league/[leagueId]/layout.tsx</code></span>
-            </div>
-            <div class="task-row">
-              <span class="task-check">✅</span>
-              <span style="color: #666"><strong style="color:#888">UX-013 (P3, S) — Wizard card min-height so it doesn't float in dead space.</strong></span>
-            </div>
-            <div class="task-row" style="opacity: 0.5; border-top: 1px solid #1a1a1a; padding-top: 0.5rem; margin-top: 0.5rem;">
-              <span class="task-check" style="color: #555">→</span>
-              <span style="color: #555"><em>Design Backlog: UX-012 (L) — Combine Standings + Bracket into a single state-aware "Season" page. Requires design pass before implementation.</em></span>
-            </div>
-            <div class="task-row" style="opacity: 0.5;">
-              <span class="task-check" style="color: #555">→</span>
-              <span style="color: #555"><em>Design Backlog: UX-022 (P3, S) — Team "Record" vs league "Schedule" naming ambiguity. Evaluate after BF-007 + UX-006 ship.</em></span>
-            </div>
+          
         </div>
-        <div class="exit-criteria"><strong>Exit criteria:</strong> ✅ All 16 items resolved. UX-012 and UX-022 specced in Design Backlog. <code>tsc --noEmit</code> clean, ≥202 tests pass.</div>
+        <div class="exit-criteria"><strong>Exit:</strong> all items resolved, Design Backlog items UX-012 and UX-022 specced.</div>
       </div>
-
-      <div id="sprint-12" class="card planned">
+    
+      <div id="sprint-12" class="card complete">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
           <div>
-            <div style="font-weight: 700; font-size: 1rem;">Sprint 12 · "UX Audit + Onboarding First-Run"</div>
-            <div style="font-size: 0.8rem; color: #888; margin-top: 0.2rem;">Track: F · Sources: Pass 1/2 end-user walkthrough (in-season UX) + Pass 5 design critique (wizard/auth) · 14 items (6 P0 + 8 P1)</div>
+            <div style="font-weight: 700; font-size: 1rem;">Sprint 12 · "Pre-Beta Polish"</div>
+            <div style="font-size: 0.8rem; color: #888;">Track: F</div>
           </div>
-          <span class="status planned">PLANNED</span>
+          <span class="status complete">✅ COMPLETE</span>
         </div>
         <div>
-            <div class="task-row" style="border-bottom: 1px solid rgba(239,68,68,0.2); padding-bottom: 0.5rem; margin-bottom: 0.25rem; background: rgba(239,68,68,0.03);">
-              <span class="task-check" style="color: #ef4444">P0</span>
-              <span style="color: #ef4444; font-size: 0.8rem; font-weight: 700;">High Severity — must ship before public launch (6 items)</span>
-            </div>
+          
             <div class="task-row">
-              <span class="task-check">☐</span>
-              <span><strong style="color:#ccc">BF-008 (P0, XS) — Activity Feed Negative Timestamps in Replay Leagues</strong> · Events like "dropped Jocelyne Larocque" show as "-243731m ago." Fix: render time-ago using real <code>Date.now()</code>, not the simulated replay date. Files: <code>lib/services/activity.ts</code>, activity feed component</span>
+              <span class="task-check">✅</span>
+              <span style="color: #666">BF-004: Fix lineup UTIL slot validation error on FORWARD seat move</span>
             </div>
+          
             <div class="task-row">
-              <span class="task-check">☐</span>
-              <span><strong style="color:#ccc">BF-009 (P0, S) — Analysis Page Navigation Broken</strong> · Clicking "Analysis" in team nav stays on matchup URL. Link href is correct; route likely fails to compile on first access. Investigate <code>app/team/[teamId]/analysis/page.tsx</code>; fix compile or runtime error. Files: <code>app/team/[teamId]/analysis/page.tsx</code>, <code>TeamNav.tsx</code></span>
+              <span class="task-check">✅</span>
+              <span style="color: #666">UX-043: Landing page jargon reduction</span>
             </div>
+          
             <div class="task-row">
-              <span class="task-check">☐</span>
-              <span><strong style="color:#ccc">OB-001 (P0, S) — "Start Your Franchise" CTA Routes to /login Instead of /register</strong> · Change landing page CTA to <code>/register?returnTo=/create-league</code>. File: <code>app/page.tsx</code></span>
+              <span class="task-check">✅</span>
+              <span style="color: #666">UX-039: Enhance Claim vs Add language clarity</span>
             </div>
+          
             <div class="task-row">
-              <span class="task-check">☐</span>
-              <span><strong style="color:#ccc">OB-002 (P0, S) — Wizard Step 4 Introduces VP Without Explaining It</strong> · Add <code>VpExplainer</code> component (collapsed) inline at step 4; add tooltip for UTIL. Files: <code>app/create-league/CreateLeagueWizard.tsx</code>, <code>components/VpExplainer.tsx</code></span>
+              <span class="task-check">✅</span>
+              <span style="color: #666">UX-038 + UX-040 + UX-042 + UX-044: UI Polish</span>
             </div>
+          
             <div class="task-row">
-              <span class="task-check">☐</span>
-              <span><strong style="color:#ccc">OB-003 (P0, S) — Wizard Does Not Warn That Team Creation Is Step 5</strong> · Add note at step 4: "Next, you'll name your own team." Update step counter to 7 steps. File: <code>app/create-league/CreateLeagueWizard.tsx</code></span>
+              <span class="task-check">✅</span>
+              <span style="color: #666">DATA-002: 2026-27 Pre-Season Roster Update Script</span>
             </div>
-            <div class="task-row">
-              <span class="task-check">☐</span>
-              <span><strong style="color:#ccc">OB-004 (P0, M) — Cancel After League Creation Silently Orphans It</strong> · Add confirm dialog when Cancel clicked after step 4 (post-league-creation). File: <code>app/create-league/CreateLeagueWizard.tsx</code></span>
-            </div>
-            <div class="task-row" style="border-top: 1px solid rgba(245,158,11,0.2); padding-top: 0.5rem; margin-top: 0.25rem; background: rgba(245,158,11,0.02);">
-              <span class="task-check" style="color: #f59e0b">P1</span>
-              <span style="color: #f59e0b; font-size: 0.8rem; font-weight: 700;">Medium Severity (8 items)</span>
-            </div>
-            <div class="task-row">
-              <span class="task-check">☐</span>
-              <span><strong style="color:#ccc">UX-046 (P1, S) — Season Series Block Renders Twice on Matchup Page</strong> · "SEASON SERIES · 1-0" immediately followed by "SEASON SERIES VS [OPPONENT] · 1-0 · Dec 5 · 24.7–16.75" — same data twice. Remove the duplicate heading; render label + detail in one block (Z4 section). File: <code>app/team/[teamId]/matchup/page.tsx</code></span>
-            </div>
-            <div class="task-row">
-              <span class="task-check">☐</span>
-              <span><strong style="color:#ccc">UX-047 (P1, M) — Trade Proposal Has No Trading-Partner-First Step</strong> · 80+ players from all teams dumped in "WANT FROM LEAGUE" with no team filter. Add team-picker pill row above the list; selecting a team filters to their roster only. "All teams" option restores full list. Files: <code>trades/new/page.tsx</code>, ProposeTradeForm component</span>
-            </div>
-            <div class="task-row">
-              <span class="task-check">☐</span>
-              <span><strong style="color:#ccc">UX-048 (P1, S) — Trade Form Search Hint Hidden Below Player List</strong> · Instruction "Search by player name or team name" appears below 80 player buttons — below the fold. Move above the list, immediately under the "WANT FROM LEAGUE" heading. Files: same as UX-047</span>
-            </div>
-            <div class="task-row">
-              <span class="task-check">☐</span>
-              <span><strong style="color:#ccc">OB-005 (P1, S) — QuickDraftJoinForm on Public Home Page</strong> · Remove League ID / Team ID form from <code>app/page.tsx</code>; move behind auth. File: <code>app/page.tsx</code></span>
-            </div>
-            <div class="task-row">
-              <span class="task-check">☐</span>
-              <span><strong style="color:#ccc">OB-006 (P1, S) — Replay Mode Description Appears Only After Clicking It</strong> · Show one-line description below each mode option (Live and Replay) before user selects. File: <code>app/create-league/CreateLeagueWizard.tsx</code></span>
-            </div>
-            <div class="task-row">
-              <span class="task-check">☐</span>
-              <span><strong style="color:#ccc">OB-007 (P1, S) — Login Page Pitch Says "All 8 Teams" (Should Be 12)</strong> · Update login page left-column pitch copy. File: <code>app/login/page.tsx</code></span>
-            </div>
-            <div class="task-row">
-              <span class="task-check">☐</span>
-              <span><strong style="color:#ccc">OB-008 (P1, S) — Registration Form Has "Confirm Password" Field</strong> · Drop confirm-password field; add show/hide toggle to single password field. File: <code>app/register/page.tsx</code></span>
-            </div>
-            <div class="task-row">
-              <span class="task-check">☐</span>
-              <span><strong style="color:#ccc">OB-009 (P1, S) — Wizard Rules Step Shows No Fantasy Point Values</strong> · Add compact scoring chip row to step 4: "Goal 2 pts · Assist 1.5 pts · Win (G) 5 pts · PPP 1 pt · Shutout (G) 3 pts." File: <code>app/create-league/CreateLeagueWizard.tsx</code></span>
-            </div>
-            <div class="task-row" style="opacity: 0.5; border-top: 1px solid #1a1a1a; padding-top: 0.5rem; margin-top: 0.5rem;">
-              <span class="task-check" style="color: #555">→</span>
-              <span style="color: #555"><em>Deferred to Sprint 13: UX-049 (P2, S) — Free Agents not in top-level nav; UX-050 (P2, S) — Win probability percentages unlabeled; OB-010 (P1, M) — Wizard progress bar misleading for Replay; OB-011 (P2, S) — Draft date picker guidance.</em></span>
-            </div>
+          
         </div>
-        <div class="exit-criteria"><strong>Exit:</strong> all 14 items resolved (6 P0 + 8 P1). Negative timestamps gone. Analysis tab navigates correctly. First-time visitor can create an account and complete the league wizard without hitting broken UX or unexplained jargon. Trade propose flow has a clear trading-partner step. <code>tsc --noEmit</code> clean, ≥202 tests pass.</div>
+        <div class="exit-criteria"><strong>Exit:</strong> MVP readiness ~99%. P0 bugs cleared. 202 tests pass. tsc clean. DATA-002 script ready. Ready for Jul 14 beta invites. ✅ ACHIEVED</div>
       </div>
-
+    
+      <div id="sprint-13" class="card planned">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+          <div>
+            <div style="font-weight: 700; font-size: 1rem;">Sprint 13 · "UX Audit + Onboarding First-Run"</div>
+            <div style="font-size: 0.8rem; color: #888;">Track: F</div>
+          </div>
+          <span class="status planned">○ PLANNED</span>
+        </div>
+        <div>
+          
+            <div class="task-row">
+              <span class="task-check">○</span>
+              <span style="color: #ccc">UX-049 (P2, S) — "Free Agents" not accessible from top-level team nav; buried inside Rosters page</span>
+            </div>
+          
+            <div class="task-row">
+              <span class="task-check">○</span>
+              <span style="color: #ccc">UX-050 (P2, S) — Win probability percentages unlabeled in DuelHero ("66%" floats with no context)</span>
+            </div>
+          
+            <div class="task-row">
+              <span class="task-check">○</span>
+              <span style="color: #ccc">OB-010 (P1, M) — Wizard progress bar misleading for Replay users (step counter skips step 4)</span>
+            </div>
+          
+            <div class="task-row">
+              <span class="task-check">○</span>
+              <span style="color: #ccc">OB-011 (P2, S) — Draft date picker has no season-anchor guidance</span>
+            </div>
+          
+        </div>
+        <div class="exit-criteria"><strong>Exit:</strong> all 14 items (6 P0 + 8 P1) resolved. Negative timestamps gone; Analysis tab navigates</div>
+      </div>
+    
   </div>
 
   <!-- Tab 3: Backlog -->
@@ -1384,7 +1189,7 @@
       
         <div class="crit-section-high">
           
-            <div class="section-header">🟠 High Priority (all done) <span class="section-count">1</span></div>
+            <div class="section-header">🟠 High Priority <span class="section-count">1</span></div>
             <table class="backlog-table">
               <thead>
                 <tr>
@@ -1393,18 +1198,18 @@
                   <th>Title</th>
                   <th style="width: 6rem;">Status</th>
                   <th style="width: 5rem;">Tokens</th>
-                  <th style="width: 5rem;">Sprint</th>
+                  <th style="width: 5rem;">Phase</th>
                 </tr>
               </thead>
               <tbody>
                 
-                  <tr class="backlog-row" data-status="done" data-crit="high">
+                  <tr class="backlog-row" data-status="todo" data-crit="high">
                     <td><span class="crit-dot crit-high"></span></td>
                     <td>#27</td>
                     <td>Roster Page UX Overhaul</td>
-                    <td><span class="status done">DONE</span></td>
+                    <td><span class="status todo">TODO</span></td>
                     <td>—</td>
-                    <td>4</td>
+                    <td>1</td>
                   </tr>
                 
               </tbody>
@@ -1414,7 +1219,7 @@
       
         <div class="crit-section-medium">
           
-            <div class="section-header">🟡 Medium Priority <span class="section-count">36</span></div>
+            <div class="section-header">🟡 Medium Priority <span class="section-count">31</span></div>
             <table class="backlog-table">
               <thead>
                 <tr>
@@ -1423,342 +1228,288 @@
                   <th>Title</th>
                   <th style="width: 6rem;">Status</th>
                   <th style="width: 5rem;">Tokens</th>
-                  <th style="width: 5rem;">Sprint</th>
+                  <th style="width: 5rem;">Phase</th>
                 </tr>
               </thead>
               <tbody>
                 
-                  <tr class="backlog-row" data-status="done" data-crit="medium">
+                  <tr class="backlog-row" data-status="todo" data-crit="medium">
                     <td><span class="crit-dot crit-medium"></span></td>
                     <td>#1</td>
                     <td>Commissioner Dashboard</td>
-                    <td><span class="status done">DONE</span></td>
+                    <td><span class="status todo">TODO</span></td>
                     <td>—</td>
-                    <td>2–4</td>
+                    <td>1</td>
                   </tr>
-
-                  <tr class="backlog-row" data-status="done" data-crit="medium">
+                
+                  <tr class="backlog-row" data-status="todo" data-crit="medium">
                     <td><span class="crit-dot crit-medium"></span></td>
                     <td>#2</td>
                     <td>League Onboarding</td>
-                    <td><span class="status done">DONE</span></td>
+                    <td><span class="status todo">TODO</span></td>
                     <td>—</td>
-                    <td>3</td>
+                    <td>1</td>
                   </tr>
-
-                  <tr class="backlog-row" data-status="done" data-crit="medium">
+                
+                  <tr class="backlog-row" data-status="todo" data-crit="medium">
                     <td><span class="crit-dot crit-medium"></span></td>
                     <td>#3</td>
                     <td>Mobile Optimization</td>
-                    <td><span class="status done">DONE</span></td>
+                    <td><span class="status todo">TODO</span></td>
                     <td>~75K</td>
-                    <td>3</td>
+                    <td>1</td>
                   </tr>
-
-                  <tr class="backlog-row" data-status="done" data-crit="medium">
+                
+                  <tr class="backlog-row" data-status="todo" data-crit="medium">
                     <td><span class="crit-dot crit-medium"></span></td>
                     <td>#4</td>
                     <td>Error Handling</td>
-                    <td><span class="status done">DONE</span></td>
+                    <td><span class="status todo">TODO</span></td>
                     <td>~65K</td>
-                    <td>3</td>
+                    <td>1</td>
                   </tr>
-
-                  <tr class="backlog-row" data-status="done" data-crit="medium">
+                
+                  <tr class="backlog-row" data-status="todo" data-crit="medium">
                     <td><span class="crit-dot crit-medium"></span></td>
                     <td>#26</td>
                     <td>League Overview Redesign</td>
-                    <td><span class="status done">DONE</span></td>
+                    <td><span class="status todo">TODO</span></td>
                     <td>—</td>
-                    <td>4</td>
+                    <td>1</td>
                   </tr>
-
-                  <tr class="backlog-row" data-status="done" data-crit="medium">
+                
+                  <tr class="backlog-row" data-status="todo" data-crit="medium">
                     <td><span class="crit-dot crit-medium"></span></td>
                     <td>#28</td>
-                    <td>Lineup Stats Tab: "Matchup Proj" Rename &amp; Default Polish</td>
-                    <td><span class="status done">DONE</span></td>
+                    <td>Lineup Stats Tab: "Matchup Proj" Rename & Default Polish</td>
+                    <td><span class="status todo">TODO</span></td>
                     <td>~25K</td>
-                    <td>3</td>
+                    <td>1</td>
                   </tr>
-
-                  <tr class="backlog-row" data-status="done" data-crit="medium">
+                
+                  <tr class="backlog-row" data-status="todo" data-crit="medium">
                     <td><span class="crit-dot crit-medium"></span></td>
                     <td>#32</td>
                     <td>Draft Room: Team Distribution Panel</td>
-                    <td><span class="status done">DONE</span></td>
+                    <td><span class="status todo">TODO</span></td>
                     <td>~30K</td>
-                    <td>3</td>
+                    <td>1</td>
                   </tr>
-
-                  <tr class="backlog-row" data-status="done" data-crit="medium">
-                    <td><span class="crit-dot crit-medium"></span></td>
-                    <td>#34</td>
-                    <td>Auto-Set Lineup</td>
-                    <td><span class="status done">DONE</span></td>
-                    <td>~60K</td>
-                    <td>6</td>
-                  </tr>
-
-                  <tr class="backlog-row" data-status="done" data-crit="medium">
-                    <td><span class="crit-dot crit-medium"></span></td>
-                    <td>#35</td>
-                    <td>FA Schedule Awareness + Add &amp; Slot</td>
-                    <td><span class="status done">DONE</span></td>
-                    <td>—</td>
-                    <td>6</td>
-                  </tr>
-
-                  <tr class="backlog-row" data-status="done" data-crit="medium">
-                    <td><span class="crit-dot crit-medium"></span></td>
-                    <td>#36</td>
-                    <td>Beta Feedback Infrastructure</td>
-                    <td><span class="status done">DONE</span></td>
-                    <td>~40K</td>
-                    <td>6</td>
-                  </tr>
-
-                  <tr class="backlog-row" data-status="done" data-crit="medium">
+                
+                  <tr class="backlog-row" data-status="todo" data-crit="medium">
                     <td><span class="crit-dot crit-medium"></span></td>
                     <td>#37</td>
-                    <td>Code Review &amp; Pre-Beta Audit</td>
-                    <td><span class="status done">DONE</span></td>
+                    <td>Code Review & Pre-Beta Audit</td>
+                    <td><span class="status todo">TODO</span></td>
                     <td>—</td>
-                    <td>6</td>
+                    <td>1</td>
                   </tr>
-
-                  <tr class="backlog-row" data-status="todo" data-crit="medium">
-                    <td><span class="crit-dot crit-medium"></span></td>
-                    <td>DATA-002</td>
-                    <td>2026-27 Final Roster Sync — run week prior to first PWHL game once schedule announced</td>
-                    <td><span class="status todo">BACKLOG</span></td>
-                    <td>—</td>
-                    <td>Pre-Nov 2026</td>
-                  </tr>
-
-                  <tr class="backlog-row" data-status="todo" data-crit="medium">
-                    <td><span class="crit-dot crit-medium"></span></td>
-                    <td>#38</td>
-                    <td>Replay Simulation V2 — Accelerated &amp; Scheduled Playback</td>
-                    <td><span class="status todo">DEFERRED</span></td>
-                    <td>—</td>
-                    <td>Post-S8</td>
-                  </tr>
-
-                  <tr class="backlog-row" data-status="done" data-crit="medium">
-                    <td><span class="crit-dot crit-medium"></span></td>
-                    <td>#40</td>
-                    <td>Beta Hardening — P0/P1 fixes, waiver cron, beta bug fixes</td>
-                    <td><span class="status done">DONE</span></td>
-                    <td>~40h</td>
-                    <td>8</td>
-                  </tr>
-
-                  <tr class="backlog-row" data-status="done" data-crit="medium">
-                    <td><span class="crit-dot crit-medium"></span></td>
-                    <td>#5</td>
-                    <td>Waiver Wire System</td>
-                    <td><span class="status done">DONE</span></td>
-                    <td>~110K</td>
-                    <td>6</td>
-                  </tr>
-
+                
                   <tr class="backlog-row" data-status="todo" data-crit="medium">
                     <td><span class="crit-dot crit-medium"></span></td>
                     <td>#6</td>
-                    <td>Free Agent Acquisition Budget (FAAB)</td>
-                    <td><span class="status todo">DEFERRED</span></td>
+                    <td>Free Agent Acquisition Budget</td>
+                    <td><span class="status todo">TODO</span></td>
                     <td>~80K</td>
-                    <td>Post-Launch</td>
+                    <td>2</td>
                   </tr>
-
-                  <tr class="backlog-row" data-status="done" data-crit="medium">
+                
+                  <tr class="backlog-row" data-status="todo" data-crit="medium">
+                    <td><span class="crit-dot crit-medium"></span></td>
+                    <td>#7</td>
+                    <td>Trade System ✅</td>
+                    <td><span class="status todo">TODO</span></td>
+                    <td>—</td>
+                    <td>2</td>
+                  </tr>
+                
+                  <tr class="backlog-row" data-status="todo" data-crit="medium">
                     <td><span class="crit-dot crit-medium"></span></td>
                     <td>#8</td>
                     <td>Transaction History</td>
-                    <td><span class="status done">DONE</span></td>
+                    <td><span class="status todo">TODO</span></td>
                     <td>~55K</td>
-                    <td>3</td>
+                    <td>2</td>
                   </tr>
-
-                  <tr class="backlog-row" data-status="done" data-crit="medium">
+                
+                  <tr class="backlog-row" data-status="todo" data-crit="medium">
                     <td><span class="crit-dot crit-medium"></span></td>
                     <td>#9</td>
                     <td>Live Matchup Center</td>
-                    <td><span class="status done">DONE</span></td>
+                    <td><span class="status todo">TODO</span></td>
                     <td>—</td>
-                    <td>4</td>
+                    <td>3</td>
                   </tr>
-
-                  <tr class="backlog-row" data-status="done" data-crit="medium">
+                
+                  <tr class="backlog-row" data-status="todo" data-crit="medium">
                     <td><span class="crit-dot crit-medium"></span></td>
                     <td>#10</td>
                     <td>Win Probability Engine</td>
-                    <td><span class="status done">DONE</span></td>
+                    <td><span class="status todo">TODO</span></td>
                     <td>—</td>
-                    <td>4</td>
+                    <td>3</td>
                   </tr>
-
-                  <tr class="backlog-row" data-status="done" data-crit="medium">
-                    <td><span class="crit-dot crit-medium"></span></td>
-                    <td>#11</td>
-                    <td>Matchup Storylines</td>
-                    <td><span class="status done">DONE</span></td>
-                    <td>~50K</td>
-                    <td>7</td>
-                  </tr>
-
-                  <tr class="backlog-row" data-status="done" data-crit="medium">
+                
+                  <tr class="backlog-row" data-status="todo" data-crit="medium">
                     <td><span class="crit-dot crit-medium"></span></td>
                     <td>#24</td>
                     <td>Lineup Management v2</td>
-                    <td><span class="status done">DONE</span></td>
+                    <td><span class="status todo">TODO</span></td>
                     <td>—</td>
-                    <td>4</td>
+                    <td>3</td>
                   </tr>
-
-                  <tr class="backlog-row" data-status="done" data-crit="medium">
+                
+                  <tr class="backlog-row" data-status="todo" data-crit="medium">
                     <td><span class="crit-dot crit-medium"></span></td>
-                    <td>#25</td>
-                    <td>Team Analysis &amp; Insights Tab</td>
-                    <td><span class="status done">DONE</span></td>
-                    <td>~85K</td>
-                    <td>6</td>
+                    <td>#35</td>
+                    <td>FA Schedule Awareness + Add & Slot</td>
+                    <td><span class="status todo">TODO</span></td>
+                    <td>—</td>
+                    <td>3</td>
                   </tr>
-
-                  <tr class="backlog-row" data-status="done" data-crit="medium">
+                
+                  <tr class="backlog-row" data-status="todo" data-crit="medium">
                     <td><span class="crit-dot crit-medium"></span></td>
-                    <td>#29</td>
-                    <td>Weekly Performance Dashboard</td>
-                    <td><span class="status done">DONE</span></td>
-                    <td>~65K</td>
-                    <td>5</td>
+                    <td>#36</td>
+                    <td>Beta Feedback Infrastructure</td>
+                    <td><span class="status todo">TODO</span></td>
+                    <td>—</td>
+                    <td>3</td>
                   </tr>
-
-                  <tr class="backlog-row" data-status="done" data-crit="medium">
+                
+                  <tr class="backlog-row" data-status="todo" data-crit="medium">
                     <td><span class="crit-dot crit-medium"></span></td>
-                    <td>#30</td>
-                    <td>Playoff Experience UX</td>
-                    <td><span class="status done">DONE</span></td>
-                    <td>~40K</td>
-                    <td>5</td>
+                    <td>#34</td>
+                    <td>Auto-Set Lineup</td>
+                    <td><span class="status todo">TODO</span></td>
+                    <td>~60K</td>
+                    <td>3</td>
                   </tr>
                 
                   <tr class="backlog-row" data-status="todo" data-crit="medium">
                     <td><span class="crit-dot crit-medium"></span></td>
                     <td>#12</td>
                     <td>Multi-Season Historical Library</td>
-                    <td><span class="status todo">BACKLOG</span></td>
+                    <td><span class="status todo">TODO</span></td>
                     <td>—</td>
-                    <td>Post-S7</td>
+                    <td>4</td>
                   </tr>
-
-                  <tr class="backlog-row" data-status="done" data-crit="medium">
+                
+                  <tr class="backlog-row" data-status="partial" data-crit="medium">
                     <td><span class="crit-dot crit-medium"></span></td>
                     <td>#13</td>
                     <td>Replay Simulation Speed Controls</td>
-                    <td><span class="status done">DONE</span></td>
+                    <td><span class="status partial">PARTIAL</span></td>
                     <td>—</td>
-                    <td>5</td>
+                    <td>4</td>
                   </tr>
-
+                
+                  <tr class="backlog-row" data-status="todo" data-crit="medium">
+                    <td><span class="crit-dot crit-medium"></span></td>
+                    <td>#38</td>
+                    <td>Replay Simulation V2 — Accelerated & Scheduled Playback</td>
+                    <td><span class="status todo">TODO</span></td>
+                    <td>—</td>
+                    <td>4</td>
+                  </tr>
+                
                   <tr class="backlog-row" data-status="todo" data-crit="medium">
                     <td><span class="crit-dot crit-medium"></span></td>
                     <td>#14</td>
                     <td>Alternate History Drafts</td>
-                    <td><span class="status todo">BACKLOG</span></td>
+                    <td><span class="status todo">TODO</span></td>
                     <td>—</td>
-                    <td>Post-S7</td>
+                    <td>4</td>
                   </tr>
-
+                
                   <tr class="backlog-row" data-status="todo" data-crit="medium">
                     <td><span class="crit-dot crit-medium"></span></td>
                     <td>#15</td>
                     <td>Replay Analytics</td>
-                    <td><span class="status todo">BACKLOG</span></td>
+                    <td><span class="status todo">TODO</span></td>
                     <td>—</td>
-                    <td>Post-S7</td>
+                    <td>4</td>
                   </tr>
-
+                
                   <tr class="backlog-row" data-status="todo" data-crit="medium">
                     <td><span class="crit-dot crit-medium"></span></td>
                     <td>#16</td>
                     <td>League Chat</td>
-                    <td><span class="status todo">BACKLOG</span></td>
+                    <td><span class="status todo">TODO</span></td>
                     <td>—</td>
-                    <td>Post-S7</td>
+                    <td>5</td>
                   </tr>
-
-                  <tr class="backlog-row" data-status="done" data-crit="medium">
+                
+                  <tr class="backlog-row" data-status="todo" data-crit="medium">
                     <td><span class="crit-dot crit-medium"></span></td>
                     <td>#17</td>
                     <td>Rivalries</td>
-                    <td><span class="status done">DONE</span></td>
+                    <td><span class="status todo">TODO</span></td>
                     <td>—</td>
-                    <td>4</td>
+                    <td>5</td>
                   </tr>
-
+                
                   <tr class="backlog-row" data-status="todo" data-crit="medium">
                     <td><span class="crit-dot crit-medium"></span></td>
                     <td>#18</td>
                     <td>League Hall of Fame</td>
                     <td><span class="status todo">TODO</span></td>
                     <td>—</td>
-                    <td>9</td>
+                    <td>5</td>
                   </tr>
-
+                
                   <tr class="backlog-row" data-status="todo" data-crit="medium">
                     <td><span class="crit-dot crit-medium"></span></td>
                     <td>#31</td>
-                    <td>Player Legacy &amp; Cross-Season Tracking</td>
-                    <td><span class="status todo">DEFERRED</span></td>
+                    <td>Player Legacy & Cross-Season Tracking</td>
+                    <td><span class="status todo">TODO</span></td>
                     <td>~95K</td>
-                    <td>Post-S9</td>
+                    <td>5</td>
                   </tr>
-
+                
                   <tr class="backlog-row" data-status="todo" data-crit="medium">
                     <td><span class="crit-dot crit-medium"></span></td>
                     <td>#19</td>
                     <td>Keeper Leagues</td>
-                    <td><span class="status todo">BACKLOG</span></td>
+                    <td><span class="status todo">TODO</span></td>
                     <td>—</td>
-                    <td>Post-S7</td>
+                    <td>6</td>
                   </tr>
-
+                
                   <tr class="backlog-row" data-status="todo" data-crit="medium">
                     <td><span class="crit-dot crit-medium"></span></td>
                     <td>#20</td>
                     <td>Dynasty Leagues</td>
-                    <td><span class="status todo">BACKLOG</span></td>
+                    <td><span class="status todo">TODO</span></td>
                     <td>—</td>
-                    <td>Post-S7</td>
+                    <td>6</td>
                   </tr>
-
+                
                   <tr class="backlog-row" data-status="partial" data-crit="medium">
                     <td><span class="crit-dot crit-medium"></span></td>
                     <td>#21</td>
                     <td>Live Scoring</td>
                     <td><span class="status partial">PARTIAL</span></td>
                     <td>—</td>
-                    <td>Post-S7</td>
+                    <td>7</td>
                   </tr>
-
+                
                   <tr class="backlog-row" data-status="todo" data-crit="medium">
                     <td><span class="crit-dot crit-medium"></span></td>
                     <td>#22</td>
                     <td>Push Notifications</td>
-                    <td><span class="status todo">BACKLOG</span></td>
+                    <td><span class="status todo">TODO</span></td>
                     <td>—</td>
-                    <td>Post-S7</td>
+                    <td>7</td>
                   </tr>
-
+                
                   <tr class="backlog-row" data-status="todo" data-crit="medium">
                     <td><span class="crit-dot crit-medium"></span></td>
                     <td>#23</td>
                     <td>Player Trends</td>
-                    <td><span class="status todo">BACKLOG</span></td>
+                    <td><span class="status todo">TODO</span></td>
                     <td>—</td>
-                    <td>Post-S7</td>
+                    <td>7</td>
                   </tr>
                 
               </tbody>
@@ -1768,7 +1519,7 @@
       
         <div class="crit-section-low">
           
-            <div class="section-header">⚪ Low / Post-launch <span class="section-count">2</span></div>
+            <div class="section-header">⚪ Low / Post-launch <span class="section-count">1</span></div>
             <table class="backlog-table">
               <thead>
                 <tr>
@@ -1777,38 +1528,20 @@
                   <th>Title</th>
                   <th style="width: 6rem;">Status</th>
                   <th style="width: 5rem;">Tokens</th>
-                  <th style="width: 5rem;">Sprint</th>
+                  <th style="width: 5rem;">Phase</th>
                 </tr>
               </thead>
               <tbody>
-
-                  <tr class="backlog-row" data-status="partial" data-crit="low">
+                
+                  <tr class="backlog-row" data-status="todo" data-crit="low">
                     <td><span class="crit-dot crit-low"></span></td>
                     <td>#33</td>
                     <td>Multi-Season League Architecture</td>
-                    <td><span class="status partial">PARTIAL</span></td>
+                    <td><span class="status todo">TODO</span></td>
                     <td>~90K</td>
-                    <td>2 (schema) / 9 (UX)</td>
+                    <td>5</td>
                   </tr>
-
-                  <tr class="backlog-row" data-status="done" data-crit="low">
-                    <td><span class="crit-dot crit-low"></span></td>
-                    <td>#7</td>
-                    <td>Trade System</td>
-                    <td><span class="status done">DONE</span></td>
-                    <td>~130K</td>
-                    <td>7</td>
-                  </tr>
-
-                  <tr class="backlog-row" data-status="done" data-crit="medium">
-                    <td><span class="crit-dot crit-medium"></span></td>
-                    <td>S9</td>
-                    <td>PWHL GM Rebrand (REBRAND-001–008 + BF-001/002)</td>
-                    <td><span class="status done">DONE</span></td>
-                    <td>43 pts</td>
-                    <td>9</td>
-                  </tr>
-
+                
               </tbody>
             </table>
           
