@@ -3003,6 +3003,276 @@ Acceptance Criteria:
 
 ---
 
+## BF-008. Activity Feed Shows Negative Timestamps in Replay Leagues
+
+Sprint: 12
+
+Priority: P0
+
+Status: OPEN
+
+Summary: In replay leagues, the activity feed shows relative timestamps like "-243731m ago" for events
+such as "homoveralls dropped Jocelyne Larocque." The negative value occurs because `LeagueEvent.createdAt`
+stores the real-world wall-clock time (e.g. June 2026, when the seed script ran), but the relative
+timestamp formatter uses `replayCurrentDate` (e.g. Jan 3 2026) as "now." A real date in the future
+relative to the simulated date appears as a negative duration.
+
+Root cause: The time-ago renderer subtracts `Date.now()` from `event.createdAt`, but the "now" passed
+to that helper is the replay simulation date, not the actual current time. Any event created after
+`replayCurrentDate` will show negative.
+
+Fix: Activity feed timestamps should use the real wall-clock `Date.now()` for rendering "X min ago,"
+not the simulated date. The simulated date controls what game data to show, not when real-world app
+actions occurred. Identify the time-ago helper (likely in `lib/services/activity.ts` or the component
+that renders `LeagueActivity`) and ensure the reference point is always `new Date()`, never the
+replay/sim date.
+
+User story: As a replay league manager viewing the activity feed, I want timestamps to read "3d ago" or
+show a real date so I understand when transactions actually happened.
+
+Acceptance Criteria:
+- AC-001: In a replay league, activity feed entries show a non-negative relative time (e.g. "3d ago," "1w ago," or an absolute date string).
+- AC-002: In a live league, activity feed timestamps are unchanged.
+- AC-003: The fix does not affect any other sim-date logic (period scoring, games remaining, lock state).
+- AC-004: `tsc --noEmit` clean.
+
+Effort: Backend XS · Frontend S
+
+Files: `lib/services/activity.ts`, the activity feed component (possibly `components/LeagueActivity.tsx` or inline in matchup/league overview pages)
+
+---
+
+## BF-009. Analysis Page Navigation Broken: Click Stays on Matchup URL
+
+Sprint: 12
+
+Priority: P0
+
+Status: OPEN
+
+Summary: Clicking the "Analysis" tab in the team nav from the matchup page does not navigate to
+`/team/[teamId]/analysis`. After the click, the URL remains at `/team/[teamId]/matchup` and the
+page continues to show matchup content.
+
+Confirmed by Playwright audit: the Analysis link exists (`href="/team/homoveralls-iyhl/analysis"`)
+and the click fires, but `waitForLoadState('networkidle')` resolves still on the matchup URL.
+
+Root cause candidates:
+1. The `app/team/[teamId]/analysis/page.tsx` route fails to compile or throws on first render in dev
+   (Next.js lazy compilation silently returns the previous page instead of showing an error).
+2. A navigation interceptor in the team layout catches the route change and cancels it.
+3. The Analysis link in `TeamNav.tsx` has a broken `href` computed path (e.g., missing the `teamId`
+   segment at runtime).
+
+Investigation steps: (1) Navigate directly to `/team/[teamId]/analysis` in a browser and check for
+compile errors in the terminal. (2) Open Network tab and see if a request to the analysis route is
+made. (3) If a 404/500 appears, check `app/team/[teamId]/analysis/page.tsx` for the root cause.
+
+Fix: Once root cause is confirmed, either patch the page component to render without error, or fix the
+href if it is malformed at runtime.
+
+User story: As a manager, I want to click "Analysis" in the nav and land on the Analysis page so I can
+view my team's projected scores and FA recommendations without manually typing a URL.
+
+Acceptance Criteria:
+- AC-001: Clicking the "Analysis" tab from any team page navigates to `/team/[teamId]/analysis` and renders the Analysis content.
+- AC-002: Direct navigation to `/team/[teamId]/analysis` renders without error.
+- AC-003: No console errors thrown during the navigation.
+- AC-004: `tsc --noEmit` clean.
+
+Effort: Backend XS · Frontend S · Testing S (add one Playwright navigation smoke test)
+
+Files: `app/team/[teamId]/analysis/page.tsx`, `app/team/[teamId]/TeamNav.tsx`
+
+---
+
+## UX-046. Season Series Block Renders Twice on Matchup Page
+
+Sprint: 12
+
+Priority: P1
+
+Status: OPEN
+
+Source: Pass 2 end-user walkthrough (June 2026). Text content of the matchup page contains
+"SEASON SERIES\n1-0" immediately followed by "SEASON SERIES VS TEST TEAM ASZC\n1-0\nW\nDec 5\n24.7 – 16.75."
+The heading and the detail block appear to be two separate renders of the same data — one is a
+summary label, the other is the full H2H row — with no visual separation that would tell a user
+they are two distinct sections.
+
+The duplication confuses users who expect to see a concise rivalry summary. The redundancy also
+wastes vertical space on the matchup page.
+
+Fix: Audit the Z4 section (Rival badge + H2H history) in `app/team/[teamId]/matchup/page.tsx`. Identify
+whether the "SEASON SERIES" heading and the row below it are separate components or a single component
+rendering twice. Remove the duplicate and ensure the section renders: (a) the label "Season Series" and
+(b) the W/L record and last-game detail, in a single unified block.
+
+User story: As a manager on my matchup page, I want to see my H2H record against today's rival once,
+cleanly, without repeated headings.
+
+Acceptance Criteria:
+- AC-001: The "Season Series" label appears exactly once on the matchup page.
+- AC-002: The H2H record and last matchup detail (date, scores) are shown in one unified row below the label.
+- AC-003: When no prior H2H history exists, the section shows "No prior matchups" (or is hidden).
+- AC-004: `tsc --noEmit` clean.
+
+Effort: Frontend S
+
+Files: `app/team/[teamId]/matchup/page.tsx` (Z4 section), any component rendering the rivalry/recap card
+
+---
+
+## UX-047. Trade Proposal Flow Has No Trading-Partner-First Step
+
+Sprint: 12
+
+Priority: P1
+
+Status: OPEN
+
+Source: Pass 2 end-user walkthrough (June 2026). The Propose Trade page (`/league/[leagueId]/trades/new`)
+shows "HOMOVERALLS GIVES" on the left and "WANT FROM LEAGUE" on the right. Under "WANT FROM LEAGUE" are
+approximately 80 player buttons from all opposing teams, unsorted by team. A search box exists but the
+instructional hint ("Search by player name or team name") appears below the 80-button list — below the
+fold — meaning most users never see the hint before they're already overwhelmed.
+
+Every major fantasy platform (Yahoo, ESPN, Sleeper) requires the proposer to select a trading partner
+team before displaying that team's roster. Without this constraint, the proposer must mentally model all
+teams simultaneously and cannot build a coherent offer around one opponent's roster.
+
+Fix: Add a team-picker step above the "WANT FROM LEAGUE" player list. Options:
+- (a) A horizontal pill row of opponent team names. Selecting a team filters "WANT FROM LEAGUE" to only
+  that team's players. Default: "All teams" shows everyone (preserves backward compat for users who
+  want to browse broadly).
+- (b) A required team-picker modal/step before the player list renders.
+
+Option (a) is preferred — it's additive and doesn't break the current behavior for experienced users.
+
+User story: As a manager proposing a trade, I want to select a trading partner team first so I can see
+their specific players and build a coherent offer without scrolling through the whole league.
+
+Acceptance Criteria:
+- AC-001: A team picker (pill row or select) appears above the "WANT FROM LEAGUE" section.
+- AC-002: Selecting a team filters the player list to only that team's rostered players.
+- AC-003: An "All teams" option (or no selection) restores the full list.
+- AC-004: The search input still works when a team is selected (searches within the filtered list).
+- AC-005: `tsc --noEmit` clean; trade proposal can still be submitted successfully.
+
+Effort: Frontend M
+
+Files: `app/league/[leagueId]/trades/new/page.tsx` (or the ProposeTradeForm client component)
+
+---
+
+## UX-048. Trade Form Search/Filter Hint Hidden Below Player List
+
+Sprint: 12
+
+Priority: P1
+
+Status: OPEN
+
+Source: Pass 2 end-user walkthrough (June 2026). The instructional text "Search by player name or team
+name and click a player to start building your trade" appears below the scrollable list of 80+ player
+buttons — meaning users encounter the player list before they see the instruction. The intended
+interaction model (type a name to filter, then click) is only revealed after confusion.
+
+Fix: Move the hint text above the player list, immediately below the "WANT FROM LEAGUE" heading and
+above the search input. The hint should be visible before the user scrolls into the player list.
+
+Note: This fix partially overlaps with UX-047 — if UX-047's team picker is implemented, the hint copy
+should also update to reflect the team-first workflow: "Select a team above, then click players to add
+them to your offer."
+
+User story: As a manager on the propose trade form, I want to see the usage instructions before the
+player list so I understand how to interact with the form.
+
+Acceptance Criteria:
+- AC-001: The search/filter hint appears above the player list, below the "WANT FROM LEAGUE" heading.
+- AC-002: The hint is visible on initial render without scrolling.
+- AC-003: If UX-047 is also shipped, the hint copy references the team-picker workflow.
+
+Effort: Frontend S
+
+Files: Same as UX-047 (ProposeTradeForm or `trades/new/page.tsx`)
+
+---
+
+## UX-049. "Free Agents" Not Accessible from Top-Level Team Nav
+
+Sprint: 13 (deferred)
+
+Priority: P2
+
+Status: OPEN
+
+Source: Pass 2 end-user walkthrough (June 2026). The user attempted to "add a free agent from the
+Analysis tab" — the task failed because the Analysis tab didn't load, but the underlying product gap
+is that there is no direct path to adding a free agent from any persistent nav element.
+
+The team nav shows: Matchup · Lineup · Rosters · Trades · Standings · Record · Analysis.
+"Free Agents" is a tab inside the Rosters page, requiring two clicks (Rosters → Free Agents tab).
+Adding players is the most frequent in-season action in fantasy sports — it should be one click
+from anywhere in the app.
+
+Fix options:
+- (a) Add "Free Agents" as a standalone tab in TeamNav between "Rosters" and "Trades."
+- (b) Rename the "Rosters" tab to "Roster & FAs" and make the Free Agents tab the default when
+  navigating from the team nav URL `/team/[teamId]/roster`.
+- (c) Add a floating "+Add Player" button to the lineup page (contextually visible when a starter
+  has zero games remaining this week).
+
+Option (a) is the clearest but makes the nav wider. Option (c) is contextually the most useful.
+Recommend (a) for MVP, (c) for post-launch polish.
+
+User story: As a manager during the season, I want to reach the free agent pool in one click from any
+team page so I can add a player without hunting through tabs.
+
+Acceptance Criteria:
+- AC-001: A "Free Agents" link is accessible from the team nav or as a prominent in-page CTA.
+- AC-002: The link navigates to the roster page with the Free Agents tab pre-selected.
+- AC-003: `tsc --noEmit` clean.
+
+Effort: Frontend S
+
+Files: `app/team/[teamId]/TeamNav.tsx`, `app/team/[teamId]/roster/RosterManager.tsx`
+
+---
+
+## UX-050. Win Probability Bar Percentages Are Unlabeled in DuelHero
+
+Sprint: 13 (deferred)
+
+Priority: P2
+
+Status: OPEN
+
+Source: Pass 1 design critique (June 2026). The DuelHero shows two percentage numbers (e.g. "66%"
+and "34%") flanking the win probability bar. No label identifies these as win probabilities. A new
+user seeing "66%" and "34%" next to scores has no way to know what those numbers mean — they could
+be ownership percentage, roster percentage, or something else entirely.
+
+Fix: Add a "Win Prob" label above the probability bar, or label the two ends with "Me" and "Opp"
+plus a tooltip explaining the calculation basis ("Based on projected scores and historical variance").
+
+Note: This issue is related to an existing deferred story (UX-025, "H2H Season Series stats label")
+but is a distinct problem — the label is missing entirely, not just unclear.
+
+User story: As a manager looking at my matchup, I want the win probability percentages labeled so I
+understand what I'm looking at without needing to guess.
+
+Acceptance Criteria:
+- AC-001: A "Win Probability" or "Win Prob" label appears above or adjacent to the probability bar.
+- AC-002: The two percentage values are identifiable as "mine" and "opponent's" (via position, label, or color).
+- AC-003: `tsc --noEmit` clean.
+
+Effort: Frontend S
+
+Files: `components/DuelHero.tsx`
+
+---
+
 # Architectural Rules
 
 Design for the live season first. Replay is a testing tool, so:

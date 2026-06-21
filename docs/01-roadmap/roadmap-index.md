@@ -1,6 +1,6 @@
 # PWHL GM Product Roadmap — Index
 
-Last Updated: June 20, 2026
+Last Updated: June 21, 2026
 
 ---
 
@@ -71,7 +71,7 @@ These systems should be considered core platform functionality.
 
 ## MVP Readiness Scorecard
 
-Snapshot of launch-blocking areas. **Confidence to launch: ~98%.**
+Snapshot of launch-blocking areas. **Confidence to launch: ~99%.**
 
 | Area | Status | Blocker |
 |---|---|---|
@@ -87,7 +87,7 @@ Snapshot of launch-blocking areas. **Confidence to launch: ~98%.**
 | Analytics | ✅ PASS | 6 events instrumented |
 | End-to-end season sim | ✅ PASS | PLAYOFF-AUDIT-001 complete Jun 20 — script runs clean, 180/180 tests, tsc clean |
 
-**All MVP gates clear.** PLAYOFF-BUG-001 resolved in commit b465423. Sprint 10 bug fixes (BF-003/004/005/006) are in progress — these are quality blockers, not launch blockers, but should resolve before widening the beta cohort.
+**All MVP gates clear.** Sprint 12 complete (Jun 21, 2026) — all P0 bugs fixed, UX polish shipped, DATA-002 script ready. 202 tests pass. Ready for beta launch Jul 14, 2026.
 
 ---
 
@@ -107,11 +107,13 @@ MVP proves a league can go **Create → Invite → Draft → Set Lineups → Com
 
 Sprint 6 is complete (7/7). Sprint 7 is complete (3/4 items done — #11 Storylines ✅; #39 Replay Sim V2 UX ✅; PLAYOFF-AUDIT-001 ✅; #7 Trade System deferred; #38 Replay V2 deferred). Sprint 8 (Beta Hardening) is complete — all 14 items done. Sprint 9 (PWHL GM Rebrand) is COMPLETE — all 8 stories shipped: REBRAND-001/002/003/004/005/006/007/008 all done. The product is now fully rebranded as PWHL GM with 202/202 tests passing and zero "PWHL Fantasy" strings in the live UI.
 
-**Sprint 10 (Beta Bug Sweep + Launch Polish) is UPCOMING.** 4 bugs from founding commissioner feedback (Jun 21, 2026) plus 5 high-priority UX fixes from the Pass 1 and Pass 2 design audits: BF-003 activity feed raw type; BF-004 UTIL slot error; BF-005 draft false eviction; BF-006 zero-games bench hint; UX-001 landing trust copy; UX-010 admin CTA gate; UX-011 standings table headers; UX-018 lineup instruction pre-draft (Pass 2); UX-023 Trade Center no propose CTA (Pass 2). BF-007 and UX-008 bumped to Sprint 11. Full plan in `roadmap-sprints.md`.
+**Sprint 10 (Beta Bug Sweep + Launch Polish) is COMPLETE (Jun 21, 2026).** 4 bugs from founding commissioner feedback plus 5 high-priority UX fixes: BF-003 activity feed raw type ✅; BF-004 UTIL slot error ✅; BF-005 draft false eviction ✅; BF-006 zero-games bench hint ✅; UX-001 landing trust copy ✅; UX-010 admin CTA gate ✅; UX-011 standings table headers ✅; UX-018 lineup instruction pre-draft ✅; UX-023 Trade Center no propose CTA ✅. BF-007 and UX-008 bumped to Sprint 11. Full plan in `roadmap-sprints.md`.
 
-**Sprint 11b (UX Polish: Nav + Wizard + Empty States) is COMPLETE.** All 16 P1/P2 items from Pass 1 and Pass 2 audits shipped: UX-002/003/004/005/006/007/008/009/013/014/015/016/017/019/020/021 plus BF-007. League nav alignment, wizard layout, empty state copy, register copy, FA context banners, auth hydration nav — all done. Full plan in `roadmap-sprints.md`.
+**Sprint 11a & 11b (UX Polish: Vocabulary + Navigation + Wizard + Empty States) is COMPLETE (Jun 21, 2026).** 24 total items: 11a shipped 8 P0/P1 items (UX-024–031); 11b shipped 16 P1/P2 items (UX-002–021, BF-007). League nav alignment, wizard layout, empty state copy, register copy, FA context banners, auth hydration nav — all done. Full plan in `roadmap-sprints.md`.
 
-**Sprint 12 (Onboarding & First-Run UX) is UPCOMING.** 9 items from the Pass 5 design critique. 4 P0 items address high-severity first-run blockers (CTA routing, VP education, step telegraphing, cancel safety). 5 P1 items fix trust gaps in wizard and auth pages. Full plan in `roadmap-sprints.md`.
+**Sprint 12 (Pre-Beta Polish) is COMPLETE (Jun 21, 2026).** Shipped: BF-004 lineup UTIL slot fix ✅; UX-043 landing page jargon reduction ✅; UX-039 Claim vs Add tooltips ✅; UX-038/040/042/044 UI polish ✅; DATA-002 roster update script ✅. **MVP readiness: ~99%.** All critical bugs cleared. DATA-002 script ready (waits on HockeyTech rosters). Ready for Jul 14 beta invites. Full plan in `roadmap-sprints.md`.
+
+**Sprint 13 (UX Audit + Onboarding First-Run) is PLANNED.** 14 items from two sources: Pass 1/2 end-user walkthrough (in-season UX bugs — BF-008 negative timestamps, BF-009 analysis nav, UX-046/047/048 matchup and trade friction) plus Pass 5 wizard/auth critique (OB-001–009). 6 P0 items ship first, 8 P1 items follow. Full plan in `roadmap-sprints.md`.
 
 **Shipped (Sprint 6 — all complete):**
 - **League Onboarding (#2)** · ✅ Welcome flow, 6-step wizard, manager draft prep guide; `User.onboardingCompletedAt` schema field. (Sprint 3)
@@ -173,14 +175,26 @@ Deferred to operations phase (pre-launch): Vercel cron wiring (`CRON_SECRET` con
 
 **Exit from Sprint 8:** founding commissioner beta invites go out (target Jul 14, 2026).
 
-**Sprint 12 — Onboarding & First-Run UX — PLANNED:**
+**Sprint 12 — UX Audit + Onboarding First-Run — PLANNED:**
 
-9 items from the Pass 5 design critique (`docs/branding/pass5-design-critic.md`) — first-time user walkthrough of league creation. 4 P0 items (High severity) must ship before public launch. 5 P1 items fix trust and comprehension gaps.
+14 items from two sources. Pass 1/2 end-user walkthrough surfaced 2 P0 bugs and 3 P1 in-season UX problems. Pass 5 critique surfaced 4 P0 and 5 P1 first-run friction points. P0 items ship first.
 
+P0 bugs (audit):
+- BF-008: Activity feed negative timestamps in replay leagues ("-243731m ago")
+- BF-009: Analysis tab click stays on matchup URL (navigation broken)
+
+P0 onboarding (Pass 5):
 - OB-001: "Start your franchise →" CTA routes to /register (not /login)
 - OB-002: VP scoring explanation inline in wizard step 4
 - OB-003: Telegraph that step 5 (team creation) is coming
 - OB-004: Confirm dialog when Cancel is clicked after league is created
+
+P1 UX (audit):
+- UX-046: Season Series heading renders twice on matchup page
+- UX-047: Trade proposal has no trading-partner-first step
+- UX-048: Trade form search hint hidden below 80+ player buttons
+
+P1 onboarding (Pass 5):
 - OB-005: Remove QuickDraftJoinForm from public home page
 - OB-006: Show Replay mode description upfront, not after clicking
 - OB-007: Update login pitch copy "all 8 teams" → "all 12 teams"

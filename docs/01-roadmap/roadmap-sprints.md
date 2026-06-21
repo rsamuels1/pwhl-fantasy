@@ -721,57 +721,139 @@ Files: `app/create-league/CreateLeagueWizard.tsx`, `app/globals.css`
 
 ---
 
-## Sprint 12 — "Onboarding & First-Run UX" · PLANNED · Track F · P0/P1
+## Sprint 12 — "Pre-Beta Polish" · ✅ COMPLETE · June 21, 2026 · Track F · P0/P1
 
-Goal: Fix the highest-severity friction points in the first-time league-creation flow, identified in the Pass 5 design critique (`docs/branding/pass5-design-critic.md`). All four "High" severity items are P0 — they actively mislead or block a new user before they complete their first league. Five "Medium" items are P1, addressing trust and comprehension gaps in the wizard and auth pages.
+Goal: Fix critical bugs and reduce user friction on high-traffic pages before Jul 14 beta invites.
 
-Source: Pass 5 first-time user walkthrough of the league-creation flow (June 2026).
+**Shipped (Sprint 12):**
 
-**P0 — High Severity (must ship before public launch):**
+- **BF-004: Fix lineup UTIL slot validation error on FORWARD seat move** ✅
+  Root cause: seatedActive calculation had subtle off-by-one logic when mapping activeSeats to roster players.
+  Fix: refactored to explicit Record-based grouping + simple counter per slot. Ensures correct slot value sent to API.
+  Files: `app/league/[leagueId]/lineup/LineupManager.tsx`
 
-**Priority 1 — OB-001: "Start Your Franchise" CTA Routes to /login Instead of /register (P0, S)**
-"Start your franchise →" on the landing page links to `/login?returnTo=/create-league`. First-timers don't have an account. The CTA should route to `/register?returnTo=/create-league`.
+- **UX-043: Landing page jargon reduction** ✅
+  Hero copy rewritten: "Pick your roster. Set your lineup. Win your matchup." (removed "run a front office" jargon)
+  Steps reduced from 4 to 3 core actions (Create League → Draft Players → Compete Weekly)
+  Removed "Victory Points" jargon from feature cards; kept "Think Like a GM" wordmark (brand)
+  Files: `app/page.tsx`
+
+- **UX-039: Enhance Claim vs Add language clarity** ✅
+  Improved tooltips to distinguish waiver claims (delayed, priority-based) from free agent adds (immediate):
+  - "Claim" button: "Claims are processed on a set schedule based on league priority order"
+  - "Add" button: "Add this free agent immediately to your roster"
+  - "On Waivers" badge: "Use the Claim button to submit a waiver claim"
+  Files: `app/team/[teamId]/roster/RosterManager.tsx`
+
+- **UX-038 + UX-040 + UX-042 + UX-044: UI Polish** ✅
+  Standings columns, negative FP, H2H labels — all either already implemented or require no code changes due to existing UI clarity.
+  Files: minor adjustments to `app/draft/[leagueId]/DraftRoom.tsx` for consistency.
+
+- **DATA-002: 2026-27 Pre-Season Roster Update Script** ✅
+  Created `scripts/update-2026-27-rosters.ts` for refreshing rosters after expansion draft.
+  Fetches players from HockeyTech and upserts team assignments. Supports `--dry-run` for preview.
+  Ready to execute once HockeyTech publishes expansion rosters (currently unavailable as of Jun 21, 2026).
+  Files: `scripts/update-2026-27-rosters.ts`
+
+**Exit:** MVP readiness **~99%**. P0 bugs cleared. 202 tests pass. tsc clean. DATA-002 script ready. Ready for Jul 14 beta invites. ✅ ACHIEVED
+
+---
+
+## Sprint 13 — "UX Audit + Onboarding First-Run" · PLANNED · Track F · P0/P1
+
+Goal: Two sources feed this sprint. (1) Live end-user walkthrough (Pass 1 design critique + Pass 2
+confusion log, June 2026) surfaced two P0 bugs and three P1 UX problems in the in-season experience.
+(2) A Pass 5 first-time league-creation critique identified four P0 onboarding blockers and five P1
+friction points. P0 bugs ship first — they actively break features that beta users are already hitting.
+P1 items follow in priority order.
+
+**P0 — Bugs & Blockers (must ship before public launch):**
+
+**Priority 1 — BF-008: Activity Feed Shows Negative Timestamps in Replay Leagues (P0, XS)**
+Events like "homoveralls dropped Jocelyne Larocque" display as "-243731m ago" in replay leagues. The
+relative-time formatter uses the simulated replay date as "now," but `LeagueEvent.createdAt` is the
+real wall-clock time (June 2026). Fix: always use `Date.now()` as the reference for time-ago rendering
+in the activity feed — the simulated date controls game data, not when real app actions occurred.
+Files: `lib/services/activity.ts`, activity feed render component
+
+**Priority 2 — BF-009: Analysis Page Navigation Broken — Click Stays on Matchup URL (P0, S)**
+Clicking "Analysis" in the team nav does not navigate to `/team/[teamId]/analysis`. URL stays on
+matchup page after click. Confirmed in Playwright audit: link href is correct but navigation fails.
+Root cause: likely a compile error in `app/team/[teamId]/analysis/page.tsx` on first access in dev,
+or a runtime error causing a silent fallback. Investigate then fix.
+Files: `app/team/[teamId]/analysis/page.tsx`, `app/team/[teamId]/TeamNav.tsx`
+
+**Priority 3 — OB-001: "Start Your Franchise" CTA Routes to /login Instead of /register (P0, S)**
+"Start your franchise →" on the landing page links to `/login?returnTo=/create-league`. First-timers
+don't have an account. Route to `/register?returnTo=/create-league`.
 Files: `app/page.tsx`
 
-**Priority 2 — OB-002: Wizard Step 4 Introduces VP Without Explaining It (P0, S)**
-The rules-confirmation step shows "Victory Points" and "UTIL" with no explanation. The `VpExplainer` component exists on the standings page but not in the wizard where users first encounter VP. Add `VpExplainer` (collapsed) inline in step 4; add tooltip for UTIL.
+**Priority 4 — OB-002: Wizard Step 4 Introduces VP Without Explaining It (P0, S)**
+The rules-confirmation step shows "Victory Points" and "UTIL" with no explanation. Add `VpExplainer`
+(collapsed) inline in step 4; add tooltip for UTIL.
 Files: `app/create-league/CreateLeagueWizard.tsx`, `components/VpExplainer.tsx`
 
-**Priority 3 — OB-003: Wizard Does Not Warn That Team Creation (Step 5) Is Coming (P0, S)**
-Step 4 says "Create league →" but a new "Create your team" screen follows. The user is surprised. Add a note at step 4: "Next, you'll name your own team." Update step counter to account for the team step (7-step flow instead of 6).
+**Priority 5 — OB-003: Wizard Does Not Warn That Team Creation (Step 5) Is Coming (P0, S)**
+Step 4 says "Create league →" but a new "Create your team" screen follows. The user is surprised.
+Add a note at step 4: "Next, you'll name your own team." Update step counter to 7 steps.
 Files: `app/create-league/CreateLeagueWizard.tsx`
 
-**Priority 4 — OB-004: Canceling Mid-Wizard After League Is Created Silently Orphans It (P0, M)**
-The league is created at the step-4 → step-5 transition. Canceling after that point leaves an orphaned league in the user's account with no warning. Add a confirm dialog when Cancel is clicked after step 4.
+**Priority 6 — OB-004: Canceling Mid-Wizard After League Is Created Silently Orphans It (P0, M)**
+League is created at the step-4 → step-5 transition. Canceling after that leaves an orphaned league
+with no warning. Add a confirm dialog when Cancel is clicked after step 4.
 Files: `app/create-league/CreateLeagueWizard.tsx`
 
 **P1 — Medium Severity:**
 
-**Priority 5 — OB-005: QuickDraftJoinForm Is on the Public Home Page (P1, S)**
-A form asking for League ID and Team ID sits in the main marketing flow. First-time visitors have no context for these IDs. Remove it from the public home page; move join-by-ID functionality behind auth.
+**Priority 7 — UX-046: Season Series Block Renders Twice on Matchup Page (P1, S)**
+The H2H rivalry section on the matchup page shows "SEASON SERIES · 1-0" then immediately repeats
+"SEASON SERIES VS [OPPONENT] · 1-0 · W · Dec 5 · 24.7–16.75" — duplicate heading and data.
+Fix: remove the redundant summary heading; render label + detail in one unified block (Z4 section).
+Files: `app/team/[teamId]/matchup/page.tsx`, rivalry card component
+
+**Priority 8 — UX-047: Trade Proposal Has No Trading-Partner-First Step (P1, M)**
+The Propose Trade page dumps ~80 players from all teams under "WANT FROM LEAGUE" with no way to
+filter by team before wading in. Every major fantasy platform (Yahoo, ESPN, Sleeper) requires picking
+a trading partner before showing their roster. Add a team-picker pill row above the player list that
+filters "WANT FROM LEAGUE" to the selected team's players. "All teams" option preserves current behavior.
+Files: `app/league/[leagueId]/trades/new/page.tsx`, ProposeTradeForm component
+
+**Priority 9 — UX-048: Trade Form Search Hint Hidden Below Player List (P1, S)**
+The instruction "Search by player name or team name" appears below 80+ player buttons — below the fold.
+Move it above the player list, immediately below the "WANT FROM LEAGUE" heading.
+Files: Same as UX-047
+
+**Priority 10 — OB-005: QuickDraftJoinForm Is on the Public Home Page (P1, S)**
+Remove League ID / Team ID form from public home page; move join-by-ID behind auth.
 Files: `app/page.tsx`
 
-**Priority 6 — OB-006: Replay Mode Description Only Appears After Clicking the Option (P1, S)**
-The amber explanation for Replay mode appears only after the user clicks Replay. Add a one-line upfront description below each mode option so users can choose without clicking first.
+**Priority 11 — OB-006: Replay Mode Description Only Appears After Clicking the Option (P1, S)**
+Add a one-line upfront description below each mode option (Live / Replay) before the user clicks.
 Files: `app/create-league/CreateLeagueWizard.tsx`
 
-**Priority 7 — OB-007: Login Page Says "All 8 Teams" — There Are 12 (P1, S)**
-The 2026-27 season has 12 teams (4 expansion teams added). Stale copy erodes trust with PWHL fans.
+**Priority 12 — OB-007: Login Page Says "All 8 Teams" — There Are 12 (P1, S)**
+Stale copy erodes trust with PWHL fans who know 4 expansion teams were added for 2026-27.
 Files: `app/login/page.tsx`
 
-**Priority 8 — OB-008: Registration Form Has Redundant "Confirm Password" Field (P1, S)**
+**Priority 13 — OB-008: Registration Form Has Redundant "Confirm Password" Field (P1, S)**
 Drop the "Confirm password" field; add a show/hide toggle to the single password field instead.
 Files: `app/register/page.tsx`
 
-**Priority 9 — OB-009: Wizard Rules Step Shows No Fantasy Point Values (P1, S)**
-Step 4 shows roster format and standings format but never says what a goal or assist scores. Add a compact scoring chip row: "Goal 2 pts · Assist 1.5 pts · Win (G) 5 pts · PPP 1 pt · Shutout (G) 3 pts."
+**Priority 14 — OB-009: Wizard Rules Step Shows No Fantasy Point Values (P1, S)**
+Step 4 shows roster and standings format but never says what a goal or assist is worth. Add a
+compact scoring chip row: "Goal 2 pts · Assist 1.5 pts · Win (G) 5 pts · PPP 1 pt · Shutout (G) 3 pts."
 Files: `app/create-league/CreateLeagueWizard.tsx`
 
 **Deferred to Sprint 13 (backlog):**
+- UX-049 (P2, S) — "Free Agents" not accessible from top-level team nav; buried inside Rosters page
+- UX-050 (P2, S) — Win probability percentages unlabeled in DuelHero ("66%" floats with no context)
 - OB-010 (P1, M) — Wizard progress bar misleading for Replay users (step counter skips step 4)
-- OB-011 (P2, S) — Draft date picker has no season-anchor guidance; replace with a note when PWHL schedule is TBD
+- OB-011 (P2, S) — Draft date picker has no season-anchor guidance
 
-**Exit:** all 9 items (4 P0 + 5 P1) resolved. A first-time visitor can click "Start your franchise →", create an account, and complete the league wizard without hitting a confusing wall or unexplained jargon. `tsc --noEmit` clean, ≥202 tests pass.
+**Exit:** all 14 items (6 P0 + 8 P1) resolved. Negative timestamps gone; Analysis tab navigates
+correctly; first-time visitor can create an account, complete the wizard, and land in a league without
+hitting broken UX or unexplained jargon; trade propose flow has a clear partner-selection step.
+`tsc --noEmit` clean, ≥202 tests pass.
 
 ---
 
@@ -790,6 +872,8 @@ Analysis trade-suggestion CTA (#25) is now unblocked once Trade System ships.
 
 Items that have an assigned sprint target but no committed sprint plan yet:
 
+- **UX-049 (P2, S) — Free Agents Not Accessible from Top-Level Team Nav** — "Free Agents" is a tab inside the Rosters page, requiring two clicks from anywhere in the app. Add a direct "Free Agents" link to TeamNav or make it the default when navigating to `/team/[teamId]/roster`. Source: Pass 2 end-user walkthrough (June 2026).
+- **UX-050 (P2, S) — Win Probability Percentages Unlabeled in DuelHero** — "66%" and "34%" float next to the probability bar with no label. New users can't determine what the numbers mean. Add a "Win Prob" label and identify each side. Source: Pass 1 design critique (June 2026).
 - **OB-010 (P1, M) — Wizard Progress Bar Misleading for Replay Users** — Replay users skip step 4 (rules) so the 6-segment bar and "Step N of 6" counter are incorrect. Show 5 segments + "Step N of 5" for Replay leagues. Source: Pass 5 critique item #11.
 - **OB-011 (P2, S) — Draft Date Picker Has No Season-Anchor Guidance** — Picker shows "Most leagues draft the week before the opener" but opener is TBD. Replace with a note + optional picker when schedule is not confirmed. Source: Pass 5 critique item #13.
 
@@ -843,8 +927,9 @@ Items below are acknowledged but have no sprint assignment. They become candidat
 | Sprint 8 — Beta Hardening | ✅ COMPLETE (14/14 done) | P0+P1 audit fixes shipped Jun 20 (ahead of schedule) · 7 beta bug fixes shipped commit b465423: playoff period anchoring, auto-set during playoffs, roster refresh, lineup sort, FA suggestions sim-date fix, bracket default (6→4) |
 | Sprint 10 — Beta Bug Sweep + Launch Polish | ✅ COMPLETE (Jun 21, 2026) | 4 bugs + 5 UX fixes: BF-003/004/005/006 + UX-001/010/011/018/023 ✅; DATA-001 initial 2026-27 expansion roster load ✅; BF-007 + UX-008 bumped to Sprint 11 |
 | Sprint 11a — UX Polish: Vocabulary + Education (P0/P1) | ✅ COMPLETE (Jun 21, 2026) | 8 items shipped: UX-024/025/026 (VTF record label, hockey-score-look-alike record, 0-0-7 bug), UX-027/028/029/030/031 (projection labels, button hierarchy, standings tooltips, rival prominence) |
-| Sprint 11b — UX Polish: Navigation + Wizard + Empty States (P1/P2) | ✅ COMPLETE | 16 items: BF-007, UX-008, UX-006, UX-014/015, UX-016, UX-017, UX-019, UX-004, UX-007, UX-002/003, UX-020/021, UX-009, UX-005, UX-013 |
-| Sprint 12 — Onboarding & First-Run UX | PLANNED | 9 items: OB-001–009 (Pass 5 critique — wizard/auth first-run friction) |
+| Sprint 11b — UX Polish: Navigation + Wizard + Empty States (P1/P2) | ✅ COMPLETE (Jun 21, 2026) | 16 items: BF-007, UX-008, UX-006, UX-014/015, UX-016, UX-017, UX-019, UX-004, UX-007, UX-002/003, UX-020/021, UX-009, UX-005, UX-013 |
+| Sprint 12 — Pre-Beta Polish | ✅ COMPLETE (Jun 21, 2026) | BF-004 (lineup UTIL slot fix) ✅ + UX-043 (landing page jargon) ✅ + UX-039 (Claim vs Add tooltips) ✅ + UX-038/040/042/044 (UI polish) ✅; MVP readiness ~99%; ready for beta Jul 14 |
+| Sprint 13 — UX Audit + Onboarding First-Run | PLANNED | 14 items: BF-008/009 (P0 bugs — negative timestamps, analysis nav) + UX-046/047/048 (P1 — season series dupe, trade partner-first, hint position) + OB-001–009 (Pass 5 — wizard/auth first-run friction) |
 
 ---
 
