@@ -123,9 +123,9 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
     <div className="page-width" style={{ padding: "32px 16px" }}>
       <div style={{ maxWidth: 560, margin: "0 auto", display: "flex", flexDirection: "column", gap: 24 }}>
 
-        {/* Progress indicator */}
+        {/* Progress indicator — 6-segment filled bar */}
         <div>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
             <p style={{ fontSize: 11, fontWeight: 700, color: "#6366f1", textTransform: "uppercase", letterSpacing: "1px", margin: 0 }}>
               Step {Math.min(step, TOTAL_STEPS - 1)} of {TOTAL_STEPS - 1}
             </p>
@@ -135,17 +135,23 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
               </Link>
             )}
           </div>
-          <div style={{ height: 3, borderRadius: 2, background: "rgba(255,255,255,0.07)" }}>
-            <div style={{
-              height: "100%", borderRadius: 2,
-              width: `${Math.min(((step - 1) / (TOTAL_STEPS - 1)) * 100, 100)}%`,
-              background: "linear-gradient(90deg, #6366f1, #818cf8)",
-              transition: "width 0.3s ease",
-            }} />
+          <div style={{ display: "flex", gap: 6 }}>
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div
+                key={i}
+                style={{
+                  flex: 1,
+                  height: 6,
+                  borderRadius: 3,
+                  background: i < Math.min(step - 1, 6) ? "#6366f1" : "rgba(255,255,255,0.08)",
+                  transition: "background 0.3s ease",
+                }}
+              />
+            ))}
           </div>
         </div>
 
-        <div className="dashboard-panel">
+        <div className="dashboard-panel" style={{ minHeight: "60vh" }}>
 
           {/* ── Step 1: League name ── */}
           {step === 1 && (
@@ -170,15 +176,14 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
                   {name.length}/50
                 </span>
               </label>
-              <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                <button
-                  className="button-primary"
-                  onClick={goNext}
-                  disabled={!nameValid}
-                >
-                  Next →
-                </button>
-              </div>
+              <button
+                className="button-primary"
+                onClick={goNext}
+                disabled={!nameValid}
+                style={{ width: "100%", marginTop: 8 }}
+              >
+                Next →
+              </button>
             </div>
           )}
 
@@ -241,9 +246,9 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
                   );
                 })}
               </div>
-              <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <button className="button-secondary" onClick={goBack}>← Back</button>
-                <button className="button-primary" onClick={goNext}>Next →</button>
+              <div style={{ display: "flex", gap: 10, justifyContent: "space-between" }}>
+                <button className="button-secondary" onClick={goBack} style={{ flex: 1 }}>← Back</button>
+                <button className="button-primary" onClick={goNext} style={{ flex: 1 }}>Next →</button>
               </div>
             </div>
           )}
@@ -333,14 +338,14 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
                 </div>
               )}
 
-              <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <button className="button-secondary" onClick={goBack}>← Back</button>
+              <div style={{ display: "flex", gap: 10, justifyContent: "space-between" }}>
+                <button className="button-secondary" onClick={goBack} style={{ flex: 1 }}>← Back</button>
                 {isReplay ? (
-                  <button className="button-primary" onClick={handleReplayCreate} disabled={loading}>
+                  <button className="button-primary" onClick={handleReplayCreate} disabled={loading} style={{ flex: 1 }}>
                     {loading ? "Creating…" : "Create replay league →"}
                   </button>
                 ) : (
-                  <button className="button-primary" onClick={goNext}>Next →</button>
+                  <button className="button-primary" onClick={goNext} style={{ flex: 1 }}>Next →</button>
                 )}
               </div>
               {error && <p style={{ color: "#f87171", fontSize: 13, margin: 0 }}>{error}</p>}
@@ -373,9 +378,9 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
                 Scoring, roster slots, and playoff format can be adjusted from the admin panel before the draft.
               </div>
 
-              <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <button className="button-secondary" onClick={goBack}>← Back</button>
-                <button className="button-primary" onClick={handleCreate} disabled={loading}>
+              <div style={{ display: "flex", gap: 10, justifyContent: "space-between" }}>
+                <button className="button-secondary" onClick={goBack} style={{ flex: 1 }}>← Back</button>
+                <button className="button-primary" onClick={handleCreate} disabled={loading} style={{ flex: 1 }}>
                   {loading ? "Creating league…" : "Create league →"}
                 </button>
               </div>
@@ -408,12 +413,13 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
                 </span>
               </label>
 
-              <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <button className="button-secondary" onClick={goBack}>← Back</button>
+              <div style={{ display: "flex", gap: 10, justifyContent: "space-between" }}>
+                <button className="button-secondary" onClick={goBack} style={{ flex: 1 }}>← Back</button>
                 <button
                   className="button-primary"
                   onClick={handleCreateTeam}
                   disabled={loading || !teamNameValid}
+                  style={{ flex: 1 }}
                 >
                   {loading ? "Creating team…" : "Create my team →"}
                 </button>
