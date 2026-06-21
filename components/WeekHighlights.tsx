@@ -4,10 +4,10 @@
 
 import type { Storyline } from "@/lib/services/storyline-service";
 
-const ICONS: Record<string, string> = {
-  closest_match: "⚡",
-  high_score: "🔥",
-  player_standout: "⭐",
+const KIND_COLOR: Record<string, string> = {
+  closest_match: "#a78bfa",
+  high_score: "#e3c989",
+  player_standout: "#5fa98c",
 };
 
 export default function WeekHighlights({
@@ -20,18 +20,12 @@ export default function WeekHighlights({
   if (storylines.length === 0) return null;
   return (
     <section>
-      <h2
-        style={{
-          fontSize: 13,
-          fontWeight: 700,
-          letterSpacing: "0.06em",
-          textTransform: "uppercase",
-          color: "#475569",
-          margin: "0 0 10px",
-        }}
-      >
-        {weekLabel} Highlights
-      </h2>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, margin: "0 0 10px" }}>
+        <span className="section-accent" />
+        <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--dim)" }}>
+          {weekLabel} Highlights
+        </span>
+      </div>
       <div
         style={{
           display: "grid",
@@ -39,33 +33,36 @@ export default function WeekHighlights({
           gap: 10,
         }}
       >
-        {storylines.map((s) => (
-          <div
-            key={s.kind}
-            style={{
-              background: "rgba(255,255,255,0.04)",
-              border: "1px solid rgba(148,163,184,0.14)",
-              borderRadius: 12,
-              padding: "14px 16px",
-            }}
-          >
-            <div style={{ fontSize: 20, marginBottom: 6 }}>{ICONS[s.kind] ?? "•"}</div>
-            <p
+        {storylines.map((s) => {
+          const accentColor = KIND_COLOR[s.kind] ?? "#a78bfa";
+          return (
+            <div
+              key={s.kind}
               style={{
-                fontSize: 13,
-                fontWeight: 600,
-                color: "#e2e8f0",
-                margin: "0 0 4px",
-                lineHeight: 1.4,
+                background: "var(--card)",
+                border: "1px solid var(--border)",
+                borderRadius: 12,
+                padding: "14px 16px",
+                borderLeft: `3px solid ${accentColor}`,
               }}
             >
-              {s.headline}
-            </p>
-            {s.detail && (
-              <p style={{ fontSize: 11, color: "#64748b", margin: 0 }}>{s.detail}</p>
-            )}
-          </div>
-        ))}
+              <p
+                style={{
+                  fontSize: 13,
+                  fontWeight: 600,
+                  color: "var(--text)",
+                  margin: "0 0 4px",
+                  lineHeight: 1.4,
+                }}
+              >
+                {s.headline}
+              </p>
+              {s.detail && (
+                <p style={{ fontSize: 11, color: "var(--muted)", margin: 0 }}>{s.detail}</p>
+              )}
+            </div>
+          );
+        })}
       </div>
     </section>
   );

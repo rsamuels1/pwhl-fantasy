@@ -10,4 +10,5 @@
 - [Sprint 9 — PWHL GM Rebrand](project-sprint9-rebrand.md) — 8 stories, 43 pts; P1 min-ship=11 pts (~8h); REBRAND-001–008; trigger: Sprint 8 complete + commissioners have drafted
 - [Playoff System Audit](project-playoff-audit.md) — PLAYOFF-BUG-001 confirmed (bracket page ?? 6 not ?? 4); Q1 VP filter risk + Q2 bracket hydration risk; spec at docs/02-engineering/playoff-system-spec.md; must resolve before beta invites
 - [Beta Feedback Bugs](project-beta-feedback-bugs.md) — BF-001 false draft eviction (useDraftSocket 4001 path), BF-002 Week 1 badge mid-season (GMCommandCenter line 55); both P1 in Sprint 9 as of Jun 21, 2026
-- [Sprint 12 — Onboarding & First-Run UX](project-sprint12-onboarding.md) — 9 stories OB-001–009 from Pass 5 critique; 4 P0 (CTA routing, VP in wizard, step telegraphing, cancel safety); next OB-NNN is OB-012; next UX-NNN is UX-046
+- [Sprint 12 — Onboarding & First-Run UX](project-sprint12-onboarding.md) — 9 stories OB-001–009 from Pass 5 critique; 4 P0 (CTA routing, VP in wizard, step telegraphing, cancel safety); next OB-NNN is OB-012; next UX-NNN is UX-051
+- [Sprint 13/14 Plan](project-sprint13-14-plan.md) — Sprint 13 IN PROGRESS (14 items); Sprint 14 PLANNED (7 items incl. UX-045 rivalry celebration); emotional engagement story = UX-045 in roadmap-features.md

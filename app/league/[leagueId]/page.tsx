@@ -244,11 +244,11 @@ export default async function LeagueOverviewPage({
       {isWelcome && myTeam && (
         <div style={{
           padding: "16px 20px", borderRadius: 16,
-          background: "rgba(52,211,153,0.07)", border: "1px solid rgba(52,211,153,0.2)",
+          background: "rgba(95,169,140,0.07)", border: "1px solid rgba(95,169,140,0.2)",
           display: "flex", flexDirection: "column", gap: 6,
         }}>
-          <p style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "#34d399" }}>
-            ✓ You&apos;re in! {myTeam.name} is registered.
+          <p style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "#5fa98c" }}>
+            {myTeam.name} is registered.
           </p>
           {league.draft?.status === "COMPLETE" ? (
             <p style={{ margin: 0, fontSize: 13, color: "#64748b" }}>
@@ -317,9 +317,11 @@ export default async function LeagueOverviewPage({
             }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <span style={{ fontSize: 24 }}>🏆</span>
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                    <path d="M6 9H4a2 2 0 0 1-2-2V5h4"/><path d="M18 9h2a2 2 0 0 0 2-2V5h-4"/><path d="M12 17v4"/><path d="M8 21h8"/><path d="M6 9a6 6 0 0 0 12 0V3H6z"/>
+                  </svg>
                   <div>
-                    <h2 style={{ ...sectionTitle, color: "#fbbf24", marginBottom: 2 }}>Season Complete</h2>
+                    <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: "#d97706", marginBottom: 2 }}>Season Complete</div>
                     <div style={{ fontSize: 14, fontWeight: 600, color: "#e2e8f0" }}>
                       {championTeamName} are champions!
                     </div>
@@ -359,7 +361,7 @@ export default async function LeagueOverviewPage({
             return (
               <section style={card}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-                  <h2 style={sectionTitle}>🏒 {roundLabel}</h2>
+                  {sideLabel(roundLabel, 0)}
                   <Link href={`/league/${leagueId}/bracket`} style={ctaLink}>Full bracket →</Link>
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
@@ -380,7 +382,7 @@ export default async function LeagueOverviewPage({
                           fontWeight: m.homeTeamId === myTeam?.id ? 600 : 400,
                         }}>
                           {m.homeTeam.name}
-                          {scored && <span style={{ marginLeft: 6, fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>{m.homeScore!.toFixed(1)}</span>}
+                          {scored && <span className="font-stats" style={{ marginLeft: 6, fontWeight: 700 }}>{m.homeScore!.toFixed(1)}</span>}
                         </span>
                         <span style={{ fontSize: 10, color: "#334155", fontWeight: 700, letterSpacing: "0.5px" }}>
                           {scored ? "FINAL" : "VS"}
@@ -391,7 +393,7 @@ export default async function LeagueOverviewPage({
                           color: m.awayTeamId === myTeam?.id ? "#e2e8f0" : "#94a3b8",
                           fontWeight: m.awayTeamId === myTeam?.id ? 600 : 400,
                         }}>
-                          {scored && <span style={{ marginRight: 6, fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>{m.awayScore!.toFixed(1)}</span>}
+                          {scored && <span className="font-stats" style={{ marginRight: 6, fontWeight: 700 }}>{m.awayScore!.toFixed(1)}</span>}
                           {m.awayTeam.name}
                         </span>
                       </div>
@@ -407,7 +409,7 @@ export default async function LeagueOverviewPage({
             <section style={card}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
                 <div>
-                  <h2 style={{ ...sectionTitle, marginBottom: 2 }}>Playoff race</h2>
+                  {cardLabel("Playoff race", 2)}
                   <div style={{ fontSize: 12, color: "#475569" }}>Top {teamsInPlayoff} advance</div>
                 </div>
                 <Link href={`/league/${leagueId}/standings`} style={{ fontSize: 12, color: "#64748b", textDecoration: "none" }}>
@@ -432,10 +434,10 @@ export default async function LeagueOverviewPage({
                         : { label: "OUT", bg: "rgba(100,116,139,0.1)", color: "var(--faint)", border: "rgba(100,116,139,0.15)" };
                     }
                     switch (race.status) {
-                      case "clinched":   return { label: "✓ CLINCHED", bg: "rgba(95,169,140,0.12)", color: "#7fc2a6", border: "rgba(95,169,140,0.30)" };
+                      case "clinched":   return { label: "CLINCHED", bg: "rgba(95,169,140,0.12)", color: "#7fc2a6", border: "rgba(95,169,140,0.30)" };
                       case "in":         return { label: "IN", bg: "rgba(95,169,140,0.08)", color: "#7fc2a6", border: "rgba(95,169,140,0.20)" };
                       case "bubble":     return { label: "BUBBLE", bg: "rgba(214,169,78,0.12)", color: "#e3c989", border: "rgba(214,169,78,0.28)" };
-                      case "eliminated": return { label: "✗ ELIM", bg: "rgba(194,119,108,0.12)", color: "#c2776c", border: "rgba(194,119,108,0.28)" };
+                      case "eliminated": return { label: "ELIM", bg: "rgba(194,119,108,0.12)", color: "#c2776c", border: "rgba(194,119,108,0.28)" };
                       case "out":        return { label: `${race.gamesBack} GB`, bg: "rgba(100,116,139,0.1)", color: "var(--faint)", border: "rgba(100,116,139,0.15)" };
                     }
                   })();
@@ -486,7 +488,7 @@ export default async function LeagueOverviewPage({
               {/* Manager draft prep guide — shown to non-commissioners in PRE_DRAFT */}
               {league.status === "PRE_DRAFT" && !isCommissioner && myTeam && (
                 <section style={card}>
-                  <h2 style={{ ...sectionTitle, marginBottom: 14 }}>Get ready to draft</h2>
+                  {cardLabel("Get ready to draft", 14)}
                   <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 16 }}>
                     <DraftPrepItem done label="Joined league" detail={`You're in as ${myTeam.name}`} />
                     <DraftPrepItem done={false} label="Learn how scoring works" detail="Victory Points: win your matchup AND be a top scorer each week.">
@@ -523,7 +525,7 @@ export default async function LeagueOverviewPage({
               {/* Commissioner sees the admin panel checklist, not this */}
               {(isCommissioner || !myTeam) && (
                 <section style={card}>
-                  <h2 style={sectionTitle}>Standings</h2>
+                  {cardLabel("Standings")}
                   <p style={{ color: "#475569", fontSize: 13, margin: "10px 0 0" }}>
                     Standings will appear once the season starts.
                   </p>
@@ -546,9 +548,7 @@ export default async function LeagueOverviewPage({
           {thisWeekMatchups.length > 0 && (
             <section style={card}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-                <h2 style={{ ...sectionTitle, fontSize: 14, color: "#64748b" }}>
-                  {currentWeek !== null ? `Week ${currentWeek} matchups` : "Matchups"}
-                </h2>
+                {cardLabel(currentWeek !== null ? `Week ${currentWeek} matchups` : "Matchups", 0)}
                 <Link href={`/league/${leagueId}/matchups`} style={{ fontSize: 12, color: "#475569", textDecoration: "none" }}>
                   Full schedule →
                 </Link>
@@ -571,7 +571,7 @@ export default async function LeagueOverviewPage({
                         fontWeight: m.homeTeamId === myTeam?.id ? 600 : 400,
                       }}>
                         {m.homeTeam.name}
-                        {scored && <span style={{ marginLeft: 6, fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>{m.homeScore!.toFixed(1)}</span>}
+                        {scored && <span className="font-stats" style={{ marginLeft: 6, fontWeight: 700 }}>{m.homeScore!.toFixed(1)}</span>}
                       </span>
                       <span style={{ fontSize: 10, color: "#334155", fontWeight: 700, letterSpacing: "0.5px" }}>
                         {scored ? "·" : "VS"}
@@ -582,7 +582,7 @@ export default async function LeagueOverviewPage({
                         color: m.awayTeamId === myTeam?.id ? "#e2e8f0" : "#94a3b8",
                         fontWeight: m.awayTeamId === myTeam?.id ? 600 : 400,
                       }}>
-                        {scored && <span style={{ marginRight: 6, fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>{m.awayScore!.toFixed(1)}</span>}
+                        {scored && <span className="font-stats" style={{ marginRight: 6, fontWeight: 700 }}>{m.awayScore!.toFixed(1)}</span>}
                         {m.awayTeam.name}
                       </span>
                     </div>
@@ -623,36 +623,51 @@ export default async function LeagueOverviewPage({
               return mine < theirs;
             }).length;
 
+            const recordColor = wins > losses ? "#5fa98c" : losses > wins ? "#d18b7f" : "#aab2c8";
+            const winRate = scoredCount > 0 ? (wins / scoredCount) * 100 : 0;
             return (
-              <section style={card}>
+              <section style={{
+                background: "linear-gradient(135deg,#1b1346,#121829 70%)",
+                border: "1px solid rgba(124,58,237,0.30)",
+                borderRadius: 16, padding: 20,
+              }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-                  <h2 style={sectionTitle}>My matchup</h2>
+                  {sideLabel("My matchup", 0)}
                   {currentWeek !== null && (
-                    <span style={{ fontSize: 11, color: "#475569" }}>Wk {currentWeek}</span>
+                    <span style={{ fontSize: 11, color: "var(--faint)" }}>Wk {currentWeek}</span>
                   )}
                 </div>
-                <div style={{ display: "flex", alignItems: "baseline", gap: 12, marginBottom: 8 }}>
+                <div style={{ display: "flex", alignItems: "baseline", gap: 12, marginBottom: 4 }}>
                   {myScore !== null ? (
-                    <span style={{ fontSize: 32, fontWeight: 800, color: "#e2e8f0", fontVariantNumeric: "tabular-nums" }}>
+                    <span className="font-stats" style={{ fontSize: 40, fontWeight: 700, lineHeight: 1, color: "#f3f5fb" }}>
                       {myScore.toFixed(1)}
                     </span>
                   ) : (
-                    <span style={{ fontSize: 20, fontWeight: 700, color: "#475569" }}>—</span>
+                    <span style={{ fontSize: 20, fontWeight: 700, color: "var(--faint)" }}>—</span>
                   )}
                   {scoredCount > 0 && (
-                    <span style={{ fontSize: 13, color: "#64748b" }}>
+                    <span style={{ fontSize: 13, color: recordColor, fontWeight: 600 }}>
                       {wins}–{losses} vs field
                     </span>
                   )}
                   {scoredCount === 0 && myMatchups.length > 0 && (
-                    <span style={{ fontSize: 13, color: "#64748b" }}>
+                    <span style={{ fontSize: 13, color: "var(--muted)" }}>
                       {currentWeek !== null
                         ? new Date(myMatchups[0].startsAt).getTime() > nowMs ? "Upcoming" : "In progress"
                         : ""}
                     </span>
                   )}
                 </div>
-                <Link href={`/team/${myTeam.id}/matchup`} style={ctaLink}>
+                {scoredCount > 0 && (
+                  <div style={{ height: 6, borderRadius: 3, background: "rgba(150,160,200,0.10)", overflow: "hidden", margin: "10px 0" }}>
+                    <div style={{ height: "100%", width: `${winRate}%`, background: "linear-gradient(90deg,#7c3aed,#a78bfa)", borderRadius: 3 }} />
+                  </div>
+                )}
+                <Link href={`/team/${myTeam.id}/matchup`} style={{
+                  display: "block", textAlign: "center", padding: "10px 0",
+                  background: "linear-gradient(135deg,#7c3aed,#6d28d9)", color: "#fff",
+                  borderRadius: 10, fontSize: 13, fontWeight: 700, textDecoration: "none", marginTop: 12,
+                }}>
                   My Matchup →
                 </Link>
               </section>
@@ -662,7 +677,7 @@ export default async function LeagueOverviewPage({
           {/* Team lineup status widget */}
           {league.status === "IN_SEASON" && league.teams.length > 0 && (
             <section style={card}>
-              <h2 style={{ ...sectionTitle, marginBottom: 12 }}>Lineup status</h2>
+              {sideLabel("Lineup status")}
               <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                 {league.teams.map((t) => {
                   const alerts = alertsByTeam.get(t.id) ?? 0;
@@ -670,8 +685,8 @@ export default async function LeagueOverviewPage({
                   const chip = !periodForGames
                     ? { label: "—", bg: "rgba(100,116,139,0.08)", color: "#475569" }
                     : alerts > 0
-                    ? { label: `⚠ ${alerts} ${alerts === 1 ? "issue" : "issues"}`, bg: "rgba(245,158,11,0.1)", color: "#f59e0b" }
-                    : { label: "✓ Set", bg: "rgba(52,211,153,0.1)", color: "#34d399" };
+                    ? { label: `${alerts} ${alerts === 1 ? "issue" : "issues"}`, bg: "rgba(214,169,78,0.10)", color: "#e3c989" }
+                    : { label: "Set", bg: "rgba(95,169,140,0.10)", color: "#5fa98c" };
                   return (
                     <div key={t.id} style={{
                       display: "flex", alignItems: "center", justifyContent: "space-between",
@@ -706,24 +721,31 @@ export default async function LeagueOverviewPage({
 
           {/* League activity */}
           <section style={card}>
-            <h2 style={{ ...sectionTitle, marginBottom: 12 }}>League activity</h2>
+            {sideLabel("League activity")}
             {activity.length === 0 ? (
-              <p style={{ color: "#334155", fontSize: 13, margin: 0, fontStyle: "italic" }}>League activity will appear here.</p>
+              <p style={{ color: "var(--faint)", fontSize: 13, margin: 0, fontStyle: "italic" }}>League activity will appear here.</p>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {activity.map((evt) => {
-                  const ICONS: Record<string, string> = {
-                    PLAYER_ADD: "➕", PLAYER_DROP: "➖", DRAFT_PICK: "🎯",
-                    PLAYOFF_QUALIFICATION: "🏒", MAJOR_PERFORMANCE: "⭐",
-                    LEAGUE_STORYLINE: "📊",
+                  const ACT_META: Record<string, { label: string; color: string; bg: string }> = {
+                    PLAYER_ADD:            { label: "Add",    color: "#5fa98c", bg: "rgba(95,169,140,0.12)" },
+                    PLAYER_DROP:           { label: "Drop",   color: "#d18b7f", bg: "rgba(209,139,127,0.12)" },
+                    DRAFT_PICK:            { label: "Draft",  color: "#a78bfa", bg: "rgba(124,58,237,0.14)" },
+                    PLAYOFF_QUALIFICATION: { label: "Playoff",color: "#e3c989", bg: "rgba(214,169,78,0.12)" },
+                    MAJOR_PERFORMANCE:     { label: "Perf",   color: "#e3c989", bg: "rgba(214,169,78,0.10)" },
+                    LEAGUE_STORYLINE:      { label: "Story",  color: "#aab2c8", bg: "rgba(150,160,200,0.08)" },
                   };
+                  const m = ACT_META[evt.type] ?? { label: "Event", color: "#6f788e", bg: "rgba(150,160,200,0.06)" };
                   return (
-                    <div key={evt.id} style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "flex-start" }}>
-                      <span style={{ fontSize: 13, color: "#cbd5e1", lineHeight: 1.5 }}>
-                        <span style={{ marginRight: 6 }}>{ICONS[evt.type] ?? "•"}</span>
-                        {evt.description}
-                      </span>
-                      <span style={{ fontSize: 11, color: "#475569", flexShrink: 0 }}>{fmt(new Date(evt.createdAt))}</span>
+                    <div key={evt.id} style={{ display: "flex", justifyContent: "space-between", gap: 10, alignItems: "flex-start" }}>
+                      <div style={{ display: "flex", gap: 8, alignItems: "flex-start", flex: 1 }}>
+                        <span style={{
+                          fontSize: 10, fontWeight: 700, letterSpacing: "0.04em", padding: "3px 7px",
+                          borderRadius: 5, background: m.bg, color: m.color, flexShrink: 0, whiteSpace: "nowrap" as const,
+                        }}>{m.label}</span>
+                        <span style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.5 }}>{evt.description}</span>
+                      </div>
+                      <span style={{ fontSize: 11, color: "var(--faint)", flexShrink: 0 }}>{fmt(new Date(evt.createdAt))}</span>
                     </div>
                   );
                 })}
@@ -740,20 +762,17 @@ export default async function LeagueOverviewPage({
           padding: "14px 18px", borderRadius: 14,
           background: "var(--accent-dim)", border: "1px solid var(--accent-border)",
         }}>
-          <div style={{ display: "flex", gap: 10, alignItems: "flex-start", marginBottom: isCommissioner ? 12 : 0 }}>
-            <span style={{ fontSize: 16, flexShrink: 0 }}>📣</span>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "#c9b6ff", marginBottom: 4 }}>
-                Commissioner note
-              </div>
-              {league.announcement ? (
-                <p style={{ margin: 0, fontSize: 14, color: "var(--text)", whiteSpace: "pre-wrap", lineHeight: 1.5 }}>
-                  {league.announcement}
-                </p>
-              ) : (
-                <p style={{ margin: 0, fontSize: 13, color: "var(--faint)", fontStyle: "italic" }}>No league announcements yet.</p>
-              )}
+          <div style={{ marginBottom: isCommissioner ? 12 : 0 }}>
+            <div style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "#c9b6ff", marginBottom: 6 }}>
+              Commissioner note
             </div>
+            {league.announcement ? (
+              <p style={{ margin: 0, fontSize: 14, color: "var(--text)", whiteSpace: "pre-wrap", lineHeight: 1.5 }}>
+                {league.announcement}
+              </p>
+            ) : (
+              <p style={{ margin: 0, fontSize: 13, color: "var(--faint)", fontStyle: "italic" }}>No league announcements yet.</p>
+            )}
           </div>
           {isCommissioner && (
             <div style={{ borderTop: "1px solid var(--accent-border)", paddingTop: 12, marginTop: 4 }}>
@@ -786,16 +805,16 @@ function DraftPrepItem({
     <div style={{
       display: "flex", alignItems: "flex-start", gap: 10,
       padding: "10px 12px", borderRadius: 10,
-      background: done ? "rgba(52,211,153,0.04)" : "rgba(255,255,255,0.02)",
-      border: `1px solid ${done ? "rgba(52,211,153,0.15)" : "rgba(148,163,184,0.08)"}`,
+      background: done ? "rgba(95,169,140,0.04)" : "rgba(255,255,255,0.02)",
+      border: `1px solid ${done ? "rgba(95,169,140,0.15)" : "rgba(148,163,184,0.08)"}`,
     }}>
       <div style={{
         width: 20, height: 20, borderRadius: "50%", flexShrink: 0,
         display: "flex", alignItems: "center", justifyContent: "center",
         fontSize: 10, fontWeight: 700, marginTop: 1,
-        background: done ? "rgba(52,211,153,0.15)" : "rgba(99,102,241,0.1)",
-        color: done ? "#34d399" : "#818cf8",
-        border: `1.5px solid ${done ? "#34d399" : "rgba(99,102,241,0.3)"}`,
+        background: done ? "rgba(95,169,140,0.15)" : "rgba(99,102,241,0.1)",
+        color: done ? "#5fa98c" : "#818cf8",
+        border: `1.5px solid ${done ? "#5fa98c" : "rgba(99,102,241,0.3)"}`,
       }}>
         {done ? "✓" : "·"}
       </div>
@@ -816,15 +835,22 @@ function DraftPrepItem({
 }
 
 const card: React.CSSProperties = {
-  background: "rgba(255,255,255,0.04)",
-  border: "1px solid rgba(148,163,184,0.14)",
-  borderRadius: 20,
+  background: "var(--card)",
+  border: "1px solid var(--border)",
+  borderRadius: 16,
   padding: 20,
 };
 
-const sectionTitle: React.CSSProperties = {
-  fontSize: 16, fontWeight: 700, margin: 0, color: "#e2e8f0",
-};
+const cardLabel = (text: string, mb = 12) => (
+  <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: mb }}>
+    <span className="section-accent" />
+    <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase" as const, color: "var(--dim)" }}>{text}</span>
+  </div>
+);
+
+const sideLabel = (text: string, mb = 12) => (
+  <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase" as const, color: "var(--dim)", marginBottom: mb }}>{text}</div>
+);
 
 const ctaLink: React.CSSProperties = {
   display: "inline-block",
