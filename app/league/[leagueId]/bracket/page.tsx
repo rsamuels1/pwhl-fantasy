@@ -9,25 +9,13 @@ import type { Matchup } from "@prisma/client";
 
 function RaceChip({ info }: { info: RaceInfo }) {
   if (info.status === "clinched") {
-    return (
-      <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 4, background: "rgba(52,211,153,0.15)", color: "#34d399", flexShrink: 0 }}>
-        ✓ CLINCHED
-      </span>
-    );
+    return <span className="chip-clinched" style={{ flexShrink: 0 }}>✓ CLINCHED</span>;
   }
   if (info.status === "eliminated") {
-    return (
-      <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 4, background: "rgba(248,113,113,0.12)", color: "#f87171", flexShrink: 0 }}>
-        ✗ ELIM
-      </span>
-    );
+    return <span className="chip-eliminated" style={{ flexShrink: 0 }}>✗ ELIM</span>;
   }
   if (info.status === "bubble") {
-    return (
-      <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 4, background: "rgba(245,158,11,0.12)", color: "#f59e0b", flexShrink: 0 }}>
-        BUBBLE
-      </span>
-    );
+    return <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 4, background: "rgba(214,169,78,0.12)", border: "1px solid rgba(214,169,78,0.28)", color: "#e3c989", flexShrink: 0 }}>BUBBLE</span>;
   }
   return null;
 }
@@ -111,11 +99,11 @@ export default async function PlayoffsPage({
           <div style={{
             display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center",
             padding: "12px 16px", borderRadius: 12,
-            background: "rgba(99,102,241,0.07)",
-            border: "1px solid rgba(99,102,241,0.2)",
-            fontSize: 13, color: "#94a3b8",
+            background: "var(--accent-dim)",
+            border: "1px solid var(--accent-border)",
+            fontSize: 13, color: "var(--muted)",
           }}>
-            <span style={{ color: "#a5b4fc", fontWeight: 700 }}>🏆 {teamsInPlayoff} teams qualify</span>
+            <span style={{ color: "#c9b6ff", fontWeight: 700 }}>🏆 {teamsInPlayoff} teams qualify</span>
             {topSeedsWithBye > 0 && (
               <>
                 <span style={{ color: "#334155" }}>·</span>
@@ -147,11 +135,11 @@ export default async function PlayoffsPage({
                     <div style={{
                       padding: "11px 16px",
                       display: "flex", alignItems: "center", gap: 10,
-                      background: isMe ? "rgba(99,102,241,0.08)" : "transparent",
-                      borderLeft: isMe ? "3px solid #6366f1" : inZone ? "3px solid rgba(52,211,153,0.25)" : "3px solid transparent",
+                      background: isMe ? "var(--accent-dim)" : "transparent",
+                      borderLeft: isMe ? "3px solid var(--accent)" : inZone ? "3px solid rgba(95,169,140,0.25)" : "3px solid transparent",
                     }}>
                       {/* Rank */}
-                      <span style={{ width: 18, fontSize: 12, fontWeight: 700, color: inZone ? "#64748b" : "#334155", textAlign: "right", flexShrink: 0 }}>
+                      <span style={{ width: 18, fontSize: 12, fontWeight: 700, color: inZone ? "var(--faint)" : "var(--dim)", textAlign: "right", flexShrink: 0 }}>
                         {i + 1}
                       </span>
 
@@ -159,37 +147,32 @@ export default async function PlayoffsPage({
                       <span style={{
                         flex: 1, fontSize: 14,
                         fontWeight: isMe ? 700 : 500,
-                        color: inZone ? "#e2e8f0" : "#64748b",
+                        color: inZone ? "var(--text)" : "var(--faint)",
                       }}>
                         {s.teamName}
                       </span>
 
                       {/* Bye badge */}
                       {hasBye && (
-                        <span style={{
-                          fontSize: 10, fontWeight: 700, padding: "2px 6px", borderRadius: 4,
-                          background: "rgba(99,102,241,0.15)", color: "#818cf8", flexShrink: 0,
-                        }}>
-                          BYE
-                        </span>
+                        <span className="chip-in" style={{ flexShrink: 0 }}>BYE</span>
                       )}
 
                       {/* Race chip */}
                       {raceInfo && <RaceChip info={raceInfo} />}
 
                       {/* Record */}
-                      <span style={{
-                        fontSize: 13, fontVariantNumeric: "tabular-nums",
-                        color: inZone ? "#94a3b8" : "#475569",
+                      <span className="font-stats" style={{
+                        fontSize: 13,
+                        color: inZone ? "var(--muted)" : "var(--faint)",
                         minWidth: 48, textAlign: "right",
                       }}>
                         {s.wins}–{s.losses}{s.ties > 0 ? `–${s.ties}` : ""}
                       </span>
 
                       {/* Points for */}
-                      <span style={{
-                        fontSize: 13, fontVariantNumeric: "tabular-nums",
-                        color: inZone ? "#64748b" : "#334155",
+                      <span className="font-stats" style={{
+                        fontSize: 13,
+                        color: inZone ? "var(--dim)" : "var(--faint)",
                         minWidth: 44, textAlign: "right",
                       }}>
                         {s.pointsFor.toFixed(1)}
@@ -199,11 +182,11 @@ export default async function PlayoffsPage({
                     {/* Playoff line divider after last "in" team */}
                     {isLastIn && (
                       <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "6px 16px" }}>
-                        <div style={{ flex: 1, height: 2, background: "rgba(99,102,241,0.3)", borderRadius: 1 }} />
-                        <span style={{ fontSize: 10, fontWeight: 700, color: "#6366f1", textTransform: "uppercase", letterSpacing: "0.06em", flexShrink: 0 }}>
+                        <div style={{ flex: 1, height: 2, background: "var(--accent-border)", borderRadius: 1 }} />
+                        <span style={{ fontSize: 10, fontWeight: 700, color: "#c9b6ff", textTransform: "uppercase", letterSpacing: "0.06em", flexShrink: 0 }}>
                           Playoff line
                         </span>
-                        <div style={{ flex: 1, height: 2, background: "rgba(99,102,241,0.3)", borderRadius: 1 }} />
+                        <div style={{ flex: 1, height: 2, background: "var(--accent-border)", borderRadius: 1 }} />
                       </div>
                     )}
                   </div>
@@ -219,8 +202,8 @@ export default async function PlayoffsPage({
             }}>
               <span style={{ width: 18, flexShrink: 0 }} />
               <span style={{ flex: 1 }} />
-              <span style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "#334155", minWidth: 48, textAlign: "right" }}>W–L</span>
-              <span style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "#334155", minWidth: 44, textAlign: "right" }}>PF</span>
+              <span style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--faint)", minWidth: 48, textAlign: "right" }}>W–L</span>
+              <span style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--faint)", minWidth: 44, textAlign: "right" }}>PF</span>
             </div>
           </section>
         </>

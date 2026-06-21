@@ -233,6 +233,7 @@ function PickBoard({
                           : pick
                           ? "1px solid var(--border)"
                           : "1px solid rgba(150,160,200,0.07)",
+                        boxShadow: isOnClock ? "0 0 10px var(--accent-glow)" : "none",
                         opacity: pick && !isMe ? 0.65 : 1,
                       }}
                       title={
@@ -412,11 +413,22 @@ function TeamSpreadPanel({
         <div style={{ fontSize: 12, color: "var(--muted)" }}>No picks yet</div>
       ) : (
         rows.map(([team, count]) => {
-          const color = count >= 4 ? "var(--clock-warn)" : count === 3 ? "#f59e0b" : "var(--text)";
+          const isHigh = count >= 4;
+          const isMid = count === 3;
+          const barColor = isHigh ? "var(--clock-warn)" : isMid ? "#f59e0b" : "var(--green)";
+          const barBg = isHigh ? "rgba(249,115,22,0.18)" : isMid ? "rgba(245,158,11,0.14)" : "rgba(34,197,94,0.12)";
+          const countColor = isHigh ? "var(--clock-warn)" : isMid ? "#f59e0b" : "var(--text)";
+          const maxCount = rows[0][1];
+          const pct = maxCount > 0 ? Math.round((count / maxCount) * 100) : 0;
           return (
-            <div key={team} style={{ display: "flex", alignItems: "center", gap: 8, padding: "4px 0", borderBottom: "1px solid var(--border)", fontSize: 12 }}>
-              <span style={{ flex: 1, color: "var(--text)" }}>{team}</span>
-              <span style={{ fontWeight: 700, fontVariantNumeric: "tabular-nums", color }}>{count}</span>
+            <div key={team} style={{ padding: "5px 0", borderBottom: "1px solid var(--border)" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, marginBottom: 3 }}>
+                <span style={{ flex: 1, color: "var(--text)" }}>{team}</span>
+                <span className="font-stats" style={{ fontWeight: 700, color: countColor }}>{count}</span>
+              </div>
+              <div style={{ height: 3, borderRadius: 2, background: "var(--border)", overflow: "hidden" }}>
+                <div style={{ height: "100%", width: `${pct}%`, background: barColor, borderRadius: 2, transition: "width 0.3s", boxShadow: `0 0 4px ${barBg}` }} />
+              </div>
             </div>
           );
         })
@@ -723,7 +735,7 @@ function PlayerPanel({
                   </thead>
                   <tbody>
                     {rows.map(({ player: p, stats: s }) => (
-                      <tr key={p.id} style={styles.playerRow}>
+                      <tr key={p.id} className="draft-player-row" style={styles.playerRow}>
                         <td style={{ padding: "5px 6px" }}><PosTag pos={p.position} /></td>
                         <td style={{ padding: "5px 6px", color: "var(--muted)", fontSize: 11, whiteSpace: "nowrap" }}>{p.team ?? "FA"}</td>
                         <td style={{ padding: "5px 6px", fontSize: 13, whiteSpace: "nowrap" }}>{p.name}</td>
@@ -1242,7 +1254,7 @@ const styles = {
   card: {
     background: "var(--card)",
     border: "1px solid var(--border)",
-    borderRadius: 8,
+    borderRadius: 12,
     padding: "12px 14px",
   },
   cardTitle: {

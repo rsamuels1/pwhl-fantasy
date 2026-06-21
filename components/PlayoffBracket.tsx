@@ -137,20 +137,15 @@ function TeamRow({
       {/* Name */}
       <span style={{
         flex: 1, fontSize: 13, fontWeight: isWinner ? 700 : isMe ? 600 : 500,
-        color: isWinner ? (isChampionship ? "#fbbf24" : "#e2e8f0") : isLoser ? "#475569" : isMe ? "#c7d2fe" : "#94a3b8",
+        color: isWinner ? (isChampionship ? "#fbbf24" : "var(--text)") : isLoser ? "var(--faint)" : isMe ? "#c9b6ff" : "var(--muted)",
         overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
       }}>
-        {team ? team.teamName : <em style={{ color: "#334155" }}>TBD</em>}
+        {team ? team.teamName : <em style={{ color: "var(--dim)" }}>TBD</em>}
       </span>
 
       {/* Bye badge */}
       {team?.hasBye && !scored && (
-        <span style={{
-          fontSize: 9, fontWeight: 700, padding: "1px 5px", borderRadius: 4,
-          background: "rgba(99,102,241,0.15)", color: "#818cf8",
-        }}>
-          BYE
-        </span>
+        <span className="chip-in" style={{ fontSize: 9 }}>BYE</span>
       )}
 
       {/* Score */}

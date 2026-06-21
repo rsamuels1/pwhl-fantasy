@@ -333,22 +333,25 @@ export default function LineupManager({
       {zeroGameStarters.length > 0 && (
         <div style={{
           display: "flex", alignItems: "flex-start", gap: 10,
-          padding: "12px 16px", borderRadius: 10,
-          background: "rgba(251,191,36,0.08)",
-          border: "1px solid rgba(251,191,36,0.25)",
+          padding: "12px 16px", borderRadius: 12,
+          background: "rgba(214,169,78,0.08)",
+          border: "1px solid rgba(214,169,78,0.30)",
         }}>
-          <span style={{ fontSize: 16, flexShrink: 0, marginTop: 1 }}>⚠️</span>
+          <div style={{ width: 34, height: 34, borderRadius: 8, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(214,169,78,0.16)", fontSize: 16 }}>
+            ⚠️
+          </div>
           <div>
-            <span style={{ fontSize: 13, fontWeight: 600, color: "#fbbf24" }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: "#e3c989", marginBottom: 2 }}>
               {zeroGameStarters.length === 1
                 ? "1 starter has no games left this period"
                 : `${zeroGameStarters.length} starters have no games left this period`}
-            </span>
-            <span style={{ fontSize: 13, color: "#94a3b8" }}>
-              {" — "}
-              {zeroGameStarters.map((p) => p.name).join(", ")}
-              {" — consider moving them to bench."}
-            </span>
+            </div>
+            <div style={{ fontSize: 13, color: "var(--muted)" }}>
+              {zeroGameStarters.map((p) => (
+                <span key={p.playerId} style={{ color: "#e3c989", background: "rgba(214,169,78,0.12)", padding: "0px 6px", borderRadius: 4, marginRight: 4 }}>{p.name}</span>
+              ))}
+              — consider moving them to bench.
+            </div>
           </div>
         </div>
       )}
@@ -455,10 +458,10 @@ export default function LineupManager({
       {selected && (
         <div style={{
           padding: "10px 14px", borderRadius: 10,
-          background: "rgba(99,102,241,0.12)", border: "1px solid rgba(99,102,241,0.3)",
-          fontSize: 13, color: "#a5b4fc",
+          background: "var(--accent-dim)", border: "1px solid var(--accent-border)",
+          fontSize: 13, color: "#c9b6ff",
         }}>
-          <strong style={{ color: "#e2e8f0" }}>{selected.name}</strong> selected —
+          <strong style={{ color: "var(--text)" }}>{selected.name}</strong> selected —
           click a highlighted slot to move them, or click them again to cancel.
         </div>
       )}
@@ -474,8 +477,9 @@ export default function LineupManager({
 
         {/* LEFT: Active slots */}
         <div style={panel}>
-          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: "#64748b", textTransform: "uppercase", marginBottom: 12 }}>
-            Active
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+            <span className="section-accent" />
+            <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.14em", color: "var(--dim)", textTransform: "uppercase" }}>Active</span>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             {seatedActive.map(({ slot, index, player }) => {
@@ -497,15 +501,16 @@ export default function LineupManager({
                     display: "grid", gridTemplateColumns: "36px 1fr",
                     gap: 10, alignItems: "start",
                     minHeight: 44, padding: "9px 12px", borderRadius: 10,
-                    border: `1px solid ${isTarget ? "rgba(99,102,241,0.5)" : isSelected ? "rgba(99,102,241,0.4)" : "rgba(148,163,184,0.1)"}`,
+                    border: `1px solid ${isTarget ? "var(--accent-border)" : isSelected ? "var(--accent-border)" : "var(--border)"}`,
                     background: isTarget
-                      ? "rgba(99,102,241,0.12)"
+                      ? "var(--accent-dim)"
                       : isSelected
-                      ? "rgba(99,102,241,0.08)"
-                      : "rgba(255,255,255,0.04)",
+                      ? "var(--accent-dim)"
+                      : "rgba(255,255,255,0.02)",
                     cursor: (player && !player.lockedAt) || isTarget ? "pointer" : "default",
                     transition: "background 0.1s, border-color 0.1s",
-                    outline: isTarget ? "1px solid rgba(99,102,241,0.3)" : "none",
+                    outline: isSelected ? "2px solid var(--accent)" : isTarget ? "1px solid var(--accent-border)" : "none",
+                    outlineOffset: isSelected ? "2px" : "0",
                   }}
                 >
                   <div style={{ paddingTop: 2 }}>
@@ -562,8 +567,9 @@ export default function LineupManager({
         {/* RIGHT: Bench + IR */}
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           <div style={panel}>
-            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: "#64748b", textTransform: "uppercase", marginBottom: 12 }}>
-              Bench
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+              <span className="section-accent" />
+              <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.14em", color: "var(--dim)", textTransform: "uppercase" }}>Bench</span>
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
               {benchPlayers.length === 0 && (
@@ -588,14 +594,16 @@ export default function LineupManager({
                       display: "grid", gridTemplateColumns: "36px 1fr",
                       gap: 10, alignItems: "start",
                       minHeight: 44, padding: "9px 12px", borderRadius: 10,
-                      border: `1px solid ${isTarget ? "rgba(99,102,241,0.5)" : isSelected ? "rgba(99,102,241,0.4)" : "rgba(148,163,184,0.08)"}`,
+                      border: `1px solid ${isTarget ? "var(--accent-border)" : isSelected ? "var(--accent-border)" : "var(--border)"}`,
                       background: isTarget
-                        ? "rgba(99,102,241,0.1)"
+                        ? "var(--accent-dim)"
                         : isSelected
-                        ? "rgba(99,102,241,0.08)"
-                        : "rgba(0,0,0,0.12)",
+                        ? "var(--accent-dim)"
+                        : "rgba(150,160,200,0.02)",
                       cursor: "pointer",
                       transition: "background 0.1s, border-color 0.1s",
+                      outline: isSelected ? "2px solid var(--accent)" : "none",
+                      outlineOffset: isSelected ? "2px" : "0",
                     }}
                   >
                     <div style={{ paddingTop: 2 }}>
@@ -610,8 +618,9 @@ export default function LineupManager({
 
           {(rosterSettings.ir ?? 0) > 0 && (
             <div style={panel}>
-              <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: "#64748b", textTransform: "uppercase", marginBottom: 12 }}>
-                IR
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+                <span className="section-accent" />
+                <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.14em", color: "var(--dim)", textTransform: "uppercase" }}>IR</span>
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                 {irPlayers.length === 0 && (
@@ -726,12 +735,14 @@ function PlayerInfo({
         )}
         {player.gamesThisPeriod !== null && !player.lockedAt && (
           <span
+            className="font-stats"
             title={player.position === "GOALIE" ? "Team games left this period (goalie may not start every game)" : "Games left this period"}
             style={{
               fontSize: 10, fontWeight: 600, flexShrink: 0,
               padding: "1px 5px", borderRadius: 4,
-              background: player.gamesThisPeriod === 0 ? "rgba(100,116,139,0.15)" : "rgba(99,102,241,0.15)",
-              color: player.gamesThisPeriod === 0 ? "#64748b" : "#818cf8",
+              background: player.gamesThisPeriod === 0 ? "rgba(100,116,139,0.15)" : "var(--accent-dim)",
+              border: player.gamesThisPeriod === 0 ? "none" : "1px solid var(--accent-border)",
+              color: player.gamesThisPeriod === 0 ? "var(--faint)" : "#c9b6ff",
             }}
           >
             {player.gamesThisPeriod === 0 ? "0 left" : `${player.gamesThisPeriod}G left`}
@@ -810,18 +821,18 @@ function StatCell({ label, value, highlight = false, gold = false, className }: 
 }) {
   return (
     <div className={className} style={{ display: "flex", flexDirection: "column", alignItems: "center", minWidth: 26 }}>
-      <span style={{ fontSize: 9, color: "#475569", textTransform: "uppercase", letterSpacing: 0.5 }}>{label}</span>
-      <span style={{
+      <span style={{ fontSize: 9, color: "var(--faint)", textTransform: "uppercase", letterSpacing: 0.5 }}>{label}</span>
+      <span className={gold || highlight ? "font-stats" : undefined} style={{
         fontSize: 12, fontWeight: highlight ? 700 : 400,
-        color: gold ? "#fbbf24" : highlight ? "#e2e8f0" : "#94a3b8",
+        color: gold ? "#fbbf24" : highlight ? "var(--text)" : "var(--muted)",
       }}>{value}</span>
     </div>
   );
 }
 
 const panel: React.CSSProperties = {
-  background: "rgba(255,255,255,0.03)",
-  border: "1px solid rgba(148,163,184,0.1)",
-  borderRadius: 14,
+  background: "var(--card)",
+  border: "1px solid var(--border)",
+  borderRadius: 16,
   padding: 16,
 };

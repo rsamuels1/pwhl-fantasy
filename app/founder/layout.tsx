@@ -9,7 +9,7 @@ export default async function FounderLayout({ children }: { children: React.Reac
     <div style={{ minHeight: "100vh", background: "#0a0a0a", color: "#e0e0e0", fontFamily: "monospace" }}>
       <header style={{ background: "#111", borderBottom: "1px solid #333", padding: "0.75rem 1.5rem", display: "flex", alignItems: "center", gap: "2rem" }}>
         <span style={{ fontWeight: 700, fontSize: "0.9rem", letterSpacing: "0.05em" }}>
-          PWHL FANTASY
+          PWHL GM
         </span>
         <span style={{ background: "rgba(245,158,11,0.15)", color: "#f59e0b", border: "1px solid #f59e0b", borderRadius: "4px", padding: "0.15rem 0.6rem", fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.1em" }}>
           FOUNDER MODE

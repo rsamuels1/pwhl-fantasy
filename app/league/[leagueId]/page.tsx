@@ -270,25 +270,25 @@ export default async function LeagueOverviewPage({
       {(league.announcement || isCommissioner) && (
         <div style={{
           padding: "14px 18px", borderRadius: 14,
-          background: "rgba(99,102,241,0.06)", border: "1px solid rgba(99,102,241,0.2)",
+          background: "var(--accent-dim)", border: "1px solid var(--accent-border)",
         }}>
           <div style={{ display: "flex", gap: 10, alignItems: "flex-start", marginBottom: isCommissioner ? 12 : 0 }}>
             <span style={{ fontSize: 16, flexShrink: 0 }}>📣</span>
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "#818cf8", marginBottom: 4 }}>
+              <div style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "#c9b6ff", marginBottom: 4 }}>
                 Commissioner note
               </div>
               {league.announcement ? (
-                <p style={{ margin: 0, fontSize: 14, color: "#e2e8f0", whiteSpace: "pre-wrap", lineHeight: 1.5 }}>
+                <p style={{ margin: 0, fontSize: 14, color: "var(--text)", whiteSpace: "pre-wrap", lineHeight: 1.5 }}>
                   {league.announcement}
                 </p>
               ) : (
-                <p style={{ margin: 0, fontSize: 13, color: "#475569", fontStyle: "italic" }}>No league announcements yet.</p>
+                <p style={{ margin: 0, fontSize: 13, color: "var(--faint)", fontStyle: "italic" }}>No league announcements yet.</p>
               )}
             </div>
           </div>
           {isCommissioner && (
-            <div style={{ borderTop: "1px solid rgba(99,102,241,0.15)", paddingTop: 12, marginTop: 4 }}>
+            <div style={{ borderTop: "1px solid var(--accent-border)", paddingTop: 12, marginTop: 4 }}>
               <AnnouncementForm leagueId={leagueId} initial={league.announcement ?? null} />
             </div>
           )}
@@ -297,19 +297,17 @@ export default async function LeagueOverviewPage({
 
       {/* ── Commissioner action strip ── */}
       {commishAction && (
-        <div style={{
-          padding: "12px 16px", borderRadius: 12,
-          background: "rgba(245,158,11,0.07)", border: "1px solid rgba(245,158,11,0.22)",
+        <div className="alert-amber" style={{
           display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap",
         }}>
           <div>
-            <div style={{ fontSize: 13, fontWeight: 700, color: "#fbbf24" }}>{commishAction.label}</div>
-            <div style={{ fontSize: 12, color: "#94a3b8", marginTop: 2 }}>{commishAction.sublabel}</div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: "#e3c989" }}>{commishAction.label}</div>
+            <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 2 }}>{commishAction.sublabel}</div>
           </div>
           <Link href={commishAction.href} style={{
             fontSize: 12, fontWeight: 700, padding: "6px 14px", borderRadius: 8, flexShrink: 0,
-            background: "rgba(245,158,11,0.15)", color: "#fbbf24",
-            border: "1px solid rgba(245,158,11,0.3)", textDecoration: "none",
+            background: "rgba(214,169,78,0.15)", color: "#e3c989",
+            border: "1px solid rgba(214,169,78,0.30)", textDecoration: "none",
           }}>
             Take action →
           </Link>
@@ -325,7 +323,8 @@ export default async function LeagueOverviewPage({
         {currentWeek !== null && (
           <span style={{
             fontSize: 12, fontWeight: 700, padding: "3px 10px", borderRadius: 20,
-            background: "rgba(99,102,241,0.12)", color: "#a5b4fc",
+            background: "var(--accent-dim)", color: "#c9b6ff",
+            border: "1px solid var(--accent-border)",
           }}>
             Week {currentWeek}
           </span>
@@ -456,17 +455,17 @@ export default async function LeagueOverviewPage({
                     if (!race) {
                       const inNow = rank <= teamsInPlayoff;
                       return inNow
-                        ? { label: "IN", bg: "rgba(52,211,153,0.12)", color: "#34d399", border: "rgba(52,211,153,0.2)" }
+                        ? { label: "IN", bg: "rgba(95,169,140,0.12)", color: "#7fc2a6", border: "rgba(95,169,140,0.25)" }
                         : rank === teamsInPlayoff + 1
-                        ? { label: "BUBBLE", bg: "rgba(245,158,11,0.12)", color: "#f59e0b", border: "rgba(245,158,11,0.2)" }
-                        : { label: "OUT", bg: "rgba(100,116,139,0.1)", color: "#64748b", border: "rgba(100,116,139,0.15)" };
+                        ? { label: "BUBBLE", bg: "rgba(214,169,78,0.12)", color: "#e3c989", border: "rgba(214,169,78,0.28)" }
+                        : { label: "OUT", bg: "rgba(100,116,139,0.1)", color: "var(--faint)", border: "rgba(100,116,139,0.15)" };
                     }
                     switch (race.status) {
-                      case "clinched":   return { label: "✓ CLINCHED", bg: "rgba(52,211,153,0.12)", color: "#34d399", border: "rgba(52,211,153,0.2)" };
-                      case "in":         return { label: "IN", bg: "rgba(52,211,153,0.08)", color: "#4ade80", border: "rgba(52,211,153,0.15)" };
-                      case "bubble":     return { label: "BUBBLE", bg: "rgba(245,158,11,0.12)", color: "#f59e0b", border: "rgba(245,158,11,0.2)" };
-                      case "eliminated": return { label: "✗ ELIM", bg: "rgba(239,68,68,0.1)", color: "#f87171", border: "rgba(239,68,68,0.2)" };
-                      case "out":        return { label: `${race.gamesBack} GB`, bg: "rgba(100,116,139,0.1)", color: "#64748b", border: "rgba(100,116,139,0.15)" };
+                      case "clinched":   return { label: "✓ CLINCHED", bg: "rgba(95,169,140,0.12)", color: "#7fc2a6", border: "rgba(95,169,140,0.30)" };
+                      case "in":         return { label: "IN", bg: "rgba(95,169,140,0.08)", color: "#7fc2a6", border: "rgba(95,169,140,0.20)" };
+                      case "bubble":     return { label: "BUBBLE", bg: "rgba(214,169,78,0.12)", color: "#e3c989", border: "rgba(214,169,78,0.28)" };
+                      case "eliminated": return { label: "✗ ELIM", bg: "rgba(194,119,108,0.12)", color: "#c2776c", border: "rgba(194,119,108,0.28)" };
+                      case "out":        return { label: `${race.gamesBack} GB`, bg: "rgba(100,116,139,0.1)", color: "var(--faint)", border: "rgba(100,116,139,0.15)" };
                     }
                   })();
 
@@ -479,18 +478,19 @@ export default async function LeagueOverviewPage({
                         display: "grid",
                         gridTemplateColumns: "22px 1fr auto 70px",
                         gap: 8, padding: "9px 10px", borderRadius: 8, alignItems: "center",
-                        background: isMe ? "rgba(99,102,241,0.07)" : "transparent",
+                        background: isMe ? "var(--accent-dim)" : "transparent",
+                        borderLeft: isMe ? "2px solid var(--accent)" : "2px solid transparent",
                       }}>
-                        <span style={{ fontSize: 12, color: "#475569", fontWeight: 700 }}>{rank}</span>
+                        <span style={{ fontSize: 12, color: "var(--faint)", fontWeight: 700 }}>{rank}</span>
                         <span style={{
                           fontSize: 14, fontWeight: isMe ? 700 : 400,
-                          color: isMe ? "#a5b4fc" : "#e2e8f0",
+                          color: isMe ? "#c9b6ff" : "var(--text)",
                           overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
                         }}>
                           {s.teamName}
-                          {isMe && <span style={{ marginLeft: 6, fontSize: 10, color: "#6366f1" }}>You</span>}
+                          {isMe && <span style={{ marginLeft: 6, fontSize: 10, color: "var(--accent)" }}>You</span>}
                         </span>
-                        <span style={{ fontSize: 12, color: "#64748b", textAlign: "right", whiteSpace: "nowrap" }}>
+                        <span className="font-stats" style={{ fontSize: 12, color: "var(--muted)", textAlign: "right", whiteSpace: "nowrap" }}>
                           {s.wins}–{s.losses}{s.ties > 0 ? `–${s.ties}` : ""}
                         </span>
                         <span style={{

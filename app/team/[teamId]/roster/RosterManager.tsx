@@ -484,7 +484,7 @@ function PlayerCard({ player, onDrop, disabled }: {
 
   return (
     <div style={{
-      background: "rgba(255,255,255,0.04)", border: "1px solid rgba(148,163,184,0.12)",
+      background: "var(--card)", border: "1px solid var(--border)",
       borderRadius: 16, padding: "14px 14px 12px",
       display: "flex", flexDirection: "column", gap: 10,
     }}>
@@ -502,8 +502,8 @@ function PlayerCard({ player, onDrop, disabled }: {
         {!player.active && <span style={{ marginLeft: 6, fontSize: 9, color: "#ef4444", background: "rgba(239,68,68,0.12)", padding: "1px 4px", borderRadius: 3 }}>INJ</span>}
       </div>
       <div>
-        <div style={{ fontSize: 22, fontWeight: 800, color: "#6366f1", lineHeight: 1 }}>{s ? s.fantasyPoints.toFixed(1) : "—"}</div>
-        <div style={{ fontSize: 10, color: "#475569", marginTop: 2 }}>pts</div>
+        <div className="font-stats" style={{ fontSize: 22, fontWeight: 800, color: "var(--accent)", lineHeight: 1 }}>{s ? s.fantasyPoints.toFixed(1) : "—"}</div>
+        <div style={{ fontSize: 10, color: "var(--faint)", marginTop: 2 }}>pts</div>
       </div>
       <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
         {chips.map((c) => (
@@ -542,7 +542,7 @@ function ColHeader({ isGoalie, readonly, sortKey, sortAsc, onSort }: {
       <button onClick={() => onSort(k)} style={{
         background: "none", border: "none", cursor: "pointer", textAlign: "right",
         fontSize: 10, fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase",
-        color: active ? "#a5b4fc" : "#475569", padding: 0,
+        color: active ? "#c9b6ff" : "var(--faint)", padding: 0,
         display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 3,
       }}>
         {label}{active ? (sortAsc ? " ↑" : " ↓") : ""}
@@ -555,8 +555,8 @@ function ColHeader({ isGoalie, readonly, sortKey, sortAsc, onSort }: {
       display: "grid", gridTemplateColumns: cols,
       gap: 8, padding: "6px 14px",
       fontSize: 10, fontWeight: 700, letterSpacing: "0.07em",
-      textTransform: "uppercase", color: "#475569",
-      borderBottom: "1px solid rgba(148,163,184,0.08)",
+      textTransform: "uppercase", color: "var(--faint)",
+      borderBottom: "1px solid var(--border)",
     }}>
       <span>Slot</span>
       <span>Player</span>
@@ -672,7 +672,7 @@ function FaColHeader({ isGoalie, sortKey, sortAsc, onSort }: {
       <button onClick={() => onSort(k)} title={title} style={{
         background: "none", border: "none", cursor: "pointer", textAlign: "right",
         fontSize: 10, fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase",
-        color: active ? "#a5b4fc" : "#475569", padding: 0,
+        color: active ? "#c9b6ff" : "var(--faint)", padding: 0,
         display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 3,
       }}>
         {label}{active ? (sortAsc ? " ↑" : " ↓") : ""}
@@ -684,9 +684,9 @@ function FaColHeader({ isGoalie, sortKey, sortAsc, onSort }: {
     <div style={{
       display: "grid", gridTemplateColumns: cols,
       gap: 8, padding: "6px 14px 8px",
-      borderBottom: "1px solid rgba(148,163,184,0.08)",
+      borderBottom: "1px solid var(--border)",
     }}>
-      <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase", color: "#475569" }}>Player</span>
+      <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--faint)" }}>Player</span>
       <SortTh label="Wk" k="gamesThisPeriod" title="Games remaining this period" />
       {isGoalie ? (
         <>
@@ -757,16 +757,17 @@ function FaRow({ player, index, isFull, rosterPlayers, pendingAdd, dropForAdd,
 
         {/* Games remaining this period badge */}
         {player.gamesThisPeriod != null ? (
-          <span style={{
+          <span className="font-stats" style={{
             fontSize: 11, fontWeight: 700, textAlign: "center",
             padding: "2px 6px", borderRadius: 10,
-            background: player.gamesThisPeriod > 0 ? "rgba(99,102,241,0.2)" : "rgba(100,116,139,0.15)",
-            color: player.gamesThisPeriod > 0 ? "#a5b4fc" : "#475569",
+            background: player.gamesThisPeriod > 0 ? "var(--accent-dim)" : "rgba(100,116,139,0.15)",
+            border: player.gamesThisPeriod > 0 ? "1px solid var(--accent-border)" : "none",
+            color: player.gamesThisPeriod > 0 ? "#c9b6ff" : "var(--faint)",
           }}>
             {player.gamesThisPeriod}
           </span>
         ) : (
-          <span style={{ fontSize: 11, color: "#334155", textAlign: "center" }}>—</span>
+          <span style={{ fontSize: 11, color: "var(--dim)", textAlign: "center" }}>—</span>
         )}
 
         {isGoalie ? (
@@ -843,9 +844,14 @@ function FaRow({ player, index, isFull, rosterPlayers, pendingAdd, dropForAdd,
 // ── helpers ────────────────────────────────────────────────────────────────────
 
 function Num({ v, highlight }: { v: number | null | undefined; highlight?: boolean }) {
-  return (
-    <span style={{ textAlign: "right", fontSize: 12, color: highlight ? "#e2e8f0" : "#94a3b8", fontWeight: highlight ? 600 : 400 }}>
-      {v == null ? "—" : typeof v === "number" && !Number.isInteger(v) ? v.toFixed(1) : v}
+  const formatted = v == null ? "—" : typeof v === "number" && !Number.isInteger(v) ? v.toFixed(1) : v;
+  return highlight ? (
+    <span className="font-stats" style={{ textAlign: "right", fontSize: 12, color: "var(--text)", fontWeight: 700 }}>
+      {formatted}
+    </span>
+  ) : (
+    <span style={{ textAlign: "right", fontSize: 12, color: "var(--muted)", fontWeight: 400 }}>
+      {formatted}
     </span>
   );
 }
@@ -892,7 +898,7 @@ function smallBtn(bg: string): React.CSSProperties {
 }
 
 const panel: React.CSSProperties = {
-  background: "rgba(255,255,255,0.03)",
-  border: "1px solid rgba(148,163,184,0.1)",
-  borderRadius: 14, overflow: "hidden",
+  background: "var(--card)",
+  border: "1px solid var(--border)",
+  borderRadius: 16, overflow: "hidden",
 };
