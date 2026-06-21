@@ -368,6 +368,40 @@ export default function ProposeTrade({
         </div>
       )}
 
+      {!lockedTeamId && (
+        <div style={{ marginBottom: 16 }}>
+          <label style={{ fontSize: 12, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.05em", display: "block", marginBottom: 8 }}>
+            Trading with
+          </label>
+          <select
+            value=""
+            onChange={(e) => {
+              const teamId = e.target.value;
+              if (teamId) setLockedTeamId(teamId);
+            }}
+            style={{
+              width: "100%", padding: "10px 12px", borderRadius: 8,
+              background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)",
+              color: "#e2e8f0", fontSize: 13,
+            }}
+          >
+            <option value="">Select a team to trade with…</option>
+            {[...new Set(leaguePlayers.map((p) => p.teamId))].map((teamId) => {
+              const teamName = leaguePlayers.find((p) => p.teamId === teamId)?.teamName ?? teamId;
+              return (
+                <option key={teamId} value={teamId}>
+                  {teamName}
+                </option>
+              );
+            })}
+          </select>
+        </div>
+      )}
+
+      <div style={{ marginBottom: 16, fontSize: 13, color: "#64748b" }}>
+        💡 Search by player name or team name to quickly find who you want.
+      </div>
+
       <form onSubmit={handleSubmit}>
         {/* Player pickers side by side */}
         <div style={{
@@ -384,18 +418,13 @@ export default function ProposeTrade({
             />
             <div style={{ paddingTop: 32, color: "#475569", fontSize: 22, textAlign: "center" }}>⇄</div>
             <LeaguePlayerPicker
-              players={leaguePlayers}
+              players={lockedTeamId ? leaguePlayers.filter((p) => p.teamId === lockedTeamId) : leaguePlayers}
               selected={theirSelected}
               lockedTeamId={lockedTeamId}
               onToggle={toggleLeaguePlayer}
               label={lockedTeamName ? `${lockedTeamName} gives` : "Want from league"}
             />
           </div>
-          {!lockedTeamId && (
-            <p style={{ marginTop: 12, color: "#64748b", fontSize: 13 }}>
-              Search by player name or team name and click a player to start building your trade.
-            </p>
-          )}
         </div>
 
         {/* Trade summary */}

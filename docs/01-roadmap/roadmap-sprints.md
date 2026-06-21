@@ -759,7 +759,7 @@ Goal: Fix critical bugs and reduce user friction on high-traffic pages before Ju
 
 ---
 
-## Sprint 13 — "UX Audit + Onboarding First-Run" · PLANNED · Track F · P0/P1
+## Sprint 13 — "UX Audit + Onboarding First-Run" · IN PROGRESS · Track F · P0/P1
 
 Goal: Two sources feed this sprint. (1) Live end-user walkthrough (Pass 1 design critique + Pass 2
 confusion log, June 2026) surfaced two P0 bugs and three P1 UX problems in the in-season experience.
@@ -844,7 +844,7 @@ Step 4 shows roster and standings format but never says what a goal or assist is
 compact scoring chip row: "Goal 2 pts · Assist 1.5 pts · Win (G) 5 pts · PPP 1 pt · Shutout (G) 3 pts."
 Files: `app/create-league/CreateLeagueWizard.tsx`
 
-**Deferred to Sprint 13 (backlog):**
+**Deferred to Sprint 14:**
 - UX-049 (P2, S) — "Free Agents" not accessible from top-level team nav; buried inside Rosters page
 - UX-050 (P2, S) — Win probability percentages unlabeled in DuelHero ("66%" floats with no context)
 - OB-010 (P1, M) — Wizard progress bar misleading for Replay users (step counter skips step 4)
@@ -854,6 +854,62 @@ Files: `app/create-league/CreateLeagueWizard.tsx`
 correctly; first-time visitor can create an account, complete the wizard, and land in a league without
 hitting broken UX or unexplained jargon; trade propose flow has a clear partner-selection step.
 `tsc --noEmit` clean, ≥202 tests pass.
+
+---
+
+## Sprint 14 — "Post-Launch Polish + Emotional Engagement" · PLANNED · Track F · P2/P3
+
+Goal: Address deferred polish items from Sprint 13 plus emotional-engagement features that require live-season data to be meaningful. These are quality-of-life improvements and engagement boosters that ship after the Jul 14 beta cohort has had time to provide feedback.
+
+**Carried from Sprint 13 deferred list:**
+
+**Priority 1 — OB-010: Wizard Progress Bar Misleading for Replay Users (P1, M)**
+Replay users skip step 4 (rules) so the 6-segment bar and "Step N of 6" counter are incorrect.
+Show 5 segments + "Step N of 5" for Replay leagues.
+Files: `app/create-league/CreateLeagueWizard.tsx`
+
+**Priority 2 — UX-049: "Free Agents" Not Accessible from Top-Level Team Nav (P2, S)**
+Free-agent adds are the most frequent in-season action but require two clicks (Rosters → Free Agents tab).
+Add a direct "Free Agents" link to TeamNav or make it the default route at `/team/[teamId]/roster`.
+Files: `app/team/[teamId]/TeamNav.tsx`, `app/team/[teamId]/roster/RosterManager.tsx`
+
+**Priority 3 — UX-050: Win Probability Percentages Unlabeled in DuelHero (P2, S)**
+"66%" and "34%" float next to the win probability bar with no label identifying what they represent.
+Add a "Win Prob" label above the bar and identify each side.
+Files: `components/DuelHero.tsx`
+
+**Priority 4 — OB-011: Draft Date Picker Has No Season-Anchor Guidance (P2, S)**
+The draft date picker shows "Most leagues draft the week before the opener" but the opener date is TBD.
+Replace with informational text; keep picker optional until schedule is announced.
+Files: `app/create-league/CreateLeagueWizard.tsx`
+
+**Emotional engagement additions (from UX-031 follow-through):**
+
+**Priority 5 — UX-045: No Celebration Moment When Rivalry Matchup Is Won (P2, M)**
+Beating your rival produces no celebration signal. Requires `RIVALRY_WIN` `NotificationType` enum addition
+and a distinct visual treatment on the recap card. See roadmap-features.md UX-045 for full spec.
+Files: `lib/services/notification-service.ts`, `app/team/[teamId]/matchup/page.tsx`, `components/DuelHero.tsx`
+
+**Priority 6 — UX-032: "+8.3 EDGE" Jargon in Matchup Hero (P2, S)**
+Replace "EDGE" with "FP lead" in both DuelHero and FieldHero.
+Files: `components/FieldHero.tsx`, `components/DuelHero.tsx`
+
+**Priority 7 — UX-033: "NO GAMES YET" Badge Has No Contextual Explanation (P2, S)**
+Badge does not distinguish "no games scheduled" (actionable) from "games haven't started yet" (timing).
+Files: `components/FieldHero.tsx`, `components/DuelHero.tsx`
+
+**Post-launch P2 backlog (schedule into Sprint 14+ as capacity allows):**
+- UX-034 (P2, S) — G · G slot/position visual stutter in Playing Tonight
+- UX-035 (P3, M) — Game times hardcoded to Eastern Time; localize to user timezone
+- UX-036 (P2, M) — Roster stat column headers have no tooltips for hockey newcomers
+- UX-037 (P2, S) — FPTS is rightmost (lowest priority) column; move near left
+- UX-040 (P2, S) — Standings "games back of the bubble" uses basketball idiom
+- UX-041 (P2, S) — Analysis "vs Median" numbers have no unit label
+- UX-044 (P3, S) — "0-0 season series" shows before any matchup played
+- UX-012 (L) — Combine Standings and Bracket into a single "Season" page (Design Backlog)
+- UX-022 (P3, S) — Team "Record" tab / league "Schedule" tab naming ambiguity (Design Backlog)
+
+**Exit:** OB-010, UX-049, UX-050, OB-011 resolved; `RIVALRY_WIN` celebration moment live; "EDGE" label fixed; `tsc --noEmit` clean, ≥202 tests pass.
 
 ---
 
@@ -868,14 +924,17 @@ Analysis trade-suggestion CTA (#25) is now unblocked once Trade System ships.
 
 ---
 
-## Sprint 13 Candidates (not yet planned)
+## Sprint 14 Candidates (committed to Sprint 14)
 
-Items that have an assigned sprint target but no committed sprint plan yet:
+These items were deferred from Sprint 13 and are committed to Sprint 14:
 
+- **OB-010 (P1, M) — Wizard Progress Bar Misleading for Replay Users** — Replay users skip step 4 (rules) so the 6-segment bar and "Step N of 6" counter are incorrect. Show 5 segments + "Step N of 5" for Replay leagues. Source: Pass 5 critique item #11.
 - **UX-049 (P2, S) — Free Agents Not Accessible from Top-Level Team Nav** — "Free Agents" is a tab inside the Rosters page, requiring two clicks from anywhere in the app. Add a direct "Free Agents" link to TeamNav or make it the default when navigating to `/team/[teamId]/roster`. Source: Pass 2 end-user walkthrough (June 2026).
 - **UX-050 (P2, S) — Win Probability Percentages Unlabeled in DuelHero** — "66%" and "34%" float next to the probability bar with no label. New users can't determine what the numbers mean. Add a "Win Prob" label and identify each side. Source: Pass 1 design critique (June 2026).
-- **OB-010 (P1, M) — Wizard Progress Bar Misleading for Replay Users** — Replay users skip step 4 (rules) so the 6-segment bar and "Step N of 6" counter are incorrect. Show 5 segments + "Step N of 5" for Replay leagues. Source: Pass 5 critique item #11.
 - **OB-011 (P2, S) — Draft Date Picker Has No Season-Anchor Guidance** — Picker shows "Most leagues draft the week before the opener" but opener is TBD. Replace with a note + optional picker when schedule is not confirmed. Source: Pass 5 critique item #13.
+- **UX-045 (P2, M) — No Celebration When Rivalry Matchup Is Won** — Beating your rival produces no signal. Requires `RIVALRY_WIN` `NotificationType` enum + distinct visual treatment. Source: UX-031 follow-through.
+- **UX-032 (P2, S) — "+8.3 EDGE" Label Jargon** — Replace with "FP lead" in DuelHero and FieldHero.
+- **UX-033 (P2, S) — "NO GAMES YET" Badge Has No Contextual Explanation** — Does not distinguish timing from actionable lineup gap.
 
 ---
 
@@ -929,7 +988,7 @@ Items below are acknowledged but have no sprint assignment. They become candidat
 | Sprint 11a — UX Polish: Vocabulary + Education (P0/P1) | ✅ COMPLETE (Jun 21, 2026) | 8 items shipped: UX-024/025/026 (VTF record label, hockey-score-look-alike record, 0-0-7 bug), UX-027/028/029/030/031 (projection labels, button hierarchy, standings tooltips, rival prominence) |
 | Sprint 11b — UX Polish: Navigation + Wizard + Empty States (P1/P2) | ✅ COMPLETE (Jun 21, 2026) | 16 items: BF-007, UX-008, UX-006, UX-014/015, UX-016, UX-017, UX-019, UX-004, UX-007, UX-002/003, UX-020/021, UX-009, UX-005, UX-013 |
 | Sprint 12 — Pre-Beta Polish | ✅ COMPLETE (Jun 21, 2026) | BF-004 (lineup UTIL slot fix) ✅ + UX-043 (landing page jargon) ✅ + UX-039 (Claim vs Add tooltips) ✅ + UX-038/040/042/044 (UI polish) ✅; MVP readiness ~99%; ready for beta Jul 14 |
-| Sprint 13 — UX Audit + Onboarding First-Run | PLANNED | 14 items: BF-008/009 (P0 bugs — negative timestamps, analysis nav) + UX-046/047/048 (P1 — season series dupe, trade partner-first, hint position) + OB-001–009 (Pass 5 — wizard/auth first-run friction) |
+| Sprint 13 — UX Audit + Onboarding First-Run | 🔄 IN PROGRESS | 14 items: BF-008/009 (P0 bugs — negative timestamps, analysis nav) + UX-046/047/048 (P1 — season series dupe, trade partner-first, hint position) + OB-001–009 (Pass 5 — wizard/auth first-run friction) |
 
 ---
 

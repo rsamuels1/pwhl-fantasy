@@ -28,8 +28,10 @@ export async function GET(
   const leagueInfo = await prisma.fantasyLeague.findUnique({
     where: { id: leagueId }, select: { isReplay: true, replayCurrentDate: true },
   });
+  if (!leagueInfo) return NextResponse.json({ error: "League not found" }, { status: 404 });
+
   const nowMs = getReplayNow(
-    { isReplay: leagueInfo?.isReplay ?? false, replayCurrentDate: leagueInfo?.replayCurrentDate ?? null },
+    { isReplay: leagueInfo.isReplay, replayCurrentDate: leagueInfo.replayCurrentDate },
     getDevNowFromRequest(req)
   );
   const now = new Date(nowMs);
@@ -123,8 +125,10 @@ export async function PUT(
   const leagueInfoPut = await prisma.fantasyLeague.findUnique({
     where: { id: leagueId }, select: { isReplay: true, replayCurrentDate: true },
   });
+  if (!leagueInfoPut) return NextResponse.json({ error: "League not found" }, { status: 404 });
+
   const nowMsPut = getReplayNow(
-    { isReplay: leagueInfoPut?.isReplay ?? false, replayCurrentDate: leagueInfoPut?.replayCurrentDate ?? null },
+    { isReplay: leagueInfoPut.isReplay, replayCurrentDate: leagueInfoPut.replayCurrentDate },
     getDevNowFromRequest(req)
   );
   const nowPut = new Date(nowMsPut);

@@ -71,7 +71,7 @@ export default function LoginPage() {
 
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {[
-              { icon: "🏒", label: "Real PWHL players", detail: "Every skater and goalie from all 8 teams" },
+              { icon: "🏒", label: "Real PWHL players", detail: "Every skater and goalie from all 12 teams" },
               { icon: "📅", label: "Weekly matchups", detail: "Head-to-head scoring every week of the season" },
               { icon: "⚡", label: "Live scoring", detail: "Points update from real game stats as they happen" },
               { icon: "🏆", label: "Playoffs", detail: "Top teams compete in a single-elimination bracket" },

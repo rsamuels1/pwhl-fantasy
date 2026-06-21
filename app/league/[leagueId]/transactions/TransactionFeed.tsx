@@ -11,19 +11,20 @@ interface Props {
   teams: { id: string; name: string }[];
   selectedTeamId: string | null;
   selectedType: string | null;
+  nowMs: number;
 }
 
-const TYPE_ICONS: Record<string, string> = {
-  DRAFT_PICK: "🎯",
-  PLAYER_ADD: "➕",
-  PLAYER_DROP: "➖",
-  TRADE: "🔄",
-  PLAYOFF_QUALIFICATION: "🏒",
-  MAJOR_PERFORMANCE: "⭐",
-  WAIVER_CLAIM_SUBMITTED: "📋",
-  WAIVER_CLAIM_AWARDED: "✅",
-  WAIVER_CLAIM_DENIED: "❌",
-  WAIVER_CLAIM_CANCELLED: "✕",
+const TYPE_META: Record<string, { label: string; color: string; bg: string }> = {
+  DRAFT_PICK:               { label: "Draft",   color: "#a78bfa", bg: "rgba(124,58,237,0.14)" },
+  PLAYER_ADD:               { label: "Add",     color: "#5fa98c", bg: "rgba(95,169,140,0.12)" },
+  PLAYER_DROP:              { label: "Drop",    color: "#d18b7f", bg: "rgba(209,139,127,0.12)" },
+  TRADE:                    { label: "Trade",   color: "#c9b6ff", bg: "rgba(124,58,237,0.10)" },
+  PLAYOFF_QUALIFICATION:    { label: "Playoff", color: "#e3c989", bg: "rgba(214,169,78,0.12)" },
+  MAJOR_PERFORMANCE:        { label: "Perf",   color: "#e3c989", bg: "rgba(214,169,78,0.10)" },
+  WAIVER_CLAIM_SUBMITTED:   { label: "Waiver", color: "#aab2c8", bg: "rgba(150,160,200,0.10)" },
+  WAIVER_CLAIM_AWARDED:     { label: "Add",    color: "#5fa98c", bg: "rgba(95,169,140,0.12)" },
+  WAIVER_CLAIM_DENIED:      { label: "Denied", color: "#d18b7f", bg: "rgba(209,139,127,0.10)" },
+  WAIVER_CLAIM_CANCELLED:   { label: "Cancel", color: "#64748b", bg: "rgba(100,116,139,0.10)" },
 };
 
 const TYPE_GROUPS: { label: string; types: string | null }[] = [
@@ -36,8 +37,8 @@ const TYPE_GROUPS: { label: string; types: string | null }[] = [
   { label: "Playoffs", types: "PLAYOFF_QUALIFICATION" },
 ];
 
-function timeAgo(iso: string): string {
-  const ms = Date.now() - new Date(iso).getTime();
+function timeAgo(iso: string, nowMs: number): string {
+  const ms = nowMs - new Date(iso).getTime();
   const mins = Math.floor(ms / 60000);
   if (mins < 1) return "just now";
   if (mins < 60) return `${mins}m ago`;
@@ -55,6 +56,7 @@ export default function TransactionFeed({
   teams,
   selectedTeamId,
   selectedType,
+  nowMs,
 }: Props) {
   const router = useRouter();
   const [events, setEvents] = useState<EnrichedTransactionEvent[]>(initialEvents);
@@ -129,9 +131,9 @@ export default function TransactionFeed({
     router.push(`/league/${leagueId}/transactions${search ? `?${search}` : ""}`);
   }
 
-  const icon = (type: string): string => {
-    if (type.startsWith("COMMISSIONER_")) return "🛠️";
-    return TYPE_ICONS[type] ?? "•";
+  const typeMeta = (type: string) => {
+    if (type.startsWith("COMMISSIONER_")) return { label: "Admin", color: "#e3c989", bg: "rgba(214,169,78,0.12)" };
+    return TYPE_META[type] ?? { label: "Event", color: "#6f788e", bg: "rgba(150,160,200,0.08)" };
   };
 
   return (
@@ -241,7 +243,9 @@ export default function TransactionFeed({
               border: "1px solid rgba(148,163,184,0.08)",
             }}
           >
-            <span style={{ fontSize: 16, flexShrink: 0 }}>{icon(evt.type)}</span>
+            {(() => { const m = typeMeta(evt.type); return (
+              <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.04em", padding: "3px 7px", borderRadius: 5, background: m.bg, color: m.color, flexShrink: 0, whiteSpace: "nowrap" as const }}>{m.label}</span>
+            ); })()}
             <div style={{ flex: 1, minWidth: 0 }}>
               <span style={{ fontSize: 13, color: "#cbd5e1" }}>
                 {evt.description}
@@ -256,7 +260,7 @@ export default function TransactionFeed({
               )}
             </div>
             <span style={{ fontSize: 11, color: "#475569", flexShrink: 0, whiteSpace: "nowrap" }}>
-              {timeAgo(evt.createdAt)}
+              {timeAgo(evt.createdAt, nowMs)}
             </span>
           </div>
         ))}

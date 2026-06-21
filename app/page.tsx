@@ -1,148 +1,145 @@
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import Link from "next/link";
-import QuickDraftJoinForm from "@/components/QuickDraftJoinForm";
+import React from "react";
 
 export default async function Home() {
   const user = await getCurrentUser();
-
-  if (user) {
-    redirect("/dashboard");
-  }
+  if (user) redirect("/dashboard");
 
   return (
-    <main style={{ display: "flex", flexDirection: "column", gap: 80, paddingBottom: 80 }}>
+    <main style={{ display: "flex", flexDirection: "column" }}>
 
-      {/* ── 1. Hero ──────────────────────────────────────────────────────────── */}
-      <section style={{ textAlign: "center", padding: "64px 16px 0" }}>
-        {/* Eyebrow pill */}
-        <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "6px 14px", borderRadius: 999, background: "rgba(124,58,237,0.14)", border: "1px solid rgba(124,58,237,0.30)", marginBottom: 24 }}>
-          <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#a78bfa", display: "inline-block", flexShrink: 0 }} />
-          <span style={{ fontSize: 12, fontWeight: 700, color: "#c9b6ff", letterSpacing: "0.06em" }}>Fantasy hockey for the PWHL</span>
-        </div>
+      {/* ── Hero ─────────────────────────────────────────────────────────── */}
+      <section style={{
+        maxWidth: 1240, margin: "0 auto", width: "100%",
+        padding: "62px 36px 24px",
+        display: "grid", gridTemplateColumns: "1.05fr 0.95fr",
+        gap: 54, alignItems: "center",
+      }}>
+        {/* Left col */}
+        <div>
+          <span style={{
+            display: "inline-flex", alignItems: "center", gap: 8,
+            fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase" as const,
+            color: "#c9b6ff", background: "rgba(124,58,237,0.14)",
+            border: "1px solid rgba(124,58,237,0.30)", borderRadius: 30, padding: "7px 14px",
+          }}>
+            <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#a78bfa", flexShrink: 0 }} />
+            Fantasy hockey for the PWHL
+          </span>
 
-        <h1 className="hero-title" style={{ maxWidth: 760, margin: "0 auto", textAlign: "center", fontWeight: 900, letterSpacing: "-0.03em" }}>
-          Think Like a GM.
-        </h1>
-        <p className="hero-text" style={{ maxWidth: 560, margin: "24px auto 0", textAlign: "center" }}>
-          Pick your roster. Set your lineup. Win your matchup. Compete every week in women&apos;s hockey&apos;s most strategic fantasy league.
-        </p>
-        {/* Trust strip */}
-        <div style={{ marginTop: 24, display: "flex", justifyContent: "center", gap: 20 }}>
-          <span style={{ fontSize: 13, color: "#6f788e" }}><span style={{ color: "#22c55e", marginRight: 4 }}>✓</span>Free to play</span>
-          <span style={{ fontSize: 13, color: "#6f788e" }}><span style={{ color: "#22c55e", marginRight: 4 }}>✓</span>No gambling, pure strategy</span>
-        </div>
-        <div className="hero-actions" style={{ justifyContent: "center", marginTop: 36 }}>
-          <Link href="/create-league" className="button-primary">Start your franchise →</Link>
-          <Link href="/join-league" className="button-secondary">Join a league</Link>
-        </div>
-      </section>
+          <h1 style={{
+            fontSize: 64, lineHeight: 0.98, fontWeight: 900,
+            letterSpacing: "-0.03em", margin: "22px 0 0", color: "#f6f7fb",
+          }}>
+            Think Like<br />a GM.
+          </h1>
 
-      {/* ── 2. Featured Players ──────────────────────────────────────────────── */}
-      <section className="page-width">
-        <div style={{ textAlign: "center", marginBottom: 36 }}>
-          <h2 style={sectionHeading}>Draft PWHL Stars</h2>
-          <p style={sectionSub}>Build your team around the biggest names in women&apos;s hockey.</p>
-        </div>
-        <div style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
-          gap: 16,
-        }}>
-          {PLAYERS.map((p) => (
-            <div key={p.name} style={playerCard}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-                <span style={{
-                  fontSize: 11, fontWeight: 700, padding: "3px 7px", borderRadius: 5,
-                  background: `${POS_COLORS[p.pos]}20`, color: POS_COLORS[p.pos],
-                }}>{p.pos}</span>
-                <span style={{ fontSize: 12, color: "#64748b" }}>{p.team}</span>
-              </div>
-              <div style={{ fontWeight: 700, fontSize: 15, color: "#e2e8f0", lineHeight: 1.3 }}>{p.name}</div>
-              <div style={{ marginTop: 10, fontSize: 12, color: "#64748b" }}>Last season</div>
-              <div style={{ fontSize: 22, fontWeight: 800, color: "#7c3aed", marginTop: 2 }}>{p.fpts}</div>
-              <div style={{ fontSize: 11, color: "#475569" }}>pts</div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* ── 3. How It Works ──────────────────────────────────────────────────── */}
-      <section className="page-width">
-        <div style={{ textAlign: "center", marginBottom: 44 }}>
-          <h2 style={sectionHeading}>Get started in three steps</h2>
-          <p style={sectionSub}>Pick players. Set lineups. Compete with friends.</p>
-        </div>
-        <div style={{
-          display: "flex", flexWrap: "wrap", gap: 0,
-          justifyContent: "center", alignItems: "flex-start",
-        }}>
-          {STEPS.map((step, i) => (
-            <div key={step.label} style={{ display: "flex", alignItems: "flex-start", flexShrink: 0 }}>
-              <div style={{ textAlign: "center", maxWidth: 180, padding: "0 16px" }}>
-                <div style={{
-                  fontSize: 40, fontWeight: 900, lineHeight: 1,
-                  color: "rgba(124,58,237,0.25)", marginBottom: 12,
-                }}>{i + 1}</div>
-                <div style={{ fontSize: 16, fontWeight: 700, color: "#e2e8f0", marginBottom: 8 }}>{step.label}</div>
-                <div style={{ fontSize: 13, color: "#64748b", lineHeight: 1.6 }}>{step.desc}</div>
-              </div>
-              {i < STEPS.length - 1 && (
-                <div style={{
-                  fontSize: 22, color: "rgba(124,58,237,0.3)",
-                  paddingTop: 8, flexShrink: 0, alignSelf: "flex-start",
-                }}>→</div>
-              )}
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* ── 4. Matchup Demo ──────────────────────────────────────────────────── */}
-      <section className="page-width">
-        <div style={{ textAlign: "center", marginBottom: 36 }}>
-          <h2 style={sectionHeading}>Follow every game with something on the line</h2>
-          <p style={sectionSub}>
-            Win by one point. Steal a waiver pickup. Build a championship roster.
+          <p style={{
+            fontSize: 17, lineHeight: 1.6, color: "#aab2c8",
+            maxWidth: 480, margin: "20px 0 0",
+          }}>
+            Don&apos;t just draft a team — run a front office. Build rosters, set lineups,
+            work the wire, and make the calls that win championships in the Professional
+            Women&apos;s Hockey League.
           </p>
+
+          <div style={{ display: "flex", gap: 13, alignItems: "center", marginTop: 30, flexWrap: "wrap" as const }}>
+            <Link href="/create-league" style={{
+              background: "linear-gradient(135deg,#7c3aed,#6d28d9)", color: "#fff",
+              padding: "14px 24px", borderRadius: 11, fontSize: 15, fontWeight: 700,
+              display: "inline-flex", alignItems: "center", gap: 9, textDecoration: "none",
+            }}>
+              Start your franchise
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M5 12h14" /><path d="m13 6 6 6-6 6" />
+              </svg>
+            </Link>
+            <Link href="/join-league" style={{
+              background: "rgba(150,160,200,0.06)", border: "1px solid rgba(150,160,200,0.18)",
+              color: "#e7eaf3", padding: "14px 22px", borderRadius: 11, fontSize: 15,
+              fontWeight: 600, display: "inline-flex", alignItems: "center", gap: 9, textDecoration: "none",
+            }}>
+              Join a league
+            </Link>
+          </div>
+
+          <div style={{ display: "flex", alignItems: "center", gap: 18, marginTop: 26, fontSize: 12.5, color: "#6f788e" }}>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 7 }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5fa98c" strokeWidth="2.5"><path d="M20 6 9 17l-5-5" /></svg>
+              Free to play
+            </span>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 7 }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5fa98c" strokeWidth="2.5"><path d="M20 6 9 17l-5-5" /></svg>
+              No gambling, pure strategy
+            </span>
+          </div>
         </div>
-        <div style={{ maxWidth: 520, margin: "0 auto" }}>
-          <div style={demoCard}>
-            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#64748b", marginBottom: 20 }}>
-              Week 7 · Head to Head
+
+        {/* Right col — product preview */}
+        <div style={{ position: "relative" }}>
+          <div style={{
+            position: "absolute", inset: "-30px -30px -30px -10px",
+            background: "radial-gradient(420px 360px at 70% 30%,rgba(124,58,237,0.22),transparent 70%)",
+            filter: "blur(8px)",
+          }} />
+          <div style={{
+            position: "relative",
+            background: "linear-gradient(160deg,#121829,#0e1322)",
+            border: "1px solid rgba(150,160,200,0.14)", borderRadius: 18,
+            padding: 16, boxShadow: "0 40px 90px -40px rgba(0,0,0,0.8)",
+          }}>
+            {/* Card header */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "4px 6px 13px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase" as const, color: "#a78bfa" }}>Your Matchup</span>
+                <span style={{ fontSize: 10, fontWeight: 600, color: "#c9b6ff", display: "inline-flex", alignItems: "center", gap: 5 }}>
+                  <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#a78bfa" }} />Live
+                </span>
+              </div>
+              <span style={{ fontSize: 10.5, color: "#6f788e" }}>Week 7</span>
             </div>
 
             {/* Scores */}
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-              <div style={{ textAlign: "left" }}>
-                <div style={{ fontSize: 12, color: "#94a3b8", marginBottom: 4 }}>Your Team</div>
-                <div style={{ fontSize: 40, fontWeight: 900, lineHeight: 1, color: "#e2e8f0" }}>112.4</div>
-              </div>
-              <div style={{ fontSize: 16, color: "#475569", fontWeight: 700 }}>vs</div>
-              <div style={{ textAlign: "right" }}>
-                <div style={{ fontSize: 12, color: "#94a3b8", marginBottom: 4 }}>Opponents</div>
-                <div style={{ fontSize: 40, fontWeight: 900, lineHeight: 1, color: "#64748b" }}>108.7</div>
-              </div>
-            </div>
-
-            {/* Win probability bar */}
-            <div style={{ marginBottom: 8 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 6 }}>
-                <span style={{ fontWeight: 700, color: "#a78bfa" }}>Your Team 67%</span>
-                <span style={{ color: "#64748b" }}>33% Opponents</span>
-              </div>
-              <div style={{ height: 8, borderRadius: 4, background: "rgba(255,255,255,0.08)", overflow: "hidden" }}>
-                <div style={{ height: "100%", width: "67%", borderRadius: 4, background: "linear-gradient(90deg, #7c3aed, #a78bfa)" }} />
+            <div style={{
+              background: "linear-gradient(135deg,#1b1346 0%,#121829 70%)",
+              border: "1px solid rgba(124,58,237,0.30)", borderRadius: 14, padding: "18px 20px",
+            }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", gap: 14, alignItems: "center" }}>
+                <div style={{ textAlign: "center" }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: "#f3f5fb", marginBottom: 7 }}>Northwind</div>
+                  <div className="font-stats" style={{ fontSize: 46, fontWeight: 700, lineHeight: 0.8, color: "#f3f5fb" }}>48.2</div>
+                  <div style={{ fontSize: 10.5, color: "#7fc2a6", marginTop: 6, fontWeight: 600 }}>52% win</div>
+                </div>
+                <div style={{ fontSize: 11, color: "#6f788e", fontWeight: 600, letterSpacing: "0.08em" }}>VS</div>
+                <div style={{ textAlign: "center" }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: "#e7eaf3", marginBottom: 7 }}>Granite City</div>
+                  <div className="font-stats" style={{ fontSize: 46, fontWeight: 700, lineHeight: 0.8, color: "#c7d2e0" }}>44.8</div>
+                  <div style={{ fontSize: 10.5, color: "#8b93a7", marginTop: 6, fontWeight: 600 }}>48% win</div>
+                </div>
               </div>
             </div>
 
-            {/* Top performers */}
-            <div style={{ marginTop: 20, borderTop: "1px solid rgba(148,163,184,0.1)", paddingTop: 16, display: "flex", flexDirection: "column", gap: 10 }}>
-              <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "#475569", marginBottom: 4 }}>Top performers</div>
-              {[{ name: "Taylor Heise", pts: "+18.5" }, { name: "Sarah Fillier", pts: "+15.2" }].map((p) => (
-                <div key={p.name} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <span style={{ fontSize: 14, color: "#cbd5e1" }}>{p.name}</span>
-                  <span style={{ fontSize: 14, fontWeight: 700, color: "#34d399" }}>{p.pts} pts</span>
+            {/* Mini standings */}
+            <div style={{
+              marginTop: 12, background: "rgba(150,160,200,0.04)",
+              border: "1px solid rgba(150,160,200,0.10)", borderRadius: 12, padding: "13px 15px",
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 11 }}>
+                <span style={{ width: 3, height: 13, borderRadius: 2, background: "linear-gradient(#a78bfa,#6d28d9)", flexShrink: 0 }} />
+                <span style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase" as const, color: "#c7d2e0" }}>Standings</span>
+              </div>
+              {MINI_STANDINGS.map((r) => (
+                <div key={r.name} style={{
+                  display: "grid", gridTemplateColumns: "20px 1fr 44px",
+                  alignItems: "center", gap: 10, padding: "7px 9px", borderRadius: 8, marginBottom: 3,
+                  background: r.you ? "rgba(124,58,237,0.12)" : "transparent",
+                  border: r.you ? "1px solid rgba(124,58,237,0.28)" : "1px solid transparent",
+                }}>
+                  <span className="font-stats" style={{ fontSize: 13, fontWeight: 600, color: r.you ? "#c9b6ff" : "#6f788e" }}>{r.rank}</span>
+                  <span style={{ fontSize: 12, fontWeight: 600, color: r.you ? "#f3f5fb" : "#dfe3ee" }}>{r.name}</span>
+                  <span className="font-stats" style={{ textAlign: "right", fontSize: 15, fontWeight: 700, color: r.you ? "#c9b6ff" : "#c7d2e0" }}>{r.vp}</span>
                 </div>
               ))}
             </div>
@@ -150,77 +147,130 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* ── 5. Feature Highlights ────────────────────────────────────────────── */}
-      <section className="page-width">
-        <div style={{ textAlign: "center", marginBottom: 36 }}>
-          <h2 style={sectionHeading}>Everything you need to compete</h2>
-        </div>
-        <div className="stat-grid">
-          <div className="stat-card">
-            <strong>Live snake draft</strong>
-            <span className="panel-text">Real draft room with a clock, queue, and board. Build your roster pick by pick.</span>
-          </div>
-          <div className="stat-card">
-            <strong>Build your roster</strong>
-            <span className="panel-text">Forwards, defense, goalies, bench and utility. Real PWHL depth, real decisions.</span>
-          </div>
-          <div className="stat-card">
-            <strong>Set your weekly lineup</strong>
-            <span className="panel-text">Start the right skaters, ride the hot goalie, and lock in before puck drop.</span>
-          </div>
-          <div className="stat-card">
-            <strong>Trades &amp; the waiver wire</strong>
-            <span className="panel-text">Negotiate deals, claim breakouts off waivers, and out-maneuver your league.</span>
-          </div>
-          <div className="stat-card">
-            <strong>Standings &amp; playoffs</strong>
-            <span className="panel-text">Climb the standings, clinch a playoff spot, and compete for a championship.</span>
-          </div>
-          <div className="stat-card">
-            <strong>Commissioner tools</strong>
-            <span className="panel-text">Run your league your way — scoring, schedule, rules and approvals.</span>
-          </div>
-        </div>
-      </section>
-
-      {/* ── 6. Commissioner Section ──────────────────────────────────────────── */}
-      <section className="page-width">
+      {/* ── Trust strip ──────────────────────────────────────────────────── */}
+      <section style={{ maxWidth: 1240, margin: "0 auto", width: "100%", padding: "30px 36px 8px" }}>
         <div style={{
-          border: "1px dashed rgba(148,163,184,0.2)",
-          borderRadius: 20, padding: "32px 28px",
-          display: "grid", gridTemplateColumns: "1fr auto", gap: 32, alignItems: "start",
-        }}
-        className="commissioner-grid"
-        >
-          <div>
-            <h2 style={{ fontSize: 20, fontWeight: 700, margin: "0 0 10px", color: "#e2e8f0" }}>Running a league?</h2>
-            <p style={{ color: "#64748b", margin: 0, lineHeight: 1.7 }}>
-              Set up your draft, invite teams, and manage settings from the admin panel.
-              Already have a league and team ID? Jump straight into the draft room.
-            </p>
-          </div>
-          <div style={{ minWidth: 260 }}>
-            <QuickDraftJoinForm />
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          gap: 24, flexWrap: "wrap" as const, padding: "20px 28px",
+          background: "rgba(150,160,200,0.04)", border: "1px solid rgba(150,160,200,0.10)", borderRadius: 16,
+        }}>
+          <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase" as const, color: "#6f788e" }}>
+            A real front office, not a points game
+          </span>
+          <div style={{ display: "flex", gap: 40, flexWrap: "wrap" as const }}>
+            {PILLARS.map((p) => (
+              <div key={p.label}>
+                <div className="font-stats" style={{ fontSize: 26, fontWeight: 700, color: "#f3f5fb", lineHeight: 1 }}>{p.stat}</div>
+                <div style={{ fontSize: 11.5, color: "#8b93a7", marginTop: 4 }}>{p.label}</div>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* ── 7. Final CTA ─────────────────────────────────────────────────────── */}
-      <section style={{ textAlign: "center", padding: "0 16px" }}>
-        <h2 style={{ fontSize: 28, fontWeight: 800, margin: "0 0 8px", color: "#e2e8f0" }}>
-          Your franchise is waiting.
-        </h2>
-        <p style={{ color: "#64748b", marginBottom: 32 }}>
-          Start a league with friends or join a public one. Draft tonight, compete all season.
-        </p>
-        <div className="hero-actions" style={{ justifyContent: "center" }}>
-          <Link href="/create-league" className="button-primary">Start your franchise →</Link>
-          <Link href="/join-league" className="button-secondary">Join a league</Link>
+      {/* ── Features ─────────────────────────────────────────────────────── */}
+      <section style={{ maxWidth: 1240, margin: "0 auto", width: "100%", padding: "56px 36px 8px" }}>
+        <div style={{ display: "flex", alignItems: "baseline", gap: 13, marginBottom: 8 }}>
+          <span className="section-accent" />
+          <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase" as const, color: "#c7d2e0" }}>What you run</span>
         </div>
-        <p style={{ marginTop: 20, fontSize: 14 }}>
-          <Link href="/login" style={{ color: "#64748b" }}>Already have an account? Log in →</Link>
-        </p>
+        <h2 style={{ fontSize: 34, fontWeight: 800, letterSpacing: "-0.02em", maxWidth: 620, lineHeight: 1.1, color: "#f3f5fb", margin: 0 }}>
+          Every decision a real GM makes — in your hands.
+        </h2>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 18, marginTop: 34 }}>
+          {FEATURES.map((f) => (
+            <div key={f.title} style={{ background: "#121829", border: "1px solid rgba(150,160,200,0.10)", borderRadius: 16, padding: 24 }}>
+              <span style={{
+                display: "inline-flex", width: 42, height: 42, borderRadius: 11,
+                background: "rgba(124,58,237,0.12)", border: "1px solid rgba(124,58,237,0.24)",
+                alignItems: "center", justifyContent: "center", color: "#a78bfa",
+              }}>
+                <f.Icon />
+              </span>
+              <div style={{ fontSize: 16.5, fontWeight: 700, color: "#f3f5fb", marginTop: 16 }}>{f.title}</div>
+              <div style={{ fontSize: 13, color: "#9aa3bd", lineHeight: 1.6, marginTop: 8 }}>{f.body}</div>
+            </div>
+          ))}
+        </div>
       </section>
+
+      {/* ── How it works ─────────────────────────────────────────────────── */}
+      <section style={{ maxWidth: 1240, margin: "0 auto", width: "100%", padding: "56px 36px 8px" }}>
+        <div style={{ display: "flex", alignItems: "baseline", gap: 13, marginBottom: 8 }}>
+          <span className="section-accent" />
+          <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase" as const, color: "#c7d2e0" }}>How it works</span>
+        </div>
+        <h2 style={{ fontSize: 34, fontWeight: 800, letterSpacing: "-0.02em", maxWidth: 620, lineHeight: 1.1, color: "#f3f5fb", margin: 0 }}>
+          From draft night to a championship banner.
+        </h2>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 18, marginTop: 34 }}>
+          {STEPS.map((s) => (
+            <div key={s.num} style={{
+              position: "relative",
+              background: "linear-gradient(160deg,rgba(124,58,237,0.08),rgba(150,160,200,0.02))",
+              border: "1px solid rgba(150,160,200,0.12)", borderRadius: 16, padding: "26px 24px",
+            }}>
+              <div className="font-stats" style={{ fontSize: 40, fontWeight: 700, color: "rgba(167,139,250,0.45)", lineHeight: 0.8 }}>{s.num}</div>
+              <div style={{ fontSize: 17, fontWeight: 700, color: "#f3f5fb", marginTop: 14 }}>{s.title}</div>
+              <div style={{ fontSize: 13, color: "#9aa3bd", lineHeight: 1.6, marginTop: 8 }}>{s.body}</div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ── CTA Band ─────────────────────────────────────────────────────── */}
+      <section style={{ maxWidth: 1240, margin: "0 auto", width: "100%", padding: "60px 36px 70px" }}>
+        <div style={{
+          position: "relative", overflow: "hidden",
+          background: "linear-gradient(135deg,#1b1346 0%,#241657 50%,#121829 100%)",
+          border: "1px solid rgba(124,58,237,0.34)", borderRadius: 22,
+          padding: "54px 48px", textAlign: "center",
+        }}>
+          <div style={{
+            position: "absolute", inset: 0,
+            background: "radial-gradient(600px 300px at 50% -20%,rgba(124,58,237,0.30),transparent 70%)",
+          }} />
+          <div style={{ position: "relative" }}>
+            <h2 style={{ fontSize: 40, fontWeight: 900, letterSpacing: "-0.02em", lineHeight: 1.05, margin: 0 }}>
+              Your franchise is waiting.
+            </h2>
+            <p style={{ fontSize: 16, color: "#c5cadb", maxWidth: 460, margin: "14px auto 0", lineHeight: 1.6 }}>
+              Start a league with friends or join a public one. Draft tonight, compete all season.
+            </p>
+            <Link href="/create-league" style={{
+              display: "inline-flex", alignItems: "center", gap: 9, marginTop: 28,
+              background: "linear-gradient(135deg,#7c3aed,#6d28d9)", color: "#fff",
+              padding: "15px 28px", borderRadius: 12, fontSize: 15.5, fontWeight: 700, textDecoration: "none",
+            }}>
+              Start your franchise
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M5 12h14" /><path d="m13 6 6 6-6 6" />
+              </svg>
+            </Link>
+            <div style={{ fontSize: 12, color: "#8b93a7", marginTop: 16 }}>Free to play · Think Like a GM.</div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Footer ───────────────────────────────────────────────────────── */}
+      <footer style={{ borderTop: "1px solid rgba(150,160,200,0.10)" }}>
+        <div style={{
+          maxWidth: 1240, margin: "0 auto", width: "100%",
+          padding: "32px 36px",
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          gap: 24, flexWrap: "wrap" as const,
+        }}>
+          <div style={{ fontSize: 12, color: "#6f788e", lineHeight: 1.5 }}>
+            PWHL General Manager · Think Like a GM.<br />
+            Not affiliated with the PWHL. Fan-built fantasy product.
+          </div>
+          <div style={{ display: "flex", gap: 26, fontSize: 12.5, color: "#8b93a7" }}>
+            <Link href="/leagues" style={{ color: "inherit", textDecoration: "none" }}>Leagues</Link>
+            <Link href="/login" style={{ color: "inherit", textDecoration: "none" }}>Sign in</Link>
+            <Link href="/create-league" style={{ color: "inherit", textDecoration: "none" }}>Start a league</Link>
+          </div>
+        </div>
+      </footer>
 
     </main>
   );
@@ -228,51 +278,59 @@ export default async function Home() {
 
 // ── Static data ──────────────────────────────────────────────────────────────
 
-const PLAYERS = [
-  { name: "Marie-Philip Poulin", pos: "F", team: "MTL", fpts: 312 },
-  { name: "Sarah Fillier",       pos: "F", team: "NY",  fpts: 287 },
-  { name: "Taylor Heise",        pos: "F", team: "MIN", fpts: 264 },
-  { name: "Hilary Knight",       pos: "F", team: "BOS", fpts: 251 },
-  { name: "Natalie Spooner",     pos: "F", team: "TOR", fpts: 238 },
-] as const;
-
-const POS_COLORS: Record<string, string> = {
-  F: "#60a5fa", D: "#34d399", G: "#f59e0b",
-};
-
-const STEPS = [
-  { label: "Create a League",  desc: "Invite friends. Set your draft date. You're ready to go." },
-  { label: "Draft Players",    desc: "Pick the PWHL stars you think will score the most points." },
-  { label: "Compete Weekly",   desc: "Set your lineup, watch the games, and rack up points together." },
+const MINI_STANDINGS = [
+  { rank: 1, name: "Northwind",   vp: 16, you: true  },
+  { rank: 2, name: "Granite City", vp: 15, you: false },
+  { rank: 3, name: "Harbour City", vp: 13, you: false },
+  { rank: 4, name: "Steel & Co",   vp: 12, you: false },
 ];
 
-// ── Shared styles ─────────────────────────────────────────────────────────────
+const PILLARS = [
+  { stat: "Draft",   label: "Build from scratch"    },
+  { stat: "Manage",  label: "Lineups & trades"      },
+  { stat: "Compete", label: "Standings & playoffs"  },
+  { stat: "Win",     label: "Championship banners"  },
+];
 
-const sectionHeading: React.CSSProperties = {
-  fontSize: "clamp(1.5rem, 3vw, 2rem)",
-  fontWeight: 800,
-  margin: 0,
-  color: "#e2e8f0",
-};
+const SVG = ({ children }: { children: React.ReactNode }) => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">{children}</svg>
+);
 
-const sectionSub: React.CSSProperties = {
-  color: "#64748b",
-  marginTop: 10,
-  marginBottom: 0,
-  fontSize: "1rem",
-  lineHeight: 1.7,
-};
+const FEATURES = [
+  {
+    title: "Live snake & auction drafts",
+    body:  "Run a real draft room with a clock, queue, and player board. Build your foundation pick by pick.",
+    Icon: () => <SVG><path d="M12 2v6" /><path d="M12 8 8 5" /><path d="M12 8l4-3" /><rect x="4" y="8" width="16" height="13" rx="2" /><path d="M9 13h6" /></SVG>,
+  },
+  {
+    title: "Build & manage rosters",
+    body:  "Forwards, defense, goalies, bench and IR. Shape a roster with real PWHL depth and positions.",
+    Icon: () => <SVG><circle cx="9" cy="8" r="3" /><path d="M3 20a6 6 0 0 1 12 0" /><path d="M16 4a3 3 0 0 1 0 6" /><path d="M18.5 20a5.5 5.5 0 0 0-3-4.9" /></SVG>,
+  },
+  {
+    title: "Set your weekly lineup",
+    body:  "Start the right skaters, ride the hot goalie, and lock in before puck drop every game night.",
+    Icon: () => <SVG><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M3 10h18" /><path d="M9 4v16" /></SVG>,
+  },
+  {
+    title: "Trades & the waiver wire",
+    body:  "Negotiate deals, claim breakouts off waivers, and out-maneuver your league all season long.",
+    Icon: () => <SVG><path d="M16 3h5v5" /><path d="M21 3l-7 7" /><path d="M8 21H3v-5" /><path d="M3 21l7-7" /></SVG>,
+  },
+  {
+    title: "Standings & playoffs",
+    body:  "Climb the table on Victory Points, clinch a seed, and chase a championship banner.",
+    Icon: () => <SVG><path d="M8 21h8" /><path d="M12 17v4" /><path d="M7 4h10v5a5 5 0 0 1-10 0z" /><path d="M7 6H4v1a3 3 0 0 0 3 3" /><path d="M17 6h3v1a3 3 0 0 1-3 3" /></SVG>,
+  },
+  {
+    title: "Commissioner tools",
+    body:  "Run your league your way — scoring, schedule, rules and approvals from one front office.",
+    Icon: () => <SVG><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" /></SVG>,
+  },
+];
 
-const playerCard: React.CSSProperties = {
-  background: "rgba(255,255,255,0.04)",
-  border: "1px solid rgba(148,163,184,0.12)",
-  borderRadius: 16,
-  padding: "18px 16px",
-};
-
-const demoCard: React.CSSProperties = {
-  background: "rgba(255,255,255,0.04)",
-  border: "1px solid rgba(148,163,184,0.14)",
-  borderRadius: 20,
-  padding: "28px 24px",
-};
+const STEPS = [
+  { num: "01", title: "Create or join a league",  body: "Start a private league with friends or jump into a public one. Invite up to your league size in seconds." },
+  { num: "02", title: "Draft your franchise",      body: "Hit the draft room and build a roster of PWHL players from across all teams in the league."              },
+  { num: "03", title: "Manage & compete",          body: "Set lineups, work the wire, make trades, and climb the standings toward the playoffs."                   },
+];

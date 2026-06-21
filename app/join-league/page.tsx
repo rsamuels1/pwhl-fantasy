@@ -128,7 +128,7 @@ export default function JoinLeaguePage() {
           </label>
 
           {error && (
-            <p style={{ color: "#f87171", fontSize: 13, margin: 0 }}>{error}</p>
+            <p style={{ color: "#d18b7f", fontSize: 13, margin: 0 }}>{error}</p>
           )}
 
           <button

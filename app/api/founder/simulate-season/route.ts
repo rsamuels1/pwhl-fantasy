@@ -146,14 +146,55 @@ async function scorePlayoffRound(
 }
 
 async function populateNextRound(leagueId: string, round: number, winnerIds: string[]): Promise<void> {
-  const placeholder = await prisma.matchup.findFirst({
+  if (winnerIds.length < 2) return;
+
+  // Look for existing matchup with empty teams
+  let matchup = await prisma.matchup.findFirst({
     where: { leagueId, isPlayoff: true, round, homeTeamId: "" },
   });
-  if (!placeholder || winnerIds.length < 2) return;
-  await prisma.matchup.update({
-    where: { id: placeholder.id },
-    data: { homeTeamId: winnerIds[0], awayTeamId: winnerIds[1] },
-  });
+
+  if (matchup) {
+    // Update existing placeholder
+    await prisma.matchup.update({
+      where: { id: matchup.id },
+      data: { homeTeamId: winnerIds[0], awayTeamId: winnerIds[1] },
+    });
+  } else {
+    // Check if matchup already exists with teams (created by advance-playoff-round)
+    const existing = await prisma.matchup.findFirst({
+      where: { leagueId, isPlayoff: true, round },
+    });
+    if (existing) {
+      // Matchup already fully populated, nothing to do
+      return;
+    }
+    // Create the matchup fresh (in case it was never created)
+    const allMatchups = await prisma.matchup.findMany({ where: { leagueId, isPlayoff: true } });
+    const prevRound = allMatchups.find((m) => m.round === (round - 1));
+    if (!prevRound) return;
+
+    const duration = prevRound.endsAt.getTime() - prevRound.startsAt.getTime();
+    const startsAt = new Date(prevRound.endsAt);
+    const endsAt = new Date(startsAt.getTime() + duration);
+    const maxWeekRow = await prisma.matchup.aggregate({
+      where: { leagueId, isPlayoff: false },
+      _max: { week: true },
+    });
+    const playoffWeek = (maxWeekRow._max.week ?? 0) + round;
+
+    await prisma.matchup.create({
+      data: {
+        leagueId,
+        week: playoffWeek,
+        homeTeamId: winnerIds[0],
+        awayTeamId: winnerIds[1],
+        startsAt,
+        endsAt,
+        isPlayoff: true,
+        round,
+      },
+    });
+  }
 }
 
 export async function POST(req: NextRequest) {

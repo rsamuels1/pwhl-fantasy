@@ -1,0 +1,118 @@
+Pass 2 — End-User Click-Through
+
+  Where I got confused
+
+  1. Register CTA copy doesn't match the action I took.
+  Landing page CTA says "Start your franchise →". I click it and land on a page headlined "Join the league. Pick your team." Those are two different framings. "Start your franchise" implies creating and owning a team. "Join the league" implies joining something that already exists First thing I see after clicking "Start" is join-flavored copy. Maybe we should consider a "Start your legacy" messaging? then let the user decide if they want to join an existing league or create a new one?
+
+  **How to fix (UX-017):** In `app/register/page.tsx` (or whatever component the CTA lands on), update the page headline and sub-copy to match the "franchise / management" framing established by REBRAND-001/002. The register page should continue the "Start your franchise" journey — use "Create your account to get started" or "Join PWHL GM" as the headline, not "Join the league. Pick your team." which implies joining an existing entity. File: `app/register/page.tsx` headline `<h1>` and sub-copy paragraph.
+
+  **Covered by:** UX-017 (net-new)
+
+  ---
+
+  2. "My Matchup" goes to a blank page with no escape hatch.
+  Dashboard card: I click "My Matchup →." I land on /team/[id]/matchup showing only: "No scoring period is active or upcoming. Check back when the season is underway." No link back to the admin panel. No explanation of what a "scoring period" is or when one will start. No suggestion of what to do next. Dead end.
+
+  **How to fix:** The empty state on the matchup page needs a page-specific message and at least one next-action link. Pre-draft: "Draft hasn't happened yet. Set your lineup once the draft is complete." with a link back to the league overview. Post-draft / pre-season: "The season starts soon. Draft is complete — check back on [draft date link] to start scoring." Use `EmptyState.tsx` `cta` prop. File: `app/team/[teamId]/matchup/page.tsx`.
+
+  **Covered by:** UX-016 (which already calls out the matchup page empty state specifically).
+
+  ---
+
+  3. Lineup page instructs me to tap players that don't exist.
+  I go to Lineup. Instruction banner says "Tap a player to select them, then tap where to move them." Every slot says "Empty." The bench says "Empty." There are zero players. The instruction references an action I literally cannot perform on this page in this state. It should say "Draft players to fill your lineup" with a link to the
+  draft room or admin panel.
+
+  **How to fix (UX-018):** In `app/team/[teamId]/lineup/LineupManager.tsx` (or its parent page), add a pre-draft state check: if the roster is empty (zero `RosterEntry` rows), replace the instruction banner with a pre-draft-specific message: "Your roster is empty. Draft players first, then come back to set your lineup." Include a link to the league overview or draft room. The click-to-swap instruction banner should only appear when there is at least one player on the roster. This is a P0 — it actively misleads users about what actions are available.
+
+  **Covered by:** UX-018 (net-new)
+
+  ---
+
+  4. 447 Free Agents, but can I pick them up?
+  On the Roster page, Free Agents tab shows 447 players. Each has an "Add" button. I click Add — does this bypass the draft? Is this a waiver claim? The page doesn't explain that these players are available after the draft and waiver process. A pre-draft user clicking "Add" on a free agent is either going to do something unexpected
+  or get an error with no explanation.
+
+  **How to fix (UX-019):** In `app/team/[teamId]/roster/RosterManager.tsx`, add a contextual banner or inline note on the Free Agents tab that explains the add/waiver process based on league state. Pre-draft: show a banner "Free agent adds open after the draft. Players are added by waiver claim during the season." Post-draft / in-season: show "Players dropped within 48 hours are on waivers. Others are immediate adds." This requires reading `league.status` (already available as a prop) to choose the appropriate copy. No schema changes needed.
+
+  **Covered by:** UX-019 (net-new)
+
+  ---
+
+  5. Waiver Wire vs. Free Agents is unexplained. Same Roster page. Two tabs side by side: "Free Agents (447)" and "Waiver Wire." I have no idea what the difference is. No tooltip, no subtitle, no inline explanation.
+
+  **How to fix (UX-020):** In `app/team/[teamId]/roster/RosterManager.tsx`, add a short subtitle or inline tooltip to each tab:
+  - "Free Agents" → subtitle: "Players not on any team — immediate add during the season."
+  - "Waiver Wire" → subtitle: "Recently dropped players — claimed by priority order over 48 hours."
+  These can be added as `<span>` subtext lines under each tab label, or as a small info banner at the top of each tab's content area. No backend changes needed.
+
+  **Covered by:** UX-020 (net-new)
+
+  ---
+
+  6. The announcements box gates the league overview before setup is done.
+  First thing I see on the league overview as commissioner: a large textarea prompt to post an announcement. I haven't set up my draft. I haven't invited my managers. But the app is asking me to communicate to a league that doesn't have anyone in it yet. The commissioner action strip ("Draft setup needed → Take action") is below this box, visually secondary to it. The announcement box shouldn't appear until all teams have joined the league and it likely doesn't need this much real estate, regardless.
+
+  **How to fix:** Already captured. Move `AnnouncementForm` below the playoff race table and matchup sections in `app/league/[leagueId]/page.tsx`. Consider hiding it entirely when `league.status === "PRE_DRAFT"` and fewer than `league.maxTeams` have joined — there is no one to announce to yet. File: `app/league/[leagueId]/page.tsx`.
+
+  **Covered by:** UX-008 (already in Sprint 10). The additional "hide it pre-draft when no one has joined yet" nuance is worth noting in UX-008's acceptance criteria but does not require a new story.
+
+  ---
+
+  7. Column headers at the bottom of the bracket table. On the Playoffs page I see 4 teams listed with numbers on the right. I scan for column headers — I find "W–L" and "PF" below Team 4's row, in a footer. I have to read
+  the data and then find the label. I guessed "W–L" from context but had to look twice.
+
+  **How to fix:** Fix `<thead>` / `<tbody>` ordering in `app/league/[leagueId]/bracket/page.tsx` or `components/PlayoffBracket.tsx`.
+
+  **Covered by:** UX-011 (already in Sprint 10).
+
+  ---
+
+  10. The dashboard skeleton shows a logged-out nav.
+  After logging in, during the ~2 second load, the top nav still shows "Login." I briefly wonder if my login worked. The nav should resolve auth state before rendering (or at least show a loading spinner in place of "Login" rather than the unauthenticated link).
+
+  **How to fix (UX-021):** In `app/layout.tsx`, the top nav auth section renders `<a href="/login">Login</a>` when the user session is not yet resolved. During the server-side rendering gap (Next.js hydration window), the client briefly sees the unauthenticated state. Fix options: (a) On the client, replace the "Login" link with a neutral loading indicator (`•••` or a skeleton chip) until the client hydration confirms auth status. (b) Use Next.js `headers()` / cookie-based server component rendering to ensure the auth state is always resolved server-side before HTML is sent. Option (b) is preferred if the nav is already a server component — confirm whether `app/layout.tsx` reads `pwhl_user_email` synchronously. File: `app/layout.tsx`.
+
+  **Covered by:** UX-021 (net-new)
+
+  ---
+
+  11. "Season" tab (team) and "Schedule" tab (league) are the same word but mean different things.
+  The league nav has "Schedule" = fantasy matchup schedule. The team nav has "Season" = also shows a schedule (PWHL game schedule for my players). A user clicking between league-level and team-level nav is likely to conflate these two tabs or explore the wrong one first.
+
+  **How to fix (UX-022):** Rename the team-nav "Season" tab to "Record" (which is already in BF-007) or "My Season." Separately, confirm the league nav's "Schedule" tab is clearly labeled as fantasy matchup schedule (not PWHL game schedule). The rename in BF-007 (Performance → Record) and the UX-006 league nav alignment work together to reduce this confusion. Once BF-007 ships ("Record") and UX-006 ships (unified nav visual language), the distinction will be clearer. No additional rename needed beyond what BF-007 specifies — the ambiguity comes from similar-sounding names, not identical ones.
+
+  **Covered by:** BF-007 (already in Sprint 10 — renaming "Performance" to "Record" directly addresses the naming ambiguity). UX-006 (Sprint 11 — league nav unification improves visual distinction between nav zones). No separate story needed.
+
+  ---
+
+  12. Analysis tab is visible but always empty pre-season.
+  Seven team nav tabs are exposed to a pre-draft user. Five of them show empty states or nothing useful. "Analysis" specifically says "Not enough scored weeks yet — check
+  back after week 2." There's no preview of what analysis will show — no wireframe preview, no description. It's just a dead end with no incentive to return. Either hide
+  this tab pre-season, or describe what it will show: "See week-by-week FP trends, consistency scores, and schedule difficulty — available after Week 2."
+
+  **How to fix:** The Analysis page empty state should describe what the tab will show and when it will activate. Use `EmptyState.tsx` with copy: "Analysis unlocks after Week 2. You'll see week-by-week FP trends, your strongest position groups, and free agent upgrade recommendations." File: `app/team/[teamId]/analysis/page.tsx`.
+
+  **Covered by:** UX-016 (which specifically lists `app/team/[teamId]/analysis/page.tsx` as one of the four pages needing a page-specific empty state message). The "hide the tab pre-season" variant is a deeper scope change not captured by UX-016 — if we want to pursue tab hiding, that warrants a Design Backlog entry.
+
+  ---
+
+  ---
+  Top 5 fixes by user impact:
+
+  1. Remove the announcement textarea from above-the-fold on league overview; move it into the commissioner sidebar or behind "Front Office"
+  **Covered by:** UX-008 (Sprint 10)
+
+  2. Add "Propose Trade →" button to the Trade Center header
+  **How to fix (UX-023):** In `app/league/[leagueId]/trades/page.tsx`, add a "Propose Trade →" button in the Trade Center page header. This button links to `/league/[leagueId]/trades/new`. It should appear for all league members (any manager can propose a trade). The Trade Center currently has Incoming / Sent / League History tabs but no visible CTA to start a new trade. File: `app/league/[leagueId]/trades/page.tsx` (page header or empty-state section).
+  **Covered by:** UX-023 (net-new)
+
+  3. Fix column headers in the bracket table (they're at the bottom)
+  **Covered by:** UX-011 (Sprint 10)
+
+  4. Replace "My Matchup" empty state with contextual next-action copy ("Draft hasn't happened yet — come back on [draft date] to set your lineup")
+  **Covered by:** UX-016 (Sprint 11)
+
+  5. Fix the lineup instruction copy pre-draft: don't tell an empty-roster user to "tap a player to select them"
+  **Covered by:** UX-018 (net-new)

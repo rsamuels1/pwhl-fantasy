@@ -1,4 +1,5 @@
-import { requireAuth } from "@/lib/auth";
+import { getCurrentUser } from "@/lib/auth";
+import { redirect } from "next/navigation";
 import CreateLeagueWizard from "./CreateLeagueWizard";
 
 interface Props {
@@ -6,7 +7,11 @@ interface Props {
 }
 
 export default async function CreateLeaguePage({ searchParams }: Props) {
-  const user = await requireAuth("/create-league");
+  const user = await getCurrentUser();
+  if (!user) {
+    redirect("/register?returnTo=/create-league");
+  }
+
   const sp = searchParams ? await searchParams : {};
   const startAsReplay = sp.replay === "1";
 

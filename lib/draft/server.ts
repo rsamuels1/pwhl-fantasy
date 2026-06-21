@@ -34,7 +34,24 @@ class DraftRoom {
     private readonly commissionerTeamId: string | null,
     private readonly rosterSettings: Record<string, number>,
     private readonly leagueSeason: string,
-  ) {}
+  ) {
+    // If the draft is already in progress when the room is created (e.g., after server restart),
+    // reschedule the timer immediately to prevent it from hanging indefinitely.
+    if (this.state.status === "IN_PROGRESS") {
+      this.rescheduleTimer();
+    }
+  }
+
+  private rescheduleTimer() {
+    // Calculate expiration time based on current pick position
+    const currentTeamSlot = this.state.order[this.state.currentOverall - 1];
+    if (!currentTeamSlot) return;
+
+    const isFlagged = this.state.autoFlaggedTeams.has(currentTeamSlot.fantasyTeamId);
+    const timerSecs = isFlagged ? this.timerConfig.autoSecs : this.timerConfig.baseSecs;
+    const expiresAt = Date.now() + timerSecs * 1000;
+    this.scheduleTimer(expiresAt);
+  }
 
   private isCommissioner(ws: WebSocket): boolean {
     return (

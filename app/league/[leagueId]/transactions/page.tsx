@@ -47,6 +47,7 @@ export default async function TransactionsPage({ params, searchParams }: Props) 
       teams={teams}
       selectedTeamId={sp.team ?? null}
       selectedType={sp.type ?? null}
+      nowMs={nowMs}
     />
   );
 }

@@ -43,6 +43,17 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
   };
   const goBack = () => setStep((s) => Math.max(s - 1, 1));
 
+  const handleCancel = () => {
+    // If league was created but team wasn't, warn before leaving
+    if (createdLeagueId && !createdTeamId) {
+      const confirmed = window.confirm(
+        "You started creating your league but didn't finish. It will be empty and abandoned.\n\nCancel and leave it, or go back to finish?"
+      );
+      if (!confirmed) return;
+    }
+    router.push("/dashboard");
+  };
+
   // In replay mode, skip steps 4–5 (rules + invite) but still go through team creation
   const handleReplayCreate = async () => {
     setLoading(true);
@@ -130,9 +141,12 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
               Step {Math.min(step, TOTAL_STEPS - 1)} of {TOTAL_STEPS - 1}
             </p>
             {step < TOTAL_STEPS && (
-              <Link href="/dashboard" style={{ fontSize: 12, color: "#475569", textDecoration: "none" }}>
+              <button
+                onClick={handleCancel}
+                style={{ fontSize: 12, color: "#475569", textDecoration: "none", background: "none", border: "none", cursor: "pointer" }}
+              >
                 Cancel
-              </Link>
+              </button>
             )}
           </div>
           <div style={{ display: "flex", gap: 6 }}>
@@ -233,8 +247,8 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
                           {recommended && (
                             <span style={{
                               fontSize: 10, fontWeight: 700, padding: "1px 7px", borderRadius: 10,
-                              background: "rgba(52,211,153,0.15)", color: "#34d399",
-                              border: "1px solid rgba(52,211,153,0.25)",
+                              background: "rgba(95,169,140,0.15)", color: "#5fa98c",
+                              border: "1px solid rgba(95,169,140,0.25)",
                             }}>
                               Recommended
                             </span>
@@ -348,7 +362,7 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
                   <button className="button-primary" onClick={goNext} style={{ flex: 1 }}>Next →</button>
                 )}
               </div>
-              {error && <p style={{ color: "#f87171", fontSize: 13, margin: 0 }}>{error}</p>}
+              {error && <p style={{ color: "#d18b7f", fontSize: 13, margin: 0 }}>{error}</p>}
             </div>
           )}
 
@@ -363,8 +377,22 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
               </div>
 
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                <RuleRow icon="👥" label="Roster" value="3 F · 2 D · 1 UTIL · 1 G · 6 Bench = 13 slots, all drafted" />
-                <RuleRow icon="📊" label="Standings" value="Victory Points — win your matchup AND be a top scorer each week" />
+                <RuleRow icon="👥" label="Roster" value="3 F · 2 D · 1 UTIL (any skater) · 1 G · 6 Bench = 13 slots, all drafted" />
+                <RuleRow icon="📊" label="Standings" value="Victory Points (VP) — win your matchup AND score more points than the rest of the league" />
+                <div style={{
+                  padding: "12px 14px", borderRadius: 12,
+                  background: "rgba(255,255,255,0.03)",
+                  border: "1px solid rgba(148,163,184,0.08)",
+                }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 8 }}>
+                    Scoring
+                  </div>
+                  <div style={{ fontSize: 13, color: "#e2e8f0", lineHeight: 1.6 }}>
+                    <strong>Skaters:</strong> Goal = 2 pts, Assist = 1.5 pts, Power Play = +0.5 pts, SOG = 0.5 pts, Hit = 0.25 pts, Block = 0.5 pts
+                    <br/>
+                    <strong>Goalies:</strong> Win = 5 pts, Shutout = 3 pts, Save = 0.25 pts, Goal Against = -1 pt
+                  </div>
+                </div>
                 <RuleRow icon="🏒" label="Playoffs" value="Top 4 teams, single-elimination, no byes" />
                 <RuleRow icon="📅" label="Season" value={`2026-27 live PWHL season · ${maxTeams} teams`} />
               </div>
@@ -378,13 +406,22 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
                 Scoring, roster slots, and playoff format can be adjusted from the admin panel before the draft.
               </div>
 
+              <div style={{
+                padding: "12px 16px", borderRadius: 12,
+                background: "rgba(99,102,241,0.06)",
+                border: "1px solid rgba(99,102,241,0.15)",
+                fontSize: 13, color: "#94a3b8",
+              }}>
+                💡 Next, you'll create your team name and become the commissioner.
+              </div>
+
               <div style={{ display: "flex", gap: 10, justifyContent: "space-between" }}>
                 <button className="button-secondary" onClick={goBack} style={{ flex: 1 }}>← Back</button>
                 <button className="button-primary" onClick={handleCreate} disabled={loading} style={{ flex: 1 }}>
                   {loading ? "Creating league…" : "Create league →"}
                 </button>
               </div>
-              {error && <p style={{ color: "#f87171", fontSize: 13, margin: 0 }}>{error}</p>}
+              {error && <p style={{ color: "#d18b7f", fontSize: 13, margin: 0 }}>{error}</p>}
             </div>
           )}
 
@@ -424,7 +461,7 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
                   {loading ? "Creating team…" : "Create my team →"}
                 </button>
               </div>
-              {error && <p style={{ color: "#f87171", fontSize: 13, margin: 0 }}>{error}</p>}
+              {error && <p style={{ color: "#d18b7f", fontSize: 13, margin: 0 }}>{error}</p>}
             </div>
           )}
 

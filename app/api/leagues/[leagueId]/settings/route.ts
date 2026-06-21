@@ -15,30 +15,42 @@ export async function PUT(
   const commissioner = await apiRequireCommissioner(params.leagueId, auth.id);
   if (commissioner instanceof NextResponse) return commissioner;
 
-  // Fetch the league to check draft status
+  // Fetch the league to check draft/playoff status
   const league = await prisma.fantasyLeague.findUnique({
     where: { id: params.leagueId },
-    select: { draft: { select: { status: true } } },
+    select: { draft: { select: { status: true } }, playoffStatus: true },
   });
 
   if (!league) {
     return NextResponse.json({ error: "League not found" }, { status: 404 });
   }
 
-  // Block changes after draft is complete
-  if (league.draft?.status === "COMPLETE") {
-    return NextResponse.json(
-      { error: "Settings are locked after the draft." },
-      { status: 409 }
-    );
-  }
+  const isDraftComplete = league.draft?.status === "COMPLETE";
+  const isPlayoffStarted = league.playoffStatus !== "NOT_STARTED";
 
   const body = (await req.json().catch(() => ({}))) as {
     maxTeams?: number;
     draftType?: string;
     scoringSettings?: unknown;
     rosterSettings?: unknown;
+    playoffSettings?: unknown;
   };
+
+  // Block scoring/roster changes after draft complete
+  if (isDraftComplete && (body.scoringSettings !== undefined || body.rosterSettings !== undefined)) {
+    return NextResponse.json(
+      { error: "Scoring and roster settings are locked after the draft." },
+      { status: 409 }
+    );
+  }
+
+  // Block playoff settings changes once playoffs are in progress
+  if (isPlayoffStarted && body.playoffSettings !== undefined) {
+    return NextResponse.json(
+      { error: "Playoff settings are locked once playoffs have started." },
+      { status: 409 }
+    );
+  }
 
   // Build update object with validation
   const updateData: Record<string, unknown> = {};
@@ -107,6 +119,29 @@ export async function PUT(
     changedFields.push("rosterSettings");
   }
 
+  // Validate and set playoffSettings
+  if (body.playoffSettings !== undefined) {
+    const ps = body.playoffSettings as Record<string, unknown>;
+    const tip = ps.teamsInPlayoff;
+    const tsb = ps.topSeedsWithBye;
+    const rdp = ps.roundDurationPeriods;
+    const hswt = ps.higherSeedWinsTies;
+    if (tip !== undefined && (!Number.isInteger(tip) || (tip as number) < 2 || (tip as number) > 20)) {
+      return NextResponse.json({ error: "teamsInPlayoff must be 2–20" }, { status: 400 });
+    }
+    if (tsb !== undefined && (!Number.isInteger(tsb) || (tsb as number) < 0)) {
+      return NextResponse.json({ error: "topSeedsWithBye must be a non-negative integer" }, { status: 400 });
+    }
+    if (rdp !== undefined && (!Number.isInteger(rdp) || (rdp as number) < 1)) {
+      return NextResponse.json({ error: "roundDurationPeriods must be >= 1" }, { status: 400 });
+    }
+    if (hswt !== undefined && typeof hswt !== "boolean") {
+      return NextResponse.json({ error: "higherSeedWinsTies must be a boolean" }, { status: 400 });
+    }
+    updateData.playoffSettings = ps;
+    changedFields.push("playoffSettings");
+  }
+
   if (changedFields.length === 0) {
     return NextResponse.json({ error: "No fields to update" }, { status: 400 });
   }
@@ -134,6 +169,7 @@ export async function PUT(
       draftType: updated.draftType,
       scoringSettings: updated.scoringSettings,
       rosterSettings: updated.rosterSettings,
+      playoffSettings: updated.playoffSettings,
     },
   });
 }

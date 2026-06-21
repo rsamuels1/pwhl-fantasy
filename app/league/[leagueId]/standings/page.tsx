@@ -104,9 +104,9 @@ export default async function StandingsPage({ params }: { params: { leagueId: st
   if (myRace && myRaceIdx >= 0) {
     const rank = myRaceIdx + 1;
     if (myRace.status === "clinched") {
-      myBanner = { text: `🎉 You've clinched a playoff spot (currently #${rank}).`, color: "#34d399", bg: "rgba(52,211,153,0.08)" };
+      myBanner = { text: `You've clinched a playoff spot (currently #${rank}).`, color: "#5fa98c", bg: "rgba(95,169,140,0.08)" };
     } else if (myRace.status === "eliminated") {
-      myBanner = { text: `You've been eliminated from playoff contention (#${rank}).`, color: "#f87171", bg: "rgba(248,113,113,0.07)" };
+      myBanner = { text: `You've been eliminated from playoff contention (#${rank}).`, color: "#d18b7f", bg: "rgba(209,139,127,0.07)" };
     } else if (myRace.status === "in" || myRace.status === "bubble") {
       const cushion = myRace.cushion ?? 0;
       myBanner = cushion > 0
@@ -184,20 +184,20 @@ export default async function StandingsPage({ params }: { params: { leagueId: st
                 if (playoffCutoff !== null) {
                   if (playoffsStarted) {
                     playoffChip = inPlayoffs
-                      ? { label: "IN", color: "#34d399", bg: "rgba(52,211,153,0.1)" }
+                      ? { label: "IN", color: "#5fa98c", bg: "rgba(95,169,140,0.1)" }
                       : { label: "OUT", color: "#64748b", bg: "rgba(100,116,139,0.1)" };
                   } else if (raceInfo?.status === "clinched") {
-                    playoffChip = { label: "✓ CLINCHED", color: "#34d399", bg: "rgba(52,211,153,0.12)" };
+                    playoffChip = { label: "CLINCHED", color: "#5fa98c", bg: "rgba(95,169,140,0.12)" };
                   } else if (raceInfo?.status === "eliminated") {
-                    playoffChip = { label: "✗ ELIM", color: "#f87171", bg: "rgba(248,113,113,0.1)" };
+                    playoffChip = { label: "ELIM", color: "#d18b7f", bg: "rgba(209,139,127,0.1)" };
                   } else if (raceInfo?.status === "bubble" || onBubble) {
                     playoffChip = { label: "BUBBLE", color: "#f59e0b", bg: "rgba(245,158,11,0.12)" };
                   } else if (inPlayoffs) {
-                    playoffChip = { label: "IN", color: "#34d399", bg: "rgba(52,211,153,0.1)" };
+                    playoffChip = { label: "IN", color: "#5fa98c", bg: "rgba(95,169,140,0.1)" };
                   }
                 }
 
-                const streakColor = streak?.type === "W" ? "#34d399" : streak?.type === "L" ? "#f87171" : "#94a3b8";
+                const streakColor = streak?.type === "W" ? "#5fa98c" : streak?.type === "L" ? "#d18b7f" : "#94a3b8";
 
                 return (
                   <tr
@@ -217,8 +217,8 @@ export default async function StandingsPage({ params }: { params: { leagueId: st
                         {isMe && <span style={{ fontSize: 10, color: "#6366f1" }}>YOU</span>}
                         {playoffChip && (() => {
                           let cls = "chip-in";
-                          if (playoffChip.color === "#34d399") cls = "chip-clinched";
-                          else if (playoffChip.color === "#f87171") cls = "chip-eliminated";
+                          if (playoffChip.color === "#5fa98c") cls = "chip-clinched";
+                          else if (playoffChip.color === "#d18b7f") cls = "chip-eliminated";
                           return <span className={cls}>{playoffChip.label}</span>;
                         })()}
                       </span>
@@ -228,7 +228,7 @@ export default async function StandingsPage({ params }: { params: { leagueId: st
                       {s.wins}–{s.losses}{s.ties > 0 ? `–${s.ties}` : ""}
                     </td>
                     <td style={{ ...tdStyle, color: "#818cf8", fontVariantNumeric: "tabular-nums" }}>{s.matchupVP}</td>
-                    <td style={{ ...tdStyle, color: "#34d399", fontVariantNumeric: "tabular-nums" }}>{s.rankVP}</td>
+                    <td style={{ ...tdStyle, color: "#5fa98c", fontVariantNumeric: "tabular-nums" }}>{s.rankVP}</td>
                     <td style={{ ...tdStyle, color: "#64748b", fontVariantNumeric: "tabular-nums" }}>{s.pointsFor.toFixed(1)}</td>
                     <td style={{ ...tdStyle, color: streakColor, fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>
                       {streak ? `${streak.type}${streak.count}` : "—"}

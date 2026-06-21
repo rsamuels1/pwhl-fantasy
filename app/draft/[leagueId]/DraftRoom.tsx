@@ -748,7 +748,6 @@ function PlayerPanel({
                 <table style={{ ...styles.table, width: "100%", minWidth: 560 }}>
                   <thead style={{ position: "sticky", top: 0, background: "var(--bg)", zIndex: 1 }}>
                     <tr style={{ color: "var(--muted)", fontSize: 11, textTransform: "uppercase" }}>
-                      <th style={{ ...styles.th, width: 44 }} />
                       <th style={styles.th}>Pos</th>
                       <th style={styles.th}>Tm</th>
                       <th style={{ ...styles.th, minWidth: 130 }}>Player</th>
@@ -769,11 +768,6 @@ function PlayerPanel({
                   <tbody>
                     {rows.map(({ player: p, stats: s }) => (
                       <tr key={p.id} className="draft-player-row" style={styles.playerRow}>
-                        <td style={{ padding: "5px 6px" }}>
-                          <span style={{ width: 34, height: 34, borderRadius: 9, background: "rgba(124,58,237,0.18)", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 800, color: "#fff", flexShrink: 0 }}>
-                            {p.name.split(" ").pop()?.charAt(0).toUpperCase() ?? "?"}
-                          </span>
-                        </td>
                         <td style={{ padding: "5px 6px" }}><PosTag pos={p.position} /></td>
                         <td style={{ padding: "5px 6px", color: "var(--muted)", fontSize: 11, whiteSpace: "nowrap" }}>{p.team ?? "FA"}</td>
                         <td style={{ padding: "5px 6px", fontSize: 13, whiteSpace: "nowrap" }}>{p.name}</td>

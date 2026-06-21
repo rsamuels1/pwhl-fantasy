@@ -20,8 +20,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <link rel="icon" type="image/svg+xml" href={SVG_FAVICON} />
       </head>
       <body className="app-shell">
-        <div className="page-width">
-          <header className="top-nav">
+        <header className="site-header">
+          <div className="site-header-inner">
             <Link href="/" className="site-brand">
               <LogoWordmark />
             </Link>
@@ -35,11 +35,15 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                 </>
               )}
               {!user && (
-                <Link href="/login" className="nav-link">Login</Link>
+                <>
+                  <Link href="/login" className="nav-link">Sign in</Link>
+                  <Link href="/create-league" className="button-primary" style={{ padding: "9px 17px", fontSize: 13 }}>Start your franchise</Link>
+                </>
               )}
             </nav>
-          </header>
-
+          </div>
+        </header>
+        <div className="page-width">
           {children}
         </div>
       </body>

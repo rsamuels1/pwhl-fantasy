@@ -48,7 +48,7 @@ export default function PlayoffBracket({ bracket, myTeamId }: Props) {
                 borderBottom: "1px solid var(--border)",
               }}>
                 <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: isChampionship ? "#fbbf24" : "var(--dim)" }}>
-                  {isChampionship ? "🏆 " : ""}{getRoundLabel(rIdx + 1, totalRounds)}
+                  {getRoundLabel(rIdx + 1, totalRounds)}
                 </div>
                 <div style={{ fontSize: 11, color: "var(--faint)", marginTop: 2 }}>
                   {settings.roundDurationPeriods} week{settings.roundDurationPeriods !== 1 ? "s" : ""}
@@ -113,9 +113,9 @@ function TeamRow({
   const isLoser = scored && winner && team && winner.fantasyTeamId !== team.fantasyTeamId;
   const isMe = !!myTeamId && !!team && team.fantasyTeamId === myTeamId;
 
-  const winColor = isChampionship ? "#fbbf24" : "#34d399";
-  const winBg = isChampionship ? "rgba(251,191,36,0.07)" : "rgba(52,211,153,0.06)";
-  const winBorder = isChampionship ? "#fbbf24" : "#34d399";
+  const winColor = isChampionship ? "#fbbf24" : "#5fa98c";
+  const winBg = isChampionship ? "rgba(251,191,36,0.07)" : "rgba(95,169,140,0.06)";
+  const winBorder = isChampionship ? "#fbbf24" : "#5fa98c";
 
   return (
     <div style={{

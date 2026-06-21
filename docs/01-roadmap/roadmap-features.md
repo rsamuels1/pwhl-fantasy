@@ -280,7 +280,7 @@ Sprint: 6
 
 Priority: HIGH — pre-beta launch gate
 
-Status: Not Implemented
+Status: ✅ DONE — findings in `docs/04-operations/pre-beta-audit.md`; all P0 + P1 findings resolved. Go/No-Go: GREEN.
 
 Goal: A staff-engineer-level review of the full codebase before the beta cohort is invited.
 The audit should surface architectural issues, duplicate logic, state machine correctness
@@ -1719,7 +1719,7 @@ Sprint: 10
 
 Priority: P0
 
-Status: OPEN
+Status: ✅ DONE — Sprint 10
 
 Summary: The league activity feed on `/league/[leagueId]/` renders the raw string
 `"LEAGUE_STORYLINE"` for storyline entries instead of the storyline headline. Root cause:
@@ -1749,11 +1749,11 @@ Acceptance Criteria:
 
 ## BF-004. Lineup Move Returns "UTIL Slot Is Full" When Moving Bench Forward to Empty Forward Seat
 
-Sprint: 10
+Sprint: 10 (fixed Sprint 12)
 
 Priority: P0
 
-Status: OPEN
+Status: ✅ DONE — Sprint 12; refactored seatedActive calculation in `LineupManager.tsx`
 
 Summary: Beta user reports: "my lineup says i need another forward, when i try to move one
 off the bench — I get this error 'UTIL SLOT IS FULL (1/1). Move someone out first' but there's
@@ -1791,7 +1791,7 @@ Sprint: 10
 
 Priority: P1
 
-Status: OPEN (BF-001 partially addressed this in Sprint 9; root cause persists)
+Status: ✅ DONE — Sprint 10; `reconnectAttemptedAfter4001Ref` ref added in `useDraftSocket.ts`; second 4001 within short window sets `evicted(true)` and stops reconnect loop
 
 Summary: Beta user opened the draft room URL and immediately saw the eviction overlay ("You
 opened the draft in another tab. Switch to that tab to continue drafting.") with no other
@@ -1831,7 +1831,7 @@ Sprint: 10
 
 Priority: P1
 
-Status: OPEN
+Status: ✅ DONE — Sprint 10; `gamesThisPeriod > 0` guard added to bench upgrade hint in `LineupManager.tsx`
 
 Summary: The starter-total summary bar on the lineup page's "Matchup Proj" view shows
 "Consider starting [Player] (X.X proj) over [Starter]" when [Player] has zero games remaining
@@ -1855,11 +1855,11 @@ Acceptance Criteria:
 
 ## BF-007. "Performance" Tab Name Unclear to Beta Users
 
-Sprint: 10
+Sprint: 11
 
 Priority: P2
 
-Status: OPEN
+Status: ✅ DONE — Sprint 11b; tab renamed to "Record" in `TeamNav.tsx`
 
 Summary: Beta user feedback: "I don't like the name of this tab cause it's not really about
 performance." The TeamNav tab links to `/team/[teamId]/schedule` but the content is a weekly
@@ -1891,6 +1891,7 @@ Sprint assignments: Sprint 10 (P0/P1 quick wins) and Sprint 11 (P1/P2 polish).
 Sprint: 10
 Priority: P1
 Effort: S
+Status: ✅ DONE — Sprint 10
 
 As a first-time visitor, I want the trust signals ("Free-to-Play, Pure Strategy") to appear
 near the headline so that I'm reassured before I reach the CTA buttons.
@@ -2064,6 +2065,7 @@ Acceptance Criteria:
 Sprint: 10
 Priority: P0
 Effort: S
+Status: ✅ DONE — Sprint 10
 
 As a league member (non-commissioner), I want the standings empty state to not show me a
 link to the admin panel so that I'm not sent to a page I can't access.
@@ -2081,6 +2083,7 @@ Acceptance Criteria:
 Sprint: 10
 Priority: P0
 Effort: S
+Status: ✅ DONE — Sprint 10
 
 As a user on the Bracket/Playoffs page, I want the standings table column headers to appear
 at the top so that I can read the table correctly.
@@ -2345,6 +2348,7 @@ Source: `docs/branding/mockups/Pass34-design-critic.md` — Pass 3 (active-seaso
 Sprint: 11
 Priority: P0
 Effort: S
+Status: ✅ DONE — Sprint 11a
 
 Issue: The most prominent number on a struggling manager's dashboard card is a bold red "0-7." To anyone unfamiliar with Victory Points, this reads as a season record (zero wins, seven losses). The label "vs field" appears as secondary text with no tooltip or callout.
 
@@ -2364,6 +2368,7 @@ Acceptance Criteria:
 Sprint: 11
 Priority: P0
 Effort: S
+Status: ✅ DONE — Sprint 11a
 
 Issue: The matchup hero displays "3-2" (or similar) floating next to the team name with no label. A PWHL fan immediately parses this as a period score, not a fantasy win-loss record. Nothing signals that the number is a season record.
 
@@ -2383,6 +2388,7 @@ Acceptance Criteria:
 Sprint: 11
 Priority: P0
 Effort: S
+Status: ✅ DONE — Sprint 11a
 
 Issue: At the start of a week before any PWHL games are played, every team has 0 FP, so all VTF matchups show as "tied." The W-L-T display renders "0–0–7". First-time users assume the app is broken when they see the Season tab showing "0–0–7" in the current week row.
 
@@ -2402,6 +2408,7 @@ Acceptance Criteria:
 Sprint: 11
 Priority: P1
 Effort: S
+Status: ✅ DONE — Sprint 11a
 
 Issue: Each player card on the lineup page shows three numbers in a row — "10.8 / 5.4 / x2" — with no labels, tooltips, or explanation. "PROJ" is inferable; "PPG" (points per game) and "x2" (games this week) are opaque without prior fantasy knowledge.
 
@@ -2421,6 +2428,7 @@ Acceptance Criteria:
 Sprint: 11
 Priority: P1
 Effort: S
+Status: ✅ DONE — Sprint 11a
 
 Issue: The "Starters projected: 43.3 pts" summary bar appears at the bottom of the active-slot column, below all player cards. This is the most actionable output of the projection system (does my lineup look competitive?) but requires scrolling to see it.
 
@@ -2440,6 +2448,7 @@ Acceptance Criteria:
 Sprint: 11
 Priority: P1
 Effort: S
+Status: ✅ DONE — Sprint 11a
 
 Issue: "Auto-set" is the large purple primary button. "Save Lineup" is the smaller dark secondary button. But "Auto-set" only stages a suggestion; "Save Lineup" commits changes. The visual hierarchy is backwards.
 
@@ -2460,6 +2469,7 @@ Acceptance Criteria:
 Sprint: 11
 Priority: P1
 Effort: M
+Status: ✅ DONE — Sprint 11a
 
 Issue: The standings table has eight columns in all-caps abbreviated jargon: VP, W-L-T, MTCH VP, RNK VP, PF, STREAK, GAP. The subheader explains the VP model in one compressed line of small gray text. A new user cannot distinguish "MTCH VP" (matchup win bonus) from "RNK VP" (weekly rank bonus) without reading the rules.
 
@@ -2481,6 +2491,7 @@ Acceptance Criteria:
 Sprint: 11
 Priority: P1
 Effort: M
+Status: ✅ DONE — Sprint 11a (structural fix: rival callout surfaced in/below matchup hero, collapsed accordion removed; celebration notification NOT included — see UX-045)
 
 Issue: The rivalry feature — the most emotionally resonant moment in the product — is hidden behind a collapsed accordion at the bottom of the matchup page. A manager who wins their rivalry matchup has no celebration moment, no notification, no badge. Winning your rivalry is a high-emotion event rendered as an optional footnote.
 
@@ -2498,7 +2509,7 @@ Acceptance Criteria:
 
 ## UX-032. "+8.3 EDGE" Label Is Unexplained Jargon in the Matchup Hero
 
-Sprint: Post-launch backlog
+Sprint: 14
 Priority: P2
 Effort: S
 
@@ -2516,7 +2527,7 @@ Acceptance Criteria:
 
 ## UX-033. "NO GAMES YET" Badge Has No Contextual Explanation
 
-Sprint: Post-launch backlog
+Sprint: 14
 Priority: P2
 Effort: S
 
@@ -2739,7 +2750,7 @@ Acceptance Criteria:
 
 ## UX-045. No Celebration Moment When a Rivalry Matchup Is Won
 
-Sprint: Post-launch backlog
+Sprint: 14
 Priority: P2
 Effort: M
 
@@ -2771,7 +2782,7 @@ Source: `docs/branding/pass5-design-critic.md` — first-time user walkthrough o
 
 ## OB-001. "Start Your Franchise" CTA Routes to /login Instead of /register
 
-Sprint: 12
+Sprint: 13
 
 Priority: P0
 
@@ -2792,7 +2803,7 @@ Acceptance Criteria:
 
 ## OB-002. Wizard Step 4 Introduces VP Without Explaining It
 
-Sprint: 12
+Sprint: 13
 
 Priority: P0
 
@@ -2814,7 +2825,7 @@ Acceptance Criteria:
 
 ## OB-003. Wizard Does Not Warn That Step 5 (Team Creation) Is Coming
 
-Sprint: 12
+Sprint: 13
 
 Priority: P0
 
@@ -2835,7 +2846,7 @@ Acceptance Criteria:
 
 ## OB-004. Canceling Mid-Wizard After League Is Created Silently Orphans It
 
-Sprint: 12
+Sprint: 13
 
 Priority: P0
 
@@ -2857,7 +2868,7 @@ Acceptance Criteria:
 
 ## OB-005. QuickDraftJoinForm Is on the Public Home Page
 
-Sprint: 12
+Sprint: 13
 
 Priority: P1
 
@@ -2878,7 +2889,7 @@ Acceptance Criteria:
 
 ## OB-006. Replay Mode Description Only Appears After Clicking the Option
 
-Sprint: 12
+Sprint: 13
 
 Priority: P1
 
@@ -2899,7 +2910,7 @@ Acceptance Criteria:
 
 ## OB-007. Login Page Pitch Says "All 8 Teams" When There Are 12
 
-Sprint: 12
+Sprint: 13
 
 Priority: P1
 
@@ -2920,7 +2931,7 @@ Acceptance Criteria:
 
 ## OB-008. Registration Form Has Redundant "Confirm Password" Field
 
-Sprint: 12
+Sprint: 13
 
 Priority: P1
 
@@ -2942,7 +2953,7 @@ Acceptance Criteria:
 
 ## OB-009. Wizard Rules Step Shows No Fantasy Point Values
 
-Sprint: 12
+Sprint: 13
 
 Priority: P1
 
@@ -2963,7 +2974,7 @@ Acceptance Criteria:
 
 ## OB-010. Wizard Progress Bar Is Misleading for Replay Users
 
-Sprint: 13 (backlog)
+Sprint: 14
 
 Priority: P1
 
@@ -2984,7 +2995,7 @@ Acceptance Criteria:
 
 ## OB-011. Draft Date Picker Has No Season-Anchor Guidance
 
-Sprint: 13 (backlog)
+Sprint: 14
 
 Priority: P2
 
@@ -3201,7 +3212,7 @@ Files: Same as UX-047 (ProposeTradeForm or `trades/new/page.tsx`)
 
 ## UX-049. "Free Agents" Not Accessible from Top-Level Team Nav
 
-Sprint: 13 (deferred)
+Sprint: 14
 
 Priority: P2
 
@@ -3242,7 +3253,7 @@ Files: `app/team/[teamId]/TeamNav.tsx`, `app/team/[teamId]/roster/RosterManager.
 
 ## UX-050. Win Probability Bar Percentages Are Unlabeled in DuelHero
 
-Sprint: 13 (deferred)
+Sprint: 14
 
 Priority: P2
 

@@ -113,7 +113,9 @@ Sprint 6 is complete (7/7). Sprint 7 is complete (3/4 items done — #11 Storyli
 
 **Sprint 12 (Pre-Beta Polish) is COMPLETE (Jun 21, 2026).** Shipped: BF-004 lineup UTIL slot fix ✅; UX-043 landing page jargon reduction ✅; UX-039 Claim vs Add tooltips ✅; UX-038/040/042/044 UI polish ✅; DATA-002 roster update script ✅. **MVP readiness: ~99%.** All critical bugs cleared. DATA-002 script ready (waits on HockeyTech rosters). Ready for Jul 14 beta invites. Full plan in `roadmap-sprints.md`.
 
-**Sprint 13 (UX Audit + Onboarding First-Run) is PLANNED.** 14 items from two sources: Pass 1/2 end-user walkthrough (in-season UX bugs — BF-008 negative timestamps, BF-009 analysis nav, UX-046/047/048 matchup and trade friction) plus Pass 5 wizard/auth critique (OB-001–009). 6 P0 items ship first, 8 P1 items follow. Full plan in `roadmap-sprints.md`.
+**Sprint 13 (UX Audit + Onboarding First-Run) is IN PROGRESS.** 14 items from two sources: Pass 1/2 end-user walkthrough (in-season UX bugs — BF-008 negative timestamps, BF-009 analysis nav, UX-046/047/048 matchup and trade friction) plus Pass 5 wizard/auth critique (OB-001–009). 6 P0 items ship first, 8 P1 items follow. Full plan in `roadmap-sprints.md`.
+
+**Sprint 14 (Post-Launch Polish + Emotional Engagement) is PLANNED.** Items deferred from Sprint 13 (OB-010, OB-011, UX-049, UX-050) plus emotional-engagement follow-through: UX-045 rivalry celebration moment (`RIVALRY_WIN` notification), UX-032 "EDGE" jargon fix, UX-033 "NO GAMES YET" context. Full plan in `roadmap-sprints.md`.
 
 **Shipped (Sprint 6 — all complete):**
 - **League Onboarding (#2)** · ✅ Welcome flow, 6-step wizard, manager draft prep guide; `User.onboardingCompletedAt` schema field. (Sprint 3)
@@ -154,9 +156,9 @@ All sprints from 7–12 are complete and shipped. Detailed plans in `roadmap-spr
 - **Sprint 11a & 11b** ✅ — UX Polish (24 items: vocab, nav, wizard, empty states)
 - **Sprint 12** ✅ — Pre-Beta Polish (5 items: BF-004, UX-043/039/038/040/042/044, DATA-002)
 
-**Current Status:** MVP readiness ~99% · All P0 bugs cleared · 202/202 tests pass · Ready for Jul 14 beta invites.
+**Current Status:** Sprint 13 IN PROGRESS · MVP readiness ~99% · All P0 bugs cleared · 202/202 tests pass · Ready for Jul 14 beta invites.
 
-**Post-Launch Backlog:** Trade System (#7, shipped Sprint 6), FAAB (#6 — defer to 2027-28 when commissioners request), Growth analytics (GR-001/002/003/004), push notifications, multi-season library (#12), player trends (#23), keeper/dynasty (#19/#20), native apps, AI features. See `roadmap-sprints.md` for details.
+**Post-Launch Backlog:** FAAB (#6 — defer to 2027-28 when commissioners request), Growth analytics (GR-001/002/003/004), push notifications, multi-season library (#12), player trends (#23), keeper/dynasty (#19/#20), native apps, AI features. See `roadmap-sprints.md` for details.
 
 ---
 

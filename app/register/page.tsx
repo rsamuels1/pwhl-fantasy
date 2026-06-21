@@ -10,7 +10,6 @@ export default function RegisterPage() {
   const [email, setEmail] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [password, setPassword] = useState("");
-  const [confirm, setConfirm] = useState("");
   const [status, setStatus] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -23,10 +22,6 @@ export default function RegisterPage() {
     event.preventDefault();
     setStatus(null);
 
-    if (password !== confirm) {
-      setStatus("Passwords don't match.");
-      return;
-    }
     if (password.length < 8) {
       setStatus("Password must be at least 8 characters.");
       return;
@@ -131,23 +126,10 @@ export default function RegisterPage() {
               />
             </label>
 
-            <label style={labelStyle}>
-              Confirm password
-              <input
-                style={inputStyle}
-                type="password"
-                value={confirm}
-                onChange={(e) => setConfirm(e.target.value)}
-                required
-                placeholder="Same password again"
-                autoComplete="new-password"
-              />
-            </label>
-
             <button
               type="submit"
               style={buttonStyle}
-              disabled={loading || !email || !password || !confirm}
+              disabled={loading || !email || !password}
             >
               {loading ? "Creating account…" : "Create account →"}
             </button>

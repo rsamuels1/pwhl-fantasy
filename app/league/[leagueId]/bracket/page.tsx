@@ -9,10 +9,10 @@ import type { Matchup } from "@prisma/client";
 
 function RaceChip({ info }: { info: RaceInfo }) {
   if (info.status === "clinched") {
-    return <span className="chip-clinched" style={{ flexShrink: 0 }}>✓ CLINCHED</span>;
+    return <span className="chip-clinched" style={{ flexShrink: 0 }}>CLINCHED</span>;
   }
   if (info.status === "eliminated") {
-    return <span className="chip-eliminated" style={{ flexShrink: 0 }}>✗ ELIM</span>;
+    return <span className="chip-eliminated" style={{ flexShrink: 0 }}>ELIM</span>;
   }
   if (info.status === "bubble") {
     return <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 4, background: "rgba(214,169,78,0.12)", border: "1px solid rgba(214,169,78,0.28)", color: "#e3c989", flexShrink: 0 }}>BUBBLE</span>;
@@ -75,7 +75,7 @@ export default async function PlayoffsPage({
     hasPlayoffs ? "In Progress" : "Regular Season";
 
   const statusColor = hasPlayoffs
-    ? (league.playoffStatus === "COMPLETE" ? "#34d399" : "#818cf8")
+    ? (league.playoffStatus === "COMPLETE" ? "#5fa98c" : "#818cf8")
     : "#94a3b8";
 
   return (
@@ -103,7 +103,7 @@ export default async function PlayoffsPage({
             border: "1px solid var(--accent-border)",
             fontSize: 13, color: "var(--muted)",
           }}>
-            <span style={{ color: "#c9b6ff", fontWeight: 700 }}>🏆 {teamsInPlayoff} teams qualify</span>
+            <span style={{ color: "#c9b6ff", fontWeight: 700 }}>{teamsInPlayoff} teams qualify</span>
             {topSeedsWithBye > 0 && (
               <>
                 <span style={{ color: "#334155" }}>·</span>
@@ -113,7 +113,7 @@ export default async function PlayoffsPage({
             {totalWeeks > 0 && (
               <>
                 <span style={{ color: "#334155" }}>·</span>
-                <span style={{ color: weeksRemaining === 0 ? "#34d399" : "#94a3b8" }}>
+                <span style={{ color: weeksRemaining === 0 ? "#5fa98c" : "#94a3b8" }}>
                   {weeksRemaining === 0 ? "Season complete" : `${weeksRemaining} week${weeksRemaining !== 1 ? "s" : ""} remaining`}
                 </span>
               </>

@@ -83,18 +83,32 @@ export async function getBracket(
     if (matchup.homeScore === null || matchup.awayScore === null || !matchup.round) continue;
     const roundIndex = matchup.round - 1;
     if (roundIndex >= bracket.rounds.length) continue;
+    // Match by both team IDs to eliminate the ambiguity of a one-sided OR find.
     const bracketMatchup = bracket.rounds[roundIndex].find(
       (m) =>
-        m.homeTeam?.fantasyTeamId === matchup.homeTeamId ||
-        m.awayTeam?.fantasyTeamId === matchup.homeTeamId
+        (m.homeTeam?.fantasyTeamId === matchup.homeTeamId &&
+          m.awayTeam?.fantasyTeamId === matchup.awayTeamId) ||
+        (m.homeTeam?.fantasyTeamId === matchup.awayTeamId &&
+          m.awayTeam?.fantasyTeamId === matchup.homeTeamId)
     );
     if (!bracketMatchup) continue;
-    bracketMatchup.homeScore = matchup.homeScore;
-    bracketMatchup.awayScore = matchup.awayScore;
-    if (matchup.homeScore > matchup.awayScore) {
-      bracketMatchup.winner = bracketMatchup.homeTeam ?? undefined;
-    } else if (matchup.awayScore > matchup.homeScore) {
-      bracketMatchup.winner = bracketMatchup.awayTeam ?? undefined;
+    // Swap scores when the bracket assigned teams in the opposite order from the DB row.
+    const isFlipped = bracketMatchup.homeTeam?.fantasyTeamId === matchup.awayTeamId;
+    bracketMatchup.homeScore = isFlipped ? matchup.awayScore : matchup.homeScore;
+    bracketMatchup.awayScore = isFlipped ? matchup.homeScore : matchup.awayScore;
+    // Determine winner from original DB scores (not swapped) so the winner is always correct
+    if (!isFlipped) {
+      if (matchup.homeScore! > matchup.awayScore!) {
+        bracketMatchup.winner = bracketMatchup.homeTeam ?? undefined;
+      } else if (matchup.awayScore! > matchup.homeScore!) {
+        bracketMatchup.winner = bracketMatchup.awayTeam ?? undefined;
+      }
+    } else {
+      if (matchup.homeScore! > matchup.awayScore!) {
+        bracketMatchup.winner = bracketMatchup.awayTeam ?? undefined;
+      } else if (matchup.awayScore! > matchup.homeScore!) {
+        bracketMatchup.winner = bracketMatchup.homeTeam ?? undefined;
+      }
     }
   }
 

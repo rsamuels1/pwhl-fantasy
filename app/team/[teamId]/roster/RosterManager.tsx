@@ -66,11 +66,11 @@ const SLOT_ORDER: Record<string, number> = {
   FORWARD: 0, DEFENSE: 1, GOALIE: 2, UTIL: 3, BENCH: 4, IR: 5,
 };
 const SLOT_COLORS: Record<string, string> = {
-  FORWARD: "#60a5fa", DEFENSE: "#34d399", GOALIE: "#f59e0b",
+  FORWARD: "#60a5fa", DEFENSE: "#5fa98c", GOALIE: "#f59e0b",
   UTIL: "#a78bfa", BENCH: "#64748b", IR: "#ef4444",
 };
 const POS_COLORS: Record<string, string> = {
-  FORWARD: "#60a5fa", DEFENSE: "#34d399", GOALIE: "#f59e0b",
+  FORWARD: "#60a5fa", DEFENSE: "#5fa98c", GOALIE: "#f59e0b",
 };
 
 type Tab = "roster" | "freeAgents" | "waiverWire";
@@ -221,9 +221,9 @@ export default function RosterManager({
       {(error || successMsg) && (
         <div style={{
           padding: "10px 16px", borderRadius: 10, fontSize: 13,
-          background: error ? "rgba(248,113,113,0.1)" : "rgba(52,211,153,0.1)",
-          border: `1px solid ${error ? "rgba(248,113,113,0.25)" : "rgba(52,211,153,0.25)"}`,
-          color: error ? "#f87171" : "#6ee7b7",
+          background: error ? "rgba(209,139,127,0.1)" : "rgba(95,169,140,0.1)",
+          border: `1px solid ${error ? "rgba(209,139,127,0.25)" : "rgba(95,169,140,0.25)"}`,
+          color: error ? "#d18b7f" : "#5fa98c",
         }}>
           {error ?? successMsg}
         </div>
@@ -532,7 +532,7 @@ function PlayerCard({ player, onDrop, disabled }: {
         ))}
       </div>
       {onDrop && (
-        <button onClick={onDrop} disabled={disabled} style={{ fontSize: 11, fontWeight: 600, minHeight: 44, padding: "0 12px", borderRadius: 8, border: "1px solid rgba(248,113,113,0.3)", cursor: "pointer", background: "rgba(248,113,113,0.06)", color: "#f87171", opacity: disabled ? 0.5 : 1, marginTop: "auto" }}>
+        <button onClick={onDrop} disabled={disabled} style={{ fontSize: 11, fontWeight: 600, minHeight: 44, padding: "0 12px", borderRadius: 8, border: "1px solid rgba(209,139,127,0.3)", cursor: "pointer", background: "rgba(209,139,127,0.06)", color: "#d18b7f", opacity: disabled ? 0.5 : 1, marginTop: "auto" }}>
           Drop
         </button>
       )}
@@ -668,7 +668,7 @@ function RosterRow({ player, index, readonly, onDrop, disabled }: {
       )}
 
       {!readonly && (
-        <button onClick={onDrop} disabled={disabled} title="Drop player" style={{ fontSize: 11, fontWeight: 600, minHeight: 44, padding: "0 12px", borderRadius: 6, border: "1px solid rgba(248,113,113,0.3)", cursor: "pointer", background: "rgba(248,113,113,0.08)", color: "#f87171", opacity: disabled ? 0.5 : 1 }}>
+        <button onClick={onDrop} disabled={disabled} title="Drop player" style={{ fontSize: 11, fontWeight: 600, minHeight: 44, padding: "0 12px", borderRadius: 6, border: "1px solid rgba(209,139,127,0.3)", cursor: "pointer", background: "rgba(209,139,127,0.08)", color: "#d18b7f", opacity: disabled ? 0.5 : 1 }}>
           Drop
         </button>
       )}
