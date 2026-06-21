@@ -7,6 +7,21 @@ import Link from "next/link";
 import WelcomeFlow from "@/components/WelcomeFlow";
 import { checkAndEmitScheduledNotifications } from "@/lib/services/notification-service";
 
+/* ── Helpers ─────────────────────────────────────────────────────────────── */
+
+// Two-letter crest from a team name: first letters of first two words,
+// or the first two characters of a single-word name.
+function teamCrest(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  const raw = parts.length > 1 ? parts[0][0] + parts[1][0] : name.trim().slice(0, 2);
+  return raw.toUpperCase();
+}
+
+const RECORD_COLOR = { win: "#5fa98c", loss: "#d18b7f", neutral: "#c7d2e0" } as const;
+const BAR_COLOR    = { win: "#5fa98c", loss: "rgba(209,139,127,0.7)", neutral: "#a78bfa" } as const;
+
+/* ── Matchup score block ─────────────────────────────────────────────────── */
+
 function MatchupHero({ summary, teamName }: { summary: MatchupQuickSummary; teamName: string }) {
   const isActive   = summary.status === "active";
   const isComplete = summary.status === "complete";
@@ -14,72 +29,82 @@ function MatchupHero({ summary, teamName }: { summary: MatchupQuickSummary; team
   const opponents  = summary.teamsCount - 1; // how many teams you play each week
 
   const label = isActive ? "Active" : isComplete ? "Final" : "Upcoming";
-  const accentColor = isActive ? "#6366f1" : "#475569";
-
-  // Win rate as a fraction of opponents (0–1)
   const winRate = opponents > 0 ? summary.wins / opponents : 0;
   const recordLabel = `${summary.wins}–${summary.losses}${summary.ties > 0 ? `–${summary.ties}` : ""}`;
-  const isWinningRecord = summary.wins > summary.losses;
+
+  const tone: keyof typeof RECORD_COLOR =
+    summary.wins > summary.losses ? "win" : summary.losses > summary.wins ? "loss" : "neutral";
+
+  const scoreBg = isActive
+    ? "linear-gradient(135deg, rgba(124,58,237,0.16), rgba(124,58,237,0.05))"
+    : "rgba(150,160,200,0.04)";
+  const scoreBorder = isActive ? "rgba(124,58,237,0.28)" : "var(--border)";
 
   return (
-    <div style={{
-      padding: "14px 16px", borderRadius: 12,
-      background: isActive ? "rgba(99,102,241,0.09)" : "rgba(255,255,255,0.04)",
-      border: `1px solid ${isActive ? "rgba(99,102,241,0.25)" : "rgba(148,163,184,0.1)"}`,
-    }}>
-      <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 8, color: accentColor }}>
-        Week {summary.week} · {label}
+    <div style={{ padding: 16, borderRadius: 14, background: scoreBg, border: `1px solid ${scoreBorder}` }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+        <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: isActive ? "#a78bfa" : "var(--dim)" }}>
+          Week {summary.week} · {label}
+        </span>
       </div>
 
       {(isActive || isComplete) && hasScores ? (
         <>
-          {/* Score + record row */}
-          <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 10 }}>
+          {/* Score + record */}
+          <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 12 }}>
             <div>
-              <div style={{ fontSize: 11, color: "#64748b", marginBottom: 2 }}>Your score</div>
-              <div style={{ fontSize: 28, fontWeight: 900, lineHeight: 1, color: "#e2e8f0" }}>
+              <div style={{ fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--faint)", marginBottom: 3 }}>Your score</div>
+              <div className="font-stats" style={{ fontSize: 42, fontWeight: 700, lineHeight: 0.78, color: "#f6f7fb" }}>
                 {summary.myScore.toFixed(1)}
               </div>
             </div>
             <div style={{ textAlign: "right" }}>
-              <div style={{ fontSize: 11, color: "#64748b", marginBottom: 2 }}>vs field</div>
-              <div style={{ fontSize: 22, fontWeight: 800, lineHeight: 1 }}>
-                <span style={{ color: isWinningRecord ? "#34d399" : summary.losses > summary.wins ? "#f87171" : "#94a3b8" }}>
-                  {recordLabel}
-                </span>
-              </div>
+              <div style={{ fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--faint)", marginBottom: 3 }}>This week vs field</div>
+              {summary.wins === -1 ? (
+                /* Setup phase — no games played yet */
+                <>
+                  <div className="font-stats" style={{ fontSize: 30, fontWeight: 700, lineHeight: 0.8, color: "var(--faint)" }}>
+                    —
+                  </div>
+                  <div style={{ fontSize: 9, color: "var(--faint)", marginTop: 4, letterSpacing: "0.02em" }}>
+                    No games yet
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="font-stats" style={{ fontSize: 30, fontWeight: 700, lineHeight: 0.8, color: RECORD_COLOR[tone] }}>
+                    {recordLabel}
+                  </div>
+                  <div style={{ fontSize: 9, color: "var(--faint)", marginTop: 4, letterSpacing: "0.02em" }} title="Record against all other teams this week in Victory Points format">
+                    Record
+                  </div>
+                </>
+              )}
             </div>
           </div>
 
-          {/* Win rate bar */}
-          <div>
-            <div style={{ fontSize: 10, color: "#64748b", marginBottom: 3 }}>
-              {isComplete ? "Final record" : "Current record"} · {summary.wins} of {opponents} opponents outscored
+          {/* Win-rate bar */}
+          <div style={{ marginTop: 13 }}>
+            <div style={{ height: 6, borderRadius: 4, background: "rgba(150,160,200,0.14)", overflow: "hidden", display: "flex" }}>
+              <div style={{ width: `${Math.round(winRate * 100)}%`, background: BAR_COLOR[tone] }} />
             </div>
-            <div style={{ height: 5, borderRadius: 3, background: "rgba(255,255,255,0.07)", overflow: "hidden" }}>
-              <div style={{
-                height: "100%",
-                width: `${Math.round(winRate * 100)}%`,
-                borderRadius: 3,
-                background: isWinningRecord
-                  ? "linear-gradient(90deg, #34d399, #6ee7b7)"
-                  : "linear-gradient(90deg, #6366f1, #818cf8)",
-              }} />
+            <div style={{ fontSize: 10.5, color: "var(--dim)", marginTop: 7 }}>
+              {summary.wins} of {opponents} opponents outscored
             </div>
           </div>
         </>
       ) : (
         /* Upcoming — no scores yet */
         <div>
-          <div style={{ fontSize: 14, fontWeight: 700, color: "#e2e8f0", marginBottom: 4 }}>{teamName}</div>
-          <div style={{ fontSize: 12, color: "#64748b" }}>
-            vs all {opponents} teams · Week {summary.week}
-          </div>
+          <div style={{ fontSize: 14, fontWeight: 700, color: "#f6f7fb", marginBottom: 4 }}>{teamName}</div>
+          <div style={{ fontSize: 12, color: "var(--dim)" }}>vs all {opponents} teams · Week {summary.week}</div>
         </div>
       )}
     </div>
   );
 }
+
+/* ── Page ────────────────────────────────────────────────────────────────── */
 
 export default async function DashboardPage() {
   const user = await requireAuth("/dashboard");
@@ -138,7 +163,7 @@ export default async function DashboardPage() {
     // Playoffs are live — highest priority
     if (league.playoffStatus === "IN_PROGRESS") {
       actions.push({
-        label: "🏆 Playoffs are live — check your bracket!",
+        label: "Playoffs are live — check your bracket",
         href: `/league/${team.leagueId}/bracket`,
         teamName: league.name,
       });
@@ -147,7 +172,7 @@ export default async function DashboardPage() {
     // Draft live right now
     if (league.draft?.status === "IN_PROGRESS") {
       actions.push({
-        label: "🎯 Draft is live right now!",
+        label: "Draft is live right now",
         href: `/draft/${team.leagueId}?team=${team.id}`,
         teamName: team.name,
       });
@@ -195,7 +220,7 @@ export default async function DashboardPage() {
     // Tight week — your weekly field record is close (within one game)
     if (summary?.status === "active" && summary.myScore > 0 && Math.abs(summary.wins - summary.losses) <= 1) {
       actions.push({
-        label: `⚡ Tight week — you're ${summary.wins}–${summary.losses}${summary.ties > 0 ? `–${summary.ties}` : ""} vs the field`,
+        label: `Tight week — you're ${summary.wins}–${summary.losses}${summary.ties > 0 ? `–${summary.ties}` : ""} vs the field`,
         href: `/team/${team.id}/matchup`,
         teamName: team.name,
       });
@@ -214,6 +239,9 @@ export default async function DashboardPage() {
     }
   });
 
+  const inSeason = teams.filter((t) => t.league.status === "IN_SEASON").length;
+  const summaryLine = `${teams.length} ${teams.length === 1 ? "franchise" : "franchises"} · ${inSeason} in season · ${teams.length - inSeason} complete`;
+
   return (
     <main>
       <section className="page-width" style={{ display: "flex", flexDirection: "column", gap: 24, paddingBottom: 48 }}>
@@ -222,12 +250,15 @@ export default async function DashboardPage() {
         <header style={{ marginTop: 16 }}>
           {hasTeams ? (
             <>
-              <p className="hero-eyebrow">My Leagues</p>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap", margin: "8px 0 0" }}>
-                <h1 style={{ margin: 0, fontSize: "clamp(1.4rem, 3vw, 2rem)" }}>
-                  {greeting}, {user.displayName}.
-                </h1>
-                <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
+              <p className="hero-eyebrow" style={{ color: "#a78bfa", letterSpacing: "0.2em" }}>My Leagues</p>
+              <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 16, flexWrap: "wrap", margin: "10px 0 0" }}>
+                <div>
+                  <h1 style={{ margin: 0, fontSize: "clamp(1.6rem, 3.2vw, 2.4rem)", fontWeight: 900, letterSpacing: "-0.025em", lineHeight: 1 }}>
+                    {greeting}, {user.displayName}.
+                  </h1>
+                  <p style={{ margin: "11px 0 0", fontSize: 14, color: "var(--dim)" }}>{summaryLine}</p>
+                </div>
+                <div style={{ display: "flex", gap: 10, flexShrink: 0 }}>
                   <Link href="/create-league" className="button-primary">+ New League</Link>
                   <Link href="/join-league" className="button-secondary">Join League</Link>
                 </div>
@@ -235,7 +266,7 @@ export default async function DashboardPage() {
             </>
           ) : (
             <>
-              <p className="hero-eyebrow">PWHL GM</p>
+              <p className="hero-eyebrow" style={{ color: "#a78bfa", letterSpacing: "0.2em" }}>PWHL GM</p>
               <h1 style={{ margin: "8px 0 0" }}>Welcome, {user.displayName}.</h1>
               <p className="hero-text" style={{ marginTop: 8 }}>Join a league or create one to get started.</p>
               <div className="hero-actions" style={{ marginTop: 20 }}>
@@ -254,93 +285,130 @@ export default async function DashboardPage() {
 
         {/* ── Action items ── */}
         {actions.length > 0 && (
-          <section style={{
-            padding: "12px 16px", borderRadius: 12,
-            background: "rgba(245,158,11,0.07)",
-            border: "1px solid rgba(245,158,11,0.2)",
-            display: "flex", flexDirection: "column", gap: 8,
-          }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: "#f59e0b", textTransform: "uppercase", letterSpacing: "0.06em" }}>
-              Action needed
+          <section className="alert-amber" style={{ display: "flex", flexDirection: "column", gap: 11 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#e3c989" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 9v4" /><path d="M12 17h.01" /><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" />
+              </svg>
+              <span style={{ fontSize: 11.5, fontWeight: 800, letterSpacing: "0.14em", textTransform: "uppercase", color: "#e3c989" }}>Action needed</span>
             </div>
             {actions.map((a, idx) => (
-              <div key={idx} style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <span style={{ fontSize: 10, color: "#f59e0b" }}>›</span>
-                <Link href={a.href} style={{ fontSize: 13, color: "#e2e8f0", textDecoration: "none" }}>
-                  {a.label}
-                  <span style={{ color: "#64748b", marginLeft: 6 }}>({a.teamName})</span>
-                </Link>
-              </div>
+              <Link key={idx} href={a.href} style={{ display: "flex", alignItems: "center", gap: 12, textDecoration: "none" }}>
+                <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#e3c989", flexShrink: 0 }} />
+                <span style={{ fontSize: 14, color: "#eef1f8", fontWeight: 500 }}>{a.label}</span>
+                <span style={{ fontSize: 12, color: "var(--dim)" }}>{a.teamName}</span>
+                <span style={{ marginLeft: "auto", fontSize: 12.5, fontWeight: 700, color: "#e3c989", whiteSpace: "nowrap" }}>Open →</span>
+              </Link>
             ))}
           </section>
         )}
 
-        {/* ── Your teams ── */}
+        {/* ── Your franchises ── */}
         {hasTeams && (
           <section>
-            <div className="panel-headline" style={{ marginBottom: 14 }}>Your Franchises</div>
-            <div className="grid-2" style={{ gap: 16 }}>
+            <div className="section-header" style={{ marginBottom: 16 }}>
+              <span className="section-accent" />
+              <span style={{ fontSize: 19, fontWeight: 800, letterSpacing: "-0.01em", color: "var(--text)" }}>Your Franchises</span>
+              <span style={{ fontSize: 12, color: "var(--faint)", fontWeight: 600 }}>{teams.length} active</span>
+            </div>
+            <div className="grid-2" style={{ gap: 20, alignItems: "stretch" }}>
               {teams.map((team, i) => {
                 const summary = summaries[i];
                 const topPerformers = topPerformersList[i];
+                const isActive = summary?.status === "active";
+                const crestBg = isActive
+                  ? "linear-gradient(135deg,#7c3aed,#4c1d95)"
+                  : "linear-gradient(135deg,#3a4258,#222a3d)";
                 return (
-                  <div key={team.id} className="team-card" style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-                    <div>
-                      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-                        <h3 style={{ margin: 0, fontSize: 17, fontWeight: 700 }}>{team.name}</h3>
-                        {!team.isOwned && (
-                          <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 4, background: "rgba(168,85,247,0.15)", color: "#d8b4fe", textTransform: "uppercase", letterSpacing: "0.5px" }}>
-                            Commissioner
-                          </span>
-                        )}
+                  <div
+                    key={team.id}
+                    className="team-card"
+                    style={{ display: "flex", flexDirection: "column", gap: 0, padding: 22, borderRadius: 18 }}
+                  >
+                    {/* Card head */}
+                    <div style={{ display: "flex", alignItems: "flex-start", gap: 13, marginBottom: 16 }}>
+                      <span style={{
+                        width: 44, height: 44, borderRadius: 12, flexShrink: 0,
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        fontSize: 17, fontWeight: 800, color: "#fff", background: crestBg,
+                      }}>
+                        {teamCrest(team.name)}
+                      </span>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                          <h3 style={{ margin: 0, fontSize: 16.5, fontWeight: 800, letterSpacing: "-0.01em", color: "#f6f7fb", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                            {team.name}
+                          </h3>
+                          {!team.isOwned && (
+                            <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 7px", borderRadius: 5, background: "var(--accent-dim)", color: "#c9b6ff", textTransform: "uppercase", letterSpacing: "0.05em", flexShrink: 0 }}>
+                              Commish
+                            </span>
+                          )}
+                        </div>
+                        <div className="team-meta" style={{ fontSize: 11.5, marginTop: 3, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                          {team.league.name} · Season {team.league.season}
+                        </div>
                       </div>
-                      <p className="team-meta" style={{ marginTop: 2, display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                        <span>{team.league.name} · Season {team.league.season}</span>
-                        <LeagueStatusChip status={team.league.status} />
-                      </p>
+                      <LeagueStatusChip status={team.league.status} />
                     </div>
 
+                    {/* Score block */}
                     {summary ? (
                       <MatchupHero summary={summary} teamName={team.name} />
                     ) : (
                       <div style={{
-                        padding: "12px 14px", borderRadius: 10,
-                        background: "rgba(255,255,255,0.02)",
-                        border: "1px solid rgba(148,163,184,0.08)",
-                        fontSize: 13, color: "#475569",
+                        padding: 16, borderRadius: 14,
+                        background: "rgba(150,160,200,0.04)", border: "1px solid var(--border)",
+                        fontSize: 13, color: "var(--faint)",
                       }}>
                         No matchup scheduled yet
                       </div>
                     )}
 
-                    {topPerformers.length > 0 && (
-                      <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-                        <span style={{ fontSize: 11, color: "#f59e0b" }}>🔥</span>
-                        {topPerformers.map((p, j) => (
-                          <span key={j} style={{ fontSize: 12, color: "#94a3b8" }}>
-                            <span style={{ color: "#e2e8f0", fontWeight: 600 }}>{p.name}</span>
-                            {" "}
-                            <span style={{ color: "#6366f1", fontWeight: 700 }}>{p.points} pts</span>
-                            {j < topPerformers.length - 1 && <span style={{ color: "#334155", marginLeft: 10 }}>·</span>}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-
-                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                      {team.isOwned && (
+                    {/* Detail row — top performers */}
+                    <div style={{ minHeight: 54, marginTop: 14, marginBottom: 16 }}>
+                      {topPerformers.length > 0 ? (
                         <>
-                          <Link href={`/team/${team.id}/matchup`} className="button-primary">
+                          <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--faint)", marginBottom: 8 }}>
+                            Top performers
+                          </div>
+                          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                            {topPerformers.map((p, j) => (
+                              <div key={j} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 9 }}>
+                                <span style={{ fontSize: 12.5, color: "#dfe3ee", fontWeight: 500, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                  {p.name}
+                                </span>
+                                <span className="font-stats" style={{ fontSize: 14, fontWeight: 700, color: "#a78bfa", flexShrink: 0 }}>{p.points} pts</span>
+                              </div>
+                            ))}
+                          </div>
+                        </>
+                      ) : (
+                        <div style={{ fontSize: 12.5, color: "var(--faint)", lineHeight: 1.5 }}>
+                          No scoring yet this period.
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Actions — pinned to bottom */}
+                    <div style={{ marginTop: "auto", display: "flex", flexDirection: "column", gap: 9 }}>
+                      {team.isOwned ? (
+                        <>
+                          <Link href={`/team/${team.id}/matchup`} className="button-primary" style={{ width: "100%", textAlign: "center" }}>
                             My Matchup →
                           </Link>
-                          <Link href={`/team/${team.id}/lineup`} className="button-secondary">Set Lineup</Link>
+                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 9 }}>
+                            <Link href={`/team/${team.id}/lineup`} className="button-secondary" style={{ textAlign: "center" }}>Set Lineup</Link>
+                            <Link href={`/league/${team.leagueId}`} className="button-secondary" style={{ textAlign: "center" }}>League</Link>
+                          </div>
                         </>
-                      )}
-                      <Link href={`/league/${team.leagueId}`} className="button-secondary">
-                        {team.isOwned ? "League" : "View League →"}
-                      </Link>
-                      {!team.isOwned && (
-                        <Link href={`/league/${team.leagueId}/admin`} className="button-secondary">Admin Panel</Link>
+                      ) : (
+                        <>
+                          <Link href={`/league/${team.leagueId}`} className="button-primary" style={{ width: "100%", textAlign: "center" }}>
+                            View League →
+                          </Link>
+                          <Link href={`/league/${team.leagueId}/admin`} className="button-secondary" style={{ textAlign: "center" }}>Admin Panel</Link>
+                        </>
                       )}
                     </div>
                   </div>
@@ -350,25 +418,24 @@ export default async function DashboardPage() {
           </section>
         )}
 
-
       </section>
     </main>
   );
 }
 
 function LeagueStatusChip({ status }: { status: string }) {
-  const map: Record<string, { label: string; color: string; bg: string }> = {
-    PRE_DRAFT:  { label: "Pre-draft",  color: "#f59e0b", bg: "rgba(245,158,11,0.1)" },
-    IN_SEASON:  { label: "In Season",  color: "#34d399", bg: "rgba(52,211,153,0.1)" },
-    COMPLETE:   { label: "Complete",   color: "#64748b", bg: "rgba(100,116,139,0.1)" },
+  const map: Record<string, { label: string; color: string; bg: string; border: string }> = {
+    PRE_DRAFT: { label: "Pre-draft", color: "#e3c989", bg: "rgba(214,169,78,0.12)", border: "rgba(214,169,78,0.30)" },
+    IN_SEASON: { label: "In Season", color: "#7fc2a6", bg: "rgba(95,169,140,0.12)", border: "rgba(95,169,140,0.30)" },
+    COMPLETE:  { label: "Complete",  color: "#9aa3bd", bg: "rgba(150,160,200,0.08)", border: "rgba(150,160,200,0.18)" },
   };
   const chip = map[status];
   if (!chip) return null;
   return (
     <span style={{
-      fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 20,
-      color: chip.color, background: chip.bg,
-      letterSpacing: "0.04em", textTransform: "uppercase",
+      fontSize: 9.5, fontWeight: 800, padding: "5px 9px", borderRadius: 20,
+      color: chip.color, background: chip.bg, border: `1px solid ${chip.border}`,
+      letterSpacing: "0.1em", textTransform: "uppercase", whiteSpace: "nowrap", flexShrink: 0,
     }}>
       {chip.label}
     </span>
