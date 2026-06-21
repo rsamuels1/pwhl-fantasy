@@ -2316,6 +2316,432 @@ Acceptance Criteria:
 
 ---
 
+# Design Critique Findings — Pass 3 & 4 (June 2026)
+
+Source: `docs/branding/mockups/Pass34-design-critic.md` — Pass 3 (active-season design critic) and Pass 4 (fantasy newcomer click-through). Twenty net-new issues identified that are not covered by existing Sprint 10/11 tickets.
+
+**Summary:** Three P0 tickets address actively misleading UI that reads like bugs or misattribution to new users (VTF record looks like 0-7 season loss, season record looks like hockey score, 0-0-7 tie display looks broken). Eight P1 tickets add missing labels and education for core UX surfaces (standings tooltips, projection stat labels, button hierarchy, rival prominence). Remaining 12 P2–P3 items are polish and localization deferred to post-launch backlog.
+
+---
+
+## UX-024. VTF Weekly Record Is Unlabeled on the Dashboard Team Card
+
+Sprint: 11
+Priority: P0
+Effort: S
+
+Issue: The most prominent number on a struggling manager's dashboard card is a bold red "0-7." To anyone unfamiliar with Victory Points, this reads as a season record (zero wins, seven losses). The label "vs field" appears as secondary text with no tooltip or callout.
+
+User story: As a first-time manager, I want the weekly record on my dashboard card to be clearly labeled as "this week vs the field" so that I don't think I've lost seven games.
+
+Files: `app/dashboard/page.tsx`, `components/TeamMatchupCard.tsx` (or equivalent dashboard card)
+
+Acceptance Criteria:
+- AC-001: The W-L record on the dashboard team card includes a visible label: "This week vs field" or equivalent.
+- AC-002: On hover (desktop) or tap (mobile), a tooltip explains the VTF format in one sentence.
+- AC-003: The label renders without overflow at 390px mobile.
+
+---
+
+## UX-025. Fantasy Season Record Reads as a Hockey Score in the Matchup Hero
+
+Sprint: 11
+Priority: P0
+Effort: S
+
+Issue: The matchup hero displays "3-2" (or similar) floating next to the team name with no label. A PWHL fan immediately parses this as a period score, not a fantasy win-loss record. Nothing signals that the number is a season record.
+
+User story: As a PWHL fan on the matchup page, I want my season fantasy record to be clearly labeled as a W-L record so that I don't confuse it with a hockey score.
+
+Files: `app/team/[teamId]/matchup/page.tsx`, `components/FieldHero.tsx`, `components/DuelHero.tsx`
+
+Acceptance Criteria:
+- AC-001: The season record in the matchup hero is preceded by a label: "Record: 3-2" or displayed as "3W-2L".
+- AC-002: The label is visible at the font size used in the hero card without requiring hover.
+- AC-003: The change applies to both DuelHero and FieldHero components.
+
+---
+
+## UX-026. "0-0-7" Tied Display at Week Start Looks Like a Bug
+
+Sprint: 11
+Priority: P0
+Effort: S
+
+Issue: At the start of a week before any PWHL games are played, every team has 0 FP, so all VTF matchups show as "tied." The W-L-T display renders "0–0–7". First-time users assume the app is broken when they see the Season tab showing "0–0–7" in the current week row.
+
+User story: As a manager on the Season tab at the start of a new week, I want the current week's record to show "In progress" or "No games yet" so that I don't think the scoring system is broken.
+
+Files: `app/league/[leagueId]/season/page.tsx`, `components/SeasonControls.tsx`
+
+Acceptance Criteria:
+- AC-001: When the current week's VTF record is 0-0-N (all ties, no games played yet), the Season tab renders "Week in progress" or "No games yet" instead of "0-0-7".
+- AC-002: Once at least one game has been played, the W-L-T display resumes normally.
+- AC-003: The fix applies to the Season tab period table and any other surface showing the current-week VTF record.
+
+---
+
+## UX-027. Lineup Page Projection Stats Are Unlabeled (PROJ, PPG, x2)
+
+Sprint: 11
+Priority: P1
+Effort: S
+
+Issue: Each player card on the lineup page shows three numbers in a row — "10.8 / 5.4 / x2" — with no labels, tooltips, or explanation. "PROJ" is inferable; "PPG" (points per game) and "x2" (games this week) are opaque without prior fantasy knowledge.
+
+User story: As a first-time manager on the lineup page, I want the projection stat abbreviations to be labeled so that I understand what I'm looking at.
+
+Files: `app/league/[leagueId]/lineup/LineupManager.tsx`
+
+Acceptance Criteria:
+- AC-001: Each of the three projection fields has a visible label or tooltip: "Proj FP", "Avg FP/game", "2 games this week".
+- AC-002: Labels do not require hover to read on mobile.
+- AC-003: The "x2" multiplier notation includes a brief tooltip: "Projected games for this scoring period".
+
+---
+
+## UX-028. "Starters Projected" Total Is Below the Fold on the Lineup Page
+
+Sprint: 11
+Priority: P1
+Effort: S
+
+Issue: The "Starters projected: 43.3 pts" summary bar appears at the bottom of the active-slot column, below all player cards. This is the most actionable output of the projection system (does my lineup look competitive?) but requires scrolling to see it.
+
+User story: As a manager reviewing my lineup, I want to see my starters' total projected score at the top of the active column so that I can judge lineup strength at a glance.
+
+Files: `app/league/[leagueId]/lineup/LineupManager.tsx`
+
+Acceptance Criteria:
+- AC-001: The starter total summary bar (projected FP + bench upgrade hint) renders above the first active player card, not below the last.
+- AC-002: On desktop ≥768px, the summary bar is visible without vertical scrolling.
+- AC-003: On mobile 390px, the summary bar is the first element in the active column.
+
+---
+
+## UX-029. Auto-Set and Save Lineup Button Hierarchy Is Inverted
+
+Sprint: 11
+Priority: P1
+Effort: S
+
+Issue: "Auto-set" is the large purple primary button. "Save Lineup" is the smaller dark secondary button. But "Auto-set" only stages a suggestion; "Save Lineup" commits changes. The visual hierarchy is backwards.
+
+User story: As a manager who has rearranged my lineup, I want the "Save Lineup" button to be visually primary so that I don't leave without saving my changes.
+
+Files: `app/league/[leagueId]/lineup/LineupManager.tsx`
+
+Acceptance Criteria:
+- AC-001: "Save Lineup" uses the primary button style (large, `--accent` fill).
+- AC-002: "Auto-set" uses the secondary button style (smaller, outlined, or different weight).
+- AC-003: "Auto-set" retains its disabled state when projections are unavailable.
+- AC-004: On mobile, both buttons are ≥44px touch targets and reachable without horizontal scrolling.
+
+---
+
+## UX-030. Standings Column Headers Lack Tooltips (MTCH VP, RNK VP, VP)
+
+Sprint: 11
+Priority: P1
+Effort: M
+
+Issue: The standings table has eight columns in all-caps abbreviated jargon: VP, W-L-T, MTCH VP, RNK VP, PF, STREAK, GAP. The subheader explains the VP model in one compressed line of small gray text. A new user cannot distinguish "MTCH VP" (matchup win bonus) from "RNK VP" (weekly rank bonus) without reading the rules.
+
+User story: As a new user on the standings page, I want hovering or tapping a column header to explain what that column means so that I can understand the standings without external documentation.
+
+Files: `app/league/[leagueId]/standings/page.tsx`
+
+Acceptance Criteria:
+- AC-001: All abbreviated column headers have a tooltip (desktop) or tap-to-expand label (mobile).
+- AC-002: "MTCH VP" tooltip: "VP earned from winning your head-to-head matchup this week (+2 VP)".
+- AC-003: "RNK VP" tooltip: "VP earned from your weekly fantasy score rank (1st = +2 VP, 2nd = +1 VP)".
+- AC-004: "VP" (total) tooltip: "Total Victory Points this season. VP determines playoff seeding".
+- AC-005: Tooltips do not obscure adjacent data on 390px mobile.
+
+---
+
+## UX-031. Rival Matchup Is Buried in a Collapsed Accordion
+
+Sprint: 11
+Priority: P1
+Effort: M
+
+Issue: The rivalry feature — the most emotionally resonant moment in the product — is hidden behind a collapsed accordion at the bottom of the matchup page. A manager who wins their rivalry matchup has no celebration moment, no notification, no badge. Winning your rivalry is a high-emotion event rendered as an optional footnote.
+
+User story: As a manager with a season-long rival, I want my rivalry matchup result to be surfaced prominently in or near the matchup hero so that beating my rival feels like a meaningful moment.
+
+Files: `app/team/[teamId]/matchup/page.tsx`, `components/FieldHero.tsx`, `components/DuelHero.tsx`
+
+Acceptance Criteria:
+- AC-001: When the user has a defined rival and the current week is a rivalry matchup, a rivalry callout appears in or directly below the matchup hero.
+- AC-002: The callout reads: "Your rival this week — you're 2-1 against them this season" (or result-aware: "Last week: beat your rival 48.2–41.7").
+- AC-003: The collapsed accordion is removed or replaced with an always-visible inline card.
+- AC-004: The "season series" record only displays after at least one completed matchup (show "First meeting" when 0-0-0).
+
+---
+
+## UX-032. "+8.3 EDGE" Label Is Unexplained Jargon in the Matchup Hero
+
+Sprint: Post-launch backlog
+Priority: P2
+Effort: S
+
+Issue: "PROJECTED: +8.3 EDGE" appears as the label for a projected FP lead. "Edge" is not standard fantasy sports vocabulary. The label adds confusion without clarity.
+
+User story: As a manager reviewing my matchup, I want the projected lead displayed in plain language.
+
+Files: `components/FieldHero.tsx`, `components/DuelHero.tsx`
+
+Acceptance Criteria:
+- AC-001: "EDGE" is replaced with "FP lead" or equivalent: "+8.3 FP lead" or "Leading by 8.3 projected pts".
+- AC-002: The change applies to both DuelHero and FieldHero.
+
+---
+
+## UX-033. "NO GAMES YET" Badge Has No Contextual Explanation
+
+Sprint: Post-launch backlog
+Priority: P2
+Effort: S
+
+Issue: The "NO GAMES YET" badge floats in the matchup hero with no context for whether it means "your players have no games scheduled" (actionable) or "games haven't started today" (timing only).
+
+User story: As a manager seeing the "NO GAMES YET" badge, I want to know whether I have a lineup problem or just a timing issue so that I can decide whether to act.
+
+Files: `components/FieldHero.tsx`, `components/DuelHero.tsx`
+
+Acceptance Criteria:
+- AC-001: The badge or adjacent caption distinguishes between "no games scheduled for your players" vs "games scheduled but not started yet".
+- AC-002: When timing-based: "Games start at [time]" or "Your players are live tonight".
+- AC-003: When zero games scheduled: the lineup alert strip (Z1) fires — hero badge is not the primary signal.
+
+---
+
+## UX-034. Position Badge and Slot Label Are Visually Identical in Playing Tonight
+
+Sprint: Post-launch backlog
+Priority: P2
+Effort: S
+
+Issue: In the Playing Tonight section, the roster slot label (e.g., "G") and the player's position (e.g., "G") appear side-by-side with identical styling: "Aerin Frankel G · G BOS" reads as a duplicate or typo.
+
+User story: As a manager scanning Playing Tonight, I want the roster slot and player position to be visually distinct so that I tell them apart at a glance.
+
+Files: `components/RosterStatusWidget.tsx` or equivalent
+
+Acceptance Criteria:
+- AC-001: The roster slot uses one visual treatment (badge, pill, or color); the player position uses a different treatment (plain text, italic, or different color).
+- AC-002: The two labels do not appear as identical adjacent strings.
+
+---
+
+## UX-035. Game Times Are Hardcoded to Eastern Time
+
+Sprint: Post-launch backlog
+Priority: P3
+Effort: M
+
+Issue: Game start times display as "12:00 PM EST" everywhere — hardcoded to ET. A user in Vancouver or London has to convert every game time. Low-priority daily friction for non-EST users.
+
+User story: As a user in a non-Eastern timezone, I want game times displayed in my local timezone so that I can see when my players are actually playing.
+
+Files: `app/team/[teamId]/matchup/page.tsx`, `app/team/[teamId]/schedule/page.tsx`, and any other game-time display surfaces
+
+Acceptance Criteria:
+- AC-001: Game times are rendered using the user's browser timezone via `Intl.DateTimeFormat` or `date-fns-tz`.
+- AC-002: The timezone abbreviation displays alongside the time: "12:00 PM ET" → "9:00 AM PT" for a Pacific user.
+- AC-003: No hardcoded "EST" or "ET" strings remain in user-visible game time displays.
+
+---
+
+## UX-036. Roster Stat Column Headers Have No Tooltips for Hockey Newcomers
+
+Sprint: Post-launch backlog
+Priority: P2
+Effort: M
+
+Issue: The roster table has nine columns (GP, G, A, PTS, PPP, SOG, HIT, BLK, FPTS) with no hover tooltips. Standard hockey abbreviations are invisible to casual PWHL fans. FPTS is not hockey vocabulary at all. A first-time user stops at PTS and misses FPTS entirely.
+
+User story: As a casual PWHL fan on the roster page, I want to hover or tap any stat column header to see its full name.
+
+Files: `app/team/[teamId]/roster/RosterManager.tsx`
+
+Acceptance Criteria:
+- AC-001: All nine column headers have tooltip text: "PPP — Power Play Points", "SOG — Shots on Goal", "FPTS — Fantasy Points", etc.
+- AC-002: Tooltips are accessible on mobile via tap.
+- AC-003: The same tooltip pattern applies to the free-agent table.
+
+---
+
+## UX-037. FPTS Is the Rightmost Column but the Most Important One
+
+Sprint: Post-launch backlog
+Priority: P2
+Effort: S
+
+Issue: The natural left-to-right reading order leads through six hockey stats before reaching FPTS — the actual reason a player is on or off the roster. A first-time user stops at PTS and misses FPTS.
+
+User story: As a manager scanning the roster table, I want the Fantasy Points column near the left so that the most relevant number is the first thing I see.
+
+Files: `app/team/[teamId]/roster/RosterManager.tsx`
+
+Acceptance Criteria:
+- AC-001: FPTS column appears immediately after GP (second column), not as the last column.
+- AC-002: The column order change applies to both the roster table and the free-agent table.
+- AC-003: Sort behavior is unchanged — FPTS remains sortable.
+
+---
+
+## UX-038. "WK" Games-Remaining Circles Have No Column Header in the FA List
+
+Sprint: Post-launch backlog
+Priority: P2
+Effort: S
+
+Issue: Purple numbered circles (1, 2, 3) in the Free Agents list show games remaining this week. There is no "WK" or "Games" column header above them. The circles are visually distinctive but unlabeled.
+
+User story: As a manager browsing free agents, I want the games-remaining column to have a visible header so that I understand what the circled number means.
+
+Files: `app/team/[teamId]/roster/RosterManager.tsx`
+
+Acceptance Criteria:
+- AC-001: The games-remaining column in the FA table has a visible header label: "Wk" or "Games".
+- AC-002: A tooltip on the header reads: "Games remaining for this player's PWHL team in the current scoring period".
+
+---
+
+## UX-039. "Claim" vs "Add" Button Distinction Is Unexplained in the FA List
+
+Sprint: Post-launch backlog
+Priority: P2
+Effort: S
+
+Issue: Some players show "On Waivers" with a "Claim" button; others show "Add". There is no inline explanation of what happens differently. Existing UX-019 and UX-020 address pre-draft banners and tab subtitles, but the specific "Claim" vs "Add" button distinction remains unexplained within the FA row itself.
+
+User story: As a manager adding a free agent, I want the "Claim" and "Add" buttons to clarify what happens differently so that I understand whether my pickup happens immediately or after a waiting period.
+
+Files: `app/team/[teamId]/roster/RosterManager.tsx`
+
+Acceptance Criteria:
+- AC-001: Rows with "Claim" display a one-line tooltip: "On waivers — your claim will be processed in priority order within 48 hours".
+- AC-002: Rows with immediate "Add" display no additional note (or a tooltip: "Immediate — added to your roster now").
+- AC-003: The distinction is visible without navigating to the Waiver Wire tab.
+
+---
+
+## UX-040. Standings "Games Back" Copy Uses Basketball Idiom
+
+Sprint: Post-launch backlog
+Priority: P2
+Effort: S
+
+Issue: The standings banner reads "2.0 games clear of the bubble." "Games back" and "the bubble" are basketball/March Madness vocabulary. These terms mean nothing to someone without heavy sports media consumption.
+
+User story: As a first-time fantasy player reading the standings page, I want the playoff bubble banner to describe my situation in plain language.
+
+Files: `app/league/[leagueId]/standings/page.tsx`
+
+Acceptance Criteria:
+- AC-001: "Games back" / "games clear" / "the bubble" phrasing is replaced with VP-based language: "You're 3rd — 2 VP ahead of the cutoff. Top 4 make playoffs".
+- AC-002: The banner does not use sport-idiom language without explanation.
+- AC-003: The replacement copy is 25 words or fewer.
+
+---
+
+## UX-041. Analysis Tab "vs Median" Numbers Have No Unit Label
+
+Sprint: Post-launch backlog
+Priority: P2
+Effort: S
+
+Issue: The Position Groups table shows "+6.3" for Goalie vs median with no unit label. Six-point-three what? FP this week? Per game? Users have to guess.
+
+User story: As a manager reading the Analysis tab, I want the vs-median deltas to include a unit so that I know what the number is measuring.
+
+Files: `app/team/[teamId]/analysis/page.tsx`
+
+Acceptance Criteria:
+- AC-001: Each delta displays a unit suffix or column header: "+6.3 FP" or a column header "vs Median (FP this week)".
+- AC-002: The unit label is correct for the time window shown.
+
+---
+
+## UX-042. Negative FP Values in Player Trends Have No Explanation
+
+Sprint: Post-launch backlog
+Priority: P2
+Effort: S
+
+Issue: The Player Trends table shows negative values (e.g., "-3.5 in Week 2") with no explanation. First-time users assume this is a bug, not intentional scoring behavior.
+
+User story: As a manager seeing a negative FP value, I want a brief explanation of why negative scores are possible so that I don't think there's a bug.
+
+Files: `app/team/[teamId]/analysis/page.tsx`
+
+Acceptance Criteria:
+- AC-001: A note near or on hover of the Player Trends table explains: "Some scoring categories can contribute negative points (e.g., goals allowed for goalies)".
+- AC-002: The note renders without overflow at 390px mobile.
+
+---
+
+## UX-043. Landing Page "Work the Wire" Jargon Is Opaque to Newcomers
+
+Sprint: Post-launch backlog
+Priority: P2
+Effort: S
+
+Issue: The landing page "How it works" reads "Build rosters, set lineups, work the wire." "The wire" is waiver-wire jargon — opaque to the PWHL-curious newcomer the landing page recruits.
+
+User story: As a first-time visitor on the landing page, I want the "How it works" steps to use plain language so that I understand what I'm signing up for.
+
+Files: `app/page.tsx`
+
+Acceptance Criteria:
+- AC-001: "Work the wire" is replaced with plain language: "Pick up free agents to strengthen your roster" or "Add and drop players during the season".
+- AC-002: No other fantasy jargon in the "How it works" list appears without definition.
+
+---
+
+## UX-044. "Season Series: 0-0" Shows Before Any Matchup Has Been Played
+
+Sprint: Post-launch backlog
+Priority: P3
+Effort: S
+
+Issue: The matchup page displays "0-0 season series" before the two teams have played each other. This creates a false "nothing has happened" signal, especially confusing when the current week IS the matchup.
+
+User story: As a manager during an active rivalry matchup, I want the season series record to show "First meeting this season" or be hidden until a completed result exists.
+
+Files: `app/team/[teamId]/matchup/page.tsx`, `components/DuelHero.tsx`
+
+Acceptance Criteria:
+- AC-001: When the H2H record is 0-0-0, the display shows "First meeting this season" or is hidden.
+- AC-002: The record appears once at least one completed matchup exists.
+- AC-003: Active (in-progress) matchups are not counted in the series record.
+
+---
+
+## UX-045. No Celebration Moment When a Rivalry Matchup Is Won
+
+Sprint: Post-launch backlog
+Priority: P2
+Effort: M
+
+Issue: Winning a rivalry matchup produces no celebration — no notification, no card, no badge. Defeating your season rival is the most emotionally resonant event in fantasy sports, and the app renders it as a footnote.
+
+User story: As a manager who just beat my season rival, I want a moment of celebration — a notification, a prominent card, or a visual badge — so that the win feels meaningful.
+
+Files: `app/team/[teamId]/matchup/page.tsx`, `lib/services/notification-service.ts`
+
+Acceptance Criteria:
+- AC-001: When a rivalry matchup result is final and the user won, a `RIVALRY_WIN` in-app notification is created using the existing `createNotification` infrastructure.
+- AC-002: The rivalry result card on the matchup page uses a distinct visual treatment (e.g., amber or green border, "Rivalry Win" chip) when the user won.
+- AC-003: The notification includes the rival's name and score: "You beat [Rival] 48.2–41.7 this week".
+
+Note: Requires extending `NotificationType` enum with `RIVALRY_WIN`. Schema delta: `npx prisma db push` to add the enum value. See `lib/services/notification-service.ts` for the call site pattern.
+
+---
+
 # Architectural Rules
 
 Design for the live season first. Replay is a testing tool, so:

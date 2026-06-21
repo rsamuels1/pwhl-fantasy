@@ -540,99 +540,167 @@ replay league without hitting any of the reported blockers.
 
 ---
 
-## Sprint 11 — "UX Polish: Navigation + Wizard + Empty States" · ~1 wk · Track F · P1/P2 · PLANNED
+## Sprint 11 — "UX Polish: Vocabulary + Navigation + Wizard + Empty States" · ~2 wks · Track F · P0/P1/P2 · PLANNED
 
-Goal: Address remaining UX audit findings from the Pass 1 and Pass 2 design reviews. All items
-are layout and copy changes — no schema changes, no new API routes.
+Goal: Address the 3 P0 vocabulary blockers from Pass 3 (design critic) plus all remaining UX audit findings
+from Pass 1, Pass 2, and Pass 4 (newcomer click-through). Three P0 items address actively misleading UI
+(VTF record looks like season loss, season record looks like hockey score, 0-0-7 display looks like a bug).
+Eight P1 items add missing education and labels for core flows. Remaining items are Pass 1/2 polish (nav,
+wizard, empty states, auth). All are layout and copy changes — no schema changes except UX-031 which may
+require optional `RIVALRY_WIN` notification enum (deferred to v1.1 if needed for Sprint 10).
 
-Sources: `docs/branding/Pass 1 — Design Critic.md` (UX-002 through UX-009, UX-013–016) and
-`docs/branding/Pass 2 — End-User Click-Through` (UX-017, UX-019, UX-020, UX-021). Also carries
-forward BF-007 and UX-008 bumped from Sprint 10.
+Sources: `docs/branding/mockups/Pass34-design-critic.md` (Pass 3 design critic, Pass 4 newcomer click-through) provides UX-024–031, UX-032–045; `docs/branding/Pass 1 — Design Critic.md` (UX-002–009, UX-013–016);
+`docs/branding/Pass 2 — End-User Click-Through` (UX-017, UX-019, UX-020, UX-021). Also carries forward
+BF-007 and UX-008 bumped from Sprint 10.
 
-**Priority 1 — BF-007: "Performance" Tab Name Unclear to Beta Users (P2, S)**
+**Soft Launch Blockers (P0 — address before widening beta to broader audience):**
+
+**Priority 1 — UX-024: VTF Weekly Record Is Unlabeled on Dashboard Card (P0, S)**
+Dashboard shows "0-7" in bold red with no context. First-time users think it's a season 0-win record.
+Add label: "This week vs field" + tooltip. See roadmap-features.md UX-024.
+Files: `app/dashboard/page.tsx`, dashboard team card component
+
+**Priority 2 — UX-025: Fantasy Season Record Reads as Hockey Score in Matchup Hero (P0, S)**
+Matchup hero shows "3-2" with no label. PWHL fans immediately parse as a period score (3–2 final).
+Add label: "Record: 3-2" or "3W-2L". See roadmap-features.md UX-025.
+Files: `app/team/[teamId]/matchup/page.tsx`, `components/FieldHero.tsx`, `components/DuelHero.tsx`
+
+**Priority 3 — UX-026: "0-0-7" Tied Display at Week Start Looks Like a Bug (P0, S)**
+Season tab shows "0–0–7" (all ties) at week start. First-time users assume the app is broken.
+Replace with "Week in progress" or "No games yet". See roadmap-features.md UX-026.
+Files: `app/league/[leagueId]/season/page.tsx`, `components/SeasonControls.tsx`
+
+**Core Education + Label Additions (P1 — unblock newcomer confidence):**
+
+**Priority 4 — UX-027: Lineup Projection Stats Are Unlabeled (PROJ, PPG, x2) (P1, S)**
+Player cards show "10.8 / 5.4 / x2" with no labels. Add: "Proj FP", "Avg FP/game", "2 games this week".
+See roadmap-features.md UX-027.
+Files: `app/league/[leagueId]/lineup/LineupManager.tsx`
+
+**Priority 5 — UX-028: "Starters Projected" Total Below Fold (P1, S)**
+"Starters projected: 43.3 pts" appears at bottom of active column. Move to top so managers see
+total without scrolling. See roadmap-features.md UX-028.
+Files: `app/league/[leagueId]/lineup/LineupManager.tsx`
+
+**Priority 6 — UX-029: Auto-Set vs Save Lineup Button Hierarchy Inverted (P1, S)**
+"Auto-set" is large purple primary button; "Save Lineup" is small dark secondary. But Save is the
+action that commits changes. Swap visual hierarchy. See roadmap-features.md UX-029.
+Files: `app/league/[leagueId]/lineup/LineupManager.tsx`
+
+**Priority 7 — UX-030: Standings Column Headers Lack Tooltips (MTCH VP, RNK VP) (P1, M)**
+Eight columns in jargon (VP, W-L-T, MTCH VP, RNK VP, PF, STREAK, GAP). Add tooltips explaining
+each column. See roadmap-features.md UX-030.
+Files: `app/league/[leagueId]/standings/page.tsx`
+
+**Priority 8 — UX-031: Rival Matchup Is Buried in Collapsed Accordion (P1, M)**
+Rivalry — the most emotionally resonant feature — is hidden behind a collapsed accordion at the
+bottom. Surface it prominently in/below the matchup hero. Also fix "0-0 season series before any
+matchup played" display. See roadmap-features.md UX-031.
+Files: `app/team/[teamId]/matchup/page.tsx`, `components/FieldHero.tsx`, `components/DuelHero.tsx`
+
+**Existing Sprint 11 Pass 1/2 UX Polish (P1/P2):**
+
+**Priority 9 — BF-007: "Performance" Tab Name Unclear to Beta Users (P2, S)**
 (Bumped from Sprint 10 to make room for UX-018 and UX-023.) Copy-only rename: TeamNav tab
 "Performance" → "Record." Disambiguates from the "Analysis" tab and better describes the
 weekly W-L FP scorecard content.
 Files: `app/team/[teamId]/TeamNav.tsx`, `app/team/[teamId]/schedule/page.tsx`
 
-**Priority 2 — UX-008: Commissioner Announcement Form Above Standings (P1, S)**
-(Bumped from Sprint 10 to make room for UX-018 and UX-023.) `AnnouncementForm` renders as the
-first visible element on the league overview, above standings and race context. Move it below
-the primary content sections.
+**Priority 10 — UX-008: Commissioner Announcement Form Above Standings (P1, S)**
+(Bumped from Sprint 10.) `AnnouncementForm` currently renders as the first visible element on the
+league overview, above standings. Move it below the primary content sections.
 Files: `app/league/[leagueId]/page.tsx`
 
-**Priority 3 — UX-006: League Nav Tab Style Mismatch (P1, M)**
+**Priority 11 — UX-006: League Nav Tab Style Mismatch (P1, M)**
 League nav uses dark pill/chip tabs with no visible active state. Team nav uses white text + indigo
 underline. Unify the league nav to match the team nav visual pattern.
 Files: `app/league/[leagueId]/layout.tsx`, `app/globals.css`
 
-**Priority 4 — UX-014 + UX-015: Wizard Button Detached + Hairline Progress Bar (P1, M)**
+**Priority 12 — UX-014 + UX-015: Wizard Button Detached + Hairline Progress Bar (P1, M)**
 "Next →" floats outside the wizard card. Progress indicator is a 1px bar with text-only label.
 Fix: move buttons inside the card container; replace progress bar with a 6-segment filled bar using `--accent`.
 Files: `app/create-league/CreateLeagueWizard.tsx`, `app/globals.css`
 
-**Priority 5 — UX-016: Pre-Season Empty States Lack Context and Next Actions (P1, M)**
+**Priority 13 — UX-016: Pre-Season Empty States Lack Context and Next Actions (P1, M)**
 All pre-season empty states look identical and offer no guidance. Add page-specific copy and a
 contextual CTA to each using the existing `EmptyState.tsx` `cta` prop.
 Files: `app/team/[teamId]/matchup/page.tsx`, `app/league/[leagueId]/standings/page.tsx`,
 `app/team/[teamId]/schedule/page.tsx`, `app/team/[teamId]/analysis/page.tsx`
 
-**Priority 6 — UX-017: Register Page Headline Contradicts "Start Your Franchise" CTA (P1, S)**
+**Priority 14 — UX-017: Register Page Headline Contradicts "Start Your Franchise" CTA (P1, S)**
 Source: Pass 2. Landing page CTA says "Start your franchise →" but the register page headline
-uses "Join the league. Pick your team." — a different framing that breaks the user's mental model.
+uses "Join the league. Pick your team." — different framing breaks user's mental model.
 Update register headline to match the REBRAND-001/002 GM/franchise voice.
 Files: `app/register/page.tsx`
 
-**Priority 7 — UX-019: Free Agent Add Button Appears Pre-Draft Without Context (P1, S)**
+**Priority 15 — UX-019: Free Agent Add Button Appears Pre-Draft Without Context (P1, S)**
 Source: Pass 2. Pre-draft users see 447 players with "Add" buttons and no explanation of whether
-this bypasses the draft. Add a contextual banner based on `league.status` explaining when and how
+this bypasses the draft. Add a contextual banner based on `league.status` explaining when/how
 free agent adds work.
 Files: `app/team/[teamId]/roster/RosterManager.tsx`
 
-**Priority 8 — UX-004: Nav Auth Indicator Uses Raw Display Name (P2, S)**
+**Priority 16 — UX-004: Nav Auth Indicator Uses Raw Display Name (P2, S)**
 The top nav shows the user's display name as the auth link, creating a collision when a user is
 named "Commish." Replace with a fixed "Account" label or monogram avatar.
 Files: `app/layout.tsx`
 
-**Priority 9 — UX-007: "Front Office" Link Icon Implies Add, Not Settings (P2, S)**
+**Priority 17 — UX-007: "Front Office" Link Icon Implies Add, Not Settings (P2, S)**
 The ⊕ symbol on the commissioner nav link implies creation. Replace with a settings/gear or
 briefcase icon and rename to "Admin" or "Commissioner Panel."
 Files: `app/league/[leagueId]/layout.tsx`
 
-**Priority 10 — UX-002: Login/Register Card Dead Zone + Faint Timing Signal (P2, M)**
+**Priority 18 — UX-002: Login/Register Card Dead Zone + Faint Timing Signal (P2, M)**
 Top 35–40% of auth cards is empty space. Season timing note is nearly invisible. Reduce top
 padding; elevate timing info to a visible chip near the form title.
 Files: `app/login/page.tsx`, `app/register/page.tsx`, `app/globals.css`
 
-**Priority 11 — UX-020: "Free Agents" and "Waiver Wire" Tabs Have No Inline Explanation (P2, S)**
-Source: Pass 2. Two tabs side by side with no explanation of the difference. Add a short subtitle
+**Priority 19 — UX-020: "Free Agents" and "Waiver Wire" Tabs Have No Inline Explanation (P2, S)**
+Source: Pass 2. Two tabs side-by-side with no explanation of the difference. Add a short subtitle
 or inline tooltip to each tab: "immediate add" vs "claimed by priority order over 48 hours."
 Files: `app/team/[teamId]/roster/RosterManager.tsx`
 
-**Priority 12 — UX-021: Dashboard Skeleton Shows Logged-Out Nav During Hydration (P2, M)**
+**Priority 20 — UX-021: Dashboard Skeleton Shows Logged-Out Nav During Hydration (P2, M)**
 Source: Pass 2. After login, the top nav briefly shows "Login" during the server→client hydration
-window. Fix auth state resolution so the nav never shows the unauthenticated state for a logged-in user.
+window. Fix auth state resolution so the nav never shows the unauthenticated state for logged-in user.
 Files: `app/layout.tsx`
 
-**Priority 13 — UX-003: Optional Field Hint Looks Like Validation Error (P2, S)**
+**Priority 21 — UX-003: Optional Field Hint Looks Like Validation Error (P2, S)**
 "(optional)" hint below Display name renders as a separate paragraph, resembling an error message.
 Inline it into the `<label>` element.
 Files: `app/register/page.tsx`
 
-**Priority 14 — UX-009: Duplicate League Name on Overview Page (P2, S)**
+**Priority 22 — UX-009: Duplicate League Name on Overview Page (P2, S)**
 League name appears in both the breadcrumb and a redundant `<h1>` on the overview. Remove
 the body-level `<h1>` or replace it with a contextual section label.
 Files: `app/league/[leagueId]/page.tsx`
 
-**Priority 15 — UX-005: "Front Office" Logo Subtext Has No Link (P2, S)**
+**Priority 23 — UX-005: "Front Office" Logo Subtext Has No Link (P2, S)**
 The "Front Office" text under the shield logo reads like a nav item but links nowhere.
 Either remove it or wire it to the admin panel for commissioners.
 Files: `components/LogoShield.tsx`, `app/league/[leagueId]/layout.tsx`
 
-**Priority 16 — UX-013: Wizard Card Doesn't Fill Viewport (P3, S)**
+**Priority 24 — UX-013: Wizard Card Doesn't Fill Viewport (P3, S)**
 Wizard card floats in ~30% of viewport with dead space below. Set `min-height: 60vh` on the
 wizard card so it feels grounded.
 Files: `app/create-league/CreateLeagueWizard.tsx`, `app/globals.css`
+
+**Sprint 11 Now 24 Items (vs 16 originally).** The Pass 3 design critique surfaced 8 P0/P1 items not previously captured. Recommend splitting into **Sprint 11a** (P0/P1 vocabulary + education: UX-024–031) and **Sprint 11b** (P1/P2 polish: UX-008, UX-006, UX-014/015, UX-016, UX-017, UX-019, UX-004, UX-007, UX-002, UX-020, UX-021, UX-003, UX-009, UX-005, UX-013). The P0 items (UX-024, UX-025, UX-026) are soft launch blockers and should be treated as critical as Sprint 10 P0 items when widening the beta.
+
+**Deferred to Post-Launch Backlog (Pass 3/4 Polish, Localization, Emotional Register):**
+- **UX-032 (P2, S)** — "+8.3 EDGE" jargon rename to "FP lead"
+- **UX-033 (P2, S)** — "NO GAMES YET" badge explanation
+- **UX-034 (P2, S)** — G · G slot/position visual stutter in Playing Tonight
+- **UX-035 (P3, M)** — Game times hardcoded to Eastern Time; localize to user timezone
+- **UX-036 (P2, M)** — Roster stat column headers have no tooltips for hockey newcomers
+- **UX-037 (P2, S)** — FPTS is rightmost (lowest priority) column; move near left
+- **UX-038 (P2, S)** — "WK" games-remaining circles have no column header in FA list
+- **UX-039 (P2, S)** — "Claim" vs "Add" button distinction unexplained in FA rows
+- **UX-040 (P2, S)** — Standings "games back of the bubble" uses basketball idiom
+- **UX-041 (P2, S)** — Analysis "vs Median" numbers have no unit label
+- **UX-042 (P2, S)** — Negative FP values in Player Trends unexplained
+- **UX-043 (P2, S)** — Landing page "work the wire" jargon is opaque to newcomers
+- **UX-044 (P3, S)** — "0-0 season series" shows before any matchup played
+- **UX-045 (P2, M)** — No celebration moment when rivalry matchup is won (requires `RIVALRY_WIN` notification enum; deferred unless UX-031 lands early)
 
 **Deferred to Design Backlog (requires design pass before implementation):**
 - **UX-012 (L)** — Combine Standings and Bracket/Playoffs into a single "Season" page with state-aware primary content. Pre-playoffs: standings-first. During playoffs: bracket-first. Eliminates the "Regular Season badge on Playoffs page" contradiction and reduces nav items.
@@ -695,7 +763,7 @@ Items below are acknowledged but have no sprint assignment. They become candidat
 | Sprint 7 — Retention Layer | ✅ COMPLETE | Storylines (#11) ✅ · Replay Sim V2 UX (#39) ✅ · Trade System (#7) ✅ · FAAB (#6) deferred to post-launch backlog · #38 DEFERRED · #31 Player Legacy deferred to backlog |
 | Sprint 8 — Beta Hardening | ✅ COMPLETE (14/14 done) | P0+P1 audit fixes shipped Jun 20 (ahead of schedule) · 7 beta bug fixes shipped commit b465423: playoff period anchoring, auto-set during playoffs, roster refresh, lineup sort, FA suggestions sim-date fix, bracket default (6→4) |
 | Sprint 10 — Beta Bug Sweep + Launch Polish | UPCOMING | 4 bugs + 5 UX fixes: BF-003/004/005/006 + UX-001/010/011/018/023; BF-007 + UX-008 bumped to Sprint 11 |
-| Sprint 11 — UX Polish: Nav + Wizard + Empty States | PLANNED | 16 items from Pass 1 + Pass 2 audits: nav alignment, wizard layout, empty state copy, auth indicator, register copy (UX-017), FA context (UX-019/020), hydration nav (UX-021), BF-007 + UX-008 from Sprint 10 |
+| Sprint 11 — UX Polish: Vocabulary + Navigation + Wizard + Empty States | PLANNED | 24 items: 3 P0 vocabulary fixes (UX-024/025/026: VTF record label, hockey-score-look-alike record, 0-0-7 bug), 5 P1 education adds (UX-027/028/029/030/031: projection labels, button hierarchy, standings tooltips, rival prominence), 16 existing P1/P2 items from Pass 1/2 audits (nav, wizard, empty states, auth). Can split into 11a (P0/P1 vocabulary) and 11b (P1/P2 polish) if needed |
 
 ---
 
