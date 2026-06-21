@@ -111,6 +111,8 @@ Sprint 6 is complete (7/7). Sprint 7 is complete (3/4 items done — #11 Storyli
 
 **Sprint 11b (UX Polish: Nav + Wizard + Empty States) is COMPLETE.** All 16 P1/P2 items from Pass 1 and Pass 2 audits shipped: UX-002/003/004/005/006/007/008/009/013/014/015/016/017/019/020/021 plus BF-007. League nav alignment, wizard layout, empty state copy, register copy, FA context banners, auth hydration nav — all done. Full plan in `roadmap-sprints.md`.
 
+**Sprint 12 (Onboarding & First-Run UX) is UPCOMING.** 9 items from the Pass 5 design critique. 4 P0 items address high-severity first-run blockers (CTA routing, VP education, step telegraphing, cancel safety). 5 P1 items fix trust gaps in wizard and auth pages. Full plan in `roadmap-sprints.md`.
+
 **Shipped (Sprint 6 — all complete):**
 - **League Onboarding (#2)** · ✅ Welcome flow, 6-step wizard, manager draft prep guide; `User.onboardingCompletedAt` schema field. (Sprint 3)
 - **Transaction History (#8)** · ✅ Paginated API + page with type/team filters, replay guard, infinite scroll. (Sprint 3)
@@ -171,9 +173,23 @@ Deferred to operations phase (pre-launch): Vercel cron wiring (`CRON_SECRET` con
 
 **Exit from Sprint 8:** founding commissioner beta invites go out (target Jul 14, 2026).
 
-**Sprint 10 — Beta Bug Sweep + Launch Polish — UPCOMING:**
+**Sprint 12 — Onboarding & First-Run UX — PLANNED:**
 
-5 bugs from founding commissioner beta feedback (Jun 21, 2026). All are P0/P1 priority. No new features.
+9 items from the Pass 5 design critique (`docs/branding/pass5-design-critic.md`) — first-time user walkthrough of league creation. 4 P0 items (High severity) must ship before public launch. 5 P1 items fix trust and comprehension gaps.
+
+- OB-001: "Start your franchise →" CTA routes to /register (not /login)
+- OB-002: VP scoring explanation inline in wizard step 4
+- OB-003: Telegraph that step 5 (team creation) is coming
+- OB-004: Confirm dialog when Cancel is clicked after league is created
+- OB-005: Remove QuickDraftJoinForm from public home page
+- OB-006: Show Replay mode description upfront, not after clicking
+- OB-007: Update login pitch copy "all 8 teams" → "all 12 teams"
+- OB-008: Drop "Confirm password" field; add show/hide toggle instead
+- OB-009: Add scoring examples ("Goal = 2 pts") to wizard rules step
+
+**Sprint 10 — Beta Bug Sweep + Launch Polish — COMPLETE:**
+
+5 bugs from founding commissioner beta feedback (Jun 21, 2026). All P0/P1 resolved.
 
 - **BF-003 (P0)** — Activity feed shows "LEAGUE_STORYLINE" string instead of storyline headline. `lib/services/storyline-service.ts` or `lib/services/activity.ts` fix.
 - **BF-004 (P0)** — Lineup move to empty FORWARD seat throws "UTIL SLOT IS FULL" error. Investigation in `LineupManager.tsx` seat generation + `validateSlotMove` fallback.

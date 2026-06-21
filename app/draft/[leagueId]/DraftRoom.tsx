@@ -897,9 +897,11 @@ export default function DraftRoom({
   initialStats: PlayerStats[];
   statSeason: string | null;
 }) {
-  const { evicted } = useDraftSocket(leagueId, teamId);
+  // Single socket for the whole room — previously two calls (root + content) caused
+  // each to JOIN as the same team, they evicted each other, triggering the eviction overlay.
+  const socket = useDraftSocket(leagueId, teamId);
 
-  if (evicted) {
+  if (socket.evicted) {
     return <EvictedOverlay />;
   }
 
@@ -912,6 +914,7 @@ export default function DraftRoom({
       initialStats={initialStats}
       statSeason={statSeason}
       rosterSettings={rosterSettings}
+      socket={socket}
     />
   );
 }
@@ -924,6 +927,7 @@ function DraftRoomContent({
   initialStats,
   statSeason,
   rosterSettings,
+  socket,
 }: {
   leagueId: string;
   teamId: string;
@@ -932,9 +936,10 @@ function DraftRoomContent({
   rosterSettings: Record<string, number>;
   initialStats: PlayerStats[];
   statSeason: string | null;
+  socket: ReturnType<typeof useDraftSocket>;
 }) {
   const { connStatus, draft, available, lastError, start, makePick, listAvailable, setQueue, pause, resume } =
-    useDraftSocket(leagueId, teamId);
+    socket;
 
   const isMobile = useIsMobile(900);
   const [mobileTab, setMobileTab] = useState<"pick" | "board" | "needs">("pick");

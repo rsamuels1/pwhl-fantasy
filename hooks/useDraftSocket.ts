@@ -69,12 +69,17 @@ export function useDraftSocket(leagueId: string, teamId: string): DraftSocket {
       setConnStatus("connecting");
 
       ws.onopen = () => {
+        // Guard: ignore callbacks from sockets superseded by a newer connect() call.
+        // React Strict Mode mounts effects twice, which can create two sockets; only
+        // the one that most recently set wsRef.current is the live connection.
+        if (wsRef.current !== ws) { ws.close(); return; }
         setConnStatus("open");
         reconnectDelayRef.current = 1000; // reset backoff on success
         ws.send(JSON.stringify({ type: "JOIN", fantasyTeamId: teamId } satisfies ClientMessage));
       };
 
       ws.onmessage = (event: MessageEvent) => {
+        if (wsRef.current !== ws) return; // stale socket
         let msg: ServerMessage;
         try {
           msg = JSON.parse(event.data as string) as ServerMessage;
@@ -99,6 +104,11 @@ export function useDraftSocket(leagueId: string, teamId: string): DraftSocket {
       };
 
       ws.onclose = (event: CloseEvent) => {
+        // If this socket has been superseded, ignore its close entirely — the active
+        // socket manages its own lifecycle. Without this guard, Strict Mode's double-
+        // mount causes the first socket's 4001 to schedule a reconnect that evicts the
+        // already-live second socket, producing a false eviction overlay.
+        if (wsRef.current !== ws) return;
         if (event.code === 4001) {
           // Evicted by server (duplicate tab). If this is a second 4001 in quick succession,
           // the reconnect is in an eviction loop (stale socket evicting the new connection).
@@ -122,6 +132,7 @@ export function useDraftSocket(leagueId: string, teamId: string): DraftSocket {
 
       // onerror always fires immediately before onclose — let onclose schedule the reconnect.
       ws.onerror = () => {
+        if (wsRef.current !== ws) return; // stale socket
         setConnStatus("error");
       };
     }

@@ -130,19 +130,31 @@ export default function LineupManager({
   }, [hasPendingChanges]);
 
   const seatedActive: Array<{ slot: SlotType; index: number; player: RosterEntryRow | null }> = (() => {
-    const bySlot: Record<string, RosterEntryRow[]> = {};
+    const result: Array<{ slot: SlotType; index: number; player: RosterEntryRow | null }> = [];
+
+    // Group active roster entries by slot
+    const playersBySlot: Record<SlotType, RosterEntryRow[]> = {
+      FORWARD: [], DEFENSE: [], GOALIE: [], UTIL: [], BENCH: [], IR: [],
+    };
     for (const p of roster) {
-      if (!ACTIVE_SLOTS.includes(p.slot)) continue;
-      bySlot[p.slot] = bySlot[p.slot] ?? [];
-      bySlot[p.slot].push(p);
+      if (ACTIVE_SLOTS.includes(p.slot) && p.slot in playersBySlot) {
+        playersBySlot[p.slot].push(p);
+      }
     }
-    const counts: Record<string, number> = {};
-    return activeSeats.map(({ slot, index }) => {
-      counts[slot] = counts[slot] ?? 0;
-      const player = bySlot[slot]?.[counts[slot]] ?? null;
-      counts[slot]++;
-      return { slot, index, player };
-    });
+
+    // Create seat entries by iterating through activeSeats, assigning players in order
+    const playerIndex: Record<SlotType, number> = {
+      FORWARD: 0, DEFENSE: 0, GOALIE: 0, UTIL: 0, BENCH: 0, IR: 0,
+    };
+    for (const seat of activeSeats) {
+      const slot = seat.slot;
+      const idx = playerIndex[slot];
+      const player = playersBySlot[slot]?.[idx] ?? null;
+      playerIndex[slot]++;
+      result.push({ slot, index: seat.index, player });
+    }
+
+    return result;
   })();
 
   function getStats(playerId: string): PlayerStatsRow | null {
@@ -223,15 +235,6 @@ export default function LineupManager({
     setError(null);
 
     const moves: Array<{ playerId: string; slot: SlotType; swapWithPlayerId?: string }> = [];
-
-    // Debug: log pending changes to help diagnose BF-004
-    if (process.env.NODE_ENV === "development") {
-      const changes = roster.filter((p) => {
-        const saved = savedRoster.find((s) => s.playerId === p.playerId);
-        return saved?.slot !== p.slot;
-      });
-      console.log("[DEBUG LineupManager] Pending changes:", changes.map(p => ({ name: p.name, from: savedRoster.find(s => s.playerId === p.playerId)?.slot, to: p.slot })));
-    }
 
     // Compute the diff and detect swaps
     const rosterMap = new Map(roster.map((p) => [p.playerId, p.slot]));

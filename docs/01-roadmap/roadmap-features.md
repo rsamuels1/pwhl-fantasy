@@ -2758,6 +2758,251 @@ Note: Requires extending `NotificationType` enum with `RIVALRY_WIN`. Schema delt
 
 ---
 
+# Onboarding & First-Run UX (Pass 5 Design Critique)
+
+Source: `docs/branding/pass5-design-critic.md` — first-time user walkthrough of the league-creation flow, June 2026. Thirteen friction points identified; ten result in new stories (three others are already covered by prior UX tickets or deferred).
+
+**Coverage notes before reading stories below:**
+- Critique #10 (Display name "(optional)" in label) is covered by UX-003 ✅ DONE.
+- Critique #12 (login pitch "8 teams" count) → OB-007 below.
+- Critique #13 (draft date picker anchor) → OB-011 below.
+
+---
+
+## OB-001. "Start Your Franchise" CTA Routes to /login Instead of /register
+
+Sprint: 12
+
+Priority: P0
+
+Effort: S
+
+As a first-time visitor who clicks "Start your franchise →" on the landing page, I want to land on /register (not /login) so that I reach the account creation form directly instead of having to find the "Don't have an account? Create one →" small link.
+
+Issue: `app/page.tsx` links "Start your franchise →" to `/login?returnTo=/create-league`. First-timers don't have an account — the login page is the wrong destination. They should land on `/register?returnTo=/create-league`.
+
+Files: `app/page.tsx`
+
+Acceptance Criteria:
+- AC-001: "Start your franchise →" button on the landing page links to `/register?returnTo=/create-league`.
+- AC-002: Logged-in users clicking this CTA are redirected directly to `/create-league` (existing behavior for authenticated users is preserved).
+- AC-003: The `/login` page still accepts `returnTo=/create-league` for returning users who navigate to it directly.
+
+---
+
+## OB-002. Wizard Step 4 Introduces VP Without Explaining It
+
+Sprint: 12
+
+Priority: P0
+
+Effort: S
+
+As a first-time user on the rules-confirmation step of the league wizard, I want a brief explanation of Victory Points and UTIL so that I understand what I'm agreeing to before I commit.
+
+Issue: Step 4 of the wizard shows "Victory Points — win your matchup AND be a top scorer each week" and "3 F · 2 D · 1 UTIL · 1 G · 6 Bench = 13 slots" with no tooltips or expansion. The `VpExplainer` component exists in `components/VpExplainer.tsx` but only appears on the standings page — first-time users see VP here first, in the wizard, with no context. UTIL is unexplained for new fantasy players.
+
+Files: `app/create-league/CreateLeagueWizard.tsx`, `components/VpExplainer.tsx`
+
+Acceptance Criteria:
+- AC-001: Step 4 renders the `VpExplainer` component inline (collapsed by default, expandable) so users can read the VP scoring rules before confirming.
+- AC-002: A tooltip or inline note explains "UTIL — any skater (F or D)" adjacent to the roster slot display.
+- AC-003: The expansion does not require navigating away from the wizard step.
+- AC-004: The `VpExplainer` in the wizard is the same component as on the standings page — no divergence in content.
+
+---
+
+## OB-003. Wizard Does Not Warn That Step 5 (Team Creation) Is Coming
+
+Sprint: 12
+
+Priority: P0
+
+Effort: S
+
+As a new commissioner stepping through the league setup wizard, I want to know that creating a team for myself is part of the flow so that I'm not surprised when a "Create your team" step appears after I thought I was done.
+
+Issue: The wizard's step 4 button says "Create league →". After clicking it, a new step appears: "Create your team." The progress bar already shows the user at step 4 of 6, so the new step feels unannounced. The wizard never mentions that the commissioner must also create a personal team. This produces a "surprise screen" feel.
+
+Files: `app/create-league/CreateLeagueWizard.tsx`
+
+Acceptance Criteria:
+- AC-001: Step 4 (rules confirmation) includes a visible note: "Next, you'll name your own team before inviting others."
+- AC-002: The progress bar segment count accounts for the team-creation step — either add a 7th visible segment for it, or relabel step 4 as "Step 4 of 7" and step 5 as "Step 5 of 7."
+- AC-003: The step change does not alter any form field behavior or API call timing.
+
+---
+
+## OB-004. Canceling Mid-Wizard After League Is Created Silently Orphans It
+
+Sprint: 12
+
+Priority: P0
+
+Effort: M
+
+As a new commissioner who changes their mind mid-wizard, I want to be warned that canceling after step 4 will leave a real (but unfinished) league in my account so that I don't accumulate orphaned leagues or get confused later.
+
+Issue: The wizard's "Cancel" link navigates to `/dashboard` at any point. But the league is created when the user transitions from step 4 to step 5 (the `POST /api/leagues/create` call). If the user cancels after that point, a real `FantasyLeague` row exists in the DB with no team, no members, and no draft date. The dashboard will show this orphaned league. There is no "are you sure?" prompt and no cleanup.
+
+Files: `app/create-league/CreateLeagueWizard.tsx`, optionally `app/api/leagues/[leagueId]/route.ts` (DELETE)
+
+Acceptance Criteria:
+- AC-001: If the user has completed step 4 and clicks "Cancel", a confirm dialog appears: "Your league was created. Canceling will leave it in your account without a team or members. You can finish setup later from your dashboard. Continue anyway?"
+- AC-002: "Continue anyway" navigates to `/dashboard`; "Stay" dismisses the dialog.
+- AC-003: The dialog does not appear before step 4 (before the league is created in the DB).
+- AC-004: The confirm dialog is implemented as a `window.confirm()` or an inline modal — not a separate page navigation.
+
+---
+
+## OB-005. QuickDraftJoinForm Is on the Public Home Page
+
+Sprint: 12
+
+Priority: P1
+
+Effort: S
+
+As a first-time visitor on the landing page, I want the homepage to explain the product and invite me to start — not ask me for League IDs and Team IDs I don't have.
+
+Issue: `app/page.tsx` renders a `QuickDraftJoinForm` (or equivalent) in the "Running a league?" section that asks for League ID and Team ID directly. First-time visitors have no idea what these are. This is a power-user tool sitting in the main marketing flow.
+
+Files: `app/page.tsx`
+
+Acceptance Criteria:
+- AC-001: The QuickDraftJoinForm (or the section containing it) is removed from the public home page.
+- AC-002: If the join-via-ID functionality is needed, it is moved behind auth (e.g., to the dashboard or admin panel).
+- AC-003: The home page CTA structure is simplified: "Start your franchise →" and "Join a league →" are the only primary actions.
+
+---
+
+## OB-006. Replay Mode Description Only Appears After Clicking the Option
+
+Sprint: 12
+
+Priority: P1
+
+Effort: S
+
+As a first-time user on step 3 of the league wizard, I want to see the Replay mode description before clicking on it so that I can make an informed choice between "Live" and "Replay."
+
+Issue: In `CreateLeagueWizard.tsx`, step 3 shows two options: "Live (2026-27 season)" and "Replay (2025-26 season)." The amber explanation box describing what Replay mode does only appears after the user clicks the Replay option. A curious user might click to explore, only to find themselves unexpectedly committed to that path. The description should be visible upfront.
+
+Files: `app/create-league/CreateLeagueWizard.tsx`
+
+Acceptance Criteria:
+- AC-001: A one-line description of Replay mode is visible below the "Replay" option label before the user clicks it: "Play through a completed 2025-26 season — great for testing before your live league drafts."
+- AC-002: The fuller amber explanation still appears after selecting Replay; the one-liner is an additional upfront hint, not a replacement.
+- AC-003: Live mode also has a one-line description: "Draft real PWHL players and compete during the 2026-27 season."
+
+---
+
+## OB-007. Login Page Pitch Says "All 8 Teams" When There Are 12
+
+Sprint: 12
+
+Priority: P1
+
+Effort: S
+
+As a PWHL fan visiting the login page, I want the player count and team count in the pitch copy to be accurate so that I trust the app's data.
+
+Issue: The login page left-column pitch reads "Real PWHL players — Every skater and goalie from all 8 teams." The 2026-27 season has 12 teams (4 expansion teams were added: Detroit, Hamilton, Las Vegas, San Jose). This stale copy erodes trust with informed PWHL fans.
+
+Files: `app/login/page.tsx`
+
+Acceptance Criteria:
+- AC-001: The copy reads "all 12 teams" (or equivalent), not "all 8 teams."
+- AC-002: Any other season-specific claim in the login pitch is reviewed for accuracy at the same time.
+- AC-003: No change to form fields or login behavior.
+
+---
+
+## OB-008. Registration Form Has Redundant "Confirm Password" Field
+
+Sprint: 12
+
+Priority: P1
+
+Effort: S
+
+As a new user registering for PWHL GM, I want a single password field with a show/hide toggle so that I'm not slowed down by a redundant confirmation step that provides no real security benefit.
+
+Issue: `app/register/page.tsx` has four fields: Email, Display name, Password, Confirm password. The "confirm password" pattern is an outdated UX convention. A single password field with a visibility toggle (eye icon) is the modern standard (used by Shopify, Stripe, most 2024+ auth flows). The redundant field adds friction without safety benefit — the user can just toggle the field visible if they want to verify.
+
+Files: `app/register/page.tsx`
+
+Acceptance Criteria:
+- AC-001: The registration form has three fields: Email, Display name (optional), Password.
+- AC-002: The Password field has a show/hide toggle (eye icon) on the right side of the input.
+- AC-003: Server-side validation is unchanged; client-side "passwords must match" logic is removed.
+- AC-004: The tab order and mobile keyboard behavior remain correct after removing the confirm field.
+
+---
+
+## OB-009. Wizard Rules Step Shows No Fantasy Point Values
+
+Sprint: 12
+
+Priority: P1
+
+Effort: S
+
+As a first-time user confirming league rules in step 4 of the wizard, I want to see at least one concrete example of how points are scored (e.g., "Goal = 2 pts") so that I understand the scoring engine before I commit to a league.
+
+Issue: Step 4 shows the roster format and standings format but never explains how fantasy points are earned. A new user has no way to evaluate "should I draft a forward or a defender?" without knowing the relative point value. The scoring details exist in `league-rules-v1.md` and in the `scoringSettings` JSON but are never surfaced to users at signup.
+
+Files: `app/create-league/CreateLeagueWizard.tsx`
+
+Acceptance Criteria:
+- AC-001: Step 4 shows a compact scoring table or chip row with at least the top-5 scoring categories: "Goal 2 pts · Assist 1.5 pts · Win (G) 5 pts · PPP 1 pt · Shutout (G) 3 pts."
+- AC-002: The values shown match the league's actual `scoringSettings` defaults, not hardcoded copy.
+- AC-003: A "Full scoring rules →" link points to `/league/[leagueId]/admin` or a modal with the complete scoring table — but the compact view is visible without clicking.
+
+---
+
+## OB-010. Wizard Progress Bar Is Misleading for Replay Users
+
+Sprint: 13 (backlog)
+
+Priority: P1
+
+Effort: M
+
+As a commissioner creating a Replay league, I want the wizard's step counter and progress bar to reflect my actual path so that the numbers make sense as I step through the flow.
+
+Issue: Replay users skip step 4 (rules) and the wizard jumps from step 3 to step 5. The 6-segment progress bar fills a segment for the skipped step, making the bar's filled state inconsistent with the user's actual progression. A user going name → size → season → (skipped rules) → team → invite sees segment 4 of 6 filled when they expected step 3 of 5.
+
+Files: `app/create-league/CreateLeagueWizard.tsx`
+
+Acceptance Criteria:
+- AC-001: For Replay leagues, the progress bar shows 5 segments (skipping the rules step) and the counter reads "Step N of 5."
+- AC-002: For Live leagues, the progress bar is unchanged at 6 segments.
+- AC-003: No regression in Live league wizard flow or step transition timing.
+
+---
+
+## OB-011. Draft Date Picker Has No Season-Anchor Guidance
+
+Sprint: 13 (backlog)
+
+Priority: P2
+
+Effort: S
+
+As a commissioner setting a draft date in step 3 of the wizard, I want actionable guidance on when to draft so that I can choose a date confidently without knowing the PWHL schedule.
+
+Issue: Step 3 shows a date picker with helper text "Most leagues draft the week before the season opener." The opener is "November 2026" with no specific date known yet. A user picking a date in June 2026 has no idea what to aim for. The picker invites action before enough information exists to act.
+
+Files: `app/create-league/CreateLeagueWizard.tsx`
+
+Acceptance Criteria:
+- AC-001: When no PWHL season opener date is confirmed, the draft date section shows: "The PWHL season opener is expected in November 2026. You can set the exact date from the admin panel once the schedule is announced."
+- AC-002: The date picker is still visible and usable for commissioners who want to set a tentative date, but it is styled as optional/secondary.
+- AC-003: Once `FantasyLeague.draftStartsAt` is set, the wizard shows the selected date on the done step (already existing behavior — verify it still works).
+
+---
+
 # Architectural Rules
 
 Design for the live season first. Replay is a testing tool, so:

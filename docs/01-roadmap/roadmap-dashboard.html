@@ -227,15 +227,15 @@
     <div class="header-right">
       <div class="stat">
         <span class="label">Current:</span>
-        <span class="value">Sprint 11b</span>
+        <span class="value">Sprint 12</span>
       </div>
       <div class="stat">
-        <span class="label">Beta Target:</span>
-        <span class="value">Jul 14, 2026</span>
+        <span class="label">Launch Target:</span>
+        <span class="value">Late Oct 2026</span>
       </div>
       <div class="stat">
         <span class="label">Sprints:</span>
-        <span class="value">11 done · 1 upcoming</span>
+        <span class="value">12 done · Sprint 12 planned</span>
       </div>
       <div class="stat">
         <span class="label">Gates:</span>
@@ -426,6 +426,12 @@
           <div class="name">Sprint 11b</div>
           <div class="progress">UX Polish: Nav + Wizard + Empty States · 16/16</div>
           <span class="status complete">✅ DONE</span>
+        </div>
+
+        <div class="sprint-card planned" onclick="switchTab('sprints'); setTimeout(() => document.getElementById('sprint-12').scrollIntoView({behavior: 'smooth'}), 100)">
+          <div class="name">Sprint 12</div>
+          <div class="progress">Onboarding &amp; First-Run UX · 9 items</div>
+          <span class="status planned">PLANNED</span>
         </div>
 
     </div>
@@ -1268,6 +1274,67 @@
             </div>
         </div>
         <div class="exit-criteria"><strong>Exit criteria:</strong> ✅ All 16 items resolved. UX-012 and UX-022 specced in Design Backlog. <code>tsc --noEmit</code> clean, ≥202 tests pass.</div>
+      </div>
+
+      <div id="sprint-12" class="card planned">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+          <div>
+            <div style="font-weight: 700; font-size: 1rem;">Sprint 12 · "Onboarding &amp; First-Run UX"</div>
+            <div style="font-size: 0.8rem; color: #888; margin-top: 0.2rem;">Track: F · Source: Pass 5 design critique (league-creation walkthrough) · 9 items (4 P0 + 5 P1)</div>
+          </div>
+          <span class="status planned">PLANNED</span>
+        </div>
+        <div>
+            <div class="task-row" style="border-bottom: 1px solid rgba(239,68,68,0.2); padding-bottom: 0.5rem; margin-bottom: 0.25rem; background: rgba(239,68,68,0.03);">
+              <span class="task-check" style="color: #ef4444">P0</span>
+              <span style="color: #ef4444; font-size: 0.8rem; font-weight: 700;">High Severity — must ship before public launch (4 items)</span>
+            </div>
+            <div class="task-row">
+              <span class="task-check">☐</span>
+              <span><strong style="color:#ccc">OB-001 (P0, S) — "Start Your Franchise" CTA Routes to /login Instead of /register</strong> · Change landing page CTA to <code>/register?returnTo=/create-league</code>. File: <code>app/page.tsx</code></span>
+            </div>
+            <div class="task-row">
+              <span class="task-check">☐</span>
+              <span><strong style="color:#ccc">OB-002 (P0, S) — Wizard Step 4 Introduces VP Without Explaining It</strong> · Add <code>VpExplainer</code> component (collapsed) inline at step 4; add tooltip for UTIL. Files: <code>app/create-league/CreateLeagueWizard.tsx</code>, <code>components/VpExplainer.tsx</code></span>
+            </div>
+            <div class="task-row">
+              <span class="task-check">☐</span>
+              <span><strong style="color:#ccc">OB-003 (P0, S) — Wizard Does Not Warn That Team Creation Is Step 5</strong> · Add note at step 4: "Next, you'll name your own team." Update step counter to 7 steps. File: <code>app/create-league/CreateLeagueWizard.tsx</code></span>
+            </div>
+            <div class="task-row">
+              <span class="task-check">☐</span>
+              <span><strong style="color:#ccc">OB-004 (P0, M) — Cancel After League Creation Silently Orphans It</strong> · Add confirm dialog when Cancel clicked after step 4 (post-league-creation). File: <code>app/create-league/CreateLeagueWizard.tsx</code></span>
+            </div>
+            <div class="task-row" style="border-top: 1px solid rgba(245,158,11,0.2); padding-top: 0.5rem; margin-top: 0.25rem; background: rgba(245,158,11,0.02);">
+              <span class="task-check" style="color: #f59e0b">P1</span>
+              <span style="color: #f59e0b; font-size: 0.8rem; font-weight: 700;">Medium Severity (5 items)</span>
+            </div>
+            <div class="task-row">
+              <span class="task-check">☐</span>
+              <span><strong style="color:#ccc">OB-005 (P1, S) — QuickDraftJoinForm on Public Home Page</strong> · Remove League ID / Team ID form from <code>app/page.tsx</code>; move behind auth. File: <code>app/page.tsx</code></span>
+            </div>
+            <div class="task-row">
+              <span class="task-check">☐</span>
+              <span><strong style="color:#ccc">OB-006 (P1, S) — Replay Mode Description Appears Only After Clicking It</strong> · Show one-line description below each mode option (Live and Replay) before user selects. File: <code>app/create-league/CreateLeagueWizard.tsx</code></span>
+            </div>
+            <div class="task-row">
+              <span class="task-check">☐</span>
+              <span><strong style="color:#ccc">OB-007 (P1, S) — Login Page Pitch Says "All 8 Teams" (Should Be 12)</strong> · Update login page left-column pitch copy. File: <code>app/login/page.tsx</code></span>
+            </div>
+            <div class="task-row">
+              <span class="task-check">☐</span>
+              <span><strong style="color:#ccc">OB-008 (P1, S) — Registration Form Has "Confirm Password" Field</strong> · Drop confirm-password field; add show/hide toggle to single password field. File: <code>app/register/page.tsx</code></span>
+            </div>
+            <div class="task-row">
+              <span class="task-check">☐</span>
+              <span><strong style="color:#ccc">OB-009 (P1, S) — Wizard Rules Step Shows No Fantasy Point Values</strong> · Add compact scoring chip row to step 4: "Goal 2 pts · Assist 1.5 pts · Win (G) 5 pts · PPP 1 pt · Shutout (G) 3 pts." File: <code>app/create-league/CreateLeagueWizard.tsx</code></span>
+            </div>
+            <div class="task-row" style="opacity: 0.5; border-top: 1px solid #1a1a1a; padding-top: 0.5rem; margin-top: 0.5rem;">
+              <span class="task-check" style="color: #555">→</span>
+              <span style="color: #555"><em>Deferred to Sprint 13: OB-010 (P1, M) — Wizard progress bar misleading for Replay users; OB-011 (P2, S) — Draft date picker has no season-anchor guidance.</em></span>
+            </div>
+        </div>
+        <div class="exit-criteria"><strong>Exit:</strong> all 9 items resolved (4 P0 + 5 P1). First-time visitor can click "Start your franchise →", create account, and complete league wizard without hitting confusing jargon or unexpected screens. <code>tsc --noEmit</code> clean, ≥202 tests pass.</div>
       </div>
 
   </div>
