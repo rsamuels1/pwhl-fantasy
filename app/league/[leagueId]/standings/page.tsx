@@ -159,14 +159,14 @@ export default async function StandingsPage({ params }: { params: { leagueId: st
               <tr style={{ color: "#64748b", textAlign: "left", borderBottom: "1px solid rgba(148,163,184,0.2)" }}>
                 <th style={thStyle}>#</th>
                 <th style={thStyle}>Team</th>
-                <th style={thStyle} title="Total Victory Points">VP</th>
-                <th style={thStyle}>W-L-T</th>
-                <th style={thStyle} title="Matchup VP earned">Mtch VP</th>
-                <th style={thStyle} title="Weekly rank bonus VP">Rnk VP</th>
-                <th style={thStyle}>PF</th>
-                <th style={thStyle}>Streak</th>
+                <th style={thStyle} title="Total Victory Points this season. VP determines playoff seeding.">VP</th>
+                <th style={thStyle} title="Weekly head-to-head match record (wins–losses–ties).">W-L-T</th>
+                <th style={thStyle} title="VP earned from winning your head-to-head matchup this week (+2 VP).">Mtch VP</th>
+                <th style={thStyle} title="VP earned from your weekly fantasy score rank (1st = +2 VP, 2nd = +1 VP).">Rnk VP</th>
+                <th style={thStyle} title="Points For — total fantasy points scored this season.">PF</th>
+                <th style={thStyle} title="Current win/loss/tie streak (e.g., W2 = two wins in a row).">Streak</th>
                 {!playoffsStarted && playoffCutoff !== null && (
-                  <th style={thStyle} className="standings-hide-mobile">Gap</th>
+                  <th style={thStyle} className="standings-hide-mobile" title="VP difference to the team directly above you (playoff seeding tiebreaker).">Gap</th>
                 )}
               </tr>
             </thead>
