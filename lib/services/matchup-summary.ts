@@ -94,11 +94,20 @@ export async function getMatchupQuickSummary(
 
   const myScore = allScores.get(teamId) ?? 0;
   let wins = 0, losses = 0, ties = 0;
+
+  // Check if setup phase: all teams have 0 score (no games played yet)
+  const isSetupPhase = [...allScores.values()].every(score => score === 0);
+
   for (const [tid, score] of allScores) {
     if (tid === teamId) continue;
     if (myScore > score) wins++;
     else if (myScore < score) losses++;
     else ties++;
+  }
+
+  // In setup phase (all 0s), show "Week in progress" instead of misleading 0-0-N record
+  if (isSetupPhase) {
+    return { week: period.week, status: "active", myScore: 0, wins: -1, losses: -1, ties: -1, teamsCount, startsAt };
   }
 
   return { week: period.week, status: "active", myScore, wins, losses, ties, teamsCount, startsAt };
