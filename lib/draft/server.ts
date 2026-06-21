@@ -109,10 +109,25 @@ class DraftRoom {
     }
 
     if (msg.type === "LIST_AVAILABLE") {
+      // When the league season has real stat-line data, restrict the pool to
+      // players who actually appeared in that season. This filters out mock /
+      // placeholder players (e.g. "Player0 BOS") that coexist in the DB after
+      // running `npm run seed` before `npm run seed-fixture`.
+      const seasonHasData = this.leagueSeason
+        ? !!(await prisma.statLine.findFirst({
+            where: { game: { season: this.leagueSeason } },
+            select: { id: true },
+          }))
+        : false;
+      const seasonFilter = seasonHasData
+        ? { statLines: { some: { game: { season: this.leagueSeason } } } }
+        : {};
+
       const players = await prisma.player.findMany({
         where: {
           active: true,
           id: { notIn: [...this.state.draftedPlayerIds] },
+          ...seasonFilter,
           ...(msg.search
             ? { lastName: { contains: msg.search, mode: "insensitive" } }
             : {}),
@@ -470,9 +485,10 @@ class DraftRoom {
       },
     });
 
-    type Ranked = { id: string; tier: number; fp: number };
+    type Ranked = { id: string; tier: number; fp: number; hasSeasonData: boolean };
     const ranked: Ranked[] = players.map((p) => {
       const pos = p.position as "FORWARD" | "DEFENSE" | "GOALIE";
+      const hasSeasonData = p.statLines.length > 0;
       const fp = p.statLines.reduce(
         (sum, sl) =>
           sum +
@@ -493,10 +509,15 @@ class DraftRoom {
       } else {
         tier = 3;
       }
-      return { id: p.id, tier, fp };
+      return { id: p.id, tier, fp, hasSeasonData };
     });
 
-    ranked.sort((a, b) => (a.tier !== b.tier ? a.tier - b.tier : b.fp - a.fp));
+    ranked.sort((a, b) => {
+      if (a.tier !== b.tier) return a.tier - b.tier;
+      // Prefer players with season data over mock/placeholder players (no data)
+      if (a.hasSeasonData !== b.hasSeasonData) return a.hasSeasonData ? -1 : 1;
+      return b.fp - a.fp;
+    });
     return ranked.map((r) => r.id);
   }
 
