@@ -397,7 +397,23 @@ export default function LineupManager({
         </div>
 
         <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
-          {/* Auto-set Lineup button */}
+          {/* Save Lineup button — PRIMARY */}
+          <button
+            onClick={() => saveLineup()}
+            disabled={!hasPendingChanges || isSaving}
+            style={{
+              minHeight: 44, padding: "0 16px", borderRadius: 8, border: "none", cursor: hasPendingChanges && !isSaving ? "pointer" : "default",
+              fontSize: 13, fontWeight: 700,
+              background: justSaved ? "rgba(52,211,153,0.2)" : hasPendingChanges && !isSaving ? "var(--accent)" : "rgba(255,255,255,0.08)",
+              color: justSaved ? "#34d399" : hasPendingChanges && !isSaving ? "#0f172a" : "#64748b",
+              transition: "background 0.2s, color 0.2s",
+              opacity: isSaving ? 0.6 : 1,
+            }}
+          >
+            {justSaved ? "✓ Lineup saved" : `Save Lineup${hasPendingChanges ? ` (${roster.filter((p) => savedRoster.find((s) => s.playerId === p.playerId)?.slot !== p.slot).length} changes)` : ""}`}
+          </button>
+
+          {/* Auto-set Lineup button — SECONDARY */}
           {(() => {
             const autoSetDisabled = !projectedStats || !projectionsAvailable || isSaving;
             const autoSetTitle = !projectionsAvailable
@@ -411,11 +427,11 @@ export default function LineupManager({
                 disabled={autoSetDisabled}
                 title={autoSetTitle}
                 style={{
-                  minHeight: 36, padding: "0 14px", borderRadius: 8, border: "none", cursor: !autoSetDisabled ? "pointer" : "default",
-                  fontSize: 12, fontWeight: 700,
-                  background: !autoSetDisabled ? "rgba(168,85,247,0.2)" : "rgba(255,255,255,0.05)",
-                  color: !autoSetDisabled ? "#d8b4fe" : "#64748b",
-                  transition: "background 0.2s, color 0.2s",
+                  minHeight: 44, padding: "0 14px", borderRadius: 8, border: "1px solid rgba(99,102,241,0.3)", cursor: !autoSetDisabled ? "pointer" : "default",
+                  fontSize: 12, fontWeight: 600,
+                  background: !autoSetDisabled ? "transparent" : "rgba(255,255,255,0.02)",
+                  color: !autoSetDisabled ? "#818cf8" : "#64748b",
+                  transition: "background 0.2s, color 0.2s, border-color 0.2s",
                   opacity: autoSetDisabled ? 0.5 : 1,
                 }}
               >
@@ -423,22 +439,6 @@ export default function LineupManager({
               </button>
             );
           })()}
-
-          {/* Save Lineup button */}
-          <button
-            onClick={() => saveLineup()}
-            disabled={!hasPendingChanges || isSaving}
-            style={{
-              minHeight: 36, padding: "0 14px", borderRadius: 8, border: "none", cursor: hasPendingChanges && !isSaving ? "pointer" : "default",
-              fontSize: 12, fontWeight: 700,
-              background: justSaved ? "rgba(52,211,153,0.15)" : hasPendingChanges && !isSaving ? "rgba(99,102,241,0.3)" : "rgba(255,255,255,0.05)",
-              color: justSaved ? "#34d399" : hasPendingChanges && !isSaving ? "#a5b4fc" : "#64748b",
-              transition: "background 0.2s, color 0.2s",
-              opacity: isSaving ? 0.6 : 1,
-            }}
-          >
-            {justSaved ? "✓ Lineup saved" : `Save Lineup${hasPendingChanges ? ` (${roster.filter((p) => savedRoster.find((s) => s.playerId === p.playerId)?.slot !== p.slot).length} changes)` : ""}`}
-          </button>
 
           {/* Stats view toggle */}
           <div style={{ display: "flex", gap: 4, background: "rgba(255,255,255,0.05)", borderRadius: 8, padding: 3 }}>
