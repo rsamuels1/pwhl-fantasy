@@ -927,7 +927,7 @@ function FieldHero({ matchup, teamId }: { matchup: ActiveMatchup; teamId: string
           </div>
           {!hideScore && (
             <div style={{ textAlign: "right" }}>
-              <div style={{ fontSize: 11, color: "var(--faint)", marginBottom: 2 }}>vs field</div>
+              <div style={{ fontSize: 11, color: "var(--faint)", marginBottom: 2 }}>Record vs field</div>
               <div className="font-stats" style={{ fontSize: 22, fontWeight: 800, color: winningRecord ? "#a78bfa" : losses > wins ? "#c2776c" : "var(--muted)" }}>
                 {wins}–{losses}{ties > 0 ? `–${ties}` : ""}
               </div>
@@ -1073,7 +1073,7 @@ function DuelHero({
                 <span style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: "0.06em", color: "#c9b6ff", background: "rgba(124,58,237,0.18)", borderRadius: 5, padding: "2px 7px" }}>YOU</span>
               </div>
               <div style={{ fontSize: 12, color: "#9aa3bd", marginTop: 3, fontVariantNumeric: "tabular-nums" }}>
-                {matchup.myRecord.wins}–{matchup.myRecord.losses}{matchup.myRecord.ties > 0 ? `–${matchup.myRecord.ties}` : ""}
+                <span style={{ color: "#6f788e", fontWeight: 400 }}>Record: </span>{matchup.myRecord.wins}–{matchup.myRecord.losses}{matchup.myRecord.ties > 0 ? `–${matchup.myRecord.ties}` : ""}
                 {seriesRecord !== "0–0" && ` · ${seriesRecord} series`}
               </div>
             </div>
@@ -1127,7 +1127,7 @@ function DuelHero({
                 <span style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: "0.06em", color: "#9aa3bd", border: "1px solid rgba(150,160,200,0.22)", borderRadius: 5, padding: "2px 7px" }}>OPP</span>
               </div>
               <div style={{ fontSize: 12, color: "#9aa3bd", marginTop: 3, fontVariantNumeric: "tabular-nums" }}>
-                {seriesRecord} season series
+                <span style={{ color: "#6f788e", fontWeight: 400 }}>Series: </span>{seriesRecord} season series
               </div>
             </div>
           </div>
