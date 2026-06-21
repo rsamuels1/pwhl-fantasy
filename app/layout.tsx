@@ -28,12 +28,13 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <nav className="nav-links">
               <Link href="/" className="nav-link">Home</Link>
               <Link href="/leagues" className="nav-link">Leagues</Link>
-              {user ? (
+              {user && (
                 <>
-                  <Link href="/dashboard" className="nav-link">{user.displayName}</Link>
+                  <Link href="/dashboard" className="nav-link">Account</Link>
                   <Link href="/api/auth/logout" className="nav-link">Logout</Link>
                 </>
-              ) : (
+              )}
+              {!user && (
                 <Link href="/login" className="nav-link">Login</Link>
               )}
             </nav>
