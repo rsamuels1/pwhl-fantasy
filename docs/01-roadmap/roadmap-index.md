@@ -141,92 +141,22 @@ required before real users are invited. All items were applied immediately after
 - **P1-F** ✅ — verified: `getTeamAnalysis()` already fetches fresh `scoringSettings`. No change.
 - **174/174 tests pass.** Zero new TypeScript errors.
 
-Remaining Sprint 8 scope (Jul 7–13): P1-D schedule badge timezone, Vercel cron wiring (`CRON_SECRET`
-confirmed), load test, integration test, P2 notification gaps, UX polish. Full details in feature
-card #40 (`roadmap-features.md`) and sprint plan (`roadmap-sprints.md`).
-
-**Sprint 7 — Retention Layer (current):**
-
-1. **Trade System (#7)** · ~130K · Sprint 7 · Priority 1
-   Spec: `docs/02-engineering/trade-spec.md`. Pulled up from backlog June 2026 — higher priority than League History/HoF for the launch period. Trade proposal/review/approval flow, commissioner review gate, trade history, 3 new notification types. Schema: `Trade`/`TradeOffer` tables. Unblocks trade-suggestion CTA in Team Analysis (#25).
-
-2. **League-Wide Matchup Storylines (#11)** · ✅ DONE · Sprint 7
-   `lib/services/storyline-service.ts` (`computeWeeklyStorylines`, `emitWeeklyStorylines`); `LEAGUE_STORYLINE` EventType; `components/WeekHighlights.tsx` on league overview; emitted fire-and-forget from `advanceSeason()`; tested in `tests/storyline.test.ts`.
-
-3. **Replay Simulation Accelerated Playback (#38)** · DEFERRED — superseded by #39 (UX Overhaul, shipped Sprint 7).
-
-_(#31 Player Legacy & #6 FAAB deferred to post-launch backlog — see below.)_
-
-**Sprint 8 — Beta Hardening — COMPLETE (14/14 done):**
-
-All audit fixes and beta bugs resolved. Commit b465423 ships the final 7 items.
-
-1. ~~P0 waiver cron~~ ✅ done Jun 20
-2. ~~P1 UX fixes (A/B/C/D/E/F)~~ ✅ all done
-3. ~~BUG-1/PLAYOFF-1~~ ✅ Anchor playoff periods to last game in replay leagues (commit b465423)
-4. ~~BUG-2/PLAYOFF-2~~ ✅ Auto-resolved by BUG-1 (commit b465423)
-5. ~~BUG-3A/PLAYOFF-3~~ ✅ Enable auto-set during playoffs (commit b465423)
-6. ~~BUG-4/ROSTER-1~~ ✅ Fix roster refresh after adding FA (commit b465423)
-7. ~~BUG-5A/LINEUP-1~~ ✅ Demote zero-games players in lineup sort (commit b465423)
-8. ~~BUG-5B/FA-SUGG-1~~ ✅ Fix fa-suggestions with sim-date + games filter (commit b465423)
-9. ~~PLAYOFF-BUG-001/BRACKET-1~~ ✅ Fix bracket default 6 → 4 teams (commit b465423)
-
-Deferred to operations phase (pre-launch): Vercel cron wiring (`CRON_SECRET` confirmed in staging), load test (10+ concurrent leagues), integration test. P2 notification gaps (lineup-incomplete cron, waiver claim awarded/denied) can slip to first post-beta fix.
-
-**Exit from Sprint 8:** founding commissioner beta invites go out (target Jul 14, 2026).
-
-**Sprint 12 — UX Audit + Onboarding First-Run — PLANNED:**
-
-14 items from two sources. Pass 1/2 end-user walkthrough surfaced 2 P0 bugs and 3 P1 in-season UX problems. Pass 5 critique surfaced 4 P0 and 5 P1 first-run friction points. P0 items ship first.
-
-P0 bugs (audit):
-- BF-008: Activity feed negative timestamps in replay leagues ("-243731m ago")
-- BF-009: Analysis tab click stays on matchup URL (navigation broken)
-
-P0 onboarding (Pass 5):
-- OB-001: "Start your franchise →" CTA routes to /register (not /login)
-- OB-002: VP scoring explanation inline in wizard step 4
-- OB-003: Telegraph that step 5 (team creation) is coming
-- OB-004: Confirm dialog when Cancel is clicked after league is created
-
-P1 UX (audit):
-- UX-046: Season Series heading renders twice on matchup page
-- UX-047: Trade proposal has no trading-partner-first step
-- UX-048: Trade form search hint hidden below 80+ player buttons
-
-P1 onboarding (Pass 5):
-- OB-005: Remove QuickDraftJoinForm from public home page
-- OB-006: Show Replay mode description upfront, not after clicking
-- OB-007: Update login pitch copy "all 8 teams" → "all 12 teams"
-- OB-008: Drop "Confirm password" field; add show/hide toggle instead
-- OB-009: Add scoring examples ("Goal = 2 pts") to wizard rules step
-
-**Sprint 10 — Beta Bug Sweep + Launch Polish — COMPLETE:**
-
-5 bugs from founding commissioner beta feedback (Jun 21, 2026). All P0/P1 resolved.
-
-- **BF-003 (P0)** — Activity feed shows "LEAGUE_STORYLINE" string instead of storyline headline. `lib/services/storyline-service.ts` or `lib/services/activity.ts` fix.
-- **BF-004 (P0)** — Lineup move to empty FORWARD seat throws "UTIL SLOT IS FULL" error. Investigation in `LineupManager.tsx` seat generation + `validateSlotMove` fallback.
-- **BF-005 (P1)** — Draft room "opened in another tab" false positive on hard refresh. `useDraftSocket.ts` reconnect loop after 4001 eviction.
-- **BF-006 (P1)** — Bench upgrade hint recommends a player with zero games remaining. `LineupManager.tsx` starter-total bar filtering.
-- **BF-007 (P2)** — "Performance" tab name unclear to beta users. Copy change only: `TeamNav.tsx` + page `<h1>`.
-
 ---
 
-**Sprint 9 — PWHL GM Rebrand — COMPLETE ✅:**
+## Completed Sprints (7–12)
 
-All 8 rebrand stories shipped. The product is now fully rebranded as PWHL GM across all user-facing surfaces. 202/202 tests pass; `tsc --noEmit` clean; zero "PWHL Fantasy" strings in the live UI.
+All sprints from 7–12 are complete and shipped. Detailed plans in `roadmap-sprints.md`.
 
-- **REBRAND-001 ✅** — `components/LogoShield.tsx`; global "PWHL Fantasy" → "PWHL GM" rename; home page hero rewrite ("Think Like a GM."); favicon/manifest update
-- **REBRAND-002 ✅** — Voice consistency: "Your Franchises" dashboard, "Front Office" nav, login/welcome copy
-- **REBRAND-003 ✅** — Detail polish: "PWHL GM — Draft Room" header, "pts" terminology, README/CLAUDE.md product name
-- **REBRAND-004 ✅** — Design token system: Archivo + Saira Condensed fonts, deep violet (#7c3aed), solid dark cards (#121829), radial gradient bg, `.section-accent` pill, `.font-stats` utility
-- **REBRAND-005 ✅** — Matchup page IA restructure (Z1–Z9 render order, `RosterStatusWidget`, BUG-MATCHUP-001 fix)
-- **REBRAND-006 ✅** — Draft room visual upgrade: pick cell glow, player row hover, card border-radius, `TeamSpreadPanel` concentration bar
-- **REBRAND-007 ✅** — Secondary pages token pass: `LineupManager`, `RosterManager`, bracket page, `PlayoffBracket`, league overview all use new CSS vars
-- **REBRAND-008 ✅** — QA pass: zero "PWHL Fantasy" strings, `tsc` clean, 202/202 tests pass
+- **Sprint 7** ✅ — Retention Layer (Trade System, Storylines, Replay Sim v2 UX)
+- **Sprint 8** ✅ — Beta Hardening (14/14 audit fixes + beta bugs)
+- **Sprint 9** ✅ — PWHL GM Rebrand (8/8 stories, fully rebranded)
+- **Sprint 10** ✅ — Beta Bug Sweep + Launch Polish (5 P0/P1 bugs, founding beta ready)
+- **Sprint 11a & 11b** ✅ — UX Polish (24 items: vocab, nav, wizard, empty states)
+- **Sprint 12** ✅ — Pre-Beta Polish (5 items: BF-004, UX-043/039/038/040/042/044, DATA-002)
 
-**Deferred to post-launch backlog:** FAAB (#6, deferred from Sprint 7 Priority 3 — not needed before public launch; revisit for 2027-28 off-season once waiver cron is stable and commissioners request it) · Growth analytics (GR-001/002/003/004) · real-time push scoring · push notifications · multi-season historical library (#12) · player trends (#23) · keeper/dynasty (#19/#20) · native apps / AI features. See `docs/01-roadmap/roadmap-sprints.md` for full backlog list.
+**Current Status:** MVP readiness ~99% · All P0 bugs cleared · 202/202 tests pass · Ready for Jul 14 beta invites.
+
+**Post-Launch Backlog:** Trade System (#7, shipped Sprint 6), FAAB (#6 — defer to 2027-28 when commissioners request), Growth analytics (GR-001/002/003/004), push notifications, multi-season library (#12), player trends (#23), keeper/dynasty (#19/#20), native apps, AI features. See `roadmap-sprints.md` for details.
 
 ---
 
