@@ -1,4 +1,4 @@
-# PWHL Fantasy Product Roadmap — Index
+# PWHL GM Product Roadmap — Index
 
 Last Updated: June 20, 2026
 
@@ -19,7 +19,7 @@ This document serves as the source of truth for future development priorities. D
 
 ## Product Vision
 
-PWHL Fantasy is the premier fantasy platform for Professional Women's Hockey League fans.
+PWHL GM is the premier fantasy platform for Professional Women's Hockey League fans.
 
 The flagship experience is the live fantasy season: drafting real players, setting weekly lineups, and competing in matchups scored from real PWHL games.
 
@@ -105,7 +105,7 @@ MVP proves a league can go **Create → Invite → Draft → Set Lineups → Com
 
 ## What To Build Next
 
-Sprint 6 is complete (7/7). Sprint 7 is complete (3/4 items done — #11 Storylines ✅; #39 Replay Sim V2 UX ✅; PLAYOFF-AUDIT-001 ✅; #7 Trade System deferred; #38 Replay V2 deferred). Sprint 8 (Beta Hardening) is complete — all 14 items done. Sprint 9 (PWHL GM Rebrand) is IN PROGRESS: REBRAND-001/002/003/004/005 shipped (name, logo, voice, design tokens, matchup IA + Analysis tab); REBRAND-006 (Draft Room visual), REBRAND-007 (Secondary Pages), REBRAND-008 (QA) remain.
+Sprint 6 is complete (7/7). Sprint 7 is complete (3/4 items done — #11 Storylines ✅; #39 Replay Sim V2 UX ✅; PLAYOFF-AUDIT-001 ✅; #7 Trade System deferred; #38 Replay V2 deferred). Sprint 8 (Beta Hardening) is complete — all 14 items done. Sprint 9 (PWHL GM Rebrand) is COMPLETE — all 8 stories shipped: REBRAND-001/002/003/004/005/006/007/008 all done. The product is now fully rebranded as PWHL GM with 202/202 tests passing and zero "PWHL Fantasy" strings in the live UI.
 
 **Shipped (Sprint 6 — all complete):**
 - **League Onboarding (#2)** · ✅ Welcome flow, 6-step wizard, manager draft prep guide; `User.onboardingCompletedAt` schema field. (Sprint 3)
@@ -167,17 +167,18 @@ Deferred to operations phase (pre-launch): Vercel cron wiring (`CRON_SECRET` con
 
 **Exit from Sprint 8:** founding commissioner beta invites go out (target Jul 14, 2026).
 
-**Sprint 9 — PWHL GM Rebrand (post-Beta Hardening):**
+**Sprint 9 — PWHL GM Rebrand — COMPLETE ✅:**
 
-All brand strategy, gap analysis, terminology guide, implementation checklist, and 3 interactive mockups are finalized in `docs/branding/`. No development-velocity cost was incurred during MVP sprints, as planned in `docs/branding/BRANDING-DEFERRED.md`. Trigger: Sprint 8 complete and founding commissioners have completed at least one draft.
+All 8 rebrand stories shipped. The product is now fully rebranded as PWHL GM across all user-facing surfaces. 202/202 tests pass; `tsc --noEmit` clean; zero "PWHL Fantasy" strings in the live UI.
 
-- **P1 (min shippable, ~8h):** REBRAND-001 (name + logo + hero) · REBRAND-002 (voice consistency) · REBRAND-008 (QA sprint)
-- **P1 (beta bug fixes):** BF-001 (draft room false eviction) · BF-002 (performance tab week number mismatch)
-- **P2 (visual redesign, ~16h more):** REBRAND-003 (detail polish + docs) · REBRAND-004 (design tokens) · REBRAND-005 (matchup page) · REBRAND-006 (draft room)
-- **P3 (secondary pages):** REBRAND-007 (lineup, roster, standings, bracket, overview)
-- **P3 (tail):** League History & Hall of Fame (#33/#18) · ~50K — moved from Sprint 7; skeleton page ships here, fills in after first season renewal. Spec: `docs/02-engineering/league-history-spec.md`.
-
-Total sprint: 43 rebrand points + League History/HoF tail item + 2 P1 beta bug fixes. P1-only minimum: 11 points (~8 hours as per original plan).
+- **REBRAND-001 ✅** — `components/LogoShield.tsx`; global "PWHL Fantasy" → "PWHL GM" rename; home page hero rewrite ("Think Like a GM."); favicon/manifest update
+- **REBRAND-002 ✅** — Voice consistency: "Your Franchises" dashboard, "Front Office" nav, login/welcome copy
+- **REBRAND-003 ✅** — Detail polish: "PWHL GM — Draft Room" header, "pts" terminology, README/CLAUDE.md product name
+- **REBRAND-004 ✅** — Design token system: Archivo + Saira Condensed fonts, deep violet (#7c3aed), solid dark cards (#121829), radial gradient bg, `.section-accent` pill, `.font-stats` utility
+- **REBRAND-005 ✅** — Matchup page IA restructure (Z1–Z9 render order, `RosterStatusWidget`, BUG-MATCHUP-001 fix)
+- **REBRAND-006 ✅** — Draft room visual upgrade: pick cell glow, player row hover, card border-radius, `TeamSpreadPanel` concentration bar
+- **REBRAND-007 ✅** — Secondary pages token pass: `LineupManager`, `RosterManager`, bracket page, `PlayoffBracket`, league overview all use new CSS vars
+- **REBRAND-008 ✅** — QA pass: zero "PWHL Fantasy" strings, `tsc` clean, 202/202 tests pass
 
 **Deferred to post-launch backlog:** FAAB (#6, deferred from Sprint 7 Priority 3 — not needed before public launch; revisit for 2027-28 off-season once waiver cron is stable and commissioners request it) · Growth analytics (GR-001/002/003/004) · real-time push scoring · push notifications · multi-season historical library (#12) · player trends (#23) · keeper/dynasty (#19/#20) · native apps / AI features. See `docs/01-roadmap/roadmap-sprints.md` for full backlog list.
 

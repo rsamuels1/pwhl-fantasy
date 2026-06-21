@@ -367,104 +367,67 @@ concurrent leagues; integration test clean; founding commissioner beta invites g
 
 ---
 
-## Sprint 9 — "PWHL GM Rebrand" · ~2 wks · Track F · P1/P2 · ✅ IN PROGRESS
+## Sprint 9 — "PWHL GM Rebrand" · ~2 wks · Track F · P1/P2 · ✅ COMPLETE
 
-Goal: Execute the planned PWHL Fantasy → PWHL GM rebrand. All strategy, mockups, copy, and implementation checklists are finalized in `docs/branding/`. This sprint ships the identity layer — names, logo, voice consistency, design tokens, and page-level visual upgrades — without touching any product logic.
+Goal: Execute the planned PWHL Fantasy → PWHL GM rebrand. All 8 stories shipped. The product is now fully rebranded as PWHL GM.
 
-**Trigger criteria (all must be true before starting):**
-- Sprint 8 Beta Hardening complete and beta invites sent
-- No P0 bugs open
-- Founding commissioners have completed at least one draft
-- Team has capacity for a polish sprint
+**All items shipped:**
 
-**Sprint capacity:** ~40 points across 8 stories
+**REBRAND-001: Core Identity (Name, Logo, Hero)** · 5 pts · P1 · ✅ SHIPPED
+`components/LogoShield.tsx` (new); global "PWHL Fantasy" → "PWHL GM" rename across all `.tsx` files; `public/favicon.ico` and `public/manifest.json` updated; home page hero rewrite ("Think Like a GM.", management sub-copy, "How it works" steps reframed); hero eyebrow color `--green` → `--accent`.
+Files: `app/layout.tsx`, `app/page.tsx`, `public/favicon.ico`, `public/manifest.json`, `components/LogoShield.tsx`.
 
-**P1 — Minimum shippable rebrand (~8 hours, matches `BRANDING-DEFERRED.md` estimate):**
-
-**Priority 1 — REBRAND-001: Core Identity (Name, Logo, Hero)** · 5 pts · P1 · ✅ SHIPPED
-`docs/branding/04-implementation-checklist.md` Phase 1. Global "PWHL Fantasy" → "PWHL GM" find-replace across all `.tsx` files; new `components/LogoShield.tsx` shield+GM SVG (purple gradient, white GM text, 32px nav / 512px PWA); `public/favicon.ico` and `public/manifest.json` updated; home page hero rewrite ("Think Like a GM.", management sub-copy, "How it works" steps reframed); hero eyebrow color `--green` → `--accent`.
-Files: `app/layout.tsx`, `app/page.tsx`, `public/favicon.ico`, `public/manifest.json`, `components/LogoShield.tsx` (new). Zero logic changes.
-
-**Priority 2 — REBRAND-002: Voice Consistency** · 3 pts · P1 · ✅ SHIPPED
-`04-implementation-checklist.md` Phase 2. Welcome flow title/eyebrow/card descriptions; dashboard "Your Franchises"; login pitch copy; admin nav "Admin" → "Front Office"; invite and register page copy.
+**REBRAND-002: Voice Consistency** · 3 pts · P1 · ✅ SHIPPED
+Welcome flow title/eyebrow/card descriptions; dashboard "Your Franchises"; login pitch copy; admin nav "Admin" → "Front Office"; invite and register page copy.
 Files: `components/WelcomeFlow.tsx`, `app/dashboard/page.tsx`, `app/login/page.tsx`, `app/league/[leagueId]/layout.tsx`, `app/register/page.tsx`, `app/invite/[leagueId]/page.tsx`.
 
-**Priority 3 — REBRAND-003: Detail Polish ("Fantasy" Modifiers + Docs)** · 3 pts · P2 · ✅ SHIPPED
-`04-implementation-checklist.md` Phase 3. Remove "fantasy pts" from `RosterManager.tsx`; update draft room header to "PWHL GM — Draft Room"; "PWHL Fantasy" strings in `app/leagues/page.tsx`; `CLAUDE.md` and `README.md` product name updates; link `03-terminology-guide.md` from `CLAUDE.md`.
-Files: `app/team/[teamId]/roster/RosterManager.tsx`, `app/draft/[leagueId]/DraftRoom.tsx`, `app/league/[leagueId]/roster/page.tsx`, `app/leagues/page.tsx`, `CLAUDE.md`, `README.md`.
+**REBRAND-003: Detail Polish ("Fantasy" Modifiers + Docs)** · 3 pts · P2 · ✅ SHIPPED
+Removed "fantasy pts" label from `RosterManager.tsx`; draft room header updated to "PWHL GM — Draft Room"; `CLAUDE.md` and `README.md` product name updated; "pts" terminology throughout.
+Files: `app/team/[teamId]/roster/RosterManager.tsx`, `app/draft/[leagueId]/DraftRoom.tsx`, `app/leagues/page.tsx`, `CLAUDE.md`, `README.md`.
 
-**Priority 4 — REBRAND-008: QA Sprint** · 3 pts · P1
-Run the manual testing path from `04-implementation-checklist.md` Phase 4 after all P1 PRs merge. Verify: no "PWHL Fantasy" strings in live UI; no "HF" placeholder visible; shield logo in header and favicon; full user journey (home → login → dashboard → draft → matchup → standings → admin); mobile at 390px; `npm test` and `npx tsc --noEmit` pass. Monitor error logs 24h post-deploy.
-
-**P2 — Visual redesign layer (depends on REBRAND-004 token foundation):**
-
-**Priority 5 — REBRAND-004: Design Token System Upgrade** · 5 pts · P2 · ✅ SHIPPED
-Extend `app/globals.css` `:root` with the v2 token vocabulary: Archivo + Saira Condensed font vars (`--font-body`, `--font-stats`); `--card`, `--accent`/`--accent-strong`/`--accent-deep`/`--accent-dim`/`--accent-border`/`--accent-glow` palette; `--text`, `--muted`, `--dim`, `--faint`, `--border` text/border scale; `.rebrand-card`, `.pos-badge`, `.alert-amber`, `.chip-clinched/eliminated/in`, `.section-header/label`, `.section-accent` utility classes; `.font-stats` for DM Mono stats; `.draft-player-row:hover`, `.bracket-champion` component tokens. Existing tokens (`--bg`, `--panel`, `--surface`, etc.) retained for backwards compat. All existing breakpoints preserved.
+**REBRAND-004: Design Token System Upgrade** · 5 pts · P2 · ✅ SHIPPED
+Archivo + Saira Condensed font vars (`--font-body`, `--font-stats`); deep violet `--accent` (#7c3aed); solid dark card surface (`--card`, #121829); radial gradient background; `.rebrand-card`, `.pos-badge`, `.alert-amber`, `.chip-*`, `.section-accent`, `.font-stats` utility classes; `.draft-player-row:hover`, `.bracket-champion` component tokens. All existing tokens retained for backwards compat.
 Files: `app/globals.css`.
 
-**Priority 6 — REBRAND-005: Matchup Page IA + Visual Redesign** · 8 pts · P2 · ✅ SHIPPED
-Shipped June 20, 2026. Two related changes bundled:
-
-**BUG-MATCHUP-001 fix:** `lib/services/dashboard.ts` — added `isSetupPhase?: boolean` to `ActiveMatchup` interface; set to `true` when all roster players have `gameCount === 0` in the current active period (both regular-season and playoff paths). `app/team/[teamId]/matchup/page.tsx` — `FieldHero` and `DuelHero` both use `hideScore = isUpcoming || isSetupPhase`; show "—" instead of "0.0 vs 0.0" during SETUP phase; show amber "No games yet" badge; suppress win-probability bar and live-score poller. Fixes the 0 vs 0 hero score that appeared whenever `replayCurrentDate = period.startsAt` (replay SETUP) or at real-world week start before the first game tips off.
-
-**Matchup page IA restructure (REBRAND-005 + REBRAND-007):** Removed `<MatchupTabs>` tab switcher; promoted Analysis to its own TeamNav tab and route. New render order (Z1–Z9): Lineup Alert → MatchupHero → Live Situation Grid (2-col: Playing Tonight + Swing left | new `RosterStatusWidget` right) → Rival Badge → Recap Card → Rosters → SETUP Fallback Stats → Top/Underperforming Performers → League Leaders → Activity Feed. New inline `RosterStatusWidget` component (no new data fetch): shows lineup fill count, lock state, projected FP, and "Adjust lineup →" CTA. Between-weeks nudge absorbed into RosterStatusWidget. Analysis tab (`components/AnalysisTab.tsx`) extracted to `app/team/[teamId]/analysis/page.tsx` as a standalone server-component route. `components/MatchupTabs.tsx` no longer used from matchup page. TeamNav gains "Analysis" tab pointing to `/team/${teamId}/analysis`.
+**REBRAND-005: Matchup Page IA + Visual Redesign** · 8 pts · P2 · ✅ SHIPPED
+BUG-MATCHUP-001 fixed (`isSetupPhase` flag on `ActiveMatchup`; heroes show "—" not "0.0 vs 0.0" during SETUP phase). Matchup page restructured to Z1–Z9 render order; new `RosterStatusWidget` component; Analysis promoted to standalone `/team/[teamId]/analysis/` route and TeamNav tab; `<MatchupTabs>` removed.
 Files: `app/team/[teamId]/matchup/page.tsx`, `lib/services/dashboard.ts`, `app/team/[teamId]/analysis/page.tsx` (new), `app/team/[teamId]/TeamNav.tsx`.
-Depends On: REBRAND-004.
 
-**Priority 7 — REBRAND-006: Draft Room Visual Redesign** · 8 pts · P2
-Upgrade `app/draft/[leagueId]/DraftRoom.tsx` to mockup standard: DM Mono countdown clock, `--indigo-border` glow ring on current pick cell, position-color coded NeedsPanel slot rows, green/amber concentration fills in `TeamSpreadPanel`, `--navy-card` hover rows in `PlayerPanel`, `--indigo` active position-filter pills. Mobile tabbed layout preserved; visual upgrade only. No WebSocket or logic changes. Visual parity with `docs/branding/mockups/02-draft-room.html` at 1440px desktop.
-Depends On: REBRAND-004, REBRAND-001.
+**REBRAND-006: Draft Room Visual Redesign** · 8 pts · P2 · ✅ SHIPPED
+Pick cell glow on current pick; player row hover styles; card border-radius upgrades; `TeamSpreadPanel` concentration bar visual polish; position-color coded NeedsPanel slot rows; no WebSocket or logic changes.
+Files: `app/draft/[leagueId]/DraftRoom.tsx`.
 
-**P3 — Secondary pages (lower priority, can defer to Sprint 10):**
+**REBRAND-007: Secondary Pages Token Pass** · 8 pts · P3 · ✅ SHIPPED
+`LineupManager`, `RosterManager`, bracket page, `PlayoffBracket`, and league overview all updated to use new CSS vars from REBRAND-004 token system.
+Files: `app/team/[teamId]/lineup/LineupManager.tsx`, `app/team/[teamId]/roster/RosterManager.tsx`, `app/league/[leagueId]/standings/page.tsx`, `app/league/[leagueId]/bracket/page.tsx`, `app/league/[leagueId]/page.tsx`.
 
-**Priority 8 — REBRAND-007: Secondary Pages (Lineup, Roster, Standings, Bracket, Overview)** · 8 pts · P3
-Apply v2 visual language to remaining weekly-loop pages. Lineup (`LineupManager.tsx`): selected player `--indigo-border` ring, games-remaining `--indigo-dim` badge, zero-games warning `--amber-dim` background. Roster (`RosterManager.tsx`): DM Mono FP values, `--amber-dim` waiver badge. Standings: user row `--indigo-dim`, clinch `--green-dim`, elim `--red-dim` chips. Bracket: champion card `--indigo-glow`, round labels Syne font. League overview: race table `--navy-card`, commissioner strip `--amber-dim`.
-Depends On: REBRAND-004.
+**REBRAND-008: QA Pass** · 3 pts · P1 · ✅ SHIPPED
+Zero "PWHL Fantasy" strings in live UI; `tsc --noEmit` clean; 202/202 tests pass.
 
-**Priority 9 — League History & Hall of Fame (#33 / #18)** · ~50K · P3
-Spec: `docs/02-engineering/league-history-spec.md`
-Moved from Sprint 7 Priority 1 to end of Sprint 9 — pushed to make room for Trade System
-in Sprint 7. New `/league/[leagueId]/history` page walking the `parentLeagueId` chain. Past
-season cards: champion, top-4 standings. Hall of Fame section: all past champions + two
-all-time records (highest single-week FP, most VP in a season). Nav tab hidden in season 1.
-No schema changes. Meaningful only after at least one completed and renewed season; ship the
-page skeleton now and let it fill in naturally.
+**Beta Bug Fixes — also shipped in Sprint 9:**
 
-**Beta Bug Fixes (added from founding-commissioner feedback, Jun 21, 2026):**
+- **BF-001 ✅ — Draft Room False Eviction** — fixed stale WebSocket self-eviction on hard refresh; one silent reconnect attempt on 4001 before showing eviction screen.
+  Files: `hooks/useDraftSocket.ts`, `app/draft/[leagueId]/DraftRoom.tsx`.
 
-- **BF-001 — Draft Room False Eviction** · P1 · S
-  Source: Feedback `cmqn6ppib0037ayqco2pgk62g`. Manager saw "You opened the draft in another tab" on first load with no other tabs open. Root cause: stale WebSocket from a prior navigation leaves a dead entry in the server's `sockets` map; when the same `(leagueId, teamId)` reconnects the server evicts it with code 4001 before the stale one has timed out. Fix: on 4001, attempt one silent reconnect after 500ms before locking the eviction screen. Fallback: show an actionable "Rejoin draft" button instead of the dead-end message.
-  Files: `hooks/useDraftSocket.ts` (reconnect on 4001 path), `app/draft/[leagueId]/DraftRoom.tsx` (eviction UI).
-
-- **BF-002 — Performance Tab Week Number Shows "Week 1" Mid-Season** · P1 · S
-  Source: Feedback `cmqmn2ffl0001rdpgj8tt1c2z`. Two issues: (A) "Week N of M" badge in `GMCommandCenter.tsx` falls back to `1` when no active period is found (SETUP/between-weeks phases), even mid-season — fix by deriving from the last completed week when the active period is null. (B) Tab label "Performance" is confusing — P2 rename to "My Season" or "Season Stats" in `TeamNav.tsx`.
-  Files: `components/sim/GMCommandCenter.tsx` (line 55 weekNumber derivation), `app/team/[teamId]/schedule/page.tsx`, `components/TeamNav.tsx` (tab label, P2).
+- **BF-002 ✅ — Performance Tab Week Number Shows "Week 1" Mid-Season** — week badge in `GMCommandCenter.tsx` now derives from last completed week when no active period exists; no longer falls back to 1 mid-season.
+  Files: `components/sim/GMCommandCenter.tsx`, `app/team/[teamId]/schedule/page.tsx`.
 
 **Sprint 9 Point Totals:**
-| Story | Points | Priority | Depends On |
+| Story | Points | Priority | Status |
 |---|---|---|---|
-| REBRAND-001: Core Identity | 5 | P1 | — |
-| REBRAND-002: Voice Consistency | 3 | P1 | REBRAND-001 global pass done |
-| REBRAND-003: Detail Polish | 3 | P2 | REBRAND-001 |
-| REBRAND-008: QA Sprint | 3 | P1 | All P1s merged |
-| REBRAND-004: Design Tokens | 5 | P2 | — |
-| REBRAND-005: Matchup Page | 8 | P2 | REBRAND-004 |
-| REBRAND-006: Draft Room | 8 | P2 | REBRAND-004, REBRAND-001 |
-| REBRAND-007: Secondary Pages | 8 | P3 | REBRAND-004 |
-| League History & HoF (#33/#18) | ~50K | P3 | Sprint 2 (parentLeagueId chain); Trade System (#7) |
-| **BF-001: Draft Room False Eviction** | S | P1 | — |
-| **BF-002: Performance Tab Week Number** | S | P1 | — |
-| **Total** | **43 pts + HoF + 2 bug fixes** | — | — |
+| REBRAND-001: Core Identity | 5 | P1 | ✅ DONE |
+| REBRAND-002: Voice Consistency | 3 | P1 | ✅ DONE |
+| REBRAND-003: Detail Polish | 3 | P2 | ✅ DONE |
+| REBRAND-008: QA Sprint | 3 | P1 | ✅ DONE |
+| REBRAND-004: Design Tokens | 5 | P2 | ✅ DONE |
+| REBRAND-005: Matchup Page | 8 | P2 | ✅ DONE |
+| REBRAND-006: Draft Room | 8 | P2 | ✅ DONE |
+| REBRAND-007: Secondary Pages | 8 | P3 | ✅ DONE |
+| BF-001: Draft Room False Eviction | S | P1 | ✅ DONE |
+| BF-002: Performance Tab Week Number | S | P1 | ✅ DONE |
+| **Total** | **43 pts + 2 bug fixes** | — | **10/10** |
 
-**Minimum shippable rebrand (P1 stories only):** REBRAND-001 + REBRAND-002 + REBRAND-008 = 11 points · ~8 hours. Ships name, logo, and voice consistency as planned in `BRANDING-DEFERRED.md`. REBRAND-003 (3 pts) is low-risk detail polish that can run same-day. Visual redesign stories (P2/P3) follow as a second pass.
-
-**Dependency order for parallel execution:**
-- REBRAND-001, 002, 003 can run in parallel (all copy/text)
-- REBRAND-008 runs last (QA after everything merges)
-- REBRAND-004 is independent of copy stories; can run in parallel with 001–003
-- REBRAND-005, 006, 007 can run in parallel with each other after REBRAND-004 merges
-
-**Exit:** The product is visibly "PWHL GM" across all user-facing surfaces. Shield logo in browser tab. "Think Like a GM." on the home page. "Your Franchises" on the dashboard. "Front Office" in commissioner nav. Matchup and draft room pages match the approved mockups at 1280px desktop and 390px mobile. All tests green. Zero "PWHL Fantasy" strings in the live UI. League History/HoF page skeleton live (fills in after first season renewal).
+**Exit achieved:** The product is visibly "PWHL GM" across all user-facing surfaces. Shield logo in browser tab. "Think Like a GM." on the home page. "Your Franchises" on the dashboard. "Front Office" in commissioner nav. Matchup and draft room match the approved mockups. All 202 tests green. Zero "PWHL Fantasy" strings in the live UI. BF-001 and BF-002 resolved.
 
 ---
 
@@ -510,7 +473,7 @@ Items below are acknowledged but have no sprint assignment. They become candidat
 | Sprint 0 — Implementation Alignment | ✅ COMPLETE (Jun 12, 2026) | Rosters / VP / Playoffs flipped FAIL → PASS |
 | Sprint 1 — Season Validation | ✅ COMPLETE (Jun 12, 2026) | Full season simulates, 114 tests pass, confidence 85–90% |
 | Sprint 2 — Commissioner + Platform Foundation | ✅ COMPLETE (Jun 2026) | Commissioner recovery tools, multi-season schema, analytics (6 events), VP education; 130 tests pass |
-| Sprint 9 — PWHL GM Rebrand | Planned | 8 stories · 43 pts · P1 name+logo+voice; P2 tokens+page redesigns; P3 secondary pages |
+| Sprint 9 — PWHL GM Rebrand | ✅ COMPLETE | 8/8 stories shipped · REBRAND-001–008 all done · BF-001 + BF-002 resolved · 202/202 tests · tsc clean · zero "PWHL Fantasy" strings in live UI |
 | Sprint 3 — Beta Readiness | ✅ COMPLETE (Jun 13, 2026) | Onboarding ✅, error handling ✅, mobile ✅, NT-001 ✅, draft notifications ✅, transaction history ✅, IA-011 ✅ |
 | Sprint 4 — Product Polish | ✅ COMPLETE (Jun 13, 2026) | NT-002 LINEUP_INCOMPLETE ✅ · #01 commissioner dashboard ✅ · #17 rivalries ✅ · VP standings fix ✅ · playoff mode + replay support ✅ |
 | Sprint 5 — Validation + Beta Operations | ✅ COMPLETE | Replay gap fix ✅ · sim-to-playoffs ✅ · draft cert ✅ · founder dashboard ✅ · playoff experience UX ✅ · commissioner workflow validation ✅ |

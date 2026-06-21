@@ -222,11 +222,11 @@
 <body>
   <!-- Header -->
   <header>
-    <h1>PWHL Fantasy · Project Tracker</h1>
+    <h1>PWHL GM · Project Tracker</h1>
     <div class="header-right">
       <div class="stat">
         <span class="label">Current:</span>
-        <span class="value">Sprint 7</span>
+        <span class="value">Sprint 10</span>
       </div>
       <div class="stat">
         <span class="label">Beta Target:</span>
@@ -234,7 +234,7 @@
       </div>
       <div class="stat">
         <span class="label">Sprints:</span>
-        <span class="value">7–8/8</span>
+        <span class="value">9/9 done</span>
       </div>
       <div class="stat">
         <span class="label">Gates:</span>
@@ -392,10 +392,10 @@
           <span class="status complete">✅ DONE</span>
         </div>
 
-        <div class="sprint-card current" onclick="switchTab('sprints'); setTimeout(() => document.getElementById('sprint-7').scrollIntoView({behavior: 'smooth'}), 100)">
+        <div class="sprint-card complete" onclick="switchTab('sprints'); setTimeout(() => document.getElementById('sprint-7').scrollIntoView({behavior: 'smooth'}), 100)">
           <div class="name">Sprint 7</div>
-          <div class="progress">2/3</div>
-          <span class="status current">● LIVE</span>
+          <div class="progress">3/3</div>
+          <span class="status complete">✅ DONE</span>
         </div>
 
         <div class="sprint-card complete" onclick="switchTab('sprints'); setTimeout(() => document.getElementById('sprint-8').scrollIntoView({behavior: 'smooth'}), 100)">
@@ -403,10 +403,16 @@
           <div class="progress">14/14 · commit b465423</div>
           <span class="status complete">✅ DONE</span>
         </div>
-        <div class="sprint-card planned" onclick="switchTab('sprints'); setTimeout(() => document.getElementById('sprint-9').scrollIntoView({behavior: 'smooth'}), 100)">
+        <div class="sprint-card complete" onclick="switchTab('sprints'); setTimeout(() => document.getElementById('sprint-9').scrollIntoView({behavior: 'smooth'}), 100)">
           <div class="name">Sprint 9</div>
-          <div class="progress">PWHL GM Rebrand · 43 pts · P1/P2/P3</div>
-          <span class="status planned">○ PLANNED</span>
+          <div class="progress">PWHL GM Rebrand · 10/10 · 202 tests</div>
+          <span class="status complete">✅ DONE</span>
+        </div>
+
+        <div class="sprint-card current" onclick="switchTab('sprints')">
+          <div class="name">Sprint 10</div>
+          <div class="progress">Post-beta · League History / HoF · Public Launch Prep</div>
+          <span class="status current">● UPCOMING</span>
         </div>
 
     </div>
@@ -985,77 +991,68 @@
         <div class="exit-criteria"><strong>Exit:</strong> all 14 items done ✅ — P0+P1 audit fixes shipped Jun 20 · 7 beta bug fixes (commit b465423) · PLAYOFF-BUG-001 resolved · auto-set during playoffs enabled · roster refresh fixed · Vercel cron wiring deferred to ops phase. <strong>Founding commissioner beta invites target Jul 14, 2026.</strong></div>
       </div>
 
-      <div id="sprint-9" class="card planned">
+      <div id="sprint-9" class="card complete">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
           <div>
             <div style="font-weight: 700; font-size: 1rem;">Sprint 9 · "PWHL GM Rebrand"</div>
-            <div style="font-size: 0.8rem; color: #888; margin-top: 0.2rem;">Goal: Execute planned PWHL Fantasy → PWHL GM rebrand · ~2 wks · P1/P2 · 43 pts · Trigger: Sprint 8 complete + founding commissioners have drafted</div>
+            <div style="font-size: 0.8rem; color: #888; margin-top: 0.2rem;">Goal: Execute planned PWHL Fantasy → PWHL GM rebrand · 10/10 items shipped · 202/202 tests · tsc clean</div>
           </div>
-          <span class="status planned">○ PLANNED</span>
+          <span class="status complete">✅ COMPLETE</span>
         </div>
         <div>
 
             <div class="task-row">
-              <span class="task-check">○</span>
-              <span style="color: #ccc"><strong style="color:#818cf8">REBRAND-001 (P1, 5 pts) — Core Identity: Name, Logo, Hero</strong> · Global "PWHL Fantasy" → "PWHL GM" find-replace; new <code>components/LogoShield.tsx</code> shield+GM SVG (purple gradient, white GM text); <code>public/favicon.ico</code> + <code>public/manifest.json</code> updated; home page hero rewrite ("Think Like a GM.", management sub-copy, "How it works" steps reframed); hero eyebrow <code>--green</code> → <code>--accent</code>. Files: <code>app/layout.tsx</code>, <code>app/page.tsx</code>, <code>public/favicon.ico</code>, <code>public/manifest.json</code>, <code>components/LogoShield.tsx</code>. Zero logic changes.</span>
+              <span class="task-check">✅</span>
+              <span style="color: #666"><strong style="color:#888">REBRAND-001 (P1, 5 pts) — Core Identity: Name, Logo, Hero</strong> · <code>components/LogoShield.tsx</code> (new); global "PWHL Fantasy" → "PWHL GM" rename; home page hero rewrite ("Think Like a GM."); <code>public/favicon.ico</code> + <code>public/manifest.json</code> updated; hero eyebrow <code>--green</code> → <code>--accent</code>.</span>
             </div>
 
             <div class="task-row">
-              <span class="task-check">○</span>
-              <span style="color: #ccc"><strong style="color:#818cf8">REBRAND-002 (P1, 3 pts) — Voice Consistency</strong> · Welcome flow title/eyebrow/cards → management framing; dashboard "Your Franchises"; login pitch copy; admin nav "Admin" → "Front Office"; invite + register page copy. Files: <code>components/WelcomeFlow.tsx</code>, <code>app/dashboard/page.tsx</code>, <code>app/login/page.tsx</code>, <code>app/league/[leagueId]/layout.tsx</code>, <code>app/register/page.tsx</code>, <code>app/invite/[leagueId]/page.tsx</code>.</span>
+              <span class="task-check">✅</span>
+              <span style="color: #666"><strong style="color:#888">REBRAND-002 (P1, 3 pts) — Voice Consistency</strong> · "Your Franchises" dashboard; "Front Office" nav; login/welcome copy rewritten in management framing; invite + register page copy updated.</span>
             </div>
 
             <div class="task-row">
-              <span class="task-check">○</span>
-              <span style="color: #ccc"><strong style="color:#f59e0b">REBRAND-003 (P2, 3 pts) — Detail Polish: "Fantasy" Modifiers + Docs</strong> · Remove "fantasy pts" label from <code>RosterManager.tsx</code>; draft room header → "PWHL GM — Draft Room"; <code>app/leagues/page.tsx</code> copy; <code>CLAUDE.md</code> + <code>README.md</code> product name updates; link <code>03-terminology-guide.md</code> from <code>CLAUDE.md</code>.</span>
+              <span class="task-check">✅</span>
+              <span style="color: #666"><strong style="color:#888">REBRAND-003 (P2, 3 pts) — Detail Polish</strong> · "fantasy pts" → "pts" in <code>RosterManager.tsx</code>; draft room header → "PWHL GM — Draft Room"; <code>CLAUDE.md</code> + <code>README.md</code> product name updated.</span>
             </div>
 
             <div class="task-row">
-              <span class="task-check">○</span>
-              <span style="color: #f59e0b"><strong>REBRAND-004 (P2, 5 pts) — Design Token System Upgrade</strong> · Extend <code>app/globals.css</code> with v2 token vocabulary from <code>docs/branding/pwhl-gm-matchup-mockup-v2.html</code>: card surface tokens (<code>--navy-card</code>, <code>--navy-card-border</code>, <code>--navy-card-hover</code>), indigo variants (<code>--indigo-dim</code>, <code>--indigo-border</code>, <code>--indigo-glow</code>, <code>--indigo-text</code>), semantic state colors (amber/red/green dim+border), position tokens (<code>--pos-fwd/def/goal/util</code>), text scale, shape tokens. Add Syne + DM Mono fonts; wire <code>--font-display</code> and <code>--font-mono</code>. Radial body glow + frosted glass header. <strong>Blocks REBRAND-005/006/007.</strong></span>
+              <span class="task-check">✅</span>
+              <span style="color: #666"><strong style="color:#888">REBRAND-004 (P2, 5 pts) — Design Token System Upgrade</strong> · Archivo + Saira Condensed fonts; deep violet <code>--accent</code> (#7c3aed); solid dark card surface (#121829); radial gradient bg; <code>.rebrand-card</code>, <code>.pos-badge</code>, <code>.alert-amber</code>, <code>.chip-*</code>, <code>.section-accent</code>, <code>.font-stats</code> utility classes. Files: <code>app/globals.css</code>.</span>
             </div>
 
             <div class="task-row">
-              <span class="task-check">○</span>
-              <span style="color: #ccc"><strong style="color:#f59e0b">REBRAND-005 (P2, 8 pts) — Matchup Page Visual Redesign</strong> · Upgrade <code>app/team/[teamId]/matchup/</code> to v2 standard: Syne font on hero scores, DM Mono for FP values, <code>--navy-card</code> surfaces, position color tokens on roster rows, indigo win-probability bar, amber swing-players label, <code>--radius-card</code> corners. Includes <code>AnalysisTab.tsx</code> upgrade. No server/data changes. Visual parity with <code>docs/branding/mockups/03-my-matchup.html</code> + <code>pwhl-gm-matchup-mockup-v2.html</code>. Depends on REBRAND-004.</span>
+              <span class="task-check">✅</span>
+              <span style="color: #666"><strong style="color:#888">REBRAND-005 (P2, 8 pts) — Matchup Page IA + Visual Redesign</strong> · BUG-MATCHUP-001 fixed (<code>isSetupPhase</code> flag; heroes show "—" not "0.0 vs 0.0" in SETUP phase). Z1–Z9 render order; new <code>RosterStatusWidget</code>; Analysis promoted to standalone <code>/team/[teamId]/analysis/</code> route + TeamNav tab.</span>
             </div>
 
             <div class="task-row">
-              <span class="task-check">○</span>
-              <span style="color: #ccc"><strong style="color:#f59e0b">REBRAND-006 (P2, 8 pts) — Draft Room Visual Redesign</strong> · Upgrade <code>app/draft/[leagueId]/DraftRoom.tsx</code>: DM Mono countdown clock, <code>--indigo-border</code> glow on current pick cell, position-color NeedsPanel slot rows, green/amber concentration fills in TeamSpreadPanel, <code>--navy-card</code> hover rows in PlayerPanel, <code>--indigo</code> active position-filter pills. Mobile tabbed layout preserved. No WebSocket or logic changes. Depends on REBRAND-004.</span>
+              <span class="task-check">✅</span>
+              <span style="color: #666"><strong style="color:#888">REBRAND-006 (P2, 8 pts) — Draft Room Visual Redesign</strong> · Pick cell glow on current pick; player row hover styles; card border-radius; <code>TeamSpreadPanel</code> concentration bar polish; no WebSocket or logic changes.</span>
             </div>
 
             <div class="task-row">
-              <span class="task-check">○</span>
-              <span style="color: #888"><em>REBRAND-007 (P3, 8 pts) — Secondary Pages (Lineup, Roster, Standings, Bracket, Overview) · Apply v2 visual language to remaining weekly-loop pages: lineup selected-player indigo ring + games-remaining indigo-dim badge; roster DM Mono FP + amber waiver badge; standings user-row indigo-dim + clinch/elim chips; bracket champion indigo glow; overview race table navy-card. Depends on REBRAND-004.</em></span>
+              <span class="task-check">✅</span>
+              <span style="color: #666"><strong style="color:#888">REBRAND-007 (P3, 8 pts) — Secondary Pages Token Pass</strong> · <code>LineupManager</code>, <code>RosterManager</code>, bracket page, <code>PlayoffBracket</code>, and league overview all updated to use new CSS vars from REBRAND-004 token system.</span>
             </div>
 
             <div class="task-row">
-              <span class="task-check">○</span>
-              <span style="color: #ccc"><strong style="color:#818cf8">REBRAND-008 (P1, 3 pts) — QA Sprint</strong> · Run full manual testing path (<code>04-implementation-checklist.md</code> Phase 4): home → login → welcome flow → dashboard → draft → matchup → standings → admin. Verify no "PWHL Fantasy" strings visible in UI; shield logo in header + favicon; all tests pass; zero JS console errors on critical path; 24h post-deploy monitoring. Runs last, after all other stories merge.</span>
+              <span class="task-check">✅</span>
+              <span style="color: #666"><strong style="color:#888">REBRAND-008 (P1, 3 pts) — QA Pass</strong> · Zero "PWHL Fantasy" strings in live UI; <code>tsc --noEmit</code> clean; 202/202 tests pass.</span>
             </div>
 
             <div class="task-row">
-              <span class="task-check">○</span>
-              <span style="color: #888"><em><strong style="color:#6b7280">League History &amp; Hall of Fame (#33/#18) (P3, ~50K)</strong> — moved from Sprint 7 Priority 1 to Sprint 9 tail to make room for Trade System. Spec: <code>docs/02-engineering/league-history-spec.md</code>. New <code>/league/[leagueId]/history</code> page walking <code>parentLeagueId</code> chain. Past season cards: champion, top-4 standings. Hall of Fame: all past champions + two all-time records. Nav tab hidden in season 1. No schema changes. Ship skeleton now; fills in after first season renewal.</em></span>
+              <span class="task-check">✅</span>
+              <span style="color: #666"><strong style="color:#888">BF-001 (P1) — Draft Room False Eviction</strong> · Fixed stale WebSocket self-eviction on hard refresh; one silent reconnect attempt on 4001 before showing eviction screen. Files: <code>hooks/useDraftSocket.ts</code>, <code>app/draft/[leagueId]/DraftRoom.tsx</code>.</span>
             </div>
 
-            <div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid rgba(148,163,184,0.12);">
-              <div style="font-size: 0.8rem; font-weight: 700; color: #818cf8; text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 10px;">Beta Bug Fixes — added Jun 21, 2026</div>
-
-              <div style="margin-bottom: 8px;">
-                <span style="color: #f87171"><strong>BF-001 (P1) — Draft Room False Eviction</strong></span>
-                <span style="color: #cbd5e1; font-size: 0.85rem; margin-left: 6px;">Source: beta feedback cmqn6ppib0037ayqco2pgk62g. Manager sees "You opened the draft in another tab" on first load with no other tabs open. Root cause: stale WebSocket entry in server's <code>sockets</code> map from prior navigation evicts the fresh connection (code 4001) before it can establish. Fix: attempt one silent reconnect after 500ms on code 4001 before locking the eviction screen; or add an actionable "Rejoin draft" button as fallback. Files: <code>hooks/useDraftSocket.ts</code>, <code>app/draft/[leagueId]/DraftRoom.tsx</code>.</span>
-              </div>
-
-              <div>
-                <span style="color: #f87171"><strong>BF-002 (P1) — Performance Tab Week Number Shows "Week 1" Mid-Season</strong></span>
-                <span style="color: #cbd5e1; font-size: 0.85rem; margin-left: 6px;">Source: beta feedback cmqmn2ffl0001rdpgj8tt1c2z. Issue A: "Week N of M" badge in GM Command Center falls back to 1 (line 55: <code>activePeriod?.week || nextPeriod?.week || 1</code>) when between weeks mid-season. Fix: derive from last completed week when active period is null. Issue B (P2): tab label "Performance" unclear — user suggests renaming to something more descriptive. Files: <code>components/sim/GMCommandCenter.tsx</code>, <code>app/team/[teamId]/schedule/page.tsx</code>, <code>components/TeamNav.tsx</code>.</span>
-              </div>
+            <div class="task-row">
+              <span class="task-check">✅</span>
+              <span style="color: #666"><strong style="color:#888">BF-002 (P1) — Performance Tab Week Number Mid-Season</strong> · Week badge in <code>GMCommandCenter.tsx</code> now derives from last completed week when no active period; no longer falls back to 1 mid-season. Files: <code>components/sim/GMCommandCenter.tsx</code>, <code>app/team/[teamId]/schedule/page.tsx</code>.</span>
             </div>
 
         </div>
-        <div class="exit-criteria"><strong>Exit:</strong> Product is visibly "PWHL GM." Shield logo in browser tab. "Think Like a GM." on home page. "Your Franchises" on dashboard. "Front Office" in commissioner nav. Matchup + draft room match approved mockups at 1280px + 390px. BF-001 + BF-002 resolved. All tests green. Zero "PWHL Fantasy" strings in live UI. League History/HoF skeleton page live.</div>
+        <div class="exit-criteria"><strong>Exit achieved:</strong> Product is visibly "PWHL GM." Shield logo in browser tab. "Think Like a GM." on home page. "Your Franchises" on dashboard. "Front Office" in commissioner nav. Matchup + draft room match approved mockups. BF-001 + BF-002 resolved. 202/202 tests green. Zero "PWHL Fantasy" strings in live UI.</div>
       </div>
 
   </div>
@@ -1483,13 +1480,22 @@
                     <td>2 (schema) / 9 (UX)</td>
                   </tr>
 
-                  <tr class="backlog-row" data-status="todo" data-crit="low">
+                  <tr class="backlog-row" data-status="done" data-crit="low">
                     <td><span class="crit-dot crit-low"></span></td>
                     <td>#7</td>
                     <td>Trade System</td>
-                    <td><span class="status todo">TODO</span></td>
+                    <td><span class="status done">DONE</span></td>
                     <td>~130K</td>
                     <td>7</td>
+                  </tr>
+
+                  <tr class="backlog-row" data-status="done" data-crit="medium">
+                    <td><span class="crit-dot crit-medium"></span></td>
+                    <td>S9</td>
+                    <td>PWHL GM Rebrand (REBRAND-001–008 + BF-001/002)</td>
+                    <td><span class="status done">DONE</span></td>
+                    <td>43 pts</td>
+                    <td>9</td>
                   </tr>
 
               </tbody>

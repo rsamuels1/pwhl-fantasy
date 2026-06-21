@@ -380,7 +380,7 @@ Sprint: 9
 
 Priority: P1 — blocks founding commissioners from entering the draft room
 
-Status: Not Implemented
+Status: ✅ DONE
 
 Source: Beta feedback submission `cmqn6ppib0037ayqco2pgk62g` (2026-06-21). User reports receiving the "You opened the draft in another tab / Switch to that tab to continue drafting." screen on first load, with no other tabs open.
 
@@ -416,7 +416,7 @@ Sprint: 9
 
 Priority: P1 — misinformation during the live season loop
 
-Status: Not Implemented
+Status: ✅ DONE
 
 Source: Beta feedback submission `cmqmn2ffl0001rdpgj8tt1c2z` (2026-06-20). User reports: "The Performance tab says it's Week 1, but the badge at the top says Week 11." User also flags the tab name as unclear.
 
@@ -1301,9 +1301,9 @@ Acceptance Criteria:
 
 ---
 
-# Phase 8: Rebranding — PWHL Fantasy → PWHL GM
+# Phase 8: Rebranding — PWHL Fantasy → PWHL GM — COMPLETE ✅
 
-Goal: Reposition the product from "fantasy sports" framing to "professional sports management." Ship the planned PWHL GM identity after MVP is stable and initial users have drafted.
+Goal: Reposition the product from "fantasy sports" framing to "professional sports management." All 8 stories shipped in Sprint 9. The product is now fully rebranded as PWHL GM.
 
 Priority: P1 (post-MVP; execute before public launch or immediately after, depending on beta feedback)
 
@@ -1325,7 +1325,7 @@ Sprint: 9
 
 Priority: P1
 
-Status: Not Implemented
+Status: ✅ DONE
 
 Points: 5
 
@@ -1366,7 +1366,7 @@ Sprint: 9
 
 Priority: P1
 
-Status: Not Implemented
+Status: ✅ DONE
 
 Points: 3
 
@@ -1404,7 +1404,7 @@ Sprint: 9
 
 Priority: P2
 
-Status: Not Implemented
+Status: ✅ DONE
 
 Points: 3
 
@@ -1441,7 +1441,7 @@ Sprint: 9
 
 Priority: P2
 
-Status: Not Implemented
+Status: ✅ DONE
 
 Points: 5
 
@@ -1486,7 +1486,7 @@ Sprint: 9
 
 Priority: P2
 
-Status: Not Implemented
+Status: ✅ DONE
 
 Points: 8
 
@@ -1528,7 +1528,7 @@ Sprint: 9
 
 Priority: P2
 
-Status: Not Implemented
+Status: ✅ DONE
 
 Points: 8
 
@@ -1571,7 +1571,7 @@ Sprint: 9
 
 Priority: P3
 
-Status: Not Implemented
+Status: ✅ DONE
 
 Points: 8
 
@@ -1631,7 +1631,7 @@ Sprint: 9
 
 Priority: P1
 
-Status: Not Implemented
+Status: ✅ DONE
 
 Points: 3
 
