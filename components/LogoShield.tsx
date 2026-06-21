@@ -51,26 +51,15 @@ export function LogoWordmark() {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 13 }}>
       <LogoShield size={34} />
-      <div style={{ display: "flex", flexDirection: "column" }}>
-        <span style={{
-          fontWeight: 800,
-          fontSize: 15,
-          letterSpacing: "0.05em",
-          color: "#f3f5fb",
-          lineHeight: 1.2,
-        }}>
-          PWHL GM
-        </span>
-        <span style={{
-          fontSize: 10,
-          letterSpacing: "0.18em",
-          textTransform: "uppercase",
-          color: "#6f788e",
-          lineHeight: 1.2,
-        }}>
-          Front Office
-        </span>
-      </div>
+      <span style={{
+        fontWeight: 800,
+        fontSize: 15,
+        letterSpacing: "0.05em",
+        color: "#f3f5fb",
+        lineHeight: 1.2,
+      }}>
+        PWHL GM
+      </span>
     </div>
   );
 }
