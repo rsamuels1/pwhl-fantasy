@@ -319,11 +319,11 @@ export default function TradeCenter({
             href={`/league/${leagueId}/trades/new`}
             style={{
               padding: "10px 18px", borderRadius: 8,
-              background: "rgba(99,102,241,0.85)", color: "#fff",
+              background: "var(--accent)", color: "#fff",
               fontSize: 14, fontWeight: 600, textDecoration: "none",
             }}
           >
-            + Propose Trade
+            Propose Trade →
           </Link>
         )}
       </div>

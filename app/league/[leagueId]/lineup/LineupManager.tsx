@@ -336,6 +336,28 @@ export default function LineupManager({
       !p.hasPlayedThisPeriod
   );
 
+  // Empty roster check — show contextual empty state
+  if (roster.length === 0) {
+    return (
+      <div style={{ display: "flex", flexDirection: "column", gap: 16, padding: "40px 20px", textAlign: "center", alignItems: "center", minHeight: "50vh", justifyContent: "center" }}>
+        <div style={{ fontSize: 16, fontWeight: 600, color: "var(--text)", marginBottom: 8 }}>Your roster is empty</div>
+        <div style={{ fontSize: 14, color: "#94a3b8", marginBottom: 20 }}>Draft players first to set your lineup.</div>
+        <a href={`/league/${leagueId}`} style={{
+          display: "inline-block",
+          padding: "10px 20px",
+          borderRadius: 8,
+          background: "var(--accent)",
+          color: "#fff",
+          fontSize: 13,
+          fontWeight: 600,
+          textDecoration: "none",
+        }}>
+          Go to league overview →
+        </a>
+      </div>
+    );
+  }
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
       {/* Zero-games warning banner */}

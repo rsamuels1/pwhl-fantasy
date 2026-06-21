@@ -27,14 +27,14 @@ export default async function Home() {
         <p className="hero-text" style={{ maxWidth: 560, margin: "24px auto 0", textAlign: "center" }}>
           Don&apos;t just draft a team — run a front office. Build rosters, set lineups, work the wire, and make the calls that win championships in the Professional Women&apos;s Hockey League.
         </p>
+        {/* Trust strip */}
+        <div style={{ marginTop: 24, display: "flex", justifyContent: "center", gap: 20 }}>
+          <span style={{ fontSize: 13, color: "#6f788e" }}><span style={{ color: "#22c55e", marginRight: 4 }}>✓</span>Free to play</span>
+          <span style={{ fontSize: 13, color: "#6f788e" }}><span style={{ color: "#22c55e", marginRight: 4 }}>✓</span>No gambling, pure strategy</span>
+        </div>
         <div className="hero-actions" style={{ justifyContent: "center", marginTop: 36 }}>
           <Link href="/create-league" className="button-primary">Start your franchise →</Link>
           <Link href="/join-league" className="button-secondary">Join a league</Link>
-        </div>
-        {/* Trust strip */}
-        <div style={{ marginTop: 20, display: "flex", justifyContent: "center", gap: 20 }}>
-          <span style={{ fontSize: 13, color: "#6f788e" }}><span style={{ color: "#22c55e", marginRight: 4 }}>✓</span>Free to play</span>
-          <span style={{ fontSize: 13, color: "#6f788e" }}><span style={{ color: "#22c55e", marginRight: 4 }}>✓</span>No gambling, pure strategy</span>
         </div>
       </section>
 

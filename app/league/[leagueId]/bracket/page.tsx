@@ -123,6 +123,17 @@ export default async function PlayoffsPage({
           {/* Leaderboard */}
           <section style={card}>
             <div style={{ display: "flex", flexDirection: "column" }}>
+              {/* Column headers (top) */}
+              <div style={{
+                display: "flex", alignItems: "center", gap: 10,
+                padding: "8px 16px 4px", borderBottom: "1px solid rgba(148,163,184,0.08)",
+              }}>
+                <span style={{ width: 18, flexShrink: 0 }} />
+                <span style={{ flex: 1 }} />
+                <span style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--faint)", minWidth: 48, textAlign: "right" }}>W–L</span>
+                <span style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--faint)", minWidth: 44, textAlign: "right" }}>PF</span>
+              </div>
+
               {standings.map((s, i) => {
                 const inZone = s.isPlayoffEligible;
                 const hasBye = s.seed !== null && s.seed <= topSeedsWithBye;
@@ -192,18 +203,6 @@ export default async function PlayoffsPage({
                   </div>
                 );
               })}
-            </div>
-
-            {/* Column headers (bottom, subtle) */}
-            <div style={{
-              display: "flex", alignItems: "center", gap: 10,
-              padding: "8px 16px 4px", borderTop: "1px solid rgba(148,163,184,0.08)",
-              marginTop: 4,
-            }}>
-              <span style={{ width: 18, flexShrink: 0 }} />
-              <span style={{ flex: 1 }} />
-              <span style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--faint)", minWidth: 48, textAlign: "right" }}>W–L</span>
-              <span style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--faint)", minWidth: 44, textAlign: "right" }}>PF</span>
             </div>
           </section>
         </>

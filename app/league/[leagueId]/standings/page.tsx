@@ -55,6 +55,8 @@ export default async function StandingsPage({ params }: { params: { leagueId: st
 
   if (!league) notFound();
 
+  const isCommissioner = league.commissionerId === user.id;
+
   const matchups = await prisma.matchup.findMany({
     where: { leagueId },
     include: { homeTeam: true, awayTeam: true },
@@ -146,7 +148,10 @@ export default async function StandingsPage({ params }: { params: { leagueId: st
         </p>
 
         {!hasResults ? (
-          <EmptyState message="Standings will appear once games begin." />
+          <EmptyState
+            message="Standings will appear once games begin."
+            {...(isCommissioner && { actionHref: `/league/${leagueId}/admin`, actionLabel: "Go to admin panel →" })}
+          />
         ) : (
         <div style={{ overflowX: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 380 }}>
