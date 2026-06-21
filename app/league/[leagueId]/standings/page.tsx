@@ -130,10 +130,13 @@ export default async function StandingsPage({ params }: { params: { leagueId: st
 
       {/* ── Victory Points standings (always authoritative) ── */}
       <section style={card}>
-        <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 4, flexWrap: "wrap", gap: 8 }}>
-          <h1 style={{ fontSize: 24, margin: 0, display: "flex", alignItems: "center" }}>Standings<VpExplainer /></h1>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4, flexWrap: "wrap", gap: 8 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span className="section-accent" />
+            <h1 style={{ fontSize: 12, margin: 0, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--dim)", display: "flex", alignItems: "center" }}>Standings<VpExplainer /></h1>
+          </div>
           {playoffCutoff !== null && !playoffsStarted && (
-            <span style={{ fontSize: 12, color: "#64748b" }}>
+            <span style={{ fontSize: 12, color: "var(--faint)" }}>
               Top {playoffCutoff} qualify for playoffs
             </span>
           )}
@@ -195,10 +198,11 @@ export default async function StandingsPage({ params }: { params: { leagueId: st
                   <tr
                     key={s.fantasyTeamId}
                     style={{
-                      background: isMe ? "rgba(99,102,241,0.08)" : "transparent",
+                      background: isMe ? "var(--accent-dim)" : "transparent",
                       borderBottom: !playoffsStarted && playoffCutoff !== null && index === playoffCutoff - 1
-                        ? "2px dashed rgba(99,102,241,0.3)"
-                        : "1px solid rgba(148,163,184,0.08)",
+                        ? "2px dashed var(--accent-border)"
+                        : "1px solid var(--border)",
+                      borderLeft: isMe ? "3px solid var(--accent)" : undefined,
                     }}
                   >
                     <td style={{ ...tdStyle, color: "#475569", fontWeight: 700 }}>{index + 1}</td>
@@ -206,18 +210,15 @@ export default async function StandingsPage({ params }: { params: { leagueId: st
                       <span style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
                         {s.teamName}
                         {isMe && <span style={{ fontSize: 10, color: "#6366f1" }}>YOU</span>}
-                        {playoffChip && (
-                          <span style={{
-                            fontSize: 10, fontWeight: 700,
-                            padding: "1px 5px", borderRadius: 3,
-                            color: playoffChip.color, background: playoffChip.bg,
-                          }}>
-                            {playoffChip.label}
-                          </span>
-                        )}
+                        {playoffChip && (() => {
+                          let cls = "chip-in";
+                          if (playoffChip.color === "#34d399") cls = "chip-clinched";
+                          else if (playoffChip.color === "#f87171") cls = "chip-eliminated";
+                          return <span className={cls}>{playoffChip.label}</span>;
+                        })()}
                       </span>
                     </td>
-                    <td style={{ ...tdStyle, fontWeight: 800, color: "#e2e8f0", fontVariantNumeric: "tabular-nums" }}>{s.totalVP}</td>
+                    <td style={{ ...tdStyle, fontWeight: 800, color: "var(--text)", fontVariantNumeric: "tabular-nums", fontFamily: "var(--font-stats)" }}>{s.totalVP}</td>
                     <td style={{ ...tdStyle, color: "#94a3b8", fontVariantNumeric: "tabular-nums" }}>
                       {s.wins}–{s.losses}{s.ties > 0 ? `–${s.ties}` : ""}
                     </td>
@@ -251,22 +252,23 @@ export default async function StandingsPage({ params }: { params: { leagueId: st
 }
 
 const card: React.CSSProperties = {
-  background: "rgba(255,255,255,0.04)",
-  border: "1px solid rgba(148,163,184,0.14)",
-  borderRadius: 20,
+  background: "var(--card)",
+  border: "1px solid var(--border)",
+  borderRadius: 16,
   padding: 20,
 };
 
 const thStyle: React.CSSProperties = {
   padding: "10px 8px",
-  fontSize: 12,
-  fontWeight: 700,
+  fontSize: 11,
+  fontWeight: 600,
   textTransform: "uppercase",
-  letterSpacing: "0.5px",
+  letterSpacing: "0.10em",
+  color: "var(--faint)",
 };
 
 const tdStyle: React.CSSProperties = {
   padding: "12px 8px",
   fontSize: 14,
-  color: "#e2e8f0",
+  color: "var(--text)",
 };

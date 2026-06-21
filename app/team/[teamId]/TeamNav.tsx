@@ -19,7 +19,7 @@ export default function TeamNav({ teamId, leagueId, leagueName, playoffStatus }:
     { label: "Rosters",       href: `/team/${teamId}/roster` },
     { label: "Trades",        href: `/league/${leagueId}/trades` },
     { label: "Standings",     href: `/team/${teamId}/standings` },
-    { label: "Performance",   href: `/team/${teamId}/schedule` },
+    { label: "Season",        href: `/team/${teamId}/schedule` },
     { label: "Analysis",      href: `/team/${teamId}/analysis` },
     ...(playoffStatus !== "NOT_STARTED"
       ? [{ label: "Playoffs", href: `/league/${leagueId}/bracket` }]

@@ -52,7 +52,8 @@ export default function GMCommandCenter({
   const [isSimulating, setIsSimulating] = useState(false);
 
   const activePeriod = state.periods.find((p) => p.status === "ACTIVE")?.period;
-  const weekNumber = activePeriod?.week || nextPeriod?.week || 1;
+  const mostRecentCompleted = [...state.periods].reverse().find((p) => p.status === "COMPLETE")?.period;
+  const weekNumber = activePeriod?.week ?? nextPeriod?.week ?? mostRecentCompleted?.week ?? 1;
   const totalWeeks = state.periods.length;
 
   const phaseLabel = {

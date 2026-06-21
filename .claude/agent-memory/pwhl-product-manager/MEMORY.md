@@ -9,3 +9,4 @@
 - [Replay Simulator v2 Spec](project-replay-sim-v2.md) — Week-boundary pause + controls on league overview + matchup page; spec at docs/02-engineering/replay-simulator-v2-spec.md; P1, no schema changes
 - [Sprint 9 — PWHL GM Rebrand](project-sprint9-rebrand.md) — 8 stories, 43 pts; P1 min-ship=11 pts (~8h); REBRAND-001–008; trigger: Sprint 8 complete + commissioners have drafted
 - [Playoff System Audit](project-playoff-audit.md) — PLAYOFF-BUG-001 confirmed (bracket page ?? 6 not ?? 4); Q1 VP filter risk + Q2 bracket hydration risk; spec at docs/02-engineering/playoff-system-spec.md; must resolve before beta invites
+- [Beta Feedback Bugs](project-beta-feedback-bugs.md) — BF-001 false draft eviction (useDraftSocket 4001 path), BF-002 Week 1 badge mid-season (GMCommandCenter line 55); both P1 in Sprint 9 as of Jun 21, 2026

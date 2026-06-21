@@ -250,8 +250,8 @@ export default async function PlayoffsPage({
 }
 
 const card: React.CSSProperties = {
-  background: "rgba(255,255,255,0.04)",
-  border: "1px solid rgba(148,163,184,0.14)",
-  borderRadius: 20,
+  background: "var(--card)",
+  border: "1px solid var(--border)",
+  borderRadius: 16,
   overflow: "hidden",
 };

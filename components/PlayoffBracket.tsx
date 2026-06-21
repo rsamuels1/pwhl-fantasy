@@ -38,21 +38,21 @@ export default function PlayoffBracket({ bracket, myTeamId }: Props) {
                 flex: "0 0 240px",
                 borderRadius: 12,
                 padding: "12px 8px",
-                background: isCurrentRound ? "rgba(99,102,241,0.05)" : "transparent",
-                border: isCurrentRound ? "1px solid rgba(99,102,241,0.15)" : "1px solid transparent",
+                background: isCurrentRound ? "var(--accent-dim)" : "transparent",
+                border: isCurrentRound ? "1px solid var(--accent-border)" : "1px solid transparent",
               }}
             >
               {/* Round header */}
               <div style={{
                 marginBottom: 14, paddingBottom: 10,
-                borderBottom: "1px solid rgba(148,163,184,0.12)",
+                borderBottom: "1px solid var(--border)",
               }}>
-                <div style={{ fontSize: 13, fontWeight: 700, color: isChampionship ? "#fbbf24" : "#e2e8f0" }}>
+                <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: isChampionship ? "#fbbf24" : "var(--dim)" }}>
                   {isChampionship ? "🏆 " : ""}{getRoundLabel(rIdx + 1, totalRounds)}
                 </div>
-                <div style={{ fontSize: 11, color: "#475569", marginTop: 2 }}>
+                <div style={{ fontSize: 11, color: "var(--faint)", marginTop: 2 }}>
                   {settings.roundDurationPeriods} week{settings.roundDurationPeriods !== 1 ? "s" : ""}
-                  {isCurrentRound && <span style={{ marginLeft: 6, color: "#818cf8", fontWeight: 700 }}>· Active</span>}
+                  {isCurrentRound && <span style={{ marginLeft: 6, color: "#c9b6ff", fontWeight: 700 }}>· Active</span>}
                 </div>
               </div>
 
@@ -87,10 +87,10 @@ function BracketMatchupCard({
   const scored = matchup.homeScore !== undefined && matchup.awayScore !== undefined;
   return (
     <div style={{
-      borderRadius: 10,
-      border: "1px solid rgba(148,163,184,0.14)",
+      borderRadius: 12,
+      border: "1px solid var(--border)",
       overflow: "hidden",
-      background: "rgba(255,255,255,0.03)",
+      background: "var(--card)",
     }}>
       <TeamRow team={matchup.homeTeam} score={matchup.homeScore} winner={matchup.winner} scored={scored} myTeamId={myTeamId} isChampionship={isChampionship} />
       <div style={{ height: 1, background: "rgba(148,163,184,0.08)" }} />
@@ -121,8 +121,8 @@ function TeamRow({
     <div style={{
       display: "flex", alignItems: "center", gap: 8,
       padding: "10px 12px",
-      background: isWinner ? winBg : isMe ? "rgba(99,102,241,0.06)" : "transparent",
-      borderLeft: isWinner ? `3px solid ${winBorder}` : isMe ? "3px solid #6366f1" : "3px solid transparent",
+      background: isWinner ? winBg : isMe ? "var(--accent-dim)" : "transparent",
+      borderLeft: isWinner ? `2px solid ${winBorder}` : isMe ? "2px solid var(--accent)" : "2px solid transparent",
     }}>
       {/* Seed badge */}
       <span style={{
@@ -154,9 +154,9 @@ function TeamRow({
       )}
 
       {/* Score */}
-      <span style={{
-        fontSize: 14, fontWeight: 800, fontVariantNumeric: "tabular-nums", flexShrink: 0,
-        color: isWinner ? winColor : isLoser ? "#475569" : "#334155",
+      <span className="font-stats" style={{
+        fontSize: 14, fontWeight: 800, flexShrink: 0,
+        color: isWinner ? winColor : isLoser ? "var(--faint)" : "var(--dim)",
       }}>
         {score !== undefined ? score.toFixed(1) : "—"}
       </span>

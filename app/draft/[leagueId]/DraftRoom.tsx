@@ -658,7 +658,7 @@ function PlayerPanel({
           {(["available", "queue"] as const).map((tab) => (
             <button
               key={tab}
-              style={{ ...styles.tab, background: activeTab === tab ? "var(--accent)" : "transparent", color: activeTab === tab ? "#fff" : "var(--muted)" }}
+              style={{ ...styles.tab, background: activeTab === tab ? "var(--accent)" : "rgba(150,160,200,0.08)", color: activeTab === tab ? "#fff" : "var(--muted)" }}
               onClick={() => setActiveTab(tab)}
             >
               {tab === "available" ? "Available" : `Queue (${queuedPlayers.length})`}
@@ -680,7 +680,7 @@ function PlayerPanel({
                 {(["", "FORWARD", "DEFENSE", "GOALIE"] as const).map((pos) => (
                   <button
                     key={pos || "all"}
-                    style={{ ...styles.tab, minHeight: 44, padding: "0 12px", background: posFilter === pos ? "var(--accent)" : "transparent", color: posFilter === pos ? "#fff" : "var(--muted)" }}
+                    style={{ ...styles.tab, minHeight: 44, padding: "0 12px", background: posFilter === pos ? "var(--accent)" : "rgba(150,160,200,0.08)", color: posFilter === pos ? "#fff" : "var(--muted)" }}
                     onClick={() => handlePosFilter(pos)}
                   >
                     {pos === "" ? "All" : pos === "FORWARD" ? "F" : pos === "DEFENSE" ? "D" : "G"}
@@ -731,7 +731,7 @@ function PlayerPanel({
                           const val = s ? (s[c.key] as number | null) : null;
                           const display = val == null ? "—" : c.key === "savePct" ? (val as number).toFixed(3).replace(/^0/, "") : String(val);
                           return (
-                            <td key={c.key} className={c.mobile ? "stat-secondary" : undefined} style={{ padding: "5px 6px", textAlign: "right", fontSize: 12, fontVariantNumeric: "tabular-nums", color: sortKey === c.key ? "var(--text)" : "var(--muted)" }}>
+                            <td key={c.key} className={c.mobile ? "stat-secondary font-stats" : "font-stats"} style={{ padding: "5px 6px", textAlign: "right", fontSize: 12, color: sortKey === c.key ? "var(--text)" : "var(--muted)" }}>
                               {display}
                             </td>
                           );

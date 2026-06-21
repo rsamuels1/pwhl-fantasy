@@ -98,9 +98,13 @@ export function useDraftSocket(leagueId: string, teamId: string): DraftSocket {
 
       ws.onclose = (event: CloseEvent) => {
         if (event.code === 4001) {
-          // Evicted by server (duplicate tab)
-          shouldReconnectRef.current = false;
-          setEvicted(true);
+          // Evicted by server (duplicate tab). Attempt one silent reconnect 500ms later
+          // in case this was a stale socket. If the reconnect fails, eviction is permanent.
+          reconnectTimerRef.current = setTimeout(() => {
+            if (shouldReconnectRef.current) {
+              connect();
+            }
+          }, 500);
         } else {
           setConnStatus("closed");
           scheduleReconnect();
