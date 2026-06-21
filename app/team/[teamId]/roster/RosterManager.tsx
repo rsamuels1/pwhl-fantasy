@@ -768,7 +768,7 @@ function FaRow({ player, index, isFull, rosterPlayers, pendingAdd, dropForAdd,
           </span>
           {player.teamAbbr && <span style={{ fontSize: 10, color: "#475569", flexShrink: 0 }}>{player.teamAbbr}</span>}
           {player.isOnWaivers && (
-            <span title="Player is on waivers — submit a claim from the Waiver Wire tab" style={{ fontSize: 9, fontWeight: 700, padding: "2px 5px", borderRadius: 4, background: "rgba(100,116,139,0.2)", color: "#64748b", flexShrink: 0 }}>
+            <span title="This player is on waivers. Use the Claim button to submit a waiver claim." style={{ fontSize: 9, fontWeight: 700, padding: "2px 5px", borderRadius: 4, background: "rgba(100,116,139,0.2)", color: "#64748b", flexShrink: 0 }}>
               On Waivers
             </span>
           )}
@@ -815,7 +815,7 @@ function FaRow({ player, index, isFull, rosterPlayers, pendingAdd, dropForAdd,
         {player.isOnWaivers ? (
           <button
             onClick={onSwitchToWaivers}
-            title="Player is on waivers — submit a claim from the Waiver Wire tab"
+            title="Submit a waiver claim from the Waiver Wire tab. Claims are processed on a set schedule based on league priority order."
             style={{ ...smallBtn("#64748b"), fontSize: 10 }}
           >
             Claim
@@ -826,6 +826,7 @@ function FaRow({ player, index, isFull, rosterPlayers, pendingAdd, dropForAdd,
           <button
             onClick={onSelectAdd}
             disabled={disabled || (!!pendingAdd && !isThisPending)}
+            title="Add this free agent immediately to your roster."
             style={smallBtn("#6366f1")}
           >
             Add
