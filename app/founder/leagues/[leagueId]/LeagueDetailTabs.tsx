@@ -62,11 +62,18 @@ interface Props {
   standings: StandingRow[];
   seasonState: SeasonStateData | null;
   draft: DraftInfo | null;
-  teams: { id: string; name: string; owner: { email: string } | null }[];
+  teams: { id: string; name: string; isBot: boolean; owner: { email: string } | null }[];
 }
 
-const TABS = ["Config", "Standings", "Season", "Draft", "Beta"] as const;
+const TABS = ["Config", "Standings", "Season", "Draft", "Beta", "Beta Users"] as const;
 type Tab = typeof TABS[number];
+
+interface BetaSignup {
+  id: string;
+  email: string;
+  wantsToCommission: boolean;
+  createdAt: string;
+}
 
 const BETA_STATUSES = ["NONE", "INVITED", "ACCEPTED", "ACTIVE", "RENEWED"] as const;
 
@@ -82,6 +89,13 @@ export function LeagueDetailTabs({ leagueId, league, standings, seasonState, dra
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Beta Users tab state
+  const [betaSignups, setBetaSignups] = useState<BetaSignup[] | null>(null);
+  const [betaSignupsLoading, setBetaSignupsLoading] = useState(false);
+  const [betaUserResult, setBetaUserResult] = useState<Record<string, string>>({}); // email → inviteUrl
+  const [betaUserError, setBetaUserError] = useState<Record<string, string>>({}); // email → error
+  const [betaUserPending, setBetaUserPending] = useState<Record<string, boolean>>({}); // email → loading
 
   async function handleDelete() {
     setIsDeleting(true);
@@ -150,6 +164,41 @@ export function LeagueDetailTabs({ leagueId, league, standings, seasonState, dra
     });
   }
 
+  async function loadBetaSignups() {
+    if (betaSignups !== null) return; // already loaded
+    setBetaSignupsLoading(true);
+    try {
+      const res = await fetch("/api/founder/beta-signups");
+      const data = await res.json() as { signups?: BetaSignup[] };
+      setBetaSignups(data.signups ?? []);
+    } catch {
+      setBetaSignups([]);
+    } finally {
+      setBetaSignupsLoading(false);
+    }
+  }
+
+  async function handleAssignBetaUser(email: string, role: "commissioner" | "manager") {
+    setBetaUserPending((p) => ({ ...p, [email]: true }));
+    setBetaUserError((e) => { const next = { ...e }; delete next[email]; return next; });
+    setBetaUserResult((r) => { const next = { ...r }; delete next[email]; return next; });
+    try {
+      const res = await fetch(`/api/founder/leagues/${leagueId}/beta-users`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, role }),
+      });
+      const data = await res.json() as { inviteUrl?: string; error?: string };
+      if (!res.ok) throw new Error(data.error ?? "Unknown error");
+      setBetaUserResult((r) => ({ ...r, [email]: data.inviteUrl ?? "" }));
+      router.refresh();
+    } catch (err) {
+      setBetaUserError((e) => ({ ...e, [email]: err instanceof Error ? err.message : "Failed" }));
+    } finally {
+      setBetaUserPending((p) => ({ ...p, [email]: false }));
+    }
+  }
+
   function handleBetaStatusChange(newStatus: string) {
     setBetaSaved(false);
     setBetaError(null);
@@ -174,11 +223,14 @@ export function LeagueDetailTabs({ leagueId, league, standings, seasonState, dra
   return (
     <div>
       {/* Tab bar */}
-      <div style={{ display: "flex", gap: "1.5rem", borderBottom: "1px solid #222", marginBottom: "1.5rem" }}>
+      <div style={{ display: "flex", gap: "1.5rem", borderBottom: "1px solid #222", marginBottom: "1.5rem", flexWrap: "wrap" }}>
         {TABS.map((t) => (
           <button
             key={t}
-            onClick={() => setActiveTab(t)}
+            onClick={() => {
+              setActiveTab(t);
+              if (t === "Beta Users") loadBetaSignups();
+            }}
             style={{ background: "none", border: "none", padding: "0.6rem 0", color: activeTab === t ? "#e0e0e0" : "#666", fontFamily: "monospace", fontSize: "0.85rem", fontWeight: activeTab === t ? 700 : 400, borderBottom: `2px solid ${activeTab === t ? "#f59e0b" : "transparent"}`, cursor: "pointer", marginBottom: "-1px" }}
           >
             {t}
@@ -499,6 +551,106 @@ export function LeagueDetailTabs({ leagueId, league, standings, seasonState, dra
           </div>
         </div>
       )}
+
+      {activeTab === "Beta Users" && (() => {
+        // Cross-reference beta signups against the league's teams/commissioner.
+        const commissionerEmail = league.commissioner?.email ?? null;
+        // All non-bot slots filled means no more real users can be added.
+        const allSlotsOwned = teams.every((t) => !t.isBot);
+
+        function getStatus(email: string): string {
+          if (email === commissionerEmail) return "Commissioner";
+          // Only count real (non-bot) team ownership.
+          const ownedTeam = teams.find((t) => t.owner?.email === email && !t.isBot);
+          if (ownedTeam) return `Manager — ${ownedTeam.name}`;
+          return "—";
+        }
+
+        function isInLeague(email: string): boolean {
+          return email === commissionerEmail || teams.some((t) => t.owner?.email === email && !t.isBot);
+        }
+
+        return (
+          <div>
+            <div style={{ fontSize: "0.78rem", color: "#666", marginBottom: "1rem" }}>
+              Cross-references all beta signups against this league&apos;s current teams and commissioner.
+            </div>
+
+            {betaSignupsLoading && (
+              <div style={{ color: "#555", fontSize: "0.85rem" }}>Loading beta signups…</div>
+            )}
+
+            {betaSignups !== null && !betaSignupsLoading && (
+              betaSignups.length === 0 ? (
+                <div style={{ color: "#555", fontSize: "0.85rem" }}>No beta signups yet.</div>
+              ) : (
+                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.82rem" }}>
+                  <thead>
+                    <tr style={{ background: "#0a0a0a" }}>
+                      {["Email", "Wants Commissioner", "Joined", "Status", "Actions"].map((h) => (
+                        <th key={h} style={{ padding: "0.5rem 0.75rem", textAlign: "left", color: "#666", fontWeight: 700, fontSize: "0.72rem", textTransform: "uppercase", borderBottom: "1px solid #222" }}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {betaSignups.map((signup) => {
+                      const status = getStatus(signup.email);
+                      const inLeague = isInLeague(signup.email);
+                      const isPending = betaUserPending[signup.email] ?? false;
+                      const result = betaUserResult[signup.email];
+                      const err = betaUserError[signup.email];
+
+                      return (
+                        <tr key={signup.id} style={{ borderBottom: "1px solid #1a1a1a" }}>
+                          <td style={{ padding: "0.5rem 0.75rem", color: "#ccc", fontFamily: "monospace", fontSize: "0.78rem" }}>{signup.email}</td>
+                          <td style={{ padding: "0.5rem 0.75rem", color: signup.wantsToCommission ? "#f59e0b" : "#555", textAlign: "center" }}>
+                            {signup.wantsToCommission ? "Yes" : "—"}
+                          </td>
+                          <td style={{ padding: "0.5rem 0.75rem", color: "#555", fontSize: "0.75rem" }}>
+                            {new Date(signup.createdAt).toLocaleDateString()}
+                          </td>
+                          <td style={{ padding: "0.5rem 0.75rem" }}>
+                            <span style={{ color: inLeague ? "#22c55e" : "#555", fontSize: "0.78rem" }}>{status}</span>
+                          </td>
+                          <td style={{ padding: "0.5rem 0.75rem" }}>
+                            {!inLeague && (
+                              <div style={{ display: "flex", gap: "0.5rem", alignItems: "center", flexWrap: "wrap" }}>
+                                <button
+                                  onClick={() => handleAssignBetaUser(signup.email, "commissioner")}
+                                  disabled={isPending}
+                                  style={{ padding: "0.3rem 0.6rem", background: "transparent", border: "1px solid #f59e0b", borderRadius: 3, color: "#f59e0b", fontSize: "0.72rem", cursor: isPending ? "not-allowed" : "pointer", opacity: isPending ? 0.5 : 1 }}
+                                >
+                                  Make Commissioner
+                                </button>
+                                <button
+                                  onClick={() => handleAssignBetaUser(signup.email, "manager")}
+                                  disabled={isPending || allSlotsOwned}
+                                  title={allSlotsOwned ? "All 8 team slots are filled" : undefined}
+                                  style={{ padding: "0.3rem 0.6rem", background: "transparent", border: "1px solid #64b5f6", borderRadius: 3, color: allSlotsOwned ? "#333" : "#64b5f6", fontSize: "0.72rem", cursor: isPending || allSlotsOwned ? "not-allowed" : "pointer", opacity: isPending || allSlotsOwned ? 0.5 : 1 }}
+                                >
+                                  Add as Manager
+                                </button>
+                              </div>
+                            )}
+                            {result && (
+                              <div style={{ marginTop: "0.25rem", fontFamily: "monospace", fontSize: "0.72rem", color: "#22c55e", wordBreak: "break-all" }}>
+                                Invite: {typeof window !== "undefined" ? window.location.origin : ""}{result}
+                              </div>
+                            )}
+                            {err && (
+                              <div style={{ marginTop: "0.25rem", fontSize: "0.72rem", color: "#f87171" }}>{err}</div>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              )
+            )}
+          </div>
+        );
+      })()}
     </div>
   );
 }

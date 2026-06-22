@@ -94,24 +94,42 @@ export async function POST(req: NextRequest) {
     },
   });
 
-  // Create 8 teams. Team 1 owned by the commissioner.
+  // Create 8 teams. Team 1 is owned by the commissioner.
+  // Teams 2–8 get placeholder bot users (isBot=true) that will be replaced
+  // when the founder assigns real beta testers via the Beta Users tab.
   const teamNames = ["Team 1", "Team 2", "Team 3", "Team 4", "Team 5", "Team 6", "Team 7", "Team 8"];
-  await prisma.fantasyTeam.createMany({
-    data: teamNames.map((name, i) => ({
-      leagueId: league.id,
-      name,
-      draftOrder: i + 1,
-      ownerId: i === 0 ? commissioner.id : null,
-    })),
-  });
+  for (let i = 0; i < teamNames.length; i++) {
+    let ownerId: string;
+    if (i === 0) {
+      ownerId = commissioner.id;
+    } else {
+      // Create a bot placeholder user with a synthetic email scoped to the league.
+      const botEmail = `bot-${i + 1}-${league.id}@beta.pwhlgm.internal`;
+      const botUser = await prisma.user.upsert({
+        where: { email: botEmail },
+        update: {},
+        create: { email: botEmail, displayName: `Slot ${i + 1}` },
+      });
+      ownerId = botUser.id;
+    }
 
-  // Create a Draft skeleton row.
+    await prisma.fantasyTeam.create({
+      data: {
+        leagueId: league.id,
+        name: teamNames[i],
+        draftOrder: i + 1,
+        ownerId,
+        isBot: i !== 0,
+      },
+    });
+  }
+
+  // Create a Draft skeleton row (no totalRounds field on Draft model).
   await prisma.draft.create({
     data: {
       leagueId: league.id,
       status: "PENDING",
       currentPick: 1,
-      totalRounds: Object.values(rosterSettings as Record<string, number>).reduce((a, b) => a + b, 0),
     },
   });
 

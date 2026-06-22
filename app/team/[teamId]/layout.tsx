@@ -19,6 +19,12 @@ export default async function TeamLayout({ children, params }: TeamLayoutProps) 
 
   const cookieStore = await cookies();
 
+  // Fetch betaStatus and league status (for TeamNav "Draft Queue" tab and beta banner).
+  const leagueExtra = await prisma.fantasyLeague.findUnique({
+    where: { id: team.league.id },
+    select: { betaStatus: true, status: true },
+  });
+
   // Lightweight matchup context: find current week's matchup, falling back to playoff matchup
   const currentMatchup = await prisma.matchup.findFirst({
     where: {
@@ -82,8 +88,28 @@ export default async function TeamLayout({ children, params }: TeamLayoutProps) 
           leagueId={team.league.id}
           leagueName={team.league.name}
           playoffStatus={team.league.playoffStatus ?? "NOT_STARTED"}
+          leagueStatus={leagueExtra?.status ?? undefined}
         />
 
+
+        {leagueExtra?.betaStatus === "ACTIVE" && (
+          <div style={{
+            background: "rgba(245,158,11,0.08)",
+            border: "1px solid rgba(245,158,11,0.3)",
+            borderRadius: 6,
+            padding: "8px 14px",
+            marginBottom: 16,
+            fontSize: 13,
+            color: "#fbbf24",
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+          }}>
+            <span>Beta League</span>
+            <span style={{ color: "#78716c" }}>·</span>
+            <span style={{ color: "#a8a29e" }}>Using 2025-26 replay data. Your feedback shapes the real thing.</span>
+          </div>
+        )}
 
         <main className="bottom-nav-pad" style={{ paddingBottom: 40 }}>{children}</main>
       </div>

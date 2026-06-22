@@ -43,7 +43,7 @@ export async function POST(
   const teams = await prisma.fantasyTeam.findMany({
     where: { leagueId },
     orderBy: { draftOrder: "asc" },
-    select: { id: true, name: true, ownerId: true, draftOrder: true },
+    select: { id: true, name: true, ownerId: true, draftOrder: true, isBot: true },
   });
 
   let teamId: string | null = null;
@@ -73,8 +73,8 @@ export async function POST(
 
     inviteUrl = `/login?returnTo=/league/${leagueId}/admin`;
   } else {
-    // Find the first team with no owner (null ownerId).
-    const openSlot = teams.find((t) => !t.ownerId);
+    // Find the first bot/placeholder team slot (isBot=true means unfilled).
+    const openSlot = teams.find((t) => t.isBot);
     if (!openSlot) {
       return NextResponse.json(
         { error: "No open team slots available in this league" },
@@ -82,8 +82,8 @@ export async function POST(
       );
     }
 
-    // Also check the user isn't already in the league.
-    const alreadyMember = teams.find((t) => t.ownerId === user.id);
+    // Also check the user isn't already in the league as a real (non-bot) member.
+    const alreadyMember = teams.find((t) => t.ownerId === user.id && !t.isBot);
     if (alreadyMember) {
       return NextResponse.json(
         { error: `${email} is already a manager in this league (Team: ${alreadyMember.name})` },
@@ -93,7 +93,7 @@ export async function POST(
 
     await prisma.fantasyTeam.update({
       where: { id: openSlot.id },
-      data: { ownerId: user.id },
+      data: { ownerId: user.id, isBot: false },
     });
 
     teamId = openSlot.id;

@@ -9,9 +9,10 @@ interface Props {
   leagueId: string;
   leagueName: string;
   playoffStatus: string;
+  leagueStatus?: string;
 }
 
-function TeamNavInner({ teamId, leagueId, leagueName, playoffStatus }: Props) {
+function TeamNavInner({ teamId, leagueId, leagueName, playoffStatus, leagueStatus }: Props) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const rosterPath = `/team/${teamId}/roster`;
@@ -27,6 +28,9 @@ function TeamNavInner({ teamId, leagueId, leagueName, playoffStatus }: Props) {
     { label: "Standings",   href: `/team/${teamId}/standings`,           active: pathname.startsWith(`/team/${teamId}/standings`) },
     { label: "Schedule",    href: `/team/${teamId}/schedule`,            active: pathname.startsWith(`/team/${teamId}/schedule`) },
     { label: "Analysis",    href: `/team/${teamId}/analysis`,            active: pathname.startsWith(`/team/${teamId}/analysis`) },
+    ...(leagueStatus === "PRE_DRAFT"
+      ? [{ label: "Draft Queue", href: `/team/${teamId}/draft-prep`,     active: pathname.startsWith(`/team/${teamId}/draft-prep`) }]
+      : []),
     ...(playoffStatus !== "NOT_STARTED"
       ? [{ label: "Playoffs", href: `/league/${leagueId}/bracket`,      active: pathname.startsWith(`/league/${leagueId}/bracket`) }]
       : []),
@@ -83,7 +87,7 @@ function TeamNavInner({ teamId, leagueId, leagueName, playoffStatus }: Props) {
 // useSearchParams requires Suspense on Next.js App Router.
 export default function TeamNav(props: Props) {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<div style={{ height: 48 }} />}>
       <TeamNavInner {...props} />
     </Suspense>
   );

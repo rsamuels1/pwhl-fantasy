@@ -597,7 +597,20 @@ export async function scoreVtfWeek(
     select: { scoringSettings: true },
   });
   const settings = parseScoringSettings(league.scoringSettings);
-  const scores = await computeAllTeamScores(leagueId, period, settings, prisma);
+
+  // Beta leagues store period dates in real July time for lifecycle/lock detection,
+  // but stat lines live at their original fixture dates. Swap in the fixture window
+  // before scoring so the stat line query actually finds data.
+  const rawSettings = league.scoringSettings as Record<string, unknown>;
+  const betaWeekMappings = rawSettings?.betaWeekMappings as
+    | { week: number; fixtureStart: string; fixtureEnd: string }[]
+    | undefined;
+  const fixtureMapping = betaWeekMappings?.find((m) => m.week === week);
+  const scoringPeriod: ScoringPeriod = fixtureMapping
+    ? { week, startsAt: new Date(fixtureMapping.fixtureStart), endsAt: new Date(fixtureMapping.fixtureEnd) }
+    : period;
+
+  const scores = await computeAllTeamScores(leagueId, scoringPeriod, settings, prisma);
 
   // Persist cached scores to all matchup rows for the week.
   const matchups = await prisma.matchup.findMany({

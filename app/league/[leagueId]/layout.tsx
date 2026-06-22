@@ -23,7 +23,7 @@ export default async function LeagueLayout({ children, params }: LeagueLayoutPro
       where: { id: leagueId },
       select: {
         commissionerId: true, name: true, isReplay: true,
-        status: true, playoffStatus: true,
+        status: true, playoffStatus: true, betaStatus: true,
         draft: { select: { status: true } },
       },
     }),
@@ -152,6 +152,25 @@ export default async function LeagueLayout({ children, params }: LeagueLayoutPro
             </Link>
           )}
         </nav>
+
+        {league?.betaStatus === "ACTIVE" && (
+          <div style={{
+            background: "rgba(245,158,11,0.08)",
+            border: "1px solid rgba(245,158,11,0.3)",
+            borderRadius: 6,
+            padding: "8px 14px",
+            marginBottom: 16,
+            fontSize: 13,
+            color: "#fbbf24",
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+          }}>
+            <span>Beta League</span>
+            <span style={{ color: "#78716c" }}>·</span>
+            <span style={{ color: "#a8a29e" }}>Using 2025-26 replay data. Your feedback shapes the real thing.</span>
+          </div>
+        )}
 
         <main className="bottom-nav-pad">{children}</main>
         {myTeam && <BottomNav teamId={myTeam.id} leagueId={leagueId} />}

@@ -21,7 +21,7 @@ export default async function FounderLeagueDetail({ params }: Props) {
         commissioner: { select: { email: true, displayName: true } },
         teams: {
           orderBy: { draftOrder: "asc" },
-          include: { owner: { select: { email: true } } },
+          select: { id: true, name: true, isBot: true, owner: { select: { email: true } } },
         },
         draft: {
           include: {
@@ -115,7 +115,7 @@ export default async function FounderLeagueDetail({ params }: Props) {
             : null
         }
         draft={draftInfo}
-        teams={league.teams.map((t) => ({ id: t.id, name: t.name, owner: t.owner }))}
+        teams={league.teams.map((t) => ({ id: t.id, name: t.name, isBot: t.isBot, owner: t.owner }))}
       />
     </div>
   );
