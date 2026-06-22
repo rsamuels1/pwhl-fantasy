@@ -46,7 +46,7 @@ export default async function Home() {
           </p>
 
           <div style={{ display: "flex", gap: 13, alignItems: "center", marginTop: 30, flexWrap: "wrap" as const }}>
-            <Link href="/create-league" style={{
+            <Link href="/register" style={{
               background: "linear-gradient(135deg,#7c3aed,#6d28d9)", color: "#fff",
               padding: "14px 24px", borderRadius: 11, fontSize: 15, fontWeight: 700,
               display: "inline-flex", alignItems: "center", gap: 9, textDecoration: "none",
@@ -237,7 +237,7 @@ export default async function Home() {
             <p style={{ fontSize: 16, color: "#c5cadb", maxWidth: 460, margin: "14px auto 0", lineHeight: 1.6 }}>
               Start a league with friends or join a public one. Draft tonight, compete all season.
             </p>
-            <Link href="/create-league" style={{
+            <Link href="/register" style={{
               display: "inline-flex", alignItems: "center", gap: 9, marginTop: 28,
               background: "linear-gradient(135deg,#7c3aed,#6d28d9)", color: "#fff",
               padding: "15px 28px", borderRadius: 12, fontSize: 15.5, fontWeight: 700, textDecoration: "none",

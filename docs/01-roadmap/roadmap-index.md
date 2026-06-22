@@ -158,6 +158,8 @@ All sprints from 7–12 are complete and shipped. Detailed plans in `roadmap-spr
 
 **Current Status:** Sprint 13 IN PROGRESS · MVP readiness ~99% · All P0 bugs cleared · 202/202 tests pass · Ready for Jul 14 beta invites.
 
+**Sprint 14 (Backlog):** 5 stories from two-agent integration test (Jun 22, 2026) — BF-010 (goalie locked in BENCH warning), BF-011 (FA suggestions empty in replay), TR-002 (silent trade rejection notification), TR-003 (trade skips PROPOSED state when commissioner review is on), DRC-002 (draft timer freeze after server restart). Full specs in `roadmap-features.md` under "Agent Integration Test Findings."
+
 **Post-Launch Backlog:** FAAB (#6 — defer to 2027-28 when commissioners request), Growth analytics (GR-001/002/003/004), push notifications, multi-season library (#12), player trends (#23), keeper/dynasty (#19/#20), native apps, AI features. See `roadmap-sprints.md` for details.
 
 ---

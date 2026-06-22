@@ -38,7 +38,7 @@ const TYPE_GROUPS: { label: string; types: string | null }[] = [
 ];
 
 function timeAgo(iso: string, nowMs: number): string {
-  const ms = nowMs - new Date(iso).getTime();
+  const ms = Math.max(0, nowMs - new Date(iso).getTime());
   const mins = Math.floor(ms / 60000);
   if (mins < 1) return "just now";
   if (mins < 60) return `${mins}m ago`;

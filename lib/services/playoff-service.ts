@@ -84,13 +84,26 @@ export async function getBracket(
     const roundIndex = matchup.round - 1;
     if (roundIndex >= bracket.rounds.length) continue;
     // Match by both team IDs to eliminate the ambiguity of a one-sided OR find.
-    const bracketMatchup = bracket.rounds[roundIndex].find(
+    let bracketMatchup = bracket.rounds[roundIndex].find(
       (m) =>
         (m.homeTeam?.fantasyTeamId === matchup.homeTeamId &&
           m.awayTeam?.fantasyTeamId === matchup.awayTeamId) ||
         (m.homeTeam?.fantasyTeamId === matchup.awayTeamId &&
           m.awayTeam?.fantasyTeamId === matchup.homeTeamId)
     );
+    // Fallback: later rounds generate TBD placeholders (homeTeam/awayTeam = null).
+    // Populate the first unfilled slot in this round using seededTeams.
+    if (!bracketMatchup) {
+      bracketMatchup = bracket.rounds[roundIndex].find(
+        (m) => m.homeTeam === null && m.awayTeam === null
+      );
+      if (bracketMatchup) {
+        bracketMatchup.homeTeam =
+          seededTeams.find((t) => t.fantasyTeamId === matchup.homeTeamId) ?? null;
+        bracketMatchup.awayTeam =
+          seededTeams.find((t) => t.fantasyTeamId === matchup.awayTeamId) ?? null;
+      }
+    }
     if (!bracketMatchup) continue;
     // Swap scores when the bracket assigned teams in the opposite order from the DB row.
     const isFlipped = bracketMatchup.homeTeam?.fantasyTeamId === matchup.awayTeamId;

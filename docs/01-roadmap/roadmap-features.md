@@ -3284,6 +3284,103 @@ Files: `components/DuelHero.tsx`
 
 ---
 
+# Agent Integration Test Findings — Sprint 12 Backlog
+
+Stories derived from a two-agent end-to-end playthrough (June 2026): commissioner + member agent drafted, managed lineups, made trades, and simmed through playoffs. Logged wherever either agent was confused.
+
+---
+
+## BF-010. Goalie Locked Into BENCH Before Manager Can Move Her to Active Slot
+
+Issue: A goalie was locked into the BENCH slot from period day 1 because her PWHL team played a game at exactly `period.startsAt`. The period lock fires when `team played any game >= period.startsAt`, which is true the instant the period opens if a game is scheduled that morning. The manager couldn't move her to the GOALIE slot for the entire week. No warning was shown.
+
+User story: As a manager, I want to be warned when one of my starting slots is unplayable because a player is already locked into BENCH, so I can fix my lineup before the period starts.
+
+Acceptance Criteria:
+- AC-001: The lineup page shows an alert when an active slot's assigned player is locked in BENCH (i.e., `lockedAt` is set and slot is BENCH).
+- AC-002: The alert names the affected player(s) and links to the lineup page.
+- AC-003: The alert does not fire after the period has already started (would be too late to act).
+- AC-004: `tsc --noEmit` clean.
+
+Effort: Frontend S
+
+Files: `app/team/[teamId]/lineup/page.tsx`, `LineupManager.tsx`
+
+---
+
+## BF-011. FA Suggestions Return Empty in Replay / Historical Leagues
+
+Issue: `GET /api/leagues/[leagueId]/fa-suggestions` filters suggestions by `gamesThisPeriod > 0`, where "games remaining" is computed as `startsAt > nowMs`. In replay leagues, `nowMs` defaults to real `Date.now()` (June 2026), so all 2025-26 fixture games appear to be in the past and every player has `gamesThisPeriod = 0`. The endpoint always returns an empty array, making the FA add flow completely non-functional during replay.
+
+User story: As a manager in a replay league, I want the Free Agent suggestions panel to show me relevant players, so I can make informed add/drop decisions during the replay season.
+
+Acceptance Criteria:
+- AC-001: `fa-suggestions` reads `nowMs` from `getDevNowFromRequest(req)` (the sim-date cookie), matching the pattern already used by lineup and matchup API routes.
+- AC-002: In replay mode with a simulated date, `gamesThisPeriod` is computed relative to the sim date, not real `Date.now()`.
+- AC-003: FA suggestions return results during a replay test run (verified with `npm run seed-fixture`).
+- AC-004: `tsc --noEmit` clean.
+
+Effort: Backend S
+
+Files: `app/api/leagues/[leagueId]/fa-suggestions/route.ts`
+
+---
+
+## TR-002. Trade Auto-Rejection Is Silent — No Notification to Proposer
+
+Issue: When a trade was auto-rejected because the proposing manager dropped an offered player after proposing the trade, the trade silently moved to `REJECTED` status with a `resolvedReason` string, but no in-app notification was sent to the proposing manager. The manager only discovers this by checking the Trade Center and reading the status badge.
+
+User story: As a manager whose trade was auto-rejected, I want to receive an in-app notification explaining why, so I don't wonder why my trade disappeared.
+
+Acceptance Criteria:
+- AC-001: When `processExpiredTrades` or stale-player validation rejects a trade, a `TRADE_REJECTED` notification is sent to the proposing team's owner.
+- AC-002: The notification body includes the `resolvedReason` string (e.g., "a player is no longer on the expected team").
+- AC-003: The Trade Center detail page surfaces the `resolvedReason` in the UI for rejected trades.
+- AC-004: `tsc --noEmit` clean.
+
+Effort: Backend S + Frontend S
+
+Files: `lib/services/trade-service.ts`, `app/league/[leagueId]/trades/[tradeId]/page.tsx`
+
+---
+
+## TR-003. Trade Skips PROPOSED State When Commissioner Review Is Required
+
+Issue: When `tradeReviewHours > 0`, calling `POST /trades` (propose) immediately creates the trade in `PENDING_REVIEW` status — bypassing the `PROPOSED` state entirely. The receiving team never sees the trade as something they need to explicitly accept or reject before commissioner review. Calling the `/accept` endpoint returns "can't accept in PENDING_REVIEW state." This means the receiver is never consulted before the commissioner reviews the deal.
+
+User story: As a trade receiver, I want to explicitly accept or reject a trade before it goes to commissioner review, so I have a chance to decline deals I don't want to proceed.
+
+Acceptance Criteria:
+- AC-001: When `tradeReviewHours > 0 || requireCommissionerTradeApproval`, newly proposed trades land in `PROPOSED` state (not `PENDING_REVIEW`).
+- AC-002: The receiver must call `/accept` to advance to `PENDING_REVIEW`. Only then does the commissioner review window open.
+- AC-003: The Trade Center "Incoming" tab shows `PROPOSED` trades to the receiver with Accept/Reject/Counter buttons.
+- AC-004: Existing 22 trade engine tests pass; new test covers the PROPOSED→PENDING_REVIEW transition path.
+- AC-005: `tsc --noEmit` clean.
+
+Effort: Backend M + Frontend S
+
+Files: `lib/services/trade-service.ts`, `lib/trades/engine.ts`, `app/league/[leagueId]/trades/`
+
+---
+
+## DRC-002. Draft Pick Timer Does Not Resume After Server Restart
+
+Issue: When the WebSocket draft server crashes and restarts mid-draft, `buildEngineState` reconstructs the draft state from DB but sets `expiresAt: null`. The server-side `setTimeout` never fires and the draft halts indefinitely. The only recovery path is a commissioner sending PAUSE followed by RESUME, which resets the timer. This was confirmed empirically in two separate automated test runs.
+
+User story: As a commissioner, I want the draft pick timer to resume automatically after a server restart, so a crash doesn't permanently stall the draft.
+
+Acceptance Criteria:
+- AC-001: `buildEngineState` computes a valid `expiresAt` when draft status is `IN_PROGRESS` — either by reading a persisted `expiresAt` from the DB or by setting it to `now + remainingPickSecs`.
+- AC-002: Draft continues auto-picking without a PAUSE/RESUME intervention after server restart.
+- AC-003: The existing `tests/draft.test.ts` suite (32+ tests) passes.
+- AC-004: `tsc --noEmit` clean.
+
+Effort: Backend M
+
+Files: `lib/draft/server.ts` (`buildEngineState`), possibly `prisma/schema.prisma` (persist `expiresAt`)
+
+---
+
 # Architectural Rules
 
 Design for the live season first. Replay is a testing tool, so:
