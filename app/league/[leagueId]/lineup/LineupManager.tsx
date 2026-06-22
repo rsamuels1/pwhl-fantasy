@@ -68,7 +68,7 @@ interface Props {
 const ACTIVE_SLOTS: SlotType[] = ["FORWARD", "DEFENSE", "GOALIE", "UTIL"];
 
 const SLOT_LABELS: Record<SlotType, string> = {
-  FORWARD: "F", DEFENSE: "D", GOALIE: "G", UTIL: "Flex", BENCH: "BN", IR: "IR",
+  FORWARD: "F", DEFENSE: "D", GOALIE: "G", UTIL: "UTIL", BENCH: "BN", IR: "IR",
 };
 
 const POS_COLORS: Record<string, string> = {
@@ -515,10 +515,13 @@ export default function LineupManager({
 
         {/* LEFT: Active slots */}
         <div style={panel}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
             <span className="section-accent" />
             <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.14em", color: "var(--dim)", textTransform: "uppercase" }}>Active</span>
           </div>
+          <p style={{ fontSize: 11, color: "var(--faint)", marginBottom: 12, lineHeight: 1.5 }}>
+            3 forwards (F) · 2 defense (D) · 1 goalie (G) · 1 <span title="Any skater — forward or defense, not a goalie" style={{ borderBottom: "1px dotted var(--faint)", cursor: "help" }}>UTIL</span> (any skater, not a goalie)
+          </p>
 
           {/* Starter total bar — projected view only — MOVED TO TOP */}
           {statsView === "projected" && projectedStats && (() => {

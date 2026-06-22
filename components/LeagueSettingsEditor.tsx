@@ -8,35 +8,45 @@ interface Props {
   maxTeams: number;
   draftType: string;
   draftDone: boolean;
+  isPublic?: boolean;
 }
 
-export function LeagueSettingsEditor({ leagueId, maxTeams: initialMaxTeams, draftType: initialDraftType, draftDone }: Props) {
+export function LeagueSettingsEditor({ leagueId, maxTeams: initialMaxTeams, draftType: initialDraftType, draftDone, isPublic: initialIsPublic = false }: Props) {
   const router = useRouter();
   const [maxTeams, setMaxTeams] = useState(String(initialMaxTeams));
   const [draftType, setDraftType] = useState(initialDraftType);
+  const [isPublic, setIsPublic] = useState(initialIsPublic);
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<string | null>(null);
+
+  const isDirty =
+    maxTeams !== String(initialMaxTeams) ||
+    draftType !== initialDraftType ||
+    isPublic !== initialIsPublic;
 
   async function handleSave() {
     if (!maxTeams || !draftType) return;
     setBusy(true);
     setResult(null);
 
+    const body: Record<string, unknown> = { isPublic };
+    if (!draftDone) {
+      body.maxTeams = parseInt(maxTeams);
+      body.draftType = draftType;
+    }
+
     try {
       const res = await fetch(`/api/leagues/${leagueId}/settings`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          maxTeams: parseInt(maxTeams),
-          draftType,
-        }),
+        body: JSON.stringify(body),
       });
 
       const data = await res.json();
       if (!res.ok) {
         setResult(`Error: ${data.error}`);
       } else {
-        setResult("Settings saved successfully.");
+        setResult("Settings saved.");
         router.refresh();
       }
     } catch {
@@ -46,80 +56,100 @@ export function LeagueSettingsEditor({ leagueId, maxTeams: initialMaxTeams, draf
     }
   }
 
-  if (draftDone) {
-    return (
-      <div style={{
-        padding: "14px 16px",
-        borderRadius: 12,
-        background: "rgba(148,163,184,0.05)",
-        border: "1px solid rgba(148,163,184,0.1)",
-      }}>
-        <p style={{ margin: 0, fontSize: 13, color: "#94a3b8" }}>
-          ⏱ Settings are locked after the draft starts.
-        </p>
-      </div>
-    );
-  }
-
   return (
     <div style={{ display: "grid", gap: 12 }}>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-        <div>
-          <label style={{ display: "block", fontSize: 12, color: "#94a3b8", marginBottom: 6, fontWeight: 600, textTransform: "uppercase" }}>
-            Max teams
-          </label>
-          <input
-            type="number"
-            min="2"
-            max="20"
-            value={maxTeams}
-            onChange={(e) => setMaxTeams(e.target.value)}
-            disabled={busy}
-            style={{
-              width: "100%",
-              padding: "9px 12px",
-              borderRadius: 8,
-              border: "1px solid rgba(148,163,184,0.2)",
-              background: "rgba(255,255,255,0.04)",
-              color: "#e2e8f0",
-              fontSize: 14,
-              boxSizing: "border-box",
-            }}
-          />
+      {!draftDone && (
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+          <div>
+            <label style={{ display: "block", fontSize: 12, color: "#94a3b8", marginBottom: 6, fontWeight: 600, textTransform: "uppercase" as const }}>
+              Max teams
+            </label>
+            <input
+              type="number"
+              min="2"
+              max="20"
+              value={maxTeams}
+              onChange={(e) => setMaxTeams(e.target.value)}
+              disabled={busy}
+              style={{
+                width: "100%",
+                padding: "9px 12px",
+                borderRadius: 8,
+                border: "1px solid rgba(148,163,184,0.2)",
+                background: "rgba(255,255,255,0.04)",
+                color: "#e2e8f0",
+                fontSize: 14,
+                boxSizing: "border-box",
+              }}
+            />
+          </div>
+          <div>
+            <label style={{ display: "block", fontSize: 12, color: "#94a3b8", marginBottom: 6, fontWeight: 600, textTransform: "uppercase" as const }}>
+              Draft type
+            </label>
+            <select
+              value={draftType}
+              onChange={(e) => setDraftType(e.target.value)}
+              disabled={busy}
+              style={{
+                width: "100%",
+                padding: "9px 12px",
+                borderRadius: 8,
+                border: "1px solid rgba(148,163,184,0.2)",
+                background: "rgba(255,255,255,0.04)",
+                color: "#e2e8f0",
+                fontSize: 14,
+                boxSizing: "border-box",
+              }}
+            >
+              <option value="SNAKE">Snake</option>
+            </select>
+          </div>
         </div>
+      )}
+
+      {/* isPublic toggle — always editable */}
+      <button
+        type="button"
+        onClick={() => setIsPublic((v) => !v)}
+        disabled={busy}
+        style={{
+          display: "flex", alignItems: "center", gap: 12,
+          background: "none", border: "none", cursor: busy ? "not-allowed" : "pointer",
+          padding: "8px 0", textAlign: "left",
+        }}
+      >
+        <span style={{
+          width: 36, height: 20, borderRadius: 99, flexShrink: 0,
+          background: isPublic ? "#6366f1" : "rgba(255,255,255,0.08)",
+          display: "inline-flex", alignItems: "center",
+          padding: "0 3px", transition: "background 0.2s",
+        }}>
+          <span style={{
+            width: 14, height: 14, borderRadius: "50%", background: "#fff",
+            transform: isPublic ? "translateX(16px)" : "translateX(0)",
+            transition: "transform 0.2s",
+          }} />
+        </span>
         <div>
-          <label style={{ display: "block", fontSize: 12, color: "#94a3b8", marginBottom: 6, fontWeight: 600, textTransform: "uppercase" }}>
-            Draft type
-          </label>
-          <select
-            value={draftType}
-            onChange={(e) => setDraftType(e.target.value)}
-            disabled={busy}
-            style={{
-              width: "100%",
-              padding: "9px 12px",
-              borderRadius: 8,
-              border: "1px solid rgba(148,163,184,0.2)",
-              background: "rgba(255,255,255,0.04)",
-              color: "#e2e8f0",
-              fontSize: 14,
-              boxSizing: "border-box",
-            }}
-          >
-            <option value="SNAKE">Snake</option>
-          </select>
+          <div style={{ fontSize: 13, fontWeight: 600, color: "#e2e8f0" }}>
+            List on public league directory
+          </div>
+          <div style={{ fontSize: 11, color: "#64748b" }}>
+            Your league will appear on the Leagues page so new players can find and join it.
+          </div>
         </div>
-      </div>
+      </button>
 
       <button
         onClick={handleSave}
-        disabled={busy || maxTeams === String(initialMaxTeams) && draftType === initialDraftType}
+        disabled={busy || !isDirty}
         style={{
           padding: "10px 16px",
           borderRadius: 10,
           border: "none",
-          cursor: busy ? "not-allowed" : "pointer",
-          background: (busy || maxTeams === String(initialMaxTeams) && draftType === initialDraftType) ? "rgba(99,102,241,0.3)" : "#6366f1",
+          cursor: busy || !isDirty ? "not-allowed" : "pointer",
+          background: busy || !isDirty ? "rgba(99,102,241,0.3)" : "#6366f1",
           color: "#fff",
           fontWeight: 700,
           fontSize: 14,

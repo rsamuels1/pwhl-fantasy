@@ -56,6 +56,8 @@ export async function POST(req: NextRequest) {
       draftStartsAt = new Date(body.draftStartsAt);
     }
 
+    const isPublic = body.isPublic === true || body.isPublic === "true";
+
     const league = await prisma.fantasyLeague.create({
       data: {
         id: generateShortId(leagueName),
@@ -76,6 +78,7 @@ export async function POST(req: NextRequest) {
         draftStartsAt,
         isReplay,
         replayCurrentDate,
+        isPublic,
       },
     });
 

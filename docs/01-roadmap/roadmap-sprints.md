@@ -956,7 +956,7 @@ Files: `app/league/[leagueId]/page.tsx`, `components/WeekHighlights.tsx`
 
 ---
 
-## Sprint 17 — "UX Polish — Agent Test Run Fixes" · IN PROGRESS · Jun 22, 2026 · Track F · P0/P1
+## Sprint 17 — "UX Polish — Agent Test Run Fixes" · ✅ COMPLETE · Jun 22, 2026 · Track F · P0/P1
 
 **Background:** A 4-agent parallel UX test run (`docs/03-validation/agent-run-findings-2026-06-22.md`) identified 6 Blockers, 13 Friction items, and 5 Minor items across the full app. Sprint 17 implements all Blocker and high-priority Friction fixes.
 
@@ -1005,16 +1005,16 @@ Files: `app/team/[teamId]/lineup/LineupManager.tsx`
 **Sprint 17 Story Totals:**
 | Story | Size | Priority | Status |
 |---|---|---|---|
-| AG-001: LEAGUES page overhaul + isPublic schema | L | P0 | To Do |
-| AG-002: Matchup page restructure (Z7/Z8/Z9 moves) | M | P0 | To Do |
-| AG-003: FP/VP comprehension copy + FieldHero label | S | P0 | To Do |
-| AG-004: Terminology standardization (FP, glossary) | S | P0 | To Do |
-| AG-005: Non-qualifying playoff empty state | S | P0 | To Do |
-| AG-006: Renewal two-step confirmation + invite step | S | P0 | To Do |
-| AG-007: Pre-login UX improvements | M | P1 | To Do |
-| AG-008: VP education reinforcement | S | P1 | To Do |
-| AG-009: Lineup lock contextual tooltip | S | P1 | To Do |
-| **Total** | **6S · 2M · 1L** | — | **0/9** |
+| AG-001: LEAGUES page overhaul + isPublic schema | L | P0 | ✅ COMPLETE |
+| AG-002: Matchup page restructure (Z7/Z8/Z9 moves) | M | P0 | ✅ COMPLETE |
+| AG-003: FP/VP comprehension copy + FieldHero label | S | P0 | ✅ COMPLETE |
+| AG-004: Terminology standardization (FP, glossary) | S | P0 | ✅ COMPLETE |
+| AG-005: Non-qualifying playoff empty state | S | P0 | ✅ COMPLETE |
+| AG-006: Renewal two-step confirmation + invite step | S | P0 | ✅ COMPLETE |
+| AG-007: Pre-login UX improvements | M | P1 | ✅ COMPLETE |
+| AG-008: VP education reinforcement | S | P1 | ✅ COMPLETE |
+| AG-009: Lineup lock contextual tooltip | S | P1 | ✅ COMPLETE |
+| **Total** | **6S · 2M · 1L** | — | **9/9** |
 
 **Schema changes:** `FantasyLeague.isPublic Boolean @default(false)` (required for AG-001 open-league directory).
 
@@ -1101,7 +1101,7 @@ Items below are acknowledged but have no sprint assignment. They become candidat
 | Sprint 14 — Post-Launch Polish + Emotional Engagement | ✅ COMPLETE (Jun 22, 2026) | 11/12 items shipped; UX-045 (rival win celebration) deferred post-launch (schema risk); OB-010 (wizard Replay bar) ✅ + UX-049 (FA direct nav link) ✅ + UX-050 (Win Prob label) ✅ + UX-033 (setup phase copy) ✅; all agent test findings + early commits included |
 | Sprint 15 — Visual Design System Deep Pass | ✅ COMPLETE (Jun 22, 2026) | 3 stories: DS-001 (homepage rewrite + sticky header), DS-002 (token sweep all pages + emoji removal), DS-003 (league overview + WeekHighlights full redesign) |
 | Sprint 16 — Emotional Design Polish | ✅ COMPLETE (Jun 22, 2026) | Score colors by win state + count-up animation, section heading hierarchy, Saira Condensed font loading, RecapCard elevation, card entrance animations. Transforms "Bloomberg terminal" feeling into energetic sports product. Commits: 5ecc116, f1d576c |
-| Sprint 17 — UX Polish: Agent Test Run Fixes | 🔄 IN PROGRESS (Jun 22, 2026) | 9 items: AG-001 (LEAGUES overhaul + isPublic schema) + AG-002 (matchup page restructure) + AG-003 (FP/VP copy) + AG-004 (terminology) + AG-005 (playoff eliminated empty state) + AG-006 (renewal confirmation) + AG-007 (pre-login UX) + AG-008 (VP education) + AG-009 (lock tooltip); source: 4-agent parallel UX test run |
+| Sprint 17 — UX Polish: Agent Test Run Fixes | ✅ COMPLETE (Jun 22, 2026) | 9/9 items: AG-001 (LEAGUES overhaul + isPublic schema) + AG-002 (matchup page restructure) + AG-003 (FP/VP copy) + AG-004 (terminology) + AG-005 (playoff eliminated empty state) + AG-006 (renewal confirmation) + AG-007 (pre-login UX) + AG-008 (VP education) + AG-009 (lock tooltip); source: 4-agent parallel UX test run |
 
 ---
 

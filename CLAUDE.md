@@ -214,6 +214,16 @@ survives DB resets and schema migrations.
      - Card entrance animations (fadeSlideUp + stagger) on page load
      - Win probability bar spring easing (cubic-bezier) instead of linear fill
      - No schema changes; transforms matchup page from "Bloomberg terminal" to energetic sports product
+   - **UX Polish — Sprint 17** ✅ (AG-001–009: agent test run fixes, 9/9 shipped):
+     - AG-001: LEAGUES page overhaul — "What's Happening" showcase + open-league directory; `FantasyLeague.isPublic Boolean @default(false)` schema field; public/private toggle in wizard + admin panel
+     - AG-002: Matchup page restructure — Z7 performers moved to Analysis tab; Z8 league leaders + Z9 activity feed moved to league overview; FieldHero embedded standings removed; positive "all set" lineup state added
+     - AG-003: FP/VP comprehension copy — VP bridge sentence in dashboard MatchupHero; "vs the field" rendered as visible text in FieldHero; setup-phase "0.0" → "—" fix on dashboard action card
+     - AG-004: Terminology standardization — FPts → FP in all stat table headers; FP/VP relationship sentence in `VpExplainer.tsx`; slot legend on lineup page (F/D/G/UTIL); draft stat glossary opens by default
+     - AG-005: Non-qualifying playoff empty state — `lib/services/dashboard.ts` detects `playoffStatus === IN_PROGRESS` + no active playoff matchup; returns `playoffEliminated` context with regular-season rank + bracket link
+     - AG-006: Season renewal two-step confirmation — `RenewLeagueForm.tsx` requires two explicit actions before firing `POST /renew`; post-renewal invite link displayed before redirect
+     - AG-007: Pre-login UX — plain-language features grid copy (no acronyms); "Try a Replay" secondary CTA on landing + login/register pages; invite join page shows draft date + fantasy explainer
+     - AG-008: VP education reinforcement — compact "How VP works" callout in FieldHero + dashboard matchup action card; links to standings page explainer
+     - AG-009: Lineup lock contextual tooltip — hover/tap on lock indicator reveals explanation: player's team played this week, cannot move to bench after contributing
 7. Public launch ~early Nov, drafts ~1 week before opener
 
 ## Draft room UI (`app/draft/[leagueId]/`)

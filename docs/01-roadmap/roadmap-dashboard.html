@@ -226,7 +226,7 @@
     <div class="header-right">
       <div class="stat">
         <span class="label">Current:</span>
-        <span class="value">Sprint 16</span>
+        <span class="value">Sprint 17</span>
       </div>
       <div class="stat">
         <span class="label">Latest Ship:</span>
@@ -238,7 +238,7 @@
       </div>
       <div class="stat">
         <span class="label">Sprints:</span>
-        <span class="value">16/16 complete</span>
+        <span class="value">17/17 complete</span>
       </div>
       <div class="stat">
         <span class="label">Gates:</span>
@@ -434,10 +434,10 @@
           <span class="status complete">✅ DONE</span>
         </div>
 
-        <div class="sprint-card partial" onclick="switchTab('sprints'); setTimeout(() => document.getElementById('sprint-14').scrollIntoView({behavior: 'smooth'}), 100)">
+        <div class="sprint-card complete" onclick="switchTab('sprints'); setTimeout(() => document.getElementById('sprint-14').scrollIntoView({behavior: 'smooth'}), 100)">
           <div class="name">Sprint 14</div>
-          <div class="progress">5/12</div>
-          <span class="status partial">🔄 IN PROGRESS</span>
+          <div class="progress">11/12</div>
+          <span class="status complete">✅ DONE</span>
         </div>
 
         <div class="sprint-card complete" onclick="switchTab('sprints'); setTimeout(() => document.getElementById('sprint-15').scrollIntoView({behavior: 'smooth'}), 100)">
@@ -449,6 +449,12 @@
         <div class="sprint-card complete" onclick="switchTab('sprints'); setTimeout(() => document.getElementById('sprint-16').scrollIntoView({behavior: 'smooth'}), 100)">
           <div class="name">Sprint 16</div>
           <div class="progress">7/7</div>
+          <span class="status complete">✅ DONE</span>
+        </div>
+
+        <div class="sprint-card complete" onclick="switchTab('sprints'); setTimeout(() => document.getElementById('sprint-17').scrollIntoView({behavior: 'smooth'}), 100)">
+          <div class="name">Sprint 17</div>
+          <div class="progress">9/9</div>
           <span class="status complete">✅ DONE</span>
         </div>
 
@@ -1313,6 +1319,28 @@
           </div>
         </div>
         <div class="exit-criteria"><strong>Exit:</strong> Matchup page emotional energy pass complete. App transforms from "Bloomberg terminal" to engaging sports product. No schema changes. 149 tests pass. tsc --noEmit clean. ✅ ACHIEVED (Jun 22, 2026)</div>
+      </div>
+
+      <div id="sprint-17" class="card complete">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+          <div>
+            <div style="font-weight: 700; font-size: 1rem;">Sprint 17 · "UX Polish — Agent Test Run Fixes"</div>
+            <div style="font-size: 0.8rem; color: #888;">Track: F · COMPLETE · Jun 22, 2026 · 9/9 shipped · Source: 4-agent parallel UX test run</div>
+          </div>
+          <span class="status complete">✅ COMPLETE</span>
+        </div>
+        <div>
+          <div class="task-row"><span class="task-check">✅</span><span style="color: #666">AG-001 (P0, L) — LEAGUES page overhaul: "What's Happening" showcase + open-league directory; isPublic schema field; public/private toggle in wizard + admin panel</span></div>
+          <div class="task-row"><span class="task-check">✅</span><span style="color: #666">AG-002 (P0, M) — Matchup page restructure: move Z7 performers to Analysis tab, move Z8 league leaders + Z9 activity feed to league overview; remove FieldHero standings; add "all set" lineup state</span></div>
+          <div class="task-row"><span class="task-check">✅</span><span style="color: #666">AG-003 (P0, S) — FP/VP comprehension copy: VP bridge sentence in dashboard MatchupHero; "vs the field" as visible text in FieldHero; fix "0.0" → "—" in setup phase on dashboard card</span></div>
+          <div class="task-row"><span class="task-check">✅</span><span style="color: #666">AG-004 (P0, S) — Terminology standardization: FPts → FP in all stat tables; VP/FP bridge sentence in VpExplainer; slot legend on lineup page (F/D/G/UTIL); draft stat glossary open by default</span></div>
+          <div class="task-row"><span class="task-check">✅</span><span style="color: #666">AG-005 (P0, S) — Non-qualifying playoff empty state: detect eliminated teams in lib/services/dashboard.ts; show "You finished Nth" + bracket link instead of "Season hasn't started"</span></div>
+          <div class="task-row"><span class="task-check">✅</span><span style="color: #666">AG-006 (P0, S) — Renewal two-step confirmation: step 1 explains new-league effect; step 2 confirms; post-renewal invite link shown before redirect</span></div>
+          <div class="task-row"><span class="task-check">✅</span><span style="color: #666">AG-007 (P1, M) — Pre-login UX: plain-language features subcopy; "Try a Replay" CTA on landing + login/register pages; draft date + fantasy explainer on invite join page</span></div>
+          <div class="task-row"><span class="task-check">✅</span><span style="color: #666">AG-008 (P1, S) — VP education reinforcement: compact "How VP works" callout in FieldHero + dashboard action card; links to standings explainer</span></div>
+          <div class="task-row"><span class="task-check">✅</span><span style="color: #666">AG-009 (P1, S) — Lineup lock tooltip: hover/tap on lock indicator reveals contextual explanation of why the player is locked</span></div>
+        </div>
+        <div class="exit-criteria"><strong>Exit:</strong> All 6 Blockers and 3 high-priority Friction items from the 4-agent UX test run resolved. No false "Season hasn't started" empty states during playoffs. FP terminology consistent site-wide. tsc --noEmit clean. All existing tests pass. ✅ ACHIEVED (Jun 22, 2026)</div>
       </div>
 
   </div>

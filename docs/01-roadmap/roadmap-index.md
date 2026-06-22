@@ -120,6 +120,8 @@ Sprint 6 is complete (7/7). Sprint 7 is complete (3/4 items done — #11 Storyli
 
 **Sprint 16 (Emotional Design Polish) is COMPLETE (Jun 22, 2026).** Matchup page emotional energy pass — score colors respond to win state (green if winning, red if losing), scores count-up animate on load (1.2s), section headings elevated from 12px uppercase to 14px normal for hierarchy, Saira Condensed font loads and applies to all scores, RecapCard styled with colored borders and contextual copy, card entrance animations with staggered delays, win probability bar animates with spring easing. Transforms the app from "Bloomberg terminal" to energetic sports product. Commits: 5ecc116 (main pass) + f1d576c (section headings + count-up). Full details in memory and `roadmap-features.md`.
 
+**Sprint 17 (UX Polish — Agent Test Run Fixes) is COMPLETE (Jun 22, 2026).** All 9 items shipped: AG-001 LEAGUES page overhaul + `isPublic` schema field; AG-002 matchup page restructure (Z7 performers to Analysis tab, Z8/Z9 to league overview, FieldHero standings removed, "all set" lineup state); AG-003 FP/VP comprehension copy (VP bridge sentence, "vs the field" visible text, setup-phase "—" fix); AG-004 terminology standardization (FPts → FP, VpExplainer FP/VP sentence, slot legend, glossary open by default); AG-005 non-qualifying playoff empty state (eliminated teams see regular-season rank + bracket link); AG-006 renewal two-step confirmation + invite step; AG-007 pre-login UX improvements (plain-language features copy, Replay CTA, invite page draft date + explainer); AG-008 VP education reinforcement on FieldHero + dashboard card; AG-009 lineup lock contextual tooltip. Full plan in `roadmap-sprints.md`.
+
 **Shipped (Sprint 6 — all complete):**
 - **League Onboarding (#2)** · ✅ Welcome flow, 6-step wizard, manager draft prep guide; `User.onboardingCompletedAt` schema field. (Sprint 3)
 - **Transaction History (#8)** · ✅ Paginated API + page with type/team filters, replay guard, infinite scroll. (Sprint 3)
@@ -150,7 +152,7 @@ required before real users are invited. All items were applied immediately after
 
 ## Completed Sprints (7–15)
 
-All sprints from 7–15 are complete and shipped (Sprint 13 is in progress with 3 items also shipped via Sprint 15 batch). Detailed plans in `roadmap-sprints.md`.
+All sprints from 7–16 are complete and shipped (Sprint 13 is in progress with 3 items also shipped via Sprint 15 batch). Detailed plans in `roadmap-sprints.md`.
 
 - **Sprint 7** ✅ — Retention Layer (Trade System, Storylines, Replay Sim v2 UX)
 - **Sprint 8** ✅ — Beta Hardening (14/14 audit fixes + beta bugs)
@@ -161,8 +163,9 @@ All sprints from 7–15 are complete and shipped (Sprint 13 is in progress with 
 - **Sprint 14** ✅ — Post-Launch Polish + Emotional Engagement (11/12; OB-010, UX-049, UX-050, UX-033 shipped; UX-045 deferred; Jun 22, 2026)
 - **Sprint 15** ✅ — Visual Design System Deep Pass (3 stories: DS-001/002/003; Jun 22, 2026)
 - **Sprint 16** ✅ — Emotional Design Polish (score colors, count-up animation, Saira Condensed font, RecapCard elevation; Jun 22, 2026)
+- **Sprint 17** ✅ — UX Polish: Agent Test Run Fixes (9/9 items: LEAGUES overhaul, matchup restructure, FP/VP copy, terminology, playoff eliminated empty state, renewal confirmation, pre-login UX, VP education, lock tooltip; Jun 22, 2026)
 
-**Current Status:** Sprint 13 IN PROGRESS (3/14 shipped: BF-008, OB-001, OB-008) · Sprint 14 COMPLETE (11/12 items; Jun 22, 2026) · Sprint 15 COMPLETE (visual design system; Jun 22, 2026) · Sprint 16 COMPLETE (emotional design polish; Jun 22, 2026) · MVP readiness ~99%
+**Current Status:** Sprint 13 IN PROGRESS (3/14 shipped: BF-008, OB-001, OB-008) · Sprint 14 COMPLETE (11/12 items; Jun 22, 2026) · Sprint 15 COMPLETE (visual design system; Jun 22, 2026) · Sprint 16 COMPLETE (emotional design polish; Jun 22, 2026) · **Sprint 17 COMPLETE** (9/9 items; Jun 22, 2026) · MVP readiness ~99%
 
 **Sprint 14 (Post-Launch Polish + Emotional Engagement) is COMPLETE (Jun 22, 2026).** 11/12 items shipped: all 5 agent integration test findings (DRC-002, BF-010, BF-011, TR-002, TR-003) ✅; OB-010 wizard Replay progress bar ✅; UX-049 "Free Agents" direct TeamNav link ✅; UX-050 "Win Probability" label in DuelHero ✅; UX-033 setup-phase copy "Games starting soon" ✅; UX-032 edge label ✅; OB-011 draft date picker text ✅. UX-045 (rival win celebration) deferred post-launch — requires schema migration (`RIVALRY_WIN` enum) which carries pre-launch risk. First item in Sprint 17 backlog.
 

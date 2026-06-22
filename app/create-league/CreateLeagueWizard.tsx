@@ -50,6 +50,7 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
   const [createdTeamId, setCreatedTeamId] = useState<string | null>(null);
   const [vpOpen, setVpOpen] = useState(false);
   const [showScoring, setShowScoring] = useState(false);
+  const [isPublic, setIsPublic] = useState(false);
 
   // Mark onboarding seen on mount (idempotent)
   useEffect(() => {
@@ -105,7 +106,7 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
       const res = await fetch("/api/leagues/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ leagueName: name, maxTeams, draftStartsAt }),
+        body: JSON.stringify({ leagueName: name, maxTeams, draftStartsAt, isPublic }),
       });
       const data = await res.json();
       if (!res.ok) { setError(data?.error || "Failed to create league"); setLoading(false); return; }
@@ -222,6 +223,38 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
                   {name.length}/50
                 </span>
               </label>
+              {/* isPublic toggle */}
+              <button
+                type="button"
+                onClick={() => setIsPublic((v) => !v)}
+                style={{
+                  display: "flex", alignItems: "center", gap: 12,
+                  background: "none", border: "none", cursor: "pointer",
+                  padding: "10px 0", textAlign: "left",
+                }}
+              >
+                <span style={{
+                  width: 36, height: 20, borderRadius: 99, flexShrink: 0,
+                  background: isPublic ? "#6366f1" : "rgba(255,255,255,0.08)",
+                  display: "inline-flex", alignItems: "center",
+                  padding: "0 3px", transition: "background 0.2s",
+                }}>
+                  <span style={{
+                    width: 14, height: 14, borderRadius: "50%", background: "#fff",
+                    transform: isPublic ? "translateX(16px)" : "translateX(0)",
+                    transition: "transform 0.2s",
+                  }} />
+                </span>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: "#e2e8f0" }}>
+                    List on public league directory
+                  </div>
+                  <div style={{ fontSize: 11, color: "#64748b" }}>
+                    Your league name and invite link will appear on the Leagues page so new players can find it.
+                  </div>
+                </div>
+              </button>
+
               <button
                 className="button-primary"
                 onClick={goNext}

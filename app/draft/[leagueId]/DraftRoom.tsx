@@ -596,7 +596,7 @@ function PlayerPanel({
   const [activeTab, setActiveTab] = useState<"available" | "queue">("available");
   const [posFilter, setPosFilter] = useState<"" | "FORWARD" | "DEFENSE" | "GOALIE">("");
   const [sortKey, setSortKey] = useState<SortKey>("points");
-  const [glossaryOpen, setGlossaryOpen] = useState(false);
+  const [glossaryOpen, setGlossaryOpen] = useState(true);
   const [statsMap, setStatsMap] = useState<Record<string, PlayerStats>>(() =>
     Object.fromEntries(initialStats.map((s) => [s.id, s]))
   );
@@ -771,6 +771,10 @@ function PlayerPanel({
                 </div>
               )}
             </div>
+
+            <p style={{ fontSize: 11, color: "var(--muted)", marginBottom: 8 }}>
+              ★ Star players you want — if your clock runs out, we draft from the top of your starred list.
+            </p>
 
             {rows.length === 0 ? (
               <p style={{ color: "var(--muted)", padding: "8px 0", fontSize: 12 }}>

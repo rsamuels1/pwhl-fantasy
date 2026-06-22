@@ -40,9 +40,8 @@ export default async function Home() {
             fontSize: 17, lineHeight: 1.6, color: "#aab2c8",
             maxWidth: 480, margin: "20px 0 0",
           }}>
-            Don&apos;t just draft a team — run a front office. Build rosters, set lineups,
-            work the wire, and make the calls that win championships in the Professional
-            Women&apos;s Hockey League.
+            Draft real PWHL players, set your lineup each week, and outscore every other team.
+            The team with the most wins at the end claims the championship.
           </p>
 
           <div style={{ display: "flex", gap: 13, alignItems: "center", marginTop: 30, flexWrap: "wrap" as const }}>
@@ -75,6 +74,13 @@ export default async function Home() {
               No gambling, pure strategy
             </span>
           </div>
+
+          <p style={{ marginTop: 18, fontSize: 12, color: "#475569" }}>
+            Want to try it alone first?{" "}
+            <Link href="/create-league?replay=1" style={{ color: "#818cf8", textDecoration: "none" }}>
+              Replay a past PWHL season →
+            </Link>
+          </p>
         </div>
 
         {/* Right col — product preview */}
@@ -126,9 +132,14 @@ export default async function Home() {
               marginTop: 12, background: "rgba(150,160,200,0.04)",
               border: "1px solid rgba(150,160,200,0.10)", borderRadius: 12, padding: "13px 15px",
             }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 11 }}>
-                <span style={{ width: 3, height: 13, borderRadius: 2, background: "linear-gradient(#a78bfa,#6d28d9)", flexShrink: 0 }} />
-                <span style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase" as const, color: "#c7d2e0" }}>Standings</span>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 9, marginBottom: 11 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
+                  <span style={{ width: 3, height: 13, borderRadius: 2, background: "linear-gradient(#a78bfa,#6d28d9)", flexShrink: 0 }} />
+                  <span style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase" as const, color: "#c7d2e0" }}>Standings</span>
+                </div>
+                <abbr title="Victory Points: 2 for a weekly win, +2 for highest score, +1 for second. How you climb the standings." style={{ fontSize: 10, fontWeight: 700, color: "#6f788e", textDecoration: "underline dotted", cursor: "help", letterSpacing: "0.1em" }}>
+                  VP
+                </abbr>
               </div>
               {MINI_STANDINGS.map((r) => (
                 <div key={r.name} style={{
@@ -155,7 +166,7 @@ export default async function Home() {
           background: "rgba(150,160,200,0.04)", border: "1px solid rgba(150,160,200,0.10)", borderRadius: 16,
         }}>
           <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase" as const, color: "#6f788e" }}>
-            A real front office, not a points game
+            Strategy beats luck every time
           </span>
           <div style={{ display: "flex", gap: 40, flexWrap: "wrap" as const }}>
             {PILLARS.map((p) => (

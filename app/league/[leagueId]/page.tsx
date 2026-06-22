@@ -5,6 +5,8 @@ import { computeRace } from "@/lib/playoffs/seeding";
 import { computeVpStandings } from "@/lib/scoring/vp";
 import { requireAuth, requireLeagueAccess, isFounder } from "@/lib/auth";
 import { getLeagueActivity } from "@/lib/services/activity";
+import { getLeaguePerformers, type LeaguePerformerRow } from "@/lib/services/dashboard";
+import { parseScoringSettings } from "@/lib/scoring/settings";
 import { getSeasonState } from "@/lib/season";
 import { getDevNow } from "@/lib/devTime";
 import { getReplayNow } from "@/lib/replayTime";
@@ -115,6 +117,12 @@ export default async function LeagueOverviewPage({
   // ── Season state for lineup status + commissioner strip ──
   const activePeriod = seasonState.periods.find((p) => p.status === "ACTIVE")?.period ?? null;
   const upcomingPeriod = seasonState.periods.find((p) => p.status === "UPCOMING")?.period ?? null;
+
+  // ── League leaders this week (active period only) ──
+  const leagueLeadersScoringSettings = parseScoringSettings(league.scoringSettings);
+  const leagueLeaders = activePeriod
+    ? await getLeaguePerformers(leagueId, myTeam?.id ?? "", activePeriod, leagueLeadersScoringSettings, prisma, nowMs).catch(() => ({ top: [] as LeaguePerformerRow[], disappointing: [] as LeaguePerformerRow[] }))
+    : { top: [] as LeaguePerformerRow[], disappointing: [] as LeaguePerformerRow[] };
   const periodForGames = activePeriod ?? upcomingPeriod;
 
   // Team lineup status widget — batch query for all active-slot entries
@@ -544,6 +552,31 @@ export default async function LeagueOverviewPage({
             <WeekHighlights storylines={storylines} weekLabel={highlightsWeekLabel} />
           )}
 
+          {/* ── League leaders this week ── */}
+          {leagueLeaders.top.length > 0 && currentWeek !== null && (
+            <section style={card}>
+              {cardLabel(`League leaders · Week ${currentWeek}`, 14)}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase" as const, letterSpacing: "0.06em", marginBottom: 8 }}>
+                    Scoring leaders
+                  </div>
+                  {leagueLeaders.top.map((p, i) => (
+                    <LeagueLeaderRow key={p.playerId} player={p} rank={i + 1} variant="top" />
+                  ))}
+                </div>
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase" as const, letterSpacing: "0.06em", marginBottom: 8 }}>
+                    Underperforming
+                  </div>
+                  {leagueLeaders.disappointing.map((p, i) => (
+                    <LeagueLeaderRow key={p.playerId} player={p} rank={i + 1} variant="low" />
+                  ))}
+                </div>
+              </div>
+            </section>
+          )}
+
           {/* ── All matchups this week — compact / secondary ── */}
           {thisWeekMatchups.length > 0 && (
             <section style={card}>
@@ -782,6 +815,31 @@ export default async function LeagueOverviewPage({
         </div>
       )}
 
+    </div>
+  );
+}
+
+function LeagueLeaderRow({ player, rank, variant }: { player: LeaguePerformerRow; rank: number; variant: "top" | "low" }) {
+  const rankColor = rank === 1 ? "#f59e0b" : rank === 2 ? "#94a3b8" : "#475569";
+  const fpColor = variant === "top" ? "#5fa98c" : "#d18b7f";
+  return (
+    <div style={{
+      display: "flex", alignItems: "center", gap: 8,
+      padding: "6px 8px", borderRadius: 8, marginBottom: 3,
+      background: player.isMyPlayer ? "rgba(99,102,241,0.07)" : "transparent",
+      borderLeft: player.isMyPlayer ? "2px solid rgba(99,102,241,0.35)" : "2px solid transparent",
+    }}>
+      <span style={{ fontSize: 11, fontWeight: 800, color: rankColor, width: 14, flexShrink: 0, textAlign: "center" }}>{rank}</span>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontSize: 12, fontWeight: 600, color: player.isMyPlayer ? "#a5b4fc" : "#e2e8f0", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          {player.name}
+          {player.isMyPlayer && <span style={{ marginLeft: 4, fontSize: 9, color: "#6366f1", fontWeight: 700 }}>YOU</span>}
+        </div>
+        <div style={{ fontSize: 10, color: "#475569" }}>{player.fantasyTeamName}</div>
+      </div>
+      <span style={{ fontSize: 13, fontWeight: 700, color: fpColor, fontVariantNumeric: "tabular-nums", flexShrink: 0 }}>
+        {player.points.toFixed(1)}
+      </span>
     </div>
   );
 }

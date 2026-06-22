@@ -64,7 +64,7 @@ export default async function TradesPage({ params, searchParams }: Props) {
   const canPropose = league.status === "IN_SEASON" && league.playoffStatus === "NOT_STARTED";
 
   const incomingTrades = myTrades.filter(
-    (t) => t.receivingTeamId === myTeam.id && (t.status === "PROPOSED")
+    (t) => t.receivingTeamId === myTeam.id && (t.status === "PROPOSED" || t.status === "ACCEPTED")
   );
   const sentTrades = myTrades.filter(
     (t) => t.proposingTeamId === myTeam.id && (t.status === "PROPOSED" || t.status === "COUNTERED")

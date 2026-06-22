@@ -228,10 +228,11 @@ export async function acceptTrade(
       ? new Date(nowMs + reviewHours * 60 * 60 * 1000)
       : null;
 
+    // First transition to ACCEPTED so receiver can still see and interact with the trade
     updated = await prisma.trade.update({
       where: { id: tradeId },
       data: {
-        status: "PENDING_REVIEW",
+        status: "ACCEPTED",
         reviewEndsAt,
       },
       include: { items: true },

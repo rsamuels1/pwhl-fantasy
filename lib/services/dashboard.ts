@@ -17,6 +17,7 @@ import { parseScoringSettings } from "../scoring/settings";
 import { getReplayNow } from "../replayTime";
 import { getRoundLabel } from "../playoffs/brackets";
 import { calculatePlayoffRounds } from "../playoffs/lifecycle";
+import { computeVpStandings } from "../scoring/vp";
 
 // ── types ─────────────────────────────────────────────────────────────────────
 
@@ -140,6 +141,8 @@ export interface DashboardData {
   eliminationInfo?: { round: number; roundLabel: string } | null;
   championInfo?: ChampionInfo | null;
   playoffPending?: boolean;
+  // Populated when the team didn't qualify for the playoffs
+  missedPlayoffs?: { regularSeasonRank: number; totalTeams: number } | null;
   // Populated when the active period has no stats yet (SETUP phase) — shows last complete week's stats
   myPlayersLastWeek: PlayerMatchupRow[] | null;
   lastWeekLabel: string | null;
@@ -617,6 +620,28 @@ async function getPlayoffDashboardData(
       const roundLabel = getRoundLabel(lastPlayoffMatchup.round, totalRounds);
       return { ...empty, eliminationInfo: { round: lastPlayoffMatchup.round, roundLabel } };
     }
+
+    // Team didn't participate in playoffs at all — compute their regular-season finish
+    const [allTeams, regularSeasonMatchups] = await Promise.all([
+      prisma.fantasyTeam.findMany({ where: { leagueId }, select: { id: true, name: true } }),
+      prisma.matchup.findMany({
+        where: { leagueId, isPlayoff: false, homeScore: { not: null } },
+        select: { homeTeamId: true, awayTeamId: true, homeScore: true, awayScore: true, homeVP: true, awayVP: true, isPlayoff: true, week: true },
+      }),
+    ]);
+    const vpStandings = computeVpStandings(
+      allTeams,
+      regularSeasonMatchups.map((m) => ({
+        homeTeamId: m.homeTeamId, awayTeamId: m.awayTeamId,
+        homeScore: m.homeScore, awayScore: m.awayScore,
+        homeVP: m.homeVP, awayVP: m.awayVP,
+        isPlayoff: m.isPlayoff, week: m.week,
+      }))
+    );
+    const myRank = vpStandings.findIndex((s) => s.fantasyTeamId === myTeamId) + 1;
+    if (myRank > 0) {
+      return { ...empty, missedPlayoffs: { regularSeasonRank: myRank, totalTeams: allTeams.length } };
+    }
     return empty;
   }
 
@@ -951,7 +976,7 @@ async function getLastResult(
   };
 }
 
-async function getLeaguePerformers(
+export async function getLeaguePerformers(
   leagueId: string,
   myTeamId: string,
   period: ScoringPeriod,

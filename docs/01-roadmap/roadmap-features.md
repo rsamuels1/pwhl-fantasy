@@ -3543,6 +3543,227 @@ Acceptance Criteria:
 
 ---
 
+# Sprint 17 Features — UX Polish: Agent Test Run Fixes
+
+Source: 4-agent parallel UX test run (`docs/03-validation/agent-run-findings-2026-06-22.md`), Jun 22, 2026. 6 Blockers + 13 Friction + 5 Minor items identified. Sprint 17 implements all Blocker and high-priority Friction items.
+
+---
+
+## AG-001. LEAGUES Page Overhaul + Public League Directory
+
+Sprint: 17
+Priority: P0
+Effort: L
+Status: ✅ COMPLETE
+
+Redesign the leagues discovery page from a bare list into a two-zone showcase. Zone 1 shows "What's Happening This Week": top weekly performers, biggest blowout matchup, a sample matchup card. Zone 2 is an open-league directory: human-readable status labels (e.g., "Drafting Oct 30" not "PRE_DRAFT"), league size, commissioner name, and a Join CTA.
+
+Requires `isPublic Boolean @default(false)` on `FantasyLeague`. Add a public/private toggle to the league creation wizard (step 1 or 2) and to the commissioner admin panel. Default is private so existing leagues are not exposed without opt-in.
+
+Schema change: `FantasyLeague.isPublic Boolean @default(false)`
+
+Acceptance Criteria:
+- AC-001: Leagues discovery page renders a "What's Happening" showcase section with at least top weekly performers and biggest blowout from the most recently scored week.
+- AC-002: Open-league directory shows only leagues where `isPublic === true` with human-readable status, league size, commissioner name, and a functional Join CTA.
+- AC-003: League creation wizard includes a public/private toggle defaulting to private.
+- AC-004: Commissioner admin panel includes the same public/private toggle.
+- AC-005: Existing leagues default to private (`isPublic = false`) — no unintended exposure.
+- AC-006: `tsc --noEmit` clean. All existing tests pass.
+
+Files: `app/leagues/page.tsx`, `app/create-league/CreateLeagueWizard.tsx`, `app/league/[leagueId]/admin/page.tsx`, `prisma/schema.prisma`
+
+---
+
+## AG-002. Matchup Page Restructure — Move League-Scope Sections
+
+Sprint: 17
+Priority: P0
+Effort: M
+Status: ✅ COMPLETE
+
+The My Franchise matchup page currently hosts Z7 (top/underperforming performers), Z8 (league leaders this week), and Z9 (league activity feed) — all league-scope data that does not belong on a personal franchise page. Restructure:
+
+- Move Z7 (top performers / disappointments) to the Analysis tab.
+- Move Z8 (league leaders) and Z9 (activity feed) to `app/league/[leagueId]/page.tsx` (league overview).
+- Remove the embedded weekly standings table from FieldHero — it duplicates the standings page.
+- Add a positive "all set" lineup state: when no lineup alerts exist and there are no active-slot players with zero games remaining, render a brief "Your lineup is set — nothing to do right now" message so the alert strip area does not leave a blank gap.
+
+Acceptance Criteria:
+- AC-001: Matchup page renders no league-leader or activity-feed sections.
+- AC-002: Analysis tab includes the top/underperforming performers section previously at Z7.
+- AC-003: League overview page renders league leaders and activity feed in its right column.
+- AC-004: FieldHero contains no embedded weekly standings table.
+- AC-005: When no lineup alerts fire, a positive "all set" state renders in the alert strip location.
+- AC-006: No regressions on existing Analysis tab content (hot/cold trends, position groups, FA upgrades).
+
+Files: `app/team/[teamId]/matchup/page.tsx`, `lib/services/dashboard.ts`, `app/league/[leagueId]/page.tsx`, `components/FieldHero.tsx`
+
+---
+
+## AG-003. FP/VP Scoring Comprehension Copy
+
+Sprint: 17
+Priority: P0
+Effort: S
+Status: ✅ COMPLETE
+
+New users cannot connect FP (fantasy points earned from real stats) to VP (victory points earned from weekly rankings). The systems feel disconnected. Three targeted copy fixes:
+
+1. Add a bridging sentence to the dashboard MatchupHero: "Your FP total determines your VP this week — score more than your opponents to earn VP."
+2. Change the FieldHero "vs the field" indicator from a `title` attribute (tooltip-only) to visible text: "vs the field" rendered inline next to the score or section header.
+3. Fix "0.0" displaying instead of "—" on the dashboard action card during the setup phase (before any games have been played). This is a parallel bug to the already-fixed matchup page hero `isSetupPhase` guard.
+
+Acceptance Criteria:
+- AC-001: Dashboard MatchupHero renders a VP bridge sentence visible without interaction.
+- AC-002: FieldHero renders "vs the field" as visible text, not only as a tooltip.
+- AC-003: Dashboard action card renders "—" (not "0.0") during setup phase / pre-first-game state.
+- AC-004: No regressions on existing matchup page `isSetupPhase` guard (already fixed).
+
+Files: `components/FieldHero.tsx`, `app/dashboard/page.tsx`, `lib/services/dashboard.ts`
+
+---
+
+## AG-004. Terminology Standardization — FP Everywhere, Glossary Open
+
+Sprint: 17
+Priority: P0
+Effort: S
+Status: ✅ COMPLETE
+
+"FPts" appears in stat tables across the app while all other UI surfaces use "FP". Standardize:
+
+1. All stat table column headers (lineup page, roster page, draft room, FA panel) use "FP" not "FPts".
+2. `VpExplainer.tsx` gains an FP/VP relationship sentence: "Your FP total determines your VP tally each week."
+3. Lineup page gains a slot legend above the active-slots grid: F = Forward, D = Defense, G = Goalie, UTIL = Any skater (F or D).
+4. Draft stat glossary (`DraftRoom.tsx`) opens by default (remove the collapsed initial state). Users who have seen it can collapse it; first-time openers see it immediately.
+
+Acceptance Criteria:
+- AC-001: No "FPts" strings visible in any stat table header across the app.
+- AC-002: `VpExplainer` renders the FP/VP relationship sentence.
+- AC-003: Lineup page slot legend renders above the active-slots grid.
+- AC-004: Draft stat glossary is open (not collapsed) on initial page load.
+
+Files: `components/VpExplainer.tsx`, `app/team/[teamId]/lineup/LineupManager.tsx`, `app/draft/[leagueId]/DraftRoom.tsx`, `app/team/[teamId]/roster/RosterManager.tsx`
+
+---
+
+## AG-005. Non-Qualifying Playoff Empty State
+
+Sprint: 17
+Priority: P0
+Effort: S
+Status: ✅ COMPLETE
+
+Teams that missed the playoffs currently see "Season hasn't started" on their My Franchise matchup page — the same empty state as the pre-draft period. This is factually incorrect and discouraging. Fix `lib/services/dashboard.ts` to detect the eliminated-during-playoffs condition and return a specific empty state with:
+
+- "You finished Nth in the regular season" (derive rank from `computeVpStandings` on the last regular-season period).
+- A link to the bracket page: "See how the playoffs are going →".
+- No score hero (render no FieldHero or DuelHero).
+
+The matchup page renders this alternative view when `dashboard.playoffEliminated === true`.
+
+Acceptance Criteria:
+- AC-001: When `league.playoffStatus === IN_PROGRESS` and the viewing team has no active playoff `Matchup` row, the matchup page renders the eliminated empty state (not "Season hasn't started").
+- AC-002: The empty state includes the team's regular-season finish rank.
+- AC-003: The empty state includes a functional link to the bracket page.
+- AC-004: Teams that ARE in the playoffs continue to see their normal playoff DuelHero.
+- AC-005: The pre-draft "Season hasn't started" state is unaffected.
+
+Files: `lib/services/dashboard.ts`, `app/team/[teamId]/matchup/page.tsx`
+
+---
+
+## AG-006. Season Renewal Two-Step Confirmation + Invite Step
+
+Sprint: 17
+Priority: P0
+Effort: S
+Status: ✅ COMPLETE
+
+`RenewLeagueForm` currently triggers league renewal on a single button click with no confirmation. Users expect "renew" to reset the current league in-place; the actual behavior creates a new child league with a fresh invite flow. Two changes:
+
+1. Two-step confirmation modal: step 1 shows a clear explanation ("This creates a new 2027-28 league. Rosters reset, history carries over. All managers need to re-join.") + a Continue button; step 2 is the final Confirm button. Cancel is available on both steps.
+2. Post-renewal invite step: after successful renewal, show the new league's invite link with a "Copy link" button and copy "Share this with your league to get everyone back for next season" before redirecting to the admin panel.
+
+Acceptance Criteria:
+- AC-001: Renewal requires two explicit user actions (step 1 → step 2) before `POST /api/leagues/[leagueId]/renew` fires.
+- AC-002: Step 1 renders the full explanation of what renewal does (new league, roster reset, re-join required).
+- AC-003: After successful renewal, the invite link for the new league is displayed before redirect.
+- AC-004: Cancel on either step aborts without side effects.
+- AC-005: Existing renewal API behavior and idempotency are unchanged.
+
+Files: `components/RenewLeagueForm.tsx`
+
+---
+
+## AG-007. Pre-Login UX Improvements
+
+Sprint: 17
+Priority: P1
+Effort: M
+Status: ✅ COMPLETE
+
+Landing page features grid subcopy uses insider terminology ("VTF scoring", "VP standings") that PWHL fans new to fantasy sports will not understand. Three improvements:
+
+1. Rewrite features grid subcopy in plain language: under 12 words per card, zero acronyms on first mention, no "VP" or "VTF" without a plain-language companion.
+2. Add a "Try a Replay League" secondary CTA to the landing page (below the primary "Create a League" CTA) and a small link on the login/register pages ("Not sure? Try a replay league first — no commitment").
+3. Update the invite-link landing page (`app/join-league/`) to show the league's draft date (if set) and a two-sentence fantasy explainer above the join form for users who followed a friend's link and have never played fantasy sports.
+
+Acceptance Criteria:
+- AC-001: Landing page features grid contains no unexplained acronyms (VP, VTF, FP) in card subcopy.
+- AC-002: Landing page renders a secondary "Try a Replay" CTA.
+- AC-003: Login and register pages each render a small replay CTA link.
+- AC-004: Join-league page renders the league's draft date and a two-sentence fantasy explainer when a valid invite code is present.
+
+Files: `app/page.tsx`, `app/login/page.tsx`, `app/register/page.tsx`, `app/join-league/page.tsx`
+
+---
+
+## AG-008. VP Education Reinforcement on Matchup/Dashboard
+
+Sprint: 17
+Priority: P1
+Effort: S
+Status: ✅ COMPLETE
+
+`VpExplainer` is only reachable from the standings page. Users first encounter VP on the matchup page (FieldHero shows a VP record like "3W–1L–0T") and on the dashboard action cards, but neither surface explains what VP is. Add a compact inline callout:
+
+- In `FieldHero`: a small "What is VP?" link below the record that expands a one-sentence inline explanation ("VP = victory points; earn 2 for a win, 1 for a tie") or routes to the standings page explainer.
+- On the dashboard matchup action card: a single-line "Your VP record" label next to the record display, with a tooltip or expand link.
+
+Acceptance Criteria:
+- AC-001: FieldHero renders a VP explanation trigger (link or tooltip) adjacent to the weekly record.
+- AC-002: Dashboard matchup card labels the VP record with at least a "VP" abbreviation + expand trigger.
+- AC-003: The expand/tooltip content matches the copy in `VpExplainer.tsx`.
+- AC-004: `VpExplainer` content on the standings page is unchanged.
+
+Files: `components/FieldHero.tsx`, `app/dashboard/page.tsx`, `components/VpExplainer.tsx`
+
+---
+
+## AG-009. Lineup Lock Contextual Tooltip
+
+Sprint: 17
+Priority: P1
+Effort: S
+Status: ✅ COMPLETE
+
+When a player is in a locked state (lock indicator visible), tapping or hovering the lock icon shows nothing. Users cannot tell why the player is locked or what it means for their team. Add a tooltip or inline label that explains the lock reason in plain language.
+
+Proposed copy: "Locked — [Player's team] played on [day]. Can't bench a player after they've contributed this week."
+
+The explanation should be visible on hover (desktop) and on tap (mobile). It should not be a modal — a tooltip or a small inline reveal is sufficient.
+
+Acceptance Criteria:
+- AC-001: Lock indicator on the lineup page renders a tooltip or inline label on hover/tap.
+- AC-002: Tooltip copy names the player's PWHL team and states the reason (team played this week).
+- AC-003: Tooltip is accessible via keyboard focus on the lock element.
+- AC-004: Existing lock logic and validation behavior are unchanged.
+
+Files: `app/team/[teamId]/lineup/LineupManager.tsx`
+
+---
+
 # Architectural Rules
 
 Design for the live season first. Replay is a testing tool, so:

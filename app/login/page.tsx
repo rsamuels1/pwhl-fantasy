@@ -65,7 +65,7 @@ export default function LoginPage() {
               Scout players. Build a championship roster. Lead your franchise through a full PWHL season.
             </p>
             <div style={{ marginTop: 14, padding: "8px 12px", borderRadius: 8, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(148,163,184,0.1)", fontSize: 12, color: "#475569" }}>
-              Season starts November 2026 · Draft week TBD
+              Season starts November 2026 · Draft week TBD · or <Link href="/create-league" style={{ color: "#818cf8", textDecoration: "none" }}>play a replay season right now →</Link>
             </div>
           </div>
 

@@ -54,12 +54,16 @@ function MatchupHero({ summary, teamName }: { summary: MatchupQuickSummary; team
           <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 12 }}>
             <div>
               <div style={{ fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--faint)", marginBottom: 3 }}>Your score</div>
-              <div className="font-stats" style={{ fontSize: 42, fontWeight: 700, lineHeight: 0.78, color: "#f6f7fb" }}>
-                {summary.myScore.toFixed(1)}
+              <div className="font-stats" style={{ fontSize: 42, fontWeight: 700, lineHeight: 0.78, color: summary.wins === -1 ? "var(--faint)" : "#f6f7fb" }}>
+                {summary.wins === -1 ? "—" : summary.myScore.toFixed(1)}
               </div>
             </div>
             <div style={{ textAlign: "right" }}>
-              <div style={{ fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--faint)", marginBottom: 3 }}>This week vs field</div>
+              <div style={{ fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--faint)", marginBottom: 3 }}>
+                <abbr title="Your score is compared to every other team. Beat more than half to win your matchup." style={{ textDecoration: "underline dotted", cursor: "help" }}>
+                  This week vs field
+                </abbr>
+              </div>
               {summary.wins === -1 ? (
                 /* Setup phase — no games played yet */
                 <>
@@ -92,6 +96,13 @@ function MatchupHero({ summary, teamName }: { summary: MatchupQuickSummary; team
               {summary.wins} of {opponents} opponents outscored
             </div>
           </div>
+
+          {/* FP/VP bridge — only when actual scores are shown */}
+          {summary.wins !== -1 && (
+            <div style={{ fontSize: 10, color: "var(--faint)", marginTop: 10, textAlign: "center" }}>
+              FP decides the matchup winner · VP is how you climb the standings
+            </div>
+          )}
         </>
       ) : (
         /* Upcoming — no scores yet */

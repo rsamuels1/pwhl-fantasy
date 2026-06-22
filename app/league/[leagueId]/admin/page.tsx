@@ -170,13 +170,20 @@ export default async function AdminPage({ params, searchParams }: Props) {
           padding: "16px 20px", borderRadius: 16,
           background: "rgba(99,102,241,0.07)",
           border: "1px solid rgba(99,102,241,0.2)",
+          display: "grid", gap: 12,
         }}>
-          <p style={{ margin: "0 0 4px", fontSize: 16, fontWeight: 700, color: "#a5b4fc" }}>
+          <p style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "#a5b4fc" }}>
             ✓ New season created!
           </p>
           <p style={{ margin: 0, fontSize: 13, color: "#64748b" }}>
-            Set up the draft to get ready for the next season. Invite returning managers to re-join.
+            Set up the draft to get ready for the next season. Invite returning managers to re-join — they need a new link for this league.
           </p>
+          <div>
+            <p style={{ margin: "0 0 8px", fontSize: 12, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+              Share invite link
+            </p>
+            <InviteLinkButton leagueId={leagueId} />
+          </div>
         </div>
       )}
 
@@ -477,25 +484,24 @@ export default async function AdminPage({ params, searchParams }: Props) {
 
       {/* ── League settings editor ── */}
       <section style={panelStyle}>
-        <h2 style={{ fontSize: 18, marginBottom: 16 }}>League settings (editor)</h2>
+        <h2 style={{ fontSize: 18, marginBottom: 16 }}>League settings</h2>
         {draftDone && (
-          <p style={{ color: "#94a3b8", fontSize: 14, marginBottom: 0 }}>
-            Settings are locked after the draft. View settings on the league settings page.
+          <p style={{ color: "#94a3b8", fontSize: 14, marginBottom: 16 }}>
+            Scoring and roster settings are locked after the draft. You can still update visibility.
           </p>
         )}
         {!draftDone && (
-          <>
-            <p style={{ color: "#94a3b8", fontSize: 14, marginBottom: 16 }}>
-              Adjust max teams and draft type before the draft begins. Changes are logged in the audit trail.
-            </p>
-            <LeagueSettingsEditor
-              leagueId={leagueId}
-              maxTeams={league.maxTeams}
-              draftType={league.draftType}
-              draftDone={draftDone}
-            />
-          </>
+          <p style={{ color: "#94a3b8", fontSize: 14, marginBottom: 16 }}>
+            Adjust max teams and draft type before the draft begins. Changes are logged in the audit trail.
+          </p>
         )}
+        <LeagueSettingsEditor
+          leagueId={leagueId}
+          maxTeams={league.maxTeams}
+          draftType={league.draftType}
+          draftDone={draftDone}
+          isPublic={league.isPublic}
+        />
       </section>
 
       {/* ── Commissioner recovery tools ── */}

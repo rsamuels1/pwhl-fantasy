@@ -12,6 +12,7 @@ export function RenewLeagueForm({ leagueId, currentSeason }: Props) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [confirmed, setConfirmed] = useState(false);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -46,6 +47,47 @@ export function RenewLeagueForm({ leagueId, currentSeason }: Props) {
   }
 
   const bumped = bumpSeason(currentSeason);
+
+  if (!confirmed) {
+    return (
+      <div style={{ display: "grid", gap: 14 }}>
+        <div style={{
+          padding: "14px 16px", borderRadius: 12,
+          background: "rgba(99,102,241,0.07)", border: "1px solid rgba(99,102,241,0.2)",
+        }}>
+          <p style={{ margin: "0 0 6px", fontSize: 15, fontWeight: 700, color: "#a5b4fc" }}>
+            Starting next season creates a new league
+          </p>
+          <p style={{ margin: 0, fontSize: 13, color: "#94a3b8", lineHeight: 1.6 }}>
+            Your current league stays as-is. Every manager needs a new invite to rejoin — they won&apos;t be added automatically. Rosters, stats, and matchup history stay in this season&apos;s league.
+          </p>
+        </div>
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+          <button
+            type="button"
+            onClick={() => setConfirmed(true)}
+            style={{
+              padding: "10px 20px", borderRadius: 12, border: "none", cursor: "pointer",
+              background: "#6366f1", color: "#fff", fontWeight: 700, fontSize: 14,
+            }}
+          >
+            Yes, create next season →
+          </button>
+          <button
+            type="button"
+            onClick={() => router.back()}
+            style={{
+              padding: "10px 20px", borderRadius: 12, cursor: "pointer",
+              background: "transparent", color: "#64748b", fontWeight: 600, fontSize: 14,
+              border: "1px solid rgba(148,163,184,0.2)",
+            }}
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <form onSubmit={handleSubmit} style={{ display: "grid", gap: 12 }}>

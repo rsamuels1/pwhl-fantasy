@@ -126,6 +126,7 @@ model FantasyLeague {
   rulesVersion            Int                      @default(1)
   scoringVersion          Int                      @default(1)
   pwhlPlayoffStartsAt     DateTime?
+  isPublic                Boolean                  @default(false)
   waiverWindowHours       Int                      @default(48)
   tradeReviewHours        Int                      @default(24)
   requireCommissionerTradeApproval Boolean         @default(false)

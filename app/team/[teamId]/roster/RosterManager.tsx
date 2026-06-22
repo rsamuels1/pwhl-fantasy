@@ -551,7 +551,7 @@ function ColHeader({ isGoalie, readonly, sortKey, sortAsc, onSort }: {
   isGoalie: boolean; readonly: boolean;
   sortKey: SortKey; sortAsc: boolean; onSort: (k: SortKey) => void;
 }) {
-  // Slot(44) | Player(1fr) | GP(36) | stats... | FPts(60) | [Drop(48)]
+  // Slot(44) | Player(1fr) | GP(36) | stats... | FP(60) | [Drop(48)]
   const skaterCols = readonly
     ? "44px minmax(80px,1fr) 36px 36px 36px 46px 46px 36px 36px 36px 60px"
     : "44px minmax(80px,1fr) 36px 36px 36px 46px 46px 36px 36px 36px 60px 48px";
@@ -591,7 +591,7 @@ function ColHeader({ isGoalie, readonly, sortKey, sortAsc, onSort }: {
           <SortTh label="SV%" k="savePct" />
           <SortTh label="GA" k="goalsAgainst" />
           <SortTh label="SO" k="shutouts" />
-          <SortTh label="FPts" k="fp" />
+          <SortTh label="FP" k="fp" />
         </>
       ) : (
         <>
@@ -603,7 +603,7 @@ function ColHeader({ isGoalie, readonly, sortKey, sortAsc, onSort }: {
           <SortTh label="SOG" k="shots" />
           <SortTh label="HIT" k="hits" />
           <SortTh label="BLK" k="blocks" />
-          <SortTh label="FPts" k="fp" />
+          <SortTh label="FP" k="fp" />
         </>
       )}
       {!readonly && <span />}
@@ -719,7 +719,7 @@ function FaColHeader({ isGoalie, sortKey, sortAsc, onSort }: {
           <SortTh label="SV%" k="savePct" />
           <SortTh label="GA" k="goalsAgainst" />
           <SortTh label="SO" k="shutouts" />
-          <SortTh label="FPts" k="fp" />
+          <SortTh label="FP" k="fp" />
         </>
       ) : (
         <>
@@ -731,7 +731,7 @@ function FaColHeader({ isGoalie, sortKey, sortAsc, onSort }: {
           <SortTh label="SOG" k="shots" />
           <SortTh label="HIT" k="hits" />
           <SortTh label="BLK" k="blocks" />
-          <SortTh label="FPts" k="fp" />
+          <SortTh label="FP" k="fp" />
         </>
       )}
       <span />
