@@ -3501,6 +3501,48 @@ Files: `lib/draft/server.ts` (`buildEngineState`), possibly `prisma/schema.prism
 
 ---
 
+## DS-004. Emotional Design Polish — Matchup Page Energy
+
+Sprint: 16
+Priority: P2
+Effort: M
+Status: ✅ DONE (Jun 22, 2026)
+
+As a user viewing a live matchup, I want the page to feel energetic and responsive to game state, not like a financial data terminal, so that I'm emotionally engaged in the moment.
+
+User story: When my team is winning, I want to *see* that visually (green score). When I'm losing, the red score tells that story. Animations should give the page motion and life. Typography should have hierarchy so section titles feel navigable, not like data labels.
+
+Files: `app/globals.css`, `app/team/[teamId]/matchup/page.tsx`, `components/ScoreDisplay.tsx`
+
+**Implementation:**
+
+1. **Score colors by win state** — `getScoreColor(myScore, oppScore)` returns green (#34d399) for leading score, red (#f87171) for trailing, white (#f6f7fb) for tied. Applied in both DuelHero (1v1) and FieldHero (vs-field).
+
+2. **Score count-up animation** — `ScoreDisplay` client component animates from 0 → final value over 1.2s on active-matchup page load using `requestAnimationFrame` timing. Only animates on active matchups; upcoming/setup phases display static values.
+
+3. **Section heading hierarchy** — Primary section headings ("Playing tonight", "Swing players", "Top performers", "Underperforming", "League leaders", "Roster status") upgraded from `.sectionHead` (12px uppercase, dim) to `.section-title` (14px normal case, full-bright text). Data table column headers remain `.sectionHead` for visual distinction.
+
+4. **Font loading** — Saira Condensed 700 imported from Google Fonts in globals.css and applied to all `.font-stats` elements (scores, projected FP, stats columns). Replaces fallback Inter with sports-data-display typeface.
+
+5. **RecapCard elevation** — Last-result card borders and score display now respond to win state: green border+score for wins, red for losses, neutral for ties. Copy elevated from flat outcome text to contextual narratives ("Took down {opponent}" vs "Tough week"). Score displays at 28px with matching color.
+
+6. **Card entrance animations** — `@keyframes fadeSlideUp` animates cards from `opacity: 0; translateY: 12px` to `opacity: 1; translateY: 0` over 0.6s with staggered delays (0.05s per nth-child). Gives the page a sense of assembly on load.
+
+7. **Win probability bar animation** — `.win-prob-bar` applies `transition: width 0.9s cubic-bezier(0.34, 1.56, 0.64, 1)` — spring easing that feels snappy and confident instead of flat linear fill.
+
+Acceptance Criteria:
+- AC-001: Score colors correctly reflect win state — leading green, trailing red, tied white.
+- AC-002: Scores animate smoothly from 0 to final value on active-matchup load (not on upcoming/setup).
+- AC-003: Section headings render at 14px normal case with full-bright color; data table headers remain 12px uppercase.
+- AC-004: Saira Condensed loads from Google Fonts (status 200 in DevTools Network) and applies to `.font-stats` elements.
+- AC-005: RecapCard borders and score display colors respond to game state (green/red/neutral).
+- AC-006: Card entrance animations execute on hard refresh with visible stagger.
+- AC-007: Win probability bar fills with spring easing, not linear.
+- AC-008: No regressions on prior animations (card entrance, live score polling).
+- AC-009: `tsc --noEmit` clean. 149 tests pass.
+
+---
+
 # Architectural Rules
 
 Design for the live season first. Replay is a testing tool, so:

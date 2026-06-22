@@ -1032,6 +1032,7 @@ Items below are acknowledged but have no sprint assignment. They become candidat
 | Sprint 13 — UX Audit + Onboarding First-Run | 🔄 IN PROGRESS | 14 items: BF-008/009 (P0 bugs — negative timestamps, analysis nav) + UX-046/047/048 (P1 — season series dupe, trade partner-first, hint position) + OB-001–009 (Pass 5 — wizard/auth first-run friction) |
 | Sprint 14 — Agent Test Findings + Draft Reliability | 📋 BACKLOG | 5 items from two-agent integration test (Jun 2026): BF-010 (goalie locked in BENCH) + BF-011 (FA suggestions empty in replay) + TR-002 (silent trade rejection) + TR-003 (trade skips PROPOSED state) + DRC-002 (draft timer freeze on restart); UX-032 + OB-011 + UX-022 shipped early (commit 972362d) |
 | Sprint 15 — Visual Design System Deep Pass | ✅ COMPLETE (Jun 22, 2026) | 3 stories: DS-001 (homepage rewrite + sticky header), DS-002 (token sweep all pages + emoji removal), DS-003 (league overview + WeekHighlights full redesign) |
+| Sprint 16 — Emotional Design Polish | ✅ COMPLETE (Jun 22, 2026) | Score colors by win state + count-up animation, section heading hierarchy, Saira Condensed font loading, RecapCard elevation, card entrance animations. Transforms "Bloomberg terminal" feeling into energetic sports product. Commits: 5ecc116, f1d576c |
 
 ---
 

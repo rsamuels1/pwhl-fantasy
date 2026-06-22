@@ -205,6 +205,15 @@ survives DB resets and schema migrations.
      - UX-004/021: Nav "Account" label (not display name); hydration fix prevents "Login" flash
      - UX-009: Removed duplicate league name from body `<h1>`
      - UX-013: Wizard card `min-height: 60vh`
+   - **Emotional Design Polish — Sprint 16** ✅ (DS-004: Score colors, animations, typography hierarchy, font loading):
+     - Score colors respond to game state (green #34d399 if winning, red #f87171 if losing, white if tied)
+     - Score count-up animation (0→value over 1.2s) on active-matchup load via `components/ScoreDisplay.tsx`
+     - Section heading hierarchy (14px normal case vs 12px uppercase) for primary sections
+     - Saira Condensed 700 font loads from Google Fonts and applies to all score displays
+     - RecapCard elevation with colored borders and contextual copy ("Took down opponent" vs "Tough week")
+     - Card entrance animations (fadeSlideUp + stagger) on page load
+     - Win probability bar spring easing (cubic-bezier) instead of linear fill
+     - No schema changes; transforms matchup page from "Bloomberg terminal" to energetic sports product
 7. Public launch ~early Nov, drafts ~1 week before opener
 
 ## Draft room UI (`app/draft/[leagueId]/`)
