@@ -115,7 +115,7 @@ Sprint 6 is complete (7/7). Sprint 7 is complete (3/4 items done — #11 Storyli
 
 **Sprint 13 (UX Audit + Onboarding First-Run) is IN PROGRESS.** 14 items from two sources: Pass 1/2 end-user walkthrough (in-season UX bugs — BF-008 negative timestamps, BF-009 analysis nav, UX-046/047/048 matchup and trade friction) plus Pass 5 wizard/auth critique (OB-001–009). 6 P0 items ship first, 8 P1 items follow. Full plan in `roadmap-sprints.md`.
 
-**Sprint 14 (Post-Launch Polish + Emotional Engagement) is PLANNED.** Items deferred from Sprint 13 (OB-010, OB-011, UX-049, UX-050) plus emotional-engagement follow-through: UX-045 rivalry celebration moment (`RIVALRY_WIN` notification), UX-032 "EDGE" jargon fix, UX-033 "NO GAMES YET" context. Full plan in `roadmap-sprints.md`.
+**Sprint 14 (Post-Launch Polish + Emotional Engagement) is PLANNED.** Items deferred from Sprint 13 (OB-010, UX-049, UX-050) plus emotional-engagement follow-through: UX-045 rivalry celebration moment (`RIVALRY_WIN` notification), UX-033 "NO GAMES YET" context. Early shipments from commit 972362d: UX-032 ✅ ("+X pt edge" label), OB-011 ✅ (draft date picker guidance), UX-022 ✅ (TeamNav "Schedule" label). Full plan in `roadmap-sprints.md`.
 
 **Shipped (Sprint 6 — all complete):**
 - **League Onboarding (#2)** · ✅ Welcome flow, 6-step wizard, manager draft prep guide; `User.onboardingCompletedAt` schema field. (Sprint 3)

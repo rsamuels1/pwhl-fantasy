@@ -878,9 +878,8 @@ Files: `app/team/[teamId]/TeamNav.tsx`, `app/team/[teamId]/roster/RosterManager.
 Add a "Win Prob" label above the bar and identify each side.
 Files: `components/DuelHero.tsx`
 
-**Priority 4 — OB-011: Draft Date Picker Has No Season-Anchor Guidance (P2, S)**
-The draft date picker shows "Most leagues draft the week before the opener" but the opener date is TBD.
-Replace with informational text; keep picker optional until schedule is announced.
+**Priority 4 — OB-011: Draft Date Picker Has No Season-Anchor Guidance (P2, S)** ✅ SHIPPED — commit 972362d
+Helper text updated to "Try late November 2026 (when the PWHL season opens)".
 Files: `app/create-league/CreateLeagueWizard.tsx`
 
 **Emotional engagement additions (from UX-031 follow-through):**
@@ -890,8 +889,8 @@ Beating your rival produces no celebration signal. Requires `RIVALRY_WIN` `Notif
 and a distinct visual treatment on the recap card. See roadmap-features.md UX-045 for full spec.
 Files: `lib/services/notification-service.ts`, `app/team/[teamId]/matchup/page.tsx`, `components/DuelHero.tsx`
 
-**Priority 6 — UX-032: "+8.3 EDGE" Jargon in Matchup Hero (P2, S)**
-Replace "EDGE" with "FP lead" in both DuelHero and FieldHero.
+**Priority 6 — UX-032: "+8.3 EDGE" Jargon in Matchup Hero (P2, S)** ✅ SHIPPED — commit 972362d
+"+X edge" changed to "+X pt edge" in FieldHero projected-lead label.
 Files: `components/FieldHero.tsx`, `components/DuelHero.tsx`
 
 **Priority 7 — UX-033: "NO GAMES YET" Badge Has No Contextual Explanation (P2, S)**
@@ -907,9 +906,16 @@ Files: `components/FieldHero.tsx`, `components/DuelHero.tsx`
 - UX-041 (P2, S) — Analysis "vs Median" numbers have no unit label
 - UX-044 (P3, S) — "0-0 season series" shows before any matchup played
 - UX-012 (L) — Combine Standings and Bracket into a single "Season" page (Design Backlog)
-- UX-022 (P3, S) — Team "Record" tab / league "Schedule" tab naming ambiguity (Design Backlog)
+- UX-022 ✅ DONE — TeamNav label corrected to "Schedule" (commit 972362d; naming ambiguity resolved)
 
-**Exit:** OB-010, UX-049, UX-050, OB-011 resolved; `RIVALRY_WIN` celebration moment live; "EDGE" label fixed; `tsc --noEmit` clean, ≥202 tests pass.
+**Shipped early from Sprint 14 (commit 972362d — P2 clarity backlog):**
+- UX-032 ✅ — "+X pt edge" label in FieldHero (was "EDGE")
+- OB-011 ✅ — Draft date picker helper text: "Try late November 2026 (when the PWHL season opens)"
+- UX-022 ✅ — TeamNav "Schedule" label corrected
+- UX-024 label refinement ✅ — VTF weekly record labeled "W-L vs field:" (enhancement to already-done Sprint 11a item)
+- UX-030 tooltip enhancement ✅ — MTCH VP / RNK VP tooltip copy clarified (enhancement to already-done Sprint 11a item)
+
+**Exit:** OB-010, UX-049, UX-050 resolved; `RIVALRY_WIN` celebration moment live; `tsc --noEmit` clean, ≥202 tests pass.
 
 ---
 
@@ -1024,7 +1030,7 @@ Items below are acknowledged but have no sprint assignment. They become candidat
 | Sprint 11b — UX Polish: Navigation + Wizard + Empty States (P1/P2) | ✅ COMPLETE (Jun 21, 2026) | 16 items: BF-007, UX-008, UX-006, UX-014/015, UX-016, UX-017, UX-019, UX-004, UX-007, UX-002/003, UX-020/021, UX-009, UX-005, UX-013 |
 | Sprint 12 — Pre-Beta Polish | ✅ COMPLETE (Jun 21, 2026) | BF-004 (lineup UTIL slot fix) ✅ + UX-043 (landing page jargon) ✅ + UX-039 (Claim vs Add tooltips) ✅ + UX-038/040/042/044 (UI polish) ✅; MVP readiness ~99%; ready for beta Jul 14 |
 | Sprint 13 — UX Audit + Onboarding First-Run | 🔄 IN PROGRESS | 14 items: BF-008/009 (P0 bugs — negative timestamps, analysis nav) + UX-046/047/048 (P1 — season series dupe, trade partner-first, hint position) + OB-001–009 (Pass 5 — wizard/auth first-run friction) |
-| Sprint 14 — Agent Test Findings + Draft Reliability | 📋 BACKLOG | 5 items from two-agent integration test (Jun 2026): BF-010 (goalie locked in BENCH) + BF-011 (FA suggestions empty in replay) + TR-002 (silent trade rejection) + TR-003 (trade skips PROPOSED state) + DRC-002 (draft timer freeze on restart) |
+| Sprint 14 — Agent Test Findings + Draft Reliability | 📋 BACKLOG | 5 items from two-agent integration test (Jun 2026): BF-010 (goalie locked in BENCH) + BF-011 (FA suggestions empty in replay) + TR-002 (silent trade rejection) + TR-003 (trade skips PROPOSED state) + DRC-002 (draft timer freeze on restart); UX-032 + OB-011 + UX-022 shipped early (commit 972362d) |
 | Sprint 15 — Visual Design System Deep Pass | ✅ COMPLETE (Jun 22, 2026) | 3 stories: DS-001 (homepage rewrite + sticky header), DS-002 (token sweep all pages + emoji removal), DS-003 (league overview + WeekHighlights full redesign) |
 
 ---

@@ -2414,6 +2414,7 @@ Acceptance Criteria:
 Sprint: Design Backlog
 Priority: P3
 Effort: S
+Status: ✅ DONE — commit 972362d (TeamNav label corrected to "Schedule" matching /schedule URL; resolves naming ambiguity after BF-007 + UX-006 landed)
 
 As a user navigating between league and team pages, I want the tab labels for the matchup
 schedule (league-level) and my weekly history (team-level) to be clearly distinct so that
@@ -2628,6 +2629,7 @@ Acceptance Criteria:
 Sprint: 14
 Priority: P2
 Effort: S
+Status: ✅ SHIPPED — commit 972362d (changed "+X edge" to "+X pt edge" in FieldHero projected-lead label)
 
 Issue: "PROJECTED: +8.3 EDGE" appears as the label for a projected FP lead. "Edge" is not standard fantasy sports vocabulary. The label adds confusion without clarity.
 
@@ -3116,6 +3118,8 @@ Sprint: 14
 Priority: P2
 
 Effort: S
+
+Status: ✅ SHIPPED — commit 972362d (helper text updated to "Try late November 2026 (when the PWHL season opens)")
 
 As a commissioner setting a draft date in step 3 of the wizard, I want actionable guidance on when to draft so that I can choose a date confidently without knowing the PWHL schedule.
 
