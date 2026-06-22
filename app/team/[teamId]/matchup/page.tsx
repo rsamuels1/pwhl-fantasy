@@ -970,7 +970,7 @@ function FieldHero({ matchup, teamId, leagueId }: { matchup: ActiveMatchup; team
               <span style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: "0.06em", color: "#c9b6ff", background: "rgba(124,58,237,0.18)", borderRadius: 5, padding: "2px 7px" }}>YOU</span>
             </div>
             <div style={{ fontSize: 12, color: "#9aa3bd", marginTop: 3 }}>
-              <span style={{ color: "#6f788e", fontWeight: 400 }}>Record: </span>
+              <span style={{ color: "#6f788e", fontWeight: 400 }}>W-L vs field: </span>
               <span style={{ color: recordColor, fontWeight: 700 }}>{wins}–{losses}{ties > 0 ? `–${ties}` : ""}</span>
               {myRank > 0 && <span style={{ color: "#6f788e" }}> · #{myRank} of {total} this week</span>}
             </div>
@@ -1093,7 +1093,7 @@ function DuelHero({
   const myProj = matchup.myTeam.score + matchup.myProjected;
   const oppProj = opponent.score + matchup.opponentProjected;
   const diff = Math.abs(myProj - oppProj).toFixed(1);
-  const marginLabel = myProj >= oppProj ? `+${diff} edge` : `${diff} underdog`;
+  const marginLabel = myProj >= oppProj ? `+${diff} pt edge` : `${diff} pt underdog`;
 
   // Starters with games this period
   const startersWithGames = matchup.myPlayers.filter(

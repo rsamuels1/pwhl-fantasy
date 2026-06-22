@@ -1661,6 +1661,122 @@ Depends On: REBRAND-001 through REBRAND-007 all merged
 
 ---
 
+# Phase 8b: Visual Design System Application — COMPLETE ✅
+
+Goal: Apply the established PWHL GM design system tokens (from REBRAND-004) site-wide across all remaining pages. Zero logic, API, or schema changes — pure visual layer.
+
+Sprint: 15
+
+---
+
+## DS-001. Homepage Rewrite + Sticky Full-Width Header
+
+Sprint: 15
+
+Priority: P1
+
+Status: ✅ DONE
+
+Points: L
+
+Goal: Complete homepage visual redesign matching the PWHL GM branding mockup, with a sticky full-width header that extends edge-to-edge.
+
+What this includes:
+
+- `app/page.tsx`: complete rewrite with two-column hero (1.05fr/0.95fr), mini matchup preview card, trust strip (Draft/Manage/Compete/Win pillars), 6-card features grid with SVG icon badges, 3-step how-it-works, radial-glow CTA band. All icons as inline JSX SVG — no emoji.
+- `app/layout.tsx`: header moved outside `.page-width` container for full-width sticky effect. New `.site-header` / `.site-header-inner` CSS classes.
+- `app/globals.css`: `.site-header`, `.site-header-inner`, homepage responsive breakpoints added.
+
+Files: `app/page.tsx`, `app/layout.tsx`, `app/globals.css`
+
+Acceptance Criteria:
+
+- AC-001: Homepage renders two-column hero with mini matchup preview card at desktop widths
+- AC-002: Header is sticky and spans full browser width (not constrained to `.page-width`)
+- AC-003: No emoji icons on any homepage surface — all iconography is inline SVG
+- AC-004: Features grid renders 6 cards with SVG icon badges and correct REBRAND-004 color tokens
+- AC-005: `tsc --noEmit` clean; no regressions in existing tests
+
+Depends On: REBRAND-004 (design token system)
+
+---
+
+## DS-002. Design Token Sweep: All Remaining Pages
+
+Sprint: 15
+
+Priority: P1
+
+Status: ✅ DONE
+
+Points: M
+
+Goal: Eliminate all remaining old color tokens from Sprint 9 REBRAND that weren't caught in the initial pass — specifically the old green/red win/loss colors and all emoji on UI surfaces.
+
+What this includes:
+
+- Win color: `#34d399` / `rgba(52,211,153,...)` → `#5fa98c` / `rgba(95,169,140,...)` everywhere
+- Loss color: `#f87171` / `rgba(248,113,113,...)` → `#d18b7f` / `rgba(209,139,127,...)` everywhere
+- All emoji removed from UI surfaces; replaced with SVG icons or colored text chips
+- `TransactionFeed`: replaced emoji `TYPE_ICONS` map with `TYPE_META` record of colored text chips
+
+Files: `app/league/[leagueId]/standings/page.tsx`, `components/PlayoffBracket.tsx`, `app/league/[leagueId]/bracket/page.tsx`, `app/team/[teamId]/roster/RosterManager.tsx`, `app/league/[leagueId]/transactions/TransactionFeed.tsx`, `app/create-league/CreateLeagueWizard.tsx`, `app/join-league/page.tsx`
+
+Acceptance Criteria:
+
+- AC-001: No `#34d399`, `rgba(52,211,153`, `#f87171`, or `rgba(248,113,113` hex/rgba values remain in any touched file
+- AC-002: No emoji characters appear on standings, bracket, roster, transaction, wizard, or join-league surfaces
+- AC-003: Win/loss color treatment is visually consistent with `#5fa98c` / `#d18b7f` across all pages
+- AC-004: `tsc --noEmit` clean; existing tests pass
+
+Depends On: REBRAND-004 (design token system)
+
+---
+
+## DS-003. League Overview Full Visual Redesign
+
+Sprint: 15
+
+Priority: P1
+
+Status: ✅ DONE
+
+Points: M
+
+Goal: Bring the league overview page and WeekHighlights component fully in line with the REBRAND-004 design system — card surfaces, typography, section labels, and the My Matchup widget.
+
+What this includes:
+
+- `app/league/[leagueId]/page.tsx`:
+  - `card` constant: `rgba(255,255,255,0.04)` / `borderRadius:20` → `var(--card)` / `var(--border)` / `borderRadius:16`
+  - `sectionTitle` constant removed; replaced with `cardLabel()` helper (section-accent bar + uppercase label) for left-column primary headers and `sideLabel()` for sidebar card headers
+  - My Matchup widget: plain card → `linear-gradient(135deg,#1b1346,#121829)` gradient + `font-stats` 40px score + win/loss-colored record text + win-rate progress bar + full-width purple CTA button
+  - Activity feed: emoji `ICONS` map → `ACT_META` colored text chips (Add/Drop/Draft/Playoff/Perf/Story)
+  - Lineup status chips: `⚠ N issues` → `N issues` (amber), `✓ Set` → `Set` (green `#5fa98c`)
+  - Announcement: emoji span removed; label-only header
+  - Champion card: `🏆` → inline SVG trophy
+  - Playoff bracket header: emoji stripped; plain round label
+  - Race chips: `✓ CLINCHED` → `CLINCHED`, `✗ ELIM` → `ELIM`
+  - DraftPrepItem: old green tokens → `#5fa98c` / `rgba(95,169,140,...)`
+- `components/WeekHighlights.tsx`:
+  - Emoji ICONS map removed; section-accent bar header
+  - Each card gets colored left-border accent (purple/gold/green by kind)
+
+Files: `app/league/[leagueId]/page.tsx`, `components/WeekHighlights.tsx`
+
+Acceptance Criteria:
+
+- AC-001: League overview card surfaces use `var(--card)` and `var(--border)` tokens, not inline rgba values
+- AC-002: My Matchup widget renders gradient card with `font-stats` score and win-rate progress bar
+- AC-003: Activity feed uses colored text chips (no emoji) for all event types
+- AC-004: WeekHighlights cards render with colored left-border accent by storyline kind
+- AC-005: No `🏆`, `📣`, `✓`, `✗`, or other emoji remain on the league overview surface
+- AC-006: `tsc --noEmit` clean; existing tests pass
+
+Depends On: DS-002 (token sweep establishes win/loss color conventions)
+
+---
+
 # Technical Priorities
 
 These should be addressed whenever relevant work is occurring.

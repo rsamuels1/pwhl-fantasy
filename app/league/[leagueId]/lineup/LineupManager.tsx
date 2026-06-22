@@ -478,14 +478,18 @@ export default function LineupManager({
         <div style={{ fontSize: 12, color: "#64748b" }}>{thisWeekLabel}</div>
       )}
 
-      {/* Entry-state instruction tip */}
+      {/* Entry-state instruction tip or empty state */}
       {!hasEverEdited && !selected && (
         <div style={{
           padding: "10px 14px", borderRadius: 10,
           background: "rgba(100,116,139,0.08)", border: "1px solid rgba(100,116,139,0.15)",
           fontSize: 12, color: "#94a3b8",
         }}>
-          Tap a player to select them, then tap where to move them — changes save when you press Save Lineup.
+          {roster.length === 0 ? (
+            <>Your roster will appear here after the draft. Check back when the draft is complete!</>
+          ) : (
+            <>Tap a player to select them, then tap where to move them — changes save when you press Save Lineup.</>
+          )}
         </div>
       )}
 

@@ -149,7 +149,7 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
               </button>
             )}
           </div>
-          <div style={{ display: "flex", gap: 6 }}>
+          <div style={{ display: "flex", gap: 6, marginBottom: 10 }}>
             {Array.from({ length: 6 }).map((_, i) => (
               <div
                 key={i}
@@ -162,6 +162,14 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
                 }}
               />
             ))}
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "#64748b" }}>
+            <span>Name</span>
+            <span>Size</span>
+            <span>Season</span>
+            <span>Rules</span>
+            <span>Team</span>
+            <span>Invite</span>
           </div>
         </div>
 
@@ -309,19 +317,30 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
                 })}
               </div>
 
-              {/* Replay explanation */}
-              {isReplay && (
-                <div style={{
-                  padding: "14px 16px", borderRadius: 12,
-                  background: "rgba(245,158,11,0.06)",
-                  border: "1px solid rgba(245,158,11,0.2)",
-                  fontSize: 13, color: "#94a3b8", lineHeight: 1.5,
-                }}>
-                  <strong style={{ color: "#fbbf24" }}>⏪ Replay mode</strong> — your league is a sandbox.
-                  You control the pace (advance by day or week). Great for trying the app or playing with a friend.
-                  Live leagues are the real competition.
-                </div>
-              )}
+              {/* Mode explanations */}
+              <div style={{ display: "grid", gap: 10 }}>
+                {!isReplay && (
+                  <div style={{
+                    padding: "12px 14px", borderRadius: 10,
+                    background: "rgba(99,102,241,0.06)",
+                    border: "1px solid rgba(99,102,241,0.15)",
+                    fontSize: 12, color: "#94a3b8", lineHeight: 1.5,
+                  }}>
+                    <strong style={{ color: "#a78bfa" }}>🏒 Live season</strong> — draft this fall, compete all season long with real-time games and standings.
+                  </div>
+                )}
+                {isReplay && (
+                  <div style={{
+                    padding: "12px 14px", borderRadius: 10,
+                    background: "rgba(245,158,11,0.06)",
+                    border: "1px solid rgba(245,158,11,0.2)",
+                    fontSize: 12, color: "#94a3b8", lineHeight: 1.5,
+                  }}>
+                    <strong style={{ color: "#fbbf24" }}>⏪ Replay mode</strong> — your league is a sandbox using a completed 2025-26 season.
+                    You control the pace (advance by day or week). Great for trying the app or playing with a friend.
+                  </div>
+                )}
+              </div>
 
               {/* Draft date — only for live leagues */}
               {!isReplay && (
@@ -335,7 +354,7 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
                       onChange={(e) => setDraftDate(e.target.value)}
                     />
                     <span style={{ fontSize: 12, color: "#475569", marginTop: 4, display: "block" }}>
-                      Most leagues draft the week before the season opener. You can set this later from the admin panel.
+                      Try late November 2026 (when the PWHL season opens). You can always change this from the admin panel.
                     </span>
                   </label>
                   {draftDate && (

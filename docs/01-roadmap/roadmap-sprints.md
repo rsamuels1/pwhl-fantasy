@@ -990,6 +990,7 @@ Items below are acknowledged but have no sprint assignment. They become candidat
 | Sprint 12 — Pre-Beta Polish | ✅ COMPLETE (Jun 21, 2026) | BF-004 (lineup UTIL slot fix) ✅ + UX-043 (landing page jargon) ✅ + UX-039 (Claim vs Add tooltips) ✅ + UX-038/040/042/044 (UI polish) ✅; MVP readiness ~99%; ready for beta Jul 14 |
 | Sprint 13 — UX Audit + Onboarding First-Run | 🔄 IN PROGRESS | 14 items: BF-008/009 (P0 bugs — negative timestamps, analysis nav) + UX-046/047/048 (P1 — season series dupe, trade partner-first, hint position) + OB-001–009 (Pass 5 — wizard/auth first-run friction) |
 | Sprint 14 — Agent Test Findings + Draft Reliability | 📋 BACKLOG | 5 items from two-agent integration test (Jun 2026): BF-010 (goalie locked in BENCH) + BF-011 (FA suggestions empty in replay) + TR-002 (silent trade rejection) + TR-003 (trade skips PROPOSED state) + DRC-002 (draft timer freeze on restart) |
+| Sprint 15 — Visual Design System Deep Pass | ✅ COMPLETE (Jun 22, 2026) | 3 stories: DS-001 (homepage rewrite + sticky header), DS-002 (token sweep all pages + emoji removal), DS-003 (league overview + WeekHighlights full redesign) |
 
 ---
 

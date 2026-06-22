@@ -161,8 +161,8 @@ export default async function StandingsPage({ params }: { params: { leagueId: st
                 <th style={thStyle}>Team</th>
                 <th style={thStyle} title="Total Victory Points this season. VP determines playoff seeding.">VP</th>
                 <th style={thStyle} title="Weekly head-to-head match record (wins–losses–ties).">W-L-T</th>
-                <th style={thStyle} title="VP earned from winning your head-to-head matchup this week (+2 VP).">Mtch VP</th>
-                <th style={thStyle} title="VP earned from your weekly fantasy score rank (1st = +2 VP, 2nd = +1 VP).">Rnk VP</th>
+                <th style={thStyle} title="Victory Points from winning your head-to-head matchup (+2 VP for a win).">MTCH VP</th>
+                <th style={thStyle} title="Victory Points from score rank: 1st place in league score gets +2 VP, 2nd gets +1 VP.">RNK VP</th>
                 <th style={thStyle} title="Points For — total fantasy points scored this season.">PF</th>
                 <th style={thStyle} title="Current win/loss/tie streak (e.g., W2 = two wins in a row).">Streak</th>
                 {!playoffsStarted && playoffCutoff !== null && (
