@@ -913,6 +913,41 @@ Files: `components/FieldHero.tsx`, `components/DuelHero.tsx`
 
 ---
 
+## Sprint 15 — "Visual Design System Deep Pass" · ✅ COMPLETE · Jun 22, 2026 · Track F · P1
+
+Goal: Apply the established PWHL GM design system tokens (REBRAND-004) site-wide across all remaining pages and components. Zero logic, API, or schema changes — pure visual layer.
+
+**All items shipped:**
+
+**DS-001 — Homepage Rewrite + Sticky Full-Width Header** · L · P1 · ✅ SHIPPED
+Complete homepage visual redesign. `app/page.tsx`: two-column hero (1.05fr/0.95fr), mini matchup preview card, trust strip (Draft/Manage/Compete/Win pillars), 6-card features grid with SVG icon badges, 3-step how-it-works, radial-glow CTA band. All icons inline JSX SVG — no emoji. `app/layout.tsx`: header moved outside `.page-width` for full-width sticky effect via new `.site-header` / `.site-header-inner` CSS classes.
+Files: `app/page.tsx`, `app/layout.tsx`, `app/globals.css`
+
+**DS-002 — Design Token Sweep: All Remaining Pages** · M · P1 · ✅ SHIPPED
+Eliminated all old color tokens from Sprint 9 REBRAND not caught initially. Win color `#34d399` → `#5fa98c`; loss color `#f87171` → `#d18b7f` everywhere. All emoji removed from UI surfaces; replaced with SVG icons or colored text chips. `TransactionFeed`: replaced emoji `TYPE_ICONS` map with `TYPE_META` record of colored text chips.
+Files: `app/league/[leagueId]/standings/page.tsx`, `components/PlayoffBracket.tsx`, `app/league/[leagueId]/bracket/page.tsx`, `app/team/[teamId]/roster/RosterManager.tsx`, `app/league/[leagueId]/transactions/TransactionFeed.tsx`, `app/create-league/CreateLeagueWizard.tsx`, `app/join-league/page.tsx`
+
+**DS-003 — League Overview Full Visual Redesign** · M · P1 · ✅ SHIPPED
+`app/league/[leagueId]/page.tsx`: card surfaces migrated to `var(--card)` / `var(--border)` tokens; `sectionTitle` replaced with `cardLabel()` / `sideLabel()` helpers; My Matchup widget gets gradient card + `font-stats` score + win-rate progress bar + full-width CTA; activity feed uses `ACT_META` colored text chips; all emoji (trophy, announce, checkmarks) replaced with inline SVG or plain text chips. `components/WeekHighlights.tsx`: emoji ICONS map removed; section-accent bar header; cards get colored left-border accent by storyline kind.
+Files: `app/league/[leagueId]/page.tsx`, `components/WeekHighlights.tsx`
+
+**Also shipped in the same commit batch (4b67b44) — Sprint 13 partial progress:**
+- **BF-008** ✅ — Negative timestamps fixed (`Math.max(0,...)` in `TransactionFeed`)
+- **OB-001** ✅ — "Start Your Franchise" CTA now routes to `/register`
+- **OB-008** ✅ — Registration form: show/hide password toggle added (`app/register/page.tsx`)
+
+**Sprint 15 Point Totals:**
+| Story | Points | Priority | Status |
+|---|---|---|---|
+| DS-001: Homepage Rewrite + Sticky Header | L | P1 | ✅ DONE |
+| DS-002: Token Sweep All Pages + Emoji Removal | M | P1 | ✅ DONE |
+| DS-003: League Overview + WeekHighlights Redesign | M | P1 | ✅ DONE |
+| **Total** | **3 stories** | — | **3/3** |
+
+**Exit achieved:** PWHL GM design system (REBRAND-004 tokens) applied site-wide. Homepage matches branding mockup. No old win/loss color tokens (`#34d399`, `#f87171`) remain. No emoji on any UI surface. `tsc --noEmit` clean.
+
+---
+
 ## Backlog / Deferred (no sprint assignment)
 
 Items in this section have been explicitly deprioritized and pulled from the sprint plan.

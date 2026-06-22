@@ -1,6 +1,6 @@
 # PWHL GM Product Roadmap — Index
 
-Last Updated: June 21, 2026
+Last Updated: June 22, 2026
 
 ---
 
@@ -145,9 +145,9 @@ required before real users are invited. All items were applied immediately after
 
 ---
 
-## Completed Sprints (7–12)
+## Completed Sprints (7–15)
 
-All sprints from 7–12 are complete and shipped. Detailed plans in `roadmap-sprints.md`.
+All sprints from 7–15 are complete and shipped (Sprint 13 is in progress with 3 items also shipped via Sprint 15 batch). Detailed plans in `roadmap-sprints.md`.
 
 - **Sprint 7** ✅ — Retention Layer (Trade System, Storylines, Replay Sim v2 UX)
 - **Sprint 8** ✅ — Beta Hardening (14/14 audit fixes + beta bugs)
@@ -155,8 +155,9 @@ All sprints from 7–12 are complete and shipped. Detailed plans in `roadmap-spr
 - **Sprint 10** ✅ — Beta Bug Sweep + Launch Polish (5 P0/P1 bugs, founding beta ready)
 - **Sprint 11a & 11b** ✅ — UX Polish (24 items: vocab, nav, wizard, empty states)
 - **Sprint 12** ✅ — Pre-Beta Polish (5 items: BF-004, UX-043/039/038/040/042/044, DATA-002)
+- **Sprint 15** ✅ — Visual Design System Deep Pass (3 stories: DS-001/002/003; Jun 22, 2026)
 
-**Current Status:** Sprint 13 IN PROGRESS · MVP readiness ~99% · All P0 bugs cleared · 202/202 tests pass · Ready for Jul 14 beta invites.
+**Current Status:** Sprint 13 IN PROGRESS (2/14 shipped: BF-008, OB-001, OB-008) · Sprint 15 COMPLETE (visual design system) · MVP readiness ~99%
 
 **Sprint 14 (Backlog):** 5 stories from two-agent integration test (Jun 22, 2026) — BF-010 (goalie locked in BENCH warning), BF-011 (FA suggestions empty in replay), TR-002 (silent trade rejection notification), TR-003 (trade skips PROPOSED state when commissioner review is on), DRC-002 (draft timer freeze after server restart). Full specs in `roadmap-features.md` under "Agent Integration Test Findings."
 

@@ -229,12 +229,16 @@
         <span class="value">Sprint 13</span>
       </div>
       <div class="stat">
+        <span class="label">Latest Ship:</span>
+        <span class="value">Sprint 15</span>
+      </div>
+      <div class="stat">
         <span class="label">To Beta:</span>
         <span class="value">Jul 14, 2026</span>
       </div>
       <div class="stat">
         <span class="label">Sprints:</span>
-        <span class="value">12/14 complete</span>
+        <span class="value">13/15 complete</span>
       </div>
       <div class="stat">
         <span class="label">Gates:</span>
@@ -435,7 +439,13 @@
           <div class="progress">0/7</div>
           <span class="status planned">○ PLAN</span>
         </div>
-      
+
+        <div class="sprint-card complete" onclick="switchTab('sprints'); setTimeout(() => document.getElementById('sprint-15').scrollIntoView({behavior: 'smooth'}), 100)">
+          <div class="name">Sprint 15</div>
+          <div class="progress">3/3</div>
+          <span class="status complete">✅ DONE</span>
+        </div>
+
     </div>
   </div>
 
@@ -1138,14 +1148,14 @@
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
           <div>
             <div style="font-weight: 700; font-size: 1rem;">Sprint 13 · "UX Audit + Onboarding First-Run"</div>
-            <div style="font-size: 0.8rem; color: #888;">Track: F · IN PROGRESS</div>
+            <div style="font-size: 0.8rem; color: #888;">Track: F · IN PROGRESS · 3/14 shipped (BF-008, OB-001, OB-008 via Sprint 15 batch)</div>
           </div>
           <span class="status partial">⟳ IN PROGRESS</span>
         </div>
         <div>
-          <div class="task-row"><span class="task-check" style="color:#ef4444">P0</span><span style="color: #ccc">BF-008 (P0, S) — Negative timestamps on transaction history when no scored periods</span></div>
+          <div class="task-row"><span class="task-check" style="color:#22c55e">✅</span><span style="color: #666">BF-008 (P0, S) — Negative timestamps on transaction history when no scored periods</span></div>
           <div class="task-row"><span class="task-check" style="color:#ef4444">P0</span><span style="color: #ccc">BF-009 (P0, S) — "Analysis" in team nav → 404 mid-season</span></div>
-          <div class="task-row"><span class="task-check" style="color:#ef4444">P0</span><span style="color: #ccc">OB-001 (P0, S) — "Start Your Franchise" CTA routes to /login instead of /register</span></div>
+          <div class="task-row"><span class="task-check" style="color:#22c55e">✅</span><span style="color: #666">OB-001 (P0, S) — "Start Your Franchise" CTA routes to /login instead of /register</span></div>
           <div class="task-row"><span class="task-check" style="color:#ef4444">P0</span><span style="color: #ccc">OB-002 (P0, S) — Wizard step 4 introduces VP without explaining it</span></div>
           <div class="task-row"><span class="task-check" style="color:#ef4444">P0</span><span style="color: #ccc">OB-003 (P0, S) — Wizard does not warn that step 5 (team creation) is coming</span></div>
           <div class="task-row"><span class="task-check" style="color:#ef4444">P0</span><span style="color: #ccc">OB-004 (P0, M) — Canceling mid-wizard after league is created silently orphans it</span></div>
@@ -1155,7 +1165,7 @@
           <div class="task-row"><span class="task-check" style="color:#f59e0b">P1</span><span style="color: #ccc">OB-005 (P1, S) — QuickDraftJoinForm is on the public home page</span></div>
           <div class="task-row"><span class="task-check" style="color:#f59e0b">P1</span><span style="color: #ccc">OB-006 (P1, S) — Replay mode description only appears after clicking the option</span></div>
           <div class="task-row"><span class="task-check" style="color:#f59e0b">P1</span><span style="color: #ccc">OB-007 (P1, S) — Login page pitch says "All 8 teams" when there are 12</span></div>
-          <div class="task-row"><span class="task-check" style="color:#f59e0b">P1</span><span style="color: #ccc">OB-008 (P1, S) — Registration form has redundant "Confirm Password" field</span></div>
+          <div class="task-row"><span class="task-check" style="color:#22c55e">✅</span><span style="color: #666">OB-008 (P1, S) — Registration form has redundant "Confirm Password" field</span></div>
           <div class="task-row"><span class="task-check" style="color:#f59e0b">P1</span><span style="color: #ccc">OB-009 (P1, S) — Wizard rules step shows no fantasy point values</span></div>
         </div>
         <div class="exit-criteria"><strong>Exit:</strong> all 14 items (6 P0 + 8 P1) resolved; negative timestamps gone; Analysis tab navigates correctly; first-run flow explained end-to-end; tsc --noEmit clean; ≥202 tests pass.</div>
