@@ -32,6 +32,7 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
   const [error, setError] = useState<string | null>(null);
   const [createdLeagueId, setCreatedLeagueId] = useState<string | null>(null);
   const [createdTeamId, setCreatedTeamId] = useState<string | null>(null);
+  const [vpOpen, setVpOpen] = useState(false);
 
   // Mark onboarding seen on mount (idempotent)
   useEffect(() => {
@@ -47,7 +48,7 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
     // If league was created but team wasn't, warn before leaving
     if (createdLeagueId && !createdTeamId) {
       const confirmed = window.confirm(
-        "You started creating your league but didn't finish. It will be empty and abandoned.\n\nCancel and leave it, or go back to finish?"
+        "Your league was already created but no one has joined yet. You can still use it — find it on your dashboard.\n\nLeave the setup wizard?"
       );
       if (!confirmed) return;
     }
@@ -397,7 +398,34 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
 
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 <RuleRow icon="👥" label="Roster" value="3 F · 2 D · 1 UTIL (any skater) · 1 G · 6 Bench = 13 slots, all drafted" />
-                <RuleRow icon="📊" label="Standings" value="Victory Points (VP) — win your matchup AND score more points than the rest of the league" />
+                <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+                  <RuleRow icon="📊" label="Standings" value="Victory Points (VP) — win your matchup AND score more than anyone else" />
+                  <button
+                    type="button"
+                    onClick={() => setVpOpen((v) => !v)}
+                    style={{
+                      background: "none", border: "none", cursor: "pointer",
+                      color: "#7c6af7", fontSize: 11, fontWeight: 600,
+                      textAlign: "left", padding: "2px 0 0 28px",
+                    }}
+                  >
+                    {vpOpen ? "▲ Hide VP details" : "▼ How does VP work?"}
+                  </button>
+                  {vpOpen && (
+                    <div style={{
+                      margin: "6px 0 0 28px", padding: "10px 12px", borderRadius: 8,
+                      background: "rgba(124,106,247,0.07)", border: "1px solid rgba(124,106,247,0.18)",
+                      fontSize: 12, color: "#94a3b8", lineHeight: 1.6,
+                    }}>
+                      Each week you earn VP two ways:
+                      <ul style={{ margin: "4px 0 4px 16px", padding: 0 }}>
+                        <li><strong style={{ color: "#c4b5fd" }}>Win your matchup</strong> — +2 VP; tie — +1 VP</li>
+                        <li><strong style={{ color: "#c4b5fd" }}>Highest score in the league</strong> — +2 VP bonus; 2nd highest — +1 VP</li>
+                      </ul>
+                      Maximum 4 VP per week. At season end, the top 4 VP totals make the playoffs — not just who won the most matchups.
+                    </div>
+                  )}
+                </div>
                 <div style={{
                   padding: "12px 14px", borderRadius: 12,
                   background: "rgba(255,255,255,0.03)",
@@ -431,7 +459,7 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
                 border: "1px solid rgba(99,102,241,0.15)",
                 fontSize: 13, color: "#94a3b8",
               }}>
-                💡 Next, you'll create your team name and become the commissioner.
+                💡 Clicking &ldquo;Create league&rdquo; will set up your league — then you&apos;ll create your team name and become the commissioner.
               </div>
 
               <div style={{ display: "flex", gap: 10, justifyContent: "space-between" }}>
