@@ -341,7 +341,7 @@ export default function ProposeTrade({
   );
 
   return (
-    <div style={{ maxWidth: 860 }}>
+    <div style={{ maxWidth: 860, paddingBottom: "calc(80px + env(safe-area-inset-bottom))" }}>
       <h1 style={{ margin: 0, fontSize: 22, fontWeight: 700, marginBottom: 6 }}>
         {counterOfId ? "Counter Offer" : "Propose Trade"}
       </h1>

@@ -833,15 +833,6 @@ function ProjectedStats({ proj }: { proj: ProjectedStatsRow }) {
           title="Rolling 5-game fantasy points per game average"
         />
       </div>
-      <div style={{ position: "relative" }}>
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", minWidth: 26 }} title="Projected games for this scoring period">
-          <span style={{ fontSize: 9, color: "var(--faint)", textTransform: "uppercase", letterSpacing: 0.5 }}>Games</span>
-          <span style={{
-            fontSize: 12, fontWeight: 400,
-            color: "var(--muted)",
-          }}>×{proj.games}</span>
-        </div>
-      </div>
     </div>
   );
 }

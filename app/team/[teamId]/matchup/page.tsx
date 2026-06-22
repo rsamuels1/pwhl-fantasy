@@ -13,6 +13,7 @@ import { getReplayNow } from "@/lib/replayTime";
 import { getRival } from "@/lib/playoffs/seeding";
 import { RivalBadge } from "@/components/RivalBadge";
 import { HeadToHeadHistory } from "@/components/HeadToHeadHistory";
+import { ScoreDisplay } from "@/components/ScoreDisplay";
 
 export default async function TeamMatchupPage({
   params,
@@ -326,7 +327,7 @@ export default async function TeamMatchupPage({
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                   <span className="section-accent" />
-                  <h2 style={sectionHead}>Playing tonight</h2>
+                  <h2 className="section-title" style={{ margin: 0 }}>Playing tonight</h2>
                 </div>
                 {remainingPlayers.length > 0 && (
                   <span style={{ fontSize: 12, color: "var(--faint)" }}>
@@ -397,7 +398,7 @@ export default async function TeamMatchupPage({
               <Card>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
                   <span className="section-accent" />
-                  <h2 style={sectionHead}>Swing players</h2>
+                  <h2 className="section-title" style={{ margin: 0 }}>Swing players</h2>
                   <span style={{ fontSize: 11, color: "var(--faint)", marginLeft: 4 }}>players who could flip the result</span>
                 </div>
                 <div style={{ display: "grid", gap: 6 }}>
@@ -546,7 +547,7 @@ export default async function TeamMatchupPage({
           <div className="matchup-2col">
             {topPerformers.length > 0 && (
               <Card>
-                <h2 style={{ ...sectionHead, marginBottom: 12 }}>Top performers</h2>
+                <h2 className="section-title" style={{ marginBottom: 12 }}>Top performers</h2>
                 {topPerformers.map((p) => (
                   <div key={p.playerId} style={{ marginBottom: 10 }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -575,7 +576,7 @@ export default async function TeamMatchupPage({
             )}
             {disappointments.length > 0 && (
               <Card>
-                <h2 style={{ ...sectionHead, marginBottom: 12 }}>Underperforming</h2>
+                <h2 className="section-title" style={{ marginBottom: 12 }}>Underperforming</h2>
                 {disappointments.map((p) => (
                   <div key={p.playerId} style={{ marginBottom: 10 }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -609,7 +610,7 @@ export default async function TeamMatchupPage({
       {/* ── Z8. League leaders this week ── */}
       {activeMatchup?.status === "active" && leagueTopPerformers.length > 0 && (
         <Card>
-          <h2 style={{ ...sectionHead, marginBottom: 14 }}>
+          <h2 className="section-title" style={{ marginBottom: 14 }}>
             League leaders · Week {activeMatchup.week}
           </h2>
           <div className="matchup-2col">
@@ -716,7 +717,7 @@ function RosterStatusWidget({
 
   return (
     <Card>
-      <h2 style={{ ...sectionHead, marginBottom: 14 }}>Roster status</h2>
+      <h2 className="section-title" style={{ marginBottom: 14 }}>Roster status</h2>
       {/* Top zone: projected FP as the hero */}
       <div style={{ marginBottom: 18 }}>
         <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#6f788e", marginBottom: 6 }}>
@@ -982,8 +983,12 @@ function FieldHero({ matchup, teamId, leagueId }: { matchup: ActiveMatchup; team
 
         {/* Score */}
         <div style={{ marginBottom: 20 }}>
-          <div className="font-stats" style={{ fontSize: showDash ? "clamp(24px, 6vw, 32px)" : "clamp(48px, 6vw, 64px)", fontWeight: 700, lineHeight: 0.82, color: myScoreColor }}>
-            {myScoreDisplay}
+          <div className="font-stats" style={{ fontSize: showDash ? "clamp(24px, 6vw, 32px)" : "clamp(48px, 6vw, 64px)", fontWeight: 700, lineHeight: 0.82 }}>
+            {!isUpcoming && !isSetupPhase ? (
+              <ScoreDisplay value={parseFloat(myScoreDisplay)} color={myScoreColor} />
+            ) : (
+              <span style={{ color: myScoreColor }}>{myScoreDisplay}</span>
+            )}
           </div>
           <div style={{ fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase", color: "#6f788e", marginTop: 6 }}>
             {scoreLabel}
@@ -1171,8 +1176,12 @@ function DuelHero({
 
           {/* Score */}
           <div>
-            <div className="font-stats" style={{ fontSize: 72, fontWeight: 700, lineHeight: 0.82, color: myScoreColor, fontVariantNumeric: "tabular-nums" }}>
-              {myScoreDisplay}
+            <div className="font-stats" style={{ fontSize: 72, fontWeight: 700, lineHeight: 0.82, fontVariantNumeric: "tabular-nums" }}>
+              {!isUpcoming && !isSetupPhase ? (
+                <ScoreDisplay value={parseFloat(myScoreDisplay)} color={myScoreColor} />
+              ) : (
+                <span style={{ color: myScoreColor }}>{myScoreDisplay}</span>
+              )}
             </div>
             <div style={{ fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase", color: "#6f788e", marginTop: 6 }}>
               {scoreLabel}
@@ -1221,8 +1230,12 @@ function DuelHero({
 
           {/* Score */}
           <div>
-            <div className="font-stats" style={{ fontSize: 72, fontWeight: 700, lineHeight: 0.82, color: oppScoreColor, fontVariantNumeric: "tabular-nums" }}>
-              {oppScoreDisplay}
+            <div className="font-stats" style={{ fontSize: 72, fontWeight: 700, lineHeight: 0.82, fontVariantNumeric: "tabular-nums" }}>
+              {!isUpcoming && !isSetupPhase ? (
+                <ScoreDisplay value={parseFloat(oppScoreDisplay)} color={oppScoreColor} />
+              ) : (
+                <span style={{ color: oppScoreColor }}>{oppScoreDisplay}</span>
+              )}
             </div>
             <div style={{ fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase", color: "#6f788e", marginTop: 6 }}>
               {scoreLabel}
