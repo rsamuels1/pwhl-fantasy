@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@700&display=swap');
+
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
@@ -422,6 +424,30 @@ img { max-width: 100%; display: block; }
   .overview-grid { grid-template-columns: 1fr; }
 }
 
+/* ── Animations ──────────────────────────────────────────────────────────── */
+
+@keyframes fadeSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.rebrand-card {
+  animation: fadeSlideUp 0.6s ease-out backwards;
+}
+
+.rebrand-card:nth-child(1) { animation-delay: 0.05s; }
+.rebrand-card:nth-child(2) { animation-delay: 0.1s; }
+.rebrand-card:nth-child(3) { animation-delay: 0.15s; }
+.rebrand-card:nth-child(4) { animation-delay: 0.2s; }
+.rebrand-card:nth-child(5) { animation-delay: 0.25s; }
+.rebrand-card:nth-child(n+6) { animation-delay: 0.3s; }
+
 /* ── Wave 1 utility classes ───────────────────────────────────────────────── */
 
 .section-accent {
@@ -435,6 +461,21 @@ img { max-width: 100%; display: block; }
 .font-stats {
   font-family: var(--font-stats);
   font-variant-numeric: tabular-nums;
+}
+
+/* Section title for primary headings (vs sectionHead for data labels) */
+.section-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+  text-transform: none;
+  letter-spacing: 0;
+  margin: 0;
+}
+
+/* Win probability bar with spring animation */
+.win-prob-bar {
+  transition: width 0.9s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 /* ── Wave 2 rebrand helpers ───────────────────────────────────────────────── */

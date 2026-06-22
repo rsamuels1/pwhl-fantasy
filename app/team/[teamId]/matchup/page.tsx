@@ -708,42 +708,36 @@ function RosterStatusWidget({
   const hasIssues = filledCount < activeSlotCount;
   const isUpcoming = matchup.status === "upcoming";
 
-  const lockLabel = lockedCount > 0
-    ? `${lockedCount} of ${filledCount} starters locked`
-    : isUpcoming
-      ? "Lineup not yet locked"
-      : "No starters locked yet";
-
-  const lockColor = lockedCount > 0 ? "#94a3b8" : "#475569";
-
   const statusLabel = hasIssues
     ? `⚠ ${filledCount}/${activeSlotCount} starters set`
     : `✓ ${filledCount}/${activeSlotCount} starters`;
   const statusColor = hasIssues ? "#fbbf24" : "#7fc2a6";
+  const projColor = hasIssues ? "#fbbf24" : "var(--accent)";
 
   return (
     <Card>
       <h2 style={{ ...sectionHead, marginBottom: 14 }}>Roster status</h2>
-      <div style={{ display: "grid", gap: 10 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 13 }}>
-          <span style={{ color: "#94a3b8" }}>Lineup</span>
-          <span style={{ fontWeight: 700, color: statusColor }}>{statusLabel}</span>
+      {/* Top zone: projected FP as the hero */}
+      <div style={{ marginBottom: 18 }}>
+        <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#6f788e", marginBottom: 6 }}>
+          Projected FP
         </div>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 13 }}>
-          <span style={{ color: "#94a3b8" }}>Lock state</span>
-          <span style={{ fontWeight: 600, color: lockColor, fontSize: 12 }}>{lockLabel}</span>
+        <div className="font-stats" style={{ fontSize: 36, fontWeight: 700, color: projColor, lineHeight: 1 }}>
+          {matchup.myProjected.toFixed(1)}
         </div>
-        {matchup.myProjected > 0 && (
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 13 }}>
-            <span style={{ color: "#94a3b8" }}>Projected</span>
-            <span style={{ fontWeight: 700, color: "#818cf8" }}>{matchup.myProjected.toFixed(1)} FP</span>
-          </div>
-        )}
+      </div>
+      {/* Bottom zone: compact status line */}
+      <div style={{ display: "flex", alignItems: "center", gap: 12, fontSize: 13, color: "#94a3b8", flexWrap: "wrap" }}>
+        <span style={{ fontWeight: 700, color: statusColor }}>{statusLabel}</span>
+        <span>·</span>
+        <span>
+          {lockedCount > 0 ? `🔒 ${lockedCount} locked` : isUpcoming ? "Not yet locked" : "0 locked"}
+        </span>
         {matchup.opponentTeam && matchup.opponentProjected > 0 && (
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 13 }}>
-            <span style={{ color: "#94a3b8" }}>Opp. projected</span>
-            <span style={{ fontWeight: 700, color: "#64748b" }}>{matchup.opponentProjected.toFixed(1)} FP</span>
-          </div>
+          <>
+            <span>·</span>
+            <span>Opp. {matchup.opponentProjected.toFixed(1)} FP</span>
+          </>
         )}
       </div>
       <div style={{ marginTop: 16 }}>
@@ -764,23 +758,30 @@ function RecapCard({ recap }: { recap: WeeklyRecap }) {
   const won = recap.result === "win";
   const tie = recap.result === "tie";
   const color = won ? "#5fa98c" : tie ? "#94a3b8" : "#d18b7f";
-  const bg = won ? "rgba(95,169,140,0.07)" : tie ? "rgba(148,163,184,0.05)" : "rgba(209,139,127,0.07)";
+  const borderColor = won ? "rgba(95,169,140,0.25)" : tie ? "rgba(148,163,184,0.15)" : "rgba(209,139,127,0.25)";
   const verb = won ? "Won" : "Lost";
-
-  const isHighScore = recap.highestScore?.teamName === recap.opponentName ||
-    recap.myRank === 1;
 
   const periodLabel = recap.isPlayoff && recap.roundLabel
     ? recap.roundLabel
     : `Wk ${recap.week}`;
 
+  const recapCopy = won
+    ? recap.opponentName
+      ? `Took down ${recap.opponentName}.`
+      : "Nice work — you outscored the field."
+    : "Tough week. You'll bounce back.";
+
   return (
     <div style={{
-      background: bg, border: `1px solid ${color}33`,
-      borderRadius: 14, padding: "14px 16px",
-      display: "flex", flexDirection: "column", gap: 8,
+      background: "var(--card)",
+      border: `1px solid ${borderColor}`,
+      borderRadius: 14,
+      padding: "18px 20px",
+      display: "flex",
+      flexDirection: "column",
+      gap: 12,
     }}>
-      {/* Top row: badge + score summary */}
+      {/* Result badge + period */}
       <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
         <span style={{
           fontSize: 11, fontWeight: 800, letterSpacing: "0.05em", textTransform: "uppercase",
@@ -788,39 +789,33 @@ function RecapCard({ recap }: { recap: WeeklyRecap }) {
         }}>
           {tie ? "TIE" : verb} · {periodLabel}
         </span>
-        <span style={{ fontSize: 15, fontWeight: 700, color: "#e2e8f0", fontVariantNumeric: "tabular-nums" }}>
+      </div>
+
+      {/* Score as hero */}
+      <div>
+        <div className="font-stats" style={{ fontSize: 28, fontWeight: 700, color: color, fontVariantNumeric: "tabular-nums", lineHeight: 1, marginBottom: 4 }}>
           {recap.myScore.toFixed(1)}
-          <span style={{ fontWeight: 400, color: "#475569", fontSize: 13 }}>
-            {" "}pts
-          </span>
-        </span>
-        {recap.myRank !== null && recap.teamsCount > 0 && (
-          <span style={{ fontSize: 12, color: "#64748b" }}>
-            #{recap.myRank} of {recap.teamsCount} this week
-          </span>
-        )}
+        </div>
+        <div style={{ fontSize: 12, color: "#94a3b8" }}>
+          {recapCopy}
+        </div>
       </div>
 
       {/* Details row */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 3, fontSize: 12 }}>
         {recap.myTopPerformer && (
-          <span style={{ fontSize: 12, color: "#94a3b8" }}>
+          <span style={{ color: "#94a3b8" }}>
             ⭐ {recap.myTopPerformer.name} led with {recap.myTopPerformer.points.toFixed(1)} pts
           </span>
         )}
-        {recap.closestMatchup && recap.teamsCount > 2 && (
-          <span style={{ fontSize: 12, color: "#64748b" }}>
-            ⚡ Closest: {recap.closestMatchup.teams[0]} vs {recap.closestMatchup.teams[1]} — {recap.closestMatchup.margin.toFixed(1)} pt margin
-          </span>
-        )}
-        {recap.highestScore && recap.myRank !== 1 && (
-          <span style={{ fontSize: 12, color: "#64748b" }}>
-            🏆 League high: {recap.highestScore.teamName} with {recap.highestScore.score.toFixed(1)} pts
+        {recap.myRank !== null && recap.teamsCount > 0 && (
+          <span style={{ color: "#64748b" }}>
+            #{recap.myRank} of {recap.teamsCount} this week
           </span>
         )}
         {recap.highestScore && recap.myRank === 1 && (
-          <span style={{ fontSize: 12, color: "#fbbf24" }}>
-            🏆 You had the league-high score this week!
+          <span style={{ color: "#fbbf24", fontWeight: 700 }}>
+            🏆 League-high score!
           </span>
         )}
       </div>
@@ -881,6 +876,14 @@ const editLink: React.CSSProperties = {
   border: "1px solid rgba(99,102,241,0.2)",
 };
 
+// ── Helpers ────────────────────────────────────────────────────────────────────
+
+function getScoreColor(myScore: number, oppScore: number): string {
+  if (myScore > oppScore) return "#34d399";
+  if (myScore < oppScore) return "#f87171";
+  return "#f6f7fb";
+}
+
 // ── MatchupHero ────────────────────────────────────────────────────────────────
 
 function MatchupHero({ matchup, teamId, leagueId }: { matchup: ActiveMatchup; teamId: string; leagueId: string }) {
@@ -909,8 +912,8 @@ function FieldHero({ matchup, teamId, leagueId }: { matchup: ActiveMatchup; team
   // Score display: upcoming → projected FP, setup → "—", active → points earned
   const myScoreDisplay = showDash ? "—" : isUpcoming ? matchup.myProjected.toFixed(1) : matchup.myTeam.score.toFixed(1);
   const scoreLabel = showDash ? "No games yet" : isUpcoming ? "Projected FP" : "Points earned";
-  const myScoreColor = showDash ? "var(--dim)" : "#f6f7fb";
   const recordColor = wins > losses ? "#a78bfa" : losses > wins ? "#c2776c" : "var(--muted)";
+  const myScoreColor = showDash ? "var(--dim)" : recordColor;
 
   // Starters with games this period (for footer CTA)
   const startersWithGames = matchup.myPlayers.filter(
@@ -1086,8 +1089,10 @@ function DuelHero({
   const myScoreDisplay = showDash ? "—" : isUpcoming ? matchup.myProjected.toFixed(1) : matchup.myTeam.score.toFixed(1);
   const oppScoreDisplay = showDash ? "—" : isUpcoming ? matchup.opponentProjected.toFixed(1) : opponent.score.toFixed(1);
   const scoreLabel = showDash ? "No games yet" : isUpcoming ? "Projected FP" : "Points earned";
-  const myScoreColor = showDash ? "var(--dim)" : "#f6f7fb";
-  const oppScoreColor = showDash ? "var(--dim)" : "#c7d2e0";
+  const myScore = isUpcoming || showDash ? 0 : matchup.myTeam.score;
+  const oppScore = isUpcoming || showDash ? 0 : opponent.score;
+  const myScoreColor = showDash ? "var(--dim)" : getScoreColor(myScore, oppScore);
+  const oppScoreColor = showDash ? "var(--dim)" : getScoreColor(oppScore, myScore);
 
   // Win prob margin label
   const myProj = matchup.myTeam.score + matchup.myProjected;
@@ -1238,7 +1243,7 @@ function DuelHero({
           <span style={{ fontSize: 12, fontWeight: 700, color: "#9aa3bd", fontVariantNumeric: "tabular-nums" }}>{oppPct}%</span>
         </div>
         <div style={{ height: 9, borderRadius: 6, overflow: "hidden", background: "rgba(150,160,200,0.12)" }}>
-          <div style={{ height: "100%", width: `${winPct}%`, background: "linear-gradient(90deg, #a78bfa, #7c3aed)" }} />
+          <div className="win-prob-bar" style={{ height: "100%", width: `${winPct}%`, background: "linear-gradient(90deg, #a78bfa, #7c3aed)" }} />
         </div>
       </div>
 
