@@ -72,141 +72,55 @@ export default async function TeamStandingsPage({
   const playoffCutoff = playoffSettings?.teamsInPlayoff ?? null;
   const playoffsStarted = league.playoffStatus !== "NOT_STARTED";
 
+  const displayStandings = vpStandings ?? standings;
+
   return (
     <div style={{ display: "grid", gap: 20 }}>
-      {/* VP mode standings */}
-      {vpStandings && vpStandings.some((s) => s.totalVP > 0) && (
-        <section style={card}>
-          <h2 style={{ fontSize: 18, margin: "0 0 4px", color: "#e2e8f0" }}>
-            Victory Points
-          </h2>
-          <p style={{ margin: "0 0 16px", fontSize: 12, color: "#475569" }}>
-            Win matchup +2 VP · 1st place score +2 VP · 2nd place score +1 VP
-          </p>
-          <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 480 }}>
-              <thead>
-                <tr
-                  style={{
-                    color: "#64748b",
-                    textAlign: "left",
-                    borderBottom: "1px solid rgba(148,163,184,0.2)",
-                  }}
-                >
-                  <th style={thStyle}>#</th>
-                  <th style={thStyle}>Team</th>
-                  <th style={thStyle} title="Total VP">VP</th>
-                  <th style={thStyle} title="Matchup record">W-L-T</th>
-                  <th style={thStyle} title="Matchup VP earned">Mtch VP</th>
-                  <th style={thStyle} title="Rank bonus VP earned">Rnk VP</th>
-                  <th style={thStyle}>PF</th>
-                </tr>
-              </thead>
-              <tbody>
-                {vpStandings.map((s, i) => {
-                  const isMe = s.fantasyTeamId === teamId;
-                  return (
-                    <tr
-                      key={s.fantasyTeamId}
-                      style={{
-                        background: isMe ? "rgba(99,102,241,0.08)" : "transparent",
-                        borderBottom: "1px solid rgba(148,163,184,0.08)",
-                        outline: isMe ? "1px solid rgba(99,102,241,0.2)" : undefined,
-                      }}
-                    >
-                      <td style={{ ...tdStyle, color: "#475569", fontWeight: 700 }}>{i + 1}</td>
-                      <td
-                        style={{
-                          ...tdStyle,
-                          fontWeight: isMe ? 700 : undefined,
-                          color: isMe ? "#a5b4fc" : "#e2e8f0",
-                        }}
-                      >
-                        {s.teamName}
-                        {isMe && (
-                          <span style={{ fontSize: 10, color: "#6366f1", marginLeft: 6 }}>
-                            YOU
-                          </span>
-                        )}
-                      </td>
-                      <td
-                        style={{
-                          ...tdStyle,
-                          fontWeight: 800,
-                          color: "#e2e8f0",
-                          fontVariantNumeric: "tabular-nums",
-                        }}
-                      >
-                        {s.totalVP}
-                      </td>
-                      <td style={{ ...tdStyle, color: "#94a3b8", fontVariantNumeric: "tabular-nums" }}>
-                        {s.wins}–{s.losses}
-                        {s.ties > 0 ? `–${s.ties}` : ""}
-                      </td>
-                      <td style={{ ...tdStyle, color: "#818cf8", fontVariantNumeric: "tabular-nums" }}>
-                        {s.matchupVP}
-                      </td>
-                      <td style={{ ...tdStyle, color: "#34d399", fontVariantNumeric: "tabular-nums" }}>
-                        {s.rankVP}
-                      </td>
-                      <td style={{ ...tdStyle, color: "#64748b", fontVariantNumeric: "tabular-nums" }}>
-                        {s.pointsFor.toFixed(1)}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </section>
-      )}
-
-      {/* VTF (all-vs-all) standings */}
       <section style={card}>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "baseline",
-            justifyContent: "space-between",
-            marginBottom: 20,
-            flexWrap: "wrap",
-            gap: 8,
-          }}
-        >
-          <div>
-            <h1 style={{ fontSize: 22, margin: 0 }}>{league.name}</h1>
-            <p style={{ margin: "4px 0 0", fontSize: 12, color: "#64748b" }}>Standings</p>
-          </div>
+        <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 4, flexWrap: "wrap", gap: 8 }}>
+          <h2 style={{ fontSize: 18, margin: 0, color: "#e2e8f0" }}>
+            {vpStandings ? "Victory Points" : league.name}
+          </h2>
           {playoffCutoff !== null && !playoffsStarted && (
             <span style={{ fontSize: 12, color: "#64748b" }}>
               Top {playoffCutoff} qualify for playoffs
             </span>
           )}
         </div>
-
+        {vpStandings && (
+          <p style={{ margin: "0 0 16px", fontSize: 12, color: "#475569" }}>
+            Win matchup +2 VP · 1st place score +2 VP · 2nd place score +1 VP
+          </p>
+        )}
         <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 420 }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", minWidth: vpStandings ? 480 : 420 }}>
             <thead>
-              <tr
-                style={{
-                  color: "#64748b",
-                  textAlign: "left",
-                  borderBottom: "1px solid rgba(148,163,184,0.2)",
-                }}
-              >
+              <tr style={{ color: "#64748b", textAlign: "left", borderBottom: "1px solid rgba(148,163,184,0.2)" }}>
                 <th style={thStyle}>#</th>
                 <th style={thStyle}>Team</th>
-                <th style={thStyle}>W</th>
-                <th style={thStyle}>L</th>
-                <th style={thStyle}>T</th>
-                <th style={thStyle}>PF</th>
+                {vpStandings ? (
+                  <>
+                    <th style={thStyle} title="Total VP">VP</th>
+                    <th style={thStyle} title="Matchup record">W-L-T</th>
+                    <th style={thStyle} title="Matchup VP earned">Mtch VP</th>
+                    <th style={thStyle} title="Rank bonus VP earned">Rnk VP</th>
+                    <th style={thStyle}>PF</th>
+                  </>
+                ) : (
+                  <>
+                    <th style={thStyle}>W</th>
+                    <th style={thStyle}>L</th>
+                    <th style={thStyle}>T</th>
+                    <th style={thStyle}>PF</th>
+                  </>
+                )}
               </tr>
             </thead>
             <tbody>
-              {standings.map((s, i) => {
+              {displayStandings.map((s, i) => {
                 const isMe = s.fantasyTeamId === teamId;
-                const atPlayoffLine =
-                  playoffCutoff !== null && !playoffsStarted && i === playoffCutoff - 1;
+                const atPlayoffLine = playoffCutoff !== null && !playoffsStarted && i === playoffCutoff - 1;
+                const vp = vpStandings ? vpStandings[i] : null;
                 return (
                   <tr
                     key={s.fantasyTeamId}
@@ -215,42 +129,38 @@ export default async function TeamStandingsPage({
                       borderBottom: atPlayoffLine
                         ? "2px dashed rgba(99,102,241,0.3)"
                         : "1px solid rgba(148,163,184,0.06)",
+                      outline: isMe ? "1px solid rgba(99,102,241,0.2)" : undefined,
                     }}
                   >
                     <td style={{ ...tdStyle, color: "#475569", fontWeight: 700 }}>{i + 1}</td>
-                    <td
-                      style={{
-                        ...tdStyle,
-                        fontWeight: isMe ? 700 : undefined,
-                        color: isMe ? "#a5b4fc" : "#e2e8f0",
-                      }}
-                    >
+                    <td style={{ ...tdStyle, fontWeight: isMe ? 700 : undefined, color: isMe ? "#a5b4fc" : "#e2e8f0" }}>
                       {s.teamName}
-                      {isMe && (
-                        <span style={{ fontSize: 10, color: "#6366f1", marginLeft: 6 }}>
-                          YOU
-                        </span>
-                      )}
+                      {isMe && <span style={{ fontSize: 10, color: "#6366f1", marginLeft: 6 }}>YOU</span>}
                     </td>
-                    <td style={{ ...tdStyle, color: "#34d399", fontVariantNumeric: "tabular-nums" }}>
-                      {s.wins}
-                    </td>
-                    <td style={{ ...tdStyle, color: "#f87171", fontVariantNumeric: "tabular-nums" }}>
-                      {s.losses}
-                    </td>
-                    <td style={{ ...tdStyle, color: "#94a3b8", fontVariantNumeric: "tabular-nums" }}>
-                      {s.ties}
-                    </td>
-                    <td style={{ ...tdStyle, color: "#64748b", fontVariantNumeric: "tabular-nums" }}>
-                      {s.pointsFor.toFixed(1)}
-                    </td>
+                    {vp ? (
+                      <>
+                        <td style={{ ...tdStyle, fontWeight: 800, color: "#e2e8f0", fontVariantNumeric: "tabular-nums" }}>{vp.totalVP}</td>
+                        <td style={{ ...tdStyle, color: "#94a3b8", fontVariantNumeric: "tabular-nums" }}>
+                          {vp.wins}–{vp.losses}{vp.ties > 0 ? `–${vp.ties}` : ""}
+                        </td>
+                        <td style={{ ...tdStyle, color: "#818cf8", fontVariantNumeric: "tabular-nums" }}>{vp.matchupVP}</td>
+                        <td style={{ ...tdStyle, color: "#34d399", fontVariantNumeric: "tabular-nums" }}>{vp.rankVP}</td>
+                        <td style={{ ...tdStyle, color: "#64748b", fontVariantNumeric: "tabular-nums" }}>{vp.pointsFor.toFixed(1)}</td>
+                      </>
+                    ) : (
+                      <>
+                        <td style={{ ...tdStyle, color: "#34d399", fontVariantNumeric: "tabular-nums" }}>{s.wins}</td>
+                        <td style={{ ...tdStyle, color: "#f87171", fontVariantNumeric: "tabular-nums" }}>{s.losses}</td>
+                        <td style={{ ...tdStyle, color: "#94a3b8", fontVariantNumeric: "tabular-nums" }}>{s.ties}</td>
+                        <td style={{ ...tdStyle, color: "#64748b", fontVariantNumeric: "tabular-nums" }}>{s.pointsFor.toFixed(1)}</td>
+                      </>
+                    )}
                   </tr>
                 );
               })}
             </tbody>
           </table>
         </div>
-
         {playoffCutoff !== null && !playoffsStarted && (
           <p style={{ fontSize: 11, color: "#334155", margin: "12px 0 0" }}>
             Top {playoffCutoff} teams advance to the playoffs — dashed line marks the cutoff
