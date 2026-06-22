@@ -224,8 +224,8 @@ export default async function AdminPage({ params, searchParams }: Props) {
         </div>
       )}
 
-      {/* ── Setup checklist ── */}
-      <section style={panelStyle}>
+      {/* ── Setup checklist — hide once all steps are done ── */}
+      {completedCount < checklistSteps.length && <section style={panelStyle}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16, flexWrap: "wrap", gap: 8 }}>
           <h2 style={{ fontSize: 18, margin: 0 }}>Setup checklist</h2>
           <span style={{ fontSize: 13, color: progressPct === 100 ? "#34d399" : "#94a3b8", fontWeight: 600 }}>
@@ -286,7 +286,7 @@ export default async function AdminPage({ params, searchParams }: Props) {
             );
           })}
         </div>
-      </section>
+      </section>}
 
       {/* ── Invite link ── */}
       {!draftDone && (

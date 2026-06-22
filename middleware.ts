@@ -21,7 +21,9 @@ export function middleware(req: NextRequest) {
       url.search = "";
       return NextResponse.redirect(url, 307);
     }
-    return NextResponse.next();
+    const res = NextResponse.next();
+    res.headers.set("x-pathname", pathname);
+    return res;
   }
 
   // League / team / founder pages — redirect to login with returnTo
@@ -45,7 +47,9 @@ export function middleware(req: NextRequest) {
     }
   }
 
-  return NextResponse.next();
+  const res = NextResponse.next();
+  res.headers.set("x-pathname", pathname);
+  return res;
 }
 
 export const config = {
