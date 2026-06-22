@@ -15,6 +15,7 @@ export async function GET(req: NextRequest) {
       status: true,
       playoffStatus: true,
       isReplay: true,
+      betaStatus: true,
       maxTeams: true,
       commissioner: { select: { email: true, displayName: true } },
       _count: { select: { teams: true } },

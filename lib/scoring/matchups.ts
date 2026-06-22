@@ -389,10 +389,13 @@ export async function computeAllTeamScores(
 
 // Generate all-vs-all Matchup rows for every scoring period in the season.
 // Creates C(N,2) rows per period. Safe to re-run (find-then-create).
+// options.weekIndices: if provided, only generate matchups for those 0-based period indices
+//   (e.g. [2, 7, 11, 15] picks 4 weeks out of the full 20). Chronological order is preserved.
 export async function generateVtfMatchups(
   leagueId: string,
   season: string,
-  prisma: PrismaClient
+  prisma: PrismaClient,
+  options?: { weekIndices?: number[] }
 ): Promise<ScoringPeriod[]> {
   const league = await prisma.fantasyLeague.findUniqueOrThrow({
     where: { id: leagueId },
@@ -404,8 +407,22 @@ export async function generateVtfMatchups(
   const gameDates = await prisma.game
     .findMany({ where: { season }, select: { startsAt: true } })
     .then((rows) => rows.map((r) => r.startsAt));
-  const periods = derivePeriods(gameDates);
-  if (periods.length === 0) throw new Error(`No games found for season ${season}`);
+  const allPeriods = derivePeriods(gameDates);
+  if (allPeriods.length === 0) throw new Error(`No games found for season ${season}`);
+
+  // If weekIndices provided, pick only those (sorted to keep chronological order).
+  const selectedPeriods = options?.weekIndices
+    ? options.weekIndices
+        .slice()
+        .sort((a, b) => a - b)
+        .map((i) => allPeriods[i])
+        .filter((p): p is ScoringPeriod => Boolean(p))
+    : allPeriods;
+
+  if (selectedPeriods.length === 0) throw new Error("No valid periods after applying weekIndices filter");
+
+  // Renumber weeks consecutively so DB week numbers are 1-based and contiguous.
+  const periods = selectedPeriods.map((p, idx) => ({ ...p, week: idx + 1 }));
 
   // Batch per period: delete any existing rows for this league+week then
   // createMany. Much faster than N*C(N,2) individual find-then-create trips.
@@ -427,6 +444,137 @@ export async function generateVtfMatchups(
     await prisma.matchup.createMany({ data });
   }
   return periods;
+}
+
+// Generate VTF matchups for a beta league: picks 4 random weeks from the fixture,
+// remaps their startsAt/endsAt to real consecutive 7-day windows starting the day
+// after draftStartsAt, but keeps the original fixture startsAt/endsAt stored in the
+// Matchup rows so stat-line queries use the correct historical dates.
+//
+// Wait — per the plan: "ScoringPeriod.startsAt/endsAt windows are only used for period
+// status/lock detection". Stat line queries in scoring already use the period object
+// passed in. So for beta leagues we store REMAPPED dates in the Matchup rows, and
+// scoring will use those remapped dates as the window for stat line queries.
+// This means the stat lines within the original fixture weeks (e.g. Nov 22–28) will
+// be queried using the REMAPPED window (e.g. Jul 8–14). This would return zero stat
+// lines since the fixture games live at their original dates.
+//
+// Correct approach per plan §4: "stat line queries still use original fixture game dates".
+// We store REMAPPED dates in the Matchup rows for period status/lock detection,
+// but scoring must use the ORIGINAL period dates. Since scoreVtfWeek takes a ScoringPeriod
+// from the Matchup, we need to pass the original dates separately.
+//
+// Implementation: store remapped dates in Matchup.startsAt/endsAt for period detection.
+// Store original dates in Matchup.homeScore metadata? No — that would require schema changes.
+//
+// Simpler approach (matches what the plan says): generate matchup rows with ORIGINAL
+// fixture dates. The periods for lock detection / week status are derived from the
+// Matchup dates. But beta leagues run on real wall clock, so a Nov week would never
+// become ACTIVE in July.
+//
+// Conclusion after re-reading the plan: remapped dates go in Matchup rows. Stat lines
+// are for the FIXTURE weeks, not the remapped weeks. This means scoring will use the
+// remapped window dates when calling computeTeamScore, which will find zero stat lines.
+//
+// The plan must intend: store fixture dates in Matchup rows (for stat scoring), but
+// use remapped dates for period lifecycle (ACTIVE/SCORING_PENDING detection).
+//
+// Since we can't store both in the current schema without a new column, the correct
+// approach is: store REMAPPED dates in Matchup rows (period lifecycle), and rely on a
+// separate ScoringPeriod→fixtureWindow mapping to score. But scoreVtfWeek gets the
+// ScoringPeriod from Matchup rows...
+//
+// Decision: store remapped dates in Matchup.startsAt/endsAt (for period lifecycle),
+// and store the fixture window bounds in scoringSettings.betaWeekMappings so
+// scoreVtfWeek can look them up. This requires NO schema change.
+//
+// scoringSettings is already Json. Add: betaWeekMappings: Array<{week, fixtureStart, fixtureEnd}>
+export async function generateBetaMatchups(
+  leagueId: string,
+  league: { draftStartsAt: Date | null; scoringSettings: unknown; season: string },
+  prisma: PrismaClient
+): Promise<ScoringPeriod[]> {
+  const settings = (league.scoringSettings ?? {}) as Record<string, unknown>;
+  const weekIndices = (settings.betaWeekIndices as number[] | undefined) ?? [];
+
+  if (weekIndices.length === 0) {
+    throw new Error("Beta league has no betaWeekIndices in scoringSettings");
+  }
+
+  const gameDates = await prisma.game
+    .findMany({ where: { season: league.season }, select: { startsAt: true } })
+    .then((rows) => rows.map((r) => r.startsAt));
+
+  const allPeriods = derivePeriods(gameDates);
+  if (allPeriods.length === 0) throw new Error(`No games found for season ${league.season}`);
+
+  // Pick the fixture periods for the selected weeks.
+  const fixturePeriods = weekIndices
+    .slice()
+    .sort((a, b) => a - b)
+    .map((i) => allPeriods[i])
+    .filter((p): p is ScoringPeriod => Boolean(p));
+
+  if (fixturePeriods.length === 0) throw new Error("No valid fixture periods for betaWeekIndices");
+
+  const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+  // Remap to real consecutive weeks starting draftStartsAt + 1 day (noon UTC to be safe).
+  const draftStart = league.draftStartsAt?.getTime() ?? Date.now();
+  const firstWeekStart = draftStart + 24 * 60 * 60 * 1000; // +1 day
+
+  const remappedPeriods: ScoringPeriod[] = fixturePeriods.map((fp, idx) => ({
+    week: idx + 1,
+    startsAt: new Date(firstWeekStart + idx * WEEK_MS),
+    endsAt: new Date(firstWeekStart + (idx + 1) * WEEK_MS),
+  }));
+
+  // Save fixture window mapping into scoringSettings so scoreVtfWeek can look up
+  // the original dates when computing scores.
+  const betaWeekMappings = fixturePeriods.map((fp, idx) => ({
+    week: idx + 1,
+    fixtureStart: fp.startsAt.toISOString(),
+    fixtureEnd: fp.endsAt.toISOString(),
+  }));
+
+  await prisma.fantasyLeague.update({
+    where: { id: leagueId },
+    data: {
+      scoringSettings: {
+        ...(settings as object),
+        betaWeekMappings,
+      },
+    },
+  });
+
+  // Fetch teams ordered by draft order.
+  const teams = await prisma.fantasyTeam.findMany({
+    where: { leagueId },
+    orderBy: { draftOrder: "asc" },
+    select: { id: true },
+  });
+  const teamIds = teams.map((t) => t.id);
+  if (teamIds.length < 2) throw new Error("Need at least 2 teams");
+
+  // Create matchup rows with REMAPPED dates (period lifecycle uses these).
+  for (const period of remappedPeriods) {
+    await prisma.matchup.deleteMany({ where: { leagueId, week: period.week } });
+    const data = [];
+    for (let i = 0; i < teamIds.length; i++) {
+      for (let j = i + 1; j < teamIds.length; j++) {
+        data.push({
+          leagueId,
+          week: period.week,
+          startsAt: period.startsAt,
+          endsAt: period.endsAt,
+          homeTeamId: teamIds[i],
+          awayTeamId: teamIds[j],
+        });
+      }
+    }
+    await prisma.matchup.createMany({ data });
+  }
+
+  return remappedPeriods;
 }
 
 export interface WeeklyResult {

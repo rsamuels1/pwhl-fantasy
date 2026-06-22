@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { Prisma } from "@prisma/client";
 import DraftRoom from "./DraftRoom";
 import type { PlayerStats } from "@/app/api/leagues/[leagueId]/draft/players/route";
+import { getPriorSeason } from "@/lib/season/index";
 
 interface Props {
   params: Promise<{ leagueId: string }>;
@@ -40,6 +41,8 @@ export default async function DraftPage({ params, searchParams }: Props) {
         name: true,
         commissionerId: true,
         rosterSettings: true,
+        isReplay: true,
+        season: true,
         teams: {
           select: { id: true, name: true, ownerId: true },
           orderBy: { draftOrder: "asc" },
@@ -58,7 +61,13 @@ export default async function DraftPage({ params, searchParams }: Props) {
   const myTeam = league.teams.find((t) => t.id === teamId);
   if (!myTeam) notFound();
 
-  const season = latestGame?.season ?? null;
+  // For replay/beta leagues, show prior-season stats so managers draft on last year's
+  // performance rather than the season they're replaying (which would be a spoiler).
+  // For live leagues, use the most recent season with game data.
+  const rawSeason = latestGame?.season ?? null;
+  const season = league.isReplay && league.season
+    ? getPriorSeason(league.season)
+    : rawSeason;
 
   const rows = season
     ? await prisma.$queryRaw<AggRow[]>`

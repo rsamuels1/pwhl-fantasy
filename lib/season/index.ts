@@ -3,9 +3,21 @@
 // engine, and runs VTF scoring for any periods that are now due.
 // Reuses the validated generateVtfMatchups / scoreVtfWeek from lib/scoring/matchups.ts.
 
+// ── Season string helpers ─────────────────────────────────────────────────────
+
+// "2025-26" → "2024-25"; handles variable-length end year ("2025-6" would → "2024-05")
+export function getPriorSeason(season: string): string {
+  const [startStr, endStr] = season.split("-");
+  const start = Number(startStr);
+  const end = Number(endStr);
+  // end is typically a 2-digit suffix (e.g. "26" in "2025-26")
+  const newEnd = end - 1;
+  return `${start - 1}-${String(newEnd).padStart(2, "0")}`;
+}
+
 import type { PrismaClient } from "@prisma/client";
 import { derivePeriods } from "@/lib/scoring/periods";
-import { generateVtfMatchups, generateMatchups, scoreVtfWeek } from "@/lib/scoring/matchups";
+import { generateVtfMatchups, generateMatchups, generateBetaMatchups, scoreVtfWeek } from "@/lib/scoring/matchups";
 import { scoreVpWeek } from "@/lib/scoring/vp";
 import { parseScoringSettings } from "@/lib/scoring/settings";
 import { computeSeasonState, pendingWeeks, validateSeasonBoundary, type SeasonState } from "./lifecycle";
@@ -93,8 +105,16 @@ export async function startSeason(leagueId: string, prisma: PrismaClient): Promi
   }
 
   // VP mode uses 1v1 round-robin matchups; VTF uses all-vs-all.
+  // Beta leagues (betaStatus === "ACTIVE") use a subset of weeks from the fixture,
+  // remapped to real July 2026 dates for period lifecycle detection.
   const scoringMode = league.scoringMode ?? "VTF";
-  if (scoringMode === "VP") {
+  if (league.betaStatus === "ACTIVE") {
+    await generateBetaMatchups(leagueId, {
+      draftStartsAt: league.draftStartsAt,
+      scoringSettings: league.scoringSettings,
+      season: league.season,
+    }, prisma);
+  } else if (scoringMode === "VP") {
     const ps = getPlayoffSettings(league.playoffSettings as Parameters<typeof getPlayoffSettings>[0]);
     const playoffRounds = calculatePlayoffRounds(ps.teamsInPlayoff);
     await generateMatchups(leagueId, league.season, prisma, { reservePlayoffWeeks: playoffRounds });
