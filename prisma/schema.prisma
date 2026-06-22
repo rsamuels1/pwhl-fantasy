@@ -507,3 +507,12 @@ model TradeItem {
 
   @@index([tradeId])
 }
+
+model BetaSignup {
+  id                String   @id @default(cuid())
+  email             String   @unique
+  wantsToCommission Boolean  @default(false)
+  createdAt         DateTime @default(now())
+
+  @@map("beta_users")
+}

@@ -1,10 +1,28 @@
 import { NextRequest, NextResponse } from "next/server";
 
 const SESSION_COOKIE = "pwhl_user_email";
+const BETA_HOST = "fantasy.dykedb.org";
 
 export function middleware(req: NextRequest) {
   const cookie = req.cookies.get(SESSION_COOKIE)?.value;
   const { pathname } = req.nextUrl;
+  const host = req.headers.get("host") ?? "";
+
+  // On the beta domain, only /beta and its API are accessible
+  if (host === BETA_HOST) {
+    const allowed =
+      pathname === "/beta" ||
+      pathname.startsWith("/api/beta-signup") ||
+      pathname.startsWith("/_next/") ||
+      pathname.startsWith("/favicon");
+    if (!allowed) {
+      const url = req.nextUrl.clone();
+      url.pathname = "/beta";
+      url.search = "";
+      return NextResponse.redirect(url, 307);
+    }
+    return NextResponse.next();
+  }
 
   // League / team / founder pages — redirect to login with returnTo
   if (
@@ -31,5 +49,15 @@ export function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/league/:path*", "/team/:path*", "/founder/:path*", "/founder", "/api/leagues/:path*", "/api/founder/:path*"],
+  matcher: [
+    // Existing auth-guard routes
+    "/league/:path*",
+    "/team/:path*",
+    "/founder/:path*",
+    "/founder",
+    "/api/leagues/:path*",
+    "/api/founder/:path*",
+    // Catch-all for beta-domain lockdown (excludes static files)
+    "/((?!_next/static|_next/image|favicon.ico).*)",
+  ],
 };

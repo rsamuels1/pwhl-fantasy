@@ -63,6 +63,13 @@ export default async function Home() {
             }}>
               Join a league
             </Link>
+            <Link href="/beta" style={{
+              background: "rgba(124,58,237,0.12)", border: "1px solid rgba(124,58,237,0.32)",
+              color: "#c4b5fd", padding: "14px 22px", borderRadius: 11, fontSize: 15,
+              fontWeight: 600, display: "inline-flex", alignItems: "center", gap: 9, textDecoration: "none",
+            }}>
+              Join the Beta →
+            </Link>
           </div>
 
           <div style={{ display: "flex", alignItems: "center", gap: 18, marginTop: 26, fontSize: 12.5, color: "#6f788e" }}>
