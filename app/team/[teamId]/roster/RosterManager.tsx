@@ -55,6 +55,7 @@ interface Props {
   viewTeamName: string;
   viewRoster: RosterPlayerRow[];
   isOwnRoster: boolean;
+  defaultTab?: Tab;
 }
 
 // ── constants ─────────────────────────────────────────────────────────────────
@@ -83,9 +84,10 @@ export default function RosterManager({
   leagueId, teamId, teamName, maxRosterSize, rosterSettings,
   initialRoster, freeAgents,
   allTeams, viewTeamId, viewTeamName, viewRoster, isOwnRoster,
+  defaultTab,
 }: Props) {
   const router = useRouter();
-  const [tab, setTab] = useState<Tab>("roster");
+  const [tab, setTab] = useState<Tab>(defaultTab ?? "roster");
   const [viewMode, setViewMode] = useState<ViewMode>("table");
   const [roster, setRoster] = useState<RosterPlayerRow[]>(initialRoster);
   const [posFilter, setPosFilter] = useState<Position | "ALL">("ALL");

@@ -158,11 +158,13 @@ All sprints from 7–15 are complete and shipped (Sprint 13 is in progress with 
 - **Sprint 10** ✅ — Beta Bug Sweep + Launch Polish (5 P0/P1 bugs, founding beta ready)
 - **Sprint 11a & 11b** ✅ — UX Polish (24 items: vocab, nav, wizard, empty states)
 - **Sprint 12** ✅ — Pre-Beta Polish (5 items: BF-004, UX-043/039/038/040/042/044, DATA-002)
+- **Sprint 14** ✅ — Post-Launch Polish + Emotional Engagement (11/12; OB-010, UX-049, UX-050, UX-033 shipped; UX-045 deferred; Jun 22, 2026)
 - **Sprint 15** ✅ — Visual Design System Deep Pass (3 stories: DS-001/002/003; Jun 22, 2026)
+- **Sprint 16** ✅ — Emotional Design Polish (score colors, count-up animation, Saira Condensed font, RecapCard elevation; Jun 22, 2026)
 
-**Current Status:** Sprint 13 IN PROGRESS (2/14 shipped: BF-008, OB-001, OB-008) · Sprint 15 COMPLETE (visual design system) · MVP readiness ~99%
+**Current Status:** Sprint 13 IN PROGRESS (3/14 shipped: BF-008, OB-001, OB-008) · Sprint 14 COMPLETE (11/12 items; Jun 22, 2026) · Sprint 15 COMPLETE (visual design system; Jun 22, 2026) · Sprint 16 COMPLETE (emotional design polish; Jun 22, 2026) · MVP readiness ~99%
 
-**Sprint 14 (Backlog):** 5 stories from two-agent integration test (Jun 22, 2026) — BF-010 (goalie locked in BENCH warning), BF-011 (FA suggestions empty in replay), TR-002 (silent trade rejection notification), TR-003 (trade skips PROPOSED state when commissioner review is on), DRC-002 (draft timer freeze after server restart). Full specs in `roadmap-features.md` under "Agent Integration Test Findings."
+**Sprint 14 (Post-Launch Polish + Emotional Engagement) is COMPLETE (Jun 22, 2026).** 11/12 items shipped: all 5 agent integration test findings (DRC-002, BF-010, BF-011, TR-002, TR-003) ✅; OB-010 wizard Replay progress bar ✅; UX-049 "Free Agents" direct TeamNav link ✅; UX-050 "Win Probability" label in DuelHero ✅; UX-033 setup-phase copy "Games starting soon" ✅; UX-032 edge label ✅; OB-011 draft date picker text ✅. UX-045 (rival win celebration) deferred post-launch — requires schema migration (`RIVALRY_WIN` enum) which carries pre-launch risk. First item in Sprint 17 backlog.
 
 **Post-Launch Backlog:** FAAB (#6 — defer to 2027-28 when commissioners request), Growth analytics (GR-001/002/003/004), push notifications, multi-season library (#12), player trends (#23), keeper/dynasty (#19/#20), native apps, AI features. See `roadmap-sprints.md` for details.
 

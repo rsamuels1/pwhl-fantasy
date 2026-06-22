@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 
 interface Props {
   teamId: string;
@@ -10,19 +11,24 @@ interface Props {
   playoffStatus: string;
 }
 
-export default function TeamNav({ teamId, leagueId, leagueName, playoffStatus }: Props) {
+function TeamNavInner({ teamId, leagueId, leagueName, playoffStatus }: Props) {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const rosterPath = `/team/${teamId}/roster`;
+  const isFreeAgentsActive = pathname === rosterPath && searchParams.get("tab") === "freeAgents";
+  const isRosterActive = pathname.startsWith(rosterPath) && !isFreeAgentsActive;
 
   const tabs = [
-    { label: "Matchup",       href: `/team/${teamId}/matchup` },
-    { label: "Lineup",        href: `/team/${teamId}/lineup` },
-    { label: "Rosters",       href: `/team/${teamId}/roster` },
-    { label: "Trades",        href: `/league/${leagueId}/trades` },
-    { label: "Standings",     href: `/team/${teamId}/standings` },
-    { label: "Schedule",      href: `/team/${teamId}/schedule` },
-    { label: "Analysis",      href: `/team/${teamId}/analysis` },
+    { label: "Matchup",     href: `/team/${teamId}/matchup`,             active: pathname.startsWith(`/team/${teamId}/matchup`) },
+    { label: "Lineup",      href: `/team/${teamId}/lineup`,              active: pathname.startsWith(`/team/${teamId}/lineup`) },
+    { label: "Rosters",     href: rosterPath,                            active: isRosterActive },
+    { label: "Free Agents", href: `${rosterPath}?tab=freeAgents`,        active: isFreeAgentsActive },
+    { label: "Trades",      href: `/league/${leagueId}/trades`,          active: pathname.startsWith(`/league/${leagueId}/trades`) },
+    { label: "Standings",   href: `/team/${teamId}/standings`,           active: pathname.startsWith(`/team/${teamId}/standings`) },
+    { label: "Schedule",    href: `/team/${teamId}/schedule`,            active: pathname.startsWith(`/team/${teamId}/schedule`) },
+    { label: "Analysis",    href: `/team/${teamId}/analysis`,            active: pathname.startsWith(`/team/${teamId}/analysis`) },
     ...(playoffStatus !== "NOT_STARTED"
-      ? [{ label: "Playoffs", href: `/league/${leagueId}/bracket` }]
+      ? [{ label: "Playoffs", href: `/league/${leagueId}/bracket`,      active: pathname.startsWith(`/league/${leagueId}/bracket`) }]
       : []),
   ];
 
@@ -37,28 +43,25 @@ export default function TeamNav({ teamId, leagueId, leagueName, playoffStatus }:
         gap: 0,
       }}
     >
-      {tabs.map((tab) => {
-        const isActive = pathname.startsWith(tab.href);
-        return (
-          <Link
-            key={tab.href}
-            href={tab.href}
-            style={{
-              padding: "12px 18px",
-              fontSize: 14,
-              fontWeight: isActive ? 600 : 400,
-              color: isActive ? "#e2e8f0" : "#64748b",
-              textDecoration: "none",
-              borderBottom: isActive ? "2px solid #6366f1" : "2px solid transparent",
-              marginBottom: -1,
-              whiteSpace: "nowrap",
-              transition: "color 0.15s",
-            }}
-          >
-            {tab.label}
-          </Link>
-        );
-      })}
+      {tabs.map((tab) => (
+        <Link
+          key={tab.href}
+          href={tab.href}
+          style={{
+            padding: "12px 18px",
+            fontSize: 14,
+            fontWeight: tab.active ? 600 : 400,
+            color: tab.active ? "#e2e8f0" : "#64748b",
+            textDecoration: "none",
+            borderBottom: tab.active ? "2px solid #6366f1" : "2px solid transparent",
+            marginBottom: -1,
+            whiteSpace: "nowrap",
+            transition: "color 0.15s",
+          }}
+        >
+          {tab.label}
+        </Link>
+      ))}
 
       <Link
         href={`/league/${leagueId}`}
@@ -74,5 +77,14 @@ export default function TeamNav({ teamId, leagueId, leagueName, playoffStatus }:
         {leagueName} ↗
       </Link>
     </nav>
+  );
+}
+
+// useSearchParams requires Suspense on Next.js App Router.
+export default function TeamNav(props: Props) {
+  return (
+    <Suspense fallback={null}>
+      <TeamNavInner {...props} />
+    </Suspense>
   );
 }

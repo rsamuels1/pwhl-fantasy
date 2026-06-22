@@ -434,10 +434,10 @@
           <span class="status complete">✅ DONE</span>
         </div>
 
-        <div class="sprint-card planned" onclick="switchTab('sprints'); setTimeout(() => document.getElementById('sprint-14').scrollIntoView({behavior: 'smooth'}), 100)">
+        <div class="sprint-card partial" onclick="switchTab('sprints'); setTimeout(() => document.getElementById('sprint-14').scrollIntoView({behavior: 'smooth'}), 100)">
           <div class="name">Sprint 14</div>
-          <div class="progress">0/7</div>
-          <span class="status planned">○ BACKLOG</span>
+          <div class="progress">5/12</div>
+          <span class="status partial">🔄 IN PROGRESS</span>
         </div>
 
         <div class="sprint-card complete" onclick="switchTab('sprints'); setTimeout(() => document.getElementById('sprint-15').scrollIntoView({behavior: 'smooth'}), 100)">
@@ -1212,29 +1212,29 @@
         <div class="exit-criteria"><strong>Exit:</strong> all 14 items (6 P0 + 8 P1) resolved; negative timestamps gone; Analysis tab navigates correctly; first-run flow explained end-to-end; tsc --noEmit clean; ≥202 tests pass. ✅ ACHIEVED Jun 22, 2026</div>
       </div>
 
-      <div id="sprint-14" class="card planned">
+      <div id="sprint-14" class="card complete">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
           <div>
-            <div style="font-weight: 700; font-size: 1rem;">Sprint 14 · "Agent Test Findings + Draft Reliability"</div>
-            <div style="font-size: 0.8rem; color: #888;">Track: F+B · BACKLOG · Source: two-agent integration test Jun 2026</div>
+            <div style="font-weight: 700; font-size: 1rem;">Sprint 14 · "Post-Launch Polish + Emotional Engagement"</div>
+            <div style="font-size: 0.8rem; color: #888;">Track: F+B · COMPLETE · Jun 22, 2026 · 11/12 shipped (UX-045 deferred post-launch)</div>
           </div>
-          <span class="status planned">○ BACKLOG</span>
+          <span class="status complete">✅ COMPLETE</span>
         </div>
         <div>
-          <div class="task-row"><span class="task-check" style="color:#ef4444">P1</span><span style="color: #ccc">DRC-002 (P1, M) — Draft timer freezes to null after server restart; requires PAUSE+RESUME to unstick</span></div>
-          <div class="task-row"><span class="task-check" style="color:#ef4444">P1</span><span style="color: #ccc">BF-010 (P1, S) — Goalie locked in BENCH from period day 1; no warning shown to manager</span></div>
-          <div class="task-row"><span class="task-check" style="color:#ef4444">P1</span><span style="color: #ccc">BF-011 (P1, S) — FA suggestions return empty list in replay leagues (sim-date cookie not applied)</span></div>
-          <div class="task-row"><span class="task-check" style="color:#f59e0b">P2</span><span style="color: #ccc">TR-002 (P2, S) — Trade auto-rejection is silent; proposer receives no notification or reason</span></div>
-          <div class="task-row"><span class="task-check" style="color:#f59e0b">P2</span><span style="color: #ccc">TR-003 (P2, M) — Trade skips PROPOSED state when commissioner review is on; receiver can't accept/reject</span></div>
-          <div class="task-row"><span class="task-check" style="color:#6b7280">P2</span><span style="color: #888">OB-010 (P2, M) — Wizard progress bar misleading for Replay users (step counter skips step 4)</span></div>
-          <div class="task-row"><span class="task-check" style="color:#6b7280">P2</span><span style="color: #888">UX-049 (P2, S) — "Free Agents" not accessible from top-level team nav</span></div>
-          <div class="task-row"><span class="task-check" style="color:#6b7280">P2</span><span style="color: #888">UX-050 (P2, S) — Win probability percentages unlabeled in DuelHero</span></div>
-          <div class="task-row"><span class="task-check" style="color:#22c55e">✓</span><span style="color: #22c55e">OB-011 (P2, S) — Draft date picker helper text updated: "Try late November 2026 (when the PWHL season opens)" — commit 972362d ✅</span></div>
-          <div class="task-row"><span class="task-check" style="color:#6b7280">P2</span><span style="color: #888">UX-045 (P2, M) — No celebration moment when rivalry matchup is won</span></div>
-          <div class="task-row"><span class="task-check" style="color:#22c55e">✓</span><span style="color: #22c55e">UX-032 (P2, S) — "+X pt edge" label in FieldHero (was "EDGE") — commit 972362d ✅</span></div>
-          <div class="task-row"><span class="task-check" style="color:#6b7280">P2</span><span style="color: #888">UX-033 (P2, S) — "NO GAMES YET" badge has no contextual explanation</span></div>
+          <div class="task-row"><span class="task-check" style="color:#22c55e">✅</span><span style="color: #22c55e">DRC-002 (P1, M) — Draft timer freezes to null after server restart; fixed rescheduleTimer() to update state.expiresAt</span></div>
+          <div class="task-row"><span class="task-check" style="color:#22c55e">✅</span><span style="color: #22c55e">BF-010 (P1, S) — Goalie locked in BENCH from period day 1; lock indicator now only shows for active players</span></div>
+          <div class="task-row"><span class="task-check" style="color:#22c55e">✅</span><span style="color: #22c55e">BF-011 (P1, S) — FA suggestions return empty list in replay leagues; route now applies getReplayNow() to sim-date</span></div>
+          <div class="task-row"><span class="task-check" style="color:#22c55e">✅</span><span style="color: #22c55e">TR-002 (P2, S) — Trade auto-rejection is silent; processExpiredTrades now sends notifications to proposers</span></div>
+          <div class="task-row"><span class="task-check" style="color:#22c55e">✅</span><span style="color: #22c55e">TR-003 (P2, M) — Trade skips PROPOSED state; acceptTrade now transitions to ACCEPTED (not PENDING_REVIEW), receiver stays visible</span></div>
+          <div class="task-row"><span class="task-check" style="color:#22c55e">✅</span><span style="color: #22c55e">OB-010 (P1, M) — Wizard progress bar fixed for Replay users: getDisplayStep/getDisplayTotal helpers show "Step N of 5" + 5 segments</span></div>
+          <div class="task-row"><span class="task-check" style="color:#22c55e">✅</span><span style="color: #22c55e">UX-049 (P2, S) — "Free Agents" direct TeamNav link added; RosterManager reads ?tab=freeAgents from query param</span></div>
+          <div class="task-row"><span class="task-check" style="color:#22c55e">✅</span><span style="color: #22c55e">UX-050 (P2, S) — "Win Probability" heading + "You —" / "Them —" labels added above probability bar in DuelHero</span></div>
+          <div class="task-row"><span class="task-check" style="color:#22c55e">✅</span><span style="color: #22c55e">OB-011 (P2, S) — Draft date picker helper text updated: "Try late November 2026 (when the PWHL season opens)" — commit 972362d</span></div>
+          <div class="task-row"><span class="task-check" style="color:#6b7280">—</span><span style="color: #888">UX-045 (P2, M) — Rival win celebration — DEFERRED: requires schema migration (RIVALRY_WIN enum); Sprint 17 backlog item #1</span></div>
+          <div class="task-row"><span class="task-check" style="color:#22c55e">✅</span><span style="color: #22c55e">UX-032 (P2, S) — "+X pt edge" label in FieldHero (was "EDGE") — commit 972362d</span></div>
+          <div class="task-row"><span class="task-check" style="color:#22c55e">✅</span><span style="color: #22c55e">UX-033 (P2, S) — Setup-phase "NO GAMES YET" changed to "Games starting soon" in both FieldHero and DuelHero variants</span></div>
         </div>
-        <div class="exit-criteria"><strong>Exit:</strong> DRC-002 (draft restarts clean), BF-010/011 (lineup warning + FA suggestions), TR-002/003 (trade UX); polish items resolved; ≥202 tests pass.</div>
+        <div class="exit-criteria"><strong>Final count: 11/12 shipped.</strong> UX-045 deferred post-launch (schema migration risk). OB-010, UX-049, UX-050, UX-033 all shipped Jun 22, 2026. tsc clean, 202 tests pass.</div>
       </div>
 
       <div id="sprint-15" class="card complete">

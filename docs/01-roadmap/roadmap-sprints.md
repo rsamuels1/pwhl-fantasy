@@ -857,26 +857,26 @@ hitting broken UX or unexplained jargon; trade propose flow has a clear partner-
 
 ---
 
-## Sprint 14 — "Post-Launch Polish + Emotional Engagement" · PLANNED · Track F · P2/P3
+## Sprint 14 — "Post-Launch Polish + Emotional Engagement" · ✅ COMPLETE · Jun 22, 2026 · Track F · P2/P3
 
 Goal: Address deferred polish items from Sprint 13 plus emotional-engagement features that require live-season data to be meaningful. These are quality-of-life improvements and engagement boosters that ship after the Jul 14 beta cohort has had time to provide feedback.
 
 **Carried from Sprint 13 deferred list:**
 
-**Priority 1 — OB-010: Wizard Progress Bar Misleading for Replay Users (P1, M)**
+**Priority 1 — OB-010: Wizard Progress Bar Misleading for Replay Users (P1, M)** ✅ SHIPPED
 Replay users skip step 4 (rules) so the 6-segment bar and "Step N of 6" counter are incorrect.
-Show 5 segments + "Step N of 5" for Replay leagues.
+`getDisplayStep()` and `getDisplayTotal()` helpers added — Replay mode shows 5 segments + "Step N of 5"; Live mode unchanged at 6 steps.
 Files: `app/create-league/CreateLeagueWizard.tsx`
 
-**Priority 2 — UX-049: "Free Agents" Not Accessible from Top-Level Team Nav (P2, S)**
-Free-agent adds are the most frequent in-season action but require two clicks (Rosters → Free Agents tab).
-Add a direct "Free Agents" link to TeamNav or make it the default route at `/team/[teamId]/roster`.
-Files: `app/team/[teamId]/TeamNav.tsx`, `app/team/[teamId]/roster/RosterManager.tsx`
+**Priority 2 — UX-049: "Free Agents" Not Accessible from Top-Level Team Nav (P2, S)** ✅ SHIPPED
+Free-agent adds are the most frequent in-season action but required two clicks (Rosters → Free Agents tab).
+Direct "Free Agents" tab added to TeamNav linking to `/team/[teamId]/roster?tab=freeAgents`; RosterManager reads `defaultTab` prop from `?tab=` query param.
+Files: `app/team/[teamId]/TeamNav.tsx`, `app/team/[teamId]/roster/RosterManager.tsx`, `app/team/[teamId]/roster/page.tsx`
 
-**Priority 3 — UX-050: Win Probability Percentages Unlabeled in DuelHero (P2, S)**
-"66%" and "34%" float next to the win probability bar with no label identifying what they represent.
-Add a "Win Prob" label above the bar and identify each side.
-Files: `components/DuelHero.tsx`
+**Priority 3 — UX-050: Win Probability Percentages Unlabeled in DuelHero (P2, S)** ✅ SHIPPED
+"66%" and "34%" were floating next to the win probability bar with no label.
+"Win Probability" section heading added above the bar; percentages labeled "You —" and "Them —".
+Files: `app/team/[teamId]/matchup/page.tsx`
 
 **Priority 4 — OB-011: Draft Date Picker Has No Season-Anchor Guidance (P2, S)** ✅ SHIPPED — commit 972362d
 Helper text updated to "Try late November 2026 (when the PWHL season opens)".
@@ -884,20 +884,22 @@ Files: `app/create-league/CreateLeagueWizard.tsx`
 
 **Emotional engagement additions (from UX-031 follow-through):**
 
-**Priority 5 — UX-045: No Celebration Moment When Rivalry Matchup Is Won (P2, M)**
-Beating your rival produces no celebration signal. Requires `RIVALRY_WIN` `NotificationType` enum addition
-and a distinct visual treatment on the recap card. See roadmap-features.md UX-045 for full spec.
-Files: `lib/services/notification-service.ts`, `app/team/[teamId]/matchup/page.tsx`, `components/DuelHero.tsx`
+**Priority 5 — UX-045: No Celebration Moment When Rivalry Matchup Is Won (P2, M)** — DEFERRED to post-launch backlog
+Requires `RIVALRY_WIN` `NotificationType` enum addition (schema migration) + service wiring + visual treatment.
+Schema risk too high pre-launch; deferred to Sprint 17 as first post-launch item. See roadmap-features.md UX-045 for full spec.
+Files when implemented: `lib/services/notification-service.ts`, `app/team/[teamId]/matchup/page.tsx`, `components/DuelHero.tsx`, `prisma/schema.prisma`
 
 **Priority 6 — UX-032: "+8.3 EDGE" Jargon in Matchup Hero (P2, S)** ✅ SHIPPED — commit 972362d
 "+X edge" changed to "+X pt edge" in FieldHero projected-lead label.
 Files: `components/FieldHero.tsx`, `components/DuelHero.tsx`
 
-**Priority 7 — UX-033: "NO GAMES YET" Badge Has No Contextual Explanation (P2, S)**
-Badge does not distinguish "no games scheduled" (actionable) from "games haven't started yet" (timing).
-Files: `components/FieldHero.tsx`, `components/DuelHero.tsx`
+**Priority 7 — UX-033: "NO GAMES YET" Badge Has No Contextual Explanation (P2, S)** ✅ SHIPPED
+Badge did not distinguish "no games scheduled" (actionable) from "games haven't started yet" (timing).
+`isSetupPhase` path now shows "Games starting soon" (period is active, games are scheduled but no stat lines yet); scoreLabel updated to match in both FieldHero and DuelHero variants.
+Files: `app/team/[teamId]/matchup/page.tsx`
 
-**Post-launch P2 backlog (schedule into Sprint 14+ as capacity allows):**
+**Post-launch P2 backlog (schedule into Sprint 17+ as capacity allows):**
+- UX-045 (P2, M) — Rival win celebration moment (RIVALRY_WIN enum + notification + recap card treatment) — first Sprint 17 item
 - UX-034 (P2, S) — G · G slot/position visual stutter in Playing Tonight
 - UX-035 (P3, M) — Game times hardcoded to Eastern Time; localize to user timezone
 - UX-036 (P2, M) — Roster stat column headers have no tooltips for hockey newcomers
@@ -915,7 +917,7 @@ Files: `components/FieldHero.tsx`, `components/DuelHero.tsx`
 - UX-024 label refinement ✅ — VTF weekly record labeled "W-L vs field:" (enhancement to already-done Sprint 11a item)
 - UX-030 tooltip enhancement ✅ — MTCH VP / RNK VP tooltip copy clarified (enhancement to already-done Sprint 11a item)
 
-**Exit:** OB-010, UX-049, UX-050 resolved; `RIVALRY_WIN` celebration moment live; `tsc --noEmit` clean, ≥202 tests pass.
+**Final item counts:** 11/12 shipped; UX-045 formally deferred to post-launch backlog (schema risk). `tsc --noEmit` clean, 202 tests pass.
 
 ---
 
@@ -951,6 +953,72 @@ Files: `app/league/[leagueId]/page.tsx`, `components/WeekHighlights.tsx`
 | **Total** | **3 stories** | — | **3/3** |
 
 **Exit achieved:** PWHL GM design system (REBRAND-004 tokens) applied site-wide. Homepage matches branding mockup. No old win/loss color tokens (`#34d399`, `#f87171`) remain. No emoji on any UI surface. `tsc --noEmit` clean.
+
+---
+
+## Sprint 17 — "UX Polish — Agent Test Run Fixes" · IN PROGRESS · Jun 22, 2026 · Track F · P0/P1
+
+**Background:** A 4-agent parallel UX test run (`docs/03-validation/agent-run-findings-2026-06-22.md`) identified 6 Blockers, 13 Friction items, and 5 Minor items across the full app. Sprint 17 implements all Blocker and high-priority Friction fixes.
+
+**Goal:** Close every Blocker and high-priority Friction item found in the parallel UX test run before beta invites go out. Scope spans the leagues discovery page, matchup page information architecture, scoring comprehension copy, terminology standardization, non-qualifying playoff empty state, renewal confirmation flow, and pre-login improvements.
+
+**P0 — Blockers (6 items):**
+
+**AG-001 — LEAGUES page overhaul** · L · P0
+Current leagues discovery page has no "what's happening" hook and displays raw status strings with no context. Redesign as a two-zone page: (1) a "What's Happening" showcase with top weekly performers, biggest blowout, and a sample matchup card; (2) an open-league directory with human-readable status labels and Join CTAs. Requires new `isPublic Boolean @default(false)` field on `FantasyLeague` schema + public/private toggle in the league creation wizard and commissioner admin panel.
+Schema change: `FantasyLeague.isPublic Boolean @default(false)`
+
+**AG-002 — Matchup page restructure** · M · P0
+Matchup page sections Z7 (top/underperforming performers), Z8 (league leaders), and Z9 (activity feed) are cluttering the My Franchise page with league-scope information. Move Z7 performers to the Analysis tab; move Z8 league leaders and Z9 activity feed to the league overview. Remove the embedded weekly standings from FieldHero. Add a positive "all set" lineup state when no alerts are needed, so the alert strip does not disappear and leave a gap.
+Files: `app/team/[teamId]/matchup/page.tsx`, `lib/services/dashboard.ts`, `app/league/[leagueId]/page.tsx`
+
+**AG-003 — FP/VP scoring comprehension copy** · S · P0
+New users cannot connect FP (fantasy points) to VP (victory points) — the two systems feel disconnected. Add a bridging sentence ("Your FP total determines your VP this week — score more than your opponents to earn VP") to the dashboard MatchupHero. Make "vs the field" visible as an explicit text label in FieldHero, not just a `title` attribute. Fix "0.0" displaying instead of "—" during setup phase on the dashboard action card.
+Files: `components/FieldHero.tsx`, `app/dashboard/page.tsx`, `lib/services/dashboard.ts`
+
+**AG-004 — Terminology standardization** · S · P0
+"FPts" appears in stat tables across the app while the rest of the UI uses "FP". Standardize all stat table headers to "FP". Add an FP/VP relationship sentence to `VpExplainer.tsx`. Add a slot legend on the lineup page explaining what F/D/G/UTIL mean. Open the draft stat glossary by default on first visit (currently collapsed by default).
+Files: `components/VpExplainer.tsx`, `app/team/[teamId]/lineup/LineupManager.tsx`, `app/draft/[leagueId]/DraftRoom.tsx`
+
+**AG-005 — Non-qualifying playoff empty state** · S · P0
+Teams that missed the playoffs see "Season hasn't started" on the matchup page — the same empty state as pre-draft. This is factually wrong. Fix `lib/services/dashboard.ts` to detect when `league.playoffStatus === IN_PROGRESS` and the current team has no active playoff matchup, then return a specific `playoffEliminated` context with their regular-season finish rank and a link to the bracket page.
+Files: `lib/services/dashboard.ts`, `app/team/[teamId]/matchup/page.tsx`
+
+**AG-006 — Season renewal confirmation flow** · S · P0
+`RenewLeagueForm` triggers renewal in one click with no warning that it creates a new league, not a reset. Add a two-step confirmation: step 1 explains the effect ("This creates a new 2027-28 league — rosters reset, but history carries over. Managers will need to re-join."); step 2 confirms. After successful renewal, surface a prominent invite-link-sharing step so commissioners remember to invite returning managers.
+Files: `components/RenewLeagueForm.tsx`
+
+**P1 — High-priority Friction (3 items):**
+
+**AG-007 — Pre-login UX improvements** · M · P1
+Landing page subcopy is too jargon-heavy for first-time PWHL fans ("VTF scoring", "VP standings"). Rewrite the features grid subcopy in plain language (under 12 words per card, zero acronyms). Promote the "Try a Replay" CTA to the landing page (secondary CTA) and the login/register pages. Update the invite-link landing page to show the league's draft date and a two-sentence fantasy explainer for first-timers.
+Files: `app/page.tsx`, `app/login/page.tsx`, `app/register/page.tsx`, `app/join-league/page.tsx`
+
+**AG-008 — VP education reinforcement on matchup/dashboard** · S · P1
+`VpExplainer` is only reachable from the standings page. Add a compact "How VP works" inline callout to the FieldHero section header and to the dashboard matchup action card, linking to the standings page explainer.
+Files: `components/FieldHero.tsx`, `app/dashboard/page.tsx`
+
+**AG-009 — Lineup lock contextual tooltip** · S · P1
+When a player is locked (lock indicator), clicking the indicator shows no explanation. Add a tooltip or inline label: "Locked — [Player]'s team already played in Week N. Cannot move to bench after they've contributed." Wording should be explanatory, not punitive.
+Files: `app/team/[teamId]/lineup/LineupManager.tsx`
+
+**Sprint 17 Story Totals:**
+| Story | Size | Priority | Status |
+|---|---|---|---|
+| AG-001: LEAGUES page overhaul + isPublic schema | L | P0 | To Do |
+| AG-002: Matchup page restructure (Z7/Z8/Z9 moves) | M | P0 | To Do |
+| AG-003: FP/VP comprehension copy + FieldHero label | S | P0 | To Do |
+| AG-004: Terminology standardization (FP, glossary) | S | P0 | To Do |
+| AG-005: Non-qualifying playoff empty state | S | P0 | To Do |
+| AG-006: Renewal two-step confirmation + invite step | S | P0 | To Do |
+| AG-007: Pre-login UX improvements | M | P1 | To Do |
+| AG-008: VP education reinforcement | S | P1 | To Do |
+| AG-009: Lineup lock contextual tooltip | S | P1 | To Do |
+| **Total** | **6S · 2M · 1L** | — | **0/9** |
+
+**Schema changes:** `FantasyLeague.isPublic Boolean @default(false)` (required for AG-001 open-league directory).
+
+**Exit criteria:** All 6 Blockers and 3 high-priority Friction items from the agent test run are resolved. No false "Season hasn't started" empty states for eliminated teams during playoffs. FP terminology consistent across all stat tables. `tsc --noEmit` clean. All existing tests pass.
 
 ---
 
@@ -1030,9 +1098,10 @@ Items below are acknowledged but have no sprint assignment. They become candidat
 | Sprint 11b — UX Polish: Navigation + Wizard + Empty States (P1/P2) | ✅ COMPLETE (Jun 21, 2026) | 16 items: BF-007, UX-008, UX-006, UX-014/015, UX-016, UX-017, UX-019, UX-004, UX-007, UX-002/003, UX-020/021, UX-009, UX-005, UX-013 |
 | Sprint 12 — Pre-Beta Polish | ✅ COMPLETE (Jun 21, 2026) | BF-004 (lineup UTIL slot fix) ✅ + UX-043 (landing page jargon) ✅ + UX-039 (Claim vs Add tooltips) ✅ + UX-038/040/042/044 (UI polish) ✅; MVP readiness ~99%; ready for beta Jul 14 |
 | Sprint 13 — UX Audit + Onboarding First-Run | 🔄 IN PROGRESS | 14 items: BF-008/009 (P0 bugs — negative timestamps, analysis nav) + UX-046/047/048 (P1 — season series dupe, trade partner-first, hint position) + OB-001–009 (Pass 5 — wizard/auth first-run friction) |
-| Sprint 14 — Agent Test Findings + Draft Reliability | 📋 BACKLOG | 5 items from two-agent integration test (Jun 2026): BF-010 (goalie locked in BENCH) + BF-011 (FA suggestions empty in replay) + TR-002 (silent trade rejection) + TR-003 (trade skips PROPOSED state) + DRC-002 (draft timer freeze on restart); UX-032 + OB-011 + UX-022 shipped early (commit 972362d) |
+| Sprint 14 — Post-Launch Polish + Emotional Engagement | ✅ COMPLETE (Jun 22, 2026) | 11/12 items shipped; UX-045 (rival win celebration) deferred post-launch (schema risk); OB-010 (wizard Replay bar) ✅ + UX-049 (FA direct nav link) ✅ + UX-050 (Win Prob label) ✅ + UX-033 (setup phase copy) ✅; all agent test findings + early commits included |
 | Sprint 15 — Visual Design System Deep Pass | ✅ COMPLETE (Jun 22, 2026) | 3 stories: DS-001 (homepage rewrite + sticky header), DS-002 (token sweep all pages + emoji removal), DS-003 (league overview + WeekHighlights full redesign) |
 | Sprint 16 — Emotional Design Polish | ✅ COMPLETE (Jun 22, 2026) | Score colors by win state + count-up animation, section heading hierarchy, Saira Condensed font loading, RecapCard elevation, card entrance animations. Transforms "Bloomberg terminal" feeling into energetic sports product. Commits: 5ecc116, f1d576c |
+| Sprint 17 — UX Polish: Agent Test Run Fixes | 🔄 IN PROGRESS (Jun 22, 2026) | 9 items: AG-001 (LEAGUES overhaul + isPublic schema) + AG-002 (matchup page restructure) + AG-003 (FP/VP copy) + AG-004 (terminology) + AG-005 (playoff eliminated empty state) + AG-006 (renewal confirmation) + AG-007 (pre-login UX) + AG-008 (VP education) + AG-009 (lock tooltip); source: 4-agent parallel UX test run |
 
 ---
 

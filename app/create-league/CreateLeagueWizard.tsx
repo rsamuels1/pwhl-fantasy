@@ -5,7 +5,23 @@ import { useRouter } from "next/navigation";
 import InviteLinkButton from "@/components/InviteLinkButton";
 import Link from "next/link";
 
+// Replay mode skips step 4 (Rules confirmation), so it has 5 displayed steps instead of 6.
+// TOTAL_STEPS is the internal step count (7 states including the final done screen).
+// displayTotal and displayStep are what we show in the progress bar and counter.
 const TOTAL_STEPS = 7;
+
+// Maps internal step number → displayed step number for each mode.
+// Replay: steps 1-3 → 1-3, steps 5-7 → 4-6 (step 4 is skipped).
+// Live: steps 1-6 → 1-6.
+function getDisplayStep(step: number, isReplay: boolean): number {
+  if (!isReplay) return step;
+  // Step 4 is skipped for replay — steps 5+ shift down by 1.
+  return step < 5 ? step : step - 1;
+}
+
+function getDisplayTotal(isReplay: boolean): number {
+  return isReplay ? 5 : 6;
+}
 
 const SIZE_OPTIONS: { value: number; label: string; note: string }[] = [
   { value: 6,  label: "6 teams",  note: "Smaller, more intimate" },
@@ -136,44 +152,50 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
     <div className="page-width" style={{ padding: "32px 16px" }}>
       <div style={{ maxWidth: 560, margin: "0 auto", display: "flex", flexDirection: "column", gap: 24 }}>
 
-        {/* Progress indicator — 6-segment filled bar */}
-        <div>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-            <p style={{ fontSize: 11, fontWeight: 700, color: "#6366f1", textTransform: "uppercase", letterSpacing: "1px", margin: 0 }}>
-              Step {Math.min(step, TOTAL_STEPS - 1)} of {TOTAL_STEPS - 1}
-            </p>
-            {step < TOTAL_STEPS && (
-              <button
-                onClick={handleCancel}
-                style={{ fontSize: 12, color: "#475569", textDecoration: "none", background: "none", border: "none", cursor: "pointer" }}
-              >
-                Cancel
-              </button>
-            )}
-          </div>
-          <div style={{ display: "flex", gap: 6, marginBottom: 10 }}>
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div
-                key={i}
-                style={{
-                  flex: 1,
-                  height: 6,
-                  borderRadius: 3,
-                  background: i < Math.min(step - 1, 6) ? "#6366f1" : "rgba(255,255,255,0.08)",
-                  transition: "background 0.3s ease",
-                }}
-              />
-            ))}
-          </div>
-          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "#64748b" }}>
-            <span>Name</span>
-            <span>Size</span>
-            <span>Season</span>
-            <span>Rules</span>
-            <span>Team</span>
-            <span>Invite</span>
-          </div>
-        </div>
+        {/* Progress indicator — filled bar (6 segments for Live, 5 for Replay) */}
+        {(() => {
+          const displayTotal = getDisplayTotal(isReplay);
+          const displayStep = getDisplayStep(Math.min(step, TOTAL_STEPS - 1), isReplay);
+          const stepLabels = isReplay
+            ? ["Name", "Size", "Season", "Team", "Invite"]
+            : ["Name", "Size", "Season", "Rules", "Team", "Invite"];
+          return (
+            <div>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                <p style={{ fontSize: 11, fontWeight: 700, color: "#6366f1", textTransform: "uppercase", letterSpacing: "1px", margin: 0 }}>
+                  Step {displayStep} of {displayTotal}
+                </p>
+                {step < TOTAL_STEPS && (
+                  <button
+                    onClick={handleCancel}
+                    style={{ fontSize: 12, color: "#475569", textDecoration: "none", background: "none", border: "none", cursor: "pointer" }}
+                  >
+                    Cancel
+                  </button>
+                )}
+              </div>
+              <div style={{ display: "flex", gap: 6, marginBottom: 10 }}>
+                {Array.from({ length: displayTotal }).map((_, i) => (
+                  <div
+                    key={i}
+                    style={{
+                      flex: 1,
+                      height: 6,
+                      borderRadius: 3,
+                      background: i < Math.min(displayStep - 1, displayTotal) ? "#6366f1" : "rgba(255,255,255,0.08)",
+                      transition: "background 0.3s ease",
+                    }}
+                  />
+                ))}
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "#64748b" }}>
+                {stepLabels.map((label) => (
+                  <span key={label}>{label}</span>
+                ))}
+              </div>
+            </div>
+          );
+        })()}
 
         <div className="dashboard-panel" style={{ minHeight: "60vh" }}>
 

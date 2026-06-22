@@ -12,7 +12,7 @@ import type { RosterSettings } from "@/lib/lineup";
 
 interface Props {
   params: Promise<{ teamId: string }>;
-  searchParams?: Promise<{ view?: string }>;
+  searchParams?: Promise<{ view?: string; tab?: string }>;
 }
 
 function maxRosterSize(settings: RosterSettings): number {
@@ -65,6 +65,9 @@ const STAT_LINE_SELECT = {
 export default async function TeamRosterPage({ params, searchParams }: Props) {
   const { teamId } = await params;
   const sp = await searchParams;
+  const tabParam = sp?.tab;
+  // Only pass recognized tab values through; ignore unknown query params.
+  const defaultTab = tabParam === "freeAgents" || tabParam === "waiverWire" ? tabParam : undefined;
   const user = await requireAuth(`/team/${teamId}/roster`);
   await requireTeamOwner(teamId, user.id);
 
@@ -336,6 +339,7 @@ export default async function TeamRosterPage({ params, searchParams }: Props) {
       viewTeamName={viewTeamName}
       viewRoster={viewRoster}
       isOwnRoster={isOwnRoster}
+      defaultTab={defaultTab}
     />
   );
 }

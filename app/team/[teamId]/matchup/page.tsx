@@ -912,7 +912,7 @@ function FieldHero({ matchup, teamId, leagueId }: { matchup: ActiveMatchup; team
 
   // Score display: upcoming → projected FP, setup → "—", active → points earned
   const myScoreDisplay = showDash ? "—" : isUpcoming ? matchup.myProjected.toFixed(1) : matchup.myTeam.score.toFixed(1);
-  const scoreLabel = showDash ? "No games yet" : isUpcoming ? "Projected FP" : "Points earned";
+  const scoreLabel = showDash ? "Games starting soon" : isUpcoming ? "Projected FP" : "Points earned";
   const recordColor = wins > losses ? "#a78bfa" : losses > wins ? "#c2776c" : "var(--muted)";
   const myScoreColor = showDash ? "var(--dim)" : recordColor;
 
@@ -955,7 +955,7 @@ function FieldHero({ matchup, teamId, leagueId }: { matchup: ActiveMatchup; team
         )}
         {isSetupPhase && (
           <span style={{ display: "inline-flex", alignItems: "center", gap: 8, fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "#e3c989", background: "rgba(214,169,78,0.12)", border: "1px solid rgba(214,169,78,0.32)", borderRadius: 30, padding: "6px 13px" }}>
-            No games yet
+            Games starting soon
           </span>
         )}
         {!isUpcoming && !isSetupPhase && <LiveScoreRefresh />}
@@ -1105,7 +1105,7 @@ function DuelHero({
   // Score display: upcoming → projected FP, setup phase → "—", active → actual score
   const myScoreDisplay = showDash ? "—" : isUpcoming ? matchup.myProjected.toFixed(1) : matchup.myTeam.score.toFixed(1);
   const oppScoreDisplay = showDash ? "—" : isUpcoming ? matchup.opponentProjected.toFixed(1) : opponent.score.toFixed(1);
-  const scoreLabel = showDash ? "No games yet" : isUpcoming ? "Projected FP" : "Points earned";
+  const scoreLabel = showDash ? "Games starting soon" : isUpcoming ? "Projected FP" : "Points earned";
   const myScore = isUpcoming || showDash ? 0 : matchup.myTeam.score;
   const oppScore = isUpcoming || showDash ? 0 : opponent.score;
   const myScoreColor = showDash ? "var(--dim)" : getScoreColor(myScore, oppScore);
@@ -1158,7 +1158,7 @@ function DuelHero({
         )}
         {isSetupPhase && (
           <span style={{ display: "inline-flex", alignItems: "center", gap: 8, fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "#e3c989", background: "rgba(214,169,78,0.12)", border: "1px solid rgba(214,169,78,0.32)", borderRadius: 30, padding: "6px 13px" }}>
-            No games yet
+            Games starting soon
           </span>
         )}
         {!isUpcoming && !isSetupPhase && <LiveScoreRefresh />}
@@ -1262,10 +1262,13 @@ function DuelHero({
 
       {/* Win probability bar */}
       <div style={{ position: "relative", padding: "0 30px 24px" }}>
+        <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#6f788e", textAlign: "center", marginBottom: 10 }}>
+          Win Probability
+        </div>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-          <span style={{ fontSize: 12, fontWeight: 700, color: "#c9b6ff", fontVariantNumeric: "tabular-nums" }}>{winPct}% win probability</span>
+          <span style={{ fontSize: 12, fontWeight: 700, color: "#c9b6ff", fontVariantNumeric: "tabular-nums" }}>{winPct}% — You</span>
           <span style={{ fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase", color: "#6f788e" }}>Projected · {marginLabel}</span>
-          <span style={{ fontSize: 12, fontWeight: 700, color: "#9aa3bd", fontVariantNumeric: "tabular-nums" }}>{oppPct}%</span>
+          <span style={{ fontSize: 12, fontWeight: 700, color: "#9aa3bd", fontVariantNumeric: "tabular-nums" }}>Them — {oppPct}%</span>
         </div>
         <div style={{ height: 9, borderRadius: 6, overflow: "hidden", background: "rgba(150,160,200,0.12)" }}>
           <div className="win-prob-bar" style={{ height: "100%", width: `${winPct}%`, background: "linear-gradient(90deg, #a78bfa, #7c3aed)" }} />
