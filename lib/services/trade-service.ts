@@ -587,6 +587,7 @@ export async function executeTrade(
 /**
  * Marks all PROPOSED trades in a league as EXPIRED if they are older than
  * `expiryHours` hours. Safe to call on a cron or before listing trades.
+ * Sends notifications to proposers about expired trades.
  */
 export async function processExpiredTrades(
   leagueId: string,
@@ -596,17 +597,41 @@ export async function processExpiredTrades(
   const EXPIRY_HOURS = 72; // 3 days default for proposal expiry
   const cutoff = new Date(nowMs - EXPIRY_HOURS * 60 * 60 * 1000);
 
-  await prisma.trade.updateMany({
+  const expired = await prisma.trade.findMany({
     where: {
       leagueId,
       status: "PROPOSED",
       createdAt: { lt: cutoff },
     },
-    data: {
-      status: "EXPIRED",
-      resolvedReason: "Trade expired after 72 hours",
-    },
+    select: { id: true, proposingTeamId: true },
   });
+
+  if (expired.length > 0) {
+    await prisma.trade.updateMany({
+      where: {
+        leagueId,
+        status: "PROPOSED",
+        createdAt: { lt: cutoff },
+      },
+      data: {
+        status: "EXPIRED",
+        resolvedReason: "Trade expired after 72 hours",
+      },
+    });
+
+    // Notify proposers of expired trades
+    for (const trade of expired) {
+      const ownerId = await getTeamOwnerId(trade.proposingTeamId, prisma);
+      if (ownerId) {
+        void createNotification(ownerId, "TRADE_REJECTED", { tradeId: trade.id }, prisma, leagueId, {
+          title: "Trade expired",
+          body: "Your trade proposal was not accepted within 72 hours and has expired.",
+          teamId: trade.proposingTeamId,
+          actionUrl: `/league/${leagueId}/trades`,
+        }).catch(() => {});
+      }
+    }
+  }
 }
 
 // ── Queries ───────────────────────────────────────────────────────────────────

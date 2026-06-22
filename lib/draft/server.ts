@@ -50,6 +50,7 @@ class DraftRoom {
     const isFlagged = this.state.autoFlaggedTeams.has(currentTeamSlot.fantasyTeamId);
     const timerSecs = isFlagged ? this.timerConfig.autoSecs : this.timerConfig.baseSecs;
     const expiresAt = Date.now() + timerSecs * 1000;
+    this.state.expiresAt = expiresAt;
     this.scheduleTimer(expiresAt);
   }
 

@@ -411,6 +411,9 @@ export default function RosterManager({
           }}>
             <span style={{ fontWeight: 600 }}>💡 Free agents add immediately.</span> They skip the waiver review period and go straight to your roster (subject to lock rules).
           </div>
+          <p style={{ fontSize: "0.7rem", color: "var(--text-muted, #6b7280)", margin: 0 }}>
+            GP = Games Played · G = Goals · A = Assists · PTS = Points · PPP = Power Play Points · SOG = Shots on Goal · HIT = Hits · BLK = Blocks · FP = Fantasy Points
+          </p>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
             <input
               type="text"

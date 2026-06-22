@@ -4,6 +4,7 @@ import { scoreStatLine } from "@/lib/scoring";
 import type { ScoringSettings } from "@/lib/scoring";
 import { parseScoringSettings } from "@/lib/scoring/settings";
 import { getDevNowFromRequest } from "@/lib/devTime";
+import { getReplayNow } from "@/lib/replayTime";
 import type { Position } from "@prisma/client";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
@@ -39,7 +40,7 @@ export async function GET(
 
     const league = await prisma.fantasyLeague.findUnique({
       where: { id: leagueId },
-      select: { season: true, scoringSettings: true },
+      select: { season: true, scoringSettings: true, isReplay: true, replayCurrentDate: true },
     });
 
     if (!league) return NextResponse.json({ error: "League not found" }, { status: 404 });
@@ -66,7 +67,11 @@ export async function GET(
     });
 
     // Fetch recent stat lines for projection (last 90 days)
-    const nowMs = getDevNowFromRequest(req);
+    const devNowMs = getDevNowFromRequest(req);
+    const nowMs = getReplayNow(
+      { isReplay: league.isReplay ?? false, replayCurrentDate: league.replayCurrentDate },
+      devNowMs
+    );
     const ninetyDaysAgo = new Date(nowMs - 90 * 24 * 60 * 60 * 1000);
     const statLines = await prisma.statLine.findMany({
       where: {

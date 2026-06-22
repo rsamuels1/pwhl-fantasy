@@ -143,8 +143,11 @@ export default async function StandingsPage({ params }: { params: { leagueId: st
             </span>
           )}
         </div>
-        <p style={{ margin: "0 0 16px", fontSize: 12, color: "#475569" }}>
+        <p style={{ margin: "0 0 8px", fontSize: 12, color: "#475569" }}>
           Win matchup +2 VP · 1st place weekly score +2 VP · 2nd place score +1 VP
+        </p>
+        <p style={{ margin: "0 0 16px", fontSize: "0.7rem", color: "var(--text-muted, #6b7280)" }}>
+          VP = Victory Points · MTCH VP = points for winning your weekly matchup · RNK VP = bonus for top-3 FP finish · PF = total fantasy points scored
         </p>
 
         {!hasResults ? (

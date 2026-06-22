@@ -995,6 +995,18 @@ function FieldHero({ matchup, teamId, leagueId }: { matchup: ActiveMatchup; team
           </div>
         </div>
 
+        {/* FP/VP bridging note */}
+        <p style={{ fontSize: "0.75rem", color: "var(--text-muted, #6b7280)", textAlign: "center", margin: "0 0 12px" }}>
+          Fantasy points (FP) decide who wins the week. Winning earns Victory Points (VP) in the standings.
+        </p>
+
+        {/* W-L vs field explanation (active state, non-setup, when games played) */}
+        {!isUpcoming && !isSetupPhase && (wins > 0 || losses > 0) && (
+          <p style={{ fontSize: "0.75rem", color: "var(--text-muted, #6b7280)", textAlign: "center", margin: "0 0 12px" }}>
+            You beat {wins} team{wins !== 1 ? "s'" : "'s"} score{wins !== 1 ? "s" : ""} and lost to {losses} this week. Most points wins.
+          </p>
+        )}
+
         {/* Leading scorer chip (active state only) */}
         {topScorer && (
           <div style={{ display: "flex", alignItems: "center", gap: 9, background: "rgba(150,160,200,0.05)", border: "1px solid rgba(150,160,200,0.12)", borderRadius: 10, padding: "8px 12px", marginBottom: 20 }}>
@@ -1258,6 +1270,10 @@ function DuelHero({
         <div style={{ height: 9, borderRadius: 6, overflow: "hidden", background: "rgba(150,160,200,0.12)" }}>
           <div className="win-prob-bar" style={{ height: "100%", width: `${winPct}%`, background: "linear-gradient(90deg, #a78bfa, #7c3aed)" }} />
         </div>
+        {/* FP/VP bridging note */}
+        <p style={{ fontSize: "0.75rem", color: "var(--text-muted, #6b7280)", textAlign: "center", margin: "12px 0 0" }}>
+          Fantasy points (FP) decide who wins the week. Winning earns Victory Points (VP) in the standings.
+        </p>
       </div>
 
       {/* Footer CTA */}
@@ -1293,7 +1309,7 @@ function DuelHero({
 // ── RosterTable ────────────────────────────────────────────────────────────────
 
 const SLOT_LABELS: Record<string, string> = {
-  FORWARD: "F", DEFENSE: "D", GOALIE: "G", UTIL: "UTIL", BENCH: "BN", IR: "IR",
+  FORWARD: "F", DEFENSE: "D", GOALIE: "G", UTIL: "Flex", BENCH: "BN", IR: "IR",
 };
 const POS_COLORS: Record<string, string> = {
   FORWARD: "#60a5fa", DEFENSE: "#5fa98c", GOALIE: "#f59e0b",

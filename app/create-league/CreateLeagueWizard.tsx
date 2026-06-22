@@ -33,6 +33,7 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
   const [createdLeagueId, setCreatedLeagueId] = useState<string | null>(null);
   const [createdTeamId, setCreatedTeamId] = useState<string | null>(null);
   const [vpOpen, setVpOpen] = useState(false);
+  const [showScoring, setShowScoring] = useState(false);
 
   // Mark onboarding seen on mount (idempotent)
   useEffect(() => {
@@ -397,7 +398,7 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
               </div>
 
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                <RuleRow icon="👥" label="Roster" value="3 F · 2 D · 1 UTIL (any skater) · 1 G · 6 Bench = 13 slots, all drafted" />
+                <RuleRow icon="👥" label="Roster" value="3 F · 2 D · 1 Flex (any skater) · 1 G · 6 Bench = 13 slots, all drafted" />
                 <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
                   <RuleRow icon="📊" label="Standings" value="Victory Points (VP) — win your matchup AND score more than anyone else" />
                   <button
@@ -426,19 +427,33 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
                     </div>
                   )}
                 </div>
-                <div style={{
-                  padding: "12px 14px", borderRadius: 12,
-                  background: "rgba(255,255,255,0.03)",
-                  border: "1px solid rgba(148,163,184,0.08)",
-                }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 8 }}>
-                    Scoring
-                  </div>
-                  <div style={{ fontSize: 13, color: "#e2e8f0", lineHeight: 1.6 }}>
-                    <strong>Skaters:</strong> Goal = 2 pts, Assist = 1.5 pts, Power Play = +0.5 pts, SOG = 0.5 pts, Hit = 0.25 pts, Block = 0.5 pts
-                    <br/>
-                    <strong>Goalies:</strong> Win = 5 pts, Shutout = 3 pts, Save = 0.25 pts, Goal Against = -1 pt
-                  </div>
+                <div>
+                  <p style={{ fontSize: "0.875rem", marginBottom: "0.5rem", color: "#94a3b8" }}>
+                    Goals and assists score the most — you don&apos;t need to memorize this.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setShowScoring((s) => !s)}
+                    style={{ fontSize: "0.8rem", color: "var(--accent, #6366f1)", background: "none", border: "none", cursor: "pointer", padding: 0, marginBottom: "0.5rem" }}
+                  >
+                    {showScoring ? "▴ Hide scoring details" : "▾ See full scoring breakdown"}
+                  </button>
+                  {showScoring && (
+                    <div style={{
+                      padding: "12px 14px", borderRadius: 12,
+                      background: "rgba(255,255,255,0.03)",
+                      border: "1px solid rgba(148,163,184,0.08)",
+                    }}>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 8 }}>
+                        Scoring
+                      </div>
+                      <div style={{ fontSize: 13, color: "#e2e8f0", lineHeight: 1.6 }}>
+                        <strong>Skaters:</strong> Goal = 2 pts, Assist = 1.5 pts, Power Play = +0.5 pts, SOG = 0.5 pts, Hit = 0.25 pts, Block = 0.5 pts
+                        <br/>
+                        <strong>Goalies:</strong> Win = 5 pts, Shutout = 3 pts, Save = 0.25 pts, Goal Against = -1 pt
+                      </div>
+                    </div>
+                  )}
                 </div>
                 <RuleRow icon="🏒" label="Playoffs" value="Top 4 teams, single-elimination, no byes" />
                 <RuleRow icon="📅" label="Season" value={`2026-27 live PWHL season · ${maxTeams} teams`} />

@@ -23,15 +23,15 @@ interface Props {
 }
 
 const STATUS_LABELS: Record<string, string> = {
-  PROPOSED: "Awaiting response",
-  COUNTERED: "Countered",
-  ACCEPTED: "Accepted",
-  PENDING_REVIEW: "In review",
-  EXECUTED: "Executed",
-  REVERSED: "Vetoed",
-  REJECTED: "Rejected",
+  PROPOSED: "Waiting for response",
+  COUNTERED: "Counter-offer sent — awaiting your response",
+  ACCEPTED: "Accepted — pending review",
+  PENDING_REVIEW: "Under commissioner review",
+  EXECUTED: "Completed",
+  REVERSED: "Reversed by commissioner",
+  REJECTED: "Declined",
   CANCELLED: "Cancelled",
-  EXPIRED: "Expired",
+  EXPIRED: "Expired (no response in time)",
 };
 
 const STATUS_COLORS: Record<string, string> = {
@@ -264,6 +264,7 @@ export default function TradeCenter({
   );
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [tradePrimerOpen, setTradePrimerOpen] = useState(false);
   const router = useRouter();
 
   async function handleAction(tradeId: string, action: string) {
@@ -325,6 +326,26 @@ export default function TradeCenter({
           >
             Propose Trade →
           </Link>
+        )}
+      </div>
+
+      {/* How trades work primer */}
+      <div style={{ marginBottom: 16 }}>
+        <button
+          type="button"
+          onClick={() => setTradePrimerOpen((v) => !v)}
+          style={{ fontSize: 13, color: "var(--accent-strong, #a5b4fc)", background: "none", border: "none", cursor: "pointer", padding: 0 }}
+        >
+          {tradePrimerOpen ? "▴ How do trades work?" : "How do trades work? ▾"}
+        </button>
+        {tradePrimerOpen && (
+          <div style={{
+            marginTop: 8, padding: "12px 16px", borderRadius: 12,
+            background: "rgba(99,102,241,0.06)", border: "1px solid rgba(99,102,241,0.18)",
+            fontSize: 13, color: "#94a3b8", lineHeight: 1.7,
+          }}>
+            <strong style={{ color: "#e2e8f0" }}>New to trading?</strong> You can offer players from your roster in exchange for players on another team&apos;s roster. Both sides must agree. The commissioner may review trades before they take effect.
+          </div>
         )}
       </div>
 

@@ -92,6 +92,18 @@ export default async function PlayoffsPage({
         </span>
       </div>
 
+      {/* Playoffs in progress — format explainer */}
+      {league.playoffStatus === "IN_PROGRESS" && (
+        <div style={{
+          padding: "14px 18px", borderRadius: 14, marginBottom: 20,
+          background: "rgba(99,102,241,0.08)", border: "1px solid rgba(99,102,241,0.22)",
+          fontSize: 14, color: "#c7d2e0", lineHeight: 1.6,
+        }}>
+          <strong style={{ color: "#a5b4fc" }}>Playoffs are here!</strong>{" "}
+          The format changes to head-to-head — your team now faces one opponent each round. Highest score advances.
+        </div>
+      )}
+
       {/* ── Regular season: Playoff Race view ────────────────────────────────── */}
       {!hasPlayoffs && (
         <>

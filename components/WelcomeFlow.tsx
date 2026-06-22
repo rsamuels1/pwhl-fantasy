@@ -65,18 +65,17 @@ export default function WelcomeFlow() {
         </div>
       </div>
 
-      {/* CTAs */}
+      {/* CTAs — navigate without dismissing; only the explicit skip button below dismisses */}
       <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center" }}>
-        <Link href="/create-league" className="button-primary" onClick={dismiss}>
+        <Link href="/create-league" className="button-primary">
           Start a league
         </Link>
-        <Link href="/join-league" className="button-secondary" onClick={dismiss}>
+        <Link href="/join-league" className="button-secondary">
           Have an invite? Join
         </Link>
         <Link
           href="/create-league?replay=1"
           style={{ fontSize: 13, color: "#475569", textDecoration: "none", marginLeft: 4 }}
-          onClick={dismiss}
         >
           Just exploring? Try a replay league
         </Link>

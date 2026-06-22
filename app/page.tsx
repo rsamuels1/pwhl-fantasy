@@ -298,7 +298,7 @@ const SVG = ({ children }: { children: React.ReactNode }) => (
 
 const FEATURES = [
   {
-    title: "Live snake & auction drafts",
+    title: "Live draft room with a pick clock",
     body:  "Run a real draft room with a clock, queue, and player board. Build your foundation pick by pick.",
     Icon: () => <SVG><path d="M12 2v6" /><path d="M12 8 8 5" /><path d="M12 8l4-3" /><rect x="4" y="8" width="16" height="13" rx="2" /><path d="M9 13h6" /></SVG>,
   },

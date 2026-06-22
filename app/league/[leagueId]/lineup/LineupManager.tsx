@@ -68,7 +68,7 @@ interface Props {
 const ACTIVE_SLOTS: SlotType[] = ["FORWARD", "DEFENSE", "GOALIE", "UTIL"];
 
 const SLOT_LABELS: Record<SlotType, string> = {
-  FORWARD: "F", DEFENSE: "D", GOALIE: "G", UTIL: "UTIL", BENCH: "BN", IR: "IR",
+  FORWARD: "F", DEFENSE: "D", GOALIE: "G", UTIL: "Flex", BENCH: "BN", IR: "IR",
 };
 
 const POS_COLORS: Record<string, string> = {
@@ -759,7 +759,7 @@ function PlayerInfo({
         {player.nextGameStartsAt && !player.lockedAt && (
           <LockCountdown startsAt={player.nextGameStartsAt} />
         )}
-        {player.lockedAt && (
+        {player.lockedAt && ACTIVE_SLOTS.includes(player.slot) && (
           <span title={`Locked — game started ${new Date(player.lockedAt).toLocaleTimeString()}`} style={{ fontSize: 11, flexShrink: 0 }}>🔒</span>
         )}
         {player.hasPlayedThisPeriod && ACTIVE_SLOTS.includes(player.slot) && !player.lockedAt && (

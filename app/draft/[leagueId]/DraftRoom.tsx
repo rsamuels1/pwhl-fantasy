@@ -228,6 +228,9 @@ function PickBoard({
   return (
     <div style={styles.card}>
       <div style={styles.cardTitle}><span className="section-accent" />Pick Board</div>
+      <div style={{ fontSize: 11, color: "var(--muted)", marginBottom: 8 }}>
+        Pick order reverses each round (snake draft) — so every team gets an early pick.
+      </div>
       <div style={{ overflowX: "auto" }}>
         <table style={styles.table}>
           <tbody>
@@ -384,7 +387,7 @@ const SLOT_LABELS: Record<string, string> = {
   forward: "Forward",
   defense: "Defense",
   goalie: "Goalie",
-  util: "Util",
+  util: "Flex (any skater)",
   bench: "Bench",
   ir: "IR",
 };
@@ -437,6 +440,11 @@ function TeamSpreadPanel({
   return (
     <div style={styles.card}>
       <div style={styles.cardTitle}><span className="section-accent" />Team Spread</div>
+      <div style={{ fontSize: 11, color: "var(--muted)", marginBottom: 6, lineHeight: 1.5 }}>
+        High concentration from one team increases injury/absence risk.
+        <br />
+        <span style={{ color: "var(--green)" }}>Green</span> = 1–2 players (fine) · <span style={{ color: "#f59e0b" }}>Amber</span> = 3 players (some risk) · <span style={{ color: "var(--clock-warn)" }}>Red</span> = 4+ players (high risk)
+      </div>
       {rows.length === 0 ? (
         <div style={{ fontSize: 12, color: "var(--muted)" }}>No picks yet</div>
       ) : (
@@ -588,6 +596,7 @@ function PlayerPanel({
   const [activeTab, setActiveTab] = useState<"available" | "queue">("available");
   const [posFilter, setPosFilter] = useState<"" | "FORWARD" | "DEFENSE" | "GOALIE">("");
   const [sortKey, setSortKey] = useState<SortKey>("points");
+  const [glossaryOpen, setGlossaryOpen] = useState(false);
   const [statsMap, setStatsMap] = useState<Record<string, PlayerStats>>(() =>
     Object.fromEntries(initialStats.map((s) => [s.id, s]))
   );
@@ -692,7 +701,7 @@ function PlayerPanel({
     <div style={{ display: "flex", flexDirection: "column", gap: 8, height: "100%" }}>
       {isMyTurn && (
         <div style={styles.yourPickBanner}>
-          Your pick — select a player or your next queued player will be auto-drafted
+          You&apos;re on the clock! Pick a player below. If the timer runs out, we&apos;ll auto-pick the best player still available.
         </div>
       )}
 
@@ -738,6 +747,30 @@ function PlayerPanel({
                 Stats: {statSeason} season{loadingStats ? " · loading…" : ""}
               </div>
             )}
+
+            {/* Stat glossary toggle */}
+            <div style={{ marginBottom: 6 }}>
+              <button
+                type="button"
+                onClick={() => setGlossaryOpen((v) => !v)}
+                style={{ fontSize: 11, color: "var(--accent-strong, #a78bfa)", background: "none", border: "none", cursor: "pointer", padding: 0 }}
+              >
+                {glossaryOpen ? "▴ Hide" : "What do these stats mean? ▾"}
+              </button>
+              {glossaryOpen && (
+                <div style={{
+                  marginTop: 6, padding: "8px 12px", borderRadius: 8,
+                  background: "rgba(150,160,200,0.06)", border: "1px solid rgba(150,160,200,0.12)",
+                  fontSize: 11, color: "var(--muted)", lineHeight: 1.7,
+                }}>
+                  <strong style={{ color: "var(--text)" }}>Skaters:</strong>{" "}
+                  G = Goals · A = Assists · PTS = Points · PPP = Power Play Points · SOG = Shots on Goal · HIT = Hits · BLK = Blocked Shots
+                  <br />
+                  <strong style={{ color: "var(--text)" }}>Goalies:</strong>{" "}
+                  W = Wins · SV = Saves · GA = Goals Against · SV% = Save % · SO = Shutouts
+                </div>
+              )}
+            </div>
 
             {rows.length === 0 ? (
               <p style={{ color: "var(--muted)", padding: "8px 0", fontSize: 12 }}>
