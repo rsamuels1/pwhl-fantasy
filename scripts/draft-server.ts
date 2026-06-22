@@ -10,5 +10,6 @@
 
 import { startDraftServer } from "../lib/draft/server";
 
-const port = Number(process.env.DRAFT_PORT ?? 8080);
+// DRAFT_PORT takes precedence; fall back to PORT (set by Render/Railway) then 8080
+const port = Number(process.env.DRAFT_PORT ?? process.env.PORT ?? 8080);
 startDraftServer(port);

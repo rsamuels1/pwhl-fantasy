@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: pwhl-draft-server
+    runtime: node
+    plan: starter          # $7/mo — never sleeps; required for persistent WebSocket connections
+    buildCommand: npm install
+    startCommand: npx tsx scripts/draft-server.ts
+    healthCheckPath: /health   # optional; remove if you don't add a /health endpoint
+    envVars:
+      - key: DATABASE_URL
+        sync: false            # set manually in Render dashboard (prod Neon connection string)
+      - key: NODE_ENV
+        value: production

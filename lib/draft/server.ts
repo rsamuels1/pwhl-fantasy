@@ -641,7 +641,15 @@ export function getRoom(leagueId: string): Promise<DraftRoom> {
 }
 
 export function startDraftServer(port = 8080) {
-  const wss = new WebSocketServer({ port });
+  // Wrap in an HTTP server so Render/Railway health checks work on GET /health.
+  // WebSocket upgrades are routed through the same server.
+  const http = require("http") as typeof import("http");
+  const httpServer = http.createServer((_req: import("http").IncomingMessage, res: import("http").ServerResponse) => {
+    res.writeHead(200, { "Content-Type": "text/plain" });
+    res.end("ok");
+  });
+
+  const wss = new WebSocketServer({ server: httpServer });
 
   wss.on("connection", (ws, req) => {
     const url = new URL(req.url ?? "", "http://localhost");
@@ -668,6 +676,8 @@ export function startDraftServer(port = 8080) {
     });
   });
 
-  console.log(`Draft websocket server listening on :${port}`);
+  httpServer.listen(port, () => {
+    console.log(`Draft websocket server listening on :${port}`);
+  });
   return wss;
 }
