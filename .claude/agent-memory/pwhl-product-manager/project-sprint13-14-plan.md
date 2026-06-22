@@ -1,18 +1,26 @@
 ---
 name: sprint13-14-plan
-description: Sprint 13 IN PROGRESS (14 items); Sprint 14 PLANNED (7 items incl. UX-045 rivalry celebration); emotional engagement story location confirmed
+description: Sprint 13 IN PROGRESS (3/14 shipped); Sprint 14 COMPLETE Jun 22 (11/12; UX-045 deferred post-launch)
 metadata:
   type: project
 ---
 
-Sprint 13 is IN PROGRESS as of Jun 21, 2026. 14 items: 6 P0 (BF-008, BF-009, OB-001–004) and 8 P1 (UX-046–048, OB-005–009). Sprint 14 is PLANNED with 7 items.
+Sprint 13 is IN PROGRESS as of Jun 22, 2026. 3/14 items shipped (BF-008, OB-001, OB-008 — via Sprint 15 batch commit 4b67b44). 11 items remain.
 
-**Why:** Roadmap audit Jun 21 found Sprint 13 still marked PLANNED; OB-001–009 were incorrectly assigned Sprint 12; ~20 features in backlog table were marked TODO when actually COMPLETE.
+Sprint 14 is COMPLETE as of Jun 22, 2026. 11/12 items shipped.
 
-**How to apply:** When reviewing Sprint 13 status, check BF-008/009 (P0 bugs) and OB-001–004 (P0 wizard fixes) first — these are the ship-blockers. Sprint 14 carries the emotional engagement work (UX-045).
+**What shipped in Sprint 14:**
+- 5 agent integration test findings: DRC-002, BF-010, BF-011, TR-002, TR-003
+- OB-010: wizard Replay progress bar — getDisplayStep/getDisplayTotal helpers, "Step N of 5" for Replay
+- UX-049: "Free Agents" direct link in TeamNav (?tab=freeAgents); RosterManager reads defaultTab from query param
+- UX-050: "Win Probability" heading + "You —"/"Them —" labels added above probability bar in DuelHero
+- UX-032: "+X pt edge" label in FieldHero (was "EDGE") — commit 972362d
+- OB-011: draft date picker helper text — commit 972362d
+- UX-033: setup-phase "NO GAMES YET" → "Games starting soon" in FieldHero + DuelHero variants
 
-**Emotional engagement story location:** `docs/01-roadmap/roadmap-features.md`, UX-045 "No Celebration Moment When a Rivalry Matchup Is Won" (Sprint 14, P2). Requires `RIVALRY_WIN` NotificationType enum extension + `npx prisma db push`. The structural fix (UX-031, surfacing rival callout in hero) shipped in Sprint 11a; the celebration notification is the unshipped follow-through.
+**UX-045 DEFERRED post-launch (Sprint 17 backlog item #1):**
+Rival win celebration moment. Requires `RIVALRY_WIN` NotificationType enum addition to `prisma/schema.prisma` — a schema migration that carries pre-launch risk. The story becomes more meaningful once users have played rivalry matchups. Full spec in roadmap-features.md UX-045.
 
-Sprint 14 items: OB-010 (wizard progress bar for replay, P1), UX-049 (free agents nav, P2), UX-050 (win prob labels, P2), OB-011 (draft date guidance, P2), UX-045 (rivalry win celebration, P2), UX-032 (EDGE jargon fix, P2), UX-033 (NO GAMES YET context, P2).
+**Why:** Schema migration risk pre-launch; UX-045 only fires after a rivalry win so beta users won't encounter it until week 2 at earliest; all other Sprint 14 items are copy/label/nav changes with zero schema impact.
 
-**Reclassification count from audit:** ~22 features marked DONE across all four roadmap files (previously TODO/Not Implemented/OPEN/PARTIAL): #1, #2, #3, #4, #5, #7, #8, #9, #10, #11, #13, #17, #24, #25, #26, #27, #28, #29, #30, #32, #34, #35, #36, #37 plus BF-003/004/005/006/007 and UX-024–031.
+**How to apply:** Sprint 17 backlog starts with UX-045 as item #1. Next ID after OB-011 is OB-012. Next UX-NNN is UX-051.

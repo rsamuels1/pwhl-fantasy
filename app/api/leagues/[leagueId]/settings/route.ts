@@ -34,6 +34,7 @@ export async function PUT(
     scoringSettings?: unknown;
     rosterSettings?: unknown;
     playoffSettings?: unknown;
+    isPublic?: boolean;
   };
 
   // Block scoring/roster changes after draft complete
@@ -119,6 +120,12 @@ export async function PUT(
     changedFields.push("rosterSettings");
   }
 
+  // Set isPublic (no validation needed — it's a plain boolean)
+  if (body.isPublic !== undefined) {
+    updateData.isPublic = Boolean(body.isPublic);
+    changedFields.push("isPublic");
+  }
+
   // Validate and set playoffSettings
   if (body.playoffSettings !== undefined) {
     const ps = body.playoffSettings as Record<string, unknown>;
@@ -170,6 +177,7 @@ export async function PUT(
       scoringSettings: updated.scoringSettings,
       rosterSettings: updated.rosterSettings,
       playoffSettings: updated.playoffSettings,
+      isPublic: updated.isPublic,
     },
   });
 }

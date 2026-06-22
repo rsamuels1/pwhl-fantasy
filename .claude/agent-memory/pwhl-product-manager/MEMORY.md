@@ -11,5 +11,6 @@
 - [Playoff System Audit](project-playoff-audit.md) — PLAYOFF-BUG-001 confirmed (bracket page ?? 6 not ?? 4); Q1 VP filter risk + Q2 bracket hydration risk; spec at docs/02-engineering/playoff-system-spec.md; must resolve before beta invites
 - [Beta Feedback Bugs](project-beta-feedback-bugs.md) — BF-001 false draft eviction (useDraftSocket 4001 path), BF-002 Week 1 badge mid-season (GMCommandCenter line 55); both P1 in Sprint 9 as of Jun 21, 2026
 - [Sprint 12 — Onboarding & First-Run UX](project-sprint12-onboarding.md) — 9 stories OB-001–009 from Pass 5 critique; 4 P0 (CTA routing, VP in wizard, step telegraphing, cancel safety); next OB-NNN is OB-012; next UX-NNN is UX-051
-- [Sprint 13/14 Plan](project-sprint13-14-plan.md) — Sprint 13 IN PROGRESS (14 items); Sprint 14 PLANNED (7 items incl. UX-045 rivalry celebration); emotional engagement story = UX-045 in roadmap-features.md
+- [Sprint 13/14 Plan](project-sprint13-14-plan.md) — Sprint 13 IN PROGRESS (3/14 shipped); Sprint 14 COMPLETE Jun 22 (11/12; UX-045 deferred — schema risk; Sprint 17 backlog #1)
 - [Sprint 15 — Visual Design System](project-sprint15-design-system.md) — 3/3 DS stories + BF-008/OB-001/OB-008 (Sprint 13 partial) all shipped Jun 22, 2026; Sprint 13 now 3/14
+- [Sprint 17 — Agent Test Run Fixes](project-sprint17-agent-test-fixes.md) — 9/9 items AG-001–AG-009 COMPLETE Jun 22; schema: FantasyLeague.isPublic; next story ID: AG-010
