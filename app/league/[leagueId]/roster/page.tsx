@@ -1,6 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
-import { requireAuth, requireLeagueMember } from "@/lib/auth";
+import { requireAuth, requireCommissioner } from "@/lib/auth";
 
 interface Props {
   params: Promise<{ leagueId: string }>;
@@ -19,7 +19,7 @@ function formatPlayer(player: {
 export default async function RosterPage({ params, searchParams }: Props) {
   const { leagueId } = await params;
   const user = await requireAuth(`/league/${leagueId}/roster`);
-  await requireLeagueMember(leagueId, user.id);
+  await requireCommissioner(leagueId, user.id);
 
   const { team: teamIdParam } = await searchParams;
 

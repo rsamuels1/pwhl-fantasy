@@ -12,7 +12,6 @@ import { getDevNow } from "@/lib/devTime";
 import { getReplayNow } from "@/lib/replayTime";
 import Link from "next/link";
 import AnnouncementForm from "@/components/AnnouncementForm";
-import { VpExplainer } from "@/components/VpExplainer";
 import WeekHighlights from "@/components/WeekHighlights";
 import type { Storyline } from "@/lib/services/storyline-service";
 
@@ -43,6 +42,11 @@ export default async function LeagueOverviewPage({
   // Draft in progress → draft room (only if user has a team in the league)
   if (league.draft?.status === "IN_PROGRESS" && myTeam) {
     redirect(`/draft/${leagueId}?team=${myTeam.id}`);
+  }
+
+  // League overview is commissioner-only. Non-commissioners live in My Franchise.
+  if (!isCommissioner) {
+    redirect(myTeam ? `/team/${myTeam.id}/matchup` : `/dashboard`);
   }
 
   const nowMs = getReplayNow(league, await getDevNow());
@@ -490,61 +494,19 @@ export default async function LeagueOverviewPage({
             </section>
           )}
 
-          {/* Pre-season / no results yet */}
+          {/* Pre-season / no results yet — commissioner sees admin link */}
           {!hasResults && league.status !== "IN_SEASON" && (
-            <>
-              {/* Manager draft prep guide — shown to non-commissioners in PRE_DRAFT */}
-              {league.status === "PRE_DRAFT" && !isCommissioner && myTeam && (
-                <section style={card}>
-                  {cardLabel("Get ready to draft", 14)}
-                  <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 16 }}>
-                    <DraftPrepItem done label="Joined league" detail={`You're in as ${myTeam.name}`} />
-                    <DraftPrepItem done={false} label="Learn how scoring works" detail="Victory Points: win your matchup AND be a top scorer each week.">
-                      <VpExplainer />
-                    </DraftPrepItem>
-                    <DraftPrepItem
-                      done={false}
-                      label="Build a draft queue"
-                      detail="Queue up players you want before the draft starts — you'll be on the clock!"
-                      linkHref={league.draft?.id ? `/draft/${leagueId}?team=${myTeam.id}` : undefined}
-                      linkLabel="Open draft room →"
-                    />
-                    {league.draftStartsAt && (() => {
-                      const ms = new Date(league.draftStartsAt).getTime() - nowMs;
-                      const days = Math.ceil(ms / 86_400_000);
-                      return ms > 0 ? (
-                        <DraftPrepItem
-                          done={false}
-                          label="Draft day is coming"
-                          detail={days <= 1 ? "Draft is today or tomorrow!" : `Draft in ${days} day${days === 1 ? "" : "s"} — make sure you're available`}
-                        />
-                      ) : null;
-                    })()}
-                  </div>
-
-                  {isCommissioner === false && (
-                    <p style={{ fontSize: 12, color: "#334155", margin: 0 }}>
-                      The commissioner will share the draft room link when it&apos;s time to pick.
-                    </p>
-                  )}
-                </section>
+            <section style={card}>
+              {cardLabel("Standings")}
+              <p style={{ color: "#475569", fontSize: 13, margin: "10px 0 0" }}>
+                Standings will appear once the season starts.
+              </p>
+              {league.status === "PRE_DRAFT" && (
+                <Link href={`/league/${leagueId}/admin`} style={{ ...ctaLink, marginTop: 14, display: "inline-block" }}>
+                  Go to admin panel →
+                </Link>
               )}
-
-              {/* Commissioner sees the admin panel checklist, not this */}
-              {(isCommissioner || !myTeam) && (
-                <section style={card}>
-                  {cardLabel("Standings")}
-                  <p style={{ color: "#475569", fontSize: 13, margin: "10px 0 0" }}>
-                    Standings will appear once the season starts.
-                  </p>
-                  {isCommissioner && league.status === "PRE_DRAFT" && (
-                    <Link href={`/league/${leagueId}/admin`} style={{ ...ctaLink, marginTop: 14, display: "inline-block" }}>
-                      Go to admin panel →
-                    </Link>
-                  )}
-                </section>
-              )}
-            </>
+            </section>
           )}
 
           {/* ── Week highlights ── */}
@@ -629,83 +591,6 @@ export default async function LeagueOverviewPage({
         {/* RIGHT: My matchup + lineup status + activity */}
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
 
-          {/* My matchup compact widget */}
-          {myTeam && (() => {
-            const myMatchups = thisWeekMatchups.filter(
-              (m) => m.homeTeamId === myTeam.id || m.awayTeamId === myTeam.id
-            );
-            const myScore = myMatchups.length > 0
-              ? (() => {
-                  const first = myMatchups[0];
-                  const scored = first.homeScore !== null;
-                  if (!scored) return null;
-                  return first.homeTeamId === myTeam.id ? first.homeScore : first.awayScore;
-                })()
-              : null;
-            const scoredCount = myMatchups.filter((m) => m.homeScore !== null).length;
-            const wins = myMatchups.filter((m) => {
-              if (m.homeScore === null) return false;
-              const mine = m.homeTeamId === myTeam.id ? m.homeScore : m.awayScore!;
-              const theirs = m.homeTeamId === myTeam.id ? m.awayScore! : m.homeScore;
-              return mine > theirs;
-            }).length;
-            const losses = myMatchups.filter((m) => {
-              if (m.homeScore === null) return false;
-              const mine = m.homeTeamId === myTeam.id ? m.homeScore : m.awayScore!;
-              const theirs = m.homeTeamId === myTeam.id ? m.awayScore! : m.homeScore;
-              return mine < theirs;
-            }).length;
-
-            const recordColor = wins > losses ? "#5fa98c" : losses > wins ? "#d18b7f" : "#aab2c8";
-            const winRate = scoredCount > 0 ? (wins / scoredCount) * 100 : 0;
-            return (
-              <section style={{
-                background: "linear-gradient(135deg,#1b1346,#121829 70%)",
-                border: "1px solid rgba(124,58,237,0.30)",
-                borderRadius: 16, padding: 20,
-              }}>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-                  {sideLabel("My matchup", 0)}
-                  {currentWeek !== null && (
-                    <span style={{ fontSize: 11, color: "var(--faint)" }}>Wk {currentWeek}</span>
-                  )}
-                </div>
-                <div style={{ display: "flex", alignItems: "baseline", gap: 12, marginBottom: 4 }}>
-                  {myScore !== null ? (
-                    <span className="font-stats" style={{ fontSize: 40, fontWeight: 700, lineHeight: 1, color: "#f3f5fb" }}>
-                      {myScore.toFixed(1)}
-                    </span>
-                  ) : (
-                    <span style={{ fontSize: 20, fontWeight: 700, color: "var(--faint)" }}>—</span>
-                  )}
-                  {scoredCount > 0 && (
-                    <span style={{ fontSize: 13, color: recordColor, fontWeight: 600 }}>
-                      {wins}–{losses} vs field
-                    </span>
-                  )}
-                  {scoredCount === 0 && myMatchups.length > 0 && (
-                    <span style={{ fontSize: 13, color: "var(--muted)" }}>
-                      {currentWeek !== null
-                        ? new Date(myMatchups[0].startsAt).getTime() > nowMs ? "Upcoming" : "In progress"
-                        : ""}
-                    </span>
-                  )}
-                </div>
-                {scoredCount > 0 && (
-                  <div style={{ height: 6, borderRadius: 3, background: "rgba(150,160,200,0.10)", overflow: "hidden", margin: "10px 0" }}>
-                    <div style={{ height: "100%", width: `${winRate}%`, background: "linear-gradient(90deg,#7c3aed,#a78bfa)", borderRadius: 3 }} />
-                  </div>
-                )}
-                <Link href={`/team/${myTeam.id}/matchup`} style={{
-                  display: "block", textAlign: "center", padding: "10px 0",
-                  background: "linear-gradient(135deg,#7c3aed,#6d28d9)", color: "#fff",
-                  borderRadius: 10, fontSize: 13, fontWeight: 700, textDecoration: "none", marginTop: 12,
-                }}>
-                  My Matchup →
-                </Link>
-              </section>
-            );
-          })()}
 
           {/* Team lineup status widget */}
           {league.status === "IN_SEASON" && league.teams.length > 0 && (
@@ -840,54 +725,6 @@ function LeagueLeaderRow({ player, rank, variant }: { player: LeaguePerformerRow
       <span style={{ fontSize: 13, fontWeight: 700, color: fpColor, fontVariantNumeric: "tabular-nums", flexShrink: 0 }}>
         {player.points.toFixed(1)}
       </span>
-    </div>
-  );
-}
-
-function DraftPrepItem({
-  done,
-  label,
-  detail,
-  linkHref,
-  linkLabel,
-  children,
-}: {
-  done: boolean;
-  label: string;
-  detail: string;
-  linkHref?: string;
-  linkLabel?: string;
-  children?: React.ReactNode;
-}) {
-  return (
-    <div style={{
-      display: "flex", alignItems: "flex-start", gap: 10,
-      padding: "10px 12px", borderRadius: 10,
-      background: done ? "rgba(95,169,140,0.04)" : "rgba(255,255,255,0.02)",
-      border: `1px solid ${done ? "rgba(95,169,140,0.15)" : "rgba(148,163,184,0.08)"}`,
-    }}>
-      <div style={{
-        width: 20, height: 20, borderRadius: "50%", flexShrink: 0,
-        display: "flex", alignItems: "center", justifyContent: "center",
-        fontSize: 10, fontWeight: 700, marginTop: 1,
-        background: done ? "rgba(95,169,140,0.15)" : "rgba(99,102,241,0.1)",
-        color: done ? "#5fa98c" : "#818cf8",
-        border: `1.5px solid ${done ? "#5fa98c" : "rgba(99,102,241,0.3)"}`,
-      }}>
-        {done ? "✓" : "·"}
-      </div>
-      <div style={{ flex: 1 }}>
-        <div style={{ fontSize: 13, fontWeight: 600, color: done ? "#64748b" : "#e2e8f0", textDecoration: done ? "line-through" : "none" }}>
-          {label}
-          {linkHref && linkLabel && (
-            <Link href={linkHref} style={{ marginLeft: 8, fontSize: 12, color: "#a5b4fc", fontWeight: 400, textDecoration: "none" }}>
-              {linkLabel}
-            </Link>
-          )}
-        </div>
-        <div style={{ fontSize: 12, color: "#475569", marginTop: 2 }}>{detail}</div>
-        {children && <div style={{ marginTop: 8 }}>{children}</div>}
-      </div>
     </div>
   );
 }

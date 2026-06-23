@@ -47,7 +47,6 @@ export default async function LeagueLayout({ children, params }: LeagueLayoutPro
     { label: "Schedule", href: `${basePath}/matchups` },
     { label: "Playoffs", href: `${basePath}/bracket` },
     { label: "Rosters", href: `${basePath}/roster` },
-    { label: "Trades", href: `${basePath}/trades` },
     { label: "Transactions", href: `${basePath}/transactions` },
     ...(league?.isReplay && isCommissioner ? [{ label: "Sim →", href: `${basePath}/sim` }] : []),
   ];
