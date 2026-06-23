@@ -4825,7 +4825,7 @@ Priority: P2
 
 Effort: M
 
-Status: 🔵 PLANNED
+Status: ✅ SHIPPED (Sprint 23)
 
 Goal: Give each manager a subtle, self-chosen accent color so opponents are recognizable at a glance across matchup, standings, and activity surfaces — without adding visual noise.
 
@@ -5043,7 +5043,7 @@ Priority: P1
 
 Effort: S
 
-Status: 🔵 PLANNED
+Status: ✅ SHIPPED (Sprint 23)
 
 Goal: Contending teams see exactly what it takes to clinch a playoff berth — N wins or M opponent losses. Makes standings feel like a real playoff race.
 
@@ -5067,7 +5067,7 @@ Priority: P1
 
 Effort: S
 
-Status: 🔵 PLANNED
+Status: ✅ SHIPPED (Sprint 23)
 
 Goal: When a team clinches a playoff berth after a week scores, they receive a one-time celebratory moment — a notification and a dismissible banner on their matchup page.
 
@@ -5091,7 +5091,7 @@ Priority: P2
 
 Effort: S
 
-Status: 🔵 PLANNED
+Status: ✅ SHIPPED (Sprint 23)
 
 Goal: A "If the season ended today" section on the standings page groups teams into Playoff / Bubble / Eliminated with a simple visual that makes standings feel urgent.
 
@@ -5115,7 +5115,7 @@ Priority: P2
 
 Effort: M
 
-Status: 🔵 PLANNED
+Status: ✅ SHIPPED (Sprint 23)
 
 Goal: Major upsets are remembered and surfaced as league lore — the game where the 10% underdog won, the week a dominant team got knocked off. Makes unlikely victories feel legendary.
 
@@ -5439,7 +5439,7 @@ Priority: P1
 
 Effort: M
 
-Status: 🔵 PLANNED
+Status: ✅ SHIPPED (Sprint 23)
 
 Goal: The first time a new manager finishes a scoring week — especially a loss or a low "vs the field" finish — they get a one-time, gentle explainer of what just happened, why, and what they can control, so the result feels understandable rather than arbitrary.
 
@@ -5487,7 +5487,7 @@ Priority: P2
 
 Effort: S
 
-Status: 🔵 PLANNED
+Status: ✅ SHIPPED (Sprint 23)
 
 Goal: The delight system celebrates the modest, controllable accomplishments that actually retain new fans — setting a full lineup, making a first add, surviving to a new week — not only the championships and records most newcomers won't reach for months.
 

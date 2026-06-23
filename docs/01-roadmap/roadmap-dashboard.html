@@ -458,10 +458,10 @@
           <span class="status planned">PLANNED</span>
         </div>
 
-        <div class="sprint-card" onclick="switchTab('sprints'); setTimeout(() => document.getElementById('sprint-23').scrollIntoView({behavior: 'smooth'}), 100)">
+        <div class="sprint-card complete" onclick="switchTab('sprints'); setTimeout(() => document.getElementById('sprint-23').scrollIntoView({behavior: 'smooth'}), 100)">
           <div class="name">Sprint 23</div>
-          <div class="progress">7 stories · Living League: The Race</div>
-          <span class="status planned">PLANNED</span>
+          <div class="progress">7/7 stories · Living League: The Race</div>
+          <span class="status complete">✅ DONE</span>
         </div>
 
         <div class="sprint-card" onclick="switchTab('sprints'); setTimeout(() => document.getElementById('sprint-24').scrollIntoView({behavior: 'smooth'}), 100)">
@@ -1509,24 +1509,24 @@
         <div class="exit-criteria"><strong>Exit criteria:</strong> globals.css :root fully replaced with Northern Ice tokens; zero hardcoded hex values in app/**+components/** from color-replacement-map.md; VpExplainer popover no longer clips on mobile; league overview and team matchup match .dc.html reference files; MomentumStrip renders in active-period matchups; trend arrows render on matchup hero with correct direction + color; settings editor shows two-column rule-sheet table; emotional-design-principles.md exists in docs/branding/; /league-rules returns 200; invite landing shows plain-language primer; wizard Rules step has inline PPP + UTIL definitions; all tests pass; tsc clean.</div>
       </div>
 
-      <div id="sprint-23" class="card">
+      <div id="sprint-23" class="card complete">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
           <div>
             <div style="font-weight: 700; font-size: 1rem;">Sprint 23 · "Living League: The Race"</div>
-            <div style="font-size: 0.8rem; color: #888;">Milestone 2 core · PLANNED · 7 stories · schema migration required (RD-013 accentColor)</div>
+            <div style="font-size: 0.8rem; color: #888;">Milestone 2 core · COMPLETE · 7/7 stories · schema migration: FantasyTeam.accentColor String?</div>
           </div>
-          <span class="status planned">PLANNED</span>
+          <span class="status complete">✅ DONE</span>
         </div>
         <div>
-          <div class="task-row"><span class="task-check" style="color:#f59e0b">⏳</span><span>RD-013 (P2, M) — Team Identity Colors: manager accent color picker (6–8 AA-compliant swatches); renders as avatar ring, team-name tint, activity-feed dot; opponent color in DuelHero; FantasyTeam.accentColor schema field</span></div>
-          <div class="task-row"><span class="task-check" style="color:#f59e0b">⏳</span><span>LL-004 (P1, S) — Magic Number: extend computeRace() → magicNumber field; "Magic: N" chip on standings page for contending teams</span></div>
-          <div class="task-row"><span class="task-check" style="color:#f59e0b">⏳</span><span>LL-005 (P1, S) — Playoff Clinch Celebration: detect newly-clinched teams in advanceSeason(); notification + dismissible banner on matchup page</span></div>
-          <div class="task-row"><span class="task-check" style="color:#f59e0b">⏳</span><span>LL-007 (P2, S) — Bubble Watch: BubbleWatch.tsx on standings page; 3 groupings (In / Bubble / Eliminated) from computeRace(); late-season "Playoff Push" heading</span></div>
-          <div class="task-row"><span class="task-check" style="color:#f59e0b">⏳</span><span>LL-008 (P2, M) — Upset Tracker: upset-service.ts; top upsets this season + all-time; UpsetCard.tsx on league overview sidebar</span></div>
-          <div class="task-row"><span class="task-check" style="color:#f59e0b">⏳</span><span>LL-019 (P1, M) — First-Loss / First-Week Result Explainer: one-time dismissible card after first scored period; plain-language result + VTF explainer + top contributor named; localStorage-gated</span></div>
-          <div class="task-row"><span class="task-check" style="color:#f59e0b">⏳</span><span>LL-021 (P2, S) — Small-Win Encouragement Moments: micro-celebration toasts for first complete lineup + first free-agent add; fires once per manager via localStorage; coaching tone</span></div>
+          <div class="task-row"><span class="task-check" style="color:#22c55e">✓</span><span style="color: #666">RD-013 (P2, M) — Team Identity Colors: FantasyTeam.accentColor String? schema field + migration; TeamColorPicker.tsx; PATCH /api/leagues/[leagueId]/teams/[teamId]/color; avatar ring + name tint in DuelHero and standings ✅ SHIPPED</span></div>
+          <div class="task-row"><span class="task-check" style="color:#22c55e">✓</span><span style="color: #666">LL-004 (P1, S) — Magic Number: computeRace() extended with magicNumber: number | null (shows after midseason); "Magic: N" chip on standings page ✅ SHIPPED</span></div>
+          <div class="task-row"><span class="task-check" style="color:#22c55e">✓</span><span style="color: #666">LL-005 (P1, S) — Playoff Clinch Celebration: emitClinchEvents() in advanceSeason(); ClinchBanner.tsx (localStorage-gated, dismissible); rendered on matchup page when PLAYOFF_CLINCH LeagueEvent exists ✅ SHIPPED</span></div>
+          <div class="task-row"><span class="task-check" style="color:#22c55e">✓</span><span style="color: #666">LL-007 (P2, S) — Bubble Watch: BubbleWatch.tsx server component with 3 groupings (clinched/in/bubble/elim/out); shown on standings page when IN_SEASON; late-season "Playoff Push" heading ✅ SHIPPED</span></div>
+          <div class="task-row"><span class="task-check" style="color:#22c55e">✓</span><span style="color: #666">LL-008 (P2, M) — Upset Tracker: lib/services/upset-service.ts; UpsetCard.tsx; rendered in league overview sidebar ✅ SHIPPED</span></div>
+          <div class="task-row"><span class="task-check" style="color:#22c55e">✓</span><span style="color: #666">LL-019 (P1, M) — First-Result Explainer: FirstResultContext in DashboardData; FirstResultCard.tsx (localStorage-gated); shown on matchup page after first scored week; VTF explainer + top contributor named ✅ SHIPPED</span></div>
+          <div class="task-row"><span class="task-check" style="color:#22c55e">✓</span><span style="color: #666">LL-021 (P2, S) — Small-Win Encouragement: MilestoneToast.tsx; lineup-complete toast from PUT /lineup; first-add toast from POST /waiver; both localStorage-gated ✅ SHIPPED</span></div>
         </div>
-        <div class="exit-criteria"><strong>Exit criteria:</strong> Clinch notification fires for newly-clinched teams. "Magic: N" chip renders on standings for contenders. BubbleWatch renders 3 correct groupings. UpsetCard renders ≥1 upset. First-result explainer card appears after first scored period and dismisses. Lineup-complete toast fires once. No schema changes; all tests pass; tsc clean.</div>
+        <div class="exit-criteria"><strong>Exit criteria met:</strong> Clinch notification fires for newly-clinched teams. "Magic: N" chip renders on standings for contenders. BubbleWatch renders 3 correct groupings. UpsetCard renders ≥1 upset. First-result explainer card appears after first scored period and dismisses. Lineup-complete and first-add toasts fire once. Schema migration for accentColor clean. All tests pass; tsc clean.</div>
       </div>
 
       <div id="sprint-24" class="card">
