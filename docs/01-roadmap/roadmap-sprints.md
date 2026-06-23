@@ -1376,15 +1376,18 @@ Goal: Restructure the app's information architecture around a "My Franchise" men
 
 ### Originally-Planned Sprint 19 Items (from Playwright UX walkthrough Jun 23, 2026)
 
-The following items were originally scoped for Sprint 19 but were superseded by the IA restructure. They remain in the post-sprint backlog:
+The following items were originally scoped for Sprint 19 but were superseded by the IA restructure. The 7 unblocked items have been reassigned to **Sprint 22** where they fit naturally alongside RD-004 (wizard rebuild) and RD-011 (empty state copy). The 2 email-blocked items remain in the post-email-infra backlog.
 
-- BF-018 (P1, S) — `/league-rules` 404 dead link
-- UX-051 (P1, S) — VP popover overflow on mobile in wizard Rules step
+**Reassigned to Sprint 22:**
+- BF-018 (P1, S) — `/league-rules` 404 dead link (note: separate from the nav-rename BF-018 that shipped in Sprint 20; same ID was reused — this is the original Playwright-walkthrough bug)
+- UX-051 (P1, S) — VP popover overflow on mobile in wizard Rules step (addressed by same file changes as RD-004)
 - UX-052 (P1, M) — Invite landing: add fantasy primer for cold new users
-- UX-057 (P1, M) — Wizard Rules step jargon wall (PPP, UTIL unexplained)
+- UX-057 (P1, M) — Wizard Rules step jargon wall (PPP, UTIL unexplained) (addressed alongside RD-004 wizard rebuild)
 - UX-054 (P2, S) — Replay CTA context copy on landing page
 - UX-055 (P2, S) — Wizard step count hidden until after welcome screen
 - UX-056 (P2, S) — Commissioner draft checklist: add plain-language draft primer
+
+**Remain blocked (post-email-infra backlog):**
 - UX-053 (P2, M) — Email invite flow — blocked on email infrastructure
 - BF-019 (P2, M) — Password reset / forgot password — blocked on email infrastructure
 
@@ -1410,6 +1413,8 @@ Goal: Make every Tuesday feel like something happened. Surface what already exis
 
 Goal: Execute the "Inviting Dark" visual redesign defined in `docs/branding/pwhl_redesign_bundle_v3_1.zip`. This sprint is pure UI/CSS — no schema changes, no new API routes, no new data models. It covers the full token replacement, inline hex sweep, emoji restoration, flagship page redesigns (league overview + team matchup), remaining page recolor sweep, and a set of emotional UX additions (Momentum Strip, prestige gradient, gold prestige moments, empty state copy, wizard summary panel).
 
+Also absorbs 7 carry-in items from the Sprint 19 Playwright UX walkthrough that were superseded by the Sprint 19 IA restructure. These items (BF-018, UX-051–057 unblocked set) fit naturally alongside RD-004 (wizard rebuild) and the broader onboarding/copy polish work in this sprint.
+
 Spec authority: `docs/branding/pwhl_redesign_bundle_v3_1.zip` (contains `globals.tokens.css`, `color-replacement-map.md`, `page-inventory.md`, and reference HTML files for league overview and team matchup).
 
 | Story | Track | Size | Priority | Status |
@@ -1426,8 +1431,15 @@ Spec authority: `docs/branding/pwhl_redesign_bundle_v3_1.zip` (contains `globals
 | RD-010 — Gold prestige moments: apply `--gold` to weekly high score badge, first-place indicator, hot streak chip, clinched banner, champion card; keep gold intentionally rare | Feature | M | P2 | Open |
 | RD-011 — Empty state personality copy: update `components/EmptyState.tsx` and inline empty states with warm copy | UX | S | P2 | Open |
 | RD-012 — Wizard "Your league at a glance" summary panel: 4-item card at wizard completion step | Feature | M | P2 | Open |
+| BF-018 — `/league-rules` 404: create minimal `app/league-rules/page.tsx` or remove all dead links (carry-in from Sprint 19) | Bug | S | P1 | Open |
+| UX-051 — VP popover overflow on mobile in wizard Rules step (handled alongside RD-004 `VpExplainer.tsx` changes; carry-in from Sprint 19) | UX | S | P1 | Open |
+| UX-052 — Invite landing: add 3+ bullet-point fantasy primer above join form for logged-out cold users (carry-in from Sprint 19) | UX | M | P1 | Open |
+| UX-057 — Wizard Rules step jargon wall: add inline PPP + UTIL definitions; restructure alongside RD-004 wizard rebuild (carry-in from Sprint 19) | UX | M | P1 | Open |
+| UX-054 — Replay CTA context copy: add ≤15-word subtitle to "Try a Replay" CTA on landing page (carry-in from Sprint 19) | UX | S | P2 | Open |
+| UX-055 — Wizard step count: show step summary on welcome/beta screen before step 1 (carry-in from Sprint 19) | UX | S | P2 | Open |
+| UX-056 — Commissioner draft checklist: add plain-language snake-draft primer in admin panel pre-draft section (carry-in from Sprint 19) | UX | S | P2 | Open |
 
-**Exit criteria:** `app/globals.css` `:root` block fully replaced with Inviting Dark tokens; zero hardcoded hex values in `app/**` + `components/**` that appear in `color-replacement-map.md`; `components/VpExplainer.tsx` anchored popover no longer clips on mobile; league overview and team matchup pages match the `.dc.html` reference files; `MomentumStrip` renders correctly in active-period matchups; all existing tests pass; `tsc --noEmit` clean.
+**Exit criteria:** `app/globals.css` `:root` block fully replaced with Inviting Dark tokens; zero hardcoded hex values in `app/**` + `components/**` that appear in `color-replacement-map.md`; `components/VpExplainer.tsx` anchored popover no longer clips on mobile; league overview and team matchup pages match the `.dc.html` reference files; `MomentumStrip` renders correctly in active-period matchups; `/league-rules` returns 200 (not 404); invite landing shows plain-language fantasy primer to logged-out users; wizard Rules step has inline PPP + UTIL definitions; all existing tests pass; `tsc --noEmit` clean.
 
 ---
 
@@ -1564,7 +1576,7 @@ Items below are acknowledged but have no sprint assignment. They become candidat
 | Sprint 19 — IA Restructure: Franchise-First Nav + DnD Lineup | ✅ COMPLETE (Jun 23, 2026) | 5/5 parts shipped: Part 1 emoji policy + colorblind chips (0d00092) · Part 2 Trades→My Franchise + TeamNav (a2cd617) · Part 3 league overview commissioner-only (3ceb056) · Part 4 DnD lineup on roster page (01075f9) · Part 5 commissioner god-mode (b4986a6). No schema changes. |
 | Sprint 20 — VTF Navigation Rename | ✅ COMPLETE (Jun 23, 2026) | 2/2 items shipped: BF-018 league nav "Schedule" → "Results" + VTF explainer subtitle (commit ad4185a) · UX-049 team nav "Schedule" → "My Season" + section rename. No schema changes. |
 | Sprint 21 — Living League: Weekly Delight | 🔵 PLANNED | 3 stories: LL-001 Weekly Awards Ceremony · LL-002 Momentum Strip data layer · LL-003 Animated Stat Chips. No schema changes. |
-| Sprint 22 — Inviting Dark Redesign | 🔵 PLANNED | 12 stories (RD-001–RD-012): Inviting Dark token swap, hex sweep, emoji restoration, VP popover fix, wizard rebuild, league overview + matchup flagship redesigns, page recolor sweep, Momentum Strip visual (LL-002 visual completes here), prestige gradient, gold prestige moments, empty state copy, wizard summary panel. No schema changes. |
+| Sprint 22 — Inviting Dark Redesign | 🔵 PLANNED | 19 stories (RD-001–RD-012 + 7 carry-ins from Sprint 19 Playwright walkthrough): Inviting Dark token swap, hex sweep, emoji restoration, VP popover fix + wizard rebuild (absorbs UX-051/057), league overview + matchup flagship redesigns, page recolor sweep, Momentum Strip visual (LL-002 visual completes here), prestige gradient, gold prestige moments, empty state copy, wizard summary panel + /league-rules fix (BF-018), invite landing primer (UX-052), Replay CTA copy (UX-054), wizard step count (UX-055), draft checklist primer (UX-056). No schema changes. |
 | Sprint 23 — Living League: The Race | 🔵 PLANNED | 4 stories: LL-004 Magic Number · LL-005 Playoff Clinch Celebration · LL-007 Bubble Watch · LL-008 Upset Tracker. No schema changes. |
 | Sprint 24 — Living League: Season Story | 🔵 PLANNED | 4 stories: LL-006 Season Timeline · LL-010 League Record Book · LL-011 Franchise Identity · LL-012 Manager Superlatives. New `/league/[leagueId]/records` page. No schema changes. |
 | Sprint 25 — Living League: Legacy | 🔵 PLANNED | 3 stories: LL-009 Trophy Cabinet (schema: Achievement model) · LL-014 Opening Day Card · LL-015 Championship Banner. Schema migration required (Achievement + AchievementType). |

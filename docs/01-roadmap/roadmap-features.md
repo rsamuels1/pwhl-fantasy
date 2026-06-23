@@ -4136,7 +4136,7 @@ Source: Live Playwright UX walkthrough of the PWHL GM beta site, June 23, 2026. 
 
 ## BF-018. `/league-rules` 404 — Dead Internal Link on Every Dashboard Load
 
-Sprint: 19
+Sprint: 22 (carry-in from Sprint 19 Playwright walkthrough; superseded by Sprint 19 IA restructure)
 
 Priority: P1
 
@@ -4162,7 +4162,7 @@ Acceptance Criteria:
 
 ## UX-051. VP Popover Overflows Viewport Bottom on Mobile (Wizard Rules Step)
 
-Sprint: 19
+Sprint: 22 (carry-in from Sprint 19 Playwright walkthrough; addressed alongside RD-004 wizard rebuild)
 
 Priority: P1
 
@@ -4189,7 +4189,7 @@ Acceptance Criteria:
 
 ## UX-052. Invite Landing Page Has Insufficient Fantasy Primer for Cold New Users
 
-Sprint: 19
+Sprint: 22 (carry-in from Sprint 19 Playwright walkthrough)
 
 Priority: P1
 
@@ -4217,7 +4217,7 @@ Acceptance Criteria:
 
 ## UX-054. Replay CTA on Landing Page Has No "Why Would I Want This?" Explanation
 
-Sprint: 19
+Sprint: 22 (carry-in from Sprint 19 Playwright walkthrough)
 
 Priority: P2
 
@@ -4241,7 +4241,7 @@ Acceptance Criteria:
 
 ## UX-055. Wizard Doesn't Show Step Count Until After the Welcome Screen
 
-Sprint: 19
+Sprint: 22 (carry-in from Sprint 19 Playwright walkthrough)
 
 Priority: P2
 
@@ -4265,7 +4265,7 @@ Acceptance Criteria:
 
 ## UX-056. Commissioner Draft Setup Checklist Has No Draft Primer
 
-Sprint: 19
+Sprint: 22 (carry-in from Sprint 19 Playwright walkthrough)
 
 Priority: P2
 
@@ -4289,7 +4289,7 @@ Acceptance Criteria:
 
 ## UX-057. Wizard Rules Step Is a Jargon Wall (VP, PPP, UTIL Unexplained)
 
-Sprint: 19
+Sprint: 22 (carry-in from Sprint 19 Playwright walkthrough; addressed alongside RD-004 wizard rebuild)
 
 Priority: P1
 
