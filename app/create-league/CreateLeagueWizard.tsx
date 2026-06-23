@@ -82,6 +82,7 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
     try {
       const res = await fetch("/api/leagues/create", {
         method: "POST",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ leagueName: name || "My Replay League", maxTeams, useLastSeasonSimulation: true }),
       });
@@ -107,6 +108,7 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
       }
       const res = await fetch("/api/leagues/create", {
         method: "POST",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ leagueName: name, maxTeams, draftStartsAt, isPublic }),
       });
@@ -142,6 +144,7 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
     try {
       const res = await fetch("/api/leagues/join", {
         method: "POST",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           leagueId: createdLeagueId,

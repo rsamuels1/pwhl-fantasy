@@ -9,9 +9,12 @@ export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
   const host = req.headers.get("host") ?? "";
 
-  // On the beta domain, restrict access (allow home, auth, create-league for BLR-002 testing, and beta page)
+  // On the beta domain, restrict access unless authenticated
   if (host === BETA_HOST) {
-    const allowed =
+    const isAuthenticated = !!cookie;
+
+    // Unauthenticated users: allow home, auth, create-league, and static assets
+    const unauthedAllowed =
       pathname === "/" ||
       pathname === "/beta" ||
       pathname === "/register" ||
@@ -22,15 +25,19 @@ export function middleware(req: NextRequest) {
       pathname.startsWith("/api/leagues/create") ||
       pathname.startsWith("/_next/") ||
       pathname.startsWith("/favicon");
-    if (!allowed) {
-      const url = req.nextUrl.clone();
-      url.pathname = "/beta";
-      url.search = "";
-      return NextResponse.redirect(url, 307);
+
+    // Authenticated users: allow everything except static assets (they're fine)
+    if (isAuthenticated || unauthedAllowed) {
+      const res = NextResponse.next();
+      res.headers.set("x-pathname", pathname);
+      return res;
     }
-    const res = NextResponse.next();
-    res.headers.set("x-pathname", pathname);
-    return res;
+
+    // Not authenticated and not in allowed list: redirect to /beta
+    const url = req.nextUrl.clone();
+    url.pathname = "/beta";
+    url.search = "";
+    return NextResponse.redirect(url, 307);
   }
 
   // League / team / founder pages — redirect to login with returnTo
