@@ -55,6 +55,7 @@ interface Props {
   viewTeamName: string;
   viewRoster: RosterPlayerRow[];
   isOwnRoster: boolean;
+  isCommissioner?: boolean;
   defaultTab?: Tab;
 }
 
@@ -83,7 +84,7 @@ type SortKey = "name" | "pts" | "goals" | "assists" | "ppp" | "shots" | "hits" |
 export default function RosterManager({
   leagueId, teamId, teamName, maxRosterSize, rosterSettings,
   initialRoster, freeAgents,
-  allTeams, viewTeamId, viewTeamName, viewRoster, isOwnRoster,
+  allTeams, viewTeamId, viewTeamName, viewRoster, isOwnRoster, isCommissioner,
   defaultTab,
 }: Props) {
   const router = useRouter();
@@ -252,16 +253,27 @@ export default function RosterManager({
           ))}
         </select>
         {!isOwnRoster && (
-          <button
-            onClick={() => router.push("?")}
-            style={{
-              fontSize: 12, fontWeight: 600, padding: "5px 12px", borderRadius: 8,
-              border: "1px solid rgba(99,102,241,0.3)", cursor: "pointer",
-              background: "rgba(99,102,241,0.1)", color: "#a5b4fc",
-            }}
-          >
-            ← My Team
-          </button>
+          <>
+            <button
+              onClick={() => router.push("?")}
+              style={{
+                fontSize: 12, fontWeight: 600, padding: "5px 12px", borderRadius: 8,
+                border: "1px solid rgba(99,102,241,0.3)", cursor: "pointer",
+                background: "rgba(99,102,241,0.1)", color: "#a5b4fc",
+              }}
+            >
+              ← My Team
+            </button>
+            {isCommissioner && (
+              <span style={{
+                fontSize: 11, fontWeight: 700, padding: "5px 10px", borderRadius: 8,
+                background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.25)",
+                color: "#e3c989", letterSpacing: "0.06em",
+              }}>
+                ⚙ Commissioner View
+              </span>
+            )}
+          </>
         )}
       </div>
 

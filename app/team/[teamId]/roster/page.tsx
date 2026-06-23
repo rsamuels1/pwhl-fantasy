@@ -96,7 +96,7 @@ export default async function TeamRosterPage({ params, searchParams }: Props) {
   const team = await prisma.fantasyTeam.findUnique({
     where: { id: teamId },
     include: {
-      league: { select: { id: true, rosterSettings: true, scoringSettings: true, season: true, isReplay: true, replayCurrentDate: true, playoffStatus: true } },
+      league: { select: { id: true, commissionerId: true, rosterSettings: true, scoringSettings: true, season: true, isReplay: true, replayCurrentDate: true, playoffStatus: true } },
       roster: {
         include: { player: { include: { team: { select: { id: true, abbreviation: true } } } } },
         orderBy: { slot: "asc" },
@@ -106,6 +106,7 @@ export default async function TeamRosterPage({ params, searchParams }: Props) {
   if (!team) notFound();
 
   const leagueId = team.league.id;
+  const isCommissioner = user.id === team.league.commissionerId;
   const settings = (team.league.rosterSettings ?? {}) as RosterSettings;
   const scoring = parseScoringSettings(team.league.scoringSettings);
   const scoringFallback = (
@@ -316,13 +317,17 @@ export default async function TeamRosterPage({ params, searchParams }: Props) {
   // If viewing another team, fetch their roster + stats
   let viewRoster: RosterPlayerRow[] = ownRosterRows;
   let viewTeamName = team.name;
+  let viewedLineupEntries: LineupEntry[] | null = null;
+  let viewedSeasonStats: Record<string, LineupStats | null> = {};
+  let viewedLastWeekStats: Record<string, LineupStats | null> = {};
+  let viewedThisWeekStats: Record<string, LineupStats | null> = {};
 
   if (!isOwnRoster) {
     const viewedTeam = await prisma.fantasyTeam.findFirst({
       where: { id: viewTeamId, leagueId },
       include: {
         roster: {
-          include: { player: { include: { team: { select: { abbreviation: true } } } } },
+          include: { player: { include: { team: { select: { id: true, abbreviation: true } } } } },
           orderBy: { slot: "asc" },
         },
       },
@@ -333,12 +338,26 @@ export default async function TeamRosterPage({ params, searchParams }: Props) {
     } else {
       viewTeamName = viewedTeam.name;
       const viewedIds = viewedTeam.roster.map((e) => e.playerId);
-      const viewedLines = viewedIds.length > 0
-        ? await prisma.statLine.findMany({
-            where: { playerId: { in: viewedIds }, game: { season } },
-            select: STAT_LINE_SELECT,
-          })
-        : [];
+      const viewedPwhlTeamIds = [...new Set(viewedTeam.roster.map((e) => e.player.team?.id).filter((id): id is string => !!id))];
+
+      const [viewedLines, viewedLastWeekLines, viewedThisWeekLines, viewedActivePeriodGames] = await Promise.all([
+        viewedIds.length > 0
+          ? prisma.statLine.findMany({ where: { playerId: { in: viewedIds }, game: { season } }, select: STAT_LINE_SELECT })
+          : Promise.resolve([]),
+        lastCompletedEntry && viewedIds.length > 0
+          ? prisma.statLine.findMany({ where: { playerId: { in: viewedIds }, game: { startsAt: { gte: lastCompletedEntry.period.startsAt, lt: lastCompletedEntry.period.endsAt } } }, select: STAT_LINE_SELECT })
+          : Promise.resolve([]),
+        activePeriod && viewedIds.length > 0
+          ? prisma.statLine.findMany({ where: { playerId: { in: viewedIds }, game: { startsAt: { gte: activePeriod.startsAt, lte: now } } }, select: STAT_LINE_SELECT })
+          : Promise.resolve([]),
+        activePeriod && viewedPwhlTeamIds.length > 0
+          ? prisma.game.findMany({
+              where: { startsAt: { gte: activePeriod.startsAt, lte: now }, OR: [{ homeTeamId: { in: viewedPwhlTeamIds } }, { awayTeamId: { in: viewedPwhlTeamIds } }] },
+              select: { homeTeamId: true, awayTeamId: true, startsAt: true },
+            })
+          : Promise.resolve([] as { homeTeamId: string; awayTeamId: string; startsAt: Date }[]),
+      ]);
+
       viewRoster = viewedTeam.roster.map((e) => ({
         entryId: e.id,
         playerId: e.playerId,
@@ -350,6 +369,33 @@ export default async function TeamRosterPage({ params, searchParams }: Props) {
         acquired: e.acquired.toISOString(),
         stats: buildRosterStats(viewedLines as RawLine[], e.playerId, e.player.position, scoringFallback),
       }));
+
+      if (isCommissioner) {
+        // Build per-player stats for the viewed team's tabs
+        for (const e of viewedTeam.roster) {
+          viewedSeasonStats[e.playerId] = buildLineupStats(viewedLines as RawLine[], e.playerId, e.player.position, scoring);
+          viewedLastWeekStats[e.playerId] = buildLineupStats(viewedLastWeekLines as RawLine[], e.playerId, e.player.position, scoring);
+          viewedThisWeekStats[e.playerId] = buildLineupStats(viewedThisWeekLines as RawLine[], e.playerId, e.player.position, scoring);
+        }
+
+        viewedLineupEntries = viewedTeam.roster.map((e) => {
+          const pTeamId = e.player.team?.id ?? null;
+          const locked = lockTime(pTeamId, viewedActivePeriodGames, nowMs, activePeriod?.startsAt.getTime());
+          const remaining = periodForGames && pTeamId ? (gamesPerTeam.get(pTeamId) ?? 0) : null;
+          return {
+            entryId: e.id,
+            playerId: e.playerId,
+            name: `${e.player.firstName} ${e.player.lastName}`,
+            position: e.player.position as LineupEntry["position"],
+            teamAbbr: e.player.team?.abbreviation ?? null,
+            slot: e.slot,
+            lockedAt: locked?.toISOString() ?? null,
+            hasPlayedThisPeriod: (viewedThisWeekStats[e.playerId]?.gp ?? 0) > 0,
+            gamesThisPeriod: remaining,
+            eligibleSlots: eligibleSlots(e.player.position as "FORWARD" | "DEFENSE" | "GOALIE", e.player.active) as string[],
+          };
+        });
+      }
     }
   }
 
@@ -458,26 +504,35 @@ export default async function TeamRosterPage({ params, searchParams }: Props) {
     };
   });
 
+  // Which lineup entries and stats to show in the DnD section
+  const dndEntries = isOwnRoster ? lineupEntries : (viewedLineupEntries ?? []);
+  const dndSeasonStats = isOwnRoster ? seasonStats : viewedSeasonStats;
+  const dndLastWeekStats = isOwnRoster ? lastWeekStatsMap : viewedLastWeekStats;
+  const dndThisWeekStats = isOwnRoster ? thisWeekStatsMap : viewedThisWeekStats;
+  const showDnD = isOwnRoster || (isCommissioner && viewedLineupEntries !== null);
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-      {/* DnD Lineup section — own roster only */}
-      {isOwnRoster && (
+      {/* DnD Lineup section — own roster, or commissioner viewing another team */}
+      {showDnD && (
         <div>
           <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#475569", marginBottom: 12 }}>
-            Set Lineup
+            {isOwnRoster ? "Set Lineup" : `Set Lineup — ${viewTeamName}`}
           </div>
           <LineupDnD
             leagueId={leagueId}
             teamId={teamId}
-            initialRoster={lineupEntries}
-            seasonStats={seasonStats}
-            lastWeekStats={lastWeekStatsMap}
+            initialRoster={dndEntries}
+            seasonStats={dndSeasonStats}
+            lastWeekStats={dndLastWeekStats}
             lastWeekLabel={lastWeekLabel}
-            thisWeekStats={thisWeekStatsMap}
+            thisWeekStats={dndThisWeekStats}
             thisWeekLabel={thisWeekLabel}
-            projectedStats={projectedStatsMap}
-            nextWeekLabel={nextWeekLabel}
-            projectionsAvailable={!!nextWeekLabel}
+            projectedStats={isOwnRoster ? projectedStatsMap : undefined}
+            nextWeekLabel={isOwnRoster ? nextWeekLabel : null}
+            projectionsAvailable={isOwnRoster ? !!nextWeekLabel : false}
+            forceMove={!isOwnRoster && isCommissioner}
+            forceMoveTeamId={!isOwnRoster ? viewTeamId : undefined}
           />
         </div>
       )}
@@ -496,6 +551,7 @@ export default async function TeamRosterPage({ params, searchParams }: Props) {
         viewTeamName={viewTeamName}
         viewRoster={viewRoster}
         isOwnRoster={isOwnRoster}
+        isCommissioner={isCommissioner}
         defaultTab={defaultTab ?? (isOwnRoster ? "freeAgents" : undefined)}
       />
     </div>

@@ -57,6 +57,9 @@ interface Props {
   projectedStats: Record<string, { projectedFp: number; games: number } | null> | undefined;
   nextWeekLabel: string | null;
   projectionsAvailable?: boolean;
+  /** When true, calls the commissioner force-move endpoint. forceMoveTeamId is the target team. */
+  forceMove?: boolean;
+  forceMoveTeamId?: string;
 }
 
 const SLOT_LABEL: Record<string, string> = {
@@ -221,6 +224,8 @@ export default function LineupDnD({
   projectedStats,
   nextWeekLabel,
   projectionsAvailable = true,
+  forceMove = false,
+  forceMoveTeamId,
 }: Props) {
   const router = useRouter();
   const [roster, setRoster] = useState<LineupEntry[]>(initialRoster);
@@ -299,11 +304,16 @@ export default function LineupDnD({
     );
 
     startTransition(async () => {
-      const res = await fetch(`/api/leagues/${leagueId}/lineup`, {
-        method: "PUT",
+      const targetTeamId = forceMove ? (forceMoveTeamId ?? teamId) : teamId;
+      const url = forceMove
+        ? `/api/leagues/${leagueId}/commissioner/force-move`
+        : `/api/leagues/${leagueId}/lineup`;
+      const method = forceMove ? "POST" : "PUT";
+      const res = await fetch(url, {
+        method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          teamId,
+          teamId: targetTeamId,
           playerId: dragged.playerId,
           slot: target.slot,
           swapWithPlayerId: target.playerId,
@@ -332,6 +342,17 @@ export default function LineupDnD({
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      {/* Commissioner mode badge */}
+      {forceMove && (
+        <div style={{
+          padding: "8px 14px", borderRadius: 8, fontSize: 13, fontWeight: 600,
+          background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.25)",
+          color: "#e3c989",
+        }}>
+          ⚙ Commissioner view — lineup changes here apply directly to this team.
+        </div>
+      )}
+
       {/* Stats tab toggle */}
       <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
         {tabs.map((t) => (
