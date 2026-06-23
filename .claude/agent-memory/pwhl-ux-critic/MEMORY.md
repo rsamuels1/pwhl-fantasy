@@ -5,3 +5,4 @@
 - [Onboarding & Wizard findings](onboarding-findings.md) — welcome flow + 6/7-step create-league wizard strengths and gaps
 - [Patterns that work — keep](wins-keep.md) — design patterns that already serve new fans well; don't regress these
 - [End-of-season findings](end-of-season-findings.md) — playoff/champion/renewal dead states; non-qualifying team sees "Season hasn't started," renewal makes new league silently
+- [Draft room findings](draft-room-findings.md) — live 4-mgr walkthrough; generic error banner swallows specific server errors, sticky errors, raw entry error, star=queue confusion

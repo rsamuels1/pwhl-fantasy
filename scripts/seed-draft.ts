@@ -38,6 +38,7 @@ async function main() {
     });
     if (prior.draft) await prisma.draft.delete({ where: { id: prior.draft.id } });
     await prisma.matchup.deleteMany({ where: { leagueId: prior.id } });
+    await (prisma as any).waiverEntry.deleteMany({ where: { leagueId: prior.id } });
     await prisma.fantasyTeam.deleteMany({ where: { leagueId: prior.id } });
     await (prisma as any).leagueEvent.deleteMany({ where: { leagueId: prior.id } });
     await prisma.fantasyLeague.delete({ where: { id: prior.id } });

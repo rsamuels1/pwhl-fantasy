@@ -714,7 +714,7 @@ function PlayerPanel({
               style={{ ...styles.tab, background: activeTab === tab ? "var(--accent)" : "rgba(150,160,200,0.08)", color: activeTab === tab ? "#fff" : "var(--muted)" }}
               onClick={() => setActiveTab(tab)}
             >
-              {tab === "available" ? "Available" : `Queue (${queuedPlayers.length})`}
+              {tab === "available" ? "Available" : `My List (${queuedPlayers.length})`}
             </button>
           ))}
         </div>
@@ -772,12 +772,14 @@ function PlayerPanel({
                   <br />
                   <strong style={{ color: "var(--text)" }}>Goalies:</strong>{" "}
                   W = Wins · SV = Saves · GA = Goals Against · SV% = Save % · SO = Shutouts
+                  <br />
+                  <strong style={{ color: "var(--text)" }}>Tm:</strong> Team abbreviation · FA = Free agent (no PWHL team yet)
                 </div>
               )}
             </div>
 
             <p style={{ fontSize: 11, color: "var(--muted)", marginBottom: 8 }}>
-              ★ Star players you want — if your clock runs out, we draft from the top of your starred list.
+              ★ Add to my list — if your clock runs out, we'll auto-pick from the top.
             </p>
 
             {rows.length === 0 ? (
@@ -810,7 +812,7 @@ function PlayerPanel({
                     {rows.map(({ player: p, stats: s }) => (
                       <tr key={p.id} className="draft-player-row" style={styles.playerRow}>
                         <td style={{ padding: "5px 6px" }}><PosTag pos={p.position} /></td>
-                        <td style={{ padding: "5px 6px", color: "var(--muted)", fontSize: 11, whiteSpace: "nowrap" }}>{p.team ?? "FA"}</td>
+                        <td style={{ padding: "5px 6px", color: "var(--muted)", fontSize: 11, whiteSpace: "nowrap" }} title={p.team ? undefined : "Free agent — not currently on a PWHL roster"}>{p.team ?? "FA"}</td>
                         <td style={{ padding: "5px 6px", fontSize: 13, whiteSpace: "nowrap" }}>{p.name}</td>
                         {cols.map((c) => {
                           const val = s ? (s[c.key] as number | null) : null;
@@ -824,7 +826,7 @@ function PlayerPanel({
                         <td style={{ padding: "5px 6px", textAlign: "right" }}>
                           <div style={{ display: "flex", gap: 6, justifyContent: "flex-end" }}>
                             {isMyTurn && (
-                              <button style={styles.btnPick} onClick={() => onPick(p.id)}>Pick</button>
+                              <button style={styles.btnPick} onClick={() => onPick(p.id)} aria-label={`Draft ${p.name}`}>Pick</button>
                             )}
                             <button
                               style={styles.starBtn}
@@ -850,11 +852,11 @@ function PlayerPanel({
         {activeTab === "queue" && (
           <div>
             <p style={{ fontSize: 12, color: "var(--muted)", marginBottom: 10 }}>
-              Players are auto-drafted from the top of your queue when the timer expires.
+              Players are auto-drafted from the top of your list when the timer expires.
             </p>
             {queuedPlayers.length === 0 ? (
               <p style={{ color: "var(--muted)", fontSize: 12 }}>
-                No players queued. Add some from the Available tab.
+                Nothing on your list yet. Add players from the Available tab.
               </p>
             ) : (
               <div>
@@ -871,14 +873,14 @@ function PlayerPanel({
                       {s && p.position === "GOALIE" && (
                         <span style={{ color: "var(--muted)", fontSize: 11 }}>{s.wins}W</span>
                       )}
-                      <span style={{ color: "var(--muted)", fontSize: 11 }}>{p.team ?? "FA"}</span>
+                      <span style={{ color: "var(--muted)", fontSize: 11 }} title={p.team ? undefined : "Free agent — not currently on a PWHL roster"}>{p.team ?? "FA"}</span>
                       <div style={{ display: "flex", gap: 4 }}>
-                        <button style={styles.queueBtn} onClick={() => moveInQueue(p.id, -1)} disabled={i === 0}>↑</button>
-                        <button style={styles.queueBtn} onClick={() => moveInQueue(p.id, 1)} disabled={i === queuedPlayers.length - 1}>↓</button>
+                        <button style={styles.queueBtn} onClick={() => moveInQueue(p.id, -1)} disabled={i === 0} aria-label={`Move ${p.name} up in queue`}>↑</button>
+                        <button style={styles.queueBtn} onClick={() => moveInQueue(p.id, 1)} disabled={i === queuedPlayers.length - 1} aria-label={`Move ${p.name} down in queue`}>↓</button>
                         {isMyTurn && (
-                          <button style={{ ...styles.btnPick, fontSize: 11, padding: "3px 8px" }} onClick={() => onPick(p.id)}>Pick</button>
+                          <button style={{ ...styles.btnPick, fontSize: 11, padding: "3px 8px" }} onClick={() => onPick(p.id)} aria-label={`Draft ${p.name}`}>Pick</button>
                         )}
-                        <button style={{ ...styles.queueBtn, color: "var(--red)" }} onClick={() => removeFromQueue(p.id)}>✕</button>
+                        <button style={{ ...styles.queueBtn, color: "var(--red)" }} onClick={() => removeFromQueue(p.id)} aria-label={`Remove ${p.name} from queue`}>✕</button>
                       </div>
                     </div>
                   );
@@ -923,6 +925,7 @@ export default function DraftRoom({
   initialStats,
   statSeason,
   rosterSettings,
+  firstWeekStartDate,
 }: {
   leagueId: string;
   teamId: string;
@@ -931,6 +934,7 @@ export default function DraftRoom({
   rosterSettings: Record<string, number>;
   initialStats: PlayerStats[];
   statSeason: string | null;
+  firstWeekStartDate: string | null;
 }) {
   // Single socket for the whole room — previously two calls (root + content) caused
   // each to JOIN as the same team, they evicted each other, triggering the eviction overlay.
@@ -950,6 +954,7 @@ export default function DraftRoom({
       statSeason={statSeason}
       rosterSettings={rosterSettings}
       socket={socket}
+      firstWeekStartDate={firstWeekStartDate}
     />
   );
 }
@@ -963,6 +968,7 @@ function DraftRoomContent({
   statSeason,
   rosterSettings,
   socket,
+  firstWeekStartDate,
 }: {
   leagueId: string;
   teamId: string;
@@ -972,6 +978,7 @@ function DraftRoomContent({
   initialStats: PlayerStats[];
   statSeason: string | null;
   socket: ReturnType<typeof useDraftSocket>;
+  firstWeekStartDate: string | null;
 }) {
   const { connStatus, draft, available, lastError, start, makePick, listAvailable, setQueue, pause, resume } =
     socket;
@@ -979,6 +986,18 @@ function DraftRoomContent({
   const isMobile = useIsMobile(900);
   const [mobileTab, setMobileTab] = useState<"pick" | "board" | "needs">("pick");
   const [queue, setQueueLocal] = useState<string[]>([]);
+  const [visibleError, setVisibleError] = useState<{ code: string; message: string } | null>(null);
+
+  // Auto-dismiss error after 4 seconds
+  useEffect(() => {
+    if (lastError) {
+      setVisibleError(lastError);
+      const timer = setTimeout(() => {
+        setVisibleError(null);
+      }, 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [lastError]);
 
   // Seed name + position lookup from SSR stats so all players are known immediately,
   // then keep it current as the WebSocket AVAILABLE messages arrive.
@@ -1033,24 +1052,77 @@ function DraftRoomContent({
         onResume={resume}
       />
 
-      {lastError && (
-        <div style={styles.errorBanner}>
-          We couldn&apos;t complete that draft action. Please try again.
+      {visibleError && (
+        <div style={styles.errorBannerContainer}>
+          <div style={styles.errorBanner}>
+            {visibleError.message}
+          </div>
+          <button
+            onClick={() => setVisibleError(null)}
+            style={styles.errorDismiss}
+            title="Dismiss"
+            aria-label="Dismiss error"
+          >
+            ✕
+          </button>
         </div>
       )}
 
       {draft?.status === "COMPLETE" && (
-        <div style={styles.completeBanner}>
-          Draft complete — {draft.completed.length} picks made.{" "}
-          <a href={`/league/${leagueId}`} style={{ color: "var(--green)", textDecoration: "underline" }}>
-            View league
-          </a>
+        <div style={{ ...styles.completeBanner, display: "block", padding: "16px 20px" }}>
+          <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 4 }}>
+            🎉 Draft complete — {draft.completed.length} picks made
+          </div>
+          {firstWeekStartDate && (
+            <div style={{ fontSize: 13, color: "var(--muted)", marginBottom: 12 }}>
+              Week 1 kicks off{" "}
+              <strong style={{ color: "var(--text)" }}>
+                {new Date(firstWeekStartDate).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
+              </strong>
+              {" "}— set your lineup before then.
+            </div>
+          )}
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+            <a
+              href={`/team/${teamId}/lineup`}
+              style={{
+                display: "inline-block", padding: "8px 18px", borderRadius: 8,
+                background: "var(--accent, #6366f1)", color: "#fff",
+                fontWeight: 700, fontSize: 13, textDecoration: "none",
+              }}
+            >
+              Set your lineup →
+            </a>
+            <a
+              href={`/league/${leagueId}`}
+              style={{
+                display: "inline-block", padding: "8px 18px", borderRadius: 8,
+                background: "rgba(255,255,255,0.06)", color: "var(--text)",
+                fontWeight: 600, fontSize: 13, textDecoration: "none",
+                border: "1px solid rgba(255,255,255,0.1)",
+              }}
+            >
+              View league
+            </a>
+          </div>
         </div>
       )}
 
       {draft?.status === "PAUSED" && (
         <div style={styles.pausedBanner}>
           Draft paused{isCommissioner ? " — press Resume to continue" : " — waiting for commissioner"}.
+        </div>
+      )}
+
+      {draft?.status === "PENDING" && (
+        <div style={styles.pendingBanner}>
+          <div style={{ flex: 1 }}>
+            {isCommissioner ? (
+              <span>Press <strong>Start</strong> when everyone is ready. ~{Object.keys(teamNames).length} teams will draft in snake order, ~30 seconds per pick.</span>
+            ) : (
+              <span>Waiting for <strong>{teamNames[draft.order[0]?.fantasyTeamId] || "commissioner"}</strong> to start. You'll get ~30 seconds per pick — star players now so you're ready.</span>
+            )}
+          </div>
         </div>
       )}
 
@@ -1413,12 +1485,35 @@ const styles = {
     fontSize: 13,
     textAlign: "center" as const,
   },
-  errorBanner: {
-    background: "#450a0a",
+  errorBannerContainer: {
+    display: "flex" as const,
+    alignItems: "center" as const,
+    justifyContent: "space-between" as const,
+    gap: 12,
+    background: "rgba(120, 40, 40, 0.6)",
     color: "var(--red)",
-    padding: "8px 20px",
+    padding: "10px 20px",
     fontSize: 13,
-    borderBottom: "1px solid var(--red)",
+    borderBottom: "1px solid rgba(248, 113, 113, 0.4)",
+  },
+  errorBanner: {
+    flex: 1,
+  },
+  errorDismiss: {
+    background: "transparent",
+    border: "none",
+    color: "var(--red)",
+    fontSize: 18,
+    cursor: "pointer" as const,
+    padding: 0,
+    lineHeight: 1,
+    width: 28,
+    height: 28,
+    display: "flex" as const,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+    opacity: 0.7,
+    transition: "opacity 0.2s",
   },
   completeBanner: {
     background: "#052e16",
@@ -1426,6 +1521,16 @@ const styles = {
     padding: "8px 20px",
     fontSize: 13,
     borderBottom: "1px solid var(--green)",
+  },
+  pendingBanner: {
+    display: "flex" as const,
+    alignItems: "center" as const,
+    gap: 12,
+    background: "rgba(59,130,246,0.12)",
+    color: "#93c5fd",
+    padding: "10px 20px",
+    fontSize: 13,
+    borderBottom: "1px solid rgba(59,130,246,0.3)",
   },
   pausedBanner: {
     background: "rgba(249,115,22,0.12)",

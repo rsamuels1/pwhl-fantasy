@@ -36,6 +36,7 @@ export default async function MatchupsPage({ params }: { params: Promise<{ leagu
   if (!league) notFound();
 
   const isVpMode = (league as { scoringMode?: string }).scoringMode === "VP";
+  const isVtfMode = !isVpMode;
 
   const nowMs = getReplayNow(league, await getDevNow());
 
@@ -105,6 +106,50 @@ export default async function MatchupsPage({ params }: { params: Promise<{ leagu
           const period = weekMatchups[0];
           const dateRange = `${fmtDate(new Date(period.startsAt))} – ${fmtDate(new Date(period.endsAt))}`;
 
+          // VTF: deduplicate teams from pair rows and compute W-L-T
+          let vtfRanked: Array<{ teamId: string; team: typeof period.homeTeam; score: number | null; wins: number; losses: number; ties: number }> | null = null;
+          if (isVtfMode) {
+            const teamMap = new Map<string, { teamId: string; team: typeof period.homeTeam; score: number | null; wins: number; losses: number; ties: number }>();
+
+            // Extract unique teams
+            for (const m of weekMatchups) {
+              if (!teamMap.has(m.homeTeamId)) {
+                teamMap.set(m.homeTeamId, { teamId: m.homeTeamId, team: m.homeTeam, score: m.homeScore, wins: 0, losses: 0, ties: 0 });
+              }
+              if (!teamMap.has(m.awayTeamId)) {
+                teamMap.set(m.awayTeamId, { teamId: m.awayTeamId, team: m.awayTeam, score: m.awayScore, wins: 0, losses: 0, ties: 0 });
+              }
+            }
+
+            // Compute W-L-T from pair rows
+            const scored = weekMatchups.some(m => m.homeScore != null && m.awayScore != null);
+            if (scored) {
+              for (const m of weekMatchups) {
+                if (m.homeScore == null || m.awayScore == null) continue;
+                const home = teamMap.get(m.homeTeamId)!;
+                const away = teamMap.get(m.awayTeamId)!;
+                if (m.homeScore > m.awayScore) {
+                  home.wins++;
+                  away.losses++;
+                } else if (m.homeScore < m.awayScore) {
+                  home.losses++;
+                  away.wins++;
+                } else {
+                  home.ties++;
+                  away.ties++;
+                }
+              }
+            }
+
+            // Sort by score desc, then by team name
+            vtfRanked = [...teamMap.values()].sort((a, b) => {
+              if (a.score != null && b.score != null) return b.score - a.score;
+              if (a.score != null) return -1;
+              if (b.score != null) return 1;
+              return a.team.name.localeCompare(b.team.name);
+            });
+          }
+
           return (
             <section key={week} style={{
               ...card,
@@ -118,6 +163,14 @@ export default async function MatchupsPage({ params }: { params: Promise<{ leagu
               <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14, flexWrap: "wrap" }}>
                 <span style={{ fontSize: 15, fontWeight: 700, color: "#e2e8f0" }}>Week {week}</span>
                 <span style={{ fontSize: 12, color: "#475569" }}>{dateRange}</span>
+                {isVtfMode && (
+                  <span style={{
+                    fontSize: 10, fontWeight: 600, padding: "2px 6px", borderRadius: 4,
+                    background: "rgba(148, 163, 184, 0.2)", color: "#cbd5e1",
+                  }}>
+                    vs Field
+                  </span>
+                )}
                 {isCurrent && (
                   <span style={{
                     fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 20,
@@ -129,76 +182,118 @@ export default async function MatchupsPage({ params }: { params: Promise<{ leagu
               </div>
 
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                {weekMatchups.map((m) => {
-                  const scored = m.homeScore !== null && m.awayScore !== null;
-                  const homeIsMe = m.homeTeamId === myTeam.id;
-                  const awayIsMe = m.awayTeamId === myTeam.id;
-                  const isMyMatchup = homeIsMe || awayIsMe;
-                  const homeWon = scored && m.homeScore! > m.awayScore!;
-                  const awayWon = scored && m.awayScore! > m.homeScore!;
-                  const homeVP = m.homeVP;
-                  const awayVP = m.awayVP;
+                {isVtfMode && vtfRanked ? (
+                  // VTF: ranked list view
+                  vtfRanked.map((entry, idx) => {
+                    const isMyTeam = entry.teamId === myTeam.id;
+                    const rank = idx + 1;
+                    const scoreStr = entry.score != null ? entry.score.toFixed(1) : "—";
+                    const recordStr = entry.score != null ? `${entry.wins}-${entry.losses}-${entry.ties}` : "—";
 
-                  return (
-                    <div key={m.id} style={{
-                      display: "grid",
-                      gridTemplateColumns: "1fr auto 1fr",
-                      alignItems: "center",
-                      gap: "4px 10px",
-                      padding: "10px 14px",
-                      borderRadius: 10,
-                      background: isMyMatchup ? "rgba(99,102,241,0.06)" : "rgba(255,255,255,0.02)",
-                      border: isMyMatchup ? "1px solid rgba(99,102,241,0.2)" : "1px solid rgba(148,163,184,0.06)",
-                    }}>
-                      {/* Home */}
-                      <div style={{ textAlign: "right", minWidth: 0 }}>
+                    return (
+                      <div key={entry.teamId} style={{
+                        display: "grid",
+                        gridTemplateColumns: "auto auto 1fr auto auto",
+                        alignItems: "center",
+                        gap: "12px",
+                        padding: "10px 14px",
+                        borderRadius: 10,
+                        background: isMyTeam ? "rgba(99,102,241,0.06)" : "rgba(255,255,255,0.02)",
+                        border: isMyTeam ? "1px solid rgba(99,102,241,0.2)" : "1px solid rgba(148,163,184,0.06)",
+                      }}>
+                        <div style={{ fontSize: 12, fontWeight: 700, color: "#64748b", minWidth: 24 }}>
+                          {rank}.
+                        </div>
                         <div style={{
-                          fontSize: 13, fontWeight: homeIsMe ? 700 : 500,
-                          color: homeIsMe ? "#e2e8f0" : "#94a3b8",
+                          fontSize: 13, fontWeight: isMyTeam ? 700 : 500,
+                          color: isMyTeam ? "#e2e8f0" : "#94a3b8",
                           overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
                         }}>
-                          {m.homeTeam.name}
+                          {entry.team.name}
                         </div>
-                        {scored && (
-                          <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "baseline", gap: 6 }}>
-                            <span style={{ fontSize: 17, fontWeight: 800, color: homeWon ? "#e2e8f0" : "#475569", fontVariantNumeric: "tabular-nums" }}>
-                              {m.homeScore!.toFixed(1)}
-                            </span>
-                            {isVpMode && homeVP != null && (
-                              <span style={{ fontSize: 11, fontWeight: 700, color: "#818cf8" }}>{homeVP} VP</span>
-                            )}
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Middle */}
-                      <div style={{ fontSize: 10, fontWeight: 700, color: "#334155", textAlign: "center", letterSpacing: "0.5px", minWidth: 36 }}>
-                        {scored ? "FINAL" : "VS"}
-                      </div>
-
-                      {/* Away */}
-                      <div style={{ textAlign: "left", minWidth: 0 }}>
-                        <div style={{
-                          fontSize: 13, fontWeight: awayIsMe ? 700 : 500,
-                          color: awayIsMe ? "#e2e8f0" : "#94a3b8",
-                          overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-                        }}>
-                          {m.awayTeam.name}
+                        <div />
+                        <div style={{ fontSize: 17, fontWeight: 800, color: "#e2e8f0", fontVariantNumeric: "tabular-nums", minWidth: 60, textAlign: "right" }}>
+                          {scoreStr}
                         </div>
-                        {scored && (
-                          <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
-                            <span style={{ fontSize: 17, fontWeight: 800, color: awayWon ? "#e2e8f0" : "#475569", fontVariantNumeric: "tabular-nums" }}>
-                              {m.awayScore!.toFixed(1)}
-                            </span>
-                            {isVpMode && awayVP != null && (
-                              <span style={{ fontSize: 11, fontWeight: 700, color: "#818cf8" }}>{awayVP} VP</span>
-                            )}
-                          </div>
-                        )}
+                        <div style={{ fontSize: 11, color: "#64748b", minWidth: 70, textAlign: "right" }}>
+                          {recordStr}
+                        </div>
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })
+                ) : (
+                  // VP/1v1: pair card view
+                  weekMatchups.map((m) => {
+                    const scored = m.homeScore !== null && m.awayScore !== null;
+                    const homeIsMe = m.homeTeamId === myTeam.id;
+                    const awayIsMe = m.awayTeamId === myTeam.id;
+                    const isMyMatchup = homeIsMe || awayIsMe;
+                    const homeWon = scored && m.homeScore! > m.awayScore!;
+                    const awayWon = scored && m.awayScore! > m.homeScore!;
+                    const homeVP = m.homeVP;
+                    const awayVP = m.awayVP;
+
+                    return (
+                      <div key={m.id} style={{
+                        display: "grid",
+                        gridTemplateColumns: "1fr auto 1fr",
+                        alignItems: "center",
+                        gap: "4px 10px",
+                        padding: "10px 14px",
+                        borderRadius: 10,
+                        background: isMyMatchup ? "rgba(99,102,241,0.06)" : "rgba(255,255,255,0.02)",
+                        border: isMyMatchup ? "1px solid rgba(99,102,241,0.2)" : "1px solid rgba(148,163,184,0.06)",
+                      }}>
+                        {/* Home */}
+                        <div style={{ textAlign: "right", minWidth: 0 }}>
+                          <div style={{
+                            fontSize: 13, fontWeight: homeIsMe ? 700 : 500,
+                            color: homeIsMe ? "#e2e8f0" : "#94a3b8",
+                            overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                          }}>
+                            {m.homeTeam.name}
+                          </div>
+                          {scored && (
+                            <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "baseline", gap: 6 }}>
+                              <span style={{ fontSize: 17, fontWeight: 800, color: homeWon ? "#e2e8f0" : "#475569", fontVariantNumeric: "tabular-nums" }}>
+                                {m.homeScore!.toFixed(1)}
+                              </span>
+                              {isVpMode && homeVP != null && (
+                                <span style={{ fontSize: 11, fontWeight: 700, color: "#818cf8" }}>{homeVP} VP</span>
+                              )}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Middle */}
+                        <div style={{ fontSize: 10, fontWeight: 700, color: "#334155", textAlign: "center", letterSpacing: "0.5px", minWidth: 36 }}>
+                          {scored ? "FINAL" : "VS"}
+                        </div>
+
+                        {/* Away */}
+                        <div style={{ textAlign: "left", minWidth: 0 }}>
+                          <div style={{
+                            fontSize: 13, fontWeight: awayIsMe ? 700 : 500,
+                            color: awayIsMe ? "#e2e8f0" : "#94a3b8",
+                            overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                          }}>
+                            {m.awayTeam.name}
+                          </div>
+                          {scored && (
+                            <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
+                              <span style={{ fontSize: 17, fontWeight: 800, color: awayWon ? "#e2e8f0" : "#475569", fontVariantNumeric: "tabular-nums" }}>
+                                {m.awayScore!.toFixed(1)}
+                              </span>
+                              {isVpMode && awayVP != null && (
+                                <span style={{ fontSize: 11, fontWeight: 700, color: "#818cf8" }}>{awayVP} VP</span>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
               </div>
             </section>
           );
