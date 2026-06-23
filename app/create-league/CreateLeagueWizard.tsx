@@ -7,27 +7,19 @@ import BetaWelcomeStep from "@/components/BetaWelcomeStep";
 import Link from "next/link";
 
 // Beta mode adds step 0 (beta welcome), which is hidden from the progress bar.
-// Replay mode skips step 4 (Rules confirmation), so it has 5 displayed steps instead of 6.
+// Both replay and live modes show all 6 steps (Name, Size, Season, Rules, Team, Invite).
 // TOTAL_STEPS is the internal step count (8 states including step 0 and the final done screen).
-// displayTotal and displayStep are what we show in the progress bar and counter.
 const TOTAL_STEPS = 8;
 const isBetaMode = typeof process !== "undefined" && process.env.NEXT_PUBLIC_BETA_MODE === "true";
 
-// Maps internal step number → displayed step number for each mode.
-// Step 0 is never shown in progress counter (it's hidden).
-// Replay: steps 1-3 → 1-3, steps 5-7 → 4-6 (step 4 is skipped).
-// Live: steps 1-6 → 1-6.
-function getDisplayStep(step: number, isReplay: boolean): number {
-  if (step === 0) return 0; // Step 0 is never shown in progress bar
-  if (!isReplay) return step;
-  // Step 4 is skipped for replay — steps 5+ shift down by 1.
-  return step < 5 ? step : step - 1;
+// Both modes now use the same step sequence (6 displayed steps).
+function getDisplayStep(step: number): number {
+  if (step === 0) return 0;
+  return step;
 }
 
-function getDisplayTotal(isReplay: boolean): number {
-  // Replay: 5 displayed steps
-  // Live: 6 displayed steps
-  return isReplay ? 5 : 6;
+function getDisplayTotal(): number {
+  return 6;
 }
 
 const SIZE_OPTIONS: { value: number; label: string; note: string }[] = [
@@ -83,7 +75,7 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
     router.push("/dashboard");
   };
 
-  // In replay mode, skip steps 4–5 (rules + invite) but still go through team creation
+  // Replay mode creates league at step 3 (Season), then shows step 4 (Rules) before team creation
   const handleReplayCreate = async () => {
     setLoading(true);
     setError(null);
@@ -96,7 +88,7 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
       const data = await res.json();
       if (!res.ok) { setError(data?.error || "Failed to create league"); setLoading(false); return; }
       setCreatedLeagueId(data.leagueId);
-      setStep(5);
+      setStep(4);
     } catch {
       setError("Unable to create league. Please try again.");
     } finally {
@@ -127,6 +119,19 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
     } finally {
       setLoading(false);
     }
+  };
+
+  // Step 4 button handler: idempotent for both modes
+  // Live: creates league, advances to step 5
+  // Replay: if league already created, just advances to step 5; else creates league first
+  const handleCreateOrAdvance = async () => {
+    if (createdLeagueId) {
+      // Already created (replay flow), just advance
+      setStep(5);
+      return;
+    }
+    // Not yet created, call handleCreate
+    await handleCreate();
   };
 
   // Create the commissioner's team (called at step 5)
@@ -165,11 +170,9 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
 
         {/* Progress indicator — filled bar (hidden when step === 0) */}
         {step > 0 && (() => {
-          const displayTotal = getDisplayTotal(isReplay);
-          const displayStep = getDisplayStep(Math.min(step, TOTAL_STEPS - 1), isReplay);
-          const stepLabels = isReplay
-            ? ["Name", "Size", "Season", "Team", "Invite"]
-            : ["Name", "Size", "Season", "Rules", "Team", "Invite"];
+          const displayTotal = getDisplayTotal();
+          const displayStep = getDisplayStep(Math.min(step, TOTAL_STEPS - 1));
+          const stepLabels = ["Name", "Size", "Season", "Rules", "Team", "Invite"];
           return (
             <div>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
@@ -549,8 +552,8 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
 
               <div style={{ display: "flex", gap: 10, justifyContent: "space-between" }}>
                 <button className="button-secondary" onClick={goBack} style={{ flex: 1 }}>← Back</button>
-                <button className="button-primary" onClick={handleCreate} disabled={loading} style={{ flex: 1 }}>
-                  {loading ? "Creating league…" : "Create league →"}
+                <button className="button-primary" onClick={handleCreateOrAdvance} disabled={loading} style={{ flex: 1 }}>
+                  {loading ? (createdLeagueId ? "Continuing…" : "Creating league…") : (createdLeagueId ? "Continue →" : "Create league →")}
                 </button>
               </div>
               {error && <p style={{ color: "#d18b7f", fontSize: 13, margin: 0 }}>{error}</p>}
