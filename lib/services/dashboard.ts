@@ -147,6 +147,14 @@ export interface ChampionInfo {
   opponentScore: number;
 }
 
+export interface FirstResultContext {
+  weekRank: number;
+  teamCount: number;
+  myScore: number;
+  topContributor: { name: string; fp: number } | null;
+  actionableGap: string | null;
+}
+
 export interface DashboardData {
   activeMatchup: ActiveMatchup | null;
   remainingPlayers: RemainingPlayer[];
@@ -165,6 +173,8 @@ export interface DashboardData {
   // Populated when the active period has no stats yet (SETUP phase) — shows last complete week's stats
   myPlayersLastWeek: PlayerMatchupRow[] | null;
   lastWeekLabel: string | null;
+  // Shown once after the very first scored period — onboarding explainer
+  firstResultContext: FirstResultContext | null;
 }
 
 // ── main ──────────────────────────────────────────────────────────────────────
@@ -198,6 +208,29 @@ export async function getDashboardData(
 
   const lastResult = await getLastResult(leagueId, myTeamId, scoringSettings, prisma, isVpMode);
 
+  // First-result explainer: detect if this is the manager's first ever scored week.
+  let firstResultContext: FirstResultContext | null = null;
+  if (lastResult && lastResult.myRank !== null) {
+    const scoredCount = await prisma.matchup.count({
+      where: {
+        leagueId,
+        homeScore: { not: null },
+        OR: [{ homeTeamId: myTeamId }, { awayTeamId: myTeamId }],
+      },
+    });
+    if (scoredCount === 1) {
+      firstResultContext = {
+        weekRank: lastResult.myRank,
+        teamCount: lastResult.teamsCount,
+        myScore: lastResult.myScore,
+        topContributor: lastResult.myTopPerformer
+          ? { name: lastResult.myTopPerformer.name, fp: lastResult.myTopPerformer.points }
+          : null,
+        actionableGap: null,
+      };
+    }
+  }
+
   const empty: DashboardData = {
     activeMatchup: null,
     remainingPlayers: [],
@@ -210,6 +243,7 @@ export async function getDashboardData(
     leagueDisappointments: [],
     myPlayersLastWeek: null,
     lastWeekLabel: null,
+    firstResultContext,
   };
 
   if (!displayPeriod) {
@@ -588,6 +622,7 @@ export async function getDashboardData(
     leagueDisappointments,
     myPlayersLastWeek,
     lastWeekLabel,
+    firstResultContext,
   };
 }
 
@@ -615,6 +650,7 @@ async function getPlayoffDashboardData(
     leagueDisappointments: [],
     myPlayersLastWeek: null,
     lastWeekLabel: null,
+    firstResultContext: null,
   };
 
   // P1-A: When playoffs are complete, determine the champion from the final-round matchup.
@@ -947,6 +983,7 @@ async function getPlayoffDashboardData(
     leagueDisappointments: [],
     myPlayersLastWeek: null,
     lastWeekLabel: null,
+    firstResultContext: null,
   };
 }
 
