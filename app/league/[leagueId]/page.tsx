@@ -13,7 +13,7 @@ import { getReplayNow } from "@/lib/replayTime";
 import Link from "next/link";
 import AnnouncementForm from "@/components/AnnouncementForm";
 import WeekHighlights from "@/components/WeekHighlights";
-import type { Storyline } from "@/lib/services/storyline-service";
+import type { Storyline, WeeklyAward } from "@/lib/services/storyline-service";
 
 export default async function LeagueOverviewPage({
   params,
@@ -173,24 +173,41 @@ export default async function LeagueOverviewPage({
       })
     : null;
 
-  const storylineRows =
+  // Fetch all LEAGUE_STORYLINE events for the latest scored week (storylines + awards share the same type).
+  const allHighlightRows =
     latestScoredMatchup && leagueEventModel
       ? await leagueEventModel
           .findMany({
             where: { leagueId, type: "LEAGUE_STORYLINE" },
             orderBy: { createdAt: "asc" as const },
-            take: 20,
+            take: 30,
           })
           .then((rows) =>
-            rows
-              .filter((r) => (r.data as Record<string, unknown>)?.week === latestScoredMatchup.week)
-              .slice(0, 3)
+            rows.filter(
+              (r) => (r.data as Record<string, unknown>)?.week === latestScoredMatchup.week
+            )
           )
       : [];
 
-  const storylines: Storyline[] = storylineRows.map(
-    (r) => r.data as unknown as Storyline
-  );
+  const storylines: Storyline[] = allHighlightRows
+    .filter((r) => !(r.data as Record<string, unknown>)?.isAward)
+    .slice(0, 3)
+    .map((r) => r.data as unknown as Storyline);
+
+  const awards: WeeklyAward[] = allHighlightRows
+    .filter((r) => (r.data as Record<string, unknown>)?.isAward)
+    .map((r) => {
+      const d = r.data as Record<string, unknown>;
+      return {
+        awardType: d.awardType as WeeklyAward["awardType"],
+        teamId: d.teamId as string,
+        teamName: d.teamName as string,
+        value: d.value as number,
+      };
+    });
+
+  const showNegativeAwards =
+    ((league.scoringSettings as Record<string, unknown>)?.showNegativeAwards ?? true) !== false;
 
   // Build a label for the highlights week (e.g. "Week 3")
   const highlightsWeekLabel =
@@ -509,9 +526,15 @@ export default async function LeagueOverviewPage({
             </section>
           )}
 
-          {/* ── Week highlights ── */}
-          {league.status === "IN_SEASON" && storylines.length > 0 && (
-            <WeekHighlights storylines={storylines} weekLabel={highlightsWeekLabel} />
+          {/* ── Week highlights + awards ── */}
+          {league.status === "IN_SEASON" && (storylines.length > 0 || awards.length > 0) && (
+            <WeekHighlights
+              storylines={storylines}
+              weekLabel={highlightsWeekLabel}
+              awards={awards}
+              showNegativeAwards={showNegativeAwards}
+              teamId={myTeam?.id}
+            />
           )}
 
           {/* ── League leaders this week ── */}
