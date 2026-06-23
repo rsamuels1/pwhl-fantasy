@@ -1258,11 +1258,11 @@ Produce a findings list; fix all P0 a11y blockers. P1/P2 findings go to the post
 | OPS-002: Load test (draft room, 30 leagues) | D | M | P0 | ✅ GATE-2 PASS — 20 leagues × 4 teams = 80 connections; all picks correct, no cross-league duplication; report: docs/04-operations/load-test-sprint-18.md |
 | OPS-003: Vercel ops verification | D | S | P0 | ✅ GATE-3 PASS — crons added; CRON_SECRET set in Vercel production; report: docs/04-operations/ops-verification-sprint-18.md |
 | OPS-004: Accessibility audit | D | M | P1 | ✅ SHIPPED — P0 a11y blockers: focus-visible CSS globally; aria-label + keyboard handlers on draft pick buttons and lineup slot divs; aria-label on AddAndSlotModal bench button |
-| BF-014: VTF matchup page confusion | C | S | P2 | Spec needed |
+| BF-014: VTF matchup page confusion | C | S | P2 | ✅ SHIPPED (dc05f03) |
 
 **Min-ship (P0 only, must land by Jul 7):** ~~BLR-001~~ ✅ SHIPPED · ~~BLR-002~~ ✅ SHIPPED · ~~BF-009~~ ✅ RESOLVED · ~~OB-002~~ ✅ SHIPPED · ~~OB-003~~ ✅ SHIPPED · ~~OB-004~~ ✅ SHIPPED · ~~OPS-001~~ ✅ GATE-1 PASS · ~~OPS-002~~ ✅ GATE-2 PASS · ~~OPS-003~~ ✅ GATE-3 PASS = **0 remaining P0 stories**
 
-**Exit:** BLR leagues creatable by founder and joinable by invitees (BLR-001 ✅); BLR-002 welcome messaging shipped ✅; all 4 P0 onboarding wizard bugs fixed ✅; Analysis page navigates correctly ✅; draft load test passes at 20-league scale ✅; security audit complete with zero P0 findings ✅; CRON_SECRET set in Vercel production ✅; all P1s shipped ✅. Beta invites go out Jul 7, 2026.
+**Exit:** BLR leagues creatable by founder and joinable by invitees (BLR-001 ✅); BLR-002 welcome messaging shipped ✅; all 4 P0 onboarding wizard bugs fixed ✅; Analysis page navigates correctly ✅; draft load test passes at 20-league scale ✅; security audit complete with zero P0 findings ✅; CRON_SECRET set in Vercel production ✅; all P1s shipped ✅; VTF matchup schedule page fixed (BF-014 ✅). **All P0+P1+P2 items complete.** Beta invites go out Jul 7, 2026.
 
 ---
 
