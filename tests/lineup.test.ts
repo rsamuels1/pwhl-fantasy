@@ -324,4 +324,33 @@ describe("computeOptimalLineup", () => {
     // p2 (inactive) despite high FP cannot play active slots
     expect(result.get("p2")).toMatch(/BENCH|IR/);
   });
+
+  it("demotes players with zero games below those with games when both compete for same slots (BF-017)", () => {
+    // Scenario: When multiple players compete for the same slot(s), those with games remaining
+    // should rank higher than those without, even if the no-games player has higher projected FP.
+    // This prevents the bench-upgrade hint from suggesting someone like "Grace (10.8 proj) over Sarah"
+    // when Grace has 0 games left and Sarah has 2 games left.
+    const roster = [
+      makePlayer({ playerId: "grace", position: "FORWARD", slot: "BENCH", projectedFp: 10.8, gamesThisPeriod: 0, eligibleSlots: ["FORWARD", "UTIL", "BENCH"] }),
+      makePlayer({ playerId: "sarah", position: "FORWARD", slot: "FORWARD", projectedFp: 8.5, gamesThisPeriod: 2, eligibleSlots: ["FORWARD", "UTIL", "BENCH"] }),
+      makePlayer({ playerId: "p3", position: "FORWARD", slot: "FORWARD", projectedFp: 7.0, gamesThisPeriod: 1, eligibleSlots: ["FORWARD", "UTIL", "BENCH"] }),
+      makePlayer({ playerId: "p4", position: "DEFENSE", slot: "DEFENSE", projectedFp: 5.0, gamesThisPeriod: 1, eligibleSlots: ["DEFENSE", "UTIL", "BENCH"] }),
+      makePlayer({ playerId: "p5", position: "DEFENSE", slot: "DEFENSE", projectedFp: 4.0, gamesThisPeriod: 1, eligibleSlots: ["DEFENSE", "UTIL", "BENCH"] }),
+      makePlayer({ playerId: "p6", position: "GOALIE", slot: "GOALIE", projectedFp: 3.0, gamesThisPeriod: 1, eligibleSlots: ["GOALIE", "BENCH"] }),
+      makePlayer({ playerId: "p7", position: "FORWARD", slot: "FORWARD", projectedFp: 6.0, gamesThisPeriod: 1, eligibleSlots: ["FORWARD", "UTIL", "BENCH"] }),
+      makePlayer({ playerId: "p8", position: "FORWARD", slot: "BENCH", projectedFp: 2.0, gamesThisPeriod: 0, eligibleSlots: ["FORWARD", "UTIL", "BENCH"] }),
+    ];
+    const result = computeOptimalLineup(roster, SETTINGS);
+    // Sort order should be: sarah(8.5,2) > p7(6,1) > p3(7,1) > grace(10.8,0) > p4(5,1) > p6(3,1) > p5(4,1) > p8(2,0)
+    // sarah should stay in FORWARD (has 2 games, ranks above grace despite lower FP)
+    expect(result.get("sarah")).toBe("FORWARD");
+    // p7 (6 FP, 1 game) should get FORWARD slot 2 (ranks above grace despite lower FP)
+    expect(result.get("p7")).toBe("FORWARD");
+    // p3 (7 FP, 1 game) should get FORWARD slot 3 (ranks above grace despite lower FP)
+    expect(result.get("p3")).toBe("FORWARD");
+    // grace (10.8 FP, 0 games) ranks below all players with games, so goes to UTIL or BENCH
+    // She is the best non-position-constrained player after the positions are filled
+    const graceslot = result.get("grace");
+    expect(graceslot).toMatch(/UTIL|BENCH/);
+  });
 });

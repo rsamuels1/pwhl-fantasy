@@ -537,8 +537,10 @@ export default function LineupManager({
               if (fp <= worstStarterProj.fp) return best;
               // Only suggest if bench player can play the worst starter's slot
               if (!p.eligibleSlots.includes(worstStarterProj.slot)) return best;
-              // Only suggest if bench player has games remaining this period
-              if ((p.gamesThisPeriod ?? 1) === 0) return best;
+              // Only suggest if bench player has games remaining this period.
+              // Note: gamesThisPeriod can be null (unknown), 0 (confirmed no games), or positive.
+              // Exclude only when explicitly 0; treat null as unknown and include it.
+              if (p.gamesThisPeriod === 0) return best;
               if (!best || fp > best.fp) return { name: p.name, fp };
               return best;
             }, null);
