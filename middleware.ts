@@ -61,7 +61,7 @@ export const config = {
     "/founder",
     "/api/leagues/:path*",
     "/api/founder/:path*",
-    // Catch-all for beta-domain lockdown (excludes static files)
-    "/((?!_next/static|_next/image|favicon.ico).*)",
+    // Catch-all for beta-domain lockdown (excludes static files and /beta)
+    "/((?!_next/static|_next/image|favicon.ico|beta).*)",
   ],
 };
