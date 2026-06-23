@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PWHL GM · Backlog</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'JetBrains Mono', monospace; background: #0a0a0a; color: #e0e0e0; line-height: 1.5; }
+    header { background: #111; border-bottom: 1px solid #222; padding: 1.5rem; display: flex; justify-content: space-between; align-items: center; }
+    header h1 { font-size: 1.2rem; font-weight: 700; letter-spacing: 0.05em; }
+    .header-right { text-align: right; font-size: 0.85rem; }
+    .item-count { font-weight: 700; color: #f59e0b; }
+    .blocked-count { font-weight: 700; color: #ef4444; margin-left: 1rem; }
+    .header-meta { color: #888; margin-top: 0.25rem; }
+    .filters { background: #0f0f0f; border-bottom: 1px solid #1a1a1a; padding: 1rem 1.5rem; display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; }
+    .filter-group { display: flex; gap: 0.4rem; align-items: center; }
+    .filter-group label { font-size: 0.75rem; color: #888; text-transform: uppercase; letter-spacing: 0.05em; margin-right: 0.25rem; }
+    .filter-btn { padding: 0.3rem 0.65rem; background: #111; border: 1px solid #2a2a2a; border-radius: 4px; color: #888; cursor: pointer; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; transition: all 0.15s; }
+    .filter-btn:hover { border-color: #444; color: #ccc; }
+    .filter-btn.active { background: #f59e0b; border-color: #f59e0b; color: #000; font-weight: 700; }
+    .filter-btn.active-blocked { background: #ef4444; border-color: #ef4444; color: #fff; font-weight: 700; }
+    .filter-btn.active-deferred { background: #6b7280; border-color: #6b7280; color: #fff; font-weight: 700; }
+    .table-wrap { padding: 1.5rem; overflow-x: auto; }
+    .result-count { font-size: 0.8rem; color: #888; margin-bottom: 1rem; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+    th { background: #0a0a0a; padding: 0.65rem 0.75rem; text-align: left; border-bottom: 2px solid #222; font-weight: 700; color: #888; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; white-space: nowrap; }
+    td { padding: 0.55rem 0.75rem; border-bottom: 1px solid #141414; vertical-align: middle; }
+    tr.status-Planned { border-left: 3px solid #f59e0b; }
+    tr.status-Blocked { border-left: 3px solid #ef4444; }
+    tr.status-Deferred { border-left: 3px solid #4b5563; }
+    tr:hover td { background: #0f0f0f; }
+    .sprint-badge { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 3px; font-size: 0.75rem; font-weight: 700; white-space: nowrap; }
+    .sprint-19 { background: rgba(245,158,11,0.12); color: #f59e0b; }
+    .sprint-post { background: rgba(107,114,128,0.12); color: #9ca3af; }
+    .sprint-gate { background: rgba(20,184,166,0.12); color: #2dd4bf; }
+    .cat-badge { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 3px; font-size: 0.72rem; font-weight: 700; white-space: nowrap; }
+    .cat-Feature { background: rgba(99,102,241,0.15); color: #818cf8; }
+    .cat-Bug     { background: rgba(239,68,68,0.1);  color: #f87171; }
+    .cat-UX      { background: rgba(245,158,11,0.12); color: #f59e0b; }
+    .cat-Ops     { background: rgba(20,184,166,0.12); color: #2dd4bf; }
+    .status-badge { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 3px; font-size: 0.72rem; font-weight: 700; white-space: nowrap; }
+    .sb-Planned  { background: rgba(245,158,11,0.12); color: #f59e0b; }
+    .sb-Blocked  { background: rgba(239,68,68,0.12); color: #f87171; }
+    .sb-Deferred { background: rgba(107,114,128,0.12); color: #9ca3af; }
+    .effort-badge { color: #888; font-size: 0.8rem; }
+    .id-cell { color: #888; font-size: 0.8rem; white-space: nowrap; }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>PWHL GM &middot; Backlog</h1>
+  <div class="header-right">
+    <span class="item-count" id="total-count">— items</span><span class="blocked-count" id="blocked-count">— blocked</span>
+    <div class="header-meta">Last updated: June 23, 2026</div>
+  </div>
+</header>
+
+<div class="filters">
+  <div class="filter-group">
+    <label>Category:</label>
+    <button class="filter-btn active" onclick="filterCat('all', this)">All</button>
+    <button class="filter-btn" onclick="filterCat('Feature', this)">Feature</button>
+    <button class="filter-btn" onclick="filterCat('Bug', this)">Bug</button>
+    <button class="filter-btn" onclick="filterCat('UX', this)">UX</button>
+    <button class="filter-btn" onclick="filterCat('Ops', this)">Ops</button>
+  </div>
+  <div class="filter-group">
+    <label>Status:</label>
+    <button class="filter-btn active" onclick="filterStatus('all', this)">All</button>
+    <button class="filter-btn" onclick="filterStatus('Planned', this)">Planned</button>
+    <button class="filter-btn" onclick="filterStatus('Blocked', this)">Blocked</button>
+    <button class="filter-btn" onclick="filterStatus('Deferred', this)">Deferred</button>
+  </div>
+</div>
+
+<div class="table-wrap">
+  <div class="result-count" id="result-count"></div>
+  <table>
+    <thead>
+      <tr>
+        <th style="width:8rem;">Sprint / Target</th>
+        <th style="width:6.5rem;">ID</th>
+        <th>Title</th>
+        <th style="width:6rem;">Category</th>
+        <th style="width:6rem;">Status</th>
+        <th style="width:4rem;">Effort</th>
+      </tr>
+    </thead>
+    <tbody id="backlog-rows">
+
+      <!-- Sprint 19 — Planned -->
+      <tr class="status-Planned" data-category="Bug" data-status="Planned"><td><span class="sprint-badge sprint-19">Sprint 19</span></td><td class="id-cell">BF-018</td><td>/league-rules 404 — Create minimal route or remove dead links</td><td><span class="cat-badge cat-Bug">Bug</span></td><td><span class="status-badge sb-Planned">Planned</span></td><td class="effort-badge">S</td></tr>
+      <tr class="status-Planned" data-category="UX" data-status="Planned"><td><span class="sprint-badge sprint-19">Sprint 19</span></td><td class="id-cell">UX-051</td><td>VP Popover Overflows Viewport Bottom on Mobile (Wizard Rules Step)</td><td><span class="cat-badge cat-UX">UX</span></td><td><span class="status-badge sb-Planned">Planned</span></td><td class="effort-badge">S</td></tr>
+      <tr class="status-Planned" data-category="UX" data-status="Planned"><td><span class="sprint-badge sprint-19">Sprint 19</span></td><td class="id-cell">UX-052</td><td>Invite Landing Insufficient Fantasy Primer for Cold New Users</td><td><span class="cat-badge cat-UX">UX</span></td><td><span class="status-badge sb-Planned">Planned</span></td><td class="effort-badge">M</td></tr>
+      <tr class="status-Planned" data-category="UX" data-status="Planned"><td><span class="sprint-badge sprint-19">Sprint 19</span></td><td class="id-cell">UX-057</td><td>Wizard Rules Step Jargon Wall — PPP and UTIL Need Plain-Language Definitions</td><td><span class="cat-badge cat-UX">UX</span></td><td><span class="status-badge sb-Planned">Planned</span></td><td class="effort-badge">M</td></tr>
+      <tr class="status-Planned" data-category="UX" data-status="Planned"><td><span class="sprint-badge sprint-19">Sprint 19</span></td><td class="id-cell">UX-054</td><td>Replay CTA on Landing Has No "Why Would I Want This?" Context Copy</td><td><span class="cat-badge cat-UX">UX</span></td><td><span class="status-badge sb-Planned">Planned</span></td><td class="effort-badge">S</td></tr>
+      <tr class="status-Planned" data-category="UX" data-status="Planned"><td><span class="sprint-badge sprint-19">Sprint 19</span></td><td class="id-cell">UX-055</td><td>Wizard Step Count Hidden Until After Welcome Screen</td><td><span class="cat-badge cat-UX">UX</span></td><td><span class="status-badge sb-Planned">Planned</span></td><td class="effort-badge">S</td></tr>
+      <tr class="status-Planned" data-category="UX" data-status="Planned"><td><span class="sprint-badge sprint-19">Sprint 19</span></td><td class="id-cell">UX-056</td><td>Commissioner Draft Checklist Has No Draft Primer</td><td><span class="cat-badge cat-UX">UX</span></td><td><span class="status-badge sb-Planned">Planned</span></td><td class="effort-badge">S</td></tr>
+
+      <!-- Email-blocked items -->
+      <tr class="status-Blocked" data-category="UX" data-status="Blocked"><td><span class="sprint-badge sprint-post">Post-email-infra</span></td><td class="id-cell">UX-053</td><td>Email Invite Flow — Type Friends' Emails (Blocked: email infrastructure)</td><td><span class="cat-badge cat-UX">UX</span></td><td><span class="status-badge sb-Blocked">Blocked</span></td><td class="effort-badge">M</td></tr>
+      <tr class="status-Blocked" data-category="Bug" data-status="Blocked"><td><span class="sprint-badge sprint-post">Post-email-infra</span></td><td class="id-cell">BF-019</td><td>Password Reset / Forgot Password on Login Page (Blocked: email infrastructure)</td><td><span class="cat-badge cat-Bug">Bug</span></td><td><span class="status-badge sb-Blocked">Blocked</span></td><td class="effort-badge">M</td></tr>
+
+      <!-- Launch Gates — not yet green -->
+      <tr class="status-Planned" data-category="Ops" data-status="Planned"><td><span class="sprint-badge sprint-gate">GATE-2 gap</span></td><td class="id-cell">&mdash;</td><td>Neon DB Connection Pool + Vercel Cold-Start Validation (GATE-2 pending items)</td><td><span class="cat-badge cat-Ops">Ops</span></td><td><span class="status-badge sb-Planned">Planned</span></td><td class="effort-badge">S</td></tr>
+      <tr class="status-Planned" data-category="Ops" data-status="Planned"><td><span class="sprint-badge sprint-gate">GATE-3 gap</span></td><td class="id-cell">&mdash;</td><td>Error Monitoring / Alerting (Sentry or equivalent) — P1 post-beta</td><td><span class="cat-badge cat-Ops">Ops</span></td><td><span class="status-badge sb-Planned">Planned</span></td><td class="effort-badge">S</td></tr>
+      <tr class="status-Planned" data-category="Ops" data-status="Planned"><td><span class="sprint-badge sprint-gate">GATE-3 gap</span></td><td class="id-cell">&mdash;</td><td>Neon PITR (Point-in-Time Recovery) — manual verification required</td><td><span class="cat-badge cat-Ops">Ops</span></td><td><span class="status-badge sb-Planned">Planned</span></td><td class="effort-badge">S</td></tr>
+      <tr class="status-Planned" data-category="Ops" data-status="Planned"><td><span class="sprint-badge sprint-gate">GATE-4</span></td><td class="id-cell">DATA-002</td><td>2026-27 Final Roster Sync — re-run update-2026-27-rosters.ts post signing period</td><td><span class="cat-badge cat-Ops">Ops</span></td><td><span class="status-badge sb-Planned">Planned</span></td><td class="effort-badge">S</td></tr>
+      <tr class="status-Planned" data-category="Ops" data-status="Planned"><td><span class="sprint-badge sprint-gate">GATE-4</span></td><td class="id-cell">&mdash;</td><td>2026-27 Regular Season Schedule Ingestion (requires HockeyTech publishing new season_id)</td><td><span class="cat-badge cat-Ops">Ops</span></td><td><span class="status-badge sb-Planned">Planned</span></td><td class="effort-badge">M</td></tr>
+      <tr class="status-Planned" data-category="Ops" data-status="Planned"><td><span class="sprint-badge sprint-gate">GATE-5</span></td><td class="id-cell">&mdash;</td><td>Beta Quality Bar: ≥3 weeks active testing, all P0 bugs resolved, 3 users through onboarding unaided</td><td><span class="cat-badge cat-Ops">Ops</span></td><td><span class="status-badge sb-Planned">Planned</span></td><td class="effort-badge">&mdash;</td></tr>
+      <tr class="status-Planned" data-category="Ops" data-status="Planned"><td><span class="sprint-badge sprint-gate">GATE-6</span></td><td class="id-cell">&mdash;</td><td>End-to-End Integration Test: simulate-season.ts re-run, waiver E2E, trade E2E, playoff E2E</td><td><span class="cat-badge cat-Ops">Ops</span></td><td><span class="status-badge sb-Planned">Planned</span></td><td class="effort-badge">M</td></tr>
+
+      <!-- Post-launch deferred features -->
+      <tr class="status-Deferred" data-category="UX" data-status="Deferred"><td><span class="sprint-badge sprint-post">Post-launch</span></td><td class="id-cell">UX-045</td><td>No Celebration Moment When Rivalry Matchup Is Won (RIVALRY_WIN enum + recap card)</td><td><span class="cat-badge cat-UX">UX</span></td><td><span class="status-badge sb-Deferred">Deferred</span></td><td class="effort-badge">M</td></tr>
+      <tr class="status-Deferred" data-category="UX" data-status="Deferred"><td><span class="sprint-badge sprint-post">Post-launch</span></td><td class="id-cell">OB-011</td><td>Draft Date Picker Has No Season-Anchor Guidance (opener date TBD)</td><td><span class="cat-badge cat-UX">UX</span></td><td><span class="status-badge sb-Deferred">Deferred</span></td><td class="effort-badge">S</td></tr>
+      <tr class="status-Deferred" data-category="Feature" data-status="Deferred"><td><span class="sprint-badge sprint-post">Post-launch</span></td><td class="id-cell">#6</td><td>FAAB — Blind-Bid Free Agent Acquisition Budget layered on waiver system</td><td><span class="cat-badge cat-Feature">Feature</span></td><td><span class="status-badge sb-Deferred">Deferred</span></td><td class="effort-badge">L</td></tr>
+      <tr class="status-Deferred" data-category="Feature" data-status="Deferred"><td><span class="sprint-badge sprint-post">Post-2027</span></td><td class="id-cell">#31</td><td>Player Legacy &amp; Cross-Season Tracking — /profile career history + global leaderboard</td><td><span class="cat-badge cat-Feature">Feature</span></td><td><span class="status-badge sb-Deferred">Deferred</span></td><td class="effort-badge">XL</td></tr>
+      <tr class="status-Deferred" data-category="Feature" data-status="Deferred"><td><span class="sprint-badge sprint-post">Post-launch</span></td><td class="id-cell">#38</td><td>Replay Simulation V2 — Configurable playback speed, jump-to-week, notification triggers</td><td><span class="cat-badge cat-Feature">Feature</span></td><td><span class="status-badge sb-Deferred">Deferred</span></td><td class="effort-badge">M</td></tr>
+      <tr class="status-Deferred" data-category="Feature" data-status="Deferred"><td><span class="sprint-badge sprint-post">Post-launch</span></td><td class="id-cell">IA-009</td><td>VP Tiebreaker Spec: VP &rarr; matchup wins &rarr; H2H &rarr; total FP &rarr; random draw</td><td><span class="cat-badge cat-Feature">Feature</span></td><td><span class="status-badge sb-Deferred">Deferred</span></td><td class="effort-badge">M</td></tr>
+      <tr class="status-Deferred" data-category="Feature" data-status="Deferred"><td><span class="sprint-badge sprint-post">Post-launch</span></td><td class="id-cell">IA-010</td><td>Stat-Correction Policy — cutoff window, playoff/championship handling</td><td><span class="cat-badge cat-Feature">Feature</span></td><td><span class="status-badge sb-Deferred">Deferred</span></td><td class="effort-badge">M</td></tr>
+      <tr class="status-Deferred" data-category="Feature" data-status="Deferred"><td><span class="sprint-badge sprint-post">Post-launch</span></td><td class="id-cell">AN-002/003</td><td>Growth / Retention Analytics Dashboards (activation + retention funnels, referral loop)</td><td><span class="cat-badge cat-Feature">Feature</span></td><td><span class="status-badge sb-Deferred">Deferred</span></td><td class="effort-badge">L</td></tr>
+      <tr class="status-Deferred" data-category="Feature" data-status="Deferred"><td><span class="sprint-badge sprint-post">Post-launch</span></td><td class="id-cell">&mdash;</td><td>Real-Time Push Scoring — Firebase RTDB WebSocket replacing LiveScoreRefresh polling</td><td><span class="cat-badge cat-Feature">Feature</span></td><td><span class="status-badge sb-Deferred">Deferred</span></td><td class="effort-badge">M</td></tr>
+      <tr class="status-Deferred" data-category="Feature" data-status="Deferred"><td><span class="sprint-badge sprint-post">Post-launch</span></td><td class="id-cell">&mdash;</td><td>Push Notifications — web push for LINEUP_INCOMPLETE and TRADE_RECEIVED (service worker)</td><td><span class="cat-badge cat-Feature">Feature</span></td><td><span class="status-badge sb-Deferred">Deferred</span></td><td class="effort-badge">M</td></tr>
+      <tr class="status-Deferred" data-category="Feature" data-status="Deferred"><td><span class="sprint-badge sprint-post">Post-launch</span></td><td class="id-cell">#12</td><td>Multi-Season Historical Replay Library — 2024 + 2024-25 fixture ingestion as replay options</td><td><span class="cat-badge cat-Feature">Feature</span></td><td><span class="status-badge sb-Deferred">Deferred</span></td><td class="effort-badge">M</td></tr>
+      <tr class="status-Deferred" data-category="Feature" data-status="Deferred"><td><span class="sprint-badge sprint-post">Post-2027</span></td><td class="id-cell">#19/#20</td><td>Advanced Formats: Keeper &rarr; Dynasty (requires completed live season + confirmed demand)</td><td><span class="cat-badge cat-Feature">Feature</span></td><td><span class="status-badge sb-Deferred">Deferred</span></td><td class="effort-badge">XL</td></tr>
+      <tr class="status-Deferred" data-category="Feature" data-status="Deferred"><td><span class="sprint-badge sprint-post">Post-2027</span></td><td class="id-cell">&mdash;</td><td>Native Apps + AI Features (draft assistant, weekly recaps, trade evaluator)</td><td><span class="cat-badge cat-Feature">Feature</span></td><td><span class="status-badge sb-Deferred">Deferred</span></td><td class="effort-badge">XL</td></tr>
+      <tr class="status-Deferred" data-category="Ops" data-status="Deferred"><td><span class="sprint-badge sprint-post">Post-beta</span></td><td class="id-cell">&mdash;</td><td>6 OPS-001 P1 Security Findings: rate-limiting, draft server origin validation, session rotation, audit log redaction, Neon row-level security</td><td><span class="cat-badge cat-Ops">Ops</span></td><td><span class="status-badge sb-Deferred">Deferred</span></td><td class="effort-badge">M</td></tr>
+
+    </tbody>
+  </table>
+</div>
+
+<script>
+  var activeCat = 'all';
+  var activeStatus = 'all';
+
+  function filterCat(cat, btn) {
+    activeCat = cat;
+    btn.closest('.filter-group').querySelectorAll('.filter-btn').forEach(function(b) { b.classList.remove('active', 'active-blocked', 'active-deferred'); });
+    btn.classList.add('active');
+    applyFilters();
+  }
+
+  function filterStatus(status, btn) {
+    activeStatus = status;
+    btn.closest('.filter-group').querySelectorAll('.filter-btn').forEach(function(b) { b.classList.remove('active', 'active-blocked', 'active-deferred'); });
+    if (status === 'Blocked') btn.classList.add('active-blocked');
+    else if (status === 'Deferred') btn.classList.add('active-deferred');
+    else btn.classList.add('active');
+    applyFilters();
+  }
+
+  function applyFilters() {
+    var rows = document.querySelectorAll('#backlog-rows tr');
+    var visible = 0;
+    rows.forEach(function(row) {
+      var catMatch = activeCat === 'all' || row.getAttribute('data-category') === activeCat;
+      var statusMatch = activeStatus === 'all' || row.getAttribute('data-status') === activeStatus;
+      if (catMatch && statusMatch) { row.classList.remove('hidden'); visible++; }
+      else { row.classList.add('hidden'); }
+    });
+    document.getElementById('result-count').textContent = visible + ' item' + (visible !== 1 ? 's' : '') + ' shown';
+  }
+
+  (function() {
+    var rows = document.querySelectorAll('#backlog-rows tr');
+    var total = rows.length;
+    var blocked = 0;
+    rows.forEach(function(r) { if (r.getAttribute('data-status') === 'Blocked') blocked++; });
+    document.getElementById('total-count').textContent = total + ' items';
+    document.getElementById('blocked-count').textContent = blocked + ' blocked';
+    document.getElementById('result-count').textContent = total + ' items shown';
+  })();
+</script>
+
+</body>
+</html>
