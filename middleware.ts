@@ -4,6 +4,7 @@ const SESSION_COOKIE = "pwhl_user_email";
 const BETA_HOST = process.env.BETA_HOST ?? "fantasy.dykedb.org";
 
 export function middleware(req: NextRequest) {
+  try {
   const cookie = req.cookies.get(SESSION_COOKIE)?.value;
   const { pathname } = req.nextUrl;
   const host = req.headers.get("host") ?? "";
@@ -56,6 +57,10 @@ export function middleware(req: NextRequest) {
   const res = NextResponse.next();
   res.headers.set("x-pathname", pathname);
   return res;
+  } catch (error) {
+    console.error("[Middleware Error]", error);
+    return NextResponse.next();
+  }
 }
 
 export const config = {

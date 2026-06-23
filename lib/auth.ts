@@ -6,8 +6,9 @@ import type { User, FantasyTeam, FantasyLeague } from "@prisma/client";
 
 const USER_SESSION_COOKIE = "pwhl_user_email";
 
-export function getAuthCookie() {
-  return cookies().get(USER_SESSION_COOKIE)?.value ?? null;
+export async function getAuthCookie() {
+  const store = await cookies();
+  return store.get(USER_SESSION_COOKIE)?.value ?? null;
 }
 
 export function setAuthCookie(response: NextResponse, email: string) {
@@ -16,6 +17,7 @@ export function setAuthCookie(response: NextResponse, email: string) {
     value: email,
     path: "/",
     httpOnly: true,
+    secure: process.env.NODE_ENV !== "development",
     sameSite: "lax",
     maxAge: 60 * 60 * 24 * 30,
   });
@@ -27,13 +29,14 @@ export function clearAuthCookie(response: NextResponse) {
     value: "",
     path: "/",
     httpOnly: true,
+    secure: process.env.NODE_ENV !== "development",
     sameSite: "lax",
     maxAge: 0,
   });
 }
 
 export async function getCurrentUser(): Promise<User | null> {
-  const email = getAuthCookie();
+  const email = await getAuthCookie();
   if (!email) return null;
   return prisma.user.findUnique({ where: { email } });
 }
