@@ -714,7 +714,7 @@ function PlayerPanel({
               style={{ ...styles.tab, background: activeTab === tab ? "var(--accent)" : "rgba(150,160,200,0.08)", color: activeTab === tab ? "#fff" : "var(--muted)" }}
               onClick={() => setActiveTab(tab)}
             >
-              {tab === "available" ? "Available" : `Queue (${queuedPlayers.length})`}
+              {tab === "available" ? "Available" : `My List (${queuedPlayers.length})`}
             </button>
           ))}
         </div>
@@ -777,7 +777,7 @@ function PlayerPanel({
             </div>
 
             <p style={{ fontSize: 11, color: "var(--muted)", marginBottom: 8 }}>
-              ★ Star players you want — if your clock runs out, we draft from the top of your starred list.
+              ★ Add to my list — if your clock runs out, we'll auto-pick from the top.
             </p>
 
             {rows.length === 0 ? (
@@ -850,11 +850,11 @@ function PlayerPanel({
         {activeTab === "queue" && (
           <div>
             <p style={{ fontSize: 12, color: "var(--muted)", marginBottom: 10 }}>
-              Players are auto-drafted from the top of your queue when the timer expires.
+              Players are auto-drafted from the top of your list when the timer expires.
             </p>
             {queuedPlayers.length === 0 ? (
               <p style={{ color: "var(--muted)", fontSize: 12 }}>
-                No players queued. Add some from the Available tab.
+                Nothing on your list yet. Add players from the Available tab.
               </p>
             ) : (
               <div>
@@ -979,6 +979,18 @@ function DraftRoomContent({
   const isMobile = useIsMobile(900);
   const [mobileTab, setMobileTab] = useState<"pick" | "board" | "needs">("pick");
   const [queue, setQueueLocal] = useState<string[]>([]);
+  const [visibleError, setVisibleError] = useState<{ code: string; message: string } | null>(null);
+
+  // Auto-dismiss error after 4 seconds
+  useEffect(() => {
+    if (lastError) {
+      setVisibleError(lastError);
+      const timer = setTimeout(() => {
+        setVisibleError(null);
+      }, 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [lastError]);
 
   // Seed name + position lookup from SSR stats so all players are known immediately,
   // then keep it current as the WebSocket AVAILABLE messages arrive.
@@ -1033,9 +1045,19 @@ function DraftRoomContent({
         onResume={resume}
       />
 
-      {lastError && (
-        <div style={styles.errorBanner}>
-          We couldn&apos;t complete that draft action. Please try again.
+      {visibleError && (
+        <div style={styles.errorBannerContainer}>
+          <div style={styles.errorBanner}>
+            {visibleError.message}
+          </div>
+          <button
+            onClick={() => setVisibleError(null)}
+            style={styles.errorDismiss}
+            title="Dismiss"
+            aria-label="Dismiss error"
+          >
+            ✕
+          </button>
         </div>
       )}
 
@@ -1413,12 +1435,35 @@ const styles = {
     fontSize: 13,
     textAlign: "center" as const,
   },
-  errorBanner: {
-    background: "#450a0a",
+  errorBannerContainer: {
+    display: "flex" as const,
+    alignItems: "center" as const,
+    justifyContent: "space-between" as const,
+    gap: 12,
+    background: "rgba(120, 40, 40, 0.6)",
     color: "var(--red)",
-    padding: "8px 20px",
+    padding: "10px 20px",
     fontSize: 13,
-    borderBottom: "1px solid var(--red)",
+    borderBottom: "1px solid rgba(248, 113, 113, 0.4)",
+  },
+  errorBanner: {
+    flex: 1,
+  },
+  errorDismiss: {
+    background: "transparent",
+    border: "none",
+    color: "var(--red)",
+    fontSize: 18,
+    cursor: "pointer" as const,
+    padding: 0,
+    lineHeight: 1,
+    width: 28,
+    height: 28,
+    display: "flex" as const,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+    opacity: 0.7,
+    transition: "opacity 0.2s",
   },
   completeBanner: {
     background: "#052e16",

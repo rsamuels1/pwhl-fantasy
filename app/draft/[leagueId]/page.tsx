@@ -1,9 +1,10 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { Prisma } from "@prisma/client";
 import DraftRoom from "./DraftRoom";
 import type { PlayerStats } from "@/app/api/leagues/[leagueId]/draft/players/route";
 import { getPriorSeason } from "@/lib/season/index";
+import { requireAuth } from "@/lib/auth";
 
 interface Props {
   params: Promise<{ leagueId: string }>;
@@ -20,16 +21,20 @@ type AggRow = {
 
 export default async function DraftPage({ params, searchParams }: Props) {
   const { leagueId } = await params;
-  const { team: teamId } = await searchParams;
+  let { team: teamId } = await searchParams;
 
+  // If no team is specified, auto-detect from the user's membership
   if (!teamId) {
-    return (
-      <main style={{ padding: "2rem" }}>
-        <p style={{ color: "var(--red)" }}>
-          Missing <code>?team=&lt;teamId&gt;</code> in the URL.
-        </p>
-      </main>
-    );
+    const user = await requireAuth();
+    const userTeam = await prisma.fantasyTeam.findFirst({
+      where: { leagueId, ownerId: user.id },
+      select: { id: true },
+    });
+    if (userTeam) {
+      redirect(`/draft/${leagueId}?team=${userTeam.id}`);
+    }
+    // No team found — user doesn't belong to this league
+    notFound();
   }
 
   // Run league fetch and stats aggregation in parallel.
