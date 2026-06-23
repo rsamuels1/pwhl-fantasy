@@ -6,6 +6,7 @@ import { requireAuth, requireLeagueMember } from "@/lib/auth";
 import type { Matchup } from "@prisma/client";
 import { VpExplainer } from "@/components/VpExplainer";
 import EmptyState from "@/components/EmptyState";
+import BubbleWatch from "@/components/BubbleWatch";
 
 function computeStreaks(
   teamIds: string[],
@@ -51,6 +52,7 @@ export default async function StandingsPage({ params }: { params: { leagueId: st
   const league = await prisma.fantasyLeague.findUnique({
     where: { id: leagueId },
     include: { teams: true },
+    // also fetch status for BubbleWatch gating
   });
 
   if (!league) notFound();
@@ -96,6 +98,12 @@ export default async function StandingsPage({ params }: { params: { leagueId: st
     playoffCutoff !== null && hasResults && !playoffsStarted
       ? computeRace(standings, matchups, playoffCutoff)
       : null;
+
+  // BubbleWatch week tracking
+  const regularMatchups = matchups.filter((m) => !m.isPlayoff);
+  const totalWeeks = regularMatchups.reduce((max, m) => Math.max(max, m.week), 0);
+  const scoredWeeksSet = new Set(regularMatchups.filter((m) => m.homeScore !== null).map((m) => m.week));
+  const currentWeek = Math.max(0, ...scoredWeeksSet);
 
   // Banner summarizing the user's own playoff status.
   const myRaceIdx = vpStandings.findIndex((s) => s.fantasyTeamId === myTeam.id);
@@ -255,6 +263,19 @@ export default async function StandingsPage({ params }: { params: { leagueId: st
           </p>
         )}
       </section>
+
+      {race && !playoffsStarted && (
+        <BubbleWatch
+          raceMap={race}
+          teams={league.teams.map((t) => {
+            const s = vpStandings.find((v) => v.fantasyTeamId === t.id);
+            return { id: t.id, name: t.name, wins: s?.wins ?? 0, losses: s?.losses ?? 0, ties: s?.ties ?? 0 };
+          })}
+          isInSeason={league.status === "IN_SEASON"}
+          currentWeek={currentWeek}
+          totalWeeks={totalWeeks}
+        />
+      )}
     </div>
   );
 }
