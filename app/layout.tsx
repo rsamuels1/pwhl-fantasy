@@ -3,7 +3,6 @@ import Link from "next/link";
 import { headers } from "next/headers";
 import Script from "next/script";
 import "./globals.css";
-import { getCurrentUser } from "@/lib/auth";
 import { LogoWordmark } from "@/components/LogoShield";
 
 export const metadata: Metadata = {
@@ -18,7 +17,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const pathname = hdrs.get("x-pathname") ?? "";
   const hideNav = pathname === "/beta";
 
-  const user = hideNav ? null : await getCurrentUser().catch(() => null);
+  let user = null;
+  if (!hideNav) {
+    const { getCurrentUser } = await import("@/lib/auth");
+    user = await getCurrentUser().catch(() => null);
+  }
 
   return (
     <html lang="en">

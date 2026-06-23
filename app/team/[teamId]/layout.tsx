@@ -1,5 +1,4 @@
 import type { ReactNode } from "react";
-import { cookies } from "next/headers";
 import { requireAuth, requireTeamOwner } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import TeamNav from "./TeamNav";
@@ -16,8 +15,6 @@ export default async function TeamLayout({ children, params }: TeamLayoutProps) 
   const { teamId } = await params;
   const user = await requireAuth(`/team/${teamId}/matchup`);
   const team = await requireTeamOwner(teamId, user.id);
-
-  const cookieStore = await cookies();
 
   // Fetch betaStatus and league status (for TeamNav "Draft Queue" tab and beta banner).
   const leagueExtra = await prisma.fantasyLeague.findUnique({
