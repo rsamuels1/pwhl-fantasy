@@ -3830,7 +3830,7 @@ Sprint: 18
 
 Priority: P0 — must land before Jul 7 beta invites
 
-Status: SPEC WRITTEN — ready for engineering
+Status: ✅ SHIPPED — BetaWelcomeStep confirmed in `CreateLeagueWizard.tsx` line 220; `NEXT_PUBLIC_BETA_MODE=true` added to `.env.local`
 
 ---
 
