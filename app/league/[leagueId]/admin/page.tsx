@@ -14,6 +14,7 @@ import { RenewLeagueForm } from "@/components/RenewLeagueForm";
 import { CommissionerRecoveryTools } from "@/components/CommissionerRecoveryTools";
 import { LeagueSettingsEditor } from "@/components/LeagueSettingsEditor";
 import TradeSettingsForm from "@/components/TradeSettingsForm";
+import NegativeAwardsToggle from "@/components/NegativeAwardsToggle";
 import PendingTradeReviewList from "@/components/PendingTradeReviewList";
 
 const COMMISSIONER_EVENT_TYPES = [
@@ -502,6 +503,23 @@ export default async function AdminPage({ params, searchParams }: Props) {
           draftDone={draftDone}
           isPublic={league.isPublic}
         />
+        {draftDone && (
+          <div style={{ marginTop: 20, paddingTop: 16, borderTop: "1px solid var(--border)" }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text)", marginBottom: 6 }}>
+              Weekly awards
+            </div>
+            <p style={{ fontSize: 12, color: "var(--muted)", marginBottom: 10 }}>
+              Negative awards (Frozen Stick, Heartbreaker, Collapse) can feel discouraging for casual leagues.
+              Turn them off to keep the vibe positive.
+            </p>
+            <NegativeAwardsToggle
+              leagueId={leagueId}
+              defaultValue={
+                ((league.scoringSettings as Record<string, unknown>)?.showNegativeAwards ?? true) !== false
+              }
+            />
+          </div>
+        )}
       </section>
 
       {/* ── Commissioner recovery tools ── */}
