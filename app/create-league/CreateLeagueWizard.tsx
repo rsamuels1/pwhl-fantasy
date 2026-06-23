@@ -3,23 +3,30 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import InviteLinkButton from "@/components/InviteLinkButton";
+import BetaWelcomeStep from "@/components/BetaWelcomeStep";
 import Link from "next/link";
 
+// Beta mode adds step 0 (beta welcome), which is hidden from the progress bar.
 // Replay mode skips step 4 (Rules confirmation), so it has 5 displayed steps instead of 6.
-// TOTAL_STEPS is the internal step count (7 states including the final done screen).
+// TOTAL_STEPS is the internal step count (8 states including step 0 and the final done screen).
 // displayTotal and displayStep are what we show in the progress bar and counter.
-const TOTAL_STEPS = 7;
+const TOTAL_STEPS = 8;
+const isBetaMode = typeof process !== "undefined" && process.env.NEXT_PUBLIC_BETA_MODE === "true";
 
 // Maps internal step number → displayed step number for each mode.
+// Step 0 is never shown in progress counter (it's hidden).
 // Replay: steps 1-3 → 1-3, steps 5-7 → 4-6 (step 4 is skipped).
 // Live: steps 1-6 → 1-6.
 function getDisplayStep(step: number, isReplay: boolean): number {
+  if (step === 0) return 0; // Step 0 is never shown in progress bar
   if (!isReplay) return step;
   // Step 4 is skipped for replay — steps 5+ shift down by 1.
   return step < 5 ? step : step - 1;
 }
 
 function getDisplayTotal(isReplay: boolean): number {
+  // Replay: 5 displayed steps
+  // Live: 6 displayed steps
   return isReplay ? 5 : 6;
 }
 
@@ -37,7 +44,7 @@ interface Props {
 
 export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: Props) {
   const router = useRouter();
-  const [step, setStep] = useState(1);
+  const [step, setStep] = useState(isBetaMode ? 0 : 1);
   const [name, setName] = useState("My PWHL League");
   const [maxTeams, setMaxTeams] = useState(8);
   const [isReplay, setIsReplay] = useState(startAsReplay);
@@ -60,7 +67,10 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
   const goNext = () => {
     setStep((s) => Math.min(s + 1, TOTAL_STEPS));
   };
-  const goBack = () => setStep((s) => Math.max(s - 1, 1));
+  const goBack = () => {
+    const minStep = isBetaMode ? 0 : 1;
+    setStep((s) => Math.max(s - 1, minStep));
+  };
 
   const handleCancel = () => {
     // If league was created but team wasn't, warn before leaving
@@ -153,8 +163,8 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
     <div className="page-width" style={{ padding: "32px 16px" }}>
       <div style={{ maxWidth: 560, margin: "0 auto", display: "flex", flexDirection: "column", gap: 24 }}>
 
-        {/* Progress indicator — filled bar (6 segments for Live, 5 for Replay) */}
-        {(() => {
+        {/* Progress indicator — filled bar (hidden when step === 0) */}
+        {step > 0 && (() => {
           const displayTotal = getDisplayTotal(isReplay);
           const displayStep = getDisplayStep(Math.min(step, TOTAL_STEPS - 1), isReplay);
           const stepLabels = isReplay
@@ -199,6 +209,11 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
         })()}
 
         <div className="dashboard-panel" style={{ minHeight: "60vh" }}>
+
+          {/* ── Step 0: Beta welcome (only when NEXT_PUBLIC_BETA_MODE=true) ── */}
+          {isBetaMode && step === 0 && (
+            <BetaWelcomeStep onContinue={() => setStep(1)} />
+          )}
 
           {/* ── Step 1: League name ── */}
           {step === 1 && (

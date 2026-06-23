@@ -1,0 +1,121 @@
+"use client";
+
+import Link from "next/link";
+
+interface Props {
+  onContinue: () => void;
+}
+
+export default function BetaWelcomeStep({ onContinue }: Props) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+      {/* Eyebrow badge with pulse */}
+      <div style={{ display: "flex", justifyContent: "center", marginBottom: 8 }}>
+        <span style={{
+          display: "inline-flex", alignItems: "center", gap: 8,
+          fontSize: 11, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase",
+          color: "#c9b6ff", background: "rgba(124,58,237,0.14)",
+          border: "1px solid rgba(124,58,237,0.30)", borderRadius: 30, padding: "7px 16px",
+        }}>
+          <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#a78bfa", animation: "pulse 2s infinite", flexShrink: 0 }} />
+          Beta · Replay Season
+        </span>
+      </div>
+
+      {/* Heading */}
+      <div style={{ textAlign: "center" }}>
+        <h1 style={{ margin: "0 0 12px", fontSize: 28, fontWeight: 800, color: "#f3f5fb" }}>
+          You're in. Welcome, Founding GM.
+        </h1>
+      </div>
+
+      {/* Intro paragraph */}
+      <p style={{
+        fontSize: 15, lineHeight: 1.6, color: "#9aa3bd", margin: 0, textAlign: "center",
+        maxWidth: 500, marginInline: "auto",
+      }}>
+        You're one of a small group helping us shape PWHL GM before the live 2026-27 season.
+        Your league runs on four real weeks from the 2025-26 PWHL season — same players, same stats,
+        compressed into a ~4-week format so you can experience a full season before opening night.
+        Everything you try, break, or love goes directly into what we build next.
+      </p>
+
+      {/* Three info cards */}
+      <div style={{
+        display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 12,
+        marginTop: 8,
+      }}>
+        <div style={betaCard}>
+          <div style={{ fontSize: 20, marginBottom: 8 }}>⏪</div>
+          <div style={betaCardTitle}>Real PWHL stats. Condensed timeline.</div>
+          <div style={betaCardBody}>
+            Four weeks of 2025-26 data, full snake draft, weekly head-to-head VP scoring.
+          </div>
+        </div>
+
+        <div style={betaCard}>
+          <div style={{ fontSize: 20, marginBottom: 8 }}>💬</div>
+          <div style={betaCardTitle}>Send us feedback. All of it.</div>
+          <div style={betaCardBody}>
+            Use the feedback button in the bottom-right corner. Bugs, confusion, missing features — we read every one.
+          </div>
+        </div>
+
+        <div style={betaCard}>
+          <div style={{ fontSize: 20, marginBottom: 8 }}>🏒</div>
+          <div style={betaCardTitle}>Founding GMs get first access in November.</div>
+          <div style={betaCardBody}>
+            When the live 2026-27 season opens, you get early invites and skip the waitlist.
+          </div>
+        </div>
+      </div>
+
+      {/* CTA and secondary link */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 12, alignItems: "center", marginTop: 12 }}>
+        <button
+          onClick={onContinue}
+          className="button-primary"
+          style={{ width: "100%", maxWidth: 300 }}
+        >
+          Build my league →
+        </button>
+        <Link
+          href="/league-rules"
+          style={{
+            fontSize: 13, color: "#7c6af7", textDecoration: "none", fontWeight: 600,
+            transition: "color 0.15s",
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.color = "#a78bfa")}
+          onMouseLeave={(e) => (e.currentTarget.style.color = "#7c6af7")}
+        >
+          What's a replay league?
+        </Link>
+      </div>
+
+      <style>{`
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.4; }
+        }
+      `}</style>
+    </div>
+  );
+}
+
+const betaCard: React.CSSProperties = {
+  background: "rgba(255,255,255,0.03)",
+  border: "1px solid rgba(148,163,184,0.1)",
+  borderRadius: 14,
+  padding: "16px 14px",
+  display: "flex",
+  flexDirection: "column",
+  gap: 6,
+};
+
+const betaCardTitle: React.CSSProperties = {
+  fontSize: 13, fontWeight: 700, color: "#e2e8f0", lineHeight: 1.3,
+};
+
+const betaCardBody: React.CSSProperties = {
+  fontSize: 12, color: "#94a3b8", lineHeight: 1.5,
+};
