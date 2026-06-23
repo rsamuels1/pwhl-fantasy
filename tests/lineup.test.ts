@@ -78,6 +78,34 @@ describe("validateSlotMove", () => {
   it("allows active forward to BENCH", () => {
     expect(validateSlotMove("FORWARD", true, "BENCH", emptyRoster(), "p1", SETTINGS)).toBeNull();
   });
+
+  it("allows bench forward to empty FORWARD slot when UTIL is full", () => {
+    // Scenario: Only 2 of 3 FORWARD slots filled, UTIL is at capacity (1/1), bench has a forward
+    // User moves bench forward to the empty FORWARD slot — should succeed
+    const roster = [
+      { playerId: "benchF", slot: "BENCH" as const },
+      { playerId: "f1", slot: "FORWARD" as const },
+      { playerId: "f2", slot: "FORWARD" as const },
+      { playerId: "d1", slot: "DEFENSE" as const },
+      { playerId: "d2", slot: "DEFENSE" as const },
+      { playerId: "util1", slot: "UTIL" as const },
+      { playerId: "g1", slot: "GOALIE" as const },
+    ];
+    // Moving bench forward to FORWARD slot should succeed — slot has capacity (2/3)
+    const err = validateSlotMove("FORWARD", true, "FORWARD", roster, "benchF", SETTINGS);
+    expect(err).toBeNull();
+  });
+
+  it("rejects bench forward to UTIL when UTIL is at capacity", () => {
+    // Scenario: UTIL slot is full, user tries to move bench forward to UTIL
+    const roster = [
+      { playerId: "benchF", slot: "BENCH" as const },
+      { playerId: "util1", slot: "UTIL" as const },
+    ];
+    // Moving bench forward to UTIL slot should fail because UTIL is at capacity
+    const err = validateSlotMove("FORWARD", true, "UTIL", roster, "benchF", SETTINGS);
+    expect(err).toMatch(/full/i);
+  });
 });
 
 describe("slotCapacity", () => {

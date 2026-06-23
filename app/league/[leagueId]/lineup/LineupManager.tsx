@@ -167,9 +167,7 @@ export default function LineupManager({
   function moveTo(targetSlot: SlotType, targetPlayerId?: string) {
     if (!selected) return;
     if (targetPlayerId === selected.playerId) { setSelectedId(null); return; }
-    const newSlot = targetPlayerId
-      ? roster.find((p) => p.playerId === targetPlayerId)?.slot ?? targetSlot
-      : targetSlot;
+    const newSlot = targetSlot;
     if (newSlot === selected.slot) { setSelectedId(null); return; }
 
     setError(null);
