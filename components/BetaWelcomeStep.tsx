@@ -34,10 +34,7 @@ export default function BetaWelcomeStep({ onContinue }: Props) {
         fontSize: 15, lineHeight: 1.6, color: "#9aa3bd", margin: 0, textAlign: "center",
         maxWidth: 500, marginInline: "auto",
       }}>
-        You're one of a small group helping us shape PWHL GM before the live 2026-27 season.
-        Your league runs on four real weeks from the 2025-26 PWHL season — same players, same stats,
-        compressed into a ~4-week format so you can experience a full season before opening night.
-        Everything you try, break, or love goes directly into what we build next.
+        You're shaping PWHL GM before launch. Your feedback goes straight into the product. This league uses four real weeks from 2025-26 with actual player stats—compressed so you experience a full season in weeks, not months.
       </p>
 
       {/* Three info cards */}
