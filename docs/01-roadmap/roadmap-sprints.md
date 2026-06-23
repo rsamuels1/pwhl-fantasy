@@ -1266,6 +1266,63 @@ Produce a findings list; fix all P0 a11y blockers. P1/P2 findings go to the post
 
 ---
 
+## Sprint 19 — "Onboarding UX: Playwright Walkthrough Fixes" · PLANNED · Track F · P1/P2
+
+**Status:** Planned. Sprint 18 is IN PROGRESS (all items shipped). Sprint 19 begins once Sprint 18 is formally closed (target: after Jul 7, 2026 beta invites go out).
+
+Goal: Address all P1 and P2 findings from the June 23, 2026 Playwright UX walkthrough of the beta site. These are onboarding, invite, and wizard copy/layout fixes — no schema changes, no new API routes, no logic changes. The two email-infrastructure-blocked items (UX-053 email invite flow, BF-019 password reset) are held for the post-email-infra backlog.
+
+**P1 — Must ship before beta widens to broader audience:**
+
+**BF-018: `/league-rules` 404 Dead Link** · S · P1
+A dead internal link to `/league-rules` fires a 404 on every dashboard load and from the BLR-002 wizard welcome screen's secondary link. Fix: create a minimal `/league-rules` route (preferred) or replace all references with a working destination.
+Files: `app/league-rules/page.tsx` (new), or `grep -r "league-rules" app/` to locate all references.
+
+**UX-051: VP Popover Overflows Viewport Bottom on Mobile** · S · P1
+The VP "?" explainer popover in wizard Step 4 breaks layout and clips past the viewport bottom on a 390px phone. Best teaching moment in the product — currently broken on mobile. Fix: `max-height: 60vh; overflow-y: auto` + flip-above-anchor positioning when near viewport bottom.
+Files: `components/VpExplainer.tsx`, `app/globals.css`
+
+**UX-052: Invite Landing Has Insufficient Fantasy Primer for Cold New Users** · M · P1
+The logged-out invite landing page is the most common new-user entry path. AG-007 (Sprint 17) added a two-sentence explainer; the Jun 23 walkthrough found it still insufficient. Needs 3–4 plain-language bullet points explaining what PWHL GM is, what a fantasy league involves, and what happens next. Zero unexplained acronyms.
+Files: `app/join-league/page.tsx` (or `app/invite/[leagueId]/page.tsx`)
+
+**UX-057: Wizard Rules Step Is a Jargon Wall (PPP, UTIL Unexplained)** · M · P1
+The Rules confirmation step (Step 4) introduces VP, FP, PPP, and UTIL simultaneously. OB-009 (Sprint 18) added FP values; this item adds inline definitions for PPP ("power play points") and UTIL ("flex slot for any skater"), reorders copy to lead with plain language before acronyms, and considers collapsing the playoff format detail.
+Files: `app/create-league/CreateLeagueWizard.tsx`
+
+**P2 — Ship in Sprint 19 alongside P1s (all S effort):**
+
+**UX-054: Replay CTA on Landing Has No "Why" Context** · S · P2
+The "Try a Replay" button added by AG-007 has no explanatory subtitle. Add ≤15 words explaining the value (e.g., "Try a full PWHL season risk-free using 2025-26 stats — no commitment needed.").
+Files: `app/page.tsx`
+
+**UX-055: Wizard Step Count Hidden on Welcome Screen** · S · P2
+"STEP N OF N" only appears after the welcome/beta screen. Add a step summary ("6 steps · ~3 minutes") to the BetaWelcomeStep and from step 1 onward in non-beta mode.
+Files: `app/create-league/CreateLeagueWizard.tsx`, `components/BetaWelcomeStep.tsx`
+
+**UX-056: Commissioner Draft Checklist Has No Draft Primer** · S · P2
+The pre-draft admin panel checklist has no explanation of what a draft is or what the commissioner's role is. Add a ≤5-sentence primer: snake draft, commissioner starts it, auto-pick fires on timeout, link to draft room.
+Files: `app/league/[leagueId]/admin/page.tsx`
+
+---
+
+### Sprint 19 Story Table
+
+| Story | Size | Priority | Status |
+|---|---|---|---|
+| BF-018: `/league-rules` 404 dead link | S | P1 | Planned |
+| UX-051: VP popover overflow on mobile | S | P1 | Planned |
+| UX-052: Invite landing fantasy primer | M | P1 | Planned |
+| UX-057: Wizard Rules step jargon wall | M | P1 | Planned |
+| UX-054: Replay CTA context copy | S | P2 | Planned |
+| UX-055: Wizard step count on welcome | S | P2 | Planned |
+| UX-056: Draft checklist primer | S | P2 | Planned |
+| **Total** | **4S · 2M** | — | **0/7** |
+
+**Exit criteria:** All 4 P1 items shipped; all 3 P2 items shipped if capacity allows. `tsc --noEmit` clean. Existing tests pass. No unexplained acronyms on the invite landing page or wizard rules step (verified by manual mobile check at 390px).
+
+---
+
 ## Launch Gates — Beta to Public Launch
 
 Formal gates that must all be GREEN before public launch. See `roadmap-index.md` for summary table.
@@ -1396,6 +1453,7 @@ Items below are acknowledged but have no sprint assignment. They become candidat
 | Sprint 16 — Emotional Design Polish | ✅ COMPLETE (Jun 22, 2026) | Score colors by win state + count-up animation, section heading hierarchy, Saira Condensed font loading, RecapCard elevation, card entrance animations. Transforms "Bloomberg terminal" feeling into energetic sports product. Commits: 5ecc116, f1d576c |
 | Sprint 17 — UX Polish: Agent Test Run Fixes | ✅ COMPLETE (Jun 22, 2026) | 9/9 items: AG-001 (LEAGUES overhaul + isPublic schema) + AG-002 (matchup page restructure) + AG-003 (FP/VP copy) + AG-004 (terminology) + AG-005 (playoff eliminated empty state) + AG-006 (renewal confirmation) + AG-007 (pre-login UX) + AG-008 (VP education) + AG-009 (lock tooltip); source: 4-agent parallel UX test run |
 | Sprint 18 — Beta Operations + Onboarding Repair | IN PROGRESS (target Jul 7, 2026) | All P0s complete: BLR-001 ✅ + BLR-002 ✅ (BetaWelcomeStep confirmed) + BF-009 ✅ + OB-002/003/004 ✅ + OPS-001 ✅ (GATE-1 PASS, zero P0 findings) + OPS-002 ✅ (GATE-2 PASS, 20 leagues × 80 connections) + OPS-003 ✅ (GATE-3 CONDITIONAL — CRON_SECRET manual action pending Jul 7); P1 items + BF-012/013/014 + OPS-004 remaining |
+| Sprint 19 — Onboarding UX: Playwright Walkthrough Fixes | PLANNED | 7 items (4P1 + 3P2): BF-018 (/league-rules 404) + UX-051 (VP popover mobile) + UX-052 (invite landing primer) + UX-057 (wizard jargon wall) + UX-054/055/056. Source: Playwright UX walkthrough Jun 23, 2026. 2 email-blocked items (UX-053, BF-019) in post-email-infra backlog. |
 
 ---
 
@@ -1435,3 +1493,5 @@ P0 fixes are already applied.
 - **Q4 2026 (in-season):** Waivers → FAAB; engagement surfaces (#25 analysis, #29 performance dashboard, #30 playoff UX) while the first live season runs. Trade System shipped Sprint 7.
 - **Off-season — winter/spring 2027:** League History/HoF page ships Sprint 9 skeleton; fills in naturally after first season renewal. Player Legacy (#31) deferred to post-launch backlog — requires at least one completed season to be meaningful; will be a candidate for the 2027-28 roadmap. The schema foundation (parentLeagueId, rulesVersion, scoringVersion) was laid in Sprint 2, so this is purely the product surface. Growth/retention analytics dashboards (AN-002/003) and referral loop. Target: 2027-28 leagues renew in-place and keep their history.
 - **2027-28 season:** Advanced formats (keeper, then dynasty), real-time push scoring + push notifications, and player trends. Native apps and AI features (draft assistant, weekly recaps, trade evaluator) remain Phase 5 "future expansion" — revisit once retention metrics justify them.
+- **UX-053: Email Invite Flow** — Commissioners can only share an invite link; no email-entry flow exists. First-time commissioners expect to type friends' emails. Medium effort. **Blocked on email infrastructure** (transactional email provider — same blocker as Sprint 7 stretch email notifications). Unblocks to P1 once email infra ships. Spec: `roadmap-features.md` UX-053.
+- **BF-019: Password Reset / Forgot Password on Login Page** — Returning users whose cookie expired have no self-service recovery path. Medium effort. **Blocked on email infrastructure** — requires sending a magic re-auth link by email. Unblocks alongside UX-053. Spec: `roadmap-features.md` BF-019.

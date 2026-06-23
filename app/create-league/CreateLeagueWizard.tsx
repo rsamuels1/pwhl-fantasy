@@ -487,7 +487,7 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
                   <button className="button-primary" onClick={goNext} style={{ flex: 1 }}>Next →</button>
                 )}
               </div>
-              {error && <p style={{ color: "#d18b7f", fontSize: 13, margin: 0 }}>{error}</p>}
+              {error && <WizardError message={error} />}
             </div>
           )}
 
@@ -616,7 +616,7 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
                   </div>
                 </>
               )}
-              {error && <p style={{ color: "#d18b7f", fontSize: 13, margin: 0 }}>{error}</p>}
+              {error && <WizardError message={error} />}
             </div>
           )}
 
@@ -656,7 +656,7 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
                   {loading ? "Creating team…" : "Create my team →"}
                 </button>
               </div>
-              {error && <p style={{ color: "#d18b7f", fontSize: 13, margin: 0 }}>{error}</p>}
+              {error && <WizardError message={error} />}
             </div>
           )}
 
@@ -727,6 +727,34 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
             </div>
           )}
         </div>
+      </div>
+    </div>
+  );
+}
+
+function WizardError({ message }: { message: string }) {
+  const isAuthError = /unauthorized|session|sign in|not logged/i.test(message);
+  return (
+    <div style={{
+      display: "flex", alignItems: "flex-start", gap: 10,
+      padding: "12px 14px", borderRadius: 10,
+      background: "rgba(239,68,68,0.08)",
+      border: "1px solid rgba(239,68,68,0.25)",
+    }}>
+      <span style={{ fontSize: 14, flexShrink: 0, marginTop: 1, color: "#f87171" }}>!</span>
+      <div style={{ fontSize: 13, color: "#fca5a5", lineHeight: 1.4 }}>
+        {message}
+        {isAuthError && (
+          <>
+            {" "}
+            <a
+              href="/login"
+              style={{ color: "#f87171", fontWeight: 700, textDecoration: "underline" }}
+            >
+              Sign in again
+            </a>
+          </>
+        )}
       </div>
     </div>
   );

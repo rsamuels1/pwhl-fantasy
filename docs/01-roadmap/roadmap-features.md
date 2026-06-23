@@ -4128,6 +4128,257 @@ Spec needed before implementation.
 
 ---
 
+# Phase 1c: Playwright UX Walkthrough Findings — Jun 23, 2026
+
+Source: Live Playwright UX walkthrough of the PWHL GM beta site, June 23, 2026. 11 raw findings deduplicated to 8 net-new items. P0 wizard "Create" 401 omitted — being fixed by engineering concurrently.
+
+---
+
+## BF-018. `/league-rules` 404 — Dead Internal Link on Every Dashboard Load
+
+Sprint: 19
+
+Priority: P1
+
+Effort: S
+
+Status: Open
+
+Source: Playwright UX walkthrough, Jun 23, 2026. A dead internal link to `/league-rules` fires a 404 on every dashboard load. The route does not exist. The link is also referenced in the BLR-002 wizard beta welcome screen copy as a secondary link ("What's a replay league?").
+
+Fix options (choose one):
+- A (preferred): Create a minimal `/league-rules` route that renders the key rules from `docs/league-rules-v1.md` in a readable format. Doubles as a useful reference page for new users.
+- B: Replace all `/league-rules` references with a tooltip, an anchor on an existing page (e.g., the standings `VpExplainer`), or remove the dead link entirely.
+
+Files: `app/league-rules/page.tsx` (new, if option A); all files that reference `/league-rules` (search: `grep -r "league-rules" app/`).
+
+Acceptance Criteria:
+- AC-001: No 404 is returned when navigating to `/league-rules` or when any internal link points to it.
+- AC-002: If option A: the page renders the key fantasy scoring rules in readable form, referencing `docs/league-rules-v1.md` content.
+- AC-003: If option B: all links to `/league-rules` are removed or redirected to a valid destination.
+- AC-004: `tsc --noEmit` clean; no new TypeScript errors.
+
+---
+
+## UX-051. VP Popover Overflows Viewport Bottom on Mobile (Wizard Rules Step)
+
+Sprint: 19
+
+Priority: P1
+
+Effort: S
+
+Status: Open
+
+Source: Playwright UX walkthrough, Jun 23, 2026. Screenshot confirms: the VP "?" explainer popover in the wizard's Rules confirmation step (Step 4 in live mode) breaks the card layout and spills past the viewport bottom on mobile. This is the highest-value teaching moment in the entire product — the spot where users learn how VP scoring works — and it is currently visually broken on mobile.
+
+The `VpExplainer` component renders a popover/tooltip that lacks overflow-scroll and upward-repositioning logic. On a 390px phone viewport, the popover renders below its anchor and clips.
+
+Fix: Add `max-height: 60vh; overflow-y: auto; scroll-behavior: smooth` to the popover container, and add positioning logic to detect when the popover would overflow the bottom of the viewport and flip it above the anchor instead. No schema changes. No logic changes.
+
+Files: `components/VpExplainer.tsx`, `app/globals.css`
+
+Acceptance Criteria:
+- AC-001: On a 390px mobile viewport, triggering the VP "?" popover in wizard Step 4 does not overflow past the viewport bottom.
+- AC-002: The popover is scrollable when its content exceeds available height.
+- AC-003: The full VP explanation content is readable — nothing is clipped or hidden.
+- AC-004: Desktop behavior (no overflow) is unchanged.
+- AC-005: `tsc --noEmit` clean.
+
+---
+
+## UX-052. Invite Landing Page Has Insufficient Fantasy Primer for Cold New Users
+
+Sprint: 19
+
+Priority: P1
+
+Effort: M
+
+Status: Open
+
+Source: Playwright UX walkthrough, Jun 23, 2026. The logged-out invite landing page (`/join-league/[code]`) is the most common new-user entry point — a fan receives a link from a friend and opens it cold with no prior context. The current page shows a "Sign in / Start your franchise" prompt. AG-007 (Sprint 17) added a two-sentence fantasy explainer (AC-004), but the Jun 23 walkthrough found the experience still insufficient: a brand-new PWHL fan has no understanding of what fantasy hockey is, what they're joining, or why it's fun.
+
+What's needed is a more substantial primer above the join form: 3–4 plain-language bullet points explaining what PWHL GM is, what a fantasy league involves, and what will happen next (join → draft → compete). This is the product's single best acquisition moment and it needs to earn the click.
+
+Note: AG-007 is SHIPPED. This is a gap in the scope of what was shipped, not a regression.
+
+Files: `app/join-league/page.tsx` (or `app/invite/[leagueId]/page.tsx` — whichever handles the public invite landing)
+
+Acceptance Criteria:
+- AC-001: The invite landing page renders a "What is PWHL GM?" primer section above the join form when the user is logged out.
+- AC-002: The primer uses plain language with zero unexplained acronyms (no VP, FP, VTF on first mention without definition).
+- AC-003: The primer is ≥ 3 bullet points or equivalent short-form explanation.
+- AC-004: The primer is visible without scrolling on a 390px mobile viewport.
+- AC-005: Logged-in users (returning to join a second league) do not see the primer — show it only when `!user`.
+- AC-006: Existing join form behavior (invite code validation, team creation) is unchanged.
+
+---
+
+## UX-054. Replay CTA on Landing Page Has No "Why Would I Want This?" Explanation
+
+Sprint: 19
+
+Priority: P2
+
+Effort: S
+
+Status: Open
+
+Source: Playwright UX walkthrough, Jun 23, 2026. AG-007 (Sprint 17) added a "Try a Replay" secondary CTA button to the landing page (AC-002, shipped). The finding from the Jun 23 walkthrough is that the button floats with no emotional context — a first-time visitor has no idea what a "Replay" is, why they would want one, or why it's compelling. The button needs a one-line descriptor that communicates the value: learn the game risk-free before the live season begins.
+
+Fix: Add a short subtitle (≤15 words) immediately below or adjacent to the Replay CTA. Example: "Try a full PWHL season risk-free using 2025-26 stats — no commitment needed." Copy-only change; no logic or schema changes.
+
+Files: `app/page.tsx`
+
+Acceptance Criteria:
+- AC-001: The "Try a Replay" CTA on the landing page has a visible subtitle explaining the value (no prior knowledge of "Replay" required to understand it).
+- AC-002: The subtitle is ≤15 words and contains no unexplained acronyms.
+- AC-003: Desktop and mobile layouts render the subtitle without overflow or wrapping issues.
+- AC-004: No other landing page behavior changes.
+
+---
+
+## UX-055. Wizard Doesn't Show Step Count Until After the Welcome Screen
+
+Sprint: 19
+
+Priority: P2
+
+Effort: S
+
+Status: Open
+
+Source: Playwright UX walkthrough, Jun 23, 2026. The "STEP N OF N" progress indicator in the league creation wizard only appears after the user leaves the welcome/beta screen (step 0 in beta mode) or from step 1 onward in normal mode. Users entering the flow don't know how long the wizard is, which creates uncertainty. In beta mode, the `BetaWelcomeStep` component hides the progress bar entirely (`{step > 0 && ...}`).
+
+Fix: Show a step-count summary ("6 steps · ~3 minutes" for live mode; "5 steps · ~2 minutes" for replay mode) on the welcome screen or immediately below the wizard card title from step 1. For the BetaWelcomeStep, add a compact step summary below the heading. This does not require changing the existing step counter — it is a supplemental hint.
+
+Files: `app/create-league/CreateLeagueWizard.tsx`, `components/BetaWelcomeStep.tsx` (or inline in wizard if no separate file)
+
+Acceptance Criteria:
+- AC-001: A user entering the wizard in any mode can see how many steps the flow has before completing step 1.
+- AC-002: Beta mode (BetaWelcomeStep at step 0) shows a step summary below the heading.
+- AC-003: Non-beta mode shows the step count from step 1 (no change to existing progress bar; supplement it).
+- AC-004: The step count is accurate for both live mode (6 steps) and replay mode (5 steps).
+
+---
+
+## UX-056. Commissioner Draft Setup Checklist Has No Draft Primer
+
+Sprint: 19
+
+Priority: P2
+
+Effort: S
+
+Status: Open
+
+Source: Playwright UX walkthrough, Jun 23, 2026. The "Draft set up" step in the commissioner pre-draft checklist (admin panel and/or wizard done screen) shows a checklist item with no explanation of what a draft involves or what the commissioner needs to do. First-time commissioners don't know whether they need to configure anything, what "snake draft" means, or that they are the one who starts the draft timer.
+
+Fix: Add a one-paragraph primer adjacent to the "Draft" section in the admin panel pre-draft checklist. Content: what a snake draft is (managers take turns picking real PWHL players), that the commissioner starts the draft when everyone is ready, that auto-pick fires if someone goes over the clock, and a link to the draft room. Copy-only addition; no schema changes.
+
+Files: `app/league/[leagueId]/admin/page.tsx` (pre-draft checklist section), or `app/create-league/CreateLeagueWizard.tsx` (done screen) depending on where the checklist lives.
+
+Acceptance Criteria:
+- AC-001: A first-time commissioner viewing the pre-draft admin panel sees a plain-language explanation of what a draft is and what their role is.
+- AC-002: The primer is ≤5 sentences and contains no unexplained jargon.
+- AC-003: The primer includes a link to the draft room (`/draft/[leagueId]`).
+- AC-004: Experienced commissioners are not penalized — the primer does not take up disproportionate space; it can be collapsed or positioned below the primary checklist action.
+
+---
+
+## UX-057. Wizard Rules Step Is a Jargon Wall (VP, PPP, UTIL Unexplained)
+
+Sprint: 19
+
+Priority: P1
+
+Effort: M
+
+Status: Open
+
+Source: Playwright UX walkthrough, Jun 23, 2026. The wizard Rules confirmation step (Step 4 in live mode) introduces VP, FP, PPP, and UTIL simultaneously on the same screen — the point in the flow where users are least equipped to process acronyms. OB-009 (Sprint 18, shipped) added a scoring chip row ("Goal 2 pts · Assist 1.5 pts · Win (G) 5 pts · PPP 1 pt · Shutout (G) 3 pts"), which improved FP values. The Jun 23 walkthrough found that PPP and UTIL still appear without plain-language definition, and the overall page overwhelms new users with density.
+
+This is P1 because the Rules step is a commitment gate — users who can't parse it may abandon the wizard or create a league without understanding how it works.
+
+Fix:
+- Add inline definitions for PPP ("power play points — goals or assists on the power play") and UTIL ("utility — a flex slot that accepts any skater").
+- Reorder copy to lead with plain language before the acronym (e.g., "Power Play Points (PPP)" not just "PPP").
+- Consider hiding or deferring the playoff format detail to a collapsed expandable — it adds cognitive load for users who don't yet have a league to worry about.
+- Requires copy + light layout review. No schema changes.
+
+Note: This partially overlaps with OB-009 (FP values chip row, shipped Sprint 18) but addresses a broader jargon problem that OB-009 did not fix.
+
+Files: `app/create-league/CreateLeagueWizard.tsx` (Step 4 / Rules step), `app/globals.css` (if tooltip styles needed)
+
+Acceptance Criteria:
+- AC-001: A first-time user with no fantasy sports background can read the Rules step without encountering an unexplained abbreviation.
+- AC-002: PPP is defined inline (in parentheses or tooltip) on first appearance.
+- AC-003: UTIL is defined inline (in parentheses or tooltip) on first appearance.
+- AC-004: VP is either defined inline or the `VpExplainer` toggle is prominently visible and open by default on this step.
+- AC-005: The step does not increase in total height — any new copy must be concise or replace existing dense text.
+- AC-006: `tsc --noEmit` clean; existing wizard tests pass.
+
+Effort: Backend 0 · Frontend M · Testing S
+
+---
+
+## UX-053. Email Invite Flow — Type-In Friends' Emails (Blocked on Email Infra)
+
+Sprint: Post-email-infra backlog
+
+Priority: P2
+
+Effort: M
+
+Status: Blocked — requires email infrastructure
+
+Blocker: Email infrastructure is deferred post-beta per Sprint 7 stretch item ("Email Notifications" in `roadmap-sprints.md` Sprint 7 Stretch section). No transactional email provider (Resend or equivalent) is wired up. This item unblocks when email infra ships.
+
+Source: Playwright UX walkthrough, Jun 23, 2026. Commissioners can only share a league invite link; there is no email-entry invite flow. First-time commissioners expect to type their friends' email addresses directly into the app (consistent with Yahoo, ESPN, Sleeper). This is a meaningful friction point for league fill — not every commissioner knows how to share a link effectively.
+
+What it requires once email infra is available:
+- An email-entry form in the commissioner admin panel / invite section: text input for email addresses (one per line or comma-separated), "Send Invites" button.
+- Backend: sends an invite email with the league join link via the transactional email provider.
+- Each email generates one `LeagueInvite` row (or reuses the existing invite link mechanism) and sends a formatted email with the league name, commissioner name, draft date, and join link.
+- No new schema beyond what email infra requires; can reuse the existing invite link and `JOIN_CODE` mechanism.
+
+Acceptance Criteria (for when unblocked):
+- AC-001: Commissioner can enter 1–N email addresses in the admin panel and send invites in one action.
+- AC-002: Each invitee receives an email with the league name, commissioner, draft date, and a direct join link.
+- AC-003: Sending to an address that is already a league member produces a clear error, not a silent failure.
+- AC-004: The existing share-link mechanism remains available alongside the email flow.
+
+---
+
+## BF-019. No Password Reset / Forgot Password on Login Page (Blocked on Email Infra)
+
+Sprint: Post-email-infra backlog
+
+Priority: P2
+
+Effort: M
+
+Status: Blocked — requires email infrastructure
+
+Blocker: Same as UX-053. Email infrastructure is deferred post-beta. Password reset requires sending a reset link or magic link by email.
+
+Source: Playwright UX walkthrough, Jun 23, 2026. Returning beta users who forget their password (or whose `pwhl_user_email` cookie has expired) have no self-service recovery path. The login page has no "Forgot password?" link. The app uses email-only cookie auth (`pwhl_user_email`, 30-day session). In this model, "password reset" means resending a magic link to the user's email or providing a re-auth flow.
+
+Fix (when email infra ships):
+- Add a "Forgot your access link?" link below the login form.
+- Clicking it renders an email-entry field where users type their address.
+- Backend sends a new magic-link email (same flow as initial registration, or a dedicated "re-auth" email).
+- No password hashing or storage — this is purely a magic-link delivery flow.
+
+Acceptance Criteria (for when unblocked):
+- AC-001: The login page renders a "Forgot your access link?" link below the login form.
+- AC-002: Submitting a valid email address sends a re-auth email with a new magic link.
+- AC-003: Submitting an unrecognized email shows a friendly message without confirming or denying whether the address exists.
+- AC-004: The existing login flow is unchanged.
+
+---
+
 # Architectural Rules
 
 Design for the live season first. Replay is a testing tool, so:

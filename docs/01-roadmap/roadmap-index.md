@@ -1,6 +1,6 @@
 # PWHL GM Product Roadmap — Index
 
-Last Updated: June 22, 2026 (PM audit — Sprint 18 plan, BLR feature, launch gates)
+Last Updated: June 23, 2026 (Sprint 19 planned — 8 items from Playwright UX walkthrough; BF-018, UX-051–057, BF-019)
 
 ---
 
@@ -183,7 +183,7 @@ All sprints from 7–17 are complete and shipped. Sprint 13 is formally absorbed
 - **Sprint 16** ✅ — Emotional Design Polish (score colors, count-up animation, Saira Condensed font, RecapCard elevation; Jun 22, 2026)
 - **Sprint 17** ✅ — UX Polish: Agent Test Run Fixes (9/9 items: LEAGUES overhaul, matchup restructure, FP/VP copy, terminology, playoff eliminated empty state, renewal confirmation, pre-login UX, VP education, lock tooltip; Jun 22, 2026)
 
-**Current Status:** Sprint 13 ABSORBED — 11 outstanding items merged into Sprint 18 (see below) · Sprint 17 COMPLETE (9/9 items; Jun 22, 2026) · **Sprint 18 IN PROGRESS** (BLR-001 shipped; BLR-002 + Sprint 13 carry-forwards + ops gates remaining) · MVP readiness ~99% · beta invites Jul 7, 2026
+**Current Status:** Sprint 18 IN PROGRESS (all P0+P1+P2 complete; beta invites Jul 7, 2026) · **Sprint 19 PLANNED** (7 items from Playwright UX walkthrough Jun 23: BF-018, UX-051–057; begins after Sprint 18 closes) · MVP readiness ~99%
 
 **Sprint 14 (Post-Launch Polish + Emotional Engagement) is COMPLETE (Jun 22, 2026).** 11/12 items shipped: all 5 agent integration test findings (DRC-002, BF-010, BF-011, TR-002, TR-003) ✅; OB-010 wizard Replay progress bar ✅; UX-049 "Free Agents" direct TeamNav link ✅; UX-050 "Win Probability" label in DuelHero ✅; UX-033 setup-phase copy "Games starting soon" ✅; UX-032 edge label ✅; OB-011 draft date picker text ✅. UX-045 (rival win celebration) deferred post-launch — requires schema migration (`RIVALRY_WIN` enum) which carries pre-launch risk. First item in Sprint 17 backlog.
 
