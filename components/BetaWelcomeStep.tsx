@@ -63,9 +63,9 @@ export default function BetaWelcomeStep({ onContinue }: Props) {
 
         <div style={betaCard}>
           <div style={{ fontSize: 20, marginBottom: 8 }}>🏒</div>
-          <div style={betaCardTitle}>Founding GMs get first access in November.</div>
+          <div style={betaCardTitle}>Draft from all 12 teams in November.</div>
           <div style={betaCardBody}>
-            When the live 2026-27 season opens, you get early invites and skip the waitlist.
+            The expansion draft just dropped — Detroit, Hamilton, Las Vegas &amp; San Jose join the PWHL for 2026-27. Founding GMs draft from all 12 teams and get priority access on opening day.
           </div>
         </div>
       </div>
