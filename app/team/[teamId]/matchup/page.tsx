@@ -15,6 +15,7 @@ import { RivalBadge } from "@/components/RivalBadge";
 import { HeadToHeadHistory } from "@/components/HeadToHeadHistory";
 import { ScoreDisplay } from "@/components/ScoreDisplay";
 import StatChip from "@/components/StatChip";
+import ClinchBanner from "@/components/ClinchBanner";
 
 export default async function TeamMatchupPage({
   params,
@@ -28,9 +29,18 @@ export default async function TeamMatchupPage({
 
   const league = await prisma.fantasyLeague.findUnique({
     where: { id: leagueId },
-    select: { scoringSettings: true, rosterSettings: true, isReplay: true, replayCurrentDate: true },
+    select: { scoringSettings: true, rosterSettings: true, isReplay: true, replayCurrentDate: true, season: true },
   });
   if (!league) notFound();
+
+  // Playoff clinch event for this team (used to render dismissible ClinchBanner)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const clinchEvent = (prisma as any).leagueEvent
+    ? await (prisma as any).leagueEvent.findFirst({
+        where: { leagueId, teamId, type: "PLAYOFF_CLINCH" },
+        select: { data: true },
+      })
+    : null;
 
   const scoringSettings = parseScoringSettings(league.scoringSettings);
   const rs = (league.rosterSettings as Record<string, number>) ?? {};
@@ -104,6 +114,21 @@ export default async function TeamMatchupPage({
 
   return (
     <div style={{ display: "grid", gap: 16 }}>
+
+      {/* ── Clinch banner — dismissible, shown once when playoff berth is clinched ── */}
+      {clinchEvent && !isChampion && (() => {
+        const d = (clinchEvent.data ?? {}) as Record<string, unknown>;
+        return (
+          <ClinchBanner
+            leagueId={leagueId}
+            season={league.season ?? ""}
+            seed={typeof d.seed === "number" ? d.seed : 1}
+            clinchWeek={typeof d.clinchWeek === "number" ? d.clinchWeek : 0}
+            teamName={typeof d.teamName === "string" ? d.teamName : team.league.name}
+            bracketHref={`/team/${teamId}/bracket`}
+          />
+        );
+      })()}
 
       {/* ── 0. Champion card — top of page when playoffs complete and I won ── */}
       {isChampion && championInfo && (
