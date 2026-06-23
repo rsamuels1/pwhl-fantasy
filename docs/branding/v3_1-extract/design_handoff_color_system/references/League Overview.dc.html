@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=Saira+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+  body { background:#0f1117; }
+  .stat { font-family:'Saira Condensed',sans-serif; font-variant-numeric:tabular-nums; }
+  .tnum { font-variant-numeric:tabular-nums; }
+  @media (max-width:880px){ .ov-grid{ grid-template-columns:1fr !important; } }
+</style>
+</helmet>
+
+<div style="min-height:100vh; background:radial-gradient(1100px 480px at 50% -10%, #16202b, #0f1117 58%); color:#f4f6fa; font-family:'Archivo',-apple-system,sans-serif;">
+
+  <!-- League nav -->
+  <div style="position:sticky; top:0; z-index:20; background:rgba(15,17,23,0.86); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px); border-bottom:1px solid rgba(255,255,255,0.06);">
+    <div style="max-width:1040px; margin:0 auto; padding:15px 24px; display:flex; align-items:center; gap:18px;">
+      <span style="font-weight:800; font-size:15px; letter-spacing:-0.01em;">Friday Night Hockey</span>
+      <div style="display:flex; gap:3px; margin-left:auto; font-size:13.5px;">
+        <span style="padding:8px 14px; border-radius:10px; font-weight:700; color:#0a0a0c; background:#8fc1e8;">Overview</span>
+        <span style="padding:8px 14px; color:#9aa1b0;">Standings</span>
+        <span style="padding:8px 14px; color:#9aa1b0;">Matchups</span>
+        <span style="padding:8px 14px; color:#9aa1b0;">Bracket</span>
+        <span style="padding:8px 14px; color:#9aa1b0;">Admin</span>
+      </div>
+    </div>
+  </div>
+
+  <div style="max-width:1040px; margin:0 auto; padding:24px 24px 64px; display:flex; flex-direction:column; gap:20px;">
+
+    <!-- Commissioner action strip (📣 status w/ label) -->
+    <div style="background:rgba(245,201,123,0.10); border:1px solid rgba(245,201,123,0.3); border-radius:16px; padding:16px 20px; display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+      <div style="display:flex; align-items:flex-start; gap:12px;">
+        <span style="font-size:19px; line-height:1.2; flex:none;">📣</span>
+        <div>
+          <div style="font-size:14px; font-weight:700; color:#f5c97b;">Week 11 is ready to score</div>
+          <div style="font-size:13px; color:#cdd3df; margin-top:2px;">Games are final — advance the season to lock in results and start the next week.</div>
+        </div>
+      </div>
+      <span style="font-size:13px; font-weight:700; padding:9px 16px; border-radius:10px; flex:none; background:rgba(245,201,123,0.16); color:#f5c97b; border:1px solid rgba(245,201,123,0.32);">Take action</span>
+    </div>
+
+    <!-- Header -->
+    <div style="display:flex; align-items:baseline; gap:13px; flex-wrap:wrap;">
+      <h1 style="font-size:30px; margin:0; font-weight:800; letter-spacing:-0.02em;">Friday Night Hockey</h1>
+      <span style="font-size:13.5px; color:#9aa1b0;">Season 2026 · 8 teams</span>
+      <span style="font-size:12.5px; font-weight:700; padding:4px 12px; border-radius:20px; background:rgba(143,193,232,0.12); color:#8fc1e8; border:1px solid rgba(143,193,232,0.30);">Week 11</span>
+    </div>
+
+    <div class="ov-grid" style="display:grid; grid-template-columns:1fr 360px; gap:20px; align-items:start;">
+
+      <!-- LEFT -->
+      <div style="display:flex; flex-direction:column; gap:18px;">
+
+        <!-- Playoff race -->
+        <section style="background:#191d25; border:1px solid rgba(255,255,255,0.07); border-radius:18px; padding:22px; box-shadow:0 1px 3px rgba(0,0,0,0.35);">
+          <div style="display:flex; align-items:baseline; justify-content:space-between; margin-bottom:16px;">
+            <div>
+              <h2 style="font-size:16px; font-weight:700; margin:0;">Playoff race</h2>
+              <div style="font-size:13px; color:#7e8593; margin-top:2px;">Top 4 teams make the playoffs</div>
+            </div>
+            <span style="font-size:13px; color:#9aa1b0;">Full standings</span>
+          </div>
+          <div style="display:flex; flex-direction:column; gap:2px;">
+            <sc-for list="{{ standings }}" as="s" hint-placeholder-count="8">
+              <div>
+                <sc-if value="{{ s.divider }}" hint-placeholder-val="{{ false }}">
+                  <div style="display:flex; align-items:center; gap:9px; margin:8px 2px;">
+                    <div style="flex:1; height:1px; background:rgba(245,201,123,0.25);"></div>
+                    <span style="font-size:10.5px; font-weight:700; color:#7e8593; letter-spacing:0.04em;">PLAYOFF CUT</span>
+                    <div style="flex:1; height:1px; background:rgba(245,201,123,0.25);"></div>
+                  </div>
+                </sc-if>
+                <div style="display:grid; grid-template-columns:24px 1fr auto 96px; gap:10px; padding:11px 12px; border-radius:12px; align-items:center; background:{{ s.rowBg }}; border-left:3px solid {{ s.rowAccent }};">
+                  <span style="font-size:13px; color:#7e8593; font-weight:700;">{{ s.rank }}</span>
+                  <span style="font-size:14.5px; font-weight:{{ s.weight }}; color:{{ s.nameColor }}; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ s.name }}<span style="margin-left:7px; font-size:10.5px; color:#8fc1e8;">{{ s.youTag }}</span></span>
+                  <span class="tnum" style="font-size:13px; color:#aeb4c0; text-align:right; white-space:nowrap;">{{ s.record }}</span>
+                  <span style="font-size:11px; font-weight:700; text-align:center; padding:4px 0; border-radius:8px; white-space:nowrap; background:{{ s.chipBg }}; color:{{ s.chipColor }}; border:1px solid {{ s.chipBorder }};">{{ s.chip }}</span>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </section>
+
+        <!-- League leaders -->
+        <section style="background:#191d25; border:1px solid rgba(255,255,255,0.07); border-radius:18px; padding:22px; box-shadow:0 1px 3px rgba(0,0,0,0.35);">
+          <h2 style="font-size:16px; font-weight:700; margin:0 0 16px;">League leaders · Week 11</h2>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:18px;">
+            <div>
+              <div style="font-size:12.5px; font-weight:600; color:#9aa1b0; margin-bottom:9px;">Top scorers</div>
+              <sc-for list="{{ leaders }}" as="p" hint-placeholder-count="3">
+                <div style="display:flex; align-items:center; gap:9px; padding:8px 9px; border-radius:10px; margin-bottom:3px; background:{{ p.bg }};">
+                  <span style="font-size:12px; font-weight:800; color:{{ p.rankColor }}; width:15px; text-align:center; flex:none;">{{ p.rank }}</span>
+                  <div style="flex:1; min-width:0;">
+                    <div style="font-size:13px; font-weight:600; color:{{ p.nameColor }}; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ p.name }}</div>
+                    <div style="font-size:11px; color:#7e8593;">{{ p.team }}</div>
+                  </div>
+                  <span class="stat" style="font-size:14px; font-weight:700; color:#51d88a; flex:none;">{{ p.fp }}</span>
+                </div>
+              </sc-for>
+            </div>
+            <div>
+              <div style="font-size:12.5px; font-weight:600; color:#9aa1b0; margin-bottom:9px;">Cold streak</div>
+              <sc-for list="{{ laggards }}" as="p" hint-placeholder-count="3">
+                <div style="display:flex; align-items:center; gap:9px; padding:8px 9px; border-radius:10px; margin-bottom:3px;">
+                  <span style="font-size:12px; font-weight:800; color:#7e8593; width:15px; text-align:center; flex:none;">{{ p.rank }}</span>
+                  <div style="flex:1; min-width:0;">
+                    <div style="font-size:13px; font-weight:600; color:#f4f6fa; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ p.name }}</div>
+                    <div style="font-size:11px; color:#7e8593;">{{ p.team }}</div>
+                  </div>
+                  <span class="stat" style="font-size:14px; font-weight:700; color:#f6837f; flex:none;">{{ p.fp }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </section>
+
+        <!-- Week matchups -->
+        <section style="background:#191d25; border:1px solid rgba(255,255,255,0.07); border-radius:18px; padding:22px; box-shadow:0 1px 3px rgba(0,0,0,0.35);">
+          <div style="display:flex; align-items:baseline; justify-content:space-between; margin-bottom:12px;">
+            <h2 style="font-size:16px; font-weight:700; margin:0;">Week 11 matchups</h2>
+            <span style="font-size:13px; color:#9aa1b0;">Full schedule</span>
+          </div>
+          <div style="display:flex; flex-direction:column; gap:5px;">
+            <sc-for list="{{ matchups }}" as="m" hint-placeholder-count="4">
+              <div style="display:grid; grid-template-columns:1fr auto 1fr; gap:6px 10px; padding:9px 11px; border-radius:11px; align-items:center; background:{{ m.bg }}; border:1px solid {{ m.border }};">
+                <span style="font-size:13.5px; text-align:right; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:{{ m.homeColor }}; font-weight:{{ m.homeWeight }};">{{ m.home }}<span class="stat" style="margin-left:7px; font-weight:700;">{{ m.homeScore }}</span></span>
+                <span style="font-size:11px; color:#5e6573; font-weight:700;">·</span>
+                <span style="font-size:13.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:{{ m.awayColor }}; font-weight:{{ m.awayWeight }};"><span class="stat" style="margin-right:7px; font-weight:700;">{{ m.awayScore }}</span>{{ m.away }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </section>
+      </div>
+
+      <!-- RIGHT -->
+      <div style="display:flex; flex-direction:column; gap:18px;">
+
+        <!-- My matchup widget -->
+        <section style="background:linear-gradient(150deg,#1e2735,#191d25 72%); border:1px solid rgba(143,193,232,0.30); border-radius:18px; padding:22px; box-shadow:0 14px 40px -22px rgba(143,193,232,0.4);">
+          <div style="display:flex; align-items:baseline; justify-content:space-between; margin-bottom:12px;">
+            <h2 style="font-size:15px; font-weight:700; margin:0;">My matchup</h2>
+            <span style="font-size:12px; color:#7e8593;">Week 11</span>
+          </div>
+          <div style="display:flex; align-items:baseline; gap:12px; margin-bottom:4px;">
+            <span class="stat" style="font-size:44px; font-weight:700; line-height:1; color:#f4f6fa;">58.9</span>
+            <span style="font-size:13.5px; color:#51d88a; font-weight:600;">6–2 vs the field</span>
+          </div>
+          <div style="height:7px; border-radius:5px; background:rgba(255,255,255,0.08); overflow:hidden; margin:12px 0;">
+            <div style="height:100%; width:75%; background:linear-gradient(90deg,#6fa8d4,#a6d0f0); border-radius:5px;"></div>
+          </div>
+          <span style="display:block; text-align:center; padding:12px 0; background:#8fc1e8; color:#0a0a0c; border-radius:12px; font-size:14px; font-weight:700; margin-top:13px;">Go to my matchup</span>
+        </section>
+
+        <!-- Lineup status -->
+        <section style="background:#191d25; border:1px solid rgba(255,255,255,0.07); border-radius:18px; padding:22px; box-shadow:0 1px 3px rgba(0,0,0,0.35);">
+          <h2 style="font-size:15px; font-weight:700; margin:0 0 14px;">Lineup status</h2>
+          <div style="display:flex; flex-direction:column; gap:5px;">
+            <sc-for list="{{ lineupStatus }}" as="t" hint-placeholder-count="5">
+              <div style="display:flex; align-items:center; justify-content:space-between; padding:8px 10px; border-radius:10px; background:{{ t.bg }};">
+                <span style="font-size:13.5px; font-weight:{{ t.weight }}; color:{{ t.nameColor }}; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1;">{{ t.name }}<span style="margin-left:6px; font-size:10.5px; color:#8fc1e8;">{{ t.youTag }}</span></span>
+                <span style="font-size:11.5px; font-weight:700; padding:3px 9px; border-radius:8px; background:{{ t.chipBg }}; color:{{ t.chipColor }}; flex:none; margin-left:8px;">{{ t.chip }}</span>
+              </div>
+            </sc-for>
+          </div>
+          <div style="font-size:12px; color:#7e8593; margin-top:12px;">Games remaining through Feb 20</div>
+        </section>
+
+        <!-- Activity (emoji icons restored, P2) -->
+        <section style="background:#191d25; border:1px solid rgba(255,255,255,0.07); border-radius:18px; padding:22px; box-shadow:0 1px 3px rgba(0,0,0,0.35);">
+          <h2 style="font-size:15px; font-weight:700; margin:0 0 14px;">Around the league</h2>
+          <div style="display:flex; flex-direction:column; gap:13px;">
+            <sc-for list="{{ activity }}" as="a" hint-placeholder-count="5">
+              <div style="display:flex; justify-content:space-between; gap:11px; align-items:flex-start;">
+                <div style="display:flex; gap:11px; align-items:flex-start; flex:1;">
+                  <span style="width:30px; height:30px; border-radius:9px; background:{{ a.bg }}; display:inline-flex; align-items:center; justify-content:center; font-size:15px; flex:none;">{{ a.icon }}</span>
+                  <span style="font-size:13.5px; color:#cdd3df; line-height:1.5;">{{ a.text }}</span>
+                </div>
+                <span style="font-size:11.5px; color:#7e8593; flex:none; white-space:nowrap;">{{ a.time }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <!-- Commissioner note -->
+    <div style="padding:16px 20px; border-radius:16px; background:rgba(143,193,232,0.10); border:1px solid rgba(143,193,232,0.28);">
+      <div style="font-size:13px; font-weight:700; color:#8fc1e8; margin-bottom:6px;">A note from your commissioner</div>
+      <p style="margin:0; font-size:14.5px; color:#f4f6fa; line-height:1.55;">Playoffs start in two weeks — lock in your lineups! Trade deadline is Friday at midnight.</p>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1080,&quot;height&quot;:1200}}">
+class Component extends DCLogic {
+  renderVals() {
+    const me = { rowBg:"rgba(143,193,232,0.10)", rowAccent:"#8fc1e8", weight:700, nameColor:"#a6d0f0", youTag:"You" };
+    const other = { rowBg:"transparent", rowAccent:"transparent", weight:400, nameColor:"#f4f6fa", youTag:"" };
+    const IN = { chip:"✓ In", chipBg:"rgba(81,216,138,0.12)", chipColor:"#7fe3a8", chipBorder:"rgba(81,216,138,0.26)" };
+    const CLINCH = { chip:"✓ Clinched", chipBg:"rgba(81,216,138,0.14)", chipColor:"#7fe3a8", chipBorder:"rgba(81,216,138,0.32)" };
+    const BUBBLE = { chip:"◉ Bubble", chipBg:"rgba(245,201,123,0.12)", chipColor:"#f5c97b", chipBorder:"rgba(245,201,123,0.30)" };
+    const OUT = { chip:"3 GB", chipBg:"rgba(170,177,189,0.10)", chipColor:"#9aa1b0", chipBorder:"rgba(170,177,189,0.16)" };
+    const ELIM = { chip:"✗ Out", chipBg:"rgba(246,131,127,0.12)", chipColor:"#f6837f", chipBorder:"rgba(246,131,127,0.28)" };
+
+    const standings = [
+      { rank:1, name:"Sirens", record:"9–2", ...other, ...CLINCH },
+      { rank:2, name:"Poulin Power Play", record:"8–4", ...me, ...IN },
+      { rank:3, name:"Frost Bytes", record:"7–4", ...other, ...IN },
+      { rank:4, name:"Rink Rats", record:"6–5", ...other, ...IN },
+      { rank:5, name:"Blue Line Crew", record:"5–6", ...other, ...BUBBLE, divider:true },
+      { rank:6, name:"Top Shelf", record:"4–7", ...other, ...OUT },
+      { rank:7, name:"Crease Crashers", record:"3–8", ...other, ...ELIM },
+      { rank:8, name:"Benchwarmers", record:"2–9", ...other, ...ELIM }
+    ];
+
+    const leaders = [
+      { rank:1, name:"M-P. Poulin", team:"Poulin Power Play", fp:"18.5", rankColor:"#f5c97b", nameColor:"#a6d0f0", bg:"rgba(143,193,232,0.08)" },
+      { rank:2, name:"Daryl Watts", team:"Frost Bytes", fp:"16.0", rankColor:"#9aa1b0", nameColor:"#f4f6fa", bg:"transparent" },
+      { rank:3, name:"Sarah Nurse", team:"Sirens", fp:"14.5", rankColor:"#7e8593", nameColor:"#f4f6fa", bg:"transparent" }
+    ];
+    const laggards = [
+      { rank:1, name:"H. Knight", team:"Rink Rats", fp:"2.0" },
+      { rank:2, name:"B. Jenner", team:"Top Shelf", fp:"3.5" },
+      { rank:3, name:"E. Roque", team:"Benchwarmers", fp:"4.0" }
+    ];
+
+    const myM = { bg:"rgba(143,193,232,0.06)", border:"rgba(143,193,232,0.18)" };
+    const plainM = { bg:"transparent", border:"rgba(255,255,255,0.05)" };
+    const matchups = [
+      { home:"Poulin Power Play", homeScore:"58.9", awayScore:"42.1", away:"Crease Crashers", homeColor:"#f4f6fa", homeWeight:700, awayColor:"#9aa1b0", awayWeight:400, ...myM },
+      { home:"Sirens", homeScore:"51.0", awayScore:"49.5", away:"Frost Bytes", homeColor:"#cdd3df", homeWeight:400, awayColor:"#cdd3df", awayWeight:400, ...plainM },
+      { home:"Rink Rats", homeScore:"45.2", awayScore:"38.0", away:"Top Shelf", homeColor:"#cdd3df", homeWeight:400, awayColor:"#9aa1b0", awayWeight:400, ...plainM },
+      { home:"Blue Line Crew", homeScore:"40.0", awayScore:"36.5", away:"Benchwarmers", homeColor:"#cdd3df", homeWeight:400, awayColor:"#9aa1b0", awayWeight:400, ...plainM }
+    ];
+
+    const meRow = { bg:"rgba(143,193,232,0.06)", weight:600, nameColor:"#a6d0f0", youTag:"You" };
+    const otherRow = { bg:"transparent", weight:400, nameColor:"#aeb4c0", youTag:"" };
+    const SET = { chip:"✓ Set", chipBg:"rgba(81,216,138,0.12)", chipColor:"#7fe3a8" };
+    const ISSUE = { chip:"⚠ 1 issue", chipBg:"rgba(245,201,123,0.12)", chipColor:"#f5c97b" };
+    const lineupStatus = [
+      { name:"Sirens", ...otherRow, ...SET },
+      { name:"Poulin Power Play", ...meRow, ...SET },
+      { name:"Frost Bytes", ...otherRow, ...ISSUE },
+      { name:"Rink Rats", ...otherRow, ...SET },
+      { name:"Blue Line Crew", ...otherRow, ...ISSUE }
+    ];
+
+    const activity = [
+      { icon:"🏒", bg:"rgba(81,216,138,0.12)", text:"Daryl Watts scored a hat trick for Frost Bytes.", time:"Feb 13" },
+      { icon:"➕", bg:"rgba(143,193,232,0.12)", text:"Rink Rats added Hilary Knight from free agency.", time:"Feb 13" },
+      { icon:"🔄", bg:"rgba(245,201,123,0.12)", text:"Top Shelf and Sirens completed a 2-for-1 trade.", time:"Feb 12" },
+      { icon:"🏆", bg:"rgba(245,201,123,0.12)", text:"Sirens clinched a playoff berth.", time:"Feb 11" },
+      { icon:"📋", bg:"rgba(170,177,189,0.10)", text:"Benchwarmers claimed Emily Clark off waivers.", time:"Feb 10" }
+    ];
+
+    return { standings, leaders, laggards, matchups, lineupStatus, activity };
+  }
+}
+</script>
+</body>
+</html>

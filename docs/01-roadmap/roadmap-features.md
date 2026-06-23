@@ -4817,6 +4817,124 @@ Acceptance Criteria:
 
 ---
 
+## RD-013. Team Identity Colors
+
+Sprint: 23
+
+Priority: P2
+
+Effort: M
+
+Status: 🔵 PLANNED
+
+Goal: Give each manager a subtle, self-chosen accent color so opponents are recognizable at a glance across matchup, standings, and activity surfaces — without adding visual noise.
+
+Acceptance Criteria:
+- Managers can pick one team accent from a small curated palette (6–8 swatches that all pass AA on `--card`); a default is assigned rather than left blank
+- The chosen color renders as: avatar ring on the matchup DuelHero/FieldHero; subtle tint behind the team name; avatar dot in standings + activity feed rows
+- Team color never overrides semantic colors (win `--green`, loss `--red`, gold prestige) and never fills a full card background, nav, or button
+- The opponent avatar in DuelHero uses the opponent's identity color, replacing the current neutral graphite default, so both sides are visually distinct
+- Renders correctly at 375px / 768px / 1280px; colorblind-safe because color is always paired with the team name text
+- Requires a new persisted field on `FantasyTeam` (e.g. `accentColor String?`); schema migration required
+
+Depends On: RD-002 (hex sweep), RD-006 (matchup redesign), RD-005 (league overview)
+
+---
+
+## RD-014. Live Matchup Excitement Indicators (Trend Arrows + Upset Chip)
+
+Sprint: 22
+
+Priority: P2
+
+Effort: M
+
+Status: 🔵 PLANNED
+
+Goal: Make the matchup page feel competitive with lightweight live indicators that signal momentum and upset drama beyond the raw score.
+
+Acceptance Criteria:
+- Each side's projected total shows a directional trend arrow vs the prior refresh/day (`▲ +4.3 projected` in `--green`, `▼ −1.2 projected` in `--red`); hidden before any game in the period has started
+- When win probability for the trailing team is between ~10% and ~40%, an upset chip renders on the hero (`⚡ 18% chance to steal the win`) using `--gold`/`--amber` per the emoji policy (emoji always paired with text label)
+- Indicators are suppressed in SETUP phase and after matchup completion (when Momentum Strip collapses)
+- In VTF (FieldHero) mode, "steal the win" copy is reframed to a field-rank framing rather than referencing a single opponent
+- Mobile: indicators wrap/truncate gracefully and do not push the score off-screen at 375px
+- No schema change — derives from existing projection + win-probability data already in `getDashboardData`
+
+**Division of labor note:** RD-008 = Momentum Strip (pts-since-yesterday / players-remaining / opp-status). LL-008 = retrospective upset lore. RD-014 = live per-projection trend arrows + in-the-moment upset chip. These are three distinct UI surfaces sharing the same placement zone; keep them in separate components.
+
+Depends On: RD-006 (matchup redesign), RD-008 (Momentum Strip — shares data layer and placement zone)
+
+---
+
+## RD-015. Settings Editor Rule-Sheet Restructure
+
+Sprint: 22
+
+Priority: P2
+
+Effort: M
+
+Status: 🔵 PLANNED
+
+Goal: Bring the commissioner Settings editor in line with the wizard's rule-sheet layout so scoring and roster config read as a clean reference card everywhere, not raw JSON in one place and a polished sheet in another.
+
+Acceptance Criteria:
+- The scoring section of `SettingsEditor.tsx` renders as the same two-column Skaters / Goalies table used in the wizard Rules step (stat in `--text` left, value in `--green` tabular-nums right)
+- Roster slots render as the same pill badges as the wizard (`3 F`, `2 D`, `1 UTIL`, `1 G`, `6 Bench`) with the "UTIL takes any skater (F or D)" sub-line
+- Section headers are sentence-case 13–14px `--dim` labels — no ALL-CAPS letter-spaced eyebrows
+- Editable fields retain full edit behavior; this is a presentation restructure only — all existing settings save/validation tests pass
+- Supersedes the `[recolor]`-only treatment for settings noted in RD-007
+
+Depends On: RD-004 (wizard rule-sheet — reuse its table + pill components)
+
+---
+
+## RD-016. Brand Theme Naming Decision — "Northern Ice"
+
+Sprint: 22
+
+Priority: P2
+
+Effort: S
+
+Status: 🔵 PLANNED
+
+Goal: Lock a memorable name for the new design theme (handoff recommends "Northern Ice" over working title "Inviting Dark") and apply it consistently in user-facing references and docs.
+
+Acceptance Criteria:
+- Product decision recorded: chosen theme name confirmed ("Northern Ice" recommended; alternatives considered: Arena Lights, Championship Night, Frozen Gold)
+- Any future user-facing theme label (theme picker, marketing copy) uses the chosen name, not "Inviting Dark"
+- The chosen name is reflected in the `globals.css` header comment and `docs/branding/` README so engineering and design share one vocabulary
+- No functional or color change — naming only; no schema change
+
+Depends On: RD-001 (token swap — same file header)
+
+---
+
+## RD-017. Emotional Design North-Star Principles (Doc Artifact)
+
+Sprint: 22
+
+Priority: P2
+
+Effort: S
+
+Status: 🔵 PLANNED
+
+Goal: Capture the "should feel / avoid feeling" design principles as a standing reference so future decisions have a north star, instead of re-deriving intent from screenshots each time.
+
+Acceptance Criteria:
+- A short principles doc at `docs/branding/emotional-design-principles.md` states PWHL GM should feel: Competitive, Welcoming, Premium, Seasonal, Social — and must avoid feeling like: Enterprise SaaS, hockey analytics software, a generic admin dashboard, or a mobile banking app
+- Includes the signature-moment rule: gold (`--gold`) reserved for champion / hot streak / weekly high score / clinched / first place — never used for neutral or informational UI
+- Includes the product north-star line: "arena concourse between periods, not accounting software"
+- Linked from the Sprint 22 exit criteria and the branding README so it is discoverable by future contributors
+- Documentation only — no code change; no schema change
+
+Depends On: (none — establishes principles applied by RD-001 through RD-016)
+
+---
+
 # Phase 9: Living League — Delight Mechanics v1
 
 Source: `docs/01-roadmap/living-league-product-strategy.md` + `docs/01-roadmap/living-league-roadmap.md`

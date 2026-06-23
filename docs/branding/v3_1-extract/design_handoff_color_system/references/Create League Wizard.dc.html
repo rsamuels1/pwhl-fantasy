@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+  body { background:#0f1117; }
+  input::placeholder { color:#7e8593; }
+  .tnum { font-variant-numeric:tabular-nums; }
+  @keyframes popIn { from { opacity:0; transform:translateY(-4px); } to { opacity:1; transform:translateY(0); } }
+</style>
+</helmet>
+
+<div style="--acc:{{ accentHex }}; min-height:100vh; background:radial-gradient(1000px 460px at 50% -10%, #16202b, #0f1117 58%); color:#f4f6fa; font-family:'Archivo',-apple-system,sans-serif; padding:44px 20px; display:flex; justify-content:center;">
+  <div style="width:100%; max-width:600px; display:flex; flex-direction:column; gap:22px;">
+
+    <!-- Progress -->
+    <div>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+        <span style="font-size:13px; font-weight:700; color:var(--acc,#8fc1e8);">Step {{ displayStep }} of 6</span>
+        <span style="font-size:13px; color:#9aa1b0; cursor:pointer;">Cancel</span>
+      </div>
+      <div style="display:flex; gap:6px; margin-bottom:11px;">
+        <sc-for list="{{ segments }}" as="seg" hint-placeholder-count="6">
+          <div style="flex:1; height:7px; border-radius:4px; background:{{ seg.bg }}; transition:background 0.3s;"></div>
+        </sc-for>
+      </div>
+      <div style="display:flex; justify-content:space-between;">
+        <sc-for list="{{ stepLabels }}" as="l" hint-placeholder-count="6">
+          <button onClick="{{ l.onClick }}" style="appearance:none; background:none; border:none; cursor:pointer; font-family:inherit; font-size:12.5px; font-weight:{{ l.weight }}; color:{{ l.color }}; padding:2px 0;">{{ l.label }}</button>
+        </sc-for>
+      </div>
+    </div>
+
+    <!-- Panel -->
+    <div style="background:#191d25; border:1px solid rgba(255,255,255,0.07); border-radius:20px; padding:32px; min-height:440px; box-shadow:0 1px 3px rgba(0,0,0,0.35);">
+
+      <!-- Step 1: Name -->
+      <sc-if value="{{ s1 }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex; flex-direction:column; gap:22px;">
+          <div>
+            <h1 style="font-size:25px; font-weight:800; letter-spacing:-0.02em; margin-bottom:8px;">Let's name your league</h1>
+            <p style="color:#9aa1b0; font-size:15px; line-height:1.55;">Pick something your friends will recognize. You can change it anytime from the admin panel.</p>
+          </div>
+          <div>
+            <label style="display:block; font-size:13.5px; font-weight:600; margin-bottom:9px;">League name</label>
+            <input value="{{ name }}" onChange="{{ setName }}" maxlength="50" placeholder="e.g. Friday Night Hockey" style="width:100%; font-family:inherit; font-size:15px; color:#f4f6fa; background:#14171e; border:1px solid rgba(255,255,255,0.1); border-radius:12px; padding:14px 16px; outline:none;" style-focus="border-color:var(--acc,#8fc1e8); box-shadow:0 0 0 3px rgba(143,193,232,0.16);" />
+            <span class="tnum" style="font-size:12px; color:#7e8593; margin-top:7px; display:block;">{{ nameLen }}/50</span>
+          </div>
+          <div style="display:flex; align-items:center; gap:13px; padding:15px 16px; background:#14171e; border:1px solid rgba(255,255,255,0.08); border-radius:12px;">
+            <button onClick="{{ togglePublic }}" style="appearance:none; border:none; cursor:pointer; width:40px; height:23px; border-radius:99px; flex:none; background:{{ publicTrackBg }}; padding:0 3px; display:inline-flex; align-items:center; transition:background 0.2s;">
+              <span style="width:17px; height:17px; border-radius:50%; background:#fff; transform:translateX({{ publicKnobX }}); transition:transform 0.2s; display:block;"></span>
+            </button>
+            <div>
+              <div style="font-size:14px; font-weight:600;">List on the public directory</div>
+              <div style="font-size:12.5px; color:#9aa1b0; line-height:1.45; margin-top:2px;">Your league shows up on the Leagues page so new players can find it.</div>
+            </div>
+          </div>
+          <button onClick="{{ next }}" style="appearance:none; border:none; cursor:pointer; font-family:inherit; width:100%; font-size:15px; font-weight:700; color:#0a0a0c; background:var(--acc,#8fc1e8); border-radius:13px; padding:15px; margin-top:2px;">Next</button>
+        </div>
+      </sc-if>
+
+      <!-- Step 2: Size -->
+      <sc-if value="{{ s2 }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex; flex-direction:column; gap:22px;">
+          <div>
+            <h1 style="font-size:25px; font-weight:800; letter-spacing:-0.02em; margin-bottom:8px;">How many teams?</h1>
+            <p style="color:#9aa1b0; font-size:15px; line-height:1.55;">Pick a size that fits your group — nothing's locked in until the draft.</p>
+          </div>
+          <div style="display:grid; gap:11px;">
+            <sc-for list="{{ sizeOptions }}" as="o" hint-placeholder-count="4">
+              <button onClick="{{ o.onClick }}" style="appearance:none; cursor:pointer; font-family:inherit; text-align:left; display:flex; align-items:center; gap:13px; padding:16px 18px; border-radius:14px; border:1.5px solid {{ o.border }}; background:{{ o.bg }}; transition:all 0.15s;">
+                <span style="width:19px; height:19px; border-radius:50%; flex:none; border:2px solid {{ o.dotBorder }}; background:{{ o.dotBg }}; display:flex; align-items:center; justify-content:center;">
+                  <span style="width:7px; height:7px; border-radius:50%; background:#0a0a0c; opacity:{{ o.dotOpacity }};"></span>
+                </span>
+                <div style="flex:1;">
+                  <div style="display:flex; align-items:center; gap:9px;">
+                    <span style="font-size:15px; font-weight:700; color:{{ o.labelColor }};">{{ o.label }}</span>
+                    <sc-if value="{{ o.recommended }}" hint-placeholder-val="{{ false }}">
+                      <span style="font-size:11px; font-weight:700; padding:2px 9px; border-radius:20px; background:rgba(81,216,138,0.14); color:#51d88a; border:1px solid rgba(81,216,138,0.3);">Recommended</span>
+                    </sc-if>
+                  </div>
+                  <div style="font-size:13px; color:#9aa1b0; margin-top:3px;">{{ o.note }}</div>
+                </div>
+              </button>
+            </sc-for>
+          </div>
+          <div style="display:flex; gap:11px;">
+            <button onClick="{{ back }}" style="appearance:none; border:1px solid rgba(255,255,255,0.12); cursor:pointer; font-family:inherit; flex:1; font-size:14px; font-weight:700; color:#cdd3df; background:transparent; border-radius:13px; padding:14px;">Back</button>
+            <button onClick="{{ next }}" style="appearance:none; border:none; cursor:pointer; font-family:inherit; flex:1; font-size:14px; font-weight:700; color:#0a0a0c; background:var(--acc,#8fc1e8); border-radius:13px; padding:14px;">Next</button>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- Step 3: Season -->
+      <sc-if value="{{ s3 }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex; flex-direction:column; gap:22px;">
+          <div>
+            <h1 style="font-size:25px; font-weight:800; letter-spacing:-0.02em; margin-bottom:8px;">Season &amp; draft date</h1>
+            <p style="color:#9aa1b0; font-size:15px; line-height:1.55;">Play the live 2026-27 season, or try a completed replay season you can start right now.</p>
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:11px;">
+            <sc-for list="{{ seasonOptions }}" as="o" hint-placeholder-count="2">
+              <button onClick="{{ o.onClick }}" style="appearance:none; cursor:pointer; font-family:inherit; text-align:left; display:flex; flex-direction:column; gap:8px; padding:17px 16px; border-radius:14px; border:1.5px solid {{ o.border }}; background:{{ o.bg }};">
+                <span style="font-size:22px; line-height:1;">{{ o.emoji }}</span>
+                <span style="font-size:15px; font-weight:700; color:{{ o.labelColor }};">{{ o.label }}</span>
+                <span style="font-size:13px; color:#9aa1b0; line-height:1.45;">{{ o.desc }}</span>
+              </button>
+            </sc-for>
+          </div>
+          <sc-if value="{{ isLive }}" hint-placeholder-val="{{ true }}">
+            <div>
+              <label style="display:block; font-size:13.5px; font-weight:600; margin-bottom:9px;">Draft date <span style="color:#7e8593; font-weight:400;">(optional)</span></label>
+              <input type="date" value="{{ draftDate }}" onChange="{{ setDraft }}" style="width:100%; font-family:inherit; font-size:15px; color:#f4f6fa; background:#14171e; border:1px solid rgba(255,255,255,0.1); border-radius:12px; padding:13px 16px; outline:none; color-scheme:dark;" style-focus="border-color:var(--acc,#8fc1e8);" />
+              <span style="font-size:12.5px; color:#7e8593; margin-top:7px; display:block; line-height:1.45;">Try late November 2026, when the PWHL season opens. You can change this anytime.</span>
+            </div>
+          </sc-if>
+          <div style="display:flex; gap:11px;">
+            <button onClick="{{ back }}" style="appearance:none; border:1px solid rgba(255,255,255,0.12); cursor:pointer; font-family:inherit; flex:1; font-size:14px; font-weight:700; color:#cdd3df; background:transparent; border-radius:13px; padding:14px;">Back</button>
+            <button onClick="{{ next }}" style="appearance:none; border:none; cursor:pointer; font-family:inherit; flex:1; font-size:14px; font-weight:700; color:#0a0a0c; background:var(--acc,#8fc1e8); border-radius:13px; padding:14px;">{{ seasonCta }}</button>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- Step 4: RULES -->
+      <sc-if value="{{ s4 }}" hint-placeholder-val="{{ true }}">
+        <div style="display:flex; flex-direction:column; gap:20px;">
+          <div>
+            <h1 style="font-size:25px; font-weight:800; letter-spacing:-0.02em; margin-bottom:8px;">Here are your league rules</h1>
+            <p style="color:#9aa1b0; font-size:15px; line-height:1.55;">Competitive defaults tuned for the PWHL. You can adjust any of them from the admin panel before your draft.</p>
+          </div>
+
+          <div style="border:1px solid rgba(255,255,255,0.08); border-radius:16px; overflow:hidden;">
+            <!-- Roster -->
+            <div style="padding:17px 18px; border-bottom:1px solid rgba(255,255,255,0.06);">
+              <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:12px;">
+                <span style="font-size:13.5px; font-weight:700; color:#cdd3df;">Roster</span>
+                <span style="font-size:12.5px; color:#7e8593;">13 slots · all drafted</span>
+              </div>
+              <div style="display:flex; flex-wrap:wrap; gap:8px;">
+                <sc-for list="{{ slots }}" as="sl" hint-placeholder-count="5">
+                  <span style="display:inline-flex; align-items:baseline; gap:5px; padding:6px 12px; border-radius:10px; background:#14171e; border:1px solid rgba(255,255,255,0.08);">
+                    <span class="tnum" style="font-size:14px; font-weight:700; color:var(--acc,#8fc1e8);">{{ sl.n }}</span>
+                    <span style="font-size:13px; font-weight:600; color:#f4f6fa;">{{ sl.pos }}</span>
+                  </span>
+                </sc-for>
+              </div>
+              <div style="font-size:12px; color:#7e8593; margin-top:10px;">UTIL takes any skater (F or D).</div>
+            </div>
+
+            <!-- Scoring -->
+            <div style="padding:17px 18px; border-bottom:1px solid rgba(255,255,255,0.06);">
+              <div style="font-size:13.5px; font-weight:700; color:#cdd3df; margin-bottom:13px;">Scoring</div>
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:22px;">
+                <div>
+                  <div style="font-size:12px; font-weight:600; color:#9aa1b0; margin-bottom:8px;">Skaters</div>
+                  <sc-for list="{{ skaterScoring }}" as="r" hint-placeholder-count="3">
+                    <div style="display:flex; justify-content:space-between; align-items:center; padding:7px 0; border-top:1px solid rgba(255,255,255,0.05);">
+                      <span style="font-size:13.5px; color:#f4f6fa;">{{ r.k }}</span>
+                      <span class="tnum" style="font-size:13.5px; font-weight:700; color:#51d88a;">{{ r.v }}</span>
+                    </div>
+                  </sc-for>
+                </div>
+                <div>
+                  <div style="font-size:12px; font-weight:600; color:#9aa1b0; margin-bottom:8px;">Goalies</div>
+                  <sc-for list="{{ goalieScoring }}" as="r" hint-placeholder-count="2">
+                    <div style="display:flex; justify-content:space-between; align-items:center; padding:7px 0; border-top:1px solid rgba(255,255,255,0.05);">
+                      <span style="font-size:13.5px; color:#f4f6fa;">{{ r.k }}</span>
+                      <span class="tnum" style="font-size:13.5px; font-weight:700; color:#51d88a;">{{ r.v }}</span>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+            </div>
+
+            <!-- Standings + VP -->
+            <div style="padding:17px 18px; border-bottom:1px solid rgba(255,255,255,0.06);">
+              <div style="font-size:13.5px; font-weight:700; color:#cdd3df; margin-bottom:9px;">Standings</div>
+              <div style="display:flex; align-items:center; gap:9px;">
+                <span style="font-size:14px; color:#f4f6fa;">Ranked by <strong style="font-weight:700;">Victory Points (VP)</strong></span>
+                <span style="position:relative; display:inline-flex;">
+                  <button onClick="{{ toggleVp }}" aria-label="How does VP work?" style="appearance:none; cursor:pointer; width:20px; height:20px; border-radius:50%; border:1px solid {{ vpBtnBorder }}; background:{{ vpBtnBg }}; color:{{ vpBtnColor }}; font-size:11px; font-weight:700; line-height:1; display:inline-flex; align-items:center; justify-content:center; font-family:inherit;">?</button>
+                  <sc-if value="{{ vpOpen }}" hint-placeholder-val="{{ false }}">
+                    <span style="position:absolute; top:calc(100% + 11px); left:50%; transform:translateX(-50%); z-index:50; width:300px; background:#20242c; border:1px solid rgba(255,255,255,0.12); border-radius:13px; padding:16px 17px; box-shadow:0 16px 44px rgba(0,0,0,0.6); animation:popIn 0.14s ease; text-align:left;">
+                      <span style="position:absolute; top:-6px; left:50%; transform:translateX(-50%) rotate(45deg); width:11px; height:11px; background:#20242c; border-left:1px solid rgba(255,255,255,0.12); border-top:1px solid rgba(255,255,255,0.12); display:block;"></span>
+                      <span style="display:block; font-size:14px; font-weight:700; color:#f4f6fa; margin-bottom:9px;">How Victory Points work</span>
+                      <span style="display:block;">
+                        <sc-for list="{{ vpRules }}" as="v" hint-placeholder-count="4">
+                          <span style="display:flex; justify-content:space-between; align-items:center; gap:10px; padding:6px 0; border-top:1px solid rgba(255,255,255,0.07);">
+                            <span style="font-size:13px; color:#cdd3df;">{{ v.k }}</span>
+                            <span class="tnum" style="font-size:13px; font-weight:700; color:var(--acc,#8fc1e8); white-space:nowrap;">{{ v.v }}</span>
+                          </span>
+                        </sc-for>
+                      </span>
+                      <span style="display:block; font-size:12px; color:#9aa1b0; line-height:1.55; margin-top:11px; padding-top:10px; border-top:1px solid rgba(255,255,255,0.1);">Max 4 VP per week. Your weekly <strong style="color:#cdd3df;">fantasy points (FP)</strong> decide who wins each matchup — winning earns the VP that rank the standings.</span>
+                    </span>
+                  </sc-if>
+                </span>
+              </div>
+              <div style="font-size:12px; color:#7e8593; margin-top:7px;">Win your matchup <em>and</em> outscore the league to bank the most VP.</div>
+            </div>
+
+            <!-- Playoffs -->
+            <div style="padding:17px 18px; border-bottom:1px solid rgba(255,255,255,0.06); display:flex; justify-content:space-between; align-items:center; gap:14px;">
+              <span style="font-size:13.5px; font-weight:700; color:#cdd3df;">Playoffs</span>
+              <span style="font-size:13.5px; color:#f4f6fa; text-align:right;">Top 4 teams · single elimination · no byes</span>
+            </div>
+
+            <!-- Season -->
+            <div style="padding:17px 18px; display:flex; justify-content:space-between; align-items:center; gap:14px;">
+              <span style="font-size:13.5px; font-weight:700; color:#cdd3df;">Season</span>
+              <span style="font-size:13.5px; color:#f4f6fa; text-align:right;">{{ seasonLabel }}</span>
+            </div>
+          </div>
+
+          <div style="display:flex; align-items:flex-start; gap:11px; padding:14px 16px; border-radius:13px; background:rgba(143,193,232,0.07); border:1px solid rgba(143,193,232,0.18);">
+            <span style="font-size:18px; line-height:1.3; flex:none;">💡</span>
+            <span style="font-size:13px; color:#cdd3df; line-height:1.55;">New to fantasy? Scoring, roster slots, and the playoff format can all be tweaked from the admin panel before your draft — so it's easy to experiment.</span>
+          </div>
+
+          <div style="display:flex; gap:11px;">
+            <button onClick="{{ back }}" style="appearance:none; border:1px solid rgba(255,255,255,0.12); cursor:pointer; font-family:inherit; flex:1; font-size:14px; font-weight:700; color:#cdd3df; background:transparent; border-radius:13px; padding:14px;">Back</button>
+            <button onClick="{{ next }}" style="appearance:none; border:none; cursor:pointer; font-family:inherit; flex:1.4; font-size:14px; font-weight:700; color:#0a0a0c; background:var(--acc,#8fc1e8); border-radius:13px; padding:14px;">Create league</button>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- Step 5: Team -->
+      <sc-if value="{{ s5 }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex; flex-direction:column; gap:22px;">
+          <div>
+            <h1 style="font-size:25px; font-weight:800; letter-spacing:-0.02em; margin-bottom:8px;">Now, create your team</h1>
+            <p style="color:#9aa1b0; font-size:15px; line-height:1.55;">You're the commissioner — but you also need a team to draft and play. Give it a name.</p>
+          </div>
+          <div>
+            <label style="display:block; font-size:13.5px; font-weight:600; margin-bottom:9px;">Team name</label>
+            <input value="{{ teamName }}" onChange="{{ setTeam }}" maxlength="50" placeholder="e.g. Poulin Power Play" style="width:100%; font-family:inherit; font-size:15px; color:#f4f6fa; background:#14171e; border:1px solid rgba(255,255,255,0.1); border-radius:12px; padding:14px 16px; outline:none;" style-focus="border-color:var(--acc,#8fc1e8); box-shadow:0 0 0 3px rgba(143,193,232,0.16);" />
+            <span class="tnum" style="font-size:12px; color:#7e8593; margin-top:7px; display:block;">{{ teamLen }}/50</span>
+          </div>
+          <div style="display:flex; gap:11px;">
+            <button onClick="{{ back }}" style="appearance:none; border:1px solid rgba(255,255,255,0.12); cursor:pointer; font-family:inherit; flex:1; font-size:14px; font-weight:700; color:#cdd3df; background:transparent; border-radius:13px; padding:14px;">Back</button>
+            <button onClick="{{ next }}" style="appearance:none; border:none; cursor:pointer; font-family:inherit; flex:1; font-size:14px; font-weight:700; color:#0a0a0c; background:var(--acc,#8fc1e8); border-radius:13px; padding:14px;">Create my team</button>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- Step 6: Invite -->
+      <sc-if value="{{ s6 }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex; flex-direction:column; gap:20px;">
+          <div style="padding:16px 18px; border-radius:14px; background:rgba(81,216,138,0.10); border:1px solid rgba(81,216,138,0.24);">
+            <div style="display:flex; align-items:center; gap:9px; margin-bottom:5px;">
+              <span style="font-size:18px; line-height:1;">🎉</span>
+              <span style="font-size:16px; font-weight:700; color:#51d88a;">Your league is live!</span>
+            </div>
+            <p style="font-size:13.5px; color:#9aa1b0; margin-left:28px;">{{ name }} is ready. Invite your managers below.</p>
+          </div>
+          <div>
+            <h2 style="font-size:19px; font-weight:700; margin-bottom:7px;">Invite your managers</h2>
+            <p style="color:#9aa1b0; font-size:14px; line-height:1.55; margin-bottom:14px;">Share this link — anyone who opens it joins in one step, no league ID needed.</p>
+            <div style="display:flex; gap:9px;">
+              <div class="tnum" style="flex:1; font-size:13.5px; color:#cdd3df; background:#14171e; border:1px solid rgba(255,255,255,0.1); border-radius:11px; padding:13px 15px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">pwhlgm.app/join/{{ inviteCode }}</div>
+              <button style="appearance:none; border:none; cursor:pointer; font-family:inherit; font-size:13.5px; font-weight:700; color:#0a0a0c; background:var(--acc,#8fc1e8); border-radius:11px; padding:0 22px;">Copy</button>
+            </div>
+          </div>
+          <div style="display:flex; gap:11px; flex-wrap:wrap;">
+            <button onClick="{{ next }}" style="appearance:none; border:none; cursor:pointer; font-family:inherit; flex:1; min-width:200px; font-size:14px; font-weight:700; color:#0a0a0c; background:var(--acc,#8fc1e8); border-radius:13px; padding:14px;">Continue to draft prep</button>
+            <button style="appearance:none; border:1px solid rgba(255,255,255,0.12); cursor:pointer; font-family:inherit; font-size:14px; font-weight:700; color:#cdd3df; background:transparent; border-radius:13px; padding:14px 18px;">Admin panel</button>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- Step 7: Done -->
+      <sc-if value="{{ s7 }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex; flex-direction:column; gap:20px;">
+          <div>
+            <span style="font-size:34px; line-height:1; display:inline-block; margin-bottom:12px;">🎉</span>
+            <h1 style="font-size:25px; font-weight:800; letter-spacing:-0.02em; margin-bottom:8px;">You're all set!</h1>
+            <p style="color:#9aa1b0; font-size:15px; line-height:1.55;">{{ name }} is created. Here's how to get ready for draft day.</p>
+          </div>
+          <div style="display:flex; flex-direction:column; gap:10px;">
+            <sc-for list="{{ prepSteps }}" as="p" hint-placeholder-count="4">
+              <div style="display:flex; align-items:flex-start; gap:12px; padding:14px 16px; border-radius:13px; background:{{ p.bg }}; border:1px solid {{ p.border }};">
+                <span style="width:24px; height:24px; border-radius:50%; flex:none; display:inline-flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; background:{{ p.numBg }}; color:{{ p.numColor }}; border:1.5px solid {{ p.numBorder }};">{{ p.num }}</span>
+                <div>
+                  <div style="font-size:14px; font-weight:700; color:{{ p.labelColor }};">{{ p.label }}</div>
+                  <div style="font-size:12.5px; color:#7e8593; margin-top:2px; line-height:1.45;">{{ p.desc }}</div>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+          <div style="display:flex; gap:11px; flex-wrap:wrap;">
+            <button style="appearance:none; border:none; cursor:pointer; font-family:inherit; flex:1; min-width:180px; font-size:14px; font-weight:700; color:#0a0a0c; background:var(--acc,#8fc1e8); border-radius:13px; padding:14px;">Go to admin panel</button>
+            <button onClick="{{ restart }}" style="appearance:none; border:1px solid rgba(255,255,255,0.12); cursor:pointer; font-family:inherit; font-size:14px; font-weight:700; color:#cdd3df; background:transparent; border-radius:13px; padding:14px 18px;">View league</button>
+          </div>
+        </div>
+      </sc-if>
+
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:640,&quot;height&quot;:880},&quot;accent&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;Sky&quot;,&quot;options&quot;:[&quot;Sky&quot;,&quot;Ice&quot;,&quot;Brass&quot;,&quot;Plum&quot;],&quot;tsType&quot;:&quot;string&quot;},&quot;defaultStep&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;Rules&quot;,&quot;options&quot;:[&quot;Name&quot;,&quot;Size&quot;,&quot;Season&quot;,&quot;Rules&quot;,&quot;Team&quot;,&quot;Invite&quot;,&quot;Done&quot;],&quot;tsType&quot;:&quot;string&quot;}}">
+class Component extends DCLogic {
+  STEP_NAMES = ["Name","Size","Season","Rules","Team","Invite","Done"];
+
+  state = {
+    step: this.STEP_NAMES.indexOf(this.props.defaultStep || "Rules") + 1 || 4,
+    name: "Friday Night Hockey",
+    teamName: "Poulin Power Play",
+    maxTeams: 8,
+    isReplay: false,
+    draftDate: "",
+    isPublic: false,
+    vpOpen: false
+  };
+
+  ACC = { Sky:"#8fc1e8", Ice:"#7fa8c9", Brass:"#c2a36b", Plum:"#9d8bb8" };
+
+  go(n)   { this.setState({ step: n, vpOpen: false }); }
+  next()  { this.setState(s => ({ step: Math.min(s.step + 1, 7), vpOpen: false })); }
+  back()  { this.setState(s => ({ step: Math.max(s.step - 1, 1), vpOpen: false })); }
+
+  renderVals() {
+    const { step, name, teamName, maxTeams, isReplay, draftDate, isPublic, vpOpen } = this.state;
+    const acc = this.ACC[this.props.accent] || this.ACC.Sky;
+
+    const segments = Array.from({ length: 6 }).map((_, i) => ({
+      bg: i < step ? acc : "rgba(255,255,255,0.08)"
+    }));
+    const stepLabels = ["Name","Size","Season","Rules","Team","Invite"].map((label, i) => {
+      const n = i + 1;
+      return {
+        label,
+        onClick: () => this.go(n),
+        color: n === step ? "#f4f6fa" : "#7e8593",
+        weight: n === step ? 700 : 500
+      };
+    });
+
+    const SIZES = [
+      { value: 6,  label: "6 teams",  note: "Smaller, more intimate" },
+      { value: 8,  label: "8 teams",  note: "Classic size — easy to fill, competitive" },
+      { value: 10, label: "10 teams", note: "More variety, deeper waiver wire" },
+      { value: 12, label: "12 teams", note: "Large league, more coordination" }
+    ];
+    const sizeOptions = SIZES.map(o => {
+      const sel = maxTeams === o.value;
+      return {
+        ...o,
+        recommended: o.value === 8,
+        onClick: () => this.setState({ maxTeams: o.value }),
+        border: sel ? acc : "rgba(255,255,255,0.1)",
+        bg: sel ? "rgba(143,193,232,0.08)" : "#14171e",
+        labelColor: sel ? acc : "#f4f6fa",
+        dotBorder: sel ? acc : "rgba(255,255,255,0.25)",
+        dotBg: sel ? acc : "transparent",
+        dotOpacity: sel ? 1 : 0
+      };
+    });
+
+    const SEAS = [
+      { val: false, emoji: "🏒", label: "Live season", desc: "Play the real 2026-27 PWHL season as it happens." },
+      { val: true,  emoji: "⏪", label: "Replay 2025-26", desc: "Draft on a completed season — start right now." }
+    ];
+    const seasonOptions = SEAS.map(o => {
+      const sel = isReplay === o.val;
+      return {
+        emoji: o.emoji, label: o.label, desc: o.desc,
+        onClick: () => this.setState({ isReplay: o.val }),
+        border: sel ? acc : "rgba(255,255,255,0.1)",
+        bg: sel ? "rgba(143,193,232,0.08)" : "#14171e",
+        labelColor: sel ? acc : "#f4f6fa"
+      };
+    });
+
+    const seasonLabel = isReplay
+      ? `2025-26 replay · ${maxTeams} teams`
+      : `2026-27 live PWHL · ${maxTeams} teams`;
+
+    const slots = [
+      { n: "3", pos: "F" }, { n: "2", pos: "D" }, { n: "1", pos: "UTIL" },
+      { n: "1", pos: "G" }, { n: "6", pos: "Bench" }
+    ];
+    const skaterScoring = [
+      { k: "Goal", v: "+2.0" }, { k: "Assist", v: "+1.5" }, { k: "Power-play pt", v: "+0.5" }
+    ];
+    const goalieScoring = [
+      { k: "Win", v: "+5.0" }, { k: "Shutout", v: "+3.0" }
+    ];
+    const vpRules = [
+      { k: "Win your matchup", v: "+2 VP" },
+      { k: "Tie your matchup", v: "+1 VP" },
+      { k: "Highest score in league", v: "+2 VP" },
+      { k: "Second-highest score", v: "+1 VP" }
+    ];
+
+    const prepSteps = [
+      { num: "✓", label: "Invite managers", desc: "Share your invite link so everyone can join.", done: true },
+      { num: "2", label: "Set up the draft", desc: "Admin panel → Draft → set up the board." },
+      { num: "3", label: "Draft", desc: "Start the draft from the draft room. Everyone picks on the clock." },
+      { num: "4", label: "Set your lineup", desc: "Choose your active starters before the first game." }
+    ].map(p => ({
+      ...p,
+      bg: p.done ? "rgba(81,216,138,0.07)" : "#14171e",
+      border: p.done ? "rgba(81,216,138,0.2)" : "rgba(255,255,255,0.08)",
+      numBg: p.done ? "rgba(81,216,138,0.15)" : "rgba(143,193,232,0.12)",
+      numColor: p.done ? "#51d88a" : acc,
+      numBorder: p.done ? "#51d88a" : acc,
+      labelColor: p.done ? "#7e8593" : "#f4f6fa"
+    }));
+
+    return {
+      accentHex: acc,
+      displayStep: Math.min(step, 6),
+      segments, stepLabels,
+      s1: step===1, s2: step===2, s3: step===3, s4: step===4, s5: step===5, s6: step===6, s7: step===7,
+      name, teamName,
+      nameLen: name.length, teamLen: teamName.length,
+      setName: (e) => this.setState({ name: e.target.value }),
+      setTeam: (e) => this.setState({ teamName: e.target.value }),
+      setDraft: (e) => this.setState({ draftDate: e.target.value }),
+      draftDate,
+      togglePublic: () => this.setState({ isPublic: !isPublic }),
+      publicTrackBg: isPublic ? acc : "rgba(255,255,255,0.1)",
+      publicKnobX: isPublic ? "17px" : "0px",
+      sizeOptions, seasonOptions, seasonLabel,
+      isLive: !isReplay,
+      seasonCta: isReplay ? "Create replay league" : "Next",
+      slots, skaterScoring, goalieScoring, vpRules,
+      vpOpen,
+      toggleVp: () => this.setState({ vpOpen: !vpOpen }),
+      vpBtnBorder: vpOpen ? acc : "rgba(255,255,255,0.3)",
+      vpBtnBg: vpOpen ? acc : "transparent",
+      vpBtnColor: vpOpen ? "#0a0a0c" : "#9aa1b0",
+      inviteCode: "x7k2m9",
+      prepSteps,
+      next: () => this.next(),
+      back: () => this.back(),
+      restart: () => this.go(1)
+    };
+  }
+}
+</script>
+</body>
+</html>
