@@ -63,6 +63,23 @@ npm run draft-cli -- --league <id> --team <id> --start  # terminal 1 (commission
 npm run draft-cli -- --league <id> --team <id>          # terminal 2..N
 ```
 
+## Deployment environments
+
+Two environments. Full runbook: `docs/04-operations/environments.md`.
+
+| Environment | Branch | Domain | Database |
+|---|---|---|---|
+| **Production** | `main` | `fantasy.dykedb.org` | Neon branch: `main` |
+| **Staging** | `dev` | `fantasydev.dykedb.org` | Neon branch: `preview` |
+
+**Key rules:**
+- `DATABASE_URL` is the isolation boundary — staging must point at the Neon `preview` branch, never `main`.
+- `BETA_HOST` env var controls which host is locked to `/beta` (defaults to `"fantasy.dykedb.org"`). Staging has it unset, so it serves the full app. Set it to `""` in Production when ready to open `fantasy.dykedb.org` to the full app.
+- `ALLOW_SIM_DATE` must NOT be set in Production — it would let any user rewind the clock for all live leagues.
+- `prisma db push` is safe on the staging Neon branch; never run it on the prod branch while beta users are active. Use `prisma migrate dev` to generate a migration, commit it, and let `prisma migrate deploy` (in the build command) apply it to prod.
+- Vercel crons (`vercel.json`) run on Production only — waivers won't double-process on staging.
+- The draft WebSocket server runs on Render. Production: `pwhl-draft-server`. Staging: optionally a second `pwhl-draft-server-staging` service; if absent, live draft testing is prod-only.
+
 ## Real data source: HockeyTech / LeagueStat
 
 The PWHL licenses [HockeyTech](https://www.hockeytech.com) (also called LeagueStat). The

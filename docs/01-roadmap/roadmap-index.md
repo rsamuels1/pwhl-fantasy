@@ -1,6 +1,6 @@
 # PWHL GM Product Roadmap — Index
 
-Last Updated: June 22, 2026
+Last Updated: June 22, 2026 (PM audit — Sprint 18 plan, BLR feature, launch gates)
 
 ---
 
@@ -88,7 +88,7 @@ Snapshot of launch-blocking areas. **Confidence to launch: ~99%.**
 | Analytics | ✅ PASS | 6 events instrumented |
 | End-to-end season sim | ✅ PASS | PLAYOFF-AUDIT-001 complete Jun 20 — script runs clean, 180/180 tests, tsc clean |
 
-**All MVP gates clear.** Sprint 12 complete (Jun 21, 2026) — all P0 bugs fixed, UX polish shipped, DATA-002 script ready. 202 tests pass. Ready for beta launch Jul 14, 2026.
+**All MVP gates clear.** Sprint 17 complete (Jun 22, 2026) — all P0 bugs fixed, UX polish shipped, DATA-002 script ready. Tests pass. Beta invites target: **Jul 7, 2026** (moved up from Jul 14).
 
 ---
 
@@ -112,9 +112,9 @@ Sprint 6 is complete (7/7). Sprint 7 is complete (3/4 items done — #11 Storyli
 
 **Sprint 11a & 11b (UX Polish: Vocabulary + Navigation + Wizard + Empty States) is COMPLETE (Jun 21, 2026).** 24 total items: 11a shipped 8 P0/P1 items (UX-024–031); 11b shipped 16 P1/P2 items (UX-002–021, BF-007). League nav alignment, wizard layout, empty state copy, register copy, FA context banners, auth hydration nav — all done. Full plan in `roadmap-sprints.md`.
 
-**Sprint 12 (Pre-Beta Polish) is COMPLETE (Jun 21, 2026).** Shipped: BF-004 lineup UTIL slot fix ✅; UX-043 landing page jargon reduction ✅; UX-039 Claim vs Add tooltips ✅; UX-038/040/042/044 UI polish ✅; DATA-002 roster update script ✅. **MVP readiness: ~99%.** All critical bugs cleared. DATA-002 script ready (waits on HockeyTech rosters). Ready for Jul 14 beta invites. Full plan in `roadmap-sprints.md`.
+**Sprint 12 (Pre-Beta Polish) is COMPLETE (Jun 21, 2026).** Shipped: BF-004 lineup UTIL slot fix ✅; UX-043 landing page jargon reduction ✅; UX-039 Claim vs Add tooltips ✅; UX-038/040/042/044 UI polish ✅; DATA-002 roster update script ✅. **MVP readiness: ~99%.** All critical bugs cleared. DATA-002 script ready (waits on HockeyTech rosters). Beta invites target: Jul 7, 2026. Full plan in `roadmap-sprints.md`.
 
-**Sprint 13 (UX Audit + Onboarding First-Run) is IN PROGRESS.** 14 items from two sources: Pass 1/2 end-user walkthrough (in-season UX bugs — BF-008 negative timestamps, BF-009 analysis nav, UX-046/047/048 matchup and trade friction) plus Pass 5 wizard/auth critique (OB-001–009). 6 P0 items ship first, 8 P1 items follow. Full plan in `roadmap-sprints.md`.
+**Sprint 13 (UX Audit + Onboarding First-Run) is ABSORBED into Sprint 18.** Of the original 14 items, 3 shipped (BF-008 ✅, OB-001 ✅, OB-008 ✅ — via Sprint 15 batch commit 4b67b44). The remaining 11 items (BF-009, OB-002–007, OB-009, UX-046–048) are carried into Sprint 18 as the P0/P1 foundation. Sprint 13 is formally closed.
 
 **Sprint 15 (Visual Design System Deep Pass) is COMPLETE (Jun 22, 2026).** 3 stories shipped: DS-001 homepage rewrite + sticky header ✅, DS-002 token sweep + emoji removal ✅, DS-003 league overview + WeekHighlights redesign ✅. Full plan in `roadmap-sprints.md`.
 
@@ -150,9 +150,26 @@ required before real users are invited. All items were applied immediately after
 
 ---
 
-## Completed Sprints (7–15)
+## Launch Gates (Beta → Public Launch)
 
-All sprints from 7–16 are complete and shipped (Sprint 13 is in progress with 3 items also shipped via Sprint 15 batch). Detailed plans in `roadmap-sprints.md`.
+These six gate categories must all be GREEN before public launch (~early Nov 2026). Sprint 18 includes tasks that advance GATE-1 through GATE-6. Detailed gate tasks in `roadmap-sprints.md`.
+
+| Gate | Category | Status | Notes |
+|---|---|---|---|
+| GATE-1 | Security Review (internal) | TODO | OWASP Top 10 audit, auth/authz guard coverage, input validation, cookie settings |
+| GATE-2 | Load Test — Draft Room | TODO | 20–30 concurrent drafts, 80–240 WebSocket connections, cold-start validation |
+| GATE-3 | Ops Readiness | TODO | `CRON_SECRET` in Vercel prod, waiver cron confirmed, error monitoring, DB backup |
+| GATE-4 | Data Readiness | TODO | 2026-27 regular season schedule ingested, 12-team rosters synced, periods generated |
+| GATE-5 | Beta Quality Bar | TODO | ≥3 weeks beta, all P0 bugs resolved, onboarding flow ≥3 new users unassisted |
+| GATE-6 | End-to-End Integration | TODO | simulate-season.ts re-run, waivers E2E, trades E2E, playoff flow E2E |
+
+Beta invite date: **Jul 7, 2026.** Public launch: **quality-driven** (target early Nov 2026 with PWHL opener). Scale target: 50–200 leagues, 20–30 concurrent drafts.
+
+---
+
+## Completed Sprints (7–17)
+
+All sprints from 7–17 are complete and shipped. Sprint 13 is formally absorbed into Sprint 18 (3/14 shipped via Sprint 15 batch; 11 carry-forwards). Detailed plans in `roadmap-sprints.md`.
 
 - **Sprint 7** ✅ — Retention Layer (Trade System, Storylines, Replay Sim v2 UX)
 - **Sprint 8** ✅ — Beta Hardening (14/14 audit fixes + beta bugs)
@@ -160,16 +177,19 @@ All sprints from 7–16 are complete and shipped (Sprint 13 is in progress with 
 - **Sprint 10** ✅ — Beta Bug Sweep + Launch Polish (5 P0/P1 bugs, founding beta ready)
 - **Sprint 11a & 11b** ✅ — UX Polish (24 items: vocab, nav, wizard, empty states)
 - **Sprint 12** ✅ — Pre-Beta Polish (5 items: BF-004, UX-043/039/038/040/042/044, DATA-002)
+- **Sprint 13** ✅ ABSORBED — 3/14 shipped (BF-008, OB-001, OB-008); 11 items carried to Sprint 18
 - **Sprint 14** ✅ — Post-Launch Polish + Emotional Engagement (11/12; OB-010, UX-049, UX-050, UX-033 shipped; UX-045 deferred; Jun 22, 2026)
 - **Sprint 15** ✅ — Visual Design System Deep Pass (3 stories: DS-001/002/003; Jun 22, 2026)
 - **Sprint 16** ✅ — Emotional Design Polish (score colors, count-up animation, Saira Condensed font, RecapCard elevation; Jun 22, 2026)
 - **Sprint 17** ✅ — UX Polish: Agent Test Run Fixes (9/9 items: LEAGUES overhaul, matchup restructure, FP/VP copy, terminology, playoff eliminated empty state, renewal confirmation, pre-login UX, VP education, lock tooltip; Jun 22, 2026)
 
-**Current Status:** Sprint 13 IN PROGRESS (3/14 shipped: BF-008, OB-001, OB-008) · Sprint 14 COMPLETE (11/12 items; Jun 22, 2026) · Sprint 15 COMPLETE (visual design system; Jun 22, 2026) · Sprint 16 COMPLETE (emotional design polish; Jun 22, 2026) · **Sprint 17 COMPLETE** (9/9 items; Jun 22, 2026) · MVP readiness ~99%
+**Current Status:** Sprint 13 ABSORBED — 11 outstanding items merged into Sprint 18 (see below) · Sprint 17 COMPLETE (9/9 items; Jun 22, 2026) · **Sprint 18 IN PROGRESS** (BLR-001 shipped; BLR-002 + Sprint 13 carry-forwards + ops gates remaining) · MVP readiness ~99% · beta invites Jul 7, 2026
 
 **Sprint 14 (Post-Launch Polish + Emotional Engagement) is COMPLETE (Jun 22, 2026).** 11/12 items shipped: all 5 agent integration test findings (DRC-002, BF-010, BF-011, TR-002, TR-003) ✅; OB-010 wizard Replay progress bar ✅; UX-049 "Free Agents" direct TeamNav link ✅; UX-050 "Win Probability" label in DuelHero ✅; UX-033 setup-phase copy "Games starting soon" ✅; UX-032 edge label ✅; OB-011 draft date picker text ✅. UX-045 (rival win celebration) deferred post-launch — requires schema migration (`RIVALRY_WIN` enum) which carries pre-launch risk. First item in Sprint 17 backlog.
 
-**Post-Launch Backlog:** FAAB (#6 — defer to 2027-28 when commissioners request), Growth analytics (GR-001/002/003/004), push notifications, multi-season library (#12), player trends (#23), keeper/dynasty (#19/#20), native apps, AI features. See `roadmap-sprints.md` for details.
+**Sprint 18 (Beta Operations + Onboarding Repair) is IN PROGRESS** (target ship: Jul 7, 2026). BLR-001 ✅ shipped (commits cc77196 + ecc7290): founder-created beta replay leagues with full UI, API routes, draft queue, and beta banner. Settings API `isPublic` fix ✅ (commit 971cd11). Deploy config `prisma migrate deploy` ✅ (commit e24b508). Beta UX polish ✅ (commit eed7d35). BLR-002 (wizard beta welcome messaging, copy TBD) not yet shipped. 11 Sprint 13 carry-forwards (Track B), BF-012/013/014 (Track C), and OPS-001/002/003/004 (Track D) all remain. Full plan in `roadmap-sprints.md`.
+
+**Post-Launch Backlog:** FAAB (#6 — defer to 2027-28 when commissioners request), Growth analytics (GR-001/002/003/004), push notifications, multi-season library (#12), player trends (#23), keeper/dynasty (#19/#20), native apps, AI features, IA reorg (League vs Franchise nav split suggestions from beta feedback). See `roadmap-sprints.md` for details.
 
 ---
 

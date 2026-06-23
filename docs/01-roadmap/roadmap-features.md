@@ -3764,6 +3764,356 @@ Files: `app/team/[teamId]/lineup/LineupManager.tsx`
 
 ---
 
+# Sprint 18 Features — Beta Operations + Onboarding Repair
+
+Source: Live feedback audit (Jun 22, 2026) + Sprint 13 carry-forwards + ops gate requirements.
+Target: Ship before Jul 7, 2026 beta invite date.
+
+---
+
+## BLR-001. Founder-Created Beta Replay Leagues
+
+Sprint: 18
+
+Priority: P0 — must land before Jul 7 beta invites
+
+Status: ✅ SHIPPED — commits cc77196 + ecc7290 (Jun 22, 2026)
+
+A founder-console UI to create a pre-configured 8-team replay league using 4 curated weeks from
+the 2025-26 season plus a 2-round playoff bracket (top 4 of 8 teams — semifinals + final). This
+is the primary onboarding vehicle for beta invitees: rather than asking them to create their own
+league from scratch, the founder creates the league and sends a join link.
+
+What shipped:
+- `POST /api/founder/beta-leagues` — creates the pre-configured replay league
+- `POST /api/founder/beta-signups` and `POST /api/founder/leagues/[leagueId]/beta-users` — invite-link mechanics and user assignment
+- `GET/PUT /api/leagues/[leagueId]/draft/queue` — draft queue API for beta participants
+- `scoreVtfWeek` beta week mapping in `lib/scoring/matchups.ts` — ensures 4-week subset scores correctly
+- Beta season generation in `lib/season/index.ts` via `pickRandomWeeks(20, 4)` — selects 4 periods from the 2025-26 fixture
+- Founder leagues page: "Create Beta League" form + "Beta" filter tab
+- Founder league detail: "Beta Users" tab showing invited users and join status
+- Beta banner rendered in league and team layouts for participants
+- TeamNav: "Draft Queue" tab visible pre-draft so managers can queue players before the draft starts
+- `/team/[teamId]/draft-prep` — new route: player rankings + queue manager for pre-draft preparation
+
+Engineering risk notes (not yet mitigated — verify before first beta draft):
+- `pickRandomWeeks(20, 4)` hardcodes `total: 20`. If the 2025-26 season fixture has a different number of periods, the random selection may be miscalibrated. This should derive the actual period count dynamically from the fixture data rather than using a hardcoded constant.
+- `computeSeasonState` may show unexpected period statuses when a beta league has only 4 `ScoringPeriod` rows but the underlying game dates span the full 2025-26 season. Specifically, periods outside the 4-week window could appear as UPCOMING or SCORING_PENDING when they should be invisible to the league. Verify the season page, matchup page, and lineup page all display correct state before inviting the first beta cohort.
+
+Acceptance Criteria (all met):
+- AC-001: Founder can create a BLR league from the Founder Console ✅
+- AC-002: BLR league is pre-configured with 4 weeks and a 2-round playoff bracket ✅
+- AC-003: Join link routes invitee to registration and then directly to their team ✅
+- AC-004: Beta participants can queue players in "Draft Queue" TeamNav tab pre-draft ✅
+
+Effort: Backend L · Frontend M · Testing M
+
+---
+
+## BLR-002. Wizard Beta Welcome Screen
+
+Sprint: 18
+
+Priority: P0 — must land before Jul 7 beta invites
+
+Status: SPEC WRITTEN — ready for engineering
+
+---
+
+### Overview
+
+A "step 0" welcome screen inserted at the very top of `app/create-league/CreateLeagueWizard.tsx`,
+shown only when `NEXT_PUBLIC_BETA_MODE=true`. It appears before the progress bar and before step 1
+("Name your league"). It orients founding GMs: what the beta is, why the season is compressed, and
+where to send feedback. When the user clicks the CTA, the step counter advances to 1 and the normal
+wizard flow begins.
+
+---
+
+### Display Condition — Option A (RECOMMENDED)
+
+**Use `NEXT_PUBLIC_BETA_MODE=true`** — an env var read client-side.
+
+Rationale:
+- **No schema changes.** `betaStatus` on `FantasyLeague` is already used for the founder-console
+  cohort management UI. Reusing it here would require the wizard to fetch the user's beta status
+  before rendering, creating a loading state and a round-trip on the very first screen. That is
+  the wrong trade-off for what is essentially a one-time splash.
+- **No conflict with `onboardingCompletedAt`.** That flag suppresses `WelcomeFlow.tsx` on the
+  dashboard. The beta welcome screen is structurally different (it lives inside the wizard, not
+  on the dashboard) and fires before `onboardingCompletedAt` is written — the wizard already
+  calls `POST /api/user/onboarding` on mount (see `useEffect` in `CreateLeagueWizard.tsx`).
+  Reusing `onboardingCompletedAt` would make it impossible to dismiss the welcome flow without
+  also killing the beta screen, or vice versa.
+- **Time-bounded.** Remove the env var at public launch. No migration, no cleanup. The wizard
+  reverts to step 1 automatically.
+
+Implementation note for the engineer: gate the step-0 render on
+`process.env.NEXT_PUBLIC_BETA_MODE === "true"`. When that env var is absent or false, `step`
+starts at 1 as today, and the `goNext()` call from step 0 simply doesn't exist.
+
+---
+
+### Placement
+
+**Step 0, inside the existing wizard card** — not a full-screen overlay.
+
+Rationale: A full-screen overlay breaks the visual continuity between sign-up and first action.
+The wizard card (`dashboard-panel` with `min-height: 60vh`) already provides a comfortable canvas
+for three short info cards plus a CTA. Using the card also means the Cancel button in the progress
+header is not yet visible (step 0 suppresses the progress bar entirely — see behavioral spec below),
+keeping the experience focused.
+
+The step-0 screen should feel visually distinct from step 1 — richer, more celebratory — but use
+the same container so it does not jarr when transitioning forward. Use the purple accent treatment
+from `app/beta/page.tsx` (badge, gradient heading, indigo CTA) rather than the plain form styling
+of steps 1–6.
+
+---
+
+### Copy
+
+**Eyebrow badge (reuse the pulse treatment from `/beta/page.tsx`)**
+```
+Beta · Replay Season
+```
+
+**Heading** (max 8 words — 6 here)
+```
+You're in. Welcome, Founding GM.
+```
+
+**Intro paragraph** (3 sentences — sets context before they touch any form field)
+```
+You're one of a small group helping us shape PWHL GM before the live 2026-27 season.
+Your league runs on four real weeks from the 2025-26 PWHL season — same players, same
+stats, compressed into a ~4-week format so you can experience a full season before
+opening night. Everything you try, break, or love goes directly into what we build next.
+```
+
+**3 orientation cards** (max 12 words each — use icon + title + one-line body format matching `WelcomeFlow.tsx`)
+
+Card 1 — How the beta works
+- Icon: replay / clock (e.g. a loop or hourglass icon, or literal "⏪")
+- Title: `Real PWHL stats. Condensed timeline.`
+- Body: Four weeks of 2025-26 data, full snake draft, weekly head-to-head VP scoring.
+
+Card 2 — Your most important job
+- Icon: speech bubble or lightning bolt (e.g. "💬")
+- Title: `Send us feedback. All of it.`
+- Body: Use the feedback button in the bottom-right corner. Bugs, confusion, missing features — we read every one.
+
+Card 3 — What comes next
+- Icon: calendar or flag (e.g. "🏒")
+- Title: `Founding GMs get first access in November.`
+- Body: When the live 2026-27 season opens, you get early invites and skip the waitlist.
+
+**CTA button label**
+```
+Build my league →
+```
+(Imperative, ownership-forward. Echoes "Think Like a GM." — "build" signals agency without being vague.)
+
+**Secondary link (optional — recommended yes)**
+```
+What's a replay league?
+```
+Links to an anchor on the `/league-rules` page or a lightweight tooltip. This is a real question
+beta users will have when they first hit the wizard — proactively answering it prevents confusion
+at step 3 (the "Season mode" step where Replay vs Live is shown). If a separate FAQ page does not
+exist, render a short inline tooltip on the link click instead of navigating away.
+
+---
+
+### Behavioral Spec
+
+**Does the CTA advance to step 1 or set a flag first?**
+The CTA calls `setStep(1)` directly — no async operation, no flag. The `NEXT_PUBLIC_BETA_MODE`
+env var is already the gate; no per-user flag needs to be written. (If the product later wants
+"show only once", that can be layered in via `localStorage` at the engineer's discretion — but
+for beta, showing on every `/create-league` visit is fine, since beta users create one league.)
+
+**Is the step skippable?**
+No. There is no Skip button and no Cancel button on step 0. The only action is the CTA. This
+keeps the beta context front-of-mind — the user should not be able to bypass orientation by
+accident. (The Cancel button in the progress header renders on `step < TOTAL_STEPS`; because
+step 0 is not a numbered step inside the wizard's `TOTAL_STEPS = 7` range, Cancel is simply
+not rendered on this screen.)
+
+**What happens to `stepLabels` and the progress bar?**
+The progress bar and the "Step N of N" counter are **hidden on step 0**. Both are rendered inside
+the existing `step === 1 ... step <= TOTAL_STEPS` conditional block in the wizard. The engineer
+should wrap the entire progress indicator block in a `step > 0 &&` guard (or equivalently
+`step >= 1` since the current wizard already starts at 1 — change the initial state from
+`useState(1)` to `useState(isBetaMode ? 0 : 1)` and add `{step > 0 && <progressBlock />}`).
+
+Step 0 does not count toward "Step N of N". The user sees no "Step 0 of 6". When they click
+"Build my league →", the label jumps directly to "Step 1 of 6" (or 5 for Replay). No animation
+is required for this jump; the step counter appearing for the first time is itself a visual cue
+that they have entered the form.
+
+**Does this affect replay mode or live mode?**
+Step 0 is display-condition-gated on `NEXT_PUBLIC_BETA_MODE`, not on `isReplay`. It appears
+regardless of which mode the user subsequently picks in step 3. The mode choice has no effect
+on step 0 content.
+
+**`onboardingCompletedAt` interaction:**
+No change. The wizard already calls `POST /api/user/onboarding` on mount (marks `onboardingCompletedAt`),
+which suppresses `WelcomeFlow.tsx` on the dashboard going forward. Step 0 does not add a new
+flag — it is gated by the env var only. If the user navigates away from step 0 and returns later,
+they see step 0 again; that is acceptable behavior for a limited-cohort beta.
+
+---
+
+### User Stories
+
+- As a first-time beta invitee opening the wizard, I want to immediately understand what this league
+  is (replay format, 4 weeks) and why it exists (to help shape the product) so I am not confused
+  when the season ends in 4 weeks.
+- As a beta participant, I want to know exactly where to send feedback before I even name my league,
+  so I don't finish the experience wondering how to report issues.
+- As a Founding GM, I want to feel celebrated for being early — not just onboarded — so the act of
+  creating a league feels meaningful, not transactional.
+
+---
+
+### Acceptance Criteria
+
+- AC-001: When `NEXT_PUBLIC_BETA_MODE=true`, visiting `/create-league` renders the step-0 welcome
+  screen (eyebrow badge, heading, 3 orientation cards, CTA) before any form field appears.
+- AC-002: When `NEXT_PUBLIC_BETA_MODE` is unset or false, the wizard starts at step 1 ("Name your
+  league") with no visible change — zero regression for non-beta users.
+- AC-003: The progress bar ("Step N of N" + filled segments + stepLabels) is completely hidden on
+  step 0; it appears only from step 1 onward.
+- AC-004: Clicking "Build my league →" advances `step` from 0 to 1, revealing the progress bar and
+  the league-name input. No async call is made; no loading spinner appears.
+- AC-005: There is no Skip button and no Cancel button on step 0.
+- AC-006: `tsc --noEmit` clean; no existing wizard or onboarding tests regress.
+- AC-007: The "What's a replay league?" secondary link renders. (Target: tooltip or `/league-rules`
+  anchor — engineer's choice, but must not be a dead link.)
+
+---
+
+### Open Questions (RESOLVED by this spec)
+
+- Q1 (copy for beta vs standard wizard): Answered — Option A env var gates step 0 in the existing
+  wizard; standard wizard users never see it.
+- Q2 (suppress/modify 6-step wizard entirely): Answered — No. Step 0 precedes the existing wizard;
+  the 6-step flow is unchanged. Beta users go through the same wizard as standard users.
+- Q3 (`onboardingCompletedAt` interaction): Answered — No conflict. Wizard writes
+  `onboardingCompletedAt` on mount (existing behavior); step 0 is gated by env var only.
+
+---
+
+Effort: Backend S (env var only, no API changes) · Frontend M · Testing S
+Depends on: BLR-001
+
+---
+
+## BF-012. FA Add Confirms Success But Shows Error Modal
+
+Sprint: 18
+
+Priority: P1
+
+Status: OPEN
+
+Source: FeedbackSubmission `cmqnc5umh000eu5tmsanmob6z` (Jun 21, 2026). User reports: "When you
+try to add a free agent and select which player to drop for her, you get an error message that
+your team is full and she can't be added but upon refresh and returning to your roster, the
+original player was dropped successfully and the new player was added."
+
+The transaction completes in the DB but the UI shows an error. Root cause hypothesis: the
+`AddAndSlotModal` capacity check fires on the component side AFTER the waiver/add API has already
+committed the transaction. Alternatively, the API returns a 4xx code for the slot assignment (post-add)
+even though the add itself succeeded. The user sees an error but the data is correct.
+
+Investigation path:
+1. Trace the `handleAdd` flow in `RosterManager.tsx` — does it call the add API and then separately
+   call the lineup API for slotting? If the lineup call fails, does it surface as "roster full"?
+2. Check whether `AddAndSlotModal` validates roster capacity before or after the add API call fires.
+3. Check whether `router.refresh()` is called before or after the error is shown — if before, it
+   may re-render with the correct data while still displaying a stale error state.
+
+Acceptance Criteria:
+- AC-001: When a FA add completes successfully, the UI shows success (or the slot modal) — not an error.
+- AC-002: If the slot assignment step fails after a successful add, the error message accurately describes
+  the slot issue (not "roster is full").
+- AC-003: No phantom error is shown when the DB state is correct.
+- AC-004: `tsc --noEmit` clean; existing waiver tests pass.
+
+Effort: Backend S · Frontend M · Testing S
+Files: `app/team/[teamId]/roster/RosterManager.tsx`, `components/AddAndSlotModal.tsx`,
+       `app/api/leagues/[leagueId]/waiver/route.ts`
+
+---
+
+## BF-013. Trades Cannot Be Proposed Between Draft Completion and Season Start
+
+Sprint: 18
+
+Priority: P1
+
+Status: OPEN
+
+Source: FeedbackSubmission `cmqniggbz000kb5xpiks9tfim` (Jun 21, 2026). User reports: "in my
+2026-2027 season, after the draft has been completed but before the season starts, there's no
+'propose trade' button. team owners should be able to propose trades as soon as their draft is over."
+
+Root cause: `proposeTrade()` in `lib/services/trade-service.ts` blocks when
+`league.playoffStatus !== "NOT_STARTED"`. However, the intent of the trade deadline was to block
+trades *during and after playoffs*, not during the pre-season window after a draft completes.
+The correct deadline logic is: block when `league.status === "COMPLETE"` (season done) OR when
+`league.playoffStatus !== "NOT_STARTED"` (playoffs started or complete). The pre-season period
+(draft done, season not yet started) should allow trades.
+
+Note: The Trade Center page also hides the "Propose Trade" CTA when `league.status !== "IN_SEASON"`.
+Both the service-level block and the UI-level hide need to be fixed together.
+
+Acceptance Criteria:
+- AC-001: After a draft completes but before the season starts, team owners can propose trades.
+- AC-002: Trades are still blocked once playoffs begin (`playoffStatus !== "NOT_STARTED"`).
+- AC-003: Trades are still blocked once the season is complete (`status === "COMPLETE"`).
+- AC-004: The Trade Center "Propose Trade" CTA is visible in all trade-allowed windows.
+- AC-005: `tsc --noEmit` clean; existing trade engine tests pass.
+
+Effort: Backend S · Frontend S · Testing S
+Files: `lib/services/trade-service.ts` (`proposeTrade` deadline check),
+       `app/league/[leagueId]/trades/page.tsx` (CTA visibility)
+
+---
+
+## BF-014. VTF Matchup Schedule Page Is Confusing in Vs-The-Field Mode
+
+Sprint: 18 (P2 — spec before implementing)
+
+Priority: P2
+
+Status: OPEN — Spec needed before implementation
+
+Source: FeedbackSubmission `cmqpqywet000911ngv1887pij` (Jun 22, 2026). User notes that when
+playing VTF (vs-the-field), the matchup schedule page showing 1v1 pairings doesn't make sense
+because in VTF you play everyone every week. The page was designed for head-to-head leagues and
+its framing does not adapt to VTF mode.
+
+The correct fix is a VTF-mode variant of the matchup schedule page that explains the weekly
+standings-based format and shows VP earned vs the field rather than 1v1 pairs.
+
+Open questions (resolve before implementing):
+- Q1: Should VTF mode show a "standings snapshot by week" table instead of matchup pairs?
+- Q2: Is the matchup schedule page the right URL for this view, or should it redirect to standings?
+- Q3: Does the schedule page need a new VTF-specific data shape from the API?
+
+Acceptance Criteria (provisional):
+- AC-001: In VTF mode, the matchup schedule page does not show 1v1 pairs as if they are the scoring mechanism.
+- AC-002: The page either shows weekly VP standings or clearly explains that all teams compete together weekly.
+- AC-003: Non-VTF leagues (if added later) continue to show the 1v1 schedule view.
+
+Effort: Backend M · Frontend M · Testing S
+Spec needed before implementation.
+
+---
+
 # Architectural Rules
 
 Design for the live season first. Replay is a testing tool, so:

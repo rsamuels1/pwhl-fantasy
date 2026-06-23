@@ -723,7 +723,7 @@ Files: `app/create-league/CreateLeagueWizard.tsx`, `app/globals.css`
 
 ## Sprint 12 — "Pre-Beta Polish" · ✅ COMPLETE · June 21, 2026 · Track F · P0/P1
 
-Goal: Fix critical bugs and reduce user friction on high-traffic pages before Jul 14 beta invites.
+Goal: Fix critical bugs and reduce user friction on high-traffic pages before Jul 7, 2026 beta invites.
 
 **Shipped (Sprint 12):**
 
@@ -755,11 +755,35 @@ Goal: Fix critical bugs and reduce user friction on high-traffic pages before Ju
   Ready to execute once HockeyTech publishes expansion rosters (currently unavailable as of Jun 21, 2026).
   Files: `scripts/update-2026-27-rosters.ts`
 
-**Exit:** MVP readiness **~99%**. P0 bugs cleared. 202 tests pass. tsc clean. DATA-002 script ready. Ready for Jul 14 beta invites. ✅ ACHIEVED
+**Exit:** MVP readiness **~99%**. P0 bugs cleared. 202 tests pass. tsc clean. DATA-002 script ready. Ready for Jul 7, 2026 beta invites. ✅ ACHIEVED
 
 ---
 
-## Sprint 13 — "UX Audit + Onboarding First-Run" · IN PROGRESS · Track F · P0/P1
+## Sprint 13 — "UX Audit + Onboarding First-Run" · ✅ ABSORBED → Sprint 18 · Track F · P0/P1
+
+**Status: Formally closed Jun 22, 2026. 3/14 items shipped via Sprint 15 batch commit (4b67b44). 11 remaining items carried into Sprint 18 as the P0/P1 foundation.**
+
+Shipped in Sprint 13 (via Sprint 15 commit 4b67b44):
+- **BF-008** ✅ — Negative timestamps fixed in replay activity feed (`Math.max(0,...)`)
+- **OB-001** ✅ — "Start Your Franchise" CTA now routes to `/register` not `/login`
+- **OB-008** ✅ — Registration form: show/hide password toggle added
+
+Carried to Sprint 18 (11 items):
+- BF-009 (P0): Analysis page navigation broken
+- OB-002 (P0): Wizard Step 4 — no VP explanation
+- OB-003 (P0): No warning that team creation step is coming
+- OB-004 (P0): Canceling mid-wizard orphans league
+- UX-046 (P1): Season series block renders twice
+- UX-047 (P1): Trade proposal has no partner-first step
+- UX-048 (P1): Trade form search hint below fold
+- OB-005 (P1): QuickDraftJoinForm on public home page
+- OB-006 (P1): Replay mode description hidden until clicked
+- OB-007 (P1): Login page says "All 8 Teams" (there are 12)
+- OB-009 (P1): Wizard rules step shows no FP values
+
+---
+
+## Sprint 13 ORIGINAL PLAN (archived for reference)
 
 Goal: Two sources feed this sprint. (1) Live end-user walkthrough (Pass 1 design critique + Pass 2
 confusion log, June 2026) surfaced two P0 bugs and three P1 UX problems in the in-season experience.
@@ -859,7 +883,7 @@ hitting broken UX or unexplained jargon; trade propose flow has a clear partner-
 
 ## Sprint 14 — "Post-Launch Polish + Emotional Engagement" · ✅ COMPLETE · Jun 22, 2026 · Track F · P2/P3
 
-Goal: Address deferred polish items from Sprint 13 plus emotional-engagement features that require live-season data to be meaningful. These are quality-of-life improvements and engagement boosters that ship after the Jul 14 beta cohort has had time to provide feedback.
+Goal: Address deferred polish items from Sprint 13 plus emotional-engagement features that require live-season data to be meaningful. These are quality-of-life improvements and engagement boosters that ship after the Jul 7, 2026 beta cohort has had time to provide feedback.
 
 **Carried from Sprint 13 deferred list:**
 
@@ -1022,6 +1046,268 @@ Files: `app/team/[teamId]/lineup/LineupManager.tsx`
 
 ---
 
+---
+
+## Sprint 18 — "Beta Operations + Onboarding Repair" · IN PROGRESS · Target: Jul 7, 2026 · Track F · P0/P1
+
+Goal: Ship everything needed before the beta invites go out on Jul 7, 2026. Two tracks run in parallel:
+(A) BLR — Beta League Replay Format, a new founder-created beta-invite experience; (B) Sprint 13
+carry-forwards — the 11 onboarding and in-season UX bugs that must be fixed before a new user can
+complete the wizard and land in a functioning league without PM assistance. A third track covers new
+live feedback bugs discovered Jun 22 and ops gate tasks.
+
+**Beta invite date: Jul 7, 2026 (firm). Scope anything that misses this date into the post-beta backlog.**
+
+---
+
+### Shipped so far (Sprint 18 in progress)
+
+**BLR-001 ✅ SHIPPED** (commits cc77196 + ecc7290, Jun 22, 2026)
+Full implementation across 2 commits. Includes:
+- `POST /api/founder/beta-leagues` — creates a pre-configured 8-team replay league with 4 curated weeks and a 2-round playoff bracket
+- `POST /api/founder/beta-signups` and `POST /api/founder/leagues/[leagueId]/beta-users` — invite-link mechanics
+- `GET/PUT /api/leagues/[leagueId]/draft/queue` — draft queue management for beta leagues
+- `scoreVtfWeek` beta week mapping in `lib/scoring/matchups.ts`
+- Beta season generation in `lib/season/index.ts` (`pickRandomWeeks(20, 4)` selects 4 periods from the 2025-26 fixture)
+- Founder leagues page: "Create Beta League" form + "Beta" filter tab
+- Founder league detail: "Beta Users" tab
+- Beta banner in league + team layouts
+- TeamNav: "Draft Queue" tab visible pre-draft
+- `/team/[teamId]/draft-prep`: player rankings + queue manager
+
+**Engineering risk notes (not yet mitigated — verify before first beta draft):**
+- `pickRandomWeeks(20, 4)` hardcodes `total: 20` — this should derive the actual period count from the 2025-26 season dynamically. If the fixture has a different number of periods, the random selection may skew.
+- `computeSeasonState` may show unexpected period statuses when game dates span the full 2025-26 season but only 4 `ScoringPeriod` rows exist for a beta league. Verify this does not produce stale COMPLETE or phantom UPCOMING states on the matchup and season pages before the first beta invitee drafts.
+
+**Settings API isPublic fix ✅ SHIPPED** (commit 971cd11)
+`app/api/leagues/[leagueId]/settings/route.ts` now correctly persists the `isPublic` field. Unblocks AG-001 public/private league toggle.
+
+**Deploy config ✅ SHIPPED** (commit e24b508)
+`prisma migrate deploy` added to `package.json` build step. Schema migrations now apply automatically on every Vercel deploy. Advances GATE-3 ops readiness.
+
+**Beta UX polish ✅ SHIPPED** (commit eed7d35)
+Nav hidden on `/beta` landing page; completed admin setup checklist (5/5 steps done) now auto-hides.
+
+**BLR-002 — SPEC WRITTEN, READY FOR ENGINEERING** · M · P0
+Wizard step-0 beta welcome screen. Gated on `NEXT_PUBLIC_BETA_MODE=true` (no schema change). Shown before the progress bar and before step 1 ("Name your league"). Step 0 is hidden from the progress bar/counter. CTA calls `setStep(1)` directly — no async, no flag. No Skip/Cancel on step 0.
+
+**Approved copy:**
+- Eyebrow badge: `Beta · Replay Season` (pulse dot, reuse `/beta/page.tsx` treatment)
+- Heading: `You're in. Welcome, Founding GM.`
+- Intro: "You're one of a small group helping us shape PWHL GM before the live 2026-27 season. Your league runs on four real weeks from the 2025-26 PWHL season — same players, same stats, compressed into a ~4-week format so you can experience a full season before opening night. Everything you try, break, or love goes directly into what we build next."
+- Card 1 (⏪ "Real PWHL stats. Condensed timeline."): Four weeks of 2025-26 data, full snake draft, weekly head-to-head VP scoring.
+- Card 2 (💬 "Send us feedback. All of it."): Use the feedback button in the bottom-right corner. Bugs, confusion, missing features — we read every one.
+- Card 3 (🏒 "Founding GMs get first access in November."): When the live 2026-27 season opens, you get early invites and skip the waitlist.
+- CTA: `Build my league →`
+- Secondary link: `What's a replay league?` → tooltip or `/league-rules` anchor (engineer's choice)
+
+**Engineer checklist:**
+1. Change `useState(1)` to `useState(process.env.NEXT_PUBLIC_BETA_MODE === "true" ? 0 : 1)` in `CreateLeagueWizard.tsx`
+2. Wrap the progress indicator block in `{step > 0 && ...}`
+3. Add `{step === 0 && <BetaWelcomeStep onContinue={() => setStep(1)} />}` before the existing step-1 block
+4. `BetaWelcomeStep` renders: eyebrow badge + heading + intro paragraph + 3 cards + CTA button + secondary link. No Cancel, no Skip.
+5. Use `--accent*` CSS vars and `.chip-*` classes from `globals.css` for the badge; `.rebrand-card` for cards; `.button-primary` for CTA.
+6. Add `NEXT_PUBLIC_BETA_MODE=true` to `.env.local` for dev testing.
+
+Full spec: `docs/01-roadmap/roadmap-features.md` § BLR-002
+
+---
+
+### Track A — BLR: Beta League Replay Format
+
+**BLR-001: Founder-Created Beta Replay Leagues** · L · P0 · ✅ SHIPPED (commits cc77196 + ecc7290, Jun 22, 2026)
+A founder-console UI to spin up a pre-configured 8-team replay league using 4 curated weeks from the
+2025-26 season + a 2-round playoff bracket (semifinals + final). Invitees join via a link and experience
+the full PWHL GM loop in a compressed, low-stakes format before the live season begins.
+
+What shipped: `POST /api/founder/beta-leagues`; `POST /api/founder/beta-signups`; `POST /api/founder/leagues/[leagueId]/beta-users`; `GET/PUT /api/leagues/[leagueId]/draft/queue`; `scoreVtfWeek` beta week mapping; beta season generation via `pickRandomWeeks(20, 4)`; founder console "Create Beta League" form + "Beta" filter; "Beta Users" tab in league detail; beta banner in league + team layouts; TeamNav "Draft Queue" tab pre-draft; `/team/[teamId]/draft-prep` player rankings + queue manager.
+
+**Engineering risk — verify before first beta draft:**
+- `pickRandomWeeks(20, 4)` hardcodes `total: 20` — should derive actual period count dynamically from the fixture.
+- `computeSeasonState` may show unexpected period statuses when only 4 `ScoringPeriod` rows exist for a beta league spanning 2025-26 game dates — needs verification.
+
+**BLR-002: Wizard Beta Welcome Screen** · M · P0 · SPEC WRITTEN — ready for engineering
+Step-0 beta welcome screen in `app/create-league/CreateLeagueWizard.tsx`, gated on `NEXT_PUBLIC_BETA_MODE=true`.
+Appears before the progress bar and step 1. Heading: "You're in. Welcome, Founding GM." Three orientation cards
+(replay format, feedback widget, November access). CTA: "Build my league →". Progress bar hidden on step 0.
+No Skip, no Cancel, no async call. Full approved copy + behavioral spec in `roadmap-features.md` § BLR-002.
+
+---
+
+### Track B — Sprint 13 Carry-Forwards (P0/P1)
+
+**BF-009: Analysis Page Navigation Broken** · S · P0
+Click on "Analysis" in team nav stays on matchup URL. Root cause: likely a runtime error in
+`app/team/[teamId]/analysis/page.tsx` on first access. Investigate and fix.
+Files: `app/team/[teamId]/analysis/page.tsx`, `app/team/[teamId]/TeamNav.tsx`
+
+**OB-002: Wizard Step 4 Introduces VP Without Explaining It** · S · P0
+Add `VpExplainer` (collapsed) inline in step 4; add tooltip for UTIL.
+Files: `app/create-league/CreateLeagueWizard.tsx`
+
+**OB-003: Wizard Does Not Warn Team Creation Step Is Coming** · S · P0
+Add note at step 4: "Next, you'll name your own team."
+Files: `app/create-league/CreateLeagueWizard.tsx`
+
+**OB-004: Canceling Mid-Wizard After League Is Created Silently Orphans It** · M · P0
+Add a confirm dialog when Cancel is clicked after step 4 (the step where the league is created).
+Files: `app/create-league/CreateLeagueWizard.tsx`
+
+**UX-046: Season Series Block Renders Twice on Matchup Page** · S · P1
+Remove redundant summary heading; render label + detail in one unified Z4 block.
+Files: `app/team/[teamId]/matchup/page.tsx`
+
+**UX-047: Trade Proposal Has No Trading-Partner-First Step** · M · P1
+Add team-picker pill row above "WANT FROM LEAGUE" player list.
+Files: `app/league/[leagueId]/trades/new/page.tsx`
+
+**UX-048: Trade Form Search Hint Hidden Below Player List** · S · P1
+Move search instruction above the player list, immediately below the section heading.
+Files: Same as UX-047
+
+**OB-005: QuickDraftJoinForm Is on the Public Home Page** · S · P1
+Remove League ID / Team ID form from public home page; move join-by-ID behind auth.
+Files: `app/page.tsx`
+
+**OB-006: Replay Mode Description Only Appears After Clicking the Option** · S · P1
+Add a one-line description below each mode option (Live / Replay) upfront.
+Files: `app/create-league/CreateLeagueWizard.tsx`
+
+**OB-007: Login Page Says "All 8 Teams" — There Are 12** · S · P1
+Update stale copy. Files: `app/login/page.tsx`
+
+**OB-009: Wizard Rules Step Shows No Fantasy Point Values** · S · P1
+Add scoring chip row: "Goal 2 pts · Assist 1.5 pts · Win (G) 5 pts · PPP 1 pt · Shutout (G) 3 pts."
+Files: `app/create-league/CreateLeagueWizard.tsx`
+
+---
+
+### Track C — New Live Feedback Bugs (Jun 21–22)
+
+**BF-012: FA Add Shows Error But Player IS Added** · M · P1
+Source: `cmqnc5umh000eu5tmsanmob6z`. User gets an error message on drop/add but the transaction succeeds on refresh.
+Root cause hypothesis: `AddAndSlotModal` capacity check fires after the add API already committed the transaction, or
+the slot assignment API returns an error that surfaces as "roster full" even though the add succeeded.
+Files: `app/team/[teamId]/roster/RosterManager.tsx`, `components/AddAndSlotModal.tsx`, `app/api/leagues/[leagueId]/waiver/route.ts`
+
+**BF-013: Trades Cannot Be Proposed Between Draft Completion and Season Start** · S · P1
+Source: `cmqniggbz000kb5xpiks9tfim`. Trade deadline logic in `lib/services/trade-service.ts` blocks when
+`league.playoffStatus !== "NOT_STARTED"` — but this also fires in the pre-season window after draft. Fix: block
+when playoffs have started OR season is complete. The pre-season window should allow trades.
+Files: `lib/services/trade-service.ts`, `app/league/[leagueId]/trades/page.tsx`
+
+**BF-014: VTF Matchup Schedule Page Is Confusing** · S · P2 · Spec needed
+Source: `cmqpqywet000911ngv1887pij`. Matchup schedule page shows 1v1 pairs in VTF mode where all teams play
+the entire field each week. The page needs a VTF-mode variant.
+Spec needed before implementation.
+
+---
+
+### Track D — Ops Gates (pre-launch blockers, can run in parallel with Tracks A–C)
+
+These tasks advance the formal launch gates. None require feature code; all require ops work or
+verification runs. See the Launch Gates table in `roadmap-index.md` for gate definitions.
+
+**OPS-001: Security Review — Internal OWASP Audit** · M · P0 (GATE-1)
+Audit all API routes for: missing `apiRequire*` guards; unvalidated user-supplied input at API boundaries;
+data isolation (league members cannot access other leagues' data); cookie settings (`httpOnly`, `SameSite`,
+`Secure` in prod). Produce a findings doc in `docs/04-operations/`. All P0 findings must be resolved before
+beta invites. This is an internal review — no third-party pentest required.
+
+**OPS-002: Load Test — Draft Room** · M · P0 (GATE-2)
+Re-run the concurrent draft load test at the target scale: 20–30 concurrent leagues, 4–8 teams each
+(80–240 WebSocket connections). Validate: no split-room bug regression, auto-pick timer fires correctly,
+no stuck clocks, DB connection pool holds under load. Document results in `docs/04-operations/`.
+
+**OPS-003: Vercel Ops Verification** · S · P0 (GATE-3)
+Confirm `CRON_SECRET` env var is set in Vercel production. Confirm `process-waivers` cron fires at 03:00 ET.
+Confirm `check-incomplete-lineups` entry is in `vercel.json`. Confirm error monitoring is configured (Sentry
+or equivalent). Confirm Neon point-in-time recovery is enabled.
+
+**OPS-004: Accessibility Audit** · M · P1
+Source: `cmqpryac7000n11ngc9j136a4`. Perform a basic a11y audit before beta invites: keyboard navigation on
+draft room and lineup page; color contrast on all status chips; screen-reader labels on interactive elements.
+Produce a findings list; fix all P0 a11y blockers. P1/P2 findings go to the post-beta backlog.
+
+---
+
+### Sprint 18 Story Table
+
+| Story | Track | Size | Priority | Status |
+|---|---|---|---|---|
+| BLR-001: Founder-created beta replay leagues | A | L | P0 | ✅ SHIPPED (cc77196 + ecc7290) |
+| BLR-002: Wizard beta welcome screen | A | M | P0 | Spec written — ready for engineering |
+| BF-009: Analysis page navigation broken | B | S | P0 | Ready |
+| OB-002: Wizard Step 4 VP explanation | B | S | P0 | Ready |
+| OB-003: Wizard team-creation warning | B | S | P0 | Ready |
+| OB-004: Wizard cancel confirm dialog | B | M | P0 | Ready |
+| BF-012: FA add phantom error | C | M | P1 | Ready |
+| BF-013: Pre-season trade block | C | S | P1 | Ready |
+| UX-046: Season series duplicate block | B | S | P1 | Ready |
+| UX-047: Trade partner-first step | B | M | P1 | Ready |
+| UX-048: Trade form hint above list | B | S | P1 | Ready |
+| OB-005: Remove public home QuickDraft form | B | S | P1 | Ready |
+| OB-006: Replay mode upfront description | B | S | P1 | Ready |
+| OB-007: Login "8 teams" copy fix | B | S | P1 | Ready |
+| OB-009: Wizard FP values in rules step | B | S | P1 | Ready |
+| OPS-001: Security review (internal OWASP) | D | M | P0 | Ready |
+| OPS-002: Load test (draft room, 30 leagues) | D | M | P0 | Ready |
+| OPS-003: Vercel ops verification | D | S | P0 | Ready |
+| OPS-004: Accessibility audit | D | M | P1 | Ready |
+| BF-012: VTF matchup page confusion | C | S | P2 | Spec needed |
+
+**Min-ship (P0 only, must land by Jul 7):** ~~BLR-001~~ ✅ SHIPPED · BLR-002, BF-009, OB-002, OB-003, OB-004, OPS-001, OPS-002, OPS-003 = 8 remaining P0 stories
+
+**Exit:** BLR leagues creatable by founder and joinable by invitees (BLR-001 ✅); BLR-002 welcome messaging shipped; all 4 P0 onboarding wizard bugs fixed; Analysis page navigates correctly; draft load test passes at 30-league scale; CRON_SECRET confirmed in Vercel; security audit complete with findings doc. Beta invites go out Jul 7, 2026.
+
+---
+
+## Launch Gates — Beta to Public Launch
+
+Formal gates that must all be GREEN before public launch. See `roadmap-index.md` for summary table.
+Sprint 18 ops tasks (OPS-001/002/003) advance GATE-1, GATE-2, GATE-3 to IN PROGRESS.
+
+**GATE-1: Security Review (internal)**
+- [ ] OWASP Top 10 audit of all API routes and auth flows (`OPS-001`)
+- [ ] Auth/authz review: all `apiRequire*` guards correct, no route bypasses
+- [ ] Input validation audit: all user-supplied data sanitized at API boundaries
+- [ ] Data isolation: league members can only access their own league's data
+- [ ] Cookie security settings (`httpOnly`, `SameSite`, `Secure` in prod)
+
+**GATE-2: Load Test — Draft Room**
+- [ ] 20–30 concurrent live drafts with 4–8 teams each = 80–240 simultaneous WebSocket connections (`OPS-002`)
+- [ ] Auto-pick timer fires correctly under concurrent load (no drift, no stuck clocks)
+- [ ] No "split room" bug regression (the `Map<string, Promise<DraftRoom>>` fix holds under concurrent JOINs)
+- [ ] DB connection pool: Neon limits tested; Prisma connection pooling configured
+- [ ] Vercel function cold-start behavior validated (draft server reconnect-safe)
+
+**GATE-3: Ops Readiness**
+- [ ] `CRON_SECRET` env var set and verified in Vercel production (`OPS-003`)
+- [ ] `process-waivers` cron verified firing at 03:00 ET in production
+- [ ] `check-incomplete-lineups` confirmed in `vercel.json`
+- [ ] Error monitoring / alerting configured (Sentry or equivalent)
+- [ ] DB backup policy confirmed for Neon (point-in-time recovery)
+
+**GATE-4: Data Readiness**
+- [ ] 2026-27 regular season schedule published by PWHL/HockeyTech and ingested
+- [ ] All 12 team rosters synced post-expansion draft + free agent signings (`scripts/update-2026-27-rosters.ts`)
+- [ ] Season periods generated for 2026-27 in at least one staging league
+- [ ] `npm run simulate-season` clean pass on 2026-27 schedule (when schedule available)
+
+**GATE-5: Beta Quality Bar**
+- [ ] Minimum beta window: ≥3 weeks of active testing with founding commissioners
+- [ ] All P0 bugs resolved (no open P0 items in `FeedbackSubmission` or sprint backlog)
+- [ ] All P1 bugs resolved or explicitly deferred with owner sign-off
+- [ ] Onboarding flow: ≥3 new users complete league creation → join → draft without PM assistance
+
+**GATE-6: End-to-End Integration Test**
+- [ ] `scripts/simulate-season.ts` clean pass — re-run before launch (was 180/180 Jun 20)
+- [ ] Waiver processing E2E: player dropped → picked up in next waiver cycle
+- [ ] Trade flow E2E: propose → accept → roster updated
+- [ ] Playoff flow: regular season complete → playoffs initialized → bracket generated → champion crowned
+
+---
+
 ## Backlog / Deferred (no sprint assignment)
 
 Items in this section have been explicitly deprioritized and pulled from the sprint plan.
@@ -1096,12 +1382,13 @@ Items below are acknowledged but have no sprint assignment. They become candidat
 | Sprint 10 — Beta Bug Sweep + Launch Polish | ✅ COMPLETE (Jun 21, 2026) | 4 bugs + 5 UX fixes: BF-003/004/005/006 + UX-001/010/011/018/023 ✅; DATA-001 initial 2026-27 expansion roster load ✅; BF-007 + UX-008 bumped to Sprint 11 |
 | Sprint 11a — UX Polish: Vocabulary + Education (P0/P1) | ✅ COMPLETE (Jun 21, 2026) | 8 items shipped: UX-024/025/026 (VTF record label, hockey-score-look-alike record, 0-0-7 bug), UX-027/028/029/030/031 (projection labels, button hierarchy, standings tooltips, rival prominence) |
 | Sprint 11b — UX Polish: Navigation + Wizard + Empty States (P1/P2) | ✅ COMPLETE (Jun 21, 2026) | 16 items: BF-007, UX-008, UX-006, UX-014/015, UX-016, UX-017, UX-019, UX-004, UX-007, UX-002/003, UX-020/021, UX-009, UX-005, UX-013 |
-| Sprint 12 — Pre-Beta Polish | ✅ COMPLETE (Jun 21, 2026) | BF-004 (lineup UTIL slot fix) ✅ + UX-043 (landing page jargon) ✅ + UX-039 (Claim vs Add tooltips) ✅ + UX-038/040/042/044 (UI polish) ✅; MVP readiness ~99%; ready for beta Jul 14 |
-| Sprint 13 — UX Audit + Onboarding First-Run | 🔄 IN PROGRESS | 14 items: BF-008/009 (P0 bugs — negative timestamps, analysis nav) + UX-046/047/048 (P1 — season series dupe, trade partner-first, hint position) + OB-001–009 (Pass 5 — wizard/auth first-run friction) |
+| Sprint 12 — Pre-Beta Polish | ✅ COMPLETE (Jun 21, 2026) | BF-004 (lineup UTIL slot fix) ✅ + UX-043 (landing page jargon) ✅ + UX-039 (Claim vs Add tooltips) ✅ + UX-038/040/042/044 (UI polish) ✅; MVP readiness ~99%; ready for beta Jul 7 (moved up from Jul 14) |
+| Sprint 13 — UX Audit + Onboarding First-Run | ✅ ABSORBED (Jun 22, 2026) | 3/14 shipped (BF-008, OB-001, OB-008 via Sprint 15 batch); 11 items carried to Sprint 18 |
 | Sprint 14 — Post-Launch Polish + Emotional Engagement | ✅ COMPLETE (Jun 22, 2026) | 11/12 items shipped; UX-045 (rival win celebration) deferred post-launch (schema risk); OB-010 (wizard Replay bar) ✅ + UX-049 (FA direct nav link) ✅ + UX-050 (Win Prob label) ✅ + UX-033 (setup phase copy) ✅; all agent test findings + early commits included |
 | Sprint 15 — Visual Design System Deep Pass | ✅ COMPLETE (Jun 22, 2026) | 3 stories: DS-001 (homepage rewrite + sticky header), DS-002 (token sweep all pages + emoji removal), DS-003 (league overview + WeekHighlights full redesign) |
 | Sprint 16 — Emotional Design Polish | ✅ COMPLETE (Jun 22, 2026) | Score colors by win state + count-up animation, section heading hierarchy, Saira Condensed font loading, RecapCard elevation, card entrance animations. Transforms "Bloomberg terminal" feeling into energetic sports product. Commits: 5ecc116, f1d576c |
 | Sprint 17 — UX Polish: Agent Test Run Fixes | ✅ COMPLETE (Jun 22, 2026) | 9/9 items: AG-001 (LEAGUES overhaul + isPublic schema) + AG-002 (matchup page restructure) + AG-003 (FP/VP copy) + AG-004 (terminology) + AG-005 (playoff eliminated empty state) + AG-006 (renewal confirmation) + AG-007 (pre-login UX) + AG-008 (VP education) + AG-009 (lock tooltip); source: 4-agent parallel UX test run |
+| Sprint 18 — Beta Operations + Onboarding Repair | IN PROGRESS (target Jul 7, 2026) | BLR-001 ✅ SHIPPED (cc77196 + ecc7290) + settings isPublic fix ✅ (971cd11) + deploy config ✅ (e24b508) + beta UX polish ✅ (eed7d35); BLR-002 (wizard welcome, copy TBD) + 11 Sprint 13 carry-forwards + BF-012/013/014 + OPS-001/002/003/004 remaining |
 
 ---
 
@@ -1124,15 +1411,17 @@ be drafting-ready before it. Dates below are estimates, not commitments.
 | **Jun 20, 2026** | P0+P1 audit fixes shipped — waiver cron (`vercel.json` + route), auto-set safety, analysis error state, add/slot capacity, waiver cancel confirm ✅ (all ahead of Sprint 8 schedule) |
 | **Jun 23 – Jul 6, 2026** | Sprint 7 — Trade System (#7) · storylines · FAAB (League History/HoF → Sprint 9; Replay V2 #38 deferred; Player Legacy #31 deferred to backlog) |
 | **Jul 7–13, 2026** | Sprint 8 — Beta Hardening: P1 fixes, Vercel crons, load test, integration test |
-| **Jul 14, 2026** | **Beta invites to founding commissioners** |
+| **Jun 22–Jul 6, 2026** | Sprint 18 — Beta Operations + Onboarding Repair (BLR, Sprint 13 carry-forwards, ops gates) |
+| **Jul 7, 2026** | **Beta invites to founding commissioners** (moved up from Jul 14) |
 | **Sep 1–30, 2026** | Beta feedback cycle: founding commissioners run replay + live test leagues; fix findings |
 | **Late Oct 2026** | **PUBLIC LAUNCH** — real leagues draft ~1 week before the opener |
 | **Nov 2026** | First live regular season on the platform |
 
 **Risk buffer:** All P0 and P1 audit fixes shipped Jun 20, ahead of the Sprint 8 schedule.
-Sprint 8 (Jul 7–13) is now focused on Vercel cron wiring (`CRON_SECRET` env var must be set),
-load testing, integration testing, P2 notification gaps, and UX polish. The beta invite date of
-Jul 14 remains the target; it is now lower risk given the P0 fixes are already applied.
+Sprint 18 (targeting Jul 7) is focused on BLR feature build, Sprint 13 carry-forward UX fixes,
+new live feedback bugs (BF-012/013/014), Vercel cron wiring, load test, and internal security
+review. The beta invite date of **Jul 7, 2026** (moved up from Jul 14) is achievable given
+P0 fixes are already applied.
 
 ## Beyond MVP
 

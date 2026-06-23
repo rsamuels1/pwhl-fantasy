@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 const SESSION_COOKIE = "pwhl_user_email";
-const BETA_HOST = "fantasy.dykedb.org";
+const BETA_HOST = process.env.BETA_HOST ?? "fantasy.dykedb.org";
 
 export function middleware(req: NextRequest) {
   const cookie = req.cookies.get(SESSION_COOKIE)?.value;

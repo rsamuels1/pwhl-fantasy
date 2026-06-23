@@ -78,6 +78,7 @@
     }
     .card.complete { border-left: 4px solid #22c55e; background: #0f1a0f; }
     .card.current { border-left: 4px solid #f59e0b; }
+    .card.in-progress { border-left: 4px solid #6366f1; background: #13112a; }
     .card.planned { border: 1px dashed #444; }
 
     /* Status chips */
@@ -87,6 +88,7 @@
     .status.todo { background: rgba(107, 114, 128, 0.1); color: #9ca3af; }
     .status.complete { background: rgba(34, 197, 94, 0.1); color: #22c55e; }
     .status.planned { background: rgba(107, 114, 128, 0.1); color: #6b7280; }
+    .status.in-progress { background: rgba(99, 102, 241, 0.15); color: #818cf8; }
     .status.risk { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
 
     /* Gates & tasks */
@@ -226,23 +228,23 @@
     <div class="header-right">
       <div class="stat">
         <span class="label">Current:</span>
-        <span class="value">Sprint 17</span>
+        <span class="value">Sprint 18</span>
       </div>
       <div class="stat">
         <span class="label">Latest Ship:</span>
-        <span class="value">Sprint 16</span>
+        <span class="value">Sprint 17</span>
       </div>
       <div class="stat">
         <span class="label">Status:</span>
-        <span class="value">MVP Ready</span>
+        <span class="value">Beta Prep</span>
       </div>
       <div class="stat">
         <span class="label">Sprints:</span>
-        <span class="value">17/17 complete</span>
+        <span class="value">17 done · 1 in progress</span>
       </div>
       <div class="stat">
-        <span class="label">Gates:</span>
-        <span class="value">12/12</span>
+        <span class="label">Beta:</span>
+        <span class="value">Jul 7, 2026</span>
       </div>
     </div>
   </header>
@@ -252,97 +254,65 @@
     <button class="tab-button active" onclick="switchTab('overview')">Overview</button>
     <button class="tab-button" onclick="switchTab('sprints')">Sprints</button>
     <button class="tab-button" onclick="switchTab('backlog')">Backlog</button>
+    <button class="tab-button" onclick="switchTab('launch-gates')">Launch Gates</button>
   </div>
 
   <!-- Tab 1: Overview -->
   <div id="overview" class="tab-content active">
-    <div class="section-header">Launch Gates <span class="section-count">12/12</span></div>
+    <div class="section-header">Pre-Launch Gates <span class="section-count">0/6 complete</span></div>
     <div class="card">
-      
-        <div class="gate-row">
-          <div class="gate-icon">✅</div>
-          <div>---</div>
-          <div><span class="status done">PASS</span></div>
-          <div style="font-size: 0.85rem; color: #888;">---</div>
-        </div>
-      
-        <div class="gate-row">
-          <div class="gate-icon">✅</div>
-          <div>League creation</div>
-          <div><span class="status done">PASS</span></div>
-          <div style="font-size: 0.85rem; color: #888;">—</div>
-        </div>
-      
-        <div class="gate-row">
-          <div class="gate-icon">✅</div>
-          <div>Draft</div>
-          <div><span class="status done">PASS</span></div>
-          <div style="font-size: 0.85rem; color: #888;">reconnect ✅ · commissioner auth ✅ · auto-pick position-aware ✅ · duplicate-tab ✅</div>
-        </div>
-      
-        <div class="gate-row">
-          <div class="gate-icon">✅</div>
-          <div>Rosters</div>
-          <div><span class="status done">PASS</span></div>
-          <div style="font-size: 0.85rem; color: #888;">—</div>
-        </div>
-      
-        <div class="gate-row">
-          <div class="gate-icon">✅</div>
-          <div>Weekly matchups</div>
-          <div><span class="status done">PASS</span></div>
-          <div style="font-size: 0.85rem; color: #888;">—</div>
-        </div>
-      
-        <div class="gate-row">
-          <div class="gate-icon">✅</div>
-          <div>VP standings</div>
-          <div><span class="status done">PASS</span></div>
-          <div style="font-size: 0.85rem; color: #888;">—</div>
-        </div>
-      
-        <div class="gate-row">
-          <div class="gate-icon">✅</div>
-          <div>Weekly lineup lock</div>
-          <div><span class="status done">PASS</span></div>
-          <div style="font-size: 0.85rem; color: #888;">—</div>
-        </div>
-      
-        <div class="gate-row">
-          <div class="gate-icon">✅</div>
-          <div>Playoffs</div>
-          <div><span class="status done">PASS</span></div>
-          <div style="font-size: 0.85rem; color: #888;">PLAYOFF-BUG-001 fixed (commit b465423: `?? 6` → `?? 4` in bracket page); playoff period anchoring fixed for replay leagues</div>
-        </div>
-      
-        <div class="gate-row">
-          <div class="gate-icon">✅</div>
-          <div>Commissioner tools</div>
-          <div><span class="status done">PASS</span></div>
-          <div style="font-size: 0.85rem; color: #888;">force move, undo transaction, replace manager, audit log all shipped</div>
-        </div>
-      
-        <div class="gate-row">
-          <div class="gate-icon">✅</div>
-          <div>Notifications</div>
-          <div><span class="status done">PASS</span></div>
-          <div style="font-size: 0.85rem; color: #888;">all 3 MVP-critical types shipped (draft starting, on the clock, lineup incomplete)</div>
-        </div>
-      
-        <div class="gate-row">
-          <div class="gate-icon">✅</div>
-          <div>Analytics</div>
-          <div><span class="status done">PASS</span></div>
-          <div style="font-size: 0.85rem; color: #888;">6 events instrumented</div>
-        </div>
-      
-        <div class="gate-row">
-          <div class="gate-icon">✅</div>
-          <div>End-to-end season sim</div>
-          <div><span class="status done">PASS</span></div>
-          <div style="font-size: 0.85rem; color: #888;">PLAYOFF-AUDIT-001 complete Jun 20 — script runs clean, 180/180 tests, tsc clean</div>
-        </div>
-      
+      <div class="gate-row">
+        <div class="gate-icon">○</div>
+        <div><strong>GATE-1</strong> — Security Review (internal OWASP)</div>
+        <div><span class="status todo">TODO</span></div>
+        <div style="font-size: 0.85rem; color: #888;">API auth/authz audit, input validation, data isolation, cookie security · OPS-001 in Sprint 18</div>
+      </div>
+      <div class="gate-row">
+        <div class="gate-icon">○</div>
+        <div><strong>GATE-2</strong> — Load Test: Draft Room</div>
+        <div><span class="status todo">TODO</span></div>
+        <div style="font-size: 0.85rem; color: #888;">20–30 concurrent drafts · 80–240 WebSocket connections · split-room regression · cold-start · OPS-002 in Sprint 18</div>
+      </div>
+      <div class="gate-row">
+        <div class="gate-icon">○</div>
+        <div><strong>GATE-3</strong> — Ops Readiness</div>
+        <div><span class="status todo">TODO</span></div>
+        <div style="font-size: 0.85rem; color: #888;">CRON_SECRET verified · process-waivers cron firing · check-incomplete-lineups in vercel.json · Sentry · Neon backup · OPS-003 in Sprint 18</div>
+      </div>
+      <div class="gate-row">
+        <div class="gate-icon">○</div>
+        <div><strong>GATE-4</strong> — Data Readiness</div>
+        <div><span class="status todo">TODO</span></div>
+        <div style="font-size: 0.85rem; color: #888;">2026-27 schedule ingested · 12 team rosters synced post-expansion · season periods generated · simulate-season clean pass</div>
+      </div>
+      <div class="gate-row">
+        <div class="gate-icon">○</div>
+        <div><strong>GATE-5</strong> — Beta Quality Bar</div>
+        <div><span class="status todo">TODO</span></div>
+        <div style="font-size: 0.85rem; color: #888;">≥3 weeks active testing · zero open P0 bugs · P1 bugs resolved or deferred with sign-off · 3 new users complete onboarding unassisted</div>
+      </div>
+      <div class="gate-row">
+        <div class="gate-icon">○</div>
+        <div><strong>GATE-6</strong> — End-to-End Integration Test</div>
+        <div><span class="status todo">TODO</span></div>
+        <div style="font-size: 0.85rem; color: #888;">simulate-season clean pass (was 180/180 Jun 20) · waiver E2E · trade E2E · playoff flow E2E</div>
+      </div>
+    </div>
+
+    <div class="section-header" style="margin-top: 1.5rem;">MVP Scorecard <span class="section-count" style="color: #22c55e;">12/12 PASS</span></div>
+    <div class="card" style="border-left: 4px solid #22c55e; background: #0f1a0f;">
+      <div class="gate-row"><div class="gate-icon">✅</div><div>League creation</div><div><span class="status done">PASS</span></div><div style="font-size: 0.85rem; color: #888;">—</div></div>
+      <div class="gate-row"><div class="gate-icon">✅</div><div>Draft</div><div><span class="status done">PASS</span></div><div style="font-size: 0.85rem; color: #888;">reconnect ✅ · commissioner auth ✅ · auto-pick position-aware ✅ · duplicate-tab ✅</div></div>
+      <div class="gate-row"><div class="gate-icon">✅</div><div>Rosters</div><div><span class="status done">PASS</span></div><div style="font-size: 0.85rem; color: #888;">—</div></div>
+      <div class="gate-row"><div class="gate-icon">✅</div><div>Weekly matchups</div><div><span class="status done">PASS</span></div><div style="font-size: 0.85rem; color: #888;">—</div></div>
+      <div class="gate-row"><div class="gate-icon">✅</div><div>VP standings</div><div><span class="status done">PASS</span></div><div style="font-size: 0.85rem; color: #888;">—</div></div>
+      <div class="gate-row"><div class="gate-icon">✅</div><div>Weekly lineup lock</div><div><span class="status done">PASS</span></div><div style="font-size: 0.85rem; color: #888;">—</div></div>
+      <div class="gate-row"><div class="gate-icon">✅</div><div>Playoffs</div><div><span class="status done">PASS</span></div><div style="font-size: 0.85rem; color: #888;">PLAYOFF-BUG-001 fixed (commit b465423); playoff period anchoring fixed for replay leagues</div></div>
+      <div class="gate-row"><div class="gate-icon">✅</div><div>Commissioner tools</div><div><span class="status done">PASS</span></div><div style="font-size: 0.85rem; color: #888;">force move, undo transaction, replace manager, audit log all shipped</div></div>
+      <div class="gate-row"><div class="gate-icon">✅</div><div>Notifications</div><div><span class="status done">PASS</span></div><div style="font-size: 0.85rem; color: #888;">3 MVP-critical types shipped (draft starting, on the clock, lineup incomplete)</div></div>
+      <div class="gate-row"><div class="gate-icon">✅</div><div>Analytics</div><div><span class="status done">PASS</span></div><div style="font-size: 0.85rem; color: #888;">6 events instrumented</div></div>
+      <div class="gate-row"><div class="gate-icon">✅</div><div>End-to-end season sim</div><div><span class="status done">PASS</span></div><div style="font-size: 0.85rem; color: #888;">PLAYOFF-AUDIT-001 complete Jun 20 — script runs clean, 180/180 tests, tsc clean</div></div>
+      <div class="gate-row"><div class="gate-icon">✅</div><div>Waivers + Trades</div><div><span class="status done">PASS</span></div><div style="font-size: 0.85rem; color: #888;">waiver priority + cron · trade 9-state machine · 22 tests · both shipped Sprint 6/7</div></div>
     </div>
 
     
@@ -430,8 +400,8 @@
 
         <div class="sprint-card complete" onclick="switchTab('sprints'); setTimeout(() => document.getElementById('sprint-13').scrollIntoView({behavior: 'smooth'}), 100)">
           <div class="name">Sprint 13</div>
-          <div class="progress">14/14</div>
-          <span class="status complete">✅ DONE</span>
+          <div class="progress">3/14 → absorbed</div>
+          <span class="status done">ABSORBED</span>
         </div>
 
         <div class="sprint-card complete" onclick="switchTab('sprints'); setTimeout(() => document.getElementById('sprint-14').scrollIntoView({behavior: 'smooth'}), 100)">
@@ -456,6 +426,12 @@
           <div class="name">Sprint 17</div>
           <div class="progress">9/9</div>
           <span class="status complete">✅ DONE</span>
+        </div>
+
+        <div class="sprint-card current" onclick="switchTab('sprints'); setTimeout(() => document.getElementById('sprint-18').scrollIntoView({behavior: 'smooth'}), 100)">
+          <div class="name">Sprint 18</div>
+          <div class="progress">BLR-001 shipped · Jul 7</div>
+          <span class="status in-progress">IN PROGRESS</span>
         </div>
 
     </div>
@@ -1188,34 +1164,36 @@
             </div>
           
         </div>
-        <div class="exit-criteria"><strong>Exit:</strong> MVP readiness ~99%. P0 bugs cleared. 202 tests pass. tsc clean. DATA-002 script ready. Ready for Jul 14 beta invites. ✅ ACHIEVED</div>
+        <div class="exit-criteria"><strong>Exit:</strong> MVP readiness ~99%. P0 bugs cleared. 202 tests pass. tsc clean. DATA-002 script ready. Ready for Jul 7, 2026 beta invites. ✅ ACHIEVED</div>
       </div>
     
-      <div id="sprint-13" class="card done">
+      <div id="sprint-13" class="card complete">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
           <div>
             <div style="font-weight: 700; font-size: 1rem;">Sprint 13 · "UX Audit + Onboarding First-Run"</div>
-            <div style="font-size: 0.8rem; color: #888;">Track: F · COMPLETE · 14/14 · Jun 22, 2026</div>
+            <div style="font-size: 0.8rem; color: #888;">Track: F · ABSORBED Jun 22, 2026 · 3/14 shipped · 11 items carried to Sprint 18</div>
           </div>
-          <span class="status done">✅ DONE</span>
+          <span class="status partial">ABSORBED</span>
         </div>
         <div>
+          <div style="font-size: 0.8rem; color: #22c55e; margin-bottom: 0.5rem;">Shipped (3) — via Sprint 15 batch commit 4b67b44:</div>
           <div class="task-row"><span class="task-check" style="color:#22c55e">✅</span><span style="color: #666">BF-008 (P0, S) — Negative timestamps on transaction history when no scored periods</span></div>
-          <div class="task-row"><span class="task-check" style="color:#22c55e">✅</span><span style="color: #666">BF-009 (P0, S) — "Analysis" in team nav → 404 mid-season (href was already correct; confirmed done)</span></div>
-          <div class="task-row"><span class="task-check" style="color:#22c55e">✅</span><span style="color: #666">OB-001 (P0, S) — "Start Your Franchise" CTA routes to /login instead of /register</span></div>
-          <div class="task-row"><span class="task-check" style="color:#22c55e">✅</span><span style="color: #666">OB-002 (P0, S) — Wizard step 4 introduces VP without explaining it (collapsible VP disclosure added)</span></div>
-          <div class="task-row"><span class="task-check" style="color:#22c55e">✅</span><span style="color: #666">OB-003 (P0, S) — Wizard does not warn that step 5 (team creation) is coming (hint copy updated)</span></div>
-          <div class="task-row"><span class="task-check" style="color:#22c55e">✅</span><span style="color: #666">OB-004 (P0, M) — Canceling mid-wizard silently orphans league (cancel dialog now explains league is recoverable)</span></div>
-          <div class="task-row"><span class="task-check" style="color:#22c55e">✅</span><span style="color: #666">UX-046 (P1, S) — Season series block renders twice (no duplicate found; confirmed done)</span></div>
-          <div class="task-row"><span class="task-check" style="color:#22c55e">✅</span><span style="color: #666">UX-047 (P1, M) — Trade proposal flow has no trading-partner-first step (team picker implemented)</span></div>
-          <div class="task-row"><span class="task-check" style="color:#22c55e">✅</span><span style="color: #666">UX-048 (P1, S) — Trade form search/filter hint hidden below player list (hint repositioned)</span></div>
-          <div class="task-row"><span class="task-check" style="color:#22c55e">✅</span><span style="color: #666">OB-005 (P1, S) — QuickDraftJoinForm is on the public home page (not present; confirmed done)</span></div>
-          <div class="task-row"><span class="task-check" style="color:#22c55e">✅</span><span style="color: #666">OB-006 (P1, S) — Replay mode description only appears after clicking the option (fixed: shows per selection)</span></div>
-          <div class="task-row"><span class="task-check" style="color:#22c55e">✅</span><span style="color: #666">OB-007 (P1, S) — Login page pitch says "All 8 teams" when there are 12 (updated to 12)</span></div>
-          <div class="task-row"><span class="task-check" style="color:#22c55e">✅</span><span style="color: #666">OB-008 (P1, S) — Registration form has redundant "Confirm Password" field (removed; show/hide toggle added)</span></div>
-          <div class="task-row"><span class="task-check" style="color:#22c55e">✅</span><span style="color: #666">OB-009 (P1, S) — Wizard rules step shows no fantasy point values (point values added to step 4)</span></div>
+          <div class="task-row"><span class="task-check" style="color:#22c55e">✅</span><span style="color: #666">OB-001 (P0, S) — "Start Your Franchise" CTA routes to /register (not /login)</span></div>
+          <div class="task-row"><span class="task-check" style="color:#22c55e">✅</span><span style="color: #666">OB-008 (P1, S) — Registration form show/hide password toggle; redundant confirm field removed</span></div>
+          <div style="font-size: 0.8rem; color: #f59e0b; margin: 0.75rem 0 0.5rem 0;">Carried to Sprint 18 (11):</div>
+          <div class="task-row"><span class="task-check" style="color:#f59e0b">→</span><span style="color: #888">BF-009 (P0) — Analysis page navigation broken</span></div>
+          <div class="task-row"><span class="task-check" style="color:#f59e0b">→</span><span style="color: #888">OB-002 (P0) — Wizard Step 4 VP explanation missing</span></div>
+          <div class="task-row"><span class="task-check" style="color:#f59e0b">→</span><span style="color: #888">OB-003 (P0) — Wizard no team-creation warning</span></div>
+          <div class="task-row"><span class="task-check" style="color:#f59e0b">→</span><span style="color: #888">OB-004 (P0) — Canceling mid-wizard orphans league</span></div>
+          <div class="task-row"><span class="task-check" style="color:#f59e0b">→</span><span style="color: #888">UX-046 (P1) — Season series block renders twice</span></div>
+          <div class="task-row"><span class="task-check" style="color:#f59e0b">→</span><span style="color: #888">UX-047 (P1) — Trade proposal no partner-first step</span></div>
+          <div class="task-row"><span class="task-check" style="color:#f59e0b">→</span><span style="color: #888">UX-048 (P1) — Trade form search hint hidden below list</span></div>
+          <div class="task-row"><span class="task-check" style="color:#f59e0b">→</span><span style="color: #888">OB-005 (P1) — QuickDraftJoinForm on public home page</span></div>
+          <div class="task-row"><span class="task-check" style="color:#f59e0b">→</span><span style="color: #888">OB-006 (P1) — Replay mode description only after click</span></div>
+          <div class="task-row"><span class="task-check" style="color:#f59e0b">→</span><span style="color: #888">OB-007 (P1) — Login page says "All 8 teams" (should be 12)</span></div>
+          <div class="task-row"><span class="task-check" style="color:#f59e0b">→</span><span style="color: #888">OB-009 (P1) — Wizard rules step shows no FP values</span></div>
         </div>
-        <div class="exit-criteria"><strong>Exit:</strong> all 14 items (6 P0 + 8 P1) resolved; negative timestamps gone; Analysis tab navigates correctly; first-run flow explained end-to-end; tsc --noEmit clean; ≥202 tests pass. ✅ ACHIEVED Jun 22, 2026</div>
+        <div class="exit-criteria"><strong>Note:</strong> Sprint 13 was formally absorbed Jun 22, 2026. 3/14 items shipped via Sprint 15 batch. Remaining 11 items assigned to Sprint 18 (Beta Operations + Onboarding Repair). See Sprint 18 for current plan.</div>
       </div>
 
       <div id="sprint-14" class="card complete">
@@ -1343,9 +1321,125 @@
         <div class="exit-criteria"><strong>Exit:</strong> All 6 Blockers and 3 high-priority Friction items from the 4-agent UX test run resolved. No false "Season hasn't started" empty states during playoffs. FP terminology consistent site-wide. tsc --noEmit clean. All existing tests pass. ✅ ACHIEVED (Jun 22, 2026)</div>
       </div>
 
+      <div id="sprint-18" class="card in-progress">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+          <div>
+            <div style="font-weight: 700; font-size: 1rem;">Sprint 18 · "Beta Operations + Onboarding Repair"</div>
+            <div style="font-size: 0.8rem; color: #888;">Track: A (BLR) · B (carry-forwards) · C (new bugs) · D (ops) · Target: Jul 7, 2026 beta invites</div>
+          </div>
+          <span class="status in-progress">IN PROGRESS</span>
+        </div>
+        <div>
+          <div style="font-size: 0.8rem; color: #22c55e; margin-bottom: 0.5rem;">Track A — BLR: Beta League Replay Format (BLR-001 shipped)</div>
+          <div class="task-row"><span class="task-check" style="color:#22c55e">✓</span><span style="color: #ccc">BLR-001 (P0, L) — Founder-created beta replay leagues: 8-team, 4 curated weeks from 2025-26, 2-round playoffs; founder console UI; API routes; draft queue; beta banner ✅ SHIPPED (cc77196 + ecc7290)</span></div>
+          <div class="task-row"><span class="task-check" style="color:#f59e0b">◑</span><span style="color: #e2e8f0">BLR-002 (P0, M) — Wizard beta welcome screen — <strong>SPEC WRITTEN, ready for engineering</strong>. Heading: "You're in. Welcome, Founding GM." 3 cards + "Build my league →" CTA. Gated on NEXT_PUBLIC_BETA_MODE=true. No schema change. See roadmap-features.md § BLR-002.</span></div>
+          <div class="task-row"><span class="task-check" style="color:#22c55e">✓</span><span style="color: #ccc">Settings API isPublic fix (971cd11) — isPublic now correctly persisted ✅ SHIPPED</span></div>
+          <div class="task-row"><span class="task-check" style="color:#22c55e">✓</span><span style="color: #ccc">Deploy config: prisma migrate deploy added to build step (e24b508) — advances GATE-3 ✅ SHIPPED</span></div>
+          <div class="task-row"><span class="task-check" style="color:#22c55e">✓</span><span style="color: #ccc">Beta UX polish: nav hidden on /beta page; completed checklist auto-hides (eed7d35) ✅ SHIPPED</span></div>
+          <div style="font-size: 0.8rem; color: #ef4444; margin: 0.75rem 0 0.5rem 0;">Track B — Sprint 13 carry-forwards (11 items)</div>
+          <div class="task-row"><span class="task-check" style="color:#9ca3af">○</span><span style="color: #ccc">BF-009 (P0, S) — Analysis page navigation broken mid-season</span></div>
+          <div class="task-row"><span class="task-check" style="color:#9ca3af">○</span><span style="color: #ccc">OB-002 (P0, S) — Wizard Step 4 VP explanation missing</span></div>
+          <div class="task-row"><span class="task-check" style="color:#9ca3af">○</span><span style="color: #ccc">OB-003 (P0, S) — Wizard no warning before team-creation step</span></div>
+          <div class="task-row"><span class="task-check" style="color:#9ca3af">○</span><span style="color: #ccc">OB-004 (P0, M) — Canceling mid-wizard orphans league silently</span></div>
+          <div class="task-row"><span class="task-check" style="color:#9ca3af">○</span><span style="color: #ccc">UX-046 (P1, S) — Season series block renders twice on matchup page</span></div>
+          <div class="task-row"><span class="task-check" style="color:#9ca3af">○</span><span style="color: #ccc">UX-047 (P1, M) — Trade proposal has no trading-partner-first step</span></div>
+          <div class="task-row"><span class="task-check" style="color:#9ca3af">○</span><span style="color: #ccc">UX-048 (P1, S) — Trade form search hint hidden below player list</span></div>
+          <div class="task-row"><span class="task-check" style="color:#9ca3af">○</span><span style="color: #ccc">OB-005 (P1, S) — QuickDraftJoinForm on public home page</span></div>
+          <div class="task-row"><span class="task-check" style="color:#9ca3af">○</span><span style="color: #ccc">OB-006 (P1, S) — Replay mode description only appears after clicking option</span></div>
+          <div class="task-row"><span class="task-check" style="color:#9ca3af">○</span><span style="color: #ccc">OB-007 (P1, S) — Login page says "All 8 teams" (should be 12)</span></div>
+          <div class="task-row"><span class="task-check" style="color:#9ca3af">○</span><span style="color: #ccc">OB-009 (P1, S) — Wizard rules step shows no FP values</span></div>
+          <div style="font-size: 0.8rem; color: #f59e0b; margin: 0.75rem 0 0.5rem 0;">Track C — New bugs from live feedback</div>
+          <div class="task-row"><span class="task-check" style="color:#9ca3af">○</span><span style="color: #ccc">BF-012 (P1, M) — FA add confirms success but shows error modal (phantom error; source: cmqnc5umh)</span></div>
+          <div class="task-row"><span class="task-check" style="color:#9ca3af">○</span><span style="color: #ccc">BF-013 (P1, S) — Trades cannot be proposed between draft completion and season start</span></div>
+          <div class="task-row"><span class="task-check" style="color:#9ca3af">○</span><span style="color: #ccc">BF-014 (P2, S) — VTF matchup schedule page confusing in vs-the-field mode; SPEC NEEDED</span></div>
+          <div style="font-size: 0.8rem; color: #f59e0b; margin: 0.75rem 0 0.5rem 0;">Track D — Ops gates (advance GATE-1/2/3)</div>
+          <div class="task-row"><span class="task-check" style="color:#9ca3af">○</span><span style="color: #ccc">OPS-001 (P0, M) — Internal OWASP Top 10 security review of all API routes and auth flows</span></div>
+          <div class="task-row"><span class="task-check" style="color:#9ca3af">○</span><span style="color: #ccc">OPS-002 (P0, M) — Load test: 20–30 concurrent live drafts, 80–240 WebSocket connections</span></div>
+          <div class="task-row"><span class="task-check" style="color:#9ca3af">○</span><span style="color: #ccc">OPS-003 (P0, S) — Vercel ops verification: CRON_SECRET set, process-waivers at 03:00 ET, check-incomplete-lineups in vercel.json</span></div>
+          <div class="task-row"><span class="task-check" style="color:#9ca3af">○</span><span style="color: #ccc">OPS-004 (P1, M) — Accessibility audit (source: beta feedback cmqpryac7)</span></div>
+        </div>
+        <div class="exit-criteria"><strong>Shipped:</strong> BLR-001 ✅ (cc77196 + ecc7290), isPublic settings fix ✅ (971cd11), deploy config ✅ (e24b508), beta UX polish ✅ (eed7d35). <strong>Remaining P0 (must land by Jul 7):</strong> BLR-002, BF-009, OB-002, OB-003, OB-004, OPS-001, OPS-002, OPS-003 (8 remaining). <strong>Exit:</strong> BLR wizard welcome shipped; 4 wizard P0 bugs fixed; Analysis navigates; load test passes at 30 leagues; CRON_SECRET confirmed; security audit complete. Beta invites Jul 7, 2026.</div>
+      </div>
+
   </div>
 
   <!-- Tab 3: Backlog -->
+  <!-- Tab 4: Launch Gates -->
+  <div id="launch-gates" class="tab-content">
+    <div class="section-header">Beta → Public Launch Gates <span class="section-count" style="color: #9ca3af;">0/6 GREEN</span></div>
+    <p style="font-size: 0.85rem; color: #888; margin-bottom: 1.5rem;">All 6 gates must be GREEN before public launch. Target: Nov 2026 PWHL season opener. Sprint 18 ops tasks advance GATE-1, GATE-2, GATE-3 to IN PROGRESS.</p>
+
+    <div class="card">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+        <div style="font-weight: 700;">GATE-1: Security Review (internal)</div>
+        <span class="status todo">TODO</span>
+      </div>
+      <div class="task-row"><span class="task-check">○</span><span>OWASP Top 10 audit of all API routes and auth flows (OPS-001)</span></div>
+      <div class="task-row"><span class="task-check">○</span><span>Auth/authz review: all apiRequire* guards correct, no route bypasses</span></div>
+      <div class="task-row"><span class="task-check">○</span><span>Input validation audit: all user-supplied data sanitized at API boundaries</span></div>
+      <div class="task-row"><span class="task-check">○</span><span>Data isolation: league members can only access their own league's data</span></div>
+      <div class="task-row"><span class="task-check">○</span><span>Cookie security settings (httpOnly, SameSite, Secure in prod)</span></div>
+    </div>
+
+    <div class="card">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+        <div style="font-weight: 700;">GATE-2: Load Test — Draft Room</div>
+        <span class="status todo">TODO</span>
+      </div>
+      <div class="task-row"><span class="task-check">○</span><span>20–30 concurrent live drafts with 4–8 teams each = 80–240 simultaneous WebSocket connections (OPS-002)</span></div>
+      <div class="task-row"><span class="task-check">○</span><span>Auto-pick timer fires correctly under concurrent load (no drift, no stuck clocks)</span></div>
+      <div class="task-row"><span class="task-check">○</span><span>No "split room" bug regression under concurrent JOIN storms (Map&lt;string, Promise&lt;DraftRoom&gt;&gt; fix)</span></div>
+      <div class="task-row"><span class="task-check">○</span><span>DB connection pool: Neon connection limits tested; Prisma connection pooling configured</span></div>
+      <div class="task-row"><span class="task-check">○</span><span>Vercel function cold-start behavior validated (draft server reconnect-safe)</span></div>
+    </div>
+
+    <div class="card">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+        <div style="font-weight: 700;">GATE-3: Ops Readiness</div>
+        <span class="status todo">TODO</span>
+      </div>
+      <div class="task-row"><span class="task-check">○</span><span>CRON_SECRET env var set and verified in Vercel production (OPS-003)</span></div>
+      <div class="task-row"><span class="task-check">○</span><span>process-waivers cron verified firing at 03:00 ET in production</span></div>
+      <div class="task-row"><span class="task-check">○</span><span>check-incomplete-lineups confirmed in vercel.json</span></div>
+      <div class="task-row"><span class="task-check">○</span><span>Error monitoring / alerting configured (Sentry or equivalent)</span></div>
+      <div class="task-row"><span class="task-check">○</span><span>DB backup policy confirmed for Neon (point-in-time recovery)</span></div>
+    </div>
+
+    <div class="card">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+        <div style="font-weight: 700;">GATE-4: Data Readiness</div>
+        <span class="status todo">TODO</span>
+      </div>
+      <div class="task-row"><span class="task-check">○</span><span>2026-27 regular season schedule published by PWHL/HockeyTech and ingested (DATA-002)</span></div>
+      <div class="task-row"><span class="task-check">○</span><span>All 12 team rosters synced post-expansion draft + free agent signings (scripts/update-2026-27-rosters.ts)</span></div>
+      <div class="task-row"><span class="task-check">○</span><span>Season periods generated for 2026-27 in at least one staging league</span></div>
+      <div class="task-row"><span class="task-check">○</span><span>npm run simulate-season clean pass on 2026-27 schedule (when schedule is available)</span></div>
+    </div>
+
+    <div class="card">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+        <div style="font-weight: 700;">GATE-5: Beta Quality Bar</div>
+        <span class="status todo">TODO</span>
+      </div>
+      <div class="task-row"><span class="task-check">○</span><span>Minimum beta window: ≥3 weeks of active testing with founding commissioners</span></div>
+      <div class="task-row"><span class="task-check">○</span><span>All P0 bugs resolved (no open P0 items in FeedbackSubmission or sprint backlog)</span></div>
+      <div class="task-row"><span class="task-check">○</span><span>All P1 bugs resolved or explicitly deferred with owner sign-off</span></div>
+      <div class="task-row"><span class="task-check">○</span><span>Onboarding flow: ≥3 new users complete league creation → join → draft without PM assistance</span></div>
+    </div>
+
+    <div class="card">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+        <div style="font-weight: 700;">GATE-6: End-to-End Integration Test</div>
+        <span class="status todo">TODO</span>
+      </div>
+      <div class="task-row"><span class="task-check">○</span><span>scripts/simulate-season.ts clean pass — re-run before launch (was 180/180 Jun 20)</span></div>
+      <div class="task-row"><span class="task-check">○</span><span>Waiver processing E2E: player dropped → picked up in next waiver cycle</span></div>
+      <div class="task-row"><span class="task-check">○</span><span>Trade flow E2E: propose → accept → roster updated</span></div>
+      <div class="task-row"><span class="task-check">○</span><span>Playoff flow: regular season complete → playoffs initialized → bracket generated → champion crowned</span></div>
+    </div>
+  </div>
+
+  <!-- Tab 3 (Backlog) content starts here -->
   <div id="backlog" class="tab-content">
     <div class="filters">
       <div class="filter-group">
@@ -1400,7 +1494,7 @@
       
         <div class="crit-section-medium">
           
-            <div class="section-header">🟡 All Features <span class="section-count">35</span></div>
+            <div class="section-header">🟡 All Features <span class="section-count">40</span></div>
             <table class="backlog-table">
               <thead>
                 <tr>
@@ -1413,6 +1507,51 @@
                 </tr>
               </thead>
               <tbody>
+
+                  <tr class="backlog-row" data-status="done" data-crit="medium">
+                    <td><span class="crit-dot crit-high"></span></td>
+                    <td>BLR-001</td>
+                    <td>Founder-Created Beta Replay Leagues</td>
+                    <td><span class="status done">SHIPPED</span></td>
+                    <td>L</td>
+                    <td>Sprint 18 · P0</td>
+                  </tr>
+
+                  <tr class="backlog-row" data-status="in-progress" data-crit="high">
+                    <td><span class="crit-dot crit-high"></span></td>
+                    <td>BLR-002</td>
+                    <td>Wizard Beta Welcome Screen <em style="color:#34d399; font-size:0.8rem">(spec written — ready for eng)</em></td>
+                    <td><span class="status in-progress">SPEC READY</span></td>
+                    <td>M</td>
+                    <td>Sprint 18 · P0</td>
+                  </tr>
+
+                  <tr class="backlog-row" data-status="todo" data-crit="medium">
+                    <td><span class="crit-dot crit-medium"></span></td>
+                    <td>BF-012</td>
+                    <td>FA Add Confirms Success But Shows Error Modal</td>
+                    <td><span class="status todo">TODO</span></td>
+                    <td>M</td>
+                    <td>Sprint 18 · P1</td>
+                  </tr>
+
+                  <tr class="backlog-row" data-status="todo" data-crit="medium">
+                    <td><span class="crit-dot crit-medium"></span></td>
+                    <td>BF-013</td>
+                    <td>Trades Cannot Be Proposed Between Draft + Season Start</td>
+                    <td><span class="status todo">TODO</span></td>
+                    <td>S</td>
+                    <td>Sprint 18 · P1</td>
+                  </tr>
+
+                  <tr class="backlog-row" data-status="todo" data-crit="medium">
+                    <td><span class="crit-dot crit-low"></span></td>
+                    <td>BF-014</td>
+                    <td>VTF Matchup Schedule Page Confusing in Vs-The-Field Mode <em style="color:#f59e0b; font-size:0.8rem">(Spec needed)</em></td>
+                    <td><span class="status todo">TODO</span></td>
+                    <td>S</td>
+                    <td>Sprint 18 · P2</td>
+                  </tr>
 
                   <tr class="backlog-row" data-status="done" data-crit="medium">
                     <td><span class="crit-dot crit-medium"></span></td>

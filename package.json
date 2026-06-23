@@ -50,6 +50,7 @@
     "esbuild@0.28.0": true,
     "esbuild@0.21.5": true,
     "fsevents@2.3.3": true,
-    "prisma@5.22.0": true
+    "prisma@5.22.0": true,
+    "fsevents@2.3.2": true
   }
 }
