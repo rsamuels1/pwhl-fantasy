@@ -36,7 +36,9 @@ export default async function MatchupsPage({ params }: { params: Promise<{ leagu
   if (!league) notFound();
 
   const isVpMode = (league as { scoringMode?: string }).scoringMode === "VP";
-  const isVtfMode = !isVpMode;
+  // VP (Victory Points) IS the VTF format — everyone vs the field, not 1v1.
+  // The ranked list view must be used for VP leagues; pair cards are for future H2H modes.
+  const isVtfMode = isVpMode;
 
   const nowMs = getReplayNow(league, await getDevNow());
 
@@ -94,16 +96,16 @@ export default async function MatchupsPage({ params }: { params: Promise<{ leagu
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
 
       <div style={{ marginBottom: 4 }}>
-        <h1 style={{ fontSize: 24, margin: "0 0 6px" }}>Weekly Results</h1>
-        <p style={{ margin: 0, fontSize: 13, color: "#64748b" }}>
-          Each week every team&apos;s score is ranked against the field. Your record shows wins vs every other team.
+        <h1 style={{ fontSize: 24, margin: "0 0 6px" }}>Scoreboard</h1>
+        <p style={{ margin: 0, fontSize: 13, color: "var(--faint)" }}>
+          Every team&apos;s score, week by week — ranked highest to lowest. No single opponent: you compete against the whole league each week.
         </p>
       </div>
 
       {/* Regular season */}
       {byWeek.size === 0 ? (
         <div style={card}>
-          <p style={{ color: "#64748b", margin: 0 }}>No matchups scheduled yet.</p>
+          <p style={{ color: "var(--faint)", margin: 0 }}>No matchups scheduled yet.</p>
         </div>
       ) : (
         [...byWeek.entries()].map(([week, weekMatchups]) => {
@@ -159,19 +161,19 @@ export default async function MatchupsPage({ params }: { params: Promise<{ leagu
             <section key={week} style={{
               ...card,
               border: isCurrent
-                ? "1px solid rgba(99,102,241,0.3)"
-                : "1px solid rgba(148,163,184,0.14)",
+                ? "1px solid rgba(143,193,232,0.3)"
+                : "1px solid var(--border)",
               background: isCurrent
-                ? "rgba(99,102,241,0.04)"
-                : "rgba(255,255,255,0.04)",
+                ? "rgba(143,193,232,0.04)"
+                : "var(--surface)",
             }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14, flexWrap: "wrap" }}>
-                <span style={{ fontSize: 15, fontWeight: 700, color: "#e2e8f0" }}>Week {week}</span>
-                <span style={{ fontSize: 12, color: "#475569" }}>{dateRange}</span>
+                <span style={{ fontSize: 15, fontWeight: 700, color: "var(--text)" }}>Week {week}</span>
+                <span style={{ fontSize: 12, color: "var(--faint)" }}>{dateRange}</span>
                 {isVtfMode && (
                   <span style={{
                     fontSize: 10, fontWeight: 600, padding: "2px 6px", borderRadius: 4,
-                    background: "rgba(148, 163, 184, 0.2)", color: "#cbd5e1",
+                    background: "rgba(148, 163, 184, 0.2)", color: "var(--muted)",
                   }}>
                     vs Field
                   </span>
@@ -179,7 +181,7 @@ export default async function MatchupsPage({ params }: { params: Promise<{ leagu
                 {isCurrent && (
                   <span style={{
                     fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 20,
-                    background: "rgba(99,102,241,0.15)", color: "#a5b4fc",
+                    background: "rgba(143,193,232,0.15)", color: "var(--accent-strong)",
                   }}>
                     Current
                   </span>
@@ -203,24 +205,24 @@ export default async function MatchupsPage({ params }: { params: Promise<{ leagu
                         gap: "12px",
                         padding: "10px 14px",
                         borderRadius: 10,
-                        background: isMyTeam ? "rgba(99,102,241,0.06)" : "rgba(255,255,255,0.02)",
-                        border: isMyTeam ? "1px solid rgba(99,102,241,0.2)" : "1px solid rgba(148,163,184,0.06)",
+                        background: isMyTeam ? "rgba(143,193,232,0.06)" : "var(--bg-raised)",
+                        border: isMyTeam ? "1px solid rgba(143,193,232,0.2)" : "1px solid var(--border)",
                       }}>
-                        <div style={{ fontSize: 12, fontWeight: 700, color: "#64748b", minWidth: 24 }}>
+                        <div style={{ fontSize: 12, fontWeight: 700, color: "var(--faint)", minWidth: 24 }}>
                           {rank}.
                         </div>
                         <div style={{
                           fontSize: 13, fontWeight: isMyTeam ? 700 : 500,
-                          color: isMyTeam ? "#e2e8f0" : "#94a3b8",
+                          color: isMyTeam ? "var(--text)" : "var(--dim)",
                           overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
                         }}>
                           {entry.team.name}
                         </div>
                         <div />
-                        <div style={{ fontSize: 17, fontWeight: 800, color: "#e2e8f0", fontVariantNumeric: "tabular-nums", minWidth: 60, textAlign: "right" }}>
+                        <div style={{ fontSize: 17, fontWeight: 800, color: "var(--text)", fontVariantNumeric: "tabular-nums", minWidth: 60, textAlign: "right" }}>
                           {scoreStr}
                         </div>
-                        <div style={{ fontSize: 11, color: "#64748b", minWidth: 70, textAlign: "right" }}>
+                        <div style={{ fontSize: 11, color: "var(--faint)", minWidth: 70, textAlign: "right" }}>
                           {recordStr}
                         </div>
                       </div>
@@ -246,21 +248,21 @@ export default async function MatchupsPage({ params }: { params: Promise<{ leagu
                         gap: "4px 10px",
                         padding: "10px 14px",
                         borderRadius: 10,
-                        background: isMyMatchup ? "rgba(99,102,241,0.06)" : "rgba(255,255,255,0.02)",
-                        border: isMyMatchup ? "1px solid rgba(99,102,241,0.2)" : "1px solid rgba(148,163,184,0.06)",
+                        background: isMyMatchup ? "rgba(143,193,232,0.06)" : "var(--bg-raised)",
+                        border: isMyMatchup ? "1px solid rgba(143,193,232,0.2)" : "1px solid var(--border)",
                       }}>
                         {/* Home */}
                         <div style={{ textAlign: "right", minWidth: 0 }}>
                           <div style={{
                             fontSize: 13, fontWeight: homeIsMe ? 700 : 500,
-                            color: homeIsMe ? "#e2e8f0" : "#94a3b8",
+                            color: homeIsMe ? "var(--text)" : "var(--dim)",
                             overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
                           }}>
                             {m.homeTeam.name}
                           </div>
                           {scored && (
                             <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "baseline", gap: 6 }}>
-                              <span style={{ fontSize: 17, fontWeight: 800, color: homeWon ? "#e2e8f0" : "#475569", fontVariantNumeric: "tabular-nums" }}>
+                              <span style={{ fontSize: 17, fontWeight: 800, color: homeWon ? "var(--text)" : "var(--faint)", fontVariantNumeric: "tabular-nums" }}>
                                 {m.homeScore!.toFixed(1)}
                               </span>
                               {isVpMode && homeVP != null && (
@@ -271,7 +273,7 @@ export default async function MatchupsPage({ params }: { params: Promise<{ leagu
                         </div>
 
                         {/* Middle */}
-                        <div style={{ fontSize: 10, fontWeight: 700, color: "#334155", textAlign: "center", letterSpacing: "0.5px", minWidth: 36 }}>
+                        <div style={{ fontSize: 10, fontWeight: 700, color: "var(--muted)", textAlign: "center", letterSpacing: "0.5px", minWidth: 36 }}>
                           {scored ? "FINAL" : "VS"}
                         </div>
 
@@ -279,14 +281,14 @@ export default async function MatchupsPage({ params }: { params: Promise<{ leagu
                         <div style={{ textAlign: "left", minWidth: 0 }}>
                           <div style={{
                             fontSize: 13, fontWeight: awayIsMe ? 700 : 500,
-                            color: awayIsMe ? "#e2e8f0" : "#94a3b8",
+                            color: awayIsMe ? "var(--text)" : "var(--dim)",
                             overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
                           }}>
                             {m.awayTeam.name}
                           </div>
                           {scored && (
                             <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
-                              <span style={{ fontSize: 17, fontWeight: 800, color: awayWon ? "#e2e8f0" : "#475569", fontVariantNumeric: "tabular-nums" }}>
+                              <span style={{ fontSize: 17, fontWeight: 800, color: awayWon ? "var(--text)" : "var(--faint)", fontVariantNumeric: "tabular-nums" }}>
                                 {m.awayScore!.toFixed(1)}
                               </span>
                               {isVpMode && awayVP != null && (
@@ -317,7 +319,7 @@ export default async function MatchupsPage({ params }: { params: Promise<{ leagu
           <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }}>
             <span style={{ fontSize: 16, fontWeight: 700, color: "#fdba74" }}>🏆 Playoffs Begin</span>
           </div>
-          <div style={{ fontSize: 12, color: "#94a3b8" }}>
+          <div style={{ fontSize: 12, color: "var(--dim)" }}>
             <div style={{ marginBottom: 6 }}>
               {(() => {
                 const dividerDate = firstPlayoffMatchup
@@ -326,7 +328,7 @@ export default async function MatchupsPage({ params }: { params: Promise<{ leagu
                 return `${fmtDate(dividerDate)} – ${fmtDate(new Date(dividerDate.getTime() + 7 * 24 * 60 * 60 * 1000))}`;
               })()}
             </div>
-            <div style={{ fontSize: 11, color: "#64748b" }}>
+            <div style={{ fontSize: 11, color: "var(--faint)" }}>
               Single-elimination · Best seed wins ties
             </div>
           </div>
@@ -336,7 +338,7 @@ export default async function MatchupsPage({ params }: { params: Promise<{ leagu
       {/* Playoffs */}
       {playoffMatchups.length > 0 && (
         <section style={card}>
-          <h2 style={{ fontSize: 16, fontWeight: 700, margin: "0 0 14px", color: "#e2e8f0" }}>Playoff Rounds</h2>
+          <h2 style={{ fontSize: 16, fontWeight: 700, margin: "0 0 14px", color: "var(--text)" }}>Playoff Rounds</h2>
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             {Array.from({ length: totalPlayoffRounds }, (_, i) => {
               const round = i + 1;
@@ -352,26 +354,26 @@ export default async function MatchupsPage({ params }: { params: Promise<{ leagu
                   {/* Round header with seed matchup info */}
                   <div style={{ marginBottom: 12 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
-                      <span style={{ fontSize: 14, fontWeight: 700, color: "#e2e8f0" }}>{roundName}</span>
-                      <span style={{ fontSize: 11, color: "#475569" }}>{dateRange}</span>
+                      <span style={{ fontSize: 14, fontWeight: 700, color: "var(--text)" }}>{roundName}</span>
+                      <span style={{ fontSize: 11, color: "var(--faint)" }}>{dateRange}</span>
                     </div>
                     {round === 1 && totalPlayoffRounds > 1 && (
-                      <div style={{ fontSize: 11, color: "#64748b" }}>
+                      <div style={{ fontSize: 11, color: "var(--faint)" }}>
                         Semifinals: (1 vs 4, 2 vs 3)
                       </div>
                     )}
                     {round === 1 && totalPlayoffRounds === 1 && (
-                      <div style={{ fontSize: 11, color: "#64748b" }}>
+                      <div style={{ fontSize: 11, color: "var(--faint)" }}>
                         Championship Match
                       </div>
                     )}
                     {round > 1 && round === totalPlayoffRounds && (
-                      <div style={{ fontSize: 11, color: "#64748b" }}>
+                      <div style={{ fontSize: 11, color: "var(--faint)" }}>
                         Championship: Winners advance
                       </div>
                     )}
                     {round > 1 && round < totalPlayoffRounds && (
-                      <div style={{ fontSize: 11, color: "#64748b" }}>
+                      <div style={{ fontSize: 11, color: "var(--faint)" }}>
                         Round {round}: Winners advance
                       </div>
                     )}
@@ -394,12 +396,12 @@ export default async function MatchupsPage({ params }: { params: Promise<{ leagu
                           gap: "4px 10px",
                           padding: "10px 14px",
                           borderRadius: 10,
-                          background: isMyMatchup ? "rgba(99,102,241,0.08)" : "rgba(217, 119, 6, 0.04)",
-                          border: isMyMatchup ? "1px solid rgba(99,102,241,0.3)" : "1px solid rgba(217, 119, 6, 0.15)",
+                          background: isMyMatchup ? "rgba(143,193,232,0.08)" : "rgba(217, 119, 6, 0.04)",
+                          border: isMyMatchup ? "1px solid rgba(143,193,232,0.3)" : "1px solid rgba(217, 119, 6, 0.15)",
                         }}>
                           <div style={{ textAlign: "right", minWidth: 0 }}>
                             <div style={{ display: "flex", alignItems: "baseline", gap: 6, justifyContent: "flex-end" }}>
-                              <div style={{ fontSize: 13, fontWeight: 500, color: "#94a3b8", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                              <div style={{ fontSize: 13, fontWeight: 500, color: "var(--dim)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                                 {m.homeTeam.name}
                               </div>
                               {homeSeed && (
@@ -409,13 +411,13 @@ export default async function MatchupsPage({ params }: { params: Promise<{ leagu
                               )}
                             </div>
                             {scored && (
-                              <div style={{ fontSize: 17, fontWeight: 800, color: homeWon ? "#e2e8f0" : "#475569", fontVariantNumeric: "tabular-nums" }}>
+                              <div style={{ fontSize: 17, fontWeight: 800, color: homeWon ? "var(--text)" : "var(--faint)", fontVariantNumeric: "tabular-nums" }}>
                                 {m.homeScore!.toFixed(1)}
                               </div>
                             )}
                           </div>
                           <div style={{ textAlign: "center", minWidth: 44 }}>
-                            <div style={{ fontSize: 10, fontWeight: 700, color: "#334155", letterSpacing: "0.5px" }}>
+                            <div style={{ fontSize: 10, fontWeight: 700, color: "var(--muted)", letterSpacing: "0.5px" }}>
                               {scored ? "FINAL" : "VS"}
                             </div>
                           </div>
@@ -426,12 +428,12 @@ export default async function MatchupsPage({ params }: { params: Promise<{ leagu
                                   {awaySeed}
                                 </span>
                               )}
-                              <div style={{ fontSize: 13, fontWeight: 500, color: "#94a3b8", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                              <div style={{ fontSize: 13, fontWeight: 500, color: "var(--dim)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                                 {m.awayTeam.name}
                               </div>
                             </div>
                             {scored && (
-                              <div style={{ fontSize: 17, fontWeight: 800, color: awayWon ? "#e2e8f0" : "#475569", fontVariantNumeric: "tabular-nums" }}>
+                              <div style={{ fontSize: 17, fontWeight: 800, color: awayWon ? "var(--text)" : "var(--faint)", fontVariantNumeric: "tabular-nums" }}>
                                 {m.awayScore!.toFixed(1)}
                               </div>
                             )}
@@ -451,8 +453,8 @@ export default async function MatchupsPage({ params }: { params: Promise<{ leagu
 }
 
 const card: React.CSSProperties = {
-  background: "rgba(255,255,255,0.04)",
-  border: "1px solid rgba(148,163,184,0.14)",
+  background: "var(--surface)",
+  border: "1px solid var(--border)",
   borderRadius: 20,
   padding: 20,
 };
