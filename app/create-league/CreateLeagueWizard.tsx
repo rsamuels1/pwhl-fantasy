@@ -8,19 +8,32 @@ import Link from "next/link";
 import { VpExplainer } from "@/components/VpExplainer";
 
 // Beta mode adds step 0 (beta welcome), which is hidden from the progress bar.
-// Both replay and live modes show all 6 steps (Name, Size, Season, Rules, Team, Invite).
+// Beta mode collapses the wizard to 4 displayed steps: Name → Rules → Team → Invite.
+// Internal steps are still 0-7; beta mode skips steps 2 (size) and 3 (season mode).
 // TOTAL_STEPS is the internal step count (8 states including step 0 and the final done screen).
 const TOTAL_STEPS = 8;
 const isBetaMode = typeof process !== "undefined" && process.env.NEXT_PUBLIC_BETA_MODE === "true";
 
-// Both modes now use the same step sequence (6 displayed steps).
+// Beta mode: internal steps 1→4→5→6 map to display steps 1→2→3→4.
 function getDisplayStep(step: number): number {
   if (step === 0) return 0;
+  if (isBetaMode) {
+    if (step <= 1) return 1;
+    if (step <= 4) return 2;
+    if (step === 5) return 3;
+    return 4;
+  }
   return step;
 }
 
 function getDisplayTotal(): number {
-  return 6;
+  return isBetaMode ? 4 : 6;
+}
+
+function getStepLabels(): string[] {
+  return isBetaMode
+    ? ["Name", "Rules", "Team", "Invite"]
+    : ["Name", "Size", "Season", "Rules", "Team", "Invite"];
 }
 
 const SIZE_OPTIONS: { value: number; label: string; note: string }[] = [
@@ -96,11 +109,25 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
     }
   };
 
-  // Create the live league (called at step 4)
+  // Create the live (or beta) league (called at step 4)
   const handleCreate = async () => {
     setLoading(true);
     setError(null);
     try {
+      // Beta mode always creates a beta replay league.
+      if (isBetaMode) {
+        const res = await fetch("/api/leagues/create", {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ leagueName: name || "My Beta League", useBetaReplay: true }),
+        });
+        const data = await res.json();
+        if (!res.ok) { setError(data?.error || "Failed to create league"); setLoading(false); return; }
+        setCreatedLeagueId(data.leagueId);
+        setStep(5);
+        return;
+      }
       let draftStartsAt: string | undefined;
       if (draftDate) {
         draftStartsAt = new Date(`${draftDate}T${draftTime}:00`).toISOString();
@@ -174,7 +201,7 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
         {step > 0 && (() => {
           const displayTotal = getDisplayTotal();
           const displayStep = getDisplayStep(Math.min(step, TOTAL_STEPS - 1));
-          const stepLabels = ["Name", "Size", "Season", "Rules", "Team", "Invite"];
+          const stepLabels = getStepLabels();
           return (
             <div>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
@@ -243,41 +270,43 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
                   {name.length}/50
                 </span>
               </label>
-              {/* isPublic toggle */}
-              <button
-                type="button"
-                onClick={() => setIsPublic((v) => !v)}
-                style={{
-                  display: "flex", alignItems: "center", gap: 12,
-                  background: "none", border: "none", cursor: "pointer",
-                  padding: "10px 0", textAlign: "left",
-                }}
-              >
-                <span style={{
-                  width: 36, height: 20, borderRadius: 99, flexShrink: 0,
-                  background: isPublic ? "#6366f1" : "rgba(255,255,255,0.08)",
-                  display: "inline-flex", alignItems: "center",
-                  padding: "0 3px", transition: "background 0.2s",
-                }}>
+              {/* isPublic toggle — hidden in beta mode (beta leagues are invite-only) */}
+              {!isBetaMode && (
+                <button
+                  type="button"
+                  onClick={() => setIsPublic((v) => !v)}
+                  style={{
+                    display: "flex", alignItems: "center", gap: 12,
+                    background: "none", border: "none", cursor: "pointer",
+                    padding: "10px 0", textAlign: "left",
+                  }}
+                >
                   <span style={{
-                    width: 14, height: 14, borderRadius: "50%", background: "#fff",
-                    transform: isPublic ? "translateX(16px)" : "translateX(0)",
-                    transition: "transform 0.2s",
-                  }} />
-                </span>
-                <div>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: "#e2e8f0" }}>
-                    List on public league directory
+                    width: 36, height: 20, borderRadius: 99, flexShrink: 0,
+                    background: isPublic ? "#6366f1" : "rgba(255,255,255,0.08)",
+                    display: "inline-flex", alignItems: "center",
+                    padding: "0 3px", transition: "background 0.2s",
+                  }}>
+                    <span style={{
+                      width: 14, height: 14, borderRadius: "50%", background: "#fff",
+                      transform: isPublic ? "translateX(16px)" : "translateX(0)",
+                      transition: "transform 0.2s",
+                    }} />
+                  </span>
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: "#e2e8f0" }}>
+                      List on public league directory
+                    </div>
+                    <div style={{ fontSize: 11, color: "#64748b" }}>
+                      Your league name and invite link will appear on the Leagues page so new players can find it.
+                    </div>
                   </div>
-                  <div style={{ fontSize: 11, color: "#64748b" }}>
-                    Your league name and invite link will appear on the Leagues page so new players can find it.
-                  </div>
-                </div>
-              </button>
+                </button>
+              )}
 
               <button
                 className="button-primary"
-                onClick={goNext}
+                onClick={() => isBetaMode ? setStep(4) : goNext()}
                 disabled={!nameValid}
                 style={{ width: "100%", marginTop: 8 }}
               >
@@ -465,59 +494,128 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
           {/* ── Step 4: Rules confirmation ── */}
           {step === 4 && (
             <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-              <div>
-                <h1 style={{ margin: "0 0 6px", fontSize: 22 }}>Standard rules</h1>
-                <p style={{ margin: 0, color: "#64748b", fontSize: 14 }}>
-                  Your league uses these defaults. They&apos;re the most competitive settings for the PWHL.
-                </p>
-              </div>
-
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                <RuleRow icon="👥" label="Roster" value="3 F · 2 D · 1 UTIL (any skater: F or D) · 1 G · 6 Bench = 13 slots, all drafted" />
-
-                {/* Simplified rules for replay, detailed for live */}
-                <RuleRow icon="📊" label="Standings" value={<>Victory Points (VP) — win your matchup AND score more than anyone else<VpExplainer /></>} />
-                <RuleRow icon="🏆" label="Scoring" value={
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 5, marginTop: 4 }}>
-                    {["Goal = 2 pts", "Assist = 1.5 pts", "PPP = +0.5 pts", "Win (G) = 5 pts", "Shutout (G) = 3 pts"].map(label => (
-                      <span key={label} style={{
-                        padding: "2px 8px", borderRadius: 5, fontSize: 11, fontWeight: 600,
-                        background: "rgba(255,255,255,0.04)", border: "1px solid rgba(148,163,184,0.12)",
-                        color: "#94a3b8",
-                      }}>{label}</span>
-                    ))}
+              {isBetaMode ? (
+                <>
+                  <div>
+                    <h1 style={{ margin: "0 0 6px", fontSize: 22 }}>Your beta replay league</h1>
+                    <p style={{ margin: 0, color: "#64748b", fontSize: 14 }}>
+                      Everything is pre-configured. Here&apos;s what you&apos;re getting into.
+                    </p>
                   </div>
-                } />
-                <RuleRow icon="🏒" label="Playoffs" value="Top 4 teams, single-elimination, no byes" />
-                <RuleRow icon="📅" label="Season" value={isReplay ? `2025-26 replay season · ${maxTeams} teams` : `2026-27 live PWHL season · ${maxTeams} teams`} />
-              </div>
 
-              <div style={{
-                padding: "12px 16px", borderRadius: 12,
-                background: "rgba(99,102,241,0.06)",
-                border: "1px solid rgba(99,102,241,0.15)",
-                fontSize: 13, color: "#94a3b8",
-              }}>
-                💡 Next, you&apos;ll name your own team before inviting others.
-              </div>
+                  {/* Beta timeline callout */}
+                  <div style={{
+                    padding: "14px 16px", borderRadius: 12,
+                    background: "rgba(245,158,11,0.06)",
+                    border: "1px solid rgba(245,158,11,0.2)",
+                    fontSize: 13, color: "#94a3b8", lineHeight: 1.6,
+                  }}>
+                    <div style={{ fontWeight: 700, color: "#fbbf24", marginBottom: 6 }}>⏱ How it works</div>
+                    <div>
+                      <strong style={{ color: "#e2e8f0" }}>Draft</strong> — starts right away. You pick players from the 2025-26 roster.
+                    </div>
+                    <div>
+                      <strong style={{ color: "#e2e8f0" }}>Week 1</strong> — kicks off the day after your draft ends.
+                    </div>
+                    <div>
+                      <strong style={{ color: "#e2e8f0" }}>2-week regular season</strong> — all vs. all VP scoring using real 2025-26 game data.
+                    </div>
+                    <div>
+                      <strong style={{ color: "#e2e8f0" }}>4-team playoffs</strong> — semi-final week, then championship week.
+                    </div>
+                  </div>
 
-              {!isReplay && (
-                <div style={{
-                  padding: "12px 16px", borderRadius: 12,
-                  background: "rgba(255,255,255,0.02)",
-                  border: "1px solid rgba(148,163,184,0.1)",
-                  fontSize: 13, color: "#475569",
-                }}>
-                  Scoring, roster slots, and playoff format can be adjusted from the admin panel before the draft.
-                </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                    <RuleRow icon="👥" label="Roster" value="3 F · 2 D · 1 UTIL (any skater) · 1 G · 6 Bench = 13 slots, all drafted" />
+                    <RuleRow icon="📊" label="Standings" value={<>Victory Points (VP) — win your matchup AND score more than anyone else<VpExplainer /></>} />
+                    <RuleRow icon="🏆" label="Scoring" value={
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 5, marginTop: 4 }}>
+                        {["Goal = 2 pts", "Assist = 1.5 pts", "PPP = +0.5 pts", "Win (G) = 5 pts", "Shutout (G) = 3 pts"].map(lbl => (
+                          <span key={lbl} style={{
+                            padding: "2px 8px", borderRadius: 5, fontSize: 11, fontWeight: 600,
+                            background: "rgba(255,255,255,0.04)", border: "1px solid rgba(148,163,184,0.12)",
+                            color: "#94a3b8",
+                          }}>{lbl}</span>
+                        ))}
+                      </div>
+                    } />
+                    <RuleRow icon="🏒" label="Playoffs" value="Top 4 teams · semi-final week · championship week · no byes" />
+                    <RuleRow icon="👥" label="League size" value="Up to 6 teams · invite-only" />
+                    <RuleRow icon="📅" label="Data source" value="4 randomly chosen weeks from the 2025-26 PWHL regular season" />
+                  </div>
+
+                  <div style={{
+                    padding: "12px 16px", borderRadius: 12,
+                    background: "rgba(99,102,241,0.06)",
+                    border: "1px solid rgba(99,102,241,0.15)",
+                    fontSize: 13, color: "#94a3b8",
+                  }}>
+                    💡 Next, you&apos;ll name your own team before inviting others.
+                  </div>
+
+                  <div style={{ display: "flex", gap: 10, justifyContent: "space-between" }}>
+                    <button className="button-secondary" onClick={() => setStep(1)} style={{ flex: 1 }}>← Back</button>
+                    <button className="button-primary" onClick={handleCreateOrAdvance} disabled={loading} style={{ flex: 1 }}>
+                      {loading ? "Creating league…" : "Create my beta league →"}
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div>
+                    <h1 style={{ margin: "0 0 6px", fontSize: 22 }}>Standard rules</h1>
+                    <p style={{ margin: 0, color: "#64748b", fontSize: 14 }}>
+                      Your league uses these defaults. They&apos;re the most competitive settings for the PWHL.
+                    </p>
+                  </div>
+
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                    <RuleRow icon="👥" label="Roster" value="3 F · 2 D · 1 UTIL (any skater: F or D) · 1 G · 6 Bench = 13 slots, all drafted" />
+
+                    <RuleRow icon="📊" label="Standings" value={<>Victory Points (VP) — win your matchup AND score more than anyone else<VpExplainer /></>} />
+                    <RuleRow icon="🏆" label="Scoring" value={
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 5, marginTop: 4 }}>
+                        {["Goal = 2 pts", "Assist = 1.5 pts", "PPP = +0.5 pts", "Win (G) = 5 pts", "Shutout (G) = 3 pts"].map(lbl => (
+                          <span key={lbl} style={{
+                            padding: "2px 8px", borderRadius: 5, fontSize: 11, fontWeight: 600,
+                            background: "rgba(255,255,255,0.04)", border: "1px solid rgba(148,163,184,0.12)",
+                            color: "#94a3b8",
+                          }}>{lbl}</span>
+                        ))}
+                      </div>
+                    } />
+                    <RuleRow icon="🏒" label="Playoffs" value="Top 4 teams, single-elimination, no byes" />
+                    <RuleRow icon="📅" label="Season" value={isReplay ? `2025-26 replay season · ${maxTeams} teams` : `2026-27 live PWHL season · ${maxTeams} teams`} />
+                  </div>
+
+                  <div style={{
+                    padding: "12px 16px", borderRadius: 12,
+                    background: "rgba(99,102,241,0.06)",
+                    border: "1px solid rgba(99,102,241,0.15)",
+                    fontSize: 13, color: "#94a3b8",
+                  }}>
+                    💡 Next, you&apos;ll name your own team before inviting others.
+                  </div>
+
+                  {!isReplay && (
+                    <div style={{
+                      padding: "12px 16px", borderRadius: 12,
+                      background: "rgba(255,255,255,0.02)",
+                      border: "1px solid rgba(148,163,184,0.1)",
+                      fontSize: 13, color: "#475569",
+                    }}>
+                      Scoring, roster slots, and playoff format can be adjusted from the admin panel before the draft.
+                    </div>
+                  )}
+
+                  <div style={{ display: "flex", gap: 10, justifyContent: "space-between" }}>
+                    <button className="button-secondary" onClick={goBack} style={{ flex: 1 }}>← Back</button>
+                    <button className="button-primary" onClick={handleCreateOrAdvance} disabled={loading} style={{ flex: 1 }}>
+                      {loading ? (createdLeagueId ? "Continuing…" : "Creating league…") : (createdLeagueId ? "Continue →" : "Create league →")}
+                    </button>
+                  </div>
+                </>
               )}
-
-              <div style={{ display: "flex", gap: 10, justifyContent: "space-between" }}>
-                <button className="button-secondary" onClick={goBack} style={{ flex: 1 }}>← Back</button>
-                <button className="button-primary" onClick={handleCreateOrAdvance} disabled={loading} style={{ flex: 1 }}>
-                  {loading ? (createdLeagueId ? "Continuing…" : "Creating league…") : (createdLeagueId ? "Continue →" : "Create league →")}
-                </button>
-              </div>
               {error && <p style={{ color: "#d18b7f", fontSize: 13, margin: 0 }}>{error}</p>}
             </div>
           )}

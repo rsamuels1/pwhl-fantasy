@@ -48,6 +48,8 @@ export default async function DraftPage({ params, searchParams }: Props) {
         rosterSettings: true,
         isReplay: true,
         season: true,
+        draftStartsAt: true,
+        betaStatus: true,
         teams: {
           select: { id: true, name: true, ownerId: true },
           orderBy: { draftOrder: "asc" },
@@ -137,6 +139,13 @@ export default async function DraftPage({ params, searchParams }: Props) {
   );
   const rosterSettings = (league.rosterSettings ?? {}) as Record<string, number>;
 
+  // For beta replay leagues, the first scoring week starts the day after the draft.
+  // Pass this so the completion banner can show the correct date.
+  const firstWeekStartDate =
+    league.betaStatus === "ACTIVE" && league.draftStartsAt
+      ? new Date(league.draftStartsAt.getTime() + 24 * 60 * 60 * 1000).toISOString()
+      : null;
+
   return (
     <DraftRoom
       leagueId={leagueId}
@@ -146,6 +155,7 @@ export default async function DraftPage({ params, searchParams }: Props) {
       rosterSettings={rosterSettings}
       initialStats={initialStats}
       statSeason={season}
+      firstWeekStartDate={firstWeekStartDate}
     />
   );
 }

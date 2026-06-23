@@ -8,6 +8,10 @@
     {
       "path": "/api/cron/check-incomplete-lineups",
       "schedule": "0 12 * * *"
+    },
+    {
+      "path": "/api/cron/advance-beta-seasons",
+      "schedule": "0 9 * * *"
     }
   ]
 }

@@ -925,6 +925,7 @@ export default function DraftRoom({
   initialStats,
   statSeason,
   rosterSettings,
+  firstWeekStartDate,
 }: {
   leagueId: string;
   teamId: string;
@@ -933,6 +934,7 @@ export default function DraftRoom({
   rosterSettings: Record<string, number>;
   initialStats: PlayerStats[];
   statSeason: string | null;
+  firstWeekStartDate: string | null;
 }) {
   // Single socket for the whole room — previously two calls (root + content) caused
   // each to JOIN as the same team, they evicted each other, triggering the eviction overlay.
@@ -952,6 +954,7 @@ export default function DraftRoom({
       statSeason={statSeason}
       rosterSettings={rosterSettings}
       socket={socket}
+      firstWeekStartDate={firstWeekStartDate}
     />
   );
 }
@@ -965,6 +968,7 @@ function DraftRoomContent({
   statSeason,
   rosterSettings,
   socket,
+  firstWeekStartDate,
 }: {
   leagueId: string;
   teamId: string;
@@ -974,6 +978,7 @@ function DraftRoomContent({
   initialStats: PlayerStats[];
   statSeason: string | null;
   socket: ReturnType<typeof useDraftSocket>;
+  firstWeekStartDate: string | null;
 }) {
   const { connStatus, draft, available, lastError, start, makePick, listAvailable, setQueue, pause, resume } =
     socket;
@@ -1064,11 +1069,42 @@ function DraftRoomContent({
       )}
 
       {draft?.status === "COMPLETE" && (
-        <div style={styles.completeBanner}>
-          Draft complete — {draft.completed.length} picks made.{" "}
-          <a href={`/league/${leagueId}`} style={{ color: "var(--green)", textDecoration: "underline" }}>
-            View league
-          </a>
+        <div style={{ ...styles.completeBanner, display: "block", padding: "16px 20px" }}>
+          <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 4 }}>
+            🎉 Draft complete — {draft.completed.length} picks made
+          </div>
+          {firstWeekStartDate && (
+            <div style={{ fontSize: 13, color: "var(--muted)", marginBottom: 12 }}>
+              Week 1 kicks off{" "}
+              <strong style={{ color: "var(--text)" }}>
+                {new Date(firstWeekStartDate).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
+              </strong>
+              {" "}— set your lineup before then.
+            </div>
+          )}
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+            <a
+              href={`/team/${teamId}/lineup`}
+              style={{
+                display: "inline-block", padding: "8px 18px", borderRadius: 8,
+                background: "var(--accent, #6366f1)", color: "#fff",
+                fontWeight: 700, fontSize: 13, textDecoration: "none",
+              }}
+            >
+              Set your lineup →
+            </a>
+            <a
+              href={`/league/${leagueId}`}
+              style={{
+                display: "inline-block", padding: "8px 18px", borderRadius: 8,
+                background: "rgba(255,255,255,0.06)", color: "var(--text)",
+                fontWeight: 600, fontSize: 13, textDecoration: "none",
+                border: "1px solid rgba(255,255,255,0.1)",
+              }}
+            >
+              View league
+            </a>
+          </div>
         </div>
       )}
 

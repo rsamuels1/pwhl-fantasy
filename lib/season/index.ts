@@ -34,7 +34,7 @@ export async function getSeasonState(
 ): Promise<SeasonState> {
   const league = await prisma.fantasyLeague.findUniqueOrThrow({
     where: { id: leagueId },
-    select: { season: true },
+    select: { season: true, scoringSettings: true },
   });
 
   const [gameDates, scoredMatchups, allRegularMatchups] = await Promise.all([
@@ -51,17 +51,35 @@ export async function getSeasonState(
     // All regular-season matchups (scored or not) to cap periods to actual generated weeks.
     prisma.matchup.findMany({
       where: { leagueId, isPlayoff: false },
-      select: { week: true },
+      select: { week: true, startsAt: true, endsAt: true },
       distinct: ["week"],
+      orderBy: { week: "asc" },
     }),
   ]);
 
-  let periods = derivePeriods(gameDates.map((g) => g.startsAt));
-  // If regular-season matchups were created with reservePlayoffWeeks, cap periods to match.
-  if (allRegularMatchups.length > 0) {
-    const maxRegularWeek = Math.max(...allRegularMatchups.map((m) => m.week));
-    periods = periods.slice(0, maxRegularWeek);
+  const rawSettings = (league.scoringSettings ?? {}) as Record<string, unknown>;
+  const hasBetaMappings =
+    Array.isArray(rawSettings.betaWeekMappings) &&
+    (rawSettings.betaWeekMappings as unknown[]).length > 0;
+
+  let periods: ReturnType<typeof derivePeriods>;
+  if (hasBetaMappings && allRegularMatchups.length > 0) {
+    // Beta leagues: matchup rows store remapped real-calendar dates (not 2025-26 dates).
+    // Use those so lifecycle (UPCOMING/ACTIVE/SCORING_PENDING) reflects real clock time.
+    periods = allRegularMatchups.map((m) => ({
+      week: m.week,
+      startsAt: m.startsAt,
+      endsAt: m.endsAt,
+    }));
+  } else {
+    periods = derivePeriods(gameDates.map((g) => g.startsAt));
+    // If regular-season matchups were created with reservePlayoffWeeks, cap periods to match.
+    if (allRegularMatchups.length > 0) {
+      const maxRegularWeek = Math.max(...allRegularMatchups.map((m) => m.week));
+      periods = periods.slice(0, maxRegularWeek);
+    }
   }
+
   const scoredWeeks = new Set(scoredMatchups.map((m) => m.week));
 
   return computeSeasonState(periods, gameDates, scoredWeeks, nowMs);

@@ -4,6 +4,7 @@ import { DEFAULT_SCORING } from "@/lib/scoring";
 import { generateShortId } from "@/lib/id";
 import { setAuthCookie } from "@/lib/auth";
 import { trackEvent } from "@/lib/analytics";
+import { derivePeriods } from "@/lib/scoring/periods";
 
 const SESSION_COOKIE = "pwhl_user_email";
 
@@ -11,7 +12,6 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const leagueName = String(body.leagueName || "").trim();
-    const maxTeams = Number(body.maxTeams || 8);
 
     if (!leagueName) {
       return NextResponse.json({ error: "League name is required." }, { status: 400 });
@@ -40,8 +40,66 @@ export async function POST(req: NextRequest) {
     let draftStartsAt: Date | null = null;
     let isReplay = false;
     let replayCurrentDate: Date | null = null;
+    let maxTeams = Number(body.maxTeams || 8);
+    let scoringSettingsOverride: Record<string, unknown> | null = null;
+    let betaStatusValue: string | undefined;
+    let playoffSettingsOverride: Record<string, unknown> | null = null;
 
-    if (body.useLastSeasonSimulation) {
+    if (body.useBetaReplay) {
+      // --- Beta Replay League ---
+      // 4 randomly chosen weeks from 2025-26: first 2 for regular season, last 2 for playoff scoring.
+      const betaSeason = "2025-26";
+      const gameDates = await prisma.game.findMany({
+        where: { season: betaSeason },
+        select: { startsAt: true },
+      });
+      const allPeriods = derivePeriods(gameDates.map((g) => g.startsAt));
+      if (allPeriods.length < 4) {
+        return NextResponse.json(
+          { error: "Not enough season data to create a beta league. Load the 2025-26 fixture first." },
+          { status: 400 }
+        );
+      }
+
+      // Pick one index from each quarter of the season for variety.
+      const quarterSize = Math.floor(allPeriods.length / 4);
+      const indices = [0, 1, 2, 3].map(
+        (q) => q * quarterSize + Math.floor(Math.random() * quarterSize)
+      );
+
+      // Pre-compute betaWeekMappings for all 4 weeks (regular + playoff).
+      // generateBetaMatchups() will overwrite weeks 1-2 with the same data and preserve weeks 3-4.
+      const draftStart = Date.now();
+      const firstWeekStart = draftStart + 24 * 60 * 60 * 1000;
+      const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+
+      const betaWeekMappings = indices.map((idx, i) => ({
+        week: i + 1,
+        fixtureStart: allPeriods[idx].startsAt.toISOString(),
+        fixtureEnd: allPeriods[idx].endsAt.toISOString(),
+        remappedStart: new Date(firstWeekStart + i * WEEK_MS).toISOString(),
+        remappedEnd: new Date(firstWeekStart + (i + 1) * WEEK_MS).toISOString(),
+      }));
+
+      scoringSettingsOverride = {
+        ...(DEFAULT_SCORING as object),
+        betaWeekIndices: [indices[0], indices[1]],
+        betaWeekMappings,
+      };
+      playoffSettingsOverride = {
+        teamsInPlayoff: 4,
+        topSeedsWithBye: 0,
+        roundDurationPeriods: 1,
+        higherSeedWinsTies: true,
+      };
+
+      leagueSeason = betaSeason;
+      maxTeams = 6;
+      draftStartsAt = new Date();
+      isReplay = true;
+      replayCurrentDate = null; // real-time: weeks advance on the actual calendar
+      betaStatusValue = "ACTIVE";
+    } else if (body.useLastSeasonSimulation) {
       const lastSeasonRow = await prisma.game.findMany({
         distinct: ["season"],
         select: { season: true },
@@ -66,7 +124,7 @@ export async function POST(req: NextRequest) {
         maxTeams,
         status: "PRE_DRAFT",
         commissionerId: commissioner.id,
-        scoringSettings: DEFAULT_SCORING as object,
+        scoringSettings: (scoringSettingsOverride ?? DEFAULT_SCORING) as object,
         scoringMode: "VP",
         rosterSettings: {
           forward: 3,
@@ -79,12 +137,14 @@ export async function POST(req: NextRequest) {
         isReplay,
         replayCurrentDate,
         isPublic,
+        ...(betaStatusValue ? { betaStatus: betaStatusValue as "ACTIVE" } : {}),
+        ...(playoffSettingsOverride ? { playoffSettings: playoffSettingsOverride as object } : {}),
       },
     });
 
     try {
       trackEvent({ event: "league_created", userId: commissioner.id, leagueId: league.id,
-        properties: { maxTeams, isReplay, source: sessionEmail ? "wizard" : "form" } });
+        properties: { maxTeams, isReplay, source: sessionEmail ? "wizard" : "form", isBetaReplay: !!body.useBetaReplay } });
     } catch {}
 
     const response = NextResponse.json({

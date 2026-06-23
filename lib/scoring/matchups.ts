@@ -530,11 +530,20 @@ export async function generateBetaMatchups(
 
   // Save fixture window mapping into scoringSettings so scoreVtfWeek can look up
   // the original dates when computing scores.
-  const betaWeekMappings = fixturePeriods.map((fp, idx) => ({
-    week: idx + 1,
-    fixtureStart: fp.startsAt.toISOString(),
-    fixtureEnd: fp.endsAt.toISOString(),
-  }));
+  // Preserve any pre-stored playoff week mappings (weeks beyond regular season count)
+  // so playoff rounds can look up their fixture data too.
+  const regularSeasonCount = fixturePeriods.length;
+  const existingMappings = (settings.betaWeekMappings as { week: number; fixtureStart: string; fixtureEnd: string }[] | undefined) ?? [];
+  const playoffMappings = existingMappings.filter((m) => m.week > regularSeasonCount);
+
+  const betaWeekMappings = [
+    ...fixturePeriods.map((fp, idx) => ({
+      week: idx + 1,
+      fixtureStart: fp.startsAt.toISOString(),
+      fixtureEnd: fp.endsAt.toISOString(),
+    })),
+    ...playoffMappings,
+  ];
 
   await prisma.fantasyLeague.update({
     where: { id: leagueId },
