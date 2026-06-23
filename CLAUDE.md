@@ -65,16 +65,17 @@ npm run draft-cli -- --league <id> --team <id>          # terminal 2..N
 
 ## Deployment environments
 
-Two environments. Full runbook: `docs/04-operations/environments.md`.
+Three environments. Full runbook: `docs/04-operations/environments.md`.
 
-| Environment | Branch | Domain | Database |
-|---|---|---|---|
-| **Production** | `main` | `fantasy.dykedb.org` | Neon branch: `main` |
-| **Staging** | `dev` | `fantasydev.dykedb.org` | Neon branch: `preview` |
+| Environment | Vercel project | Branch | Domain | Database |
+|---|---|---|---|---|
+| **Beta** | `pwhl-gm-beta` | `release/beta-v1` | `beta.fantasy.dykedb.org` | Neon branch: `main` |
+| **Production** | `pwhl-fantasy` | `main` | `fantasy.dykedb.org` | Neon branch: `main` |
+| **Staging** | `pwhl-fantasy` | `dev` | `fantasydev.dykedb.org` | Neon branch: `preview` |
 
 **Key rules:**
 - `DATABASE_URL` is the isolation boundary — staging must point at the Neon `preview` branch, never `main`.
-- `BETA_HOST` env var controls which host is locked to `/beta` (defaults to `"fantasy.dykedb.org"`). Staging has it unset, so it serves the full app. Set it to `""` in Production when ready to open `fantasy.dykedb.org` to the full app.
+- `BETA_HOST` env var controls which host is locked to just the `/beta` signup page (defaults to `"fantasy.dykedb.org"`). The beta subdomain (`beta.fantasy.dykedb.org`) never matches this check, so the full app runs there. Set `BETA_HOST` to `""` in the production Vercel project when ready to open `fantasy.dykedb.org` to the full app.
 - `ALLOW_SIM_DATE` must NOT be set in Production — it would let any user rewind the clock for all live leagues.
 - `prisma db push` is safe on the staging Neon branch; never run it on the prod branch while beta users are active. Use `prisma migrate dev` to generate a migration, commit it, and let `prisma migrate deploy` (in the build command) apply it to prod.
 - Vercel crons (`vercel.json`) run on Production only — waivers won't double-process on staging.
