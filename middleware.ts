@@ -5,52 +5,65 @@ const BETA_HOST = process.env.BETA_HOST ?? "fantasy.dykedb.org";
 
 export function middleware(req: NextRequest) {
   try {
-    const cookie = req.cookies.get(SESSION_COOKIE)?.value;
-    const { pathname } = req.nextUrl;
-    const host = req.headers.get("host") ?? "";
+  const cookie = req.cookies.get(SESSION_COOKIE)?.value;
+  const { pathname } = req.nextUrl;
+  const host = req.headers.get("host") ?? "";
 
-    // On the beta domain, only /beta and its API are accessible
-    if (host === BETA_HOST) {
-      const allowed =
-        pathname === "/beta" ||
-        pathname.startsWith("/api/beta-signup") ||
-        pathname.startsWith("/_next/") ||
-        pathname.startsWith("/favicon");
-      if (!allowed) {
-        const url = req.nextUrl.clone();
-        url.pathname = "/beta";
-        url.search = "";
-        return NextResponse.redirect(url, 307);
-      }
+  // On the beta domain, restrict access unless authenticated
+  if (host === BETA_HOST) {
+    const isAuthenticated = !!cookie;
+
+    // Unauthenticated users: allow home, auth, create-league, and static assets
+    const unauthedAllowed =
+      pathname === "/" ||
+      pathname === "/beta" ||
+      pathname === "/register" ||
+      pathname === "/login" ||
+      pathname.startsWith("/create-league") ||
+      pathname.startsWith("/api/beta-signup") ||
+      pathname.startsWith("/api/auth") ||
+      pathname.startsWith("/api/leagues/create") ||
+      pathname.startsWith("/_next/") ||
+      pathname.startsWith("/favicon");
+
+    // Authenticated users: allow everything except static assets (they're fine)
+    if (isAuthenticated || unauthedAllowed) {
       const res = NextResponse.next();
       res.headers.set("x-pathname", pathname);
       return res;
     }
 
-    // League / team / founder pages — redirect to login with returnTo
-    if (
-      pathname.startsWith("/league/") ||
-      pathname.startsWith("/team/") ||
-      pathname.startsWith("/founder")
-    ) {
-      if (!cookie) {
-        const url = req.nextUrl.clone();
-        url.pathname = "/login";
-        url.searchParams.set("returnTo", pathname);
-        return NextResponse.redirect(url);
-      }
-    }
+    // Not authenticated and not in allowed list: redirect to /beta
+    const url = req.nextUrl.clone();
+    url.pathname = "/beta";
+    url.search = "";
+    return NextResponse.redirect(url, 307);
+  }
 
-    // League + founder API routes — return 401 (except join, which allows unauthenticated invites)
-    if ((pathname.startsWith("/api/leagues/") && !pathname.startsWith("/api/leagues/join")) || pathname.startsWith("/api/founder/")) {
-      if (!cookie) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-      }
+  // League / team / founder pages — redirect to login with returnTo
+  if (
+    pathname.startsWith("/league/") ||
+    pathname.startsWith("/team/") ||
+    pathname.startsWith("/founder")
+  ) {
+    if (!cookie) {
+      const url = req.nextUrl.clone();
+      url.pathname = "/login";
+      url.searchParams.set("returnTo", pathname);
+      return NextResponse.redirect(url);
     }
+  }
 
-    const res = NextResponse.next();
-    res.headers.set("x-pathname", pathname);
-    return res;
+  // League + founder API routes — return 401 (except join, which allows unauthenticated invites)
+  if ((pathname.startsWith("/api/leagues/") && !pathname.startsWith("/api/leagues/join")) || pathname.startsWith("/api/founder/")) {
+    if (!cookie) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+  }
+
+  const res = NextResponse.next();
+  res.headers.set("x-pathname", pathname);
+  return res;
   } catch (error) {
     console.error("[Middleware Error]", error);
     return NextResponse.next();

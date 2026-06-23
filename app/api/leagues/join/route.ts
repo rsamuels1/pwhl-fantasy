@@ -86,7 +86,8 @@ export async function POST(req: NextRequest) {
     }
     return response;
   } catch (error) {
-    console.error("Error joining league:", error);
-    return NextResponse.json({ error: "Failed to join league." }, { status: 500 });
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    console.error("Error joining league:", errorMsg, error);
+    return NextResponse.json({ error: `Failed to join league: ${errorMsg}` }, { status: 500 });
   }
 }

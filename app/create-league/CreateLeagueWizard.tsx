@@ -7,23 +7,18 @@ import BetaWelcomeStep from "@/components/BetaWelcomeStep";
 import Link from "next/link";
 
 // Beta mode adds step 0 (beta welcome), which is hidden from the progress bar.
-// Replay mode skips step 4 (Rules confirmation), so it has 5 displayed steps instead of 6.
+// Both replay and live modes show all 6 steps (Name, Size, Season, Rules, Team, Invite).
 // TOTAL_STEPS is the internal step count (8 states including step 0 and the final done screen).
-// displayTotal and displayStep are what we show in the progress bar and counter.
 const TOTAL_STEPS = 8;
 const isBetaMode = typeof process !== "undefined" && process.env.NEXT_PUBLIC_BETA_MODE === "true";
 
-// Maps internal step number → displayed step number for each mode.
-// Step 0 is never shown in progress counter (it's hidden).
-// Replay: steps 1-3 → 1-3, steps 5-7 → 4-6 (step 4 is skipped).
-// Live: steps 1-6 → 1-6.
+// Both modes now use the same step sequence (6 displayed steps).
 function getDisplayStep(step: number): number {
-  if (step === 0) return 0; // Step 0 is never shown in progress bar
+  if (step === 0) return 0;
   return step;
 }
 
 function getDisplayTotal(): number {
-  // Both replay and live: 6 displayed steps (Rules now shown in replay too)
   return 6;
 }
 
@@ -80,29 +75,21 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
     router.push("/dashboard");
   };
 
-  const handleCreateOrAdvance = async () => {
-    if (createdLeagueId) {
-      // League already created (replay flow). Skip creation, just advance.
-      setStep(5);
-      return;
-    }
-    await handleCreate();
-  };
-
-  // In replay mode, skip steps 4–5 (rules + invite) but still go through team creation
+  // Replay mode creates league at step 3 (Season), then shows step 4 (Rules) before team creation
   const handleReplayCreate = async () => {
     setLoading(true);
     setError(null);
     try {
       const res = await fetch("/api/leagues/create", {
         method: "POST",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ leagueName: name || "My Replay League", maxTeams, useLastSeasonSimulation: true }),
       });
       const data = await res.json();
       if (!res.ok) { setError(data?.error || "Failed to create league"); setLoading(false); return; }
       setCreatedLeagueId(data.leagueId);
-      setStep(4); // Show Rules screen in replay mode (league already created, user just confirms)
+      setStep(4);
     } catch {
       setError("Unable to create league. Please try again.");
     } finally {
@@ -121,6 +108,7 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
       }
       const res = await fetch("/api/leagues/create", {
         method: "POST",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ leagueName: name, maxTeams, draftStartsAt, isPublic }),
       });
@@ -135,6 +123,19 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
     }
   };
 
+  // Step 4 button handler: idempotent for both modes
+  // Live: creates league, advances to step 5
+  // Replay: if league already created, just advances to step 5; else creates league first
+  const handleCreateOrAdvance = async () => {
+    if (createdLeagueId) {
+      // Already created (replay flow), just advance
+      setStep(5);
+      return;
+    }
+    // Not yet created, call handleCreate
+    await handleCreate();
+  };
+
   // Create the commissioner's team (called at step 5)
   const handleCreateTeam = async () => {
     if (!createdLeagueId || !teamName.trim()) return;
@@ -143,6 +144,7 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
     try {
       const res = await fetch("/api/leagues/join", {
         method: "POST",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           leagueId: createdLeagueId,
@@ -473,74 +475,88 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
 
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 <RuleRow icon="👥" label="Roster" value="3 F · 2 D · 1 Flex (any skater) · 1 G · 6 Bench = 13 slots, all drafted" />
-                <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
-                  <RuleRow icon="📊" label="Standings" value="Victory Points (VP) — win your matchup AND score more than anyone else" />
-                  <button
-                    type="button"
-                    onClick={() => setVpOpen((v) => !v)}
-                    style={{
-                      background: "none", border: "none", cursor: "pointer",
-                      color: "#7c6af7", fontSize: 11, fontWeight: 600,
-                      textAlign: "left", padding: "2px 0 0 28px",
-                    }}
-                  >
-                    {vpOpen ? "▲ Hide VP details" : "▼ How does VP work?"}
-                  </button>
-                  {vpOpen && (
-                    <div style={{
-                      margin: "6px 0 0 28px", padding: "10px 12px", borderRadius: 8,
-                      background: "rgba(124,106,247,0.07)", border: "1px solid rgba(124,106,247,0.18)",
-                      fontSize: 12, color: "#94a3b8", lineHeight: 1.6,
-                    }}>
-                      Each week you earn VP two ways:
-                      <ul style={{ margin: "4px 0 4px 16px", padding: 0 }}>
-                        <li><strong style={{ color: "#c4b5fd" }}>Win your matchup</strong> — +2 VP; tie — +1 VP</li>
-                        <li><strong style={{ color: "#c4b5fd" }}>Highest score in the league</strong> — +2 VP bonus; 2nd highest — +1 VP</li>
-                      </ul>
-                      Maximum 4 VP per week. At season end, the top 4 VP totals make the playoffs — not just who won the most matchups.
+
+                {/* Simplified rules for replay, detailed for live */}
+                {isReplay ? (
+                  <>
+                    <RuleRow icon="📊" label="Standings" value="Victory Points (VP) — win your matchup AND score more than anyone else" />
+                    <RuleRow icon="🏒" label="Playoffs" value="Top 4 teams, single-elimination, no byes" />
+                    <RuleRow icon="📅" label="Season" value={`2025-26 replay season · ${maxTeams} teams`} />
+                  </>
+                ) : (
+                  <>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+                      <RuleRow icon="📊" label="Standings" value="Victory Points (VP) — win your matchup AND score more than anyone else" />
+                      <button
+                        type="button"
+                        onClick={() => setVpOpen((v) => !v)}
+                        style={{
+                          background: "none", border: "none", cursor: "pointer",
+                          color: "#7c6af7", fontSize: 11, fontWeight: 600,
+                          textAlign: "left", padding: "2px 0 0 28px",
+                        }}
+                      >
+                        {vpOpen ? "▲ Hide VP details" : "▼ How does VP work?"}
+                      </button>
+                      {vpOpen && (
+                        <div style={{
+                          margin: "6px 0 0 28px", padding: "10px 12px", borderRadius: 8,
+                          background: "rgba(124,106,247,0.07)", border: "1px solid rgba(124,106,247,0.18)",
+                          fontSize: 12, color: "#94a3b8", lineHeight: 1.6,
+                        }}>
+                          Each week you earn VP two ways:
+                          <ul style={{ margin: "4px 0 4px 16px", padding: 0 }}>
+                            <li><strong style={{ color: "#c4b5fd" }}>Win your matchup</strong> — +2 VP; tie — +1 VP</li>
+                            <li><strong style={{ color: "#c4b5fd" }}>Highest score in the league</strong> — +2 VP bonus; 2nd highest — +1 VP</li>
+                          </ul>
+                          Maximum 4 VP per week. At season end, the top 4 VP totals make the playoffs — not just who won the most matchups.
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
-                <div>
-                  <p style={{ fontSize: "0.875rem", marginBottom: "0.5rem", color: "#94a3b8" }}>
-                    Goals and assists score the most — you don&apos;t need to memorize this.
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => setShowScoring((s) => !s)}
-                    style={{ fontSize: "0.8rem", color: "var(--accent, #6366f1)", background: "none", border: "none", cursor: "pointer", padding: 0, marginBottom: "0.5rem" }}
-                  >
-                    {showScoring ? "▴ Hide scoring details" : "▾ See full scoring breakdown"}
-                  </button>
-                  {showScoring && (
-                    <div style={{
-                      padding: "12px 14px", borderRadius: 12,
-                      background: "rgba(255,255,255,0.03)",
-                      border: "1px solid rgba(148,163,184,0.08)",
-                    }}>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 8 }}>
-                        Scoring
-                      </div>
-                      <div style={{ fontSize: 13, color: "#e2e8f0", lineHeight: 1.6 }}>
-                        <strong>Skaters:</strong> Goal = 2 pts, Assist = 1.5 pts, Power Play = +0.5 pts, SOG = 0.5 pts, Hit = 0.25 pts, Block = 0.5 pts
-                        <br/>
-                        <strong>Goalies:</strong> Win = 5 pts, Shutout = 3 pts, Save = 0.25 pts, Goal Against = -1 pt
-                      </div>
+                    <div>
+                      <p style={{ fontSize: "0.875rem", marginBottom: "0.5rem", color: "#94a3b8" }}>
+                        Goals and assists score the most — you don&apos;t need to memorize this.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => setShowScoring((s) => !s)}
+                        style={{ fontSize: "0.8rem", color: "var(--accent, #6366f1)", background: "none", border: "none", cursor: "pointer", padding: 0, marginBottom: "0.5rem" }}
+                      >
+                        {showScoring ? "▴ Hide scoring details" : "▾ See full scoring breakdown"}
+                      </button>
+                      {showScoring && (
+                        <div style={{
+                          padding: "12px 14px", borderRadius: 12,
+                          background: "rgba(255,255,255,0.03)",
+                          border: "1px solid rgba(148,163,184,0.08)",
+                        }}>
+                          <div style={{ fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 8 }}>
+                            Scoring
+                          </div>
+                          <div style={{ fontSize: 13, color: "#e2e8f0", lineHeight: 1.6 }}>
+                            <strong>Skaters:</strong> Goal = 2 pts, Assist = 1.5 pts, Power Play = +0.5 pts, SOG = 0.5 pts, Hit = 0.25 pts, Block = 0.5 pts
+                            <br/>
+                            <strong>Goalies:</strong> Win = 5 pts, Shutout = 3 pts, Save = 0.25 pts, Goal Against = -1 pt
+                          </div>
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
-                <RuleRow icon="🏒" label="Playoffs" value="Top 4 teams, single-elimination, no byes" />
-                <RuleRow icon="📅" label="Season" value={`2026-27 live PWHL season · ${maxTeams} teams`} />
+                    <RuleRow icon="🏒" label="Playoffs" value="Top 4 teams, single-elimination, no byes" />
+                    <RuleRow icon="📅" label="Season" value={`2026-27 live PWHL season · ${maxTeams} teams`} />
+                  </>
+                )}
               </div>
 
-              <div style={{
-                padding: "12px 16px", borderRadius: 12,
-                background: "rgba(255,255,255,0.02)",
-                border: "1px solid rgba(148,163,184,0.1)",
-                fontSize: 13, color: "#475569",
-              }}>
-                Scoring, roster slots, and playoff format can be adjusted from the admin panel before the draft.
-              </div>
+              {!isReplay && (
+                <div style={{
+                  padding: "12px 16px", borderRadius: 12,
+                  background: "rgba(255,255,255,0.02)",
+                  border: "1px solid rgba(148,163,184,0.1)",
+                  fontSize: 13, color: "#475569",
+                }}>
+                  Scoring, roster slots, and playoff format can be adjusted from the admin panel before the draft.
+                </div>
+              )}
 
               <div style={{
                 padding: "12px 16px", borderRadius: 12,
@@ -548,7 +564,7 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
                 border: "1px solid rgba(99,102,241,0.15)",
                 fontSize: 13, color: "#94a3b8",
               }}>
-                💡 Clicking &ldquo;Create league&rdquo; will set up your league — then you&apos;ll create your team name and become the commissioner.
+                💡 Next up: create your team name and become the commissioner.
               </div>
 
               <div style={{ display: "flex", gap: 10, justifyContent: "space-between" }}>
