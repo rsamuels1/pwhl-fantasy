@@ -772,6 +772,8 @@ function PlayerPanel({
                   <br />
                   <strong style={{ color: "var(--text)" }}>Goalies:</strong>{" "}
                   W = Wins · SV = Saves · GA = Goals Against · SV% = Save % · SO = Shutouts
+                  <br />
+                  <strong style={{ color: "var(--text)" }}>Tm:</strong> Team abbreviation · FA = Free agent (no PWHL team yet)
                 </div>
               )}
             </div>
@@ -810,7 +812,7 @@ function PlayerPanel({
                     {rows.map(({ player: p, stats: s }) => (
                       <tr key={p.id} className="draft-player-row" style={styles.playerRow}>
                         <td style={{ padding: "5px 6px" }}><PosTag pos={p.position} /></td>
-                        <td style={{ padding: "5px 6px", color: "var(--muted)", fontSize: 11, whiteSpace: "nowrap" }}>{p.team ?? "FA"}</td>
+                        <td style={{ padding: "5px 6px", color: "var(--muted)", fontSize: 11, whiteSpace: "nowrap" }} title={p.team ? undefined : "Free agent — not currently on a PWHL roster"}>{p.team ?? "FA"}</td>
                         <td style={{ padding: "5px 6px", fontSize: 13, whiteSpace: "nowrap" }}>{p.name}</td>
                         {cols.map((c) => {
                           const val = s ? (s[c.key] as number | null) : null;
@@ -871,7 +873,7 @@ function PlayerPanel({
                       {s && p.position === "GOALIE" && (
                         <span style={{ color: "var(--muted)", fontSize: 11 }}>{s.wins}W</span>
                       )}
-                      <span style={{ color: "var(--muted)", fontSize: 11 }}>{p.team ?? "FA"}</span>
+                      <span style={{ color: "var(--muted)", fontSize: 11 }} title={p.team ? undefined : "Free agent — not currently on a PWHL roster"}>{p.team ?? "FA"}</span>
                       <div style={{ display: "flex", gap: 4 }}>
                         <button style={styles.queueBtn} onClick={() => moveInQueue(p.id, -1)} disabled={i === 0}>↑</button>
                         <button style={styles.queueBtn} onClick={() => moveInQueue(p.id, 1)} disabled={i === queuedPlayers.length - 1}>↓</button>
@@ -1073,6 +1075,18 @@ function DraftRoomContent({
       {draft?.status === "PAUSED" && (
         <div style={styles.pausedBanner}>
           Draft paused{isCommissioner ? " — press Resume to continue" : " — waiting for commissioner"}.
+        </div>
+      )}
+
+      {draft?.status === "PENDING" && (
+        <div style={styles.pendingBanner}>
+          <div style={{ flex: 1 }}>
+            {isCommissioner ? (
+              <span>Press <strong>Start</strong> when everyone is ready. ~{Object.keys(teamNames).length} teams will draft in snake order, ~30 seconds per pick.</span>
+            ) : (
+              <span>Waiting for <strong>{teamNames[draft.order[0]?.fantasyTeamId] || "commissioner"}</strong> to start. You'll get ~30 seconds per pick — star players now so you're ready.</span>
+            )}
+          </div>
         </div>
       )}
 
@@ -1471,6 +1485,16 @@ const styles = {
     padding: "8px 20px",
     fontSize: 13,
     borderBottom: "1px solid var(--green)",
+  },
+  pendingBanner: {
+    display: "flex" as const,
+    alignItems: "center" as const,
+    gap: 12,
+    background: "rgba(59,130,246,0.12)",
+    color: "#93c5fd",
+    padding: "10px 20px",
+    fontSize: 13,
+    borderBottom: "1px solid rgba(59,130,246,0.3)",
   },
   pausedBanner: {
     background: "rgba(249,115,22,0.12)",

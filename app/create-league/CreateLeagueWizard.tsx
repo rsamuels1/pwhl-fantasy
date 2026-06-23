@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import InviteLinkButton from "@/components/InviteLinkButton";
 import BetaWelcomeStep from "@/components/BetaWelcomeStep";
 import Link from "next/link";
+import { VpExplainer } from "@/components/VpExplainer";
 
 // Beta mode adds step 0 (beta welcome), which is hidden from the progress bar.
 // Both replay and live modes show all 6 steps (Name, Size, Season, Rules, Team, Invite).
@@ -47,7 +48,6 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
   const [error, setError] = useState<string | null>(null);
   const [createdLeagueId, setCreatedLeagueId] = useState<string | null>(null);
   const [createdTeamId, setCreatedTeamId] = useState<string | null>(null);
-  const [vpOpen, setVpOpen] = useState(false);
   const [showScoring, setShowScoring] = useState(false);
   const [isPublic, setIsPublic] = useState(false);
 
@@ -68,7 +68,7 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
     // If league was created but team wasn't, warn before leaving
     if (createdLeagueId && !createdTeamId) {
       const confirmed = window.confirm(
-        "Your league was already created but no one has joined yet. You can still use it — find it on your dashboard.\n\nLeave the setup wizard?"
+        "Your league was created. Canceling will leave it in your account without a team or members. You can finish setup later from your dashboard.\n\nContinue anyway?"
       );
       if (!confirmed) return;
     }
@@ -474,45 +474,18 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
               </div>
 
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                <RuleRow icon="👥" label="Roster" value="3 F · 2 D · 1 Flex (any skater) · 1 G · 6 Bench = 13 slots, all drafted" />
+                <RuleRow icon="👥" label="Roster" value="3 F · 2 D · 1 UTIL (any skater: F or D) · 1 G · 6 Bench = 13 slots, all drafted" />
 
                 {/* Simplified rules for replay, detailed for live */}
                 {isReplay ? (
                   <>
-                    <RuleRow icon="📊" label="Standings" value="Victory Points (VP) — win your matchup AND score more than anyone else" />
+                    <RuleRow icon="📊" label="Standings" value={<>Victory Points (VP) — win your matchup AND score more than anyone else<VpExplainer /></>} />
                     <RuleRow icon="🏒" label="Playoffs" value="Top 4 teams, single-elimination, no byes" />
                     <RuleRow icon="📅" label="Season" value={`2025-26 replay season · ${maxTeams} teams`} />
                   </>
                 ) : (
                   <>
-                    <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
-                      <RuleRow icon="📊" label="Standings" value="Victory Points (VP) — win your matchup AND score more than anyone else" />
-                      <button
-                        type="button"
-                        onClick={() => setVpOpen((v) => !v)}
-                        style={{
-                          background: "none", border: "none", cursor: "pointer",
-                          color: "#7c6af7", fontSize: 11, fontWeight: 600,
-                          textAlign: "left", padding: "2px 0 0 28px",
-                        }}
-                      >
-                        {vpOpen ? "▲ Hide VP details" : "▼ How does VP work?"}
-                      </button>
-                      {vpOpen && (
-                        <div style={{
-                          margin: "6px 0 0 28px", padding: "10px 12px", borderRadius: 8,
-                          background: "rgba(124,106,247,0.07)", border: "1px solid rgba(124,106,247,0.18)",
-                          fontSize: 12, color: "#94a3b8", lineHeight: 1.6,
-                        }}>
-                          Each week you earn VP two ways:
-                          <ul style={{ margin: "4px 0 4px 16px", padding: 0 }}>
-                            <li><strong style={{ color: "#c4b5fd" }}>Win your matchup</strong> — +2 VP; tie — +1 VP</li>
-                            <li><strong style={{ color: "#c4b5fd" }}>Highest score in the league</strong> — +2 VP bonus; 2nd highest — +1 VP</li>
-                          </ul>
-                          Maximum 4 VP per week. At season end, the top 4 VP totals make the playoffs — not just who won the most matchups.
-                        </div>
-                      )}
-                    </div>
+                    <RuleRow icon="📊" label="Standings" value={<>Victory Points (VP) — win your matchup AND score more than anyone else<VpExplainer /></>} />
                     <div>
                       <p style={{ fontSize: "0.875rem", marginBottom: "0.5rem", color: "#94a3b8" }}>
                         Goals and assists score the most — you don&apos;t need to memorize this.
@@ -547,6 +520,15 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
                 )}
               </div>
 
+              <div style={{
+                padding: "12px 16px", borderRadius: 12,
+                background: "rgba(99,102,241,0.06)",
+                border: "1px solid rgba(99,102,241,0.15)",
+                fontSize: 13, color: "#94a3b8",
+              }}>
+                💡 Next, you&apos;ll name your own team before inviting others.
+              </div>
+
               {!isReplay && (
                 <div style={{
                   padding: "12px 16px", borderRadius: 12,
@@ -557,15 +539,6 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
                   Scoring, roster slots, and playoff format can be adjusted from the admin panel before the draft.
                 </div>
               )}
-
-              <div style={{
-                padding: "12px 16px", borderRadius: 12,
-                background: "rgba(99,102,241,0.06)",
-                border: "1px solid rgba(99,102,241,0.15)",
-                fontSize: 13, color: "#94a3b8",
-              }}>
-                💡 Next up: create your team name and become the commissioner.
-              </div>
 
               <div style={{ display: "flex", gap: 10, justifyContent: "space-between" }}>
                 <button className="button-secondary" onClick={goBack} style={{ flex: 1 }}>← Back</button>
@@ -689,7 +662,7 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
   );
 }
 
-function RuleRow({ icon, label, value }: { icon: string; label: string; value: string }) {
+function RuleRow({ icon, label, value }: { icon: string; label: string; value: React.ReactNode }) {
   return (
     <div style={{
       display: "flex", alignItems: "flex-start", gap: 12,

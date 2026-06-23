@@ -1237,10 +1237,10 @@ Produce a findings list; fix all P0 a11y blockers. P1/P2 findings go to the post
 |---|---|---|---|---|
 | BLR-001: Founder-created beta replay leagues | A | L | P0 | ✅ SHIPPED (cc77196 + ecc7290) |
 | BLR-002: Wizard beta welcome screen | A | M | P0 | Spec written — ready for engineering |
-| BF-009: Analysis page navigation broken | B | S | P0 | Ready |
-| OB-002: Wizard Step 4 VP explanation | B | S | P0 | Ready |
-| OB-003: Wizard team-creation warning | B | S | P0 | Ready |
-| OB-004: Wizard cancel confirm dialog | B | M | P0 | Ready |
+| BF-009: Analysis page navigation broken | B | S | P0 | ✅ RESOLVED (Playwright false-negative; nav confirmed working) |
+| OB-002: Wizard Step 4 VP explanation | B | S | P0 | ✅ SHIPPED |
+| OB-003: Wizard team-creation warning | B | S | P0 | ✅ SHIPPED |
+| OB-004: Wizard cancel confirm dialog | B | M | P0 | ✅ SHIPPED |
 | BF-012: FA add phantom error | C | M | P1 | Ready |
 | BF-013: Pre-season trade block | C | S | P1 | Ready |
 | UX-046: Season series duplicate block | B | S | P1 | Ready |
@@ -1254,9 +1254,9 @@ Produce a findings list; fix all P0 a11y blockers. P1/P2 findings go to the post
 | OPS-002: Load test (draft room, 30 leagues) | D | M | P0 | Ready |
 | OPS-003: Vercel ops verification | D | S | P0 | Ready |
 | OPS-004: Accessibility audit | D | M | P1 | Ready |
-| BF-012: VTF matchup page confusion | C | S | P2 | Spec needed |
+| BF-014: VTF matchup page confusion | C | S | P2 | Spec needed |
 
-**Min-ship (P0 only, must land by Jul 7):** ~~BLR-001~~ ✅ SHIPPED · BLR-002, BF-009, OB-002, OB-003, OB-004, OPS-001, OPS-002, OPS-003 = 8 remaining P0 stories
+**Min-ship (P0 only, must land by Jul 7):** ~~BLR-001~~ ✅ SHIPPED · BLR-002, ~~BF-009~~ ✅ RESOLVED, ~~OB-002~~ ✅ SHIPPED, ~~OB-003~~ ✅ SHIPPED, ~~OB-004~~ ✅ SHIPPED · OPS-001, OPS-002, OPS-003 = 4 remaining P0 stories
 
 **Exit:** BLR leagues creatable by founder and joinable by invitees (BLR-001 ✅); BLR-002 welcome messaging shipped; all 4 P0 onboarding wizard bugs fixed; Analysis page navigates correctly; draft load test passes at 30-league scale; CRON_SECRET confirmed in Vercel; security audit complete with findings doc. Beta invites go out Jul 7, 2026.
 

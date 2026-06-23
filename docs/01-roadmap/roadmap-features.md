@@ -2927,6 +2927,8 @@ Priority: P0
 
 Effort: S
 
+Status: ✅ SHIPPED — Sprint 18; `VpExplainer` component added inline to VP row (both replay + live paths); UTIL relabeled to "UTIL (any skater: F or D)"; custom `vpOpen` toggle removed.
+
 As a first-time user on the rules-confirmation step of the league wizard, I want a brief explanation of Victory Points and UTIL so that I understand what I'm agreeing to before I commit.
 
 Issue: Step 4 of the wizard shows "Victory Points — win your matchup AND be a top scorer each week" and "3 F · 2 D · 1 UTIL · 1 G · 6 Bench = 13 slots" with no tooltips or expansion. The `VpExplainer` component exists in `components/VpExplainer.tsx` but only appears on the standings page — first-time users see VP here first, in the wizard, with no context. UTIL is unexplained for new fantasy players.
@@ -2949,6 +2951,8 @@ Priority: P0
 
 Effort: S
 
+Status: ✅ SHIPPED — Sprint 18; "Next up" callout updated to "Next, you'll name your own team before inviting others." and moved above the scoring toggle for visibility.
+
 As a new commissioner stepping through the league setup wizard, I want to know that creating a team for myself is part of the flow so that I'm not surprised when a "Create your team" step appears after I thought I was done.
 
 Issue: The wizard's step 4 button says "Create league →". After clicking it, a new step appears: "Create your team." The progress bar already shows the user at step 4 of 6, so the new step feels unannounced. The wizard never mentions that the commissioner must also create a personal team. This produces a "surprise screen" feel.
@@ -2969,6 +2973,8 @@ Sprint: 13
 Priority: P0
 
 Effort: M
+
+Status: ✅ SHIPPED — Sprint 18; `window.confirm()` dialog message updated to spec copy; fires correctly when `createdLeagueId && !createdTeamId`.
 
 As a new commissioner who changes their mind mid-wizard, I want to be warned that canceling after step 4 will leave a real (but unfinished) league in my account so that I don't accumulate orphaned leagues or get confused later.
 
@@ -2992,6 +2998,8 @@ Priority: P1
 
 Effort: S
 
+Status: OPEN — carried into Sprint 18 Track B
+
 As a first-time visitor on the landing page, I want the homepage to explain the product and invite me to start — not ask me for League IDs and Team IDs I don't have.
 
 Issue: `app/page.tsx` renders a `QuickDraftJoinForm` (or equivalent) in the "Running a league?" section that asks for League ID and Team ID directly. First-time visitors have no idea what these are. This is a power-user tool sitting in the main marketing flow.
@@ -3013,6 +3021,8 @@ Priority: P1
 
 Effort: S
 
+Status: OPEN — carried into Sprint 18 Track B
+
 As a first-time user on step 3 of the league wizard, I want to see the Replay mode description before clicking on it so that I can make an informed choice between "Live" and "Replay."
 
 Issue: In `CreateLeagueWizard.tsx`, step 3 shows two options: "Live (2026-27 season)" and "Replay (2025-26 season)." The amber explanation box describing what Replay mode does only appears after the user clicks the Replay option. A curious user might click to explore, only to find themselves unexpectedly committed to that path. The description should be visible upfront.
@@ -3033,6 +3043,8 @@ Sprint: 13
 Priority: P1
 
 Effort: S
+
+Status: OPEN — carried into Sprint 18 Track B
 
 As a PWHL fan visiting the login page, I want the player count and team count in the pitch copy to be accurate so that I trust the app's data.
 
@@ -3076,6 +3088,8 @@ Sprint: 13
 Priority: P1
 
 Effort: S
+
+Status: OPEN — carried into Sprint 18 Track B
 
 As a first-time user confirming league rules in step 4 of the wizard, I want to see at least one concrete example of how points are scored (e.g., "Goal = 2 pts") so that I understand the scoring engine before I commit to a league.
 
@@ -3140,7 +3154,7 @@ Sprint: 12
 
 Priority: P0
 
-Status: OPEN
+Status: ✅ SHIPPED — Sprint 15 batch commit 4b67b44; `Math.max(0, ...)` guard in `TransactionFeed` ensures timestamps never display negative
 
 Summary: In replay leagues, the activity feed shows relative timestamps like "-243731m ago" for events
 such as "homoveralls dropped Jocelyne Larocque." The negative value occurs because `LeagueEvent.createdAt`
@@ -3179,7 +3193,7 @@ Sprint: 12
 
 Priority: P0
 
-Status: OPEN
+Status: ✅ CONFIRMED RESOLVED — Sprint 18 investigation; Playwright confirmed navigation works correctly (URL changes to `/analysis`, 200 RSC fetch). Original audit false-negative caused by `waitForLoadState('networkidle')` resolving before Next.js App Router RSC fetch completes. No code change required.
 
 Summary: Clicking the "Analysis" tab in the team nav from the matchup page does not navigate to
 `/team/[teamId]/analysis`. After the click, the URL remains at `/team/[teamId]/matchup` and the
