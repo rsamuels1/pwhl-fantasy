@@ -1302,6 +1302,19 @@ Produce a findings list; fix all P0 a11y blockers. P1/P2 findings go to the post
 
 ---
 
+## Sprint 20 — "VTF Navigation Rename" · ✅ COMPLETE · Jun 23, 2026 · Track F · P1/P2
+
+Goal: Rename navigation labels in the league and team zones to better communicate VTF semantics to new users. Two targeted polish items only; no schema changes.
+
+| Story | Track | Size | Priority | Status |
+|---|---|---|---|---|
+| BF-018 — League "Schedule" tab → "Results" tab + VTF explainer subtitle | F | S | P1 | ✅ SHIPPED (commit ad4185a) |
+| UX-049 — Team Nav "Schedule" → "My Season" + "Your Players This Week" section rename | F | S | P2 | ✅ SHIPPED |
+
+**Exit achieved:** VTF navigation labels updated for clarity — "Results" replaces "Schedule" in the league nav; "My Season" replaces "Schedule" in the team nav. "Your Players This Week" section rename aligns with franchise-first language. Two targeted polish items shipped, no regressions.
+
+---
+
 ## Sprint 19 — "IA Restructure: Franchise-First Navigation + DnD Lineup" · ✅ COMPLETE · Track F · P1/P2
 
 **Status:** COMPLETE. All 5 parts shipped to main. Sprint 19 superseded the originally-planned "Playwright UX Walkthrough Fixes" scope (BF-018, UX-051–057) with a larger IA restructure. The Playwright items remain in the post-sprint backlog for a future UX polish pass.
@@ -1374,6 +1387,47 @@ The following items were originally scoped for Sprint 19 but were superseded by 
 - UX-056 (P2, S) — Commissioner draft checklist: add plain-language draft primer
 - UX-053 (P2, M) — Email invite flow — blocked on email infrastructure
 - BF-019 (P2, M) — Password reset / forgot password — blocked on email infrastructure
+
+---
+
+## Sprint 21 — "Living League: Weekly Delight" · PLANNED · Milestone 1 · P1/P2
+
+Goal: Make every Tuesday feel like something happened. Surface what already exists (scoring, standings, notifications, matchup page) through storytelling, recognition, and live momentum signals. First sprint of the Living League arc.
+
+**Sprint coordination note:** LL-002 (Momentum Strip) ships its data layer here. The visual `MomentumStrip.tsx` component is built in Sprint 22 (RD-008) as part of the Inviting Dark redesign — the full feature is complete after Sprint 22.
+
+| Story | Track | Size | Priority | Status |
+|---|---|---|---|---|
+| LL-001 — Weekly Awards Ceremony: `computeWeeklyAwards()` in `storyline-service.ts`; 5 award types (Ice-Cold Closer, Heater, Heartbreaker, Collapse, Frozen Stick); emitted as `LEAGUE_STORYLINE` events from `advanceSeason()`; rendered as award cards in `WeekHighlights.tsx` | Feature | M | P1 | Open |
+| LL-002 (data layer) — Matchup Momentum Strip data: add `scoreDeltaSinceYesterday`, `playersRemainingTonight`, `opponentFinished` to `ActiveMatchup` type in `getDashboardData`; computed from existing score + roster data; dev sim cookie respected | Feature | S | P1 | Open |
+| LL-003 — Animated Stat Chips: `StatChip.tsx` pill badges with CSS pulse; 4 chip types (streak, projection swing, league record, weekly leader); computed server-side in `getDashboardData` as `chips[]` on `RosterEntryRow`; rendered in matchup page Z6 roster breakdown | Feature | S | P2 | Open |
+
+**Exit criteria:** After `advanceSeason()` runs, 5 award cards appear in `WeekHighlights.tsx` on the league overview; at least 1 award card renders a distinct icon and border color from the storyline cards. `ActiveMatchup` type in `lib/services/dashboard.ts` includes all three Momentum Strip fields with correct values under dev sim date. At least one stat chip type renders correctly on the matchup page roster breakdown for a player with qualifying data. All existing tests pass; `tsc --noEmit` clean. No schema changes.
+
+---
+
+## Sprint 22 — "Inviting Dark Redesign" · PLANNED · Track F · P1
+
+Goal: Execute the "Inviting Dark" visual redesign defined in `docs/branding/pwhl_redesign_bundle_v3_1.zip`. This sprint is pure UI/CSS — no schema changes, no new API routes, no new data models. It covers the full token replacement, inline hex sweep, emoji restoration, flagship page redesigns (league overview + team matchup), remaining page recolor sweep, and a set of emotional UX additions (Momentum Strip, prestige gradient, gold prestige moments, empty state copy, wizard summary panel).
+
+Spec authority: `docs/branding/pwhl_redesign_bundle_v3_1.zip` (contains `globals.tokens.css`, `color-replacement-map.md`, `page-inventory.md`, and reference HTML files for league overview and team matchup).
+
+| Story | Track | Size | Priority | Status |
+|---|---|---|---|---|
+| RD-001 — Token swap: replace `:root` in `globals.css` with Inviting Dark tokens + 3 follow-up edits (body radial-gradient, `.button-primary` accent-ink text, `.section-accent` drop violet) | UX | S | P1 | Open |
+| RD-002 — Inline hex sweep across `app/**` + `components/**` per `color-replacement-map.md`; verify button/badge contrast after | Refactor | M | P1 | Open |
+| RD-003 — Emoji policy restoration: apply tiered policy; restore glyph chips (✓ CLINCHED, ✗ OUT, ◉ BUBBLE), activity-feed emoji, recap emoji, lock emoji; remove blanket-ban relics | UX | S | P1 | Open |
+| RD-004 — VP popover fix + Create League Wizard rebuild: fix `components/VpExplainer.tsx` anchored popover; rebuild `app/create-league/CreateLeagueWizard.tsx` with rule-sheet layout, scoring two-column table, slot pills | Feature | L | P1 | Open |
+| RD-005 — League overview flagship redesign: `app/league/[leagueId]/page.tsx` per `references/League Overview.dc.html`; gold commissioner strip, glyph chips, My Matchup widget sky-accent recolor, league leaders layout | Feature | L | P1 | Open |
+| RD-006 — Team matchup flagship redesign: `app/team/[teamId]/matchup/page.tsx` per `references/Team Matchup.dc.html`; DuelHero warm gradient + gold radial, score semantics → token vars, prestige RecapCard, all-set banner | Feature | L | P1 | Open |
+| RD-007 — Remaining page recolor sweep: walk `page-inventory.md` [recolor] screens: dashboard, standings, bracket, admin, roster, draft, trades, auth pages, founder console, shared components | Refactor | L | P1 | Open |
+| RD-008 — Momentum Strip component: new `components/MomentumStrip.tsx`; placed under matchup score header; hidden pre-game, collapses when matchup complete; shows +X pts since yesterday, N players remaining, opponent status | Feature | M | P1 | Open |
+| RD-009 — Prestige gradient token: add `--prestige-gradient` CSS variable to `app/globals.css`; apply to champion cards, clinched playoff banners, weekly recap hero; never on buttons/nav | UX | S | P2 | Open |
+| RD-010 — Gold prestige moments: apply `--gold` to weekly high score badge, first-place indicator, hot streak chip, clinched banner, champion card; keep gold intentionally rare | Feature | M | P2 | Open |
+| RD-011 — Empty state personality copy: update `components/EmptyState.tsx` and inline empty states with warm copy | UX | S | P2 | Open |
+| RD-012 — Wizard "Your league at a glance" summary panel: 4-item card at wizard completion step | Feature | M | P2 | Open |
+
+**Exit criteria:** `app/globals.css` `:root` block fully replaced with Inviting Dark tokens; zero hardcoded hex values in `app/**` + `components/**` that appear in `color-replacement-map.md`; `components/VpExplainer.tsx` anchored popover no longer clips on mobile; league overview and team matchup pages match the `.dc.html` reference files; `MomentumStrip` renders correctly in active-period matchups; all existing tests pass; `tsc --noEmit` clean.
 
 ---
 
@@ -1508,6 +1562,14 @@ Items below are acknowledged but have no sprint assignment. They become candidat
 | Sprint 17 — UX Polish: Agent Test Run Fixes | ✅ COMPLETE (Jun 22, 2026) | 9/9 items: AG-001 (LEAGUES overhaul + isPublic schema) + AG-002 (matchup page restructure) + AG-003 (FP/VP copy) + AG-004 (terminology) + AG-005 (playoff eliminated empty state) + AG-006 (renewal confirmation) + AG-007 (pre-login UX) + AG-008 (VP education) + AG-009 (lock tooltip); source: 4-agent parallel UX test run |
 | Sprint 18 — Beta Operations + Onboarding Repair | ✅ COMPLETE (Jun 23, 2026) | All 24 items shipped across 5 tracks: BLR-001/002 ✅ + BF-009 ✅ + OB-002/003/004 ✅ + UX-046/047/048 ✅ + OB-005/006/007/009 ✅ + BF-012/013/014 ✅ + OPS-001/002/003/004 ✅ + BF-015/016/017 ✅ + BLR-003 ✅. GATE-1/2/3 all PASS. Beta invites Jul 7, 2026. |
 | Sprint 19 — IA Restructure: Franchise-First Nav + DnD Lineup | ✅ COMPLETE (Jun 23, 2026) | 5/5 parts shipped: Part 1 emoji policy + colorblind chips (0d00092) · Part 2 Trades→My Franchise + TeamNav (a2cd617) · Part 3 league overview commissioner-only (3ceb056) · Part 4 DnD lineup on roster page (01075f9) · Part 5 commissioner god-mode (b4986a6). No schema changes. |
+| Sprint 20 — VTF Navigation Rename | ✅ COMPLETE (Jun 23, 2026) | 2/2 items shipped: BF-018 league nav "Schedule" → "Results" + VTF explainer subtitle (commit ad4185a) · UX-049 team nav "Schedule" → "My Season" + section rename. No schema changes. |
+| Sprint 21 — Living League: Weekly Delight | 🔵 PLANNED | 3 stories: LL-001 Weekly Awards Ceremony · LL-002 Momentum Strip data layer · LL-003 Animated Stat Chips. No schema changes. |
+| Sprint 22 — Inviting Dark Redesign | 🔵 PLANNED | 12 stories (RD-001–RD-012): Inviting Dark token swap, hex sweep, emoji restoration, VP popover fix, wizard rebuild, league overview + matchup flagship redesigns, page recolor sweep, Momentum Strip visual (LL-002 visual completes here), prestige gradient, gold prestige moments, empty state copy, wizard summary panel. No schema changes. |
+| Sprint 23 — Living League: The Race | 🔵 PLANNED | 4 stories: LL-004 Magic Number · LL-005 Playoff Clinch Celebration · LL-007 Bubble Watch · LL-008 Upset Tracker. No schema changes. |
+| Sprint 24 — Living League: Season Story | 🔵 PLANNED | 4 stories: LL-006 Season Timeline · LL-010 League Record Book · LL-011 Franchise Identity · LL-012 Manager Superlatives. New `/league/[leagueId]/records` page. No schema changes. |
+| Sprint 25 — Living League: Legacy | 🔵 PLANNED | 3 stories: LL-009 Trophy Cabinet (schema: Achievement model) · LL-014 Opening Day Card · LL-015 Championship Banner. Schema migration required (Achievement + AchievementType). |
+| Sprint 26 — The Morning Skate | 🔵 PLANNED | 1 XL story: LL-013. New MorningSkateEdition model, archive + detail pages, homepage hero integration, league nav entry. Schema migration required (MorningSkateEdition model). |
+| Sprint 27 — League Hub | 🔵 PLANNED | 1 story: LL-016. Homepage + league overview restructured to surface all Living League systems. No schema changes. |
 
 ---
 
@@ -1541,6 +1603,88 @@ Sprint 18 (targeting Jul 7) is focused on BLR feature build, Sprint 13 carry-for
 new live feedback bugs (BF-012/013/014), Vercel cron wiring, load test, and internal security
 review. The beta invite date of **Jul 7, 2026** (moved up from Jul 14) is achievable given
 P0 fixes are already applied.
+
+---
+
+## Sprint 23 — "Living League: The Race" · PLANNED · Milestone 2 core · P1/P2
+
+Goal: Make standings feel dramatic. Real-time playoff implications, clinch celebrations, and a record of the season's most improbable results.
+
+| Story | Track | Size | Priority | Status |
+|---|---|---|---|---|
+| LL-004 — Magic Number: extend `computeRace()` in `lib/playoffs/seeding.ts` → `magicNumber: number \| null` on `RaceInfo`; "Magic: N" chip on standings page for contending teams | Feature | S | P1 | Open |
+| LL-005 — Playoff Clinch Celebration: detect newly-clinched teams in `advanceSeason()` by comparing race state before/after scoring; `createNotification()` + `PLAYOFF_CLINCH` LeagueEvent; dismissible banner on `/team/[teamId]/matchup` | Feature | S | P1 | Open |
+| LL-007 — Bubble Watch: `BubbleWatch.tsx` appended below standings table; 3 groupings (In the Playoffs / Bubble / Eliminated) from existing `computeRace()`; shown only during `IN_SEASON`; late-season heading "Playoff Push" after week N/2 | Feature | S | P2 | Open |
+| LL-008 — Upset Tracker: `lib/services/upset-service.ts` — `getLeagueUpsets()` scans scored matchups, computes underdog probability retrospectively via `winProbability(homeScore, awayScore)`, returns top upsets this season + all-time; `UpsetCard.tsx` on league overview sidebar | Feature | M | P2 | Open |
+
+**Exit criteria:** After `advanceSeason()` scores a week, any team newly at `status === "clinched"` in `computeRace()` receives a notification and the dismissible clinch banner appears on their matchup page. "Magic: N" chip renders next to the race chip on the standings page for contending teams. `BubbleWatch.tsx` renders correctly in `IN_SEASON` state with the correct three groupings. `UpsetCard.tsx` renders at least one upset on the league overview when scored matchup data exists. All existing tests pass; `tsc --noEmit` clean. No schema changes.
+
+---
+
+## Sprint 24 — "Living League: Season Story" · PLANNED · Milestone 2 tail + Milestone 3 surface · P1/P2
+
+Goal: Give the league a narrative. A scrollable season timeline, a record book, franchise personality archetypes, and end-of-season manager superlatives.
+
+| Story | Track | Size | Priority | Status |
+|---|---|---|---|---|
+| LL-006 — Season Timeline: `lib/services/timeline-service.ts` → `getSeasonTimeline()`; events sourced from existing `LeagueEvent` rows (TRADE, PLAYOFF_CLINCH, CHAMPIONSHIP_WON, etc.); `SeasonTimeline.tsx` on league overview left column below playoff race | Feature | M | P2 | Open |
+| LL-010 — League Record Book: new `/league/[leagueId]/records` page; 4 record categories (Highest Weekly Score, Longest Win Streak, Biggest Blowout, Closest Victory); Current Season + All Time tabs; "Records" link in league nav | Feature | M | P1 | Open |
+| LL-011 — Franchise Identity: `computeFranchiseIdentity()` in `lib/services/analysis-service.ts`; 4 archetypes (Boom or Bust, Defensive Fortress, Sniper Factory, Goaltender Driven); archetype chip in team matchup page Z2 area | Feature | M | P2 | Open |
+| LL-012 — Manager Superlatives: `computeManagerSuperlatives()` in `lib/services/storyline-service.ts`; 5 superlative types (Waiver Wizard, Trade Shark, Draft Sniper, Iron Lineup, Injury Magnet); one per manager; displayed on league overview after `playoffStatus === COMPLETE`; emitted as `LEAGUE_STORYLINE` events | Feature | M | P2 | Open |
+
+**Exit criteria:** Season timeline renders at least 3 event types on the league overview when matching `LeagueEvent` rows exist. Records page loads at `/league/[leagueId]/records`, shows all 4 categories with current-season data, and "Records" appears in the league nav. Franchise identity chip renders on at least one team's matchup page when ≥4 weeks of `StatLine` data exists. Manager superlatives section appears on league overview when `playoffStatus === COMPLETE`. All existing tests pass; `tsc --noEmit` clean. No schema changes.
+
+---
+
+## Sprint 25 — "Living League: Legacy" · PLANNED · Milestone 3 depth + Milestone 5 · P1/P2
+
+Goal: Seasons contribute to franchise identity. Win something and it stays with you forever. The champion gets a banner; the season opener gets a card.
+
+| Story | Track | Size | Priority | Status |
+|---|---|---|---|---|
+| LL-009 — Trophy Cabinet: `Achievement` model + `AchievementType` enum in schema; achievements written at lifecycle hooks (clinch, championship, weekly high score, regular season winner); `/team/[teamId]/trophies` page; "Trophies" in `TeamNav.tsx`; trophy icons in matchup page header (Z2) | Feature | L | P1 | Open |
+| LL-014 — Opening Day Card: dismissible hero card at Z0 on matchup page during Week 1 only (`activePeriod.number === 1`); content: season year, week count, manager count, "1 Champion"; dismiss flag in `localStorage` keyed on `leagueId + season` | Feature | S | P2 | Open |
+| LL-015 — Championship Banner: dismissible banner on matchup page for league champion after `playoffStatus === COMPLETE`; triggered by unread `CHAMPIONSHIP_WON` notification; `createNotification()` called from `advance-playoff-round` route when final round scores; dismiss calls `markAllRead()` | Feature | S | P1 | Open |
+
+**Exit criteria:** `Achievement` model and `AchievementType` enum migrated and in schema. After the final playoff round scores, the champion's owner sees the championship banner on their matchup page; the banner dismisses correctly. A `CHAMPION` `Achievement` row is written for the winning team. `/team/[teamId]/trophies` page loads and renders the trophy grid. Opening Day card appears on the matchup page when `activePeriod?.number === 1` and disappears after dismiss. Schema migration clean (`npx prisma migrate dev`); all existing tests pass; `tsc --noEmit` clean.
+
+---
+
+## Sprint 26 — "The Morning Skate" · PLANNED · Milestone 4 · P1
+
+Goal: PWHL GM's first truly branded subsystem. A weekly league newsletter published every Tuesday after matchups score. Managers should say "I checked the Morning Skate" instead of "I opened PWHL GM."
+
+| Story | Track | Size | Priority | Status |
+|---|---|---|---|---|
+| LL-013 — The Morning Skate: `MorningSkateEdition` model (schema migration required); `lib/services/morning-skate-service.ts` → `generateEdition()`; 4 article sections (Standings, Matchups, Players, League Activity) via pure template strings — no AI/LLM; `emitMorningSkateEdition()` from `advanceSeason()`; archive page `/league/[leagueId]/morning-skate`; detail page `/league/[leagueId]/morning-skate/[editionId]`; homepage hero preview when edition exists; "Morning Skate" primary league nav tab with 📰 icon | Feature | XL | P1 | Open |
+
+**Engineer checklist:**
+1. Add `MorningSkateEdition` model to `prisma/schema.prisma` and run `npx prisma migrate dev`
+2. `lib/services/morning-skate-service.ts` — `generateEdition(leagueId, periodId, prisma): Edition` (pure, returns structured object)
+3. `emitMorningSkateEdition(leagueId, periodId, prisma)` — stores the edition row; called after `emitWeeklyStorylines()` in `advanceSeason()`
+4. `app/league/[leagueId]/morning-skate/page.tsx` — archive list (newest first), server-rendered
+5. `app/league/[leagueId]/morning-skate/[editionId]/page.tsx` — full edition display
+6. Modify `app/team/[teamId]/matchup/page.tsx` — fetch latest edition; if present, render masthead preview at Z0 with "Read full edition →" link
+7. Add "Morning Skate" to `app/league/[leagueId]/layout.tsx` nav
+8. Article template strings: each section uses `switch` / conditional logic on existing data — no external calls
+
+**Exit criteria:** After `advanceSeason()` scores a week, a `MorningSkateEdition` row is written for that period. The archive page at `/league/[leagueId]/morning-skate` lists the edition. The detail page renders all 4 article sections with at least 2 blurbs each. The matchup page homepage hero shows the Morning Skate masthead and 2+ headline blurbs when a current edition exists. "Morning Skate" tab appears in the league nav. Schema migration clean; all existing tests pass; `tsc --noEmit` clean.
+
+---
+
+## Sprint 27 — "League Hub" · PLANNED · Strategy Rec 1 Capstone · P1
+
+Goal: Assemble all Living League systems into a coherent "arena concourse" experience. The franchise home page and league overview stop feeling like utility screens.
+
+| Story | Track | Size | Priority | Status |
+|---|---|---|---|---|
+| LL-016 — League Hub: `/team/[teamId]/matchup` render order restructure (Morning Skate preview → Matchup Hero → Momentum → Playoff Race context → Live situation → Franchise identity + trophies → Performers); `/league/[leagueId]/` restructure (Morning Skate → Season Timeline → Record Book highlights → Lineup status → Commissioner strip); admin panel utility polish (scoring/roster settings rendered as human-readable summaries, not raw JSON) | Feature | M | P1 | Open |
+
+**Prerequisite:** All LL-001 through LL-015 (Sprints 21–26) must be complete and green before Sprint 27 begins.
+
+**Exit criteria:** `/team/[teamId]/matchup` render order matches the spec above — Morning Skate preview is the first content section when an edition exists; franchise identity chip and recent trophy icons appear in Z2 area. League overview leads with Morning Skate → Season Timeline → Record Book highlight → lineup status widget. Admin panel scoring settings section shows human-readable labels instead of raw JSON keys. All existing tests pass; `tsc --noEmit` clean. No schema changes.
+
+---
 
 ## Beyond MVP
 

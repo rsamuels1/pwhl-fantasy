@@ -440,6 +440,54 @@
           <span class="status complete">✅ DONE</span>
         </div>
 
+        <div class="sprint-card complete" onclick="switchTab('sprints'); setTimeout(() => document.getElementById('sprint-20').scrollIntoView({behavior: 'smooth'}), 100)">
+          <div class="name">Sprint 20</div>
+          <div class="progress">2/2 items · VTF nav rename</div>
+          <span class="status complete">✅ DONE</span>
+        </div>
+
+        <div class="sprint-card current" onclick="switchTab('sprints'); setTimeout(() => document.getElementById('sprint-21').scrollIntoView({behavior: 'smooth'}), 100)">
+          <div class="name">Sprint 21</div>
+          <div class="progress">3 stories · Living League: Weekly Delight</div>
+          <span class="status planned">PLANNED</span>
+        </div>
+
+        <div class="sprint-card" onclick="switchTab('sprints'); setTimeout(() => document.getElementById('sprint-22').scrollIntoView({behavior: 'smooth'}), 100)">
+          <div class="name">Sprint 22</div>
+          <div class="progress">12 stories · Inviting Dark Redesign</div>
+          <span class="status planned">PLANNED</span>
+        </div>
+
+        <div class="sprint-card" onclick="switchTab('sprints'); setTimeout(() => document.getElementById('sprint-23').scrollIntoView({behavior: 'smooth'}), 100)">
+          <div class="name">Sprint 23</div>
+          <div class="progress">4 stories · Living League: The Race</div>
+          <span class="status planned">PLANNED</span>
+        </div>
+
+        <div class="sprint-card" onclick="switchTab('sprints'); setTimeout(() => document.getElementById('sprint-24').scrollIntoView({behavior: 'smooth'}), 100)">
+          <div class="name">Sprint 24</div>
+          <div class="progress">4 stories · Living League: Season Story</div>
+          <span class="status planned">PLANNED</span>
+        </div>
+
+        <div class="sprint-card" onclick="switchTab('sprints'); setTimeout(() => document.getElementById('sprint-25').scrollIntoView({behavior: 'smooth'}), 100)">
+          <div class="name">Sprint 25</div>
+          <div class="progress">3 stories · Living League: Legacy</div>
+          <span class="status planned">PLANNED</span>
+        </div>
+
+        <div class="sprint-card" onclick="switchTab('sprints'); setTimeout(() => document.getElementById('sprint-26').scrollIntoView({behavior: 'smooth'}), 100)">
+          <div class="name">Sprint 26</div>
+          <div class="progress">1 XL story · The Morning Skate</div>
+          <span class="status planned">PLANNED</span>
+        </div>
+
+        <div class="sprint-card" onclick="switchTab('sprints'); setTimeout(() => document.getElementById('sprint-27').scrollIntoView({behavior: 'smooth'}), 100)">
+          <div class="name">Sprint 27</div>
+          <div class="progress">1 story · League Hub capstone</div>
+          <span class="status planned">PLANNED</span>
+        </div>
+
     </div>
   </div>
 
@@ -1389,6 +1437,140 @@
           <div style="font-size: 0.8rem; color: #888; margin: 0.75rem 0 0.25rem 0;">Original Sprint 19 Playwright items (BF-018, UX-051–057) deferred to post-sprint backlog — superseded by IA restructure scope.</div>
         </div>
         <div class="exit-criteria"><strong>Exit achieved:</strong> All personal/transactional surfaces live under /team/[teamId]/. Non-commissioners redirect from league overview to their franchise. /team/roster is the single page for lineup management and roster operations — DnD replaces click-to-swap. Commissioner can view and rearrange any team's lineup.</div>
+      </div>
+
+      <div id="sprint-20" class="card complete">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+          <div>
+            <div style="font-weight: 700; font-size: 1rem;">Sprint 20 · "VTF Navigation Rename"</div>
+            <div style="font-size: 0.8rem; color: #888;">Track: F · COMPLETE · Jun 23, 2026 · 2 items · no schema changes</div>
+          </div>
+          <span class="status complete">✅ COMPLETE</span>
+        </div>
+        <div>
+          <div class="task-row"><span class="task-check" style="color:#22c55e">✓</span><span>BF-018 (P1, S) — League "Schedule" tab → "Results" tab + VTF explainer subtitle — commit ad4185a</span></div>
+          <div class="task-row"><span class="task-check" style="color:#22c55e">✓</span><span>UX-049 (P2, S) — Team Nav "Schedule" → "My Season" + "Your Players This Week" section rename</span></div>
+        </div>
+        <div class="exit-criteria"><strong>Exit achieved:</strong> VTF navigation labels updated for clarity — "Results" replaces "Schedule" in the league nav, "My Season" in the team nav. Two targeted polish items shipped.</div>
+      </div>
+
+      <div id="sprint-21" class="card current">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+          <div>
+            <div style="font-weight: 700; font-size: 1rem;">Sprint 21 · "Living League: Weekly Delight"</div>
+            <div style="font-size: 0.8rem; color: #888;">Milestone 1 · PLANNED · 3 stories · no schema changes · LL-002 data layer only (visual ships Sprint 22 RD-008)</div>
+          </div>
+          <span class="status planned">PLANNED</span>
+        </div>
+        <div>
+          <div class="task-row"><span class="task-check" style="color:#f59e0b">⏳</span><span>LL-001 (P1, M) — Weekly Awards Ceremony: computeWeeklyAwards() in storyline-service.ts; 5 award types; emitted as LEAGUE_STORYLINE events from advanceSeason(); rendered as award cards in WeekHighlights.tsx</span></div>
+          <div class="task-row"><span class="task-check" style="color:#f59e0b">⏳</span><span>LL-002 (P1, S) — Momentum Strip data layer: scoreDeltaSinceYesterday + playersRemainingTonight + opponentFinished added to ActiveMatchup in getDashboardData; full visual component ships in Sprint 22 RD-008</span></div>
+          <div class="task-row"><span class="task-check" style="color:#f59e0b">⏳</span><span>LL-003 (P2, S) — Animated Stat Chips: StatChip.tsx pill badges with CSS pulse; 4 chip types (streak, projection swing, league record, weekly leader); computed server-side in getDashboardData; rendered in matchup page Z6 roster breakdown</span></div>
+        </div>
+        <div class="exit-criteria"><strong>Exit criteria:</strong> 5 award cards appear in WeekHighlights.tsx after advanceSeason() runs. ActiveMatchup type includes all 3 Momentum Strip fields. At least 1 stat chip type renders on the matchup page. All existing tests pass; tsc clean. No schema changes.</div>
+      </div>
+
+      <div id="sprint-22" class="card current">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+          <div>
+            <div style="font-weight: 700; font-size: 1rem;">Sprint 22 · "Inviting Dark Redesign"</div>
+            <div style="font-size: 0.8rem; color: #888;">Track: F · PLANNED · 12 stories · no schema changes · spec: docs/branding/pwhl_redesign_bundle_v3_1.zip</div>
+          </div>
+          <span class="status planned">PLANNED</span>
+        </div>
+        <div>
+          <div class="task-row"><span class="task-check" style="color:#f59e0b">⏳</span><span>RD-001 (P1, S) — Token swap: replace :root in globals.css with Inviting Dark tokens + 3 follow-up edits</span></div>
+          <div class="task-row"><span class="task-check" style="color:#f59e0b">⏳</span><span>RD-002 (P1, M) — Inline hex sweep across app/** + components/** per color-replacement-map.md</span></div>
+          <div class="task-row"><span class="task-check" style="color:#f59e0b">⏳</span><span>RD-003 (P1, S) — Emoji policy restoration: tiered policy, glyph chips, activity-feed emoji, lock emoji</span></div>
+          <div class="task-row"><span class="task-check" style="color:#f59e0b">⏳</span><span>RD-004 (P1, L) — VP popover fix + Create League Wizard rebuild (rule-sheet layout, scoring table, slot pills)</span></div>
+          <div class="task-row"><span class="task-check" style="color:#f59e0b">⏳</span><span>RD-005 (P1, L) — League overview flagship redesign per references/League Overview.dc.html</span></div>
+          <div class="task-row"><span class="task-check" style="color:#f59e0b">⏳</span><span>RD-006 (P1, L) — Team matchup flagship redesign per references/Team Matchup.dc.html</span></div>
+          <div class="task-row"><span class="task-check" style="color:#f59e0b">⏳</span><span>RD-007 (P1, L) — Remaining page recolor sweep (walk page-inventory.md [recolor] screens)</span></div>
+          <div class="task-row"><span class="task-check" style="color:#f59e0b">⏳</span><span>RD-008 (P1, M) — Momentum Strip component (MomentumStrip.tsx, Z2 under score header)</span></div>
+          <div class="task-row"><span class="task-check" style="color:#f59e0b">⏳</span><span>RD-009 (P2, S) — Prestige gradient token (--prestige-gradient for champion/clinched/recap)</span></div>
+          <div class="task-row"><span class="task-check" style="color:#f59e0b">⏳</span><span>RD-010 (P2, M) — Gold prestige moments (--gold on 5 surfaces: high score, 1st place, hot streak, clinched, champion)</span></div>
+          <div class="task-row"><span class="task-check" style="color:#f59e0b">⏳</span><span>RD-011 (P2, S) — Empty state personality copy ("Quiet week. / Build your wishlist. / You're all set.")</span></div>
+          <div class="task-row"><span class="task-check" style="color:#f59e0b">⏳</span><span>RD-012 (P2, M) — Wizard "Your league at a glance" summary panel at completion step</span></div>
+        </div>
+        <div class="exit-criteria"><strong>Exit criteria:</strong> globals.css :root fully replaced with Inviting Dark tokens; zero hardcoded hex values in app/**+components/** from color-replacement-map.md; VpExplainer popover no longer clips on mobile; league overview and team matchup match .dc.html reference files; MomentumStrip renders in active-period matchups; all tests pass; tsc clean.</div>
+      </div>
+
+      <div id="sprint-23" class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+          <div>
+            <div style="font-weight: 700; font-size: 1rem;">Sprint 23 · "Living League: The Race"</div>
+            <div style="font-size: 0.8rem; color: #888;">Milestone 2 core · PLANNED · 4 stories · no schema changes</div>
+          </div>
+          <span class="status planned">PLANNED</span>
+        </div>
+        <div>
+          <div class="task-row"><span class="task-check" style="color:#f59e0b">⏳</span><span>LL-004 (P1, S) — Magic Number: extend computeRace() → magicNumber field; "Magic: N" chip on standings page for contending teams</span></div>
+          <div class="task-row"><span class="task-check" style="color:#f59e0b">⏳</span><span>LL-005 (P1, S) — Playoff Clinch Celebration: detect newly-clinched teams in advanceSeason(); notification + dismissible banner on matchup page</span></div>
+          <div class="task-row"><span class="task-check" style="color:#f59e0b">⏳</span><span>LL-007 (P2, S) — Bubble Watch: BubbleWatch.tsx on standings page; 3 groupings (In / Bubble / Eliminated) from computeRace(); late-season "Playoff Push" heading</span></div>
+          <div class="task-row"><span class="task-check" style="color:#f59e0b">⏳</span><span>LL-008 (P2, M) — Upset Tracker: upset-service.ts; top upsets this season + all-time; UpsetCard.tsx on league overview sidebar</span></div>
+        </div>
+        <div class="exit-criteria"><strong>Exit criteria:</strong> Clinch notification fires for newly-clinched teams. "Magic: N" chip renders on standings for contenders. BubbleWatch renders 3 correct groupings. UpsetCard renders ≥1 upset. No schema changes; all tests pass; tsc clean.</div>
+      </div>
+
+      <div id="sprint-24" class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+          <div>
+            <div style="font-weight: 700; font-size: 1rem;">Sprint 24 · "Living League: Season Story"</div>
+            <div style="font-size: 0.8rem; color: #888;">Milestone 2 tail + Milestone 3 surface · PLANNED · 4 stories · no schema changes</div>
+          </div>
+          <span class="status planned">PLANNED</span>
+        </div>
+        <div>
+          <div class="task-row"><span class="task-check" style="color:#f59e0b">⏳</span><span>LL-006 (P2, M) — Season Timeline: timeline-service.ts; events from existing LeagueEvent rows; SeasonTimeline.tsx on league overview left column</span></div>
+          <div class="task-row"><span class="task-check" style="color:#f59e0b">⏳</span><span>LL-010 (P1, M) — League Record Book: /league/[leagueId]/records page; 4 record categories; Current Season + All Time tabs; "Records" in league nav</span></div>
+          <div class="task-row"><span class="task-check" style="color:#f59e0b">⏳</span><span>LL-011 (P2, M) — Franchise Identity: computeFranchiseIdentity() in analysis-service.ts; 4 archetypes; chip in matchup page Z2 area</span></div>
+          <div class="task-row"><span class="task-check" style="color:#f59e0b">⏳</span><span>LL-012 (P2, M) — Manager Superlatives: computeManagerSuperlatives() after playoffStatus === COMPLETE; 5 types; displayed on league overview; emitted as LEAGUE_STORYLINE events</span></div>
+        </div>
+        <div class="exit-criteria"><strong>Exit criteria:</strong> Season timeline renders ≥3 event types. Records page loads with all 4 categories. Franchise identity chip renders on matchup page. Superlatives section appears after playoff completion. No schema changes; all tests pass; tsc clean.</div>
+      </div>
+
+      <div id="sprint-25" class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+          <div>
+            <div style="font-weight: 700; font-size: 1rem;">Sprint 25 · "Living League: Legacy"</div>
+            <div style="font-size: 0.8rem; color: #888;">Milestone 3 depth + Milestone 5 · PLANNED · 3 stories · schema migration required (Achievement model)</div>
+          </div>
+          <span class="status planned">PLANNED</span>
+        </div>
+        <div>
+          <div class="task-row"><span class="task-check" style="color:#f59e0b">⏳</span><span>LL-009 (P1, L) — Trophy Cabinet: Achievement model + AchievementType enum (schema migration); achievements written at lifecycle hooks; /team/[teamId]/trophies page; "Trophies" in TeamNav; trophy icons in matchup header Z2</span></div>
+          <div class="task-row"><span class="task-check" style="color:#f59e0b">⏳</span><span>LL-014 (P2, S) — Opening Day Card: dismissible Z0 card on matchup page during Week 1 only; localStorage dismiss flag; no schema change</span></div>
+          <div class="task-row"><span class="task-check" style="color:#f59e0b">⏳</span><span>LL-015 (P1, S) — Championship Banner: triggered by unread CHAMPIONSHIP_WON notification; createNotification() from advance-playoff-round after final round; markAllRead() on dismiss</span></div>
+        </div>
+        <div class="exit-criteria"><strong>Exit criteria:</strong> Achievement model migrated and in schema. Champion receives banner after final round scores. /team/[teamId]/trophies loads and renders trophy grid. Opening Day card appears in Week 1 and dismisses correctly. Schema migration clean; all tests pass; tsc clean.</div>
+      </div>
+
+      <div id="sprint-26" class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+          <div>
+            <div style="font-weight: 700; font-size: 1rem;">Sprint 26 · "The Morning Skate"</div>
+            <div style="font-size: 0.8rem; color: #888;">Milestone 4 · PLANNED · 1 XL story · schema migration required (MorningSkateEdition model)</div>
+          </div>
+          <span class="status planned">PLANNED</span>
+        </div>
+        <div>
+          <div class="task-row"><span class="task-check" style="color:#f59e0b">⏳</span><span>LL-013 (P1, XL) — The Morning Skate: MorningSkateEdition schema model; morning-skate-service.ts generateEdition() with 4 article sections via pure template strings (no AI); emitMorningSkateEdition() from advanceSeason(); archive page + detail page; homepage hero preview; "Morning Skate" primary league nav tab</span></div>
+        </div>
+        <div class="exit-criteria"><strong>Exit criteria:</strong> After advanceSeason() scores, a MorningSkateEdition row is written. Archive and detail pages load. Homepage hero shows Morning Skate masthead + 2+ blurbs. "Morning Skate" tab in league nav. Schema migration clean; all tests pass; tsc clean.</div>
+      </div>
+
+      <div id="sprint-27" class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+          <div>
+            <div style="font-weight: 700; font-size: 1rem;">Sprint 27 · "League Hub"</div>
+            <div style="font-size: 0.8rem; color: #888;">Strategy Rec 1 Capstone · PLANNED · 1 story · no schema changes · prerequisite: LL-001 through LL-015 complete</div>
+          </div>
+          <span class="status planned">PLANNED</span>
+        </div>
+        <div>
+          <div class="task-row"><span class="task-check" style="color:#f59e0b">⏳</span><span>LL-016 (P1, M) — League Hub: /team/[teamId]/matchup render order restructure (Morning Skate → Matchup Hero → Momentum → Playoff Race context → Live situation → Franchise identity + trophies → Performers); /league/[leagueId]/ restructure (Morning Skate → Timeline → Records → Lineup status → Commissioner strip); admin panel utility polish</span></div>
+        </div>
+        <div class="exit-criteria"><strong>Exit criteria:</strong> Matchup page render order matches spec. League overview leads with Morning Skate. Admin panel scoring settings rendered as human-readable summaries. All tests pass; tsc clean. No schema changes.</div>
       </div>
 
   </div>

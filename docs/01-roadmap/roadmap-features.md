@@ -4568,6 +4568,704 @@ Files: `components/LineupDnD.tsx`, `app/team/[teamId]/roster/RosterManager.tsx`,
 
 ---
 
+# Sprint 22 — "Inviting Dark" Redesign
+
+Spec authority: `docs/branding/pwhl_redesign_bundle_v3_1.zip`
+
+No schema changes. No new API routes. Pure UI/CSS.
+
+---
+
+## RD-001. Token Swap — Replace `:root` with Inviting Dark Tokens
+
+Sprint: 22
+Priority: P1
+Effort: S
+Status: Open
+Source: `globals.tokens.css` in `docs/branding/pwhl_redesign_bundle_v3_1.zip`
+
+Replace the existing `:root` block in `app/globals.css` with the Inviting Dark token set from `globals.tokens.css`. Three follow-up edits ship in the same PR: (1) body radial-gradient updated to the new background value, (2) `.button-primary` text color set to `--accent-ink` (dark text on bright accent), (3) `.section-accent` drops the violet tint and inherits the new accent color.
+
+Files: `app/globals.css`
+
+Acceptance Criteria:
+- AC-001: Given the updated `globals.css`, when any page loads, the background radial-gradient uses the Inviting Dark values from the spec.
+- AC-002: `.button-primary` renders with dark `--accent-ink` text instead of white.
+- AC-003: `.section-accent` no longer applies a violet background.
+- AC-004: `tsc --noEmit` clean and all existing tests pass.
+
+---
+
+## RD-002. Inline Hex Sweep — `app/**` + `components/**`
+
+Sprint: 22
+Priority: P1
+Effort: M
+Status: Open
+Source: `color-replacement-map.md` in `docs/branding/pwhl_redesign_bundle_v3_1.zip`
+
+Walk every file in `app/**` and `components/**` and replace hardcoded hex values with their CSS token equivalents per `color-replacement-map.md`. After the sweep, manually verify that all buttons and status badges still meet WCAG AA contrast requirements against their new background tokens.
+
+Files: All files under `app/**` and `components/**` containing hardcoded hex colors listed in `color-replacement-map.md`
+
+Acceptance Criteria:
+- AC-001: No hardcoded hex values from `color-replacement-map.md` remain in `app/**` or `components/**`.
+- AC-002: All buttons and badges pass WCAG AA contrast check after replacement.
+- AC-003: `tsc --noEmit` clean; no visual regressions on core pages (matchup, standings, draft).
+
+---
+
+## RD-003. Emoji Policy Restoration
+
+Sprint: 22
+Priority: P1
+Effort: S
+Status: Open
+Source: Tiered emoji policy section in `docs/branding/pwhl_redesign_bundle_v3_1.zip`
+
+The Sprint 15 DS-002 token sweep removed all emoji from the UI with a blanket ban. The Inviting Dark design handoff restores a tiered policy: Tier 1 contexts (celebratory moments, onboarding, recap cards) SHOULD use emoji for warmth; Tier 2 contexts (nav, tables, status chips) SHOULD NOT. Apply the tiered policy: restore glyph chips (✓ CLINCHED, ✗ OUT, ◉ BUBBLE) where they were removed, restore activity-feed emoji, recap emoji, and the lock emoji on lineup locked players. Remove any remaining blanket-ban relics.
+
+Files: `app/league/[leagueId]/standings/page.tsx`, `app/team/[teamId]/matchup/page.tsx`, `lib/services/activity.ts`, `components/EmptyState.tsx`, `app/globals.css`
+
+Acceptance Criteria:
+- AC-001: Standings clinched/eliminated/bubble chips render with glyph + color (not color-only).
+- AC-002: Activity feed items render with emoji per the tiered policy.
+- AC-003: Lineup locked players show the lock emoji on their card.
+- AC-004: No emoji appear in primary nav items or sortable table headers.
+
+---
+
+## RD-004. VP Popover Fix + Create League Wizard Rebuild
+
+Sprint: 22
+Priority: P1
+Effort: L
+Status: Open
+Source: Wizard rebuild section in `docs/branding/pwhl_redesign_bundle_v3_1.zip`
+
+Two related changes ship together: (1) Fix the anchored popover in `components/VpExplainer.tsx` — currently clips off the bottom of the viewport on mobile in the wizard Rules step (UX-051). Use a CSS-positioned popover that stays within the viewport bounds. (2) Rebuild `app/create-league/CreateLeagueWizard.tsx` with the rule-sheet layout from the design handoff: scoring displayed in a two-column table (stat on left, points on right), roster slots as pill badges (F F F / D D / G / UTIL / BN×6), and a clean separation between the live and replay paths.
+
+Files: `components/VpExplainer.tsx`, `app/create-league/CreateLeagueWizard.tsx`
+
+Acceptance Criteria:
+- AC-001: On a 375px wide mobile viewport, the VP popover in the wizard Rules step does not clip below the visible window.
+- AC-002: The wizard Rules step displays scoring as a two-column table.
+- AC-003: Roster slots are rendered as pill badges.
+- AC-004: All existing wizard tests pass; live and replay paths both complete end-to-end.
+
+---
+
+## RD-005. League Overview Flagship Redesign
+
+Sprint: 22
+Priority: P1
+Effort: L
+Status: Open
+Source: `references/League Overview.dc.html` in `docs/branding/pwhl_redesign_bundle_v3_1.zip`
+
+Redesign `app/league/[leagueId]/page.tsx` to match the reference HTML. Key changes: gold commissioner action strip at the top (replaces amber banner); glyph chips on the playoff race table (consistent with RD-003); My Matchup widget recolored to sky-accent instead of the current indigo; league leaders section uses the new two-column card layout from the reference.
+
+Files: `app/league/[leagueId]/page.tsx`, `app/globals.css` (new `.commissioner-strip` and `.sky-card` utility classes if needed)
+
+Acceptance Criteria:
+- AC-001: The commissioner action strip uses the gold token, not amber.
+- AC-002: Playoff race table glyph chips match the RD-003 emoji policy.
+- AC-003: My Matchup widget uses the sky-accent card background.
+- AC-004: Page renders correctly at 375px, 768px, and 1280px viewport widths.
+
+---
+
+## RD-006. Team Matchup Flagship Redesign
+
+Sprint: 22
+Priority: P1
+Effort: L
+Status: Open
+Source: `references/Team Matchup.dc.html` in `docs/branding/pwhl_redesign_bundle_v3_1.zip`
+
+Redesign `app/team/[teamId]/matchup/page.tsx` to match the reference HTML. Key changes: DuelHero gets a warm gradient background with a gold radial accent behind the score display; score colors use `--score-win` / `--score-loss` / `--score-tied` token vars instead of hardcoded hex; RecapCard gets the prestige treatment (elevated border, contextual emoji copy); all-set banner gets a distinct "you're good" color treatment that does not look like a warning.
+
+Files: `app/team/[teamId]/matchup/page.tsx`, `components/DuelHero.tsx`, `components/FieldHero.tsx`, `app/globals.css`
+
+Acceptance Criteria:
+- AC-001: DuelHero renders the warm gradient + gold radial in active-matchup state.
+- AC-002: Score colors reference CSS token vars, not hardcoded hex values.
+- AC-003: RecapCard uses the prestige border treatment.
+- AC-004: The all-set lineup banner uses a distinct non-warning color.
+
+---
+
+## RD-007. Remaining Page Recolor Sweep
+
+Sprint: 22
+Priority: P1
+Effort: L
+Status: Open
+Source: `page-inventory.md` in `docs/branding/pwhl_redesign_bundle_v3_1.zip`
+
+Walk every route marked `[recolor]` in `page-inventory.md` and apply the Inviting Dark token replacements. Covers: dashboard (`app/dashboard/`), standings (`app/league/[leagueId]/standings/`), bracket (`app/league/[leagueId]/bracket/`), admin (`app/league/[leagueId]/admin/`), roster (`app/team/[teamId]/roster/`), draft room (`app/draft/[leagueId]/`), trades (`app/team/[teamId]/trades/`), auth pages (`app/login/`, `app/register/`), founder console (`app/founder/`), and shared components (`components/`).
+
+Files: All routes and components listed in `page-inventory.md` under `[recolor]`
+
+Acceptance Criteria:
+- AC-001: All `[recolor]` pages in `page-inventory.md` use Inviting Dark token vars.
+- AC-002: No `[recolor]` page retains any hex values listed in `color-replacement-map.md` after this sweep.
+- AC-003: Draft room and standings page render correctly at 375px mobile width.
+
+---
+
+## RD-008. Momentum Strip Component
+
+Sprint: 22
+Priority: P1
+Effort: M
+Status: Open
+Source: Emotional UX section in `docs/branding/pwhl_redesign_bundle_v3_1.zip`
+
+New `components/MomentumStrip.tsx` — a compact stats bar placed directly under the matchup score header. Shows: +X FP since yesterday, N players still to play today, opponent's current situation. Hidden before any game has been played in the period (pre-game state). Collapses gracefully to a single line when the matchup is complete. Placed in Z2 of the matchup page render order, immediately below the hero score.
+
+Files: `components/MomentumStrip.tsx` (new), `app/team/[teamId]/matchup/page.tsx`, `lib/services/dashboard.ts` (new `momentumData` field on `DashboardData` if needed)
+
+Acceptance Criteria:
+- AC-001: `MomentumStrip` is not rendered when `matchup.isUpcoming` is true.
+- AC-002: When an active matchup has started, the strip shows FP delta since yesterday, players-remaining count, and opponent status.
+- AC-003: When the matchup is complete, the strip collapses to a single summary line.
+- AC-004: No schema changes; data derived from existing `StatLine` and `Game` rows.
+
+---
+
+## RD-009. Prestige Gradient Token
+
+Sprint: 22
+Priority: P2
+Effort: S
+Status: Open
+Source: Emotional UX section in `docs/branding/pwhl_redesign_bundle_v3_1.zip`
+
+Add `--prestige-gradient` CSS variable to `app/globals.css`. Apply it to: champion cards (wherever the champion is displayed after playoffs), clinched playoff banners, and weekly recap heroes when the player had a top-3 FP week. Never apply to buttons, nav items, or generic cards — prestige must feel earned.
+
+Files: `app/globals.css`, `app/team/[teamId]/matchup/page.tsx`, `app/league/[leagueId]/bracket/page.tsx`, `app/league/[leagueId]/page.tsx`
+
+Acceptance Criteria:
+- AC-001: `--prestige-gradient` is defined in `app/globals.css`.
+- AC-002: Champion cards use `--prestige-gradient` as the card background.
+- AC-003: Clinched playoff banners use `--prestige-gradient`.
+- AC-004: No button, nav item, or generic card uses `--prestige-gradient`.
+
+---
+
+## RD-010. Gold Prestige Moments
+
+Sprint: 22
+Priority: P2
+Effort: M
+Status: Open
+Source: Emotional UX section in `docs/branding/pwhl_redesign_bundle_v3_1.zip`
+
+Apply the `--gold` CSS token (defined in the Inviting Dark token set) to exactly five surfaces: weekly high score badge, first-place standing indicator, hot streak chip, clinched banner, and champion card. Gold must remain rare — do not add it to any other surface without explicit product approval.
+
+Files: `app/league/[leagueId]/standings/page.tsx`, `app/team/[teamId]/matchup/page.tsx`, `app/league/[leagueId]/bracket/page.tsx`, `app/league/[leagueId]/page.tsx`
+
+Acceptance Criteria:
+- AC-001: The weekly high score badge uses `--gold`.
+- AC-002: The first-place standings indicator uses `--gold`.
+- AC-003: The hot streak chip uses `--gold`.
+- AC-004: The clinched playoff banner uses `--gold`.
+- AC-005: The champion card uses `--gold`.
+- AC-006: No other surface in `app/**` or `components/**` references `--gold`.
+
+---
+
+## RD-011. Empty State Personality Copy
+
+Sprint: 22
+Priority: P2
+Effort: S
+Status: Open
+Source: Emotional UX section in `docs/branding/pwhl_redesign_bundle_v3_1.zip`
+
+Update `components/EmptyState.tsx` and inline empty state strings with warm, personality-driven copy. Key replacements: transaction feed empty state → "Quiet week. Nobody's shopping players right now."; draft queue empty state → "Build your wishlist before draft night."; all-set lineup state → "You're all set — sit back and let your stars cook." Audit all empty state strings in the listed files and replace generic "No data" / "Nothing here" copy with context-appropriate warm alternatives.
+
+Files: `components/EmptyState.tsx`, `app/team/[teamId]/matchup/page.tsx`, `app/team/[teamId]/roster/RosterManager.tsx`, `app/league/[leagueId]/transactions/TransactionFeed.tsx`, `app/draft/[leagueId]/DraftRoom.tsx`
+
+Acceptance Criteria:
+- AC-001: Transaction feed empty state reads "Quiet week. Nobody's shopping players right now."
+- AC-002: Draft queue empty state reads "Build your wishlist before draft night."
+- AC-003: All-set lineup state reads "You're all set — sit back and let your stars cook."
+- AC-004: No empty state in the listed files reads "No data" or "Nothing here" without context.
+
+---
+
+## RD-012. Wizard "Your League at a Glance" Summary Panel
+
+Sprint: 22
+Priority: P2
+Effort: M
+Status: Open
+Source: Emotional UX section in `docs/branding/pwhl_redesign_bundle_v3_1.zip`
+
+Add a 4-item summary card at the wizard completion step (step 6 / final step). The card shows: N Teams (from step 2), 20 Weeks (fixed for 2026-27), Head-to-Head Points (scoring format), Weekly Waivers (transaction mode). Subtitle: "This should take about 2 minutes." The summary card precedes the invite link on step 6; the invite link moves below it. Does not render on the Replay path.
+
+Files: `app/create-league/CreateLeagueWizard.tsx`
+
+Acceptance Criteria:
+- AC-001: Wizard completion step shows a 4-item summary card before the invite link.
+- AC-002: The team count in the card reflects the size chosen in step 2.
+- AC-003: The card subtitle reads "This should take about 2 minutes."
+- AC-004: The invite link still appears below the summary panel.
+- AC-005: Summary card does not render on the Replay path.
+
+---
+
+# Phase 9: Living League — Delight Mechanics v1
+
+Source: `docs/01-roadmap/living-league-product-strategy.md` + `docs/01-roadmap/living-league-roadmap.md`
+
+Vision: evolve PWHL GM from "fantasy hockey software" into "a living hockey league that remembers things, celebrates accomplishments, and tells stories about itself." Sprints 21–26.
+
+---
+
+## LL-001. Weekly Awards Ceremony
+
+Sprint: 21
+
+Priority: P1
+
+Effort: M
+
+Status: 🔵 PLANNED
+
+Goal: After each week scores, the league automatically generates 5 awards celebrating the week's standout performances. Awards appear on the league overview and in each team's weekly recap. Makes every Tuesday feel like something happened.
+
+Award categories:
+- **🏆 Ice-Cold Closer** — highest score in the league this week
+- **🔥 Heater Award** — biggest positive score vs projected (outperformed projection by most FP)
+- **💀 Heartbreaker** — highest score among teams who lost their matchup
+- **📉 Collapse of the Week** — biggest score underperformance vs projection
+- **🧊 Frozen Stick** — lowest score in the league this week
+
+Acceptance Criteria:
+- `computeWeeklyAwards(leagueId, periodId, prisma)` in `lib/services/storyline-service.ts` returns `WeeklyAward[]` — pure, no IO
+- `emitWeeklyAwards(leagueId, periodId, prisma)` called from `advanceSeason()` after `emitWeeklyStorylines()` — fire-and-forget, same pattern
+- Each award emitted as a `LEAGUE_STORYLINE` `LeagueEvent` with `data.awardType` discriminator
+- `WeekHighlights.tsx` renders award cards visually distinct from storyline cards (different icon + border color)
+- Awards appear on league overview after the week's matchup grid
+- A manager who wins an award gets an in-app notification (type `LINEUP_INCOMPLETE` reused as `WEEKLY_AWARD` — or add enum value if schema risk is acceptable)
+- No schema change (reuses existing `LEAGUE_STORYLINE` EventType + `LeagueEvent` model)
+
+Depends On: existing `storyline-service.ts`, `advanceSeason()` in `lib/season/index.ts`, `WeekHighlights.tsx`
+
+---
+
+## LL-002. Matchup Momentum Strip
+
+Sprint: 21 (data layer) / 22 (visual component — absorbed into RD-008, Sprint 22 Inviting Dark Redesign)
+
+Priority: P1
+
+Effort: S
+
+Status: 🔵 PLANNED
+
+Goal: A momentum card beneath the matchup hero shows live score delta vs 24 hours ago, players still to play, and whether the opponent has finished. Makes active matchups feel exciting even when you're behind.
+
+**Sprint coordination note:** Sprint 21 ships the data layer (new `ActiveMatchup` fields in `getDashboardData`). Sprint 22 (RD-008) builds `MomentumStrip.tsx` using those fields and integrates it into the matchup page. The full feature is complete after Sprint 22.
+
+Acceptance Criteria (Sprint 21 — data layer):
+- `scoreDeltaSinceYesterday: number | null` added to `ActiveMatchup` in `lib/services/dashboard.ts`, computed by calling `computeTeamScoreDetailed` at `nowMs - 86400000` vs current score; `null` when period age < 24h or setup phase
+- `playersRemainingTonight: number` and `opponentFinished: boolean` derived from roster `gamesThisPeriod` data already fetched in `getDashboardData`
+- All three fields correct under dev sim date cookie
+- No new API route
+
+Acceptance Criteria (Sprint 22 — visual, see RD-008):
+- `MomentumStrip.tsx` renders between Z2 and Z3 using the three fields above
+- Hidden when `isSetupPhase`, hidden when no active period, collapses after matchup completes
+
+Depends On: `lib/services/dashboard.ts` (`getDashboardData`, `computeTeamScoreDetailed`)
+
+---
+
+## LL-003. Animated Stat Chips
+
+Sprint: 21
+
+Priority: P2
+
+Effort: S
+
+Status: 🔵 PLANNED
+
+Goal: Small animated pill badges highlight exceptional player moments inline on the matchup and lineup pages. Turns raw stats into emotional signals.
+
+Chip types:
+- **🔥 N Game Streak** — player has scored FP in N consecutive games
+- **⚡ Projection Swing** — player significantly outperformed or underperformed projection this week
+- **🏆 League Record** — player holds a current league record (highest single-week FP)
+- **⭐ Weekly Leader** — player is the top scorer in the league this period
+
+Acceptance Criteria:
+- New `StatChip.tsx` component renders as a small pill badge with icon, label, and a CSS `@keyframes` pulse animation (one-time, not looping)
+- Chips computed server-side in `getDashboardData` — each `RosterEntryRow` gets `chips: StatChip[]` (empty array when none apply)
+- Streak chip: requires counting consecutive games with FP > 0 from recent `StatLine` history
+- Projection swing chip: `|thisWeekFp - projectedFp| > 5` threshold
+- League record chip: compare player's period FP to `leagueHighScore` returned by existing data
+- Weekly leader chip: player has the highest FP among all active players across all teams this period
+- Chips rendered in the roster breakdown section (Z6) on matchup page beside player name
+- No schema change
+
+Depends On: `getDashboardData`, existing `StatLine` data, `RosterEntryRow` type
+
+---
+
+## LL-004. Magic Number
+
+Sprint: 23
+
+Priority: P1
+
+Effort: S
+
+Status: 🔵 PLANNED
+
+Goal: Contending teams see exactly what it takes to clinch a playoff berth — N wins or M opponent losses. Makes standings feel like a real playoff race.
+
+Acceptance Criteria:
+- `computeRace()` in `lib/playoffs/seeding.ts` extended to add `magicNumber: number | null` to `RaceInfo`
+- Formula: number of additional VP wins (or opponent non-wins) needed to mathematically secure a playoff berth vs the last bubble team, accounting for remaining games for both teams
+- `null` when: team already clinched (`status === "clinched"`), team already eliminated, or the math is not yet conclusive early in the season (fewer than half the games played)
+- "Magic: N" chip displayed on standings page (`app/league/[leagueId]/standings/page.tsx`) next to the existing race chip for teams with `status === "in"` or `"bubble"` where `magicNumber > 0`
+- No new API — standings page already calls `computeRace()` server-side
+- No schema change
+
+Depends On: `computeRace()` in `lib/playoffs/seeding.ts`, standings page
+
+---
+
+## LL-005. Playoff Clinch Celebration
+
+Sprint: 23
+
+Priority: P1
+
+Effort: S
+
+Status: 🔵 PLANNED
+
+Goal: When a team clinches a playoff berth after a week scores, they receive a one-time celebratory moment — a notification and a dismissible banner on their matchup page.
+
+Acceptance Criteria:
+- After `advanceSeason()` scores a week, call `computeRace()` before and after — detect teams whose `status` changed to `"clinched"` in this scoring pass
+- For each newly-clinched team: call `createNotification(ownerId, "PLAYOFF_QUALIFICATION", { title: "Playoff Berth Clinched!", body: "Your team has secured a spot in the playoffs. N–M record.", actionUrl: "/team/.../matchup" }, prisma)` — fire-and-forget
+- Emit a `PLAYOFF_CLINCH` `LeagueEvent` (already in schema) with `data.seed` and `data.clinchWeek`
+- Dismissible banner rendered on `/team/[teamId]/matchup` when a `PLAYOFF_CLINCH` event exists and user hasn't dismissed it — shows "🏒 PLAYOFF BERTH CLINCHED — [Team] is the Nth team to secure a spot" with seed info
+- Shown once; dismiss stores flag in `localStorage` keyed on `leagueId + season`
+- No schema change — `PLAYOFF_CLINCH` EventType already exists; `PLAYOFF_QUALIFICATION` NotificationType already exists
+
+Depends On: `advanceSeason()`, `computeRace()`, `createNotification()`, `PLAYOFF_CLINCH` EventType
+
+---
+
+## LL-007. Bubble Watch ("If The Season Ended Today")
+
+Sprint: 23
+
+Priority: P2
+
+Effort: S
+
+Status: 🔵 PLANNED
+
+Goal: A "If the season ended today" section on the standings page groups teams into Playoff / Bubble / Eliminated with a simple visual that makes standings feel urgent.
+
+Acceptance Criteria:
+- New `BubbleWatch.tsx` server-rendered section appended below the main standings table on `/league/[leagueId]/standings`
+- Three groupings derived from existing `computeRace()`: "In the Playoffs" (clinched + in), "Bubble" (bubble), "Eliminated" (eliminated + out)
+- Each team row shows: rank, name, record, race status chip (reusing existing `.chip-clinched` / `.chip-bubble` etc. CSS classes)
+- Shown only when season is `IN_SEASON` — hidden pre-draft and in playoffs
+- Late-season emphasis: section heading changes from "Current Playoff Picture" to "Playoff Push" after week N/2 of the regular season
+- No schema change
+
+Depends On: `computeRace()`, existing standings page, existing chip CSS classes
+
+---
+
+## LL-008. Upset Tracker
+
+Sprint: 23
+
+Priority: P2
+
+Effort: M
+
+Status: 🔵 PLANNED
+
+Goal: Major upsets are remembered and surfaced as league lore — the game where the 10% underdog won, the week a dominant team got knocked off. Makes unlikely victories feel legendary.
+
+Acceptance Criteria:
+- New `lib/services/upset-service.ts` — `getLeagueUpsets(leagueId, prisma)` scans all scored matchups and computes the win probability at the time of each matchup (using `winProbability(homeProjected, awayProjected)` from `lib/projections/index.ts`); returns top 3 upsets by underdog probability (this season + all-time)
+- An upset is defined as a matchup result where the loser had `winProbability > 0.65` going in
+- **Implementation note on win probability**: the current architecture does not store `winProbAtClose` on `Matchup`. Two options: (a) compute retrospectively from final scores using `winProbability(homeScore, awayScore)` as a proxy — fast, no schema change; (b) add `Matchup.winProbAtClose Float?` stored at scoring time — accurate but requires migration. Prefer option (a) for Sprint 22; option (b) is a post-launch improvement if accuracy matters.
+- `UpsetCard.tsx` displays the top upset(s): matchup, projected winner, actual result, underdog probability
+- Rendered on league overview sidebar (below activity feed or as part of `WeekHighlights`) — only when at least one qualifying upset exists
+- No schema change required for option (a)
+
+Depends On: `lib/projections/index.ts` (`winProbability`), scored `Matchup` rows
+
+---
+
+## LL-006. Season Timeline
+
+Sprint: 24
+
+Priority: P2
+
+Effort: M
+
+Status: 🔵 PLANNED
+
+Goal: The league overview shows a scrollable timeline of the season's most significant moments — trades, clinches, records, and the eventual champion. The league develops a narrative managers can look back on.
+
+Timeline event types:
+- Biggest Trade (most players involved, or highest-FP player traded)
+- Longest Win Streak (team + count + weeks)
+- Playoff Clinch (team + seed + week)
+- League Record Broken (category + player/team + value)
+- Championship (champion + final score)
+
+Acceptance Criteria:
+- New `lib/services/timeline-service.ts` — `getSeasonTimeline(leagueId, prisma)` returns `TimelineEvent[]` sorted by `occurredAt` ascending
+- Events sourced entirely from existing `LeagueEvent` rows (TRADE, PLAYOFF_CLINCH, PLAYOFF_ELIMINATION, CHAMPIONSHIP_WON, LEAGUE_STORYLINE with `data.isRecord === true`) — no new schema writes
+- New `SeasonTimeline.tsx` component rendered on the league overview left column, below the playoff race module — collapses when fewer than 3 events exist (too early in season)
+- Each event shows: date, icon, one-sentence description generated from `LeagueEvent.data`
+- No schema change
+
+Depends On: existing `LeagueEvent` rows (TRADE, PLAYOFF_CLINCH, CHAMPIONSHIP_WON), league overview layout
+
+---
+
+## LL-010. League Record Book
+
+Sprint: 24
+
+Priority: P1
+
+Effort: M
+
+Status: 🔵 PLANNED
+
+Goal: Historical records give managers bragging rights beyond a single season. The record book tracks league-wide bests and motivates managers to chase history.
+
+Record categories:
+- Highest Single-Week Score (team)
+- Longest Win Streak (team, consecutive VP wins)
+- Biggest Blowout (largest margin of victory in a single matchup)
+- Closest Victory (smallest margin)
+
+Acceptance Criteria:
+- New `/league/[leagueId]/records` page — server-rendered, no client JS needed
+- Two tabs: "This Season" and "All Time" — "All Time" queries across all leagues in the `parentLeagueId` lineage
+- Each record shows: holder name, value, week/date it was set
+- Records computed via Prisma queries against `Matchup` and `StatLine` tables — no new schema columns
+- "Records" link added to league nav (`app/league/[leagueId]/layout.tsx`)
+- Empty state: "Records will appear after the first week scores"
+
+Depends On: `Matchup` table, `StatLine` table, `parentLeagueId` lineage relation
+
+---
+
+## LL-011. Franchise Identity
+
+Sprint: 24
+
+Priority: P2
+
+Effort: M
+
+Status: 🔵 PLANNED
+
+Goal: Each team automatically earns a personality archetype based on how they actually play — goalies-first, boom-or-bust, defensive fortress. Teams feel emotionally distinct, not just statistically distinct.
+
+Archetypes:
+- **🔥 Boom or Bust** — high scoring variance (high stddev in weekly scores)
+- **🧱 Defensive Fortress** — above-median goalie FP contribution as % of total roster FP
+- **🎯 Sniper Factory** — above-median goal-scorer FP concentration (top 2 skaters dominate total FP)
+- **🥅 Goaltender Driven** — goalie FP > 25% of total roster FP
+
+Acceptance Criteria:
+- `computeFranchiseIdentity(teamId, scoringPeriods, prisma)` in `lib/services/analysis-service.ts` returns `{ archetype: string, icon: string, description: string } | null` (null when fewer than 4 weeks of data)
+- Archetype displayed as a styled chip in the team matchup page header (Z2 area, next to team record)
+- Archetype recomputed each time the dashboard loads (no caching needed — derived from existing `StatLine` and `Matchup` data)
+- Changes are expected season-to-season as roster composition evolves — this is a feature, not a bug
+- No schema change
+
+Depends On: `lib/services/analysis-service.ts`, `lib/services/dashboard.ts`, matchup page Z2 area
+
+---
+
+## LL-012. Manager Superlatives
+
+Sprint: 24
+
+Priority: P2
+
+Effort: M
+
+Status: 🔵 PLANNED
+
+Goal: After the championship, every manager receives a superlative recognizing their play style over the season. It's a playful end-of-year moment that makes the season feel complete.
+
+Superlative categories:
+- **🧠 Waiver Wizard** — most waiver claims submitted across the season
+- **💰 Trade Shark** — most trades proposed AND accepted (both sides of the deal)
+- **🎯 Draft Sniper** — highest % of rounds where drafted player outperformed draft position by FP (requires prior-season stats)
+- **🪨 Iron Lineup** — fewest lineup changes (lowest transaction count overall)
+- **😫 Snakebitten** — most lineup-locked players who scored 0 FP in the period they were locked
+
+Acceptance Criteria:
+- `computeManagerSuperlatives(leagueId, prisma)` in `lib/services/storyline-service.ts` returns one superlative per manager — each team gets exactly one (their top category)
+- Computed only when `playoffStatus === "COMPLETE"` — called from league overview page server-side
+- Displayed on league overview below the champion banner — one card per manager with icon, label, and one-line explanation
+- Emitted as `LEAGUE_STORYLINE` `LeagueEvent` rows so they persist in the activity feed
+- No schema change
+
+Depends On: `LeagueEvent` (PLAYER_ADD, PLAYER_DROP, TRADE, DRAFT_PICK), `playoffStatus === COMPLETE`
+
+---
+
+## LL-009. Trophy Cabinet
+
+Sprint: 25
+
+Priority: P1
+
+Effort: L
+
+Status: 🔵 PLANNED
+
+Goal: Championships, records, and achievements persist across seasons and display on a team's trophy page. Winning something should stay with a franchise forever.
+
+Trophy types:
+- `CHAMPION` — league champion for the season
+- `REGULAR_SEASON_WINNER` — highest VP at end of regular season
+- `WEEKLY_HIGH_SCORE` — set the all-time league high score for a single week
+- `LONGEST_WIN_STREAK` — held the longest VP win streak in league history
+- `PLAYOFF_BERTH` — qualified for playoffs (lower prestige, still tracked)
+
+Acceptance Criteria:
+- New `Achievement` model in `prisma/schema.prisma`: `id String @id @default(cuid())`, `teamId String`, `leagueId String`, `type AchievementType` (new enum), `season String`, `earnedAt DateTime @default(now())`, `data Json @default("{}")`, `@@unique([teamId, leagueId, type, season])`
+- `AchievementType` enum: `CHAMPION REGULAR_SEASON_WINNER WEEKLY_HIGH_SCORE LONGEST_WIN_STREAK PLAYOFF_BERTH`
+- Achievements written at relevant lifecycle moments: `CHAMPION` / `REGULAR_SEASON_WINNER` after `advance-playoff-round` completes the final round; `PLAYOFF_BERTH` after clinch; `WEEKLY_HIGH_SCORE` / `LONGEST_WIN_STREAK` from `advanceSeason()`
+- New `/team/[teamId]/trophies` page — trophy grid showing earned achievements with season labels; empty state "Win something — trophies will appear here"
+- "Trophies" added to `TeamNav.tsx` (shown only when team has at least 1 achievement — or always, as an aspiration)
+- Achievements display on the team matchup page header (Z2) as small trophy icons linking to the trophies page
+- `npx prisma migrate dev` migration required
+
+Depends On: requires schema migration (`Achievement` model), `advanceSeason()`, `advance-playoff-round` route
+
+---
+
+## LL-014. Opening Day Card
+
+Sprint: 25
+
+Priority: P2
+
+Effort: S
+
+Status: 🔵 PLANNED
+
+Goal: The first week of the season feels like a special occasion — a momentary card signals that a new journey is beginning.
+
+Acceptance Criteria:
+- Dismissible hero card rendered at Z0 (above lineup alerts) on `/team/[teamId]/matchup` during Week 1 only — i.e., `activePeriod?.number === 1` (or equivalent first-period detection)
+- Card content: season year, number of weeks, number of managers, "1 Champion" — e.g., "2027 SEASON BEGINS · 20 Weeks · 8 Managers · 1 Champion"
+- Dismiss stores a `localStorage` flag keyed on `leagueId + season` — won't re-appear after dismissed
+- Card uses existing `.rebrand-card` CSS class with an accent border
+- No schema change; no server-side state
+
+Depends On: `activePeriod.number` from `getSeasonState`, matchup page layout
+
+---
+
+## LL-015. Championship Banner
+
+Sprint: 25
+
+Priority: P1
+
+Effort: S
+
+Status: 🔵 PLANNED
+
+Goal: Winning the championship is a peak emotional moment. The champion should see something unforgettable the first time they open the app after the title is clinched.
+
+Acceptance Criteria:
+- Dismissible full-screen overlay (or prominent top banner) displayed on `/team/[teamId]/matchup` for the league champion immediately after `playoffStatus === COMPLETE`
+- Content: "🏆 [SEASON] LEAGUE CHAMPION · [Team Name] · [Record]"
+- A `CHAMPIONSHIP_WON` `Notification` row (already in schema NotificationType enum) is created for the champion's owner when the final playoff round is scored — use `createNotification()` with a unique `dedupeKey`
+- The banner is triggered by the presence of an unread `CHAMPIONSHIP_WON` notification; dismiss calls `markAllRead()` for this league
+- Also adds a `CHAMPION` `Achievement` row (LL-009 depends on same sprint — coordinate)
+- No new schema changes beyond what LL-009 adds
+
+Depends On: `CHAMPIONSHIP_WON` NotificationType (already in schema), `advance-playoff-round` route, LL-009 (Achievement model if CHAMPION trophy is awarded simultaneously)
+
+---
+
+## LL-013. The Morning Skate
+
+Sprint: 26
+
+Priority: P1
+
+Effort: XL
+
+Status: 🔵 PLANNED
+
+Goal: A weekly league newsletter — published every Tuesday after matchups score — that makes the league feel alive. Managers should say "I checked the Morning Skate" instead of "I opened PWHL GM." The first truly branded subsystem.
+
+Article categories:
+- **Standings**: team entered first place / bubble movement / clinched / eliminated
+- **Matchups**: biggest upset / closest win / largest blowout
+- **Players**: Player of the Week / best goalie / top performer
+- **League Activity**: trades / waiver steals / commissioner announcements
+
+Acceptance Criteria:
+- New `MorningSkateEdition` model: `id String @id @default(cuid())`, `leagueId String`, `periodId String @unique`, `publishedAt DateTime @default(now())`, `content Json`, `@@index([leagueId, publishedAt])`
+- `lib/services/morning-skate-service.ts` — `generateEdition(leagueId, periodId, prisma)` returns structured `Edition` with article sections; each section is an array of `{ headline: string, body: string }` blurbs generated via pure template strings from existing data — no AI, no LLM, no external calls
+- `emitMorningSkatEdition()` called from `advanceSeason()` after `emitWeeklyStorylines()` and `emitWeeklyAwards()` — stores the edition row; fire-and-forget
+- New `/league/[leagueId]/morning-skate` archive page — server-rendered list of all editions newest-first, each linking to its detail page
+- New `/league/[leagueId]/morning-skate/[editionId]` detail page — masthead ("📰 THE MORNING SKATE · Vol. N · Week N · Season 2027"), article sections rendered with section headings, each blurb as a paragraph
+- League overview homepage hero (`/team/[teamId]/matchup`) replaced with Morning Skate preview when a current-period edition exists: masthead + 2–3 headline blurbs + "Read full edition →" link
+- "Morning Skate" added to league nav as a primary tab (between Overview and Standings), with `📰` as its icon (Tier 1 context per emoji policy)
+- `npx prisma migrate dev` migration required for `MorningSkateEdition` model
+
+Depends On: LL-001 (weekly awards exist to reference), LL-004/005 (clinch/magic number data), existing `storyline-service.ts`, `advanceSeason()`, requires schema migration
+
+---
+
+## LL-016. League Hub — Homepage Reorganization
+
+Sprint: 27
+
+Priority: P1
+
+Effort: M
+
+Status: 🔵 PLANNED
+
+Goal: All the new Living League systems (Morning Skate, awards, playoff race, records, timeline, trophies) get assembled into a coherent "arena concourse" experience. The franchise home page stops feeling like a utility screen.
+
+Acceptance Criteria:
+- `/team/[teamId]/matchup` render order restructured: Morning Skate preview (Z0, when edition exists) → Matchup Hero (Z1) → Momentum Strip (Z2) → Playoff Race context (magic number + bubble watch compact) (Z3) → Live situation / roster (Z4–Z5) → Franchise identity chip + recent trophies (Z6) → Performer highlights (Z7)
+- `/league/[leagueId]/` (commissioner overview) restructured: Morning Skate → Season Timeline → Record Book highlights → Team lineup status → Commissioner strip
+- Admin panel utility-screen polish: scoring settings and roster configuration sections replaced with human-readable summaries (not raw JSON) — extends the IA-011 improvement pattern
+- No schema changes — this sprint is pure assembly of systems built in Sprints 21–25
+- All prior acceptance criteria for LL-001 through LL-015 must already be green
+
+Depends On: all LL-001 through LL-015
+
+---
+
 # Architectural Rules
 
 Design for the live season first. Replay is a testing tool, so:

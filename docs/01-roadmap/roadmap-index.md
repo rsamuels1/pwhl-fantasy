@@ -1,6 +1,6 @@
 # PWHL GM Product Roadmap — Index
 
-Last Updated: June 23, 2026 (Sprint 19 COMPLETE — IA restructure, DnD lineup, commissioner god-mode; 5/5 parts shipped)
+Last Updated: June 23, 2026 (Sprint 20 COMPLETE — VTF nav rename; Sprint 21 PLANNED — Living League Weekly Delight; Sprints 21–27 Living League arc added to roadmap)
 
 ---
 
@@ -167,9 +167,9 @@ Beta invite date: **Jul 7, 2026.** Public launch: **quality-driven** (target ear
 
 ---
 
-## Completed Sprints (7–19)
+## Completed Sprints (7–20)
 
-All sprints from 7–19 are complete and shipped. Sprint 13 is formally absorbed into Sprint 18 (3/14 shipped via Sprint 15 batch; 11 carry-forwards). Detailed plans in `roadmap-sprints.md`.
+All sprints from 7–20 are complete and shipped. Sprint 13 is formally absorbed into Sprint 18 (3/14 shipped via Sprint 15 batch; 11 carry-forwards). Detailed plans in `roadmap-sprints.md`.
 
 - **Sprint 7** ✅ — Retention Layer (Trade System, Storylines, Replay Sim v2 UX)
 - **Sprint 8** ✅ — Beta Hardening (14/14 audit fixes + beta bugs)
@@ -184,14 +184,32 @@ All sprints from 7–19 are complete and shipped. Sprint 13 is formally absorbed
 - **Sprint 17** ✅ — UX Polish: Agent Test Run Fixes (9/9 items: LEAGUES overhaul, matchup restructure, FP/VP copy, terminology, playoff eliminated empty state, renewal confirmation, pre-login UX, VP education, lock tooltip; Jun 22, 2026)
 - **Sprint 18** ✅ — Beta Operations + Onboarding Repair (24/24 items: BLR-001/002, Sprint 13 carry-forwards, ops gates GATE-1/2/3 PASS; Jun 23, 2026)
 - **Sprint 19** ✅ — IA Restructure: Franchise-First Nav + DnD Lineup (5/5 parts: emoji policy, Trades→My Franchise, league overview commissioner-only, DnD lineup on roster, commissioner god-mode; Jun 23, 2026)
+- **Sprint 20** ✅ — VTF Navigation Rename (2/2 items: BF-018 league nav "Schedule"→"Results", UX-049 team nav "Schedule"→"My Season"; Jun 23, 2026)
 
-**Current Status:** Sprint 18 COMPLETE (Jun 23, 2026) · **Sprint 19 COMPLETE** (Jun 23, 2026 — 5/5 parts shipped: IA restructure, DnD lineup, commissioner god-mode) · MVP readiness ~99%
+**Current Status:** Sprint 20 COMPLETE (Jun 23, 2026) · **Sprint 21 PLANNED** — Living League: Weekly Delight (LL-001/002/003) · Sprint 22 PLANNED — "Inviting Dark" redesign · Sprints 23–27 Living League arc planned · MVP readiness ~99%
 
 **Sprint 14 (Post-Launch Polish + Emotional Engagement) is COMPLETE (Jun 22, 2026).** 11/12 items shipped: all 5 agent integration test findings (DRC-002, BF-010, BF-011, TR-002, TR-003) ✅; OB-010 wizard Replay progress bar ✅; UX-049 "Free Agents" direct TeamNav link ✅; UX-050 "Win Probability" label in DuelHero ✅; UX-033 setup-phase copy "Games starting soon" ✅; UX-032 edge label ✅; OB-011 draft date picker text ✅. UX-045 (rival win celebration) deferred post-launch — requires schema migration (`RIVALRY_WIN` enum) which carries pre-launch risk. First item in Sprint 17 backlog.
 
 **Sprint 18 (Beta Operations + Onboarding Repair) is COMPLETE (Jun 23, 2026).** All 24 items shipped across 5 tracks: BLR-001/002, Sprint 13 carry-forwards, new live feedback bugs, ops gates, and ad-hoc beta fixes. GATE-1 ✅ GATE-2 ✅ GATE-3 ✅ all pass. Beta invites target: Jul 7, 2026. Full plan in `roadmap-sprints.md`.
 
 **Sprint 19 (IA Restructure: Franchise-First Nav + DnD Lineup) is COMPLETE (Jun 23, 2026).** All 5 parts shipped: Part 1 emoji policy + colorblind chip fix; Part 2 Trades→My Franchise routes + TeamNav restructure; Part 3 league overview redirect to commissioner-only; Part 4 DnD lineup management consolidated onto the roster page; Part 5 commissioner god-mode access to any team's lineup. No schema changes. Full plan in `roadmap-sprints.md`.
+
+**Sprint 20 (VTF Navigation Rename) is COMPLETE (Jun 23, 2026).** 2 items shipped: BF-018 renamed the league nav "Schedule" tab to "Results" and added a VTF explainer subtitle (commit ad4185a); UX-049 renamed the team nav "Schedule" tab to "My Season" and updated the "Your Players This Week" section heading. No schema changes.
+
+**Sprint 21 (Living League: Weekly Delight) is PLANNED.** 3 stories: LL-001 Weekly Awards Ceremony, LL-002 Momentum Strip data layer, LL-003 Animated Stat Chips. First sprint of the Living League arc. No schema changes. Full plan in `roadmap-sprints.md`.
+
+**Sprint 22 (Inviting Dark Redesign) is PLANNED.** 12 stories (RD-001–RD-012) covering the "Inviting Dark" color system, inline hex sweep, emoji policy restoration, VP popover fix, Create League Wizard rebuild, league overview and team matchup flagship redesigns, remaining page recolor sweep, Momentum Strip visual (completing LL-002), prestige gradient, gold prestige moments, empty state personality copy, and wizard summary panel. No schema changes. Spec authority: `docs/branding/pwhl_redesign_bundle_v3_1.zip`. Full plan in `roadmap-sprints.md`.
+
+**Living League Arc (Sprints 23–27) is PLANNED.** Source: `docs/01-roadmap/living-league-product-strategy.md` + `docs/01-roadmap/living-league-roadmap.md`. Evolves PWHL GM from "fantasy hockey software" into a living league that remembers, celebrates, and tells stories. 7 total sprints (21–27):
+- Sprint 21 — Weekly Delight (awards, momentum, stat chips)
+- Sprint 22 — Inviting Dark Redesign (design system)
+- Sprint 23 — The Race (magic number, clinch moments, bubble watch, upset tracker)
+- Sprint 24 — Season Story (timeline, record book, franchise identity, manager superlatives)
+- Sprint 25 — Legacy (trophy cabinet, opening day card, championship banner)
+- Sprint 26 — The Morning Skate (weekly league newsletter, own nav entry, archive page)
+- Sprint 27 — League Hub (assemble all systems into franchise home page)
+
+Full feature cards: `roadmap-features.md` Phase 9 (LL-001 through LL-016).
 
 **Post-Launch Backlog:** FAAB (#6 — defer to 2027-28 when commissioners request), Growth analytics (GR-001/002/003/004), push notifications, multi-season library (#12), player trends (#23), keeper/dynasty (#19/#20), native apps, AI features, IA reorg (League vs Franchise nav split suggestions from beta feedback). See `roadmap-sprints.md` for details.
 
