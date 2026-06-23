@@ -20,6 +20,8 @@ interface Props {
   pendingReview: TradeWithItems[];
   playerMap: Record<string, PlayerInfo>;
   teamMap: Record<string, string>;
+  /** When provided, navigation uses /team/[teamId]/trades routes and hides the League History tab */
+  teamId?: string;
 }
 
 const STATUS_LABELS: Record<string, string> = {
@@ -96,6 +98,7 @@ function TradeCard({
   isCommissioner,
   onAction,
   actionPending,
+  tradeBase,
 }: {
   trade: TradeWithItems;
   myTeamId: string;
@@ -104,6 +107,7 @@ function TradeCard({
   isCommissioner: boolean;
   onAction: (tradeId: string, action: string) => void;
   actionPending: boolean;
+  tradeBase: string;
 }) {
   const isReceiver = trade.receivingTeamId === myTeamId;
   const isProposer = trade.proposingTeamId === myTeamId;
@@ -134,7 +138,7 @@ function TradeCard({
           <span style={{ fontSize: 12, color: "#64748b" }}>{formatDate(trade.createdAt)}</span>
         </div>
         <Link
-          href={`/league/${trade.leagueId}/trades/${trade.id}`}
+          href={`${tradeBase}/${trade.id}`}
           style={{ fontSize: 12, color: "#a5b4fc", textDecoration: "none" }}
         >
           View →
@@ -192,7 +196,7 @@ function TradeCard({
               Reject
             </button>
             <Link
-              href={`/league/${trade.leagueId}/trades/${trade.id}/counter`}
+              href={`${tradeBase}/${trade.id}/counter`}
               style={{
                 padding: "8px 16px", borderRadius: 8, border: "1px solid rgba(165,180,252,0.4)",
                 background: "transparent", color: "#a5b4fc", fontSize: 13, textDecoration: "none",
@@ -258,7 +262,10 @@ export default function TradeCenter({
   pendingReview,
   playerMap,
   teamMap,
+  teamId,
 }: Props) {
+  const tradeBase = teamId ? `/team/${teamId}/trades` : `/league/${leagueId}/trades`;
+
   const [tab, setTab] = useState<"incoming" | "sent" | "history" | "review">(
     isCommissioner && pendingReview.length > 0 ? "review" : initialTab
   );
@@ -302,7 +309,8 @@ export default function TradeCenter({
     ...(isCommissioner && pendingReview.length > 0
       ? [{ key: "review" as const, label: "Needs Review", count: pendingReview.length }]
       : []),
-    { key: "history", label: "League History" },
+    // League History hidden in team context — Transactions covers full trade history
+    ...(teamId ? [] : [{ key: "history" as const, label: "League History" }]),
   ];
 
   const currentTrades =
@@ -317,7 +325,7 @@ export default function TradeCenter({
         <h1 style={{ margin: 0, fontSize: 22, fontWeight: 700 }}>Trade Center</h1>
         {canPropose && (
           <Link
-            href={`/league/${leagueId}/trades/new`}
+            href={`${tradeBase}/new`}
             style={{
               padding: "10px 18px", borderRadius: 8,
               background: "var(--accent)", color: "#fff",
@@ -404,7 +412,7 @@ export default function TradeCenter({
           {tab === "incoming" && canPropose && (
             <div style={{ marginTop: 16 }}>
               <Link
-                href={`/league/${leagueId}/trades/new`}
+                href={`${tradeBase}/new`}
                 style={{ color: "#a5b4fc", textDecoration: "none", fontSize: 14 }}
               >
                 Propose a trade to another team →
@@ -423,6 +431,7 @@ export default function TradeCenter({
             isCommissioner={isCommissioner}
             onAction={handleAction}
             actionPending={isPending}
+            tradeBase={tradeBase}
           />
         ))
       )}

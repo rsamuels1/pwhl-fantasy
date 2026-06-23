@@ -24,6 +24,8 @@ interface Props {
   leaguePlayers: LeaguePlayer[];
   preselectedTeamId: string | null;
   counterOfId: string | null;
+  /** When provided, success navigation uses /team/[teamId]/trades routes */
+  teamId?: string;
 }
 
 const POS_ORDER: Record<string, number> = { FORWARD: 0, DEFENSE: 1, GOALIE: 2 };
@@ -242,8 +244,10 @@ export default function ProposeTrade({
   leaguePlayers,
   preselectedTeamId,
   counterOfId,
+  teamId,
 }: Props) {
   const router = useRouter();
+  const tradeBase = teamId ? `/team/${teamId}/trades` : `/league/${leagueId}/trades`;
 
   // Derive locked team from preselectedTeamId or first selected league player
   const preselectedPlayers = preselectedTeamId
@@ -329,7 +333,7 @@ export default function ProposeTrade({
       }
       const tradeId = (data as { trade?: { id: string } }).trade?.id;
       startTransition(() => {
-        router.push(tradeId ? `/league/${leagueId}/trades/${tradeId}` : `/league/${leagueId}/trades`);
+        router.push(tradeId ? `${tradeBase}/${tradeId}` : tradeBase);
       });
     } catch {
       setError("Network error. Please try again.");
@@ -471,7 +475,7 @@ export default function ProposeTrade({
             {isPending ? "Sending..." : counterOfId ? "Send Counter Offer" : "Send Trade Proposal"}
           </button>
           <a
-            href={`/league/${leagueId}/trades`}
+            href={tradeBase}
             style={{
               padding: "12px 24px", borderRadius: 8, border: "1px solid rgba(148,163,184,0.3)",
               background: "transparent", color: "#94a3b8", fontSize: 14,

@@ -241,6 +241,12 @@ survives DB resets and schema migrations.
      - AG-007: Pre-login UX — plain-language features grid copy (no acronyms); "Try a Replay" secondary CTA on landing + login/register pages; invite join page shows draft date + fantasy explainer
      - AG-008: VP education reinforcement — compact "How VP works" callout in FieldHero + dashboard matchup action card; links to standings page explainer
      - AG-009: Lineup lock contextual tooltip — hover/tap on lock indicator reveals explanation: player's team played this week, cannot move to bench after contributing
+   - **Beta Operations + Onboarding Repair — Sprint 18** ✅ (24 items across 5 tracks, all shipped Jun 23, 2026):
+     - **Beta League Replay Format** ✅ (BLR-001/002/003: founder-created beta replay leagues, wizard beta welcome screen, expansion team teaser in welcome screen + draft room)
+     - **Sprint 13 carry-forwards** ✅ (BF-009, OB-002/003/004, UX-046/047/048, OB-005/006/007/009: analysis nav confirmed, VP explainer in wizard, team-creation warning, cancel confirm, season series dedup, trade form partner-first, trade form hint, home page cleanup, replay mode desc, "12 teams" copy, scoring chip row)
+     - **Beta bug fixes** ✅ (BF-012/013/014/015/016/017: FA add error copy clarified, pre-season trade gate removed, VTF matchup ranked view, UTIL slot stale-closure fix, activity feed LEAGUE_STORYLINE label, auto-set 0-game null-coalescing fix)
+     - **Ops gates** ✅ (OPS-001 security audit GATE-1 PASS, OPS-002 load test GATE-2 PASS 20 leagues×80 connections, OPS-003 CRON_SECRET GATE-3 PASS, OPS-004 accessibility focus-visible + aria-labels)
+     - **Wizard 401 fix** ✅ (middleware exemption for `/api/leagues/create` + WizardError styled component)
 7. Public launch ~early Nov, drafts ~1 week before opener
 
 ## Draft room UI (`app/draft/[leagueId]/`)

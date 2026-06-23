@@ -1331,7 +1331,7 @@
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
           <div>
             <div style="font-weight: 700; font-size: 1rem;">Sprint 18 · "Beta Operations + Onboarding Repair"</div>
-            <div style="font-size: 0.8rem; color: #888;">Track: A (BLR) · B (carry-forwards) · C (new bugs) · D (ops) · Target: Jul 7, 2026 beta invites · <strong style="color: #22c55e;">All P0s + P1s complete — 0 remaining</strong></div>
+            <div style="font-size: 0.8rem; color: #888;">Track: A (BLR) · B (carry-forwards) · C (new bugs) · D (ops) · E (ad-hoc) · Target: Jul 7, 2026 beta invites · <strong style="color: #22c55e;">All 24 items complete — 0 remaining</strong></div>
           </div>
           <span class="status complete">✅ COMPLETE</span>
         </div>
@@ -1363,8 +1363,13 @@
           <div class="task-row"><span class="task-check" style="color:#22c55e">✓</span><span style="color: #666">OPS-002 (P0, M) — <strong>✅ GATE-2 PASS</strong> — 20 leagues × 80 connections; report: docs/04-operations/load-test-sprint-18.md</span></div>
           <div class="task-row"><span class="task-check" style="color:#22c55e">✓</span><span style="color: #666">OPS-003 (P0, S) — <strong>✅ GATE-3 PASS</strong> — CRON_SECRET set in Vercel production ✅ COMPLETE</span></div>
           <div class="task-row"><span class="task-check" style="color:#22c55e">✓</span><span style="color: #666">OPS-004 (P1, M) — Accessibility: focus-visible CSS globally; aria-label on draft pick buttons + lineup slot divs; keyboard handlers on lineup slots ✅ SHIPPED</span></div>
+          <div style="font-size: 0.8rem; color: #22c55e; margin: 0.75rem 0 0.5rem 0;">Track E — Ad-hoc beta fixes (Jun 22–23, all shipped)</div>
+          <div class="task-row"><span class="task-check" style="color:#22c55e">✓</span><span style="color: #666">BF-015 (P1, S) — UTIL slot false error in multi-move batches (stale closure) ✅ SHIPPED (f400b90)</span></div>
+          <div class="task-row"><span class="task-check" style="color:#22c55e">✓</span><span style="color: #666">BF-016 (P1, S) — Activity feed raw LEAGUE_STORYLINE enum — TYPE_META label added ✅ SHIPPED (70cd536)</span></div>
+          <div class="task-row"><span class="task-check" style="color:#22c55e">✓</span><span style="color: #666">BF-017 (P1, S) — Auto-set and bench-upgrade hint suggesting 0-game players — null-coalescing fix ✅ SHIPPED (622ac9a)</span></div>
+          <div class="task-row"><span class="task-check" style="color:#22c55e">✓</span><span style="color: #666">BLR-003 (P1, S) — Expansion team teaser in beta welcome screen + draft room header ✅ SHIPPED (dfef7ef)</span></div>
         </div>
-        <div class="exit-criteria"><strong>All P0s + P1s complete.</strong> GATE-3 fully cleared (CRON_SECRET set in Vercel production). BF-014 deferred (spec needed). Beta invites Jul 7, 2026. ✅ ACHIEVED (Jun 23, 2026)</div>
+        <div class="exit-criteria"><strong>All 24 items complete across 5 tracks.</strong> GATE-3 fully cleared (CRON_SECRET set in Vercel production). BF-014 shipped (dc05f03). Track E ad-hoc fixes (BF-015/016/017 + BLR-003) all shipped Jun 22–23. Beta invites Jul 7, 2026. ✅ ACHIEVED (Jun 23, 2026)</div>
       </div>
 
       <div id="sprint-19" class="card current">
@@ -1550,40 +1555,76 @@
                     <td>Sprint 18 · P0</td>
                   </tr>
 
-                  <tr class="backlog-row" data-status="in-progress" data-crit="high">
+                  <tr class="backlog-row" data-status="done" data-crit="high">
                     <td><span class="crit-dot crit-high"></span></td>
                     <td>BLR-002</td>
-                    <td>Wizard Beta Welcome Screen <em style="color:#34d399; font-size:0.8rem">(spec written — ready for eng)</em></td>
-                    <td><span class="status in-progress">SPEC READY</span></td>
+                    <td>Wizard Beta Welcome Screen</td>
+                    <td><span class="status done">SHIPPED</span></td>
                     <td>M</td>
                     <td>Sprint 18 · P0</td>
                   </tr>
 
-                  <tr class="backlog-row" data-status="todo" data-crit="medium">
+                  <tr class="backlog-row" data-status="done" data-crit="medium">
                     <td><span class="crit-dot crit-medium"></span></td>
                     <td>BF-012</td>
                     <td>FA Add Confirms Success But Shows Error Modal</td>
-                    <td><span class="status todo">TODO</span></td>
+                    <td><span class="status done">SHIPPED</span></td>
                     <td>M</td>
                     <td>Sprint 18 · P1</td>
                   </tr>
 
-                  <tr class="backlog-row" data-status="todo" data-crit="medium">
+                  <tr class="backlog-row" data-status="done" data-crit="medium">
                     <td><span class="crit-dot crit-medium"></span></td>
                     <td>BF-013</td>
                     <td>Trades Cannot Be Proposed Between Draft + Season Start</td>
-                    <td><span class="status todo">TODO</span></td>
+                    <td><span class="status done">SHIPPED</span></td>
                     <td>S</td>
                     <td>Sprint 18 · P1</td>
                   </tr>
 
-                  <tr class="backlog-row" data-status="todo" data-crit="medium">
-                    <td><span class="crit-dot crit-low"></span></td>
+                  <tr class="backlog-row" data-status="done" data-crit="medium">
+                    <td><span class="crit-dot crit-medium"></span></td>
                     <td>BF-014</td>
-                    <td>VTF Matchup Schedule Page Confusing in Vs-The-Field Mode <em style="color:#f59e0b; font-size:0.8rem">(Spec needed)</em></td>
-                    <td><span class="status todo">TODO</span></td>
+                    <td>VTF Matchup Schedule Page Confusing in Vs-The-Field Mode</td>
+                    <td><span class="status done">SHIPPED</span></td>
                     <td>S</td>
                     <td>Sprint 18 · P2</td>
+                  </tr>
+
+                  <tr class="backlog-row" data-status="done" data-crit="medium">
+                    <td><span class="crit-dot crit-medium"></span></td>
+                    <td>BF-015</td>
+                    <td>UTIL Slot False Error on Valid Forward Move (stale-closure in multi-move batch)</td>
+                    <td><span class="status done">SHIPPED</span></td>
+                    <td>S</td>
+                    <td>Sprint 18 · P1</td>
+                  </tr>
+
+                  <tr class="backlog-row" data-status="done" data-crit="medium">
+                    <td><span class="crit-dot crit-medium"></span></td>
+                    <td>BF-016</td>
+                    <td>Activity Feed Shows Raw LEAGUE_STORYLINE Enum String</td>
+                    <td><span class="status done">SHIPPED</span></td>
+                    <td>S</td>
+                    <td>Sprint 18 · P1</td>
+                  </tr>
+
+                  <tr class="backlog-row" data-status="done" data-crit="medium">
+                    <td><span class="crit-dot crit-medium"></span></td>
+                    <td>BF-017</td>
+                    <td>Auto-Set and Bench-Upgrade Hint Suggest Players with 0 Games</td>
+                    <td><span class="status done">SHIPPED</span></td>
+                    <td>S</td>
+                    <td>Sprint 18 · P1</td>
+                  </tr>
+
+                  <tr class="backlog-row" data-status="done" data-crit="medium">
+                    <td><span class="crit-dot crit-medium"></span></td>
+                    <td>BLR-003</td>
+                    <td>Expansion Team Teaser in Beta Welcome Screen + Draft Room</td>
+                    <td><span class="status done">SHIPPED</span></td>
+                    <td>S</td>
+                    <td>Sprint 18 · P1</td>
                   </tr>
 
                   <tr class="backlog-row" data-status="todo" data-crit="high">

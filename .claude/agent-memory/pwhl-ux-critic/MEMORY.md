@@ -6,3 +6,4 @@
 - [Patterns that work — keep](wins-keep.md) — design patterns that already serve new fans well; don't regress these
 - [End-of-season findings](end-of-season-findings.md) — playoff/champion/renewal dead states; non-qualifying team sees "Season hasn't started," renewal makes new league silently
 - [Draft room findings](draft-room-findings.md) — live 4-mgr walkthrough; generic error banner swallows specific server errors, sticky errors, raw entry error, star=queue confusion
+- [Emoji policy](emoji-policy.md) — DS-002 "no emoji" ban is dead/contradicts FEEL brief; recommend tiered policy; standings chips are color-only (a11y fix)

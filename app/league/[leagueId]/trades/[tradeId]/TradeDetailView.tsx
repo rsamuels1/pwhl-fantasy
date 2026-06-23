@@ -40,6 +40,8 @@ interface Props {
   playerMap: Record<string, PlayerInfo>;
   teamMap: Record<string, string>;
   canPropose: boolean;
+  /** When provided, back links use /team/[teamId]/trades routes */
+  teamId?: string;
 }
 
 export default function TradeDetailView({
@@ -50,7 +52,9 @@ export default function TradeDetailView({
   playerMap,
   teamMap,
   canPropose,
+  teamId,
 }: Props) {
+  const tradeBase = teamId ? `/team/${teamId}/trades` : `/league/${leagueId}/trades`;
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -204,7 +208,7 @@ export default function TradeDetailView({
         <div style={{ marginBottom: 16, fontSize: 13, color: "#94a3b8" }}>
           This is a counter-offer.{" "}
           <Link
-            href={`/league/${leagueId}/trades/${trade.counterOfId}`}
+            href={`${tradeBase}/${trade.counterOfId}`}
             style={{ color: "#a5b4fc", textDecoration: "none" }}
           >
             View original proposal →
@@ -241,7 +245,7 @@ export default function TradeDetailView({
             </button>
             {canPropose && (
               <Link
-                href={`/league/${leagueId}/trades/new?counterOf=${trade.id}`}
+                href={`${tradeBase}/new?counterOf=${trade.id}`}
                 style={{
                   padding: "10px 22px", borderRadius: 8,
                   border: "1px solid rgba(165,180,252,0.4)",

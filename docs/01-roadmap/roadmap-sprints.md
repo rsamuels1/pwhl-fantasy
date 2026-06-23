@@ -1054,7 +1054,8 @@ Goal: Ship everything needed before the beta invites go out on Jul 7, 2026. Two 
 (A) BLR — Beta League Replay Format, a new founder-created beta-invite experience; (B) Sprint 13
 carry-forwards — the 11 onboarding and in-season UX bugs that must be fixed before a new user can
 complete the wizard and land in a functioning league without PM assistance. A third track covers new
-live feedback bugs discovered Jun 22 and ops gate tasks.
+live feedback bugs discovered Jun 22, ops gate tasks, and a fifth track of ad-hoc beta fixes
+discovered Jun 22–23 after the primary tracks shipped (BF-015/016/017, BLR-003).
 
 **Beta invite date: Jul 7, 2026 (firm). Scope anything that misses this date into the post-beta backlog.**
 
@@ -1203,6 +1204,37 @@ keeps VP 1v1 pair-card layout unchanged; added "vs Field" badge to week header. 
 
 ---
 
+### Track E — Ad-hoc Beta Fixes (Jun 22–23, 2026)
+
+Discovered and shipped during Sprint 18 after the primary tracks completed.
+
+**BF-015: UTIL Slot False Error on Valid Forward Move** · S · P1 · ✅ SHIPPED (commit f400b90)
+Stale-closure bug in `LineupManager.tsx` multi-move batches. In auto-set and bench-upgrade hint
+operations that apply several moves at once, the slot-validation closure held the pre-move roster
+snapshot, causing valid forward→UTIL moves to be rejected as "slot full" once the batch reached a
+second forward. Fix: validation closure now accounts for prior pending moves within the same batch.
+Files: `app/team/[teamId]/lineup/LineupManager.tsx`
+
+**BF-016: Activity Feed Showing Raw LEAGUE_STORYLINE Enum String** · S · P1 · ✅ SHIPPED (commit 70cd536)
+`TYPE_META` in `lib/services/activity.ts` was missing an entry for `LEAGUE_STORYLINE`, causing the
+activity feed to display the raw enum value instead of a human-readable label. Fix: added
+`LEAGUE_STORYLINE` (label "League Storyline") and audited all other `EventType` values for missing
+entries. Files: `lib/services/activity.ts`
+
+**BF-017: Auto-Set and Bench-Upgrade Hint Suggest Players with 0 Games** · S · P1 · ✅ SHIPPED (commit 622ac9a)
+Null-coalescing inconsistency for `projectedFp` in `computeOptimalLineup` and the bench-upgrade hint
+ranked null-projection players (callups, injured players with no recent history) above players with
+real projections. Fix: standardized null→0 across both paths so zero-game players always rank last.
+Files: `lib/lineup.ts`, `app/team/[teamId]/lineup/LineupManager.tsx`
+
+**BLR-003: Expansion Team Teaser in Beta Welcome Screen + Draft Room** · S · P1 · ✅ SHIPPED (commit dfef7ef)
+Marketing/hype copy tied to the PWHL expansion draft (week of Jun 21, 2026). Added expansion team
+teaser to the BLR-002 beta welcome screen and draft room header, noting the four new franchises
+(Detroit, Hamilton, Las Vegas, San Jose) joining the 2026-27 season. Gated on `isBetaMode`.
+Files: `app/create-league/CreateLeagueWizard.tsx`, `app/draft/[leagueId]/DraftRoom.tsx`
+
+---
+
 ### Track D — Ops Gates (pre-launch blockers, can run in parallel with Tracks A–C)
 
 These tasks advance the formal launch gates. None require feature code; all require ops work or
@@ -1259,6 +1291,10 @@ Produce a findings list; fix all P0 a11y blockers. P1/P2 findings go to the post
 | OPS-003: Vercel ops verification | D | S | P0 | ✅ GATE-3 PASS — crons added; CRON_SECRET set in Vercel production; report: docs/04-operations/ops-verification-sprint-18.md |
 | OPS-004: Accessibility audit | D | M | P1 | ✅ SHIPPED — P0 a11y blockers: focus-visible CSS globally; aria-label + keyboard handlers on draft pick buttons and lineup slot divs; aria-label on AddAndSlotModal bench button |
 | BF-014: VTF matchup page confusion | C | S | P2 | ✅ SHIPPED (dc05f03) |
+| BF-015: UTIL slot false error on valid forward move | E | S | P1 | ✅ SHIPPED (f400b90) |
+| BF-016: Activity feed shows raw LEAGUE_STORYLINE enum | E | S | P1 | ✅ SHIPPED (70cd536) |
+| BF-017: Auto-set suggests players with 0 games | E | S | P1 | ✅ SHIPPED (622ac9a) |
+| BLR-003: Expansion team teaser in beta welcome screen + draft room | E | S | P1 | ✅ SHIPPED (dfef7ef) |
 
 **Min-ship (P0 only, must land by Jul 7):** ~~BLR-001~~ ✅ SHIPPED · ~~BLR-002~~ ✅ SHIPPED · ~~BF-009~~ ✅ RESOLVED · ~~OB-002~~ ✅ SHIPPED · ~~OB-003~~ ✅ SHIPPED · ~~OB-004~~ ✅ SHIPPED · ~~OPS-001~~ ✅ GATE-1 PASS · ~~OPS-002~~ ✅ GATE-2 PASS · ~~OPS-003~~ ✅ GATE-3 PASS = **0 remaining P0 stories**
 
@@ -1452,7 +1488,7 @@ Items below are acknowledged but have no sprint assignment. They become candidat
 | Sprint 15 — Visual Design System Deep Pass | ✅ COMPLETE (Jun 22, 2026) | 3 stories: DS-001 (homepage rewrite + sticky header), DS-002 (token sweep all pages + emoji removal), DS-003 (league overview + WeekHighlights full redesign) |
 | Sprint 16 — Emotional Design Polish | ✅ COMPLETE (Jun 22, 2026) | Score colors by win state + count-up animation, section heading hierarchy, Saira Condensed font loading, RecapCard elevation, card entrance animations. Transforms "Bloomberg terminal" feeling into energetic sports product. Commits: 5ecc116, f1d576c |
 | Sprint 17 — UX Polish: Agent Test Run Fixes | ✅ COMPLETE (Jun 22, 2026) | 9/9 items: AG-001 (LEAGUES overhaul + isPublic schema) + AG-002 (matchup page restructure) + AG-003 (FP/VP copy) + AG-004 (terminology) + AG-005 (playoff eliminated empty state) + AG-006 (renewal confirmation) + AG-007 (pre-login UX) + AG-008 (VP education) + AG-009 (lock tooltip); source: 4-agent parallel UX test run |
-| Sprint 18 — Beta Operations + Onboarding Repair | IN PROGRESS (target Jul 7, 2026) | All P0s complete: BLR-001 ✅ + BLR-002 ✅ (BetaWelcomeStep confirmed) + BF-009 ✅ + OB-002/003/004 ✅ + OPS-001 ✅ (GATE-1 PASS, zero P0 findings) + OPS-002 ✅ (GATE-2 PASS, 20 leagues × 80 connections) + OPS-003 ✅ (GATE-3 CONDITIONAL — CRON_SECRET manual action pending Jul 7); P1 items + BF-012/013/014 + OPS-004 remaining |
+| Sprint 18 — Beta Operations + Onboarding Repair | ✅ COMPLETE (Jun 23, 2026) | All 24 items shipped across 5 tracks: BLR-001/002 ✅ + BF-009 ✅ + OB-002/003/004 ✅ + UX-046/047/048 ✅ + OB-005/006/007/009 ✅ + BF-012/013/014 ✅ + OPS-001/002/003/004 ✅ + BF-015/016/017 ✅ + BLR-003 ✅. GATE-1/2/3 all PASS. Beta invites Jul 7, 2026. |
 | Sprint 19 — Onboarding UX: Playwright Walkthrough Fixes | PLANNED | 7 items (4P1 + 3P2): BF-018 (/league-rules 404) + UX-051 (VP popover mobile) + UX-052 (invite landing primer) + UX-057 (wizard jargon wall) + UX-054/055/056. Source: Playwright UX walkthrough Jun 23, 2026. 2 email-blocked items (UX-053, BF-019) in post-email-infra backlog. |
 
 ---

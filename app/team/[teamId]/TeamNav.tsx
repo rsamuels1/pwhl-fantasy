@@ -16,23 +16,24 @@ function TeamNavInner({ teamId, leagueId, leagueName, playoffStatus, leagueStatu
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const rosterPath = `/team/${teamId}/roster`;
-  const isFreeAgentsActive = pathname === rosterPath && searchParams.get("tab") === "freeAgents";
-  const isRosterActive = pathname.startsWith(rosterPath) && !isFreeAgentsActive;
+  const isRosterActive = pathname.startsWith(rosterPath);
+
+  const tradesPath = `/team/${teamId}/trades`;
+  const isTradesActive = pathname.startsWith(tradesPath);
 
   const tabs = [
-    { label: "Matchup",     href: `/team/${teamId}/matchup`,             active: pathname.startsWith(`/team/${teamId}/matchup`) },
-    { label: "Lineup",      href: `/team/${teamId}/lineup`,              active: pathname.startsWith(`/team/${teamId}/lineup`) },
-    { label: "Rosters",     href: rosterPath,                            active: isRosterActive },
-    { label: "Free Agents", href: `${rosterPath}?tab=freeAgents`,        active: isFreeAgentsActive },
-    { label: "Trades",      href: `/league/${leagueId}/trades`,          active: pathname.startsWith(`/league/${leagueId}/trades`) },
-    { label: "Standings",   href: `/team/${teamId}/standings`,           active: pathname.startsWith(`/team/${teamId}/standings`) },
-    { label: "Schedule",    href: `/team/${teamId}/schedule`,            active: pathname.startsWith(`/team/${teamId}/schedule`) },
-    { label: "Analysis",    href: `/team/${teamId}/analysis`,            active: pathname.startsWith(`/team/${teamId}/analysis`) },
+    { label: "Matchup",      href: `/team/${teamId}/matchup`,            active: pathname.startsWith(`/team/${teamId}/matchup`) },
+    { label: "My Roster",    href: rosterPath,                           active: isRosterActive || pathname.startsWith(`/team/${teamId}/lineup`) },
+    { label: "Trades",       href: tradesPath,                           active: isTradesActive },
+    { label: "Standings",    href: `/team/${teamId}/standings`,          active: pathname.startsWith(`/team/${teamId}/standings`) },
+    { label: "Schedule",     href: `/team/${teamId}/schedule`,           active: pathname.startsWith(`/team/${teamId}/schedule`) },
+    { label: "Transactions", href: `/team/${teamId}/transactions`,       active: pathname.startsWith(`/team/${teamId}/transactions`) },
+    { label: "Analysis",     href: `/team/${teamId}/analysis`,           active: pathname.startsWith(`/team/${teamId}/analysis`) },
     ...(leagueStatus === "PRE_DRAFT"
       ? [{ label: "Draft Queue", href: `/team/${teamId}/draft-prep`,     active: pathname.startsWith(`/team/${teamId}/draft-prep`) }]
       : []),
     ...(playoffStatus !== "NOT_STARTED"
-      ? [{ label: "Playoffs", href: `/league/${leagueId}/bracket`,      active: pathname.startsWith(`/league/${leagueId}/bracket`) }]
+      ? [{ label: "Playoffs", href: `/team/${teamId}/bracket`,           active: pathname.startsWith(`/team/${teamId}/bracket`) }]
       : []),
   ];
 

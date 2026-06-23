@@ -15,3 +15,4 @@
 - [Sprint 15 — Visual Design System](project-sprint15-design-system.md) — 3/3 DS stories + BF-008/OB-001/OB-008 (Sprint 13 partial) all shipped Jun 22, 2026; Sprint 13 now 3/14
 - [Sprint 17 — Agent Test Run Fixes](project-sprint17-agent-test-fixes.md) — 9/9 items AG-001–AG-009 COMPLETE Jun 22; schema: FantasyLeague.isPublic; next story ID: AG-010
 - [Sprint 18 — Beta Operations + Onboarding Repair](project-sprint18-plan.md) — 20 stories (Tracks A/B/C/D); BLR-001 ✅ SHIPPED; BLR-002 spec written (copy approved, ready for eng); beta invites Jul 7, 2026; 8 P0 items remain; next IDs: OB-012, UX-051, AG-010, BF-015
+- [Sprint 19 — Playwright UX Walkthrough Fixes](project-sprint19-plan.md) — 7 items in Sprint 19 (BF-015, UX-051–057); 2 email-blocked (UX-053, BF-016); all layout/copy, no schema; next IDs: UX-058, BF-017

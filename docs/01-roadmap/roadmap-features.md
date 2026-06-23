@@ -4379,6 +4379,121 @@ Acceptance Criteria (for when unblocked):
 
 ---
 
+# Sprint 18 Ad-hoc Beta Fixes — Jun 22–23, 2026
+
+Source: Beta site bugs discovered during Sprint 18 (Jun 22–23, 2026) after the primary sprint tracks shipped. All four items shipped as atomic commits.
+
+---
+
+## BF-015. UTIL Slot False Error on Valid Forward Move
+
+Sprint: 18 (ad-hoc)
+
+Priority: P1
+
+Status: ✅ SHIPPED — commit f400b90 (Jun 22, 2026)
+
+Source: Regression discovered during Sprint 18 validation. In multi-move batches (e.g. auto-set
+or bench-upgrade hint applying several moves at once), a stale closure in `LineupManager.tsx`
+held the pre-move roster state for validation. When a forward was moved to UTIL, subsequent moves
+in the same batch saw the UTIL slot as still filled and returned a false "slot full" error even
+though the earlier move had vacated it.
+
+Fix: updated the slot-validation closure to derive available capacity from the in-flight pending
+moves rather than the snapshot roster state, so each move in a batch correctly accounts for
+prior moves within the same operation.
+
+Files: `app/team/[teamId]/lineup/LineupManager.tsx`
+
+Acceptance Criteria:
+- AC-001: Moving a forward to UTIL followed by a second forward to active in the same multi-move batch does not produce a false "slot full" error.
+- AC-002: Single-move validation behavior is unchanged.
+
+---
+
+## BF-016. Activity Feed Shows Raw LEAGUE_STORYLINE Enum String
+
+Sprint: 18 (ad-hoc)
+
+Priority: P1
+
+Status: ✅ SHIPPED — commit 70cd536 (Jun 22, 2026)
+
+Source: Beta site observation. The activity feed in the league overview was rendering the raw
+`LEAGUE_STORYLINE` string from the `EventType` enum instead of a human-readable label (e.g.
+"League Storyline"). `TYPE_META` in `lib/services/activity.ts` was missing an entry for
+`LEAGUE_STORYLINE`, causing the fallback display logic to expose the internal enum value.
+
+Fix: added `LEAGUE_STORYLINE` to `TYPE_META` with label "League Storyline" and an appropriate
+icon; added any other missing enum entries to prevent future regressions.
+
+Files: `lib/services/activity.ts`
+
+Acceptance Criteria:
+- AC-001: Activity feed items with type `LEAGUE_STORYLINE` render a human-readable label, not the raw enum string.
+- AC-002: All `EventType` enum values have a corresponding `TYPE_META` entry (no fallback to raw string for any valid type).
+
+---
+
+## BF-017. Auto-Set and Bench-Upgrade Hint Suggest Players with 0 Games
+
+Sprint: 18 (ad-hoc)
+
+Priority: P1
+
+Status: ✅ SHIPPED — commit 622ac9a (Jun 22, 2026)
+
+Source: Beta site observation. The auto-set optimal lineup function (`computeOptimalLineup` in
+`lib/lineup.ts`) and the bench-upgrade hint in `LineupManager.tsx` were ranking players by
+`projectedFp`, which could be `null` for players with no recent game history. Null-coalescing
+logic treated `null` as `0` in some paths and as a large positive number in others, causing
+zero-game players (new callups, injured players with no recent data) to surface as top suggestions
+ahead of active players with real projections.
+
+Fix: standardized null-coalescing for `projectedFp` across both the optimizer and the hint
+calculation so `null` always resolves to `0` (i.e., ranks last, not first).
+
+Files: `lib/lineup.ts`, `app/team/[teamId]/lineup/LineupManager.tsx`
+
+Acceptance Criteria:
+- AC-001: `computeOptimalLineup` never ranks a player with `projectedFp === null` above a player with `projectedFp > 0`.
+- AC-002: Bench-upgrade hint does not suggest a swap to a player who projects 0 FP for the upcoming period.
+- AC-003: Existing auto-set tests pass; no regression to players with valid projections.
+
+---
+
+## BLR-003. Expansion Team Teaser in Beta Welcome Screen + Draft Room
+
+Sprint: 18 (ad-hoc)
+
+Priority: P1
+
+Status: ✅ SHIPPED — commit dfef7ef (Jun 22, 2026)
+
+Source: Marketing/hype opportunity tied to the PWHL expansion draft happening the week of Jun 21,
+2026. Four new teams (Detroit Hockey Team, Hamilton Hockey Team, Las Vegas Hockey Team, San Jose
+Hockey Team) were publicly announced. Adding a teaser in the beta experience (welcome screen and
+draft room header) provides context for why the live 2026-27 season will be significantly larger
+than the 2025-26 replay data and builds excitement for the November live launch.
+
+What shipped:
+- Expansion team teaser copy added to the BLR-002 beta welcome screen (Step 0 in
+  `CreateLeagueWizard.tsx`), noting that the live season will feature all 12 teams including the
+  four new franchises.
+- Draft room header in `app/draft/[leagueId]/page.tsx` updated with a contextual note about the
+  2026-27 expansion, visible to beta participants during the replay draft.
+- No schema changes. No new API routes.
+
+Files: `app/create-league/CreateLeagueWizard.tsx`, `app/draft/[leagueId]/DraftRoom.tsx` (or `page.tsx`)
+
+Acceptance Criteria:
+- AC-001: Beta welcome screen (step 0) includes a visible reference to the four expansion teams or the 12-team 2026-27 season.
+- AC-002: Draft room header includes expansion context copy for beta leagues.
+- AC-003: Expansion teaser is gated on `isBetaMode` — does not appear in non-beta league creation or non-beta draft rooms.
+- AC-004: No TypeScript errors; `tsc --noEmit` clean.
+
+---
+
 # Architectural Rules
 
 Design for the live season first. Replay is a testing tool, so:
