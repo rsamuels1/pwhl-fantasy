@@ -5266,6 +5266,198 @@ Depends On: all LL-001 through LL-015
 
 ---
 
+## LL-017. Plain-Language Award & Storyline Explainers
+
+Sprint: 21
+
+Priority: P1
+
+Effort: S
+
+Status: 🔵 PLANNED
+
+Goal: Every award, storyline, and stat chip surfaced by the Living League systems can be tapped to reveal a one-sentence, jargon-free explanation — so a new fan is never shown a label they can't decode.
+
+Acceptance Criteria:
+- Each `WeeklyAward` (LL-001), `StatChip` (LL-003), and `LeagueStoryline` card gets a tappable info affordance (ⓘ icon or tap-to-expand) that reveals plain-language helper text
+- Helper text uses fan-first language: e.g. "🔥 Heater Award — Your team scored 18 more fantasy points than we predicted. Your players had a great week." — never "outperformed projection by 18.4 FP"
+- "FP" is expanded to "fantasy points" on first use within any explainer; "VP" linked to the existing `VpExplainer`
+- All explainer copy lives in a single shared map `lib/copy/living-league-glossary.ts` so wording is consistent across the Morning Skate, awards, and chips — no divergent strings in component files
+- Touch target for the info affordance is ≥44px; explainer is keyboard- and screen-reader-accessible
+- No schema change
+
+Depends On: LL-001 (Weekly Awards Ceremony), LL-003 (Animated Stat Chips), existing `storyline-service.ts`, `VpExplainer.tsx`
+
+---
+
+## LL-018. New-Fan Tone Calibration for Negative Awards
+
+Sprint: 21
+
+Priority: P1
+
+Effort: S
+
+Status: 🔵 PLANNED
+
+Goal: The "punishment" awards (Heartbreaker, Collapse of the Week, Frozen Stick) are reframed so a brand-new fan having a rough week feels encouraged to come back rather than publicly mocked in front of their friends.
+
+Acceptance Criteria:
+- Each negative-valence award card includes a forward-looking, supportive second line linking to a recovery action: e.g. "🧊 Frozen Stick — Quiet week for your squad. Next week resets — check the waiver wire. → Find players"
+- Negative award cards link directly to the action that addresses the problem (set lineup / browse free agents)
+- A per-league commissioner toggle `showNegativeAwards Boolean @default(true)` (or stored in league settings JSON to avoid a migration) lets a commissioner soften a casual/friends league by suppressing punitive awards
+- Copy avoids ridicule language; tone is "tough week, bounce back" throughout
+- No schema migration required if stored in existing `scoringSettings` or `rosterSettings` JSON; commissioner toggle exposed in admin panel
+
+Depends On: LL-001 (Weekly Awards Ceremony), free-agent route, lineup route, commissioner admin panel
+
+---
+
+## LL-019. First-Loss / First-Week Result Explainer
+
+Sprint: 23
+
+Priority: P1
+
+Effort: M
+
+Status: 🔵 PLANNED
+
+Goal: The first time a new manager finishes a scoring week — especially a loss or a low "vs the field" finish — they get a one-time, gentle explainer of what just happened, why, and what they can control, so the result feels understandable rather than arbitrary.
+
+Acceptance Criteria:
+- After a manager's first scored period, a dismissible card appears on `/team/[teamId]/matchup` explaining the result in plain language: "You finished 6th of 8 this week. Your starters earned 78 fantasy points. Set a full lineup and pick up players with more games next week to climb."
+- Explicitly explains "vs the field" / VTF in one sentence for regular-season weeks and links to the existing `FieldHero` explainer — this is the peak confusion moment for managers new to VTF scoring
+- Shown once per manager; dismiss flag stored in `localStorage` keyed on `userId + leagueId + "first-result-seen"` (no schema change) or a nullable `User` flag
+- Names the top contributing player ("Marie-Philip Poulin led your week with 12 FP") to anchor the abstract score to a real PWHL player the fan cares about
+- Surfaces the single most actionable gap (e.g. a starter with 0 games played this period) when one exists
+- No schema change if localStorage-keyed
+
+Depends On: `getDashboardData`, `FieldHero` VTF explainer, season lifecycle (first scored period detection)
+
+---
+
+## LL-020. Newcomer-Mode Morning Skate Reading Layer
+
+Sprint: 26
+
+Priority: P1
+
+Effort: M
+
+Status: 🔵 PLANNED
+
+Goal: The Morning Skate is readable and exciting for a fan who doesn't speak fantasy shorthand — headlines lead with real PWHL player and team names, any stat is glossed, and there is always a "new here?" primer — so the league's flagship subsystem doesn't become a jargon wall.
+
+Acceptance Criteria:
+- Morning Skate blurb templates (LL-013) lead with human subjects: "Marie-Philip Poulin powered the Northern Lights to the week's top score" rather than "142 FP week tops the field"
+- Any acronym used in a blurb (FP, VP, PPP, GAA, SV%) is either expanded inline on first use or wrapped in a tap-to-define span sourced from the LL-017 shared glossary map
+- Each edition includes a one-paragraph "What happened this week" lede in plain English aimed at first-time readers, auto-generated from structured data
+- A persistent "New here? How to read this →" link in the masthead opens a one-screen primer on standings, scoring, and "vs the field"
+- Verified legible on a 375px mobile viewport: headline ≥16px, body ≥14px, no horizontal overflow
+- No schema change beyond LL-013's existing `MorningSkateEdition` model
+
+Depends On: LL-013 (The Morning Skate), LL-017 (shared glossary map `lib/copy/living-league-glossary.ts`)
+
+---
+
+## LL-021. Small-Win Encouragement Moments
+
+Sprint: 23
+
+Priority: P2
+
+Effort: S
+
+Status: 🔵 PLANNED
+
+Goal: The delight system celebrates the modest, controllable accomplishments that actually retain new fans — setting a full lineup, making a first add, surviving to a new week — not only the championships and records most newcomers won't reach for months.
+
+Acceptance Criteria:
+- Lightweight, non-blocking inline confirmation moments for first-time milestones: "✓ Lineup set for Week N — you're all in!" after first complete lineup; "✓ First free-agent add" after first waiver claim
+- These are positive micro-celebrations distinct from the prestige `Achievement` model in LL-009 — they are coaching encouragement, not persistent trophies
+- Each milestone fires at most once per manager (localStorage keyed on `userId + leagueId + milestoneType`); never nags
+- Tone is warm and fan-first, reinforcing that the action was correct: "Nice — a full lineup means every roster spot earns points this week"
+- Reuses existing inline confirmation / toast patterns; no full-screen interruption
+- No schema change
+
+Depends On: lineup route, free-agent route, existing toast/confirmation UI patterns
+
+---
+
+## LL-022. Living League Information Hierarchy & Progressive Disclosure
+
+Sprint: 27
+
+Priority: P1
+
+Effort: M
+
+Status: 🔵 PLANNED
+
+Goal: The redesigned franchise hub (LL-016) presents one obvious primary action and a digestible amount of content for a new fan, with richer Living League modules progressively revealed — so the homepage delights rather than overwhelms on a phone.
+
+**Note:** This story constrains and refines LL-016's render-order spec. It must be reconciled with (not bolted onto) the LL-016 implementation.
+
+Acceptance Criteria:
+- The franchise hub always surfaces exactly one obvious primary CTA above the fold appropriate to current state (Set your lineup / Read the Morning Skate / See who you're up against) — never a flat stack of six equal-weight modules
+- Secondary modules (timeline, records, franchise identity, performer highlights) collapse to a compact summary with "Show more" on mobile (≤768px); they do not all render expanded by default
+- First-session "lite" hub: for managers with `onboardingCompletedAt` recent or fewer than 2 scored weeks of history, legacy/records/timeline modules are minimized or hidden until there is meaningful data — avoids empty/confusing modules for newcomers (pairs with LL-023)
+- Module order and density verified on a 375px viewport: above-the-fold content answers "what do I do now?" without scrolling
+- No schema change; conditional rendering driven by existing `onboardingCompletedAt` and scored period count
+
+Depends On: LL-016 (League Hub), LL-023 (empty states), `User.onboardingCompletedAt`, scored period count from `getSeasonState`
+
+---
+
+## LL-023. Empty-State & Pre-History Copy for Legacy Systems
+
+Sprint: 24
+
+Priority: P2
+
+Effort: S
+
+Status: 🔵 PLANNED
+
+Goal: Every legacy/history surface (Record Book, Trophy Cabinet, Season Timeline, Trophies tab) has a welcoming, instructive empty state in a brand-new league's first season — so a fan exploring the app never hits a blank, confidence-eroding page.
+
+Acceptance Criteria:
+- Record Book (LL-010), Trophy Cabinet (LL-009), Season Timeline (LL-006), and `/team/[teamId]/trophies` each render a purposeful empty state when no data exists, not a blank table or raw "No data found"
+- Empty-state copy explains what the surface is for and points forward: "No records yet — these fill in as you play. The first big week sets the bar." / "Win a week, clinch a spot, or take the title and your trophies show up here."
+- Empty states verified for a freshly created league with one team and zero scored weeks — never expose internal placeholders, zeros, or null
+- Copy reviewed against the no-jargon standard (no unexplained FP/VP/VTF in empty-state prose)
+- No schema change; uses existing `EmptyState.tsx` component with custom copy props
+
+Depends On: LL-006 (Season Timeline), LL-009 (Trophy Cabinet), LL-010 (League Record Book), existing `EmptyState.tsx`
+
+---
+
+## LL-024. Glossary & "How Scoring Works" Anchor Page
+
+Sprint: 27
+
+Priority: P2
+
+Effort: M
+
+Status: 🔵 PLANNED
+
+Goal: There is one persistent, easy-to-find home for "what do all these terms mean?" — a glossary and scoring primer — that every jargon term across the Living League links back to, so a confused fan always has one reliable place to get un-stuck.
+
+Acceptance Criteria:
+- New `/league/[leagueId]/how-it-works` page: plain-language definitions of FP, VP, VTF / "vs the field", PPP, GAA, SV%, UTIL, waiver / free agent, clinch, magic number, projection — each with a one-line PWHL-flavored example sentence
+- Every tap-to-define span and explainer across LL-017 and LL-020 links to its anchor on this page
+- Reachable from a persistent, discoverable entry point present on both team and league layouts (nav item or footer link) — not buried in admin
+- The page is the single source of truth feeding `lib/copy/living-league-glossary.ts` (LL-017) so inline and on-page definitions never drift
+- Folds in and supersedes the existing `VpExplainer.tsx` content — the VP explainer links here instead of being standalone
+- Verified readable on 375px: anchored sections, ≥16px body text, ≥44px tap targets on the section index
+- No schema change
+
+Depends On: LL-017 (shared glossary map), LL-020 (Morning Skate newcomer layer), existing `VpExplainer.tsx`
+
+---
+
 # Architectural Rules
 
 Design for the live season first. Replay is a testing tool, so:

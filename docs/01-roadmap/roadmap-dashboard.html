@@ -448,7 +448,7 @@
 
         <div class="sprint-card current" onclick="switchTab('sprints'); setTimeout(() => document.getElementById('sprint-21').scrollIntoView({behavior: 'smooth'}), 100)">
           <div class="name">Sprint 21</div>
-          <div class="progress">3 stories · Living League: Weekly Delight</div>
+          <div class="progress">5 stories · Living League: Weekly Delight</div>
           <span class="status planned">PLANNED</span>
         </div>
 
@@ -460,13 +460,13 @@
 
         <div class="sprint-card" onclick="switchTab('sprints'); setTimeout(() => document.getElementById('sprint-23').scrollIntoView({behavior: 'smooth'}), 100)">
           <div class="name">Sprint 23</div>
-          <div class="progress">4 stories · Living League: The Race</div>
+          <div class="progress">6 stories · Living League: The Race</div>
           <span class="status planned">PLANNED</span>
         </div>
 
         <div class="sprint-card" onclick="switchTab('sprints'); setTimeout(() => document.getElementById('sprint-24').scrollIntoView({behavior: 'smooth'}), 100)">
           <div class="name">Sprint 24</div>
-          <div class="progress">4 stories · Living League: Season Story</div>
+          <div class="progress">5 stories · Living League: Season Story</div>
           <span class="status planned">PLANNED</span>
         </div>
 
@@ -478,13 +478,13 @@
 
         <div class="sprint-card" onclick="switchTab('sprints'); setTimeout(() => document.getElementById('sprint-26').scrollIntoView({behavior: 'smooth'}), 100)">
           <div class="name">Sprint 26</div>
-          <div class="progress">1 XL story · The Morning Skate</div>
+          <div class="progress">2 stories · The Morning Skate</div>
           <span class="status planned">PLANNED</span>
         </div>
 
         <div class="sprint-card" onclick="switchTab('sprints'); setTimeout(() => document.getElementById('sprint-27').scrollIntoView({behavior: 'smooth'}), 100)">
           <div class="name">Sprint 27</div>
-          <div class="progress">1 story · League Hub capstone</div>
+          <div class="progress">3 stories · League Hub capstone</div>
           <span class="status planned">PLANNED</span>
         </div>
 
@@ -1458,7 +1458,7 @@
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
           <div>
             <div style="font-weight: 700; font-size: 1rem;">Sprint 21 · "Living League: Weekly Delight"</div>
-            <div style="font-size: 0.8rem; color: #888;">Milestone 1 · PLANNED · 3 stories · no schema changes · LL-002 data layer only (visual ships Sprint 22 RD-008)</div>
+            <div style="font-size: 0.8rem; color: #888;">Milestone 1 · PLANNED · 5 stories · no schema changes · LL-002 data layer only (visual ships Sprint 22 RD-008)</div>
           </div>
           <span class="status planned">PLANNED</span>
         </div>
@@ -1466,8 +1466,10 @@
           <div class="task-row"><span class="task-check" style="color:#f59e0b">⏳</span><span>LL-001 (P1, M) — Weekly Awards Ceremony: computeWeeklyAwards() in storyline-service.ts; 5 award types; emitted as LEAGUE_STORYLINE events from advanceSeason(); rendered as award cards in WeekHighlights.tsx</span></div>
           <div class="task-row"><span class="task-check" style="color:#f59e0b">⏳</span><span>LL-002 (P1, S) — Momentum Strip data layer: scoreDeltaSinceYesterday + playersRemainingTonight + opponentFinished added to ActiveMatchup in getDashboardData; full visual component ships in Sprint 22 RD-008</span></div>
           <div class="task-row"><span class="task-check" style="color:#f59e0b">⏳</span><span>LL-003 (P2, S) — Animated Stat Chips: StatChip.tsx pill badges with CSS pulse; 4 chip types (streak, projection swing, league record, weekly leader); computed server-side in getDashboardData; rendered in matchup page Z6 roster breakdown</span></div>
+          <div class="task-row"><span class="task-check" style="color:#f59e0b">⏳</span><span>LL-017 (P1, S) — Plain-Language Award & Storyline Explainers: tappable ⓘ affordance on every award/chip card; copy from lib/copy/living-league-glossary.ts; fan-first language; ≥44px touch target; links to VpExplainer</span></div>
+          <div class="task-row"><span class="task-check" style="color:#f59e0b">⏳</span><span>LL-018 (P1, S) — Negative Award Tone Calibration: recovery CTA on Heartbreaker/Collapse/Frozen Stick cards; commissioner showNegativeAwards toggle in admin panel</span></div>
         </div>
-        <div class="exit-criteria"><strong>Exit criteria:</strong> 5 award cards appear in WeekHighlights.tsx after advanceSeason() runs. ActiveMatchup type includes all 3 Momentum Strip fields. At least 1 stat chip type renders on the matchup page. All existing tests pass; tsc clean. No schema changes.</div>
+        <div class="exit-criteria"><strong>Exit criteria:</strong> 5 award cards appear in WeekHighlights.tsx after advanceSeason() runs; negative awards include recovery CTA; ⓘ affordance reveals jargon-free helper text. ActiveMatchup type includes all 3 Momentum Strip fields. At least 1 stat chip type renders on the matchup page. All existing tests pass; tsc clean. No schema changes.</div>
       </div>
 
       <div id="sprint-22" class="card current">
@@ -1507,7 +1509,7 @@
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
           <div>
             <div style="font-weight: 700; font-size: 1rem;">Sprint 23 · "Living League: The Race"</div>
-            <div style="font-size: 0.8rem; color: #888;">Milestone 2 core · PLANNED · 4 stories · no schema changes</div>
+            <div style="font-size: 0.8rem; color: #888;">Milestone 2 core · PLANNED · 6 stories · no schema changes</div>
           </div>
           <span class="status planned">PLANNED</span>
         </div>
@@ -1516,15 +1518,17 @@
           <div class="task-row"><span class="task-check" style="color:#f59e0b">⏳</span><span>LL-005 (P1, S) — Playoff Clinch Celebration: detect newly-clinched teams in advanceSeason(); notification + dismissible banner on matchup page</span></div>
           <div class="task-row"><span class="task-check" style="color:#f59e0b">⏳</span><span>LL-007 (P2, S) — Bubble Watch: BubbleWatch.tsx on standings page; 3 groupings (In / Bubble / Eliminated) from computeRace(); late-season "Playoff Push" heading</span></div>
           <div class="task-row"><span class="task-check" style="color:#f59e0b">⏳</span><span>LL-008 (P2, M) — Upset Tracker: upset-service.ts; top upsets this season + all-time; UpsetCard.tsx on league overview sidebar</span></div>
+          <div class="task-row"><span class="task-check" style="color:#f59e0b">⏳</span><span>LL-019 (P1, M) — First-Loss / First-Week Result Explainer: one-time dismissible card after first scored period; plain-language result + VTF explainer + top contributor named; localStorage-gated</span></div>
+          <div class="task-row"><span class="task-check" style="color:#f59e0b">⏳</span><span>LL-021 (P2, S) — Small-Win Encouragement Moments: micro-celebration toasts for first complete lineup + first free-agent add; fires once per manager via localStorage; coaching tone</span></div>
         </div>
-        <div class="exit-criteria"><strong>Exit criteria:</strong> Clinch notification fires for newly-clinched teams. "Magic: N" chip renders on standings for contenders. BubbleWatch renders 3 correct groupings. UpsetCard renders ≥1 upset. No schema changes; all tests pass; tsc clean.</div>
+        <div class="exit-criteria"><strong>Exit criteria:</strong> Clinch notification fires for newly-clinched teams. "Magic: N" chip renders on standings for contenders. BubbleWatch renders 3 correct groupings. UpsetCard renders ≥1 upset. First-result explainer card appears after first scored period and dismisses. Lineup-complete toast fires once. No schema changes; all tests pass; tsc clean.</div>
       </div>
 
       <div id="sprint-24" class="card">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
           <div>
             <div style="font-weight: 700; font-size: 1rem;">Sprint 24 · "Living League: Season Story"</div>
-            <div style="font-size: 0.8rem; color: #888;">Milestone 2 tail + Milestone 3 surface · PLANNED · 4 stories · no schema changes</div>
+            <div style="font-size: 0.8rem; color: #888;">Milestone 2 tail + Milestone 3 surface · PLANNED · 5 stories · no schema changes</div>
           </div>
           <span class="status planned">PLANNED</span>
         </div>
@@ -1533,8 +1537,9 @@
           <div class="task-row"><span class="task-check" style="color:#f59e0b">⏳</span><span>LL-010 (P1, M) — League Record Book: /league/[leagueId]/records page; 4 record categories; Current Season + All Time tabs; "Records" in league nav</span></div>
           <div class="task-row"><span class="task-check" style="color:#f59e0b">⏳</span><span>LL-011 (P2, M) — Franchise Identity: computeFranchiseIdentity() in analysis-service.ts; 4 archetypes; chip in matchup page Z2 area</span></div>
           <div class="task-row"><span class="task-check" style="color:#f59e0b">⏳</span><span>LL-012 (P2, M) — Manager Superlatives: computeManagerSuperlatives() after playoffStatus === COMPLETE; 5 types; displayed on league overview; emitted as LEAGUE_STORYLINE events</span></div>
+          <div class="task-row"><span class="task-check" style="color:#f59e0b">⏳</span><span>LL-023 (P2, S) — Empty-State & Pre-History Copy: purposeful empty states on Record Book, Season Timeline, Trophy Cabinet, trophies page for new leagues; forward-pointing copy; no jargon; uses EmptyState.tsx</span></div>
         </div>
-        <div class="exit-criteria"><strong>Exit criteria:</strong> Season timeline renders ≥3 event types. Records page loads with all 4 categories. Franchise identity chip renders on matchup page. Superlatives section appears after playoff completion. No schema changes; all tests pass; tsc clean.</div>
+        <div class="exit-criteria"><strong>Exit criteria:</strong> Season timeline renders ≥3 event types. Records page loads with all 4 categories. Franchise identity chip renders on matchup page. Superlatives section appears after playoff completion. A brand-new league shows purposeful empty states (not blank tables) on records and timeline. No schema changes; all tests pass; tsc clean.</div>
       </div>
 
       <div id="sprint-25" class="card">
@@ -1557,28 +1562,31 @@
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
           <div>
             <div style="font-weight: 700; font-size: 1rem;">Sprint 26 · "The Morning Skate"</div>
-            <div style="font-size: 0.8rem; color: #888;">Milestone 4 · PLANNED · 1 XL story · schema migration required (MorningSkateEdition model)</div>
+            <div style="font-size: 0.8rem; color: #888;">Milestone 4 · PLANNED · 2 stories · schema migration required (MorningSkateEdition model)</div>
           </div>
           <span class="status planned">PLANNED</span>
         </div>
         <div>
           <div class="task-row"><span class="task-check" style="color:#f59e0b">⏳</span><span>LL-013 (P1, XL) — The Morning Skate: MorningSkateEdition schema model; morning-skate-service.ts generateEdition() with 4 article sections via pure template strings (no AI); emitMorningSkateEdition() from advanceSeason(); archive page + detail page; homepage hero preview; "Morning Skate" primary league nav tab</span></div>
+          <div class="task-row"><span class="task-check" style="color:#f59e0b">⏳</span><span>LL-020 (P1, M) — Newcomer-Mode Morning Skate Reading Layer: blurb templates subject-first ("Marie-Philip Poulin powered…"); acronyms expanded via lib/copy/living-league-glossary.ts; plain-language lede paragraph; "New here? →" primer link in masthead; verified at 375px</span></div>
         </div>
-        <div class="exit-criteria"><strong>Exit criteria:</strong> After advanceSeason() scores, a MorningSkateEdition row is written. Archive and detail pages load. Homepage hero shows Morning Skate masthead + 2+ blurbs. "Morning Skate" tab in league nav. Schema migration clean; all tests pass; tsc clean.</div>
+        <div class="exit-criteria"><strong>Exit criteria:</strong> After advanceSeason() scores, a MorningSkateEdition row is written. Archive and detail pages load. Each blurb leads with a player/team name. "New here?" primer link is visible. Homepage hero shows Morning Skate masthead + 2+ blurbs. "Morning Skate" tab in league nav. Schema migration clean; all tests pass; tsc clean.</div>
       </div>
 
       <div id="sprint-27" class="card">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
           <div>
             <div style="font-weight: 700; font-size: 1rem;">Sprint 27 · "League Hub"</div>
-            <div style="font-size: 0.8rem; color: #888;">Strategy Rec 1 Capstone · PLANNED · 1 story · no schema changes · prerequisite: LL-001 through LL-015 complete</div>
+            <div style="font-size: 0.8rem; color: #888;">Strategy Rec 1 Capstone · PLANNED · 3 stories · no schema changes · prerequisite: LL-001 through LL-015 + LL-017–021 complete</div>
           </div>
           <span class="status planned">PLANNED</span>
         </div>
         <div>
           <div class="task-row"><span class="task-check" style="color:#f59e0b">⏳</span><span>LL-016 (P1, M) — League Hub: /team/[teamId]/matchup render order restructure (Morning Skate → Matchup Hero → Momentum → Playoff Race context → Live situation → Franchise identity + trophies → Performers); /league/[leagueId]/ restructure (Morning Skate → Timeline → Records → Lineup status → Commissioner strip); admin panel utility polish</span></div>
+          <div class="task-row"><span class="task-check" style="color:#f59e0b">⏳</span><span>LL-022 (P1, M) — Progressive Disclosure: hub always surfaces exactly one primary CTA above the fold; secondary modules collapse to "Show more" on mobile ≤768px; first-session lite hub hides legacy modules for managers with &lt;2 scored weeks; verified at 375px</span></div>
+          <div class="task-row"><span class="task-check" style="color:#f59e0b">⏳</span><span>LL-024 (P2, M) — Glossary Anchor Page: /league/[leagueId]/how-it-works with plain-language definitions of FP, VP, VTF, PPP, GAA, SV%, UTIL, clinch, magic number; PWHL-flavored examples; absorbs VpExplainer; reachable from league/team layout nav; all LL-017 ⓘ links resolve here</span></div>
         </div>
-        <div class="exit-criteria"><strong>Exit criteria:</strong> Matchup page render order matches spec. League overview leads with Morning Skate. Admin panel scoring settings rendered as human-readable summaries. All tests pass; tsc clean. No schema changes.</div>
+        <div class="exit-criteria"><strong>Exit criteria:</strong> Matchup page render order matches spec. League overview leads with Morning Skate. Above the fold on 375px shows exactly one primary CTA. /league/[leagueId]/how-it-works renders all glossary terms. Admin panel scoring settings rendered as human-readable summaries. All tests pass; tsc clean. No schema changes.</div>
       </div>
 
   </div>
