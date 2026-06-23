@@ -826,7 +826,7 @@ function PlayerPanel({
                         <td style={{ padding: "5px 6px", textAlign: "right" }}>
                           <div style={{ display: "flex", gap: 6, justifyContent: "flex-end" }}>
                             {isMyTurn && (
-                              <button style={styles.btnPick} onClick={() => onPick(p.id)}>Pick</button>
+                              <button style={styles.btnPick} onClick={() => onPick(p.id)} aria-label={`Draft ${p.name}`}>Pick</button>
                             )}
                             <button
                               style={styles.starBtn}
@@ -875,12 +875,12 @@ function PlayerPanel({
                       )}
                       <span style={{ color: "var(--muted)", fontSize: 11 }} title={p.team ? undefined : "Free agent — not currently on a PWHL roster"}>{p.team ?? "FA"}</span>
                       <div style={{ display: "flex", gap: 4 }}>
-                        <button style={styles.queueBtn} onClick={() => moveInQueue(p.id, -1)} disabled={i === 0}>↑</button>
-                        <button style={styles.queueBtn} onClick={() => moveInQueue(p.id, 1)} disabled={i === queuedPlayers.length - 1}>↓</button>
+                        <button style={styles.queueBtn} onClick={() => moveInQueue(p.id, -1)} disabled={i === 0} aria-label={`Move ${p.name} up in queue`}>↑</button>
+                        <button style={styles.queueBtn} onClick={() => moveInQueue(p.id, 1)} disabled={i === queuedPlayers.length - 1} aria-label={`Move ${p.name} down in queue`}>↓</button>
                         {isMyTurn && (
-                          <button style={{ ...styles.btnPick, fontSize: 11, padding: "3px 8px" }} onClick={() => onPick(p.id)}>Pick</button>
+                          <button style={{ ...styles.btnPick, fontSize: 11, padding: "3px 8px" }} onClick={() => onPick(p.id)} aria-label={`Draft ${p.name}`}>Pick</button>
                         )}
-                        <button style={{ ...styles.queueBtn, color: "var(--red)" }} onClick={() => removeFromQueue(p.id)}>✕</button>
+                        <button style={{ ...styles.queueBtn, color: "var(--red)" }} onClick={() => removeFromQueue(p.id)} aria-label={`Remove ${p.name} from queue`}>✕</button>
                       </div>
                     </div>
                   );
