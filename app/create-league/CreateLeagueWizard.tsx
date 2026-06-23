@@ -17,17 +17,14 @@ const isBetaMode = typeof process !== "undefined" && process.env.NEXT_PUBLIC_BET
 // Step 0 is never shown in progress counter (it's hidden).
 // Replay: steps 1-3 → 1-3, steps 5-7 → 4-6 (step 4 is skipped).
 // Live: steps 1-6 → 1-6.
-function getDisplayStep(step: number, isReplay: boolean): number {
+function getDisplayStep(step: number): number {
   if (step === 0) return 0; // Step 0 is never shown in progress bar
-  if (!isReplay) return step;
-  // Step 4 is skipped for replay — steps 5+ shift down by 1.
-  return step < 5 ? step : step - 1;
+  return step;
 }
 
-function getDisplayTotal(isReplay: boolean): number {
-  // Replay: 5 displayed steps
-  // Live: 6 displayed steps
-  return isReplay ? 5 : 6;
+function getDisplayTotal(): number {
+  // Both replay and live: 6 displayed steps (Rules now shown in replay too)
+  return 6;
 }
 
 const SIZE_OPTIONS: { value: number; label: string; note: string }[] = [
@@ -83,6 +80,15 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
     router.push("/dashboard");
   };
 
+  const handleCreateOrAdvance = async () => {
+    if (createdLeagueId) {
+      // League already created (replay flow). Skip creation, just advance.
+      setStep(5);
+      return;
+    }
+    await handleCreate();
+  };
+
   // In replay mode, skip steps 4–5 (rules + invite) but still go through team creation
   const handleReplayCreate = async () => {
     setLoading(true);
@@ -96,7 +102,7 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
       const data = await res.json();
       if (!res.ok) { setError(data?.error || "Failed to create league"); setLoading(false); return; }
       setCreatedLeagueId(data.leagueId);
-      setStep(5);
+      setStep(4); // Show Rules screen in replay mode (league already created, user just confirms)
     } catch {
       setError("Unable to create league. Please try again.");
     } finally {
@@ -165,11 +171,9 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
 
         {/* Progress indicator — filled bar (hidden when step === 0) */}
         {step > 0 && (() => {
-          const displayTotal = getDisplayTotal(isReplay);
-          const displayStep = getDisplayStep(Math.min(step, TOTAL_STEPS - 1), isReplay);
-          const stepLabels = isReplay
-            ? ["Name", "Size", "Season", "Team", "Invite"]
-            : ["Name", "Size", "Season", "Rules", "Team", "Invite"];
+          const displayTotal = getDisplayTotal();
+          const displayStep = getDisplayStep(Math.min(step, TOTAL_STEPS - 1));
+          const stepLabels = ["Name", "Size", "Season", "Rules", "Team", "Invite"];
           return (
             <div>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
@@ -549,8 +553,8 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
 
               <div style={{ display: "flex", gap: 10, justifyContent: "space-between" }}>
                 <button className="button-secondary" onClick={goBack} style={{ flex: 1 }}>← Back</button>
-                <button className="button-primary" onClick={handleCreate} disabled={loading} style={{ flex: 1 }}>
-                  {loading ? "Creating league…" : "Create league →"}
+                <button className="button-primary" onClick={handleCreateOrAdvance} disabled={loading} style={{ flex: 1 }}>
+                  {loading ? (createdLeagueId ? "Continuing…" : "Creating league…") : (createdLeagueId ? "Continue →" : "Create league →")}
                 </button>
               </div>
               {error && <p style={{ color: "#d18b7f", fontSize: 13, margin: 0 }}>{error}</p>}

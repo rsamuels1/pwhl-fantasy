@@ -41,8 +41,8 @@ export function middleware(req: NextRequest) {
       }
     }
 
-    // League + founder API routes — return 401
-    if (pathname.startsWith("/api/leagues/") || pathname.startsWith("/api/founder/")) {
+    // League + founder API routes — return 401 (except join, which allows unauthenticated invites)
+    if ((pathname.startsWith("/api/leagues/") && !pathname.startsWith("/api/leagues/join")) || pathname.startsWith("/api/founder/")) {
       if (!cookie) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
       }
