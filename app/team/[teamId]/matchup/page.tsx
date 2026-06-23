@@ -14,6 +14,7 @@ import { getRival } from "@/lib/playoffs/seeding";
 import { RivalBadge } from "@/components/RivalBadge";
 import { HeadToHeadHistory } from "@/components/HeadToHeadHistory";
 import { ScoreDisplay } from "@/components/ScoreDisplay";
+import StatChip from "@/components/StatChip";
 
 export default async function TeamMatchupPage({
   params,
@@ -1246,6 +1247,7 @@ function RosterTable({ players, isMyTeam }: { players: PlayerMatchupRow[]; isMyT
                   {p.name}
                 </span>
                 {p.teamAbbr && <span style={{ fontSize: 10, color: "var(--faint)", flexShrink: 0 }}>{p.teamAbbr}</span>}
+                {p.chips?.map((chip) => <StatChip key={chip.type} chip={chip} />)}
               </div>
               {p.statBreakdown.length > 0 && (
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 3, marginTop: 3 }}>

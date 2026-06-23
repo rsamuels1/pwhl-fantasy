@@ -9,6 +9,7 @@ import { getSeasonState } from "../season";
 import {
   projectTeamRemainingScore,
   getRemainingPlayersTonight,
+  projectPlayer,
   type RemainingPlayer,
 } from "../projections";
 import { getLeagueActivity } from "./activity";
@@ -21,6 +22,16 @@ import { computeVpStandings } from "../scoring/vp";
 
 // ── types ─────────────────────────────────────────────────────────────────────
 
+export interface StatChip {
+  type:
+    | "weekly_leader"
+    | "league_record"
+    | "streak"
+    | "projection_swing_up"
+    | "projection_swing_down";
+  label: string;
+}
+
 export interface PlayerMatchupRow {
   playerId: string;
   name: string;
@@ -31,6 +42,7 @@ export interface PlayerMatchupRow {
   points: number;
   gameCount: number;
   statBreakdown: ScoringBreakdown[];
+  chips: StatChip[];
 }
 
 export interface PlayerPerfSummary {
@@ -270,6 +282,7 @@ export async function getDashboardData(
       points: 0,
       gameCount: 0,
       statBreakdown: [],
+      chips: [],
     });
 
     const zeroStandings: WeeklyStanding[] = allTeams.map((t) => ({
@@ -404,6 +417,7 @@ export async function getDashboardData(
       points: p.points,
       gameCount: p.gameCount,
       statBreakdown: p.statBreakdown,
+      chips: [],
     }));
   }
 
@@ -436,7 +450,29 @@ export async function getDashboardData(
     }
   }
 
-  const myPlayers = withGames(myDetailed.players);
+  const isSetupPhase = myDetailed.players.length > 0 && myDetailed.players.every((p) => p.gameCount === 0);
+
+  const myPlayersRaw = withGames(myDetailed.players);
+
+  // Compute stat chips for active starters (only when there are actual scores to evaluate).
+  const chipMap = isSetupPhase
+    ? new Map<string, StatChip>()
+    : await computeStatChips(
+        myDetailed.players.map((p) => ({
+          playerId: p.playerId,
+          position: p.position,
+          points: p.points,
+          gameCount: p.gameCount,
+        })),
+        leagueTopPerformers,
+        scoringSettings,
+        prisma
+      );
+
+  const myPlayers: PlayerMatchupRow[] = myPlayersRaw.map((p) => ({
+    ...p,
+    chips: chipMap.get(p.playerId) ? [chipMap.get(p.playerId)!] : [],
+  }));
 
   // When no games have been played yet in the active period (SETUP phase: replayCurrentDate = period.startsAt),
   // the stat query returns an empty range [startsAt, startsAt). Fall back to the last complete period's stats
@@ -460,6 +496,7 @@ export async function getDashboardData(
           points: p.points,
           gameCount: p.gameCount,
           statBreakdown: p.statBreakdown,
+          chips: [],
         }));
         lastWeekLabel = `Week ${lastComplete.period.week}`;
       }
@@ -487,6 +524,7 @@ export async function getDashboardData(
         points: 0,
         gameCount: 0,
         statBreakdown: [],
+        chips: [],
       }))
     : [];
 
@@ -495,8 +533,6 @@ export async function getDashboardData(
   const myProj = myProjected;
   const oppProj = opponentProjected as number;
   const winProb = isVpMode && opponentTeamId ? winProbability(myProj, oppProj) : 0;
-
-  const isSetupPhase = myDetailed.players.length > 0 && myDetailed.players.every((p) => p.gameCount === 0);
 
   // ── Momentum Strip fields (LL-002) ────────────────────────────────────────
   const periodAgeMs = nowMs - displayPeriod.startsAt.getTime();
@@ -789,6 +825,7 @@ async function getPlayoffDashboardData(
       points: p.points,
       gameCount: p.gameCount,
       statBreakdown: p.statBreakdown,
+      chips: [],
     }));
   }
 
@@ -1137,4 +1174,115 @@ async function getLeagueActivityFallback(
       description: `${pick.fantasyTeam.name} drafted ${pick.player!.firstName} ${pick.player!.lastName} (Round ${pick.round}, Pick ${pick.overall})`,
       createdAt: pick.pickedAt ?? new Date(0),
     }));
+}
+
+// ── Stat chip computation (LL-003) ────────────────────────────────────────────
+
+interface ChipInput {
+  playerId: string;
+  position: string;
+  points: number;
+  gameCount: number;
+}
+
+/**
+ * Compute at most one StatChip per player (priority: weekly_leader > streak > projection_swing).
+ * League record is detected via a simple threshold (≥30 FP for skaters, ≥20 for goalies) as an
+ * approximation; callers can refine post-beta by comparing to a persisted historical max.
+ */
+export async function computeStatChips(
+  players: ChipInput[],
+  leagueTopPerformers: LeaguePerformerRow[],
+  scoringSettings: ScoringSettings,
+  prisma: PrismaClient
+): Promise<Map<string, StatChip>> {
+  const chipMap = new Map<string, StatChip>();
+  const starters = players.filter((p) => p.gameCount > 0);
+  if (starters.length === 0) return chipMap;
+
+  const starterIds = starters.map((p) => p.playerId);
+
+  // ── Weekly leader (highest FP across the entire league) ──────────────────
+  const leaderPlayerId = leagueTopPerformers[0]?.playerId;
+  if (leaderPlayerId && starterIds.includes(leaderPlayerId)) {
+    chipMap.set(leaderPlayerId, { type: "weekly_leader", label: "League leader" });
+  }
+
+  // ── Streak: 3+ consecutive games with FP > 0 ────────────────────────────
+  // One batch query for recent stat lines for all starters.
+  const { scoreStatLine } = await import("@/lib/scoring");
+  const recentLines = await prisma.statLine.findMany({
+    where: { playerId: { in: starterIds } },
+    orderBy: { game: { startsAt: "desc" } },
+    take: starterIds.length * 10,
+    include: { player: { select: { position: true } } },
+  });
+
+  // Group by player and compute consecutive games with FP > 0 (most recent first)
+  const linesByPlayer = new Map<string, typeof recentLines>();
+  for (const line of recentLines) {
+    const arr = linesByPlayer.get(line.playerId) ?? [];
+    arr.push(line);
+    linesByPlayer.set(line.playerId, arr);
+  }
+
+  for (const p of starters) {
+    if (chipMap.has(p.playerId)) continue;
+    const lines = linesByPlayer.get(p.playerId) ?? [];
+    let streak = 0;
+    for (const line of lines) {
+      const fp = scoreStatLine(
+        {
+          goals: line.goals, assists: line.assists, shots: line.shots,
+          plusMinus: line.plusMinus, penaltyMinutes: line.penaltyMinutes,
+          powerPlayPts: line.powerPlayPts, hits: line.hits, blocks: line.blocks,
+          saves: line.saves, goalsAgainst: line.goalsAgainst,
+          shutout: line.shutout, win: line.win,
+        },
+        line.player.position as import("@prisma/client").Position,
+        scoringSettings
+      );
+      if (fp > 0) streak++;
+      else break;
+    }
+    if (streak >= 3) {
+      chipMap.set(p.playerId, { type: "streak", label: `${streak}-game streak` });
+    }
+  }
+
+  // ── Projection swing: actual vs rolling 5-game projection ────────────────
+  const projections = await Promise.all(
+    starters
+      .filter((p) => !chipMap.has(p.playerId))
+      .map(async (p) => {
+        const proj = await projectPlayer(
+          p.playerId,
+          p.position as import("@prisma/client").Position,
+          scoringSettings,
+          prisma,
+          5
+        );
+        return { playerId: p.playerId, proj };
+      })
+  );
+
+  for (const { playerId, proj } of projections) {
+    if (chipMap.has(playerId)) continue;
+    const player = starters.find((p) => p.playerId === playerId);
+    if (!player) continue;
+    const delta = player.points - proj;
+    if (delta >= 5) {
+      chipMap.set(playerId, {
+        type: "projection_swing_up",
+        label: `+${delta.toFixed(1)} vs projection`,
+      });
+    } else if (delta <= -5) {
+      chipMap.set(playerId, {
+        type: "projection_swing_down",
+        label: `${delta.toFixed(1)} vs projection`,
+      });
+    }
+  }
+
+  return chipMap;
 }
