@@ -182,21 +182,21 @@ export default async function StandingsPage({ params }: { params: { leagueId: st
                 const nextAbove = index > 0 ? vpStandings[index - 1] : null;
                 const gapToNext = nextAbove ? (nextAbove.totalVP - s.totalVP) : null;
 
-                let playoffChip: { label: string; color: string; bg: string } | null = null;
+                let playoffChip: { label: string; cls: string } | null = null;
                 const raceInfo = race?.get(s.fantasyTeamId) ?? null;
                 if (playoffCutoff !== null) {
                   if (playoffsStarted) {
                     playoffChip = inPlayoffs
-                      ? { label: "IN", color: "#5fa98c", bg: "rgba(95,169,140,0.1)" }
-                      : { label: "OUT", color: "#64748b", bg: "rgba(100,116,139,0.1)" };
+                      ? { label: "IN", cls: "chip-in" }
+                      : { label: "OUT", cls: "chip-out" };
                   } else if (raceInfo?.status === "clinched") {
-                    playoffChip = { label: "CLINCHED", color: "#5fa98c", bg: "rgba(95,169,140,0.12)" };
+                    playoffChip = { label: "✓ CLINCHED", cls: "chip-clinched" };
                   } else if (raceInfo?.status === "eliminated") {
-                    playoffChip = { label: "ELIM", color: "#d18b7f", bg: "rgba(209,139,127,0.1)" };
+                    playoffChip = { label: "✗ ELIM", cls: "chip-eliminated" };
                   } else if (raceInfo?.status === "bubble" || onBubble) {
-                    playoffChip = { label: "BUBBLE", color: "#f59e0b", bg: "rgba(245,158,11,0.12)" };
+                    playoffChip = { label: "◉ BUBBLE", cls: "chip-bubble" };
                   } else if (inPlayoffs) {
-                    playoffChip = { label: "IN", color: "#5fa98c", bg: "rgba(95,169,140,0.1)" };
+                    playoffChip = { label: "IN", cls: "chip-in" };
                   }
                 }
 
@@ -218,12 +218,7 @@ export default async function StandingsPage({ params }: { params: { leagueId: st
                       <span style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
                         {s.teamName}
                         {isMe && <span style={{ fontSize: 10, color: "#6366f1" }}>YOU</span>}
-                        {playoffChip && (() => {
-                          let cls = "chip-in";
-                          if (playoffChip.color === "#5fa98c") cls = "chip-clinched";
-                          else if (playoffChip.color === "#d18b7f") cls = "chip-eliminated";
-                          return <span className={cls}>{playoffChip.label}</span>;
-                        })()}
+                        {playoffChip && <span className={playoffChip.cls}>{playoffChip.label}</span>}
                       </span>
                     </td>
                     <td style={{ ...tdStyle, fontWeight: 800, color: "var(--text)", fontVariantNumeric: "tabular-nums", fontFamily: "var(--font-stats)" }}>{s.totalVP}</td>

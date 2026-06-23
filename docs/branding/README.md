@@ -33,7 +33,12 @@ The rebrand repositions the product from "fantasy sports" framing to "profession
    - No-risk verification checklist
    - Complete file list of what needs to change
 
-3. **`03-terminology-guide.md`** — Quick copy reference
+3. **`emoji-policy.md`** — Tiered emoji usage rules (supersedes DS-002 "no emoji on any surface")
+   - When emoji add signal vs. noise
+   - Compliant / non-compliant inventory
+   - Accessibility rule: always pair with text label
+
+4. **`03-terminology-guide.md`** — Quick copy reference
    - Before/after terminology table
    - Writing tone examples
    - UI-specific copy updates
