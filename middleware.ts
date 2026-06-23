@@ -8,11 +8,14 @@ export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
   const host = req.headers.get("host") ?? "";
 
-  // On the beta domain, only /beta and its API are accessible
+  // On the beta domain, restrict access (allow home, create-league for BLR-002 testing, and beta page)
   if (host === BETA_HOST) {
     const allowed =
+      pathname === "/" ||
       pathname === "/beta" ||
+      pathname.startsWith("/create-league") ||
       pathname.startsWith("/api/beta-signup") ||
+      pathname.startsWith("/api/leagues/create") ||
       pathname.startsWith("/_next/") ||
       pathname.startsWith("/favicon");
     if (!allowed) {
