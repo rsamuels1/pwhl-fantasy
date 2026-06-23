@@ -55,7 +55,7 @@ export default async function TeamMatchupPage({
   const [allTeams, allMatchups] = await Promise.all([
     prisma.fantasyTeam.findMany({
       where: { leagueId },
-      select: { id: true, name: true },
+      select: { id: true, name: true, accentColor: true },
     }),
     prisma.matchup.findMany({
       where: { leagueId },
@@ -286,7 +286,11 @@ export default async function TeamMatchupPage({
 
       {/* ── 2. Matchup hero ── */}
       {activeMatchup ? (
-        <MatchupHero matchup={activeMatchup} teamId={teamId} leagueId={leagueId} />
+        <MatchupHero
+          matchup={activeMatchup} teamId={teamId} leagueId={leagueId}
+          myAccentColor={allTeams.find((t) => t.id === teamId)?.accentColor ?? null}
+          oppAccentColor={activeMatchup.opponentTeam ? (allTeams.find((t) => t.id === activeMatchup.opponentTeam!.id)?.accentColor ?? null) : null}
+        />
       ) : eliminationInfo ? (
         <Card>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
@@ -697,8 +701,8 @@ function RosterStatusWidget({
 function RecapCard({ recap }: { recap: WeeklyRecap }) {
   const won = recap.result === "win";
   const tie = recap.result === "tie";
-  const color = won ? "#5fa98c" : tie ? "#94a3b8" : "#d18b7f";
-  const borderColor = won ? "rgba(95,169,140,0.25)" : tie ? "rgba(148,163,184,0.15)" : "rgba(209,139,127,0.25)";
+  const color = won ? "#5fa98c" : tie ? "var(--dim)" : "#d18b7f";
+  const borderColor = won ? "rgba(95,169,140,0.25)" : tie ? "var(--border)" : "rgba(209,139,127,0.25)";
   const verb = won ? "Won" : "Lost";
 
   const periodLabel = recap.isPlayoff && recap.roundLabel
@@ -764,7 +768,7 @@ function RecapCard({ recap }: { recap: WeeklyRecap }) {
 }
 
 function LeaguePerformerItem({ player, rank, variant }: { player: LeaguePerformerRow; rank: number; variant: "top" | "low" }) {
-  const rankColor = rank === 1 ? "#f59e0b" : rank === 2 ? "#94a3b8" : "#475569";
+  const rankColor = rank === 1 ? "#f59e0b" : rank === 2 ? "var(--dim)" : "var(--faint)";
   const fpColor = variant === "top" ? "#5fa98c" : "#d18b7f";
   return (
     <div style={{
@@ -826,11 +830,12 @@ function getScoreColor(myScore: number, oppScore: number): string {
 
 // ── MatchupHero ────────────────────────────────────────────────────────────────
 
-function MatchupHero({ matchup, teamId, leagueId }: { matchup: ActiveMatchup; teamId: string; leagueId: string }) {
-  // Two modes: 1v1 (playoffs — single opponent, win probability, rivalry) and
-  // VTF (regular season — ranked against the whole field).
+function MatchupHero({ matchup, teamId, leagueId, myAccentColor, oppAccentColor }: {
+  matchup: ActiveMatchup; teamId: string; leagueId: string;
+  myAccentColor: string | null; oppAccentColor: string | null;
+}) {
   return matchup.opponentTeam
-    ? <DuelHero matchup={matchup} opponent={matchup.opponentTeam} teamId={teamId} leagueId={leagueId} />
+    ? <DuelHero matchup={matchup} opponent={matchup.opponentTeam} teamId={teamId} leagueId={leagueId} myAccentColor={myAccentColor} oppAccentColor={oppAccentColor} />
     : <FieldHero matchup={matchup} teamId={teamId} leagueId={leagueId} />;
 }
 
@@ -999,12 +1004,14 @@ function FieldHero({ matchup, teamId, leagueId }: { matchup: ActiveMatchup; team
 
 // ── 1v1 (playoffs): head-to-head duel with win probability + rivalry ────────────
 function DuelHero({
-  matchup, opponent, teamId, leagueId,
+  matchup, opponent, teamId, leagueId, myAccentColor, oppAccentColor,
 }: {
   matchup: ActiveMatchup;
   opponent: NonNullable<ActiveMatchup["opponentTeam"]>;
   teamId: string;
   leagueId: string;
+  myAccentColor: string | null;
+  oppAccentColor: string | null;
 }) {
   const isUpcoming = matchup.status === "upcoming";
   const isSetupPhase = !!matchup.isSetupPhase;
@@ -1086,12 +1093,12 @@ function DuelHero({
         <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 14 }}>
           {/* Avatar + team name */}
           <div style={{ display: "flex", alignItems: "center", gap: 13 }}>
-            <span style={{ width: 52, height: 52, borderRadius: 14, background: "linear-gradient(135deg, var(--accent-deep), #4c1d95)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, fontWeight: 800, color: "var(--accent-ink)", boxShadow: "0 8px 20px -8px rgba(143,193,232,0.5)", flexShrink: 0 }}>
+            <span style={{ width: 52, height: 52, borderRadius: 14, background: "linear-gradient(135deg, var(--accent-deep), #4c1d95)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, fontWeight: 800, color: "var(--accent-ink)", boxShadow: myAccentColor ? `0 0 0 2px ${myAccentColor}, 0 8px 20px -8px rgba(143,193,232,0.5)` : "0 8px 20px -8px rgba(143,193,232,0.5)", flexShrink: 0 }}>
               {matchup.myTeam.name.charAt(0).toUpperCase()}
             </span>
             <div>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <span style={{ fontSize: 19, fontWeight: 800, color: "var(--text)", letterSpacing: "-0.01em" }}>{matchup.myTeam.name}</span>
+                <span style={{ fontSize: 19, fontWeight: 800, color: myAccentColor ?? "var(--text)", letterSpacing: "-0.01em" }}>{matchup.myTeam.name}</span>
                 <span style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: "0.06em", color: "var(--accent-strong)", background: "rgba(143,193,232,0.18)", borderRadius: 5, padding: "2px 7px" }}>YOU</span>
               </div>
               <div style={{ fontSize: 12, color: "var(--dim)", marginTop: 3, fontVariantNumeric: "tabular-nums" }}>
@@ -1144,12 +1151,12 @@ function DuelHero({
         <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 14, textAlign: "right" }}>
           {/* Avatar + team name */}
           <div style={{ display: "flex", alignItems: "center", gap: 13, flexDirection: "row-reverse" }}>
-            <span style={{ width: 52, height: 52, borderRadius: 14, background: "linear-gradient(135deg, #3a4258, #222a3d)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, fontWeight: 800, color: "#dfe3ee", flexShrink: 0 }}>
+            <span style={{ width: 52, height: 52, borderRadius: 14, background: "linear-gradient(135deg, #3a4258, #222a3d)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, fontWeight: 800, color: "#dfe3ee", boxShadow: oppAccentColor ? `0 0 0 2px ${oppAccentColor}` : undefined, flexShrink: 0 }}>
               {opponent.name.charAt(0).toUpperCase()}
             </span>
             <div>
               <div style={{ display: "flex", alignItems: "center", gap: 8, flexDirection: "row-reverse" }}>
-                <span style={{ fontSize: 19, fontWeight: 800, color: "var(--text)", letterSpacing: "-0.01em" }}>{opponent.name}</span>
+                <span style={{ fontSize: 19, fontWeight: 800, color: oppAccentColor ?? "var(--text)", letterSpacing: "-0.01em" }}>{opponent.name}</span>
                 <span style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: "0.06em", color: "var(--dim)", border: "1px solid var(--border)", borderRadius: 5, padding: "2px 7px" }}>OPP</span>
               </div>
             </div>
@@ -1301,7 +1308,7 @@ function RosterTable({ players, isMyTeam }: { players: PlayerMatchupRow[]; isMyT
                   fontSize: 10, fontWeight: 700,
                   padding: "2px 5px", borderRadius: 4,
                   background: p.gamesThisPeriod === 0 ? "rgba(239,68,68,0.12)" : "var(--accent-dim)",
-                  color: p.gamesThisPeriod === 0 ? "#d18b7f" : "#c9b6ff",
+                  color: p.gamesThisPeriod === 0 ? "#d18b7f" : "var(--accent-strong)",
                   border: p.gamesThisPeriod > 0 ? "1px solid var(--accent-border)" : undefined,
                 }}>
                   {p.gamesThisPeriod === 0 ? "0" : `${p.gamesThisPeriod}G`}

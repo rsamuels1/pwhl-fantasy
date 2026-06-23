@@ -87,6 +87,7 @@ export default async function StandingsPage({ params }: { params: { leagueId: st
     pointsAgainst: 0,
   }));
   const streaks = computeStreaks(league.teams.map((t) => t.id), matchups);
+  const accentColorMap = new Map(league.teams.map((t) => [t.id, t.accentColor ?? null]));
 
   const playoffSettings = (league.playoffSettings ?? null) as { teamsInPlayoff?: number } | null;
   const playoffCutoff = playoffSettings?.teamsInPlayoff ?? null;
@@ -118,7 +119,7 @@ export default async function StandingsPage({ params }: { params: { leagueId: st
     } else if (myRace.status === "in" || myRace.status === "bubble") {
       const cushion = myRace.cushion ?? 0;
       myBanner = cushion > 0
-        ? { text: `In the playoff picture at #${rank} — ${cushion.toFixed(1)} ${cushion === 1 ? "game" : "games"} clear of the bubble.`, color: "#818cf8", bg: "rgba(99,102,241,0.08)" }
+        ? { text: `In the playoff picture at #${rank} — ${cushion.toFixed(1)} ${cushion === 1 ? "game" : "games"} clear of the bubble.`, color: "var(--accent-strong)", bg: "rgba(143,193,232,0.08)" }
         : { text: `On the playoff bubble at #${rank} — hold your spot.`, color: "#f59e0b", bg: "rgba(245,158,11,0.08)" };
     } else {
       const gb = myRace.gamesBack ?? 0;
@@ -154,7 +155,7 @@ export default async function StandingsPage({ params }: { params: { leagueId: st
         <p style={{ margin: "0 0 8px", fontSize: 12, color: "var(--faint)" }}>
           Win matchup +2 VP · 1st place weekly score +2 VP · 2nd place score +1 VP
         </p>
-        <p style={{ margin: "0 0 16px", fontSize: "0.7rem", color: "var(--text-muted, #6b7280)" }}>
+        <p style={{ margin: "0 0 16px", fontSize: "0.7rem", color: "var(--faint)" }}>
           VP = Victory Points · MTCH VP = points for winning your weekly matchup · RNK VP = bonus for top-3 FP finish · PF = total fantasy points scored
         </p>
 
@@ -167,7 +168,7 @@ export default async function StandingsPage({ params }: { params: { leagueId: st
         <div style={{ overflowX: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 380 }}>
             <thead>
-              <tr style={{ color: "var(--faint)", textAlign: "left", borderBottom: "1px solid rgba(148,163,184,0.2)" }}>
+              <tr style={{ color: "var(--faint)", textAlign: "left", borderBottom: "1px solid var(--border)" }}>
                 <th style={thStyle}>#</th>
                 <th style={thStyle}>Team</th>
                 <th style={thStyle} title="Total Victory Points this season. VP determines playoff seeding.">VP</th>
@@ -184,6 +185,7 @@ export default async function StandingsPage({ params }: { params: { leagueId: st
             <tbody>
               {vpStandings.map((s, index) => {
                 const isMe = s.fantasyTeamId === myTeam.id;
+                const accentColor = accentColorMap.get(s.fantasyTeamId) ?? null;
                 const streak = streaks.get(s.fantasyTeamId) ?? null;
                 const inPlayoffs = playoffCutoff !== null && index < playoffCutoff;
                 const onBubble = playoffCutoff !== null && index === playoffCutoff;
@@ -208,7 +210,7 @@ export default async function StandingsPage({ params }: { params: { leagueId: st
                   }
                 }
 
-                const streakColor = streak?.type === "W" ? "#5fa98c" : streak?.type === "L" ? "#d18b7f" : "#94a3b8";
+                const streakColor = streak?.type === "W" ? "#5fa98c" : streak?.type === "L" ? "#d18b7f" : "var(--dim)";
 
                 return (
                   <tr
@@ -224,7 +226,7 @@ export default async function StandingsPage({ params }: { params: { leagueId: st
                     <td style={{ ...tdStyle, color: "var(--faint)", fontWeight: 700 }}>{index + 1}</td>
                     <td style={{ ...tdStyle, fontWeight: isMe ? 700 : undefined, color: isMe ? "var(--accent-strong)" : "var(--text)" }}>
                       <span style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
-                        {s.teamName}
+                        <span style={accentColor ? { color: accentColor } : undefined}>{s.teamName}</span>
                         {isMe && <span style={{ fontSize: 10, color: "var(--accent)" }}>YOU</span>}
                         {playoffChip && <span className={playoffChip.cls}>{playoffChip.label}</span>}
                         {raceInfo?.magicNumber != null && (
@@ -235,10 +237,10 @@ export default async function StandingsPage({ params }: { params: { leagueId: st
                       </span>
                     </td>
                     <td style={{ ...tdStyle, fontWeight: 800, color: "var(--text)", fontVariantNumeric: "tabular-nums", fontFamily: "var(--font-stats)" }}>{s.totalVP}</td>
-                    <td style={{ ...tdStyle, color: "#94a3b8", fontVariantNumeric: "tabular-nums" }}>
+                    <td style={{ ...tdStyle, color: "var(--dim)", fontVariantNumeric: "tabular-nums" }}>
                       {s.wins}–{s.losses}{s.ties > 0 ? `–${s.ties}` : ""}
                     </td>
-                    <td style={{ ...tdStyle, color: "#818cf8", fontVariantNumeric: "tabular-nums" }}>{s.matchupVP}</td>
+                    <td style={{ ...tdStyle, color: "var(--accent-strong)", fontVariantNumeric: "tabular-nums" }}>{s.matchupVP}</td>
                     <td style={{ ...tdStyle, color: "#5fa98c", fontVariantNumeric: "tabular-nums" }}>{s.rankVP}</td>
                     <td style={{ ...tdStyle, color: "var(--faint)", fontVariantNumeric: "tabular-nums" }}>{s.pointsFor.toFixed(1)}</td>
                     <td style={{ ...tdStyle, color: streakColor, fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>

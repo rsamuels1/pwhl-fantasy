@@ -12,6 +12,7 @@ import { getSeasonState } from "@/lib/season";
 import { Position } from "@prisma/client";
 import RosterManager from "./RosterManager";
 import LineupDnD from "@/components/LineupDnD";
+import TeamColorPicker from "@/components/TeamColorPicker";
 import type { LineupEntry, LineupStats } from "@/components/LineupDnD";
 import type { RosterPlayerRow, FreeAgentRow, SkaterStats, GoalieStats } from "./RosterManager";
 
@@ -516,7 +517,7 @@ export default async function TeamRosterPage({ params, searchParams }: Props) {
       {/* DnD Lineup section — own roster, or commissioner viewing another team */}
       {showDnD && (
         <div>
-          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#475569", marginBottom: 12 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--faint)", marginBottom: 12 }}>
             {isOwnRoster ? "Set Lineup" : `Set Lineup — ${viewTeamName}`}
           </div>
           <LineupDnD
@@ -535,6 +536,11 @@ export default async function TeamRosterPage({ params, searchParams }: Props) {
             forceMoveTeamId={!isOwnRoster ? viewTeamId : undefined}
           />
         </div>
+      )}
+
+      {/* Team color — own team only */}
+      {isOwnRoster && (
+        <TeamColorPicker leagueId={leagueId} teamId={teamId} currentColor={team.accentColor ?? null} />
       )}
 
       {/* Roster management — roster table + FA + waiver wire */}
