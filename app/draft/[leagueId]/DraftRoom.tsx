@@ -743,10 +743,14 @@ function PlayerPanel({
             </div>
 
             {statSeason && (
-              <div style={{ fontSize: 11, color: "var(--muted)", marginBottom: 6 }}>
+              <div style={{ fontSize: 11, color: "var(--muted)", marginBottom: 4 }}>
                 Stats: {statSeason} season{loadingStats ? " · loading…" : ""}
               </div>
             )}
+
+            <div style={{ fontSize: 11, color: "#a78bfa", marginBottom: 8 }}>
+              🏒 4 expansion teams join 2026-27 — DET · HAM · LV · SJ
+            </div>
 
             {/* Stat glossary toggle */}
             <div style={{ marginBottom: 6 }}>
