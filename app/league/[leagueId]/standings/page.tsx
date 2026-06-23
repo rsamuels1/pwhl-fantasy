@@ -143,7 +143,7 @@ export default async function StandingsPage({ params }: { params: { leagueId: st
             </span>
           )}
         </div>
-        <p style={{ margin: "0 0 8px", fontSize: 12, color: "#475569" }}>
+        <p style={{ margin: "0 0 8px", fontSize: 12, color: "var(--faint)" }}>
           Win matchup +2 VP · 1st place weekly score +2 VP · 2nd place score +1 VP
         </p>
         <p style={{ margin: "0 0 16px", fontSize: "0.7rem", color: "var(--text-muted, #6b7280)" }}>
@@ -159,7 +159,7 @@ export default async function StandingsPage({ params }: { params: { leagueId: st
         <div style={{ overflowX: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 380 }}>
             <thead>
-              <tr style={{ color: "#64748b", textAlign: "left", borderBottom: "1px solid rgba(148,163,184,0.2)" }}>
+              <tr style={{ color: "var(--faint)", textAlign: "left", borderBottom: "1px solid rgba(148,163,184,0.2)" }}>
                 <th style={thStyle}>#</th>
                 <th style={thStyle}>Team</th>
                 <th style={thStyle} title="Total Victory Points this season. VP determines playoff seeding.">VP</th>
@@ -213,12 +213,17 @@ export default async function StandingsPage({ params }: { params: { leagueId: st
                       borderLeft: isMe ? "3px solid var(--accent)" : undefined,
                     }}
                   >
-                    <td style={{ ...tdStyle, color: "#475569", fontWeight: 700 }}>{index + 1}</td>
-                    <td style={{ ...tdStyle, fontWeight: isMe ? 700 : undefined, color: isMe ? "#a5b4fc" : "#e2e8f0" }}>
+                    <td style={{ ...tdStyle, color: "var(--faint)", fontWeight: 700 }}>{index + 1}</td>
+                    <td style={{ ...tdStyle, fontWeight: isMe ? 700 : undefined, color: isMe ? "var(--accent-strong)" : "var(--text)" }}>
                       <span style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
                         {s.teamName}
-                        {isMe && <span style={{ fontSize: 10, color: "#6366f1" }}>YOU</span>}
+                        {isMe && <span style={{ fontSize: 10, color: "var(--accent)" }}>YOU</span>}
                         {playoffChip && <span className={playoffChip.cls}>{playoffChip.label}</span>}
+                        {raceInfo?.magicNumber != null && (
+                          <span className="chip-magic" title={`Need ${raceInfo.magicNumber} more VP to clinch a playoff spot`}>
+                            Magic: {raceInfo.magicNumber}
+                          </span>
+                        )}
                       </span>
                     </td>
                     <td style={{ ...tdStyle, fontWeight: 800, color: "var(--text)", fontVariantNumeric: "tabular-nums", fontFamily: "var(--font-stats)" }}>{s.totalVP}</td>
@@ -227,12 +232,12 @@ export default async function StandingsPage({ params }: { params: { leagueId: st
                     </td>
                     <td style={{ ...tdStyle, color: "#818cf8", fontVariantNumeric: "tabular-nums" }}>{s.matchupVP}</td>
                     <td style={{ ...tdStyle, color: "#5fa98c", fontVariantNumeric: "tabular-nums" }}>{s.rankVP}</td>
-                    <td style={{ ...tdStyle, color: "#64748b", fontVariantNumeric: "tabular-nums" }}>{s.pointsFor.toFixed(1)}</td>
+                    <td style={{ ...tdStyle, color: "var(--faint)", fontVariantNumeric: "tabular-nums" }}>{s.pointsFor.toFixed(1)}</td>
                     <td style={{ ...tdStyle, color: streakColor, fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>
                       {streak ? `${streak.type}${streak.count}` : "—"}
                     </td>
                     {!playoffsStarted && playoffCutoff !== null && (
-                      <td style={{ ...tdStyle, color: "#475569", fontSize: 12 }} className="standings-hide-mobile">
+                      <td style={{ ...tdStyle, color: "var(--faint)", fontSize: 12 }} className="standings-hide-mobile">
                         {index === 0 ? "—" : gapToNext === 0 ? "tied" : `-${gapToNext} VP`}
                       </td>
                     )}
@@ -245,7 +250,7 @@ export default async function StandingsPage({ params }: { params: { leagueId: st
         )}
 
         {!hasResults ? null : !playoffsStarted && playoffCutoff !== null && (
-          <p style={{ fontSize: 12, color: "#475569", marginTop: 14, marginBottom: 0 }}>
+          <p style={{ fontSize: 12, color: "var(--faint)", marginTop: 14, marginBottom: 0 }}>
             Dashed line separates the top {playoffCutoff} (playoff qualifiers) from the rest
           </p>
         )}

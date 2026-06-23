@@ -218,8 +218,9 @@ export function getRival(
  */
 export interface RaceInfo {
   status: "clinched" | "eliminated" | "in" | "bubble" | "out";
-  gamesBack: number | null;  // points behind playoff line (teams out only)
-  cushion: number | null;    // points ahead of bubble (teams in only)
+  gamesBack: number | null;    // points behind playoff line (teams out only)
+  cushion: number | null;      // points ahead of bubble (teams in only)
+  magicNumber: number | null;  // VP still needed to clinch (null when clinched/eliminated/too early)
 }
 
 export function computeRace(
@@ -231,7 +232,7 @@ export function computeRace(
   const map = new Map<string, RaceInfo>();
   if (standings.length === 0 || cutoff <= 0 || cutoff >= standings.length) {
     standings.forEach((s) =>
-      map.set(s.fantasyTeamId, { status: "in", gamesBack: null, cushion: null })
+      map.set(s.fantasyTeamId, { status: "in", gamesBack: null, cushion: null, magicNumber: null })
     );
     return map;
   }
@@ -251,6 +252,9 @@ export function computeRace(
   const lineTeam = standings[cutoff - 1];   // last team in
   const bubbleTeam = standings[cutoff];     // first team out
 
+  const bubbleRemaining = remainingFor(bubbleTeam.fantasyTeamId);
+  const bubbleCeiling = bubbleTeam.points + bubbleRemaining * maxPointsPerWeek;
+
   standings.forEach((s, i) => {
     const rank = i + 1;
     const inSpot = rank <= cutoff;
@@ -259,16 +263,26 @@ export function computeRace(
 
     let status: RaceInfo["status"];
     if (inSpot) {
-      const bubbleCeiling = bubbleTeam.points + remainingFor(bubbleTeam.fantasyTeamId) * maxPointsPerWeek;
       status = bubbleCeiling < s.points ? "clinched" : rank === cutoff ? "bubble" : "in";
     } else {
       status = maxPoints < lineTeam.points ? "eliminated" : "out";
+    }
+
+    // Magic number: VP still needed to put the bubble team's ceiling below our total.
+    // Only meaningful after half the season; null once clinched or eliminated.
+    let magicNumber: number | null = null;
+    if (status === "in" || status === "bubble") {
+      const playedWeeks = totalWeeks - remaining;
+      if (totalWeeks > 0 && playedWeeks >= totalWeeks / 2) {
+        magicNumber = Math.ceil(bubbleCeiling - s.points + 0.5);
+      }
     }
 
     map.set(s.fantasyTeamId, {
       status,
       gamesBack: inSpot ? null : Math.round((lineTeam.points - s.points) * 10) / 10,
       cushion: inSpot ? Math.round((s.points - bubbleTeam.points) * 10) / 10 : null,
+      magicNumber,
     });
   });
 
