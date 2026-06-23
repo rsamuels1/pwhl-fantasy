@@ -65,7 +65,7 @@ export function RivalBadge({ rival, compact = false, lastResultAgainstRival = nu
           <div style={{ fontSize: 14, fontWeight: 700, color: showCelebratory ? "#34d399" : "#fb923c" }}>
             {showCelebratory ? "Rivalry Win!" : "Your rival this week"}
           </div>
-          <div style={{ fontSize: 12, color: "#94a3b8", marginTop: 2 }}>
+          <div style={{ fontSize: 12, color: "var(--dim)", marginTop: 2 }}>
             {rival.teamName}
           </div>
         </div>
@@ -85,7 +85,7 @@ export function RivalBadge({ rival, compact = false, lastResultAgainstRival = nu
           }}
         >
           <div>
-            <div style={{ fontSize: 11, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: "var(--dim)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>
               This week
             </div>
             <div
@@ -93,7 +93,7 @@ export function RivalBadge({ rival, compact = false, lastResultAgainstRival = nu
               style={{
                 fontSize: 18,
                 fontWeight: 700,
-                color: showCelebratory ? "#34d399" : "#e2e8f0",
+                color: showCelebratory ? "#34d399" : "var(--text)",
               }}
             >
               {lastResultAgainstRival.myScore.toFixed(1)} – {lastResultAgainstRival.oppScore.toFixed(1)}

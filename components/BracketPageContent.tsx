@@ -77,21 +77,21 @@ export default async function BracketPageContent({ leagueId, myTeamId }: Props) 
     hasPlayoffs ? "In Progress" : "Regular Season";
 
   const statusColor = hasPlayoffs
-    ? (league.playoffStatus === "COMPLETE" ? "#5fa98c" : "#818cf8")
-    : "#94a3b8";
+    ? (league.playoffStatus === "COMPLETE" ? "#5fa98c" : "var(--accent-strong)")
+    : "var(--dim)";
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
         <h1 style={{ fontSize: 24, margin: 0 }}>Playoffs</h1>
-        <span style={{ fontSize: 12, fontWeight: 700, padding: "3px 10px", borderRadius: 20, background: "rgba(148,163,184,0.1)", color: statusColor }}>
+        <span style={{ fontSize: 12, fontWeight: 700, padding: "3px 10px", borderRadius: 20, background: "var(--border)", color: statusColor }}>
           {statusLabel}
         </span>
       </div>
 
       {league.playoffStatus === "IN_PROGRESS" && (
-        <div style={{ padding: "14px 18px", borderRadius: 14, marginBottom: 20, background: "rgba(99,102,241,0.08)", border: "1px solid rgba(99,102,241,0.22)", fontSize: 14, color: "#c7d2e0", lineHeight: 1.6 }}>
-          <strong style={{ color: "#a5b4fc" }}>Playoffs are here!</strong>{" "}
+        <div style={{ padding: "14px 18px", borderRadius: 14, marginBottom: 20, background: "rgba(143,193,232,0.08)", border: "1px solid rgba(143,193,232,0.22)", fontSize: 14, color: "#c7d2e0", lineHeight: 1.6 }}>
+          <strong style={{ color: "var(--accent-strong)" }}>Playoffs are here!</strong>{" "}
           The format changes to head-to-head — your team now faces one opponent each round. Highest score advances.
         </div>
       )}
@@ -99,7 +99,7 @@ export default async function BracketPageContent({ leagueId, myTeamId }: Props) 
       {!hasPlayoffs && (
         <>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center", padding: "12px 16px", borderRadius: 12, background: "var(--accent-dim)", border: "1px solid var(--accent-border)", fontSize: 13, color: "var(--muted)" }}>
-            <span style={{ color: "#c9b6ff", fontWeight: 700 }}>{teamsInPlayoff} teams qualify</span>
+            <span style={{ color: "var(--accent-strong)", fontWeight: 700 }}>{teamsInPlayoff} teams qualify</span>
             {topSeedsWithBye > 0 && (
               <>
                 <span style={{ color: "#334155" }}>·</span>
@@ -109,7 +109,7 @@ export default async function BracketPageContent({ leagueId, myTeamId }: Props) 
             {totalWeeks > 0 && (
               <>
                 <span style={{ color: "#334155" }}>·</span>
-                <span style={{ color: weeksRemaining === 0 ? "#5fa98c" : "#94a3b8" }}>
+                <span style={{ color: weeksRemaining === 0 ? "#5fa98c" : "var(--dim)" }}>
                   {weeksRemaining === 0 ? "Season complete" : `${weeksRemaining} week${weeksRemaining !== 1 ? "s" : ""} remaining`}
                 </span>
               </>
@@ -118,7 +118,7 @@ export default async function BracketPageContent({ leagueId, myTeamId }: Props) 
 
           <section style={card}>
             <div style={{ display: "flex", flexDirection: "column" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 16px 4px", borderBottom: "1px solid rgba(148,163,184,0.08)" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 16px 4px", borderBottom: "1px solid var(--border)" }}>
                 <span style={{ width: 18, flexShrink: 0 }} />
                 <span style={{ flex: 1 }} />
                 <span style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--faint)", minWidth: 48, textAlign: "right" }}>W–L</span>
@@ -149,7 +149,7 @@ export default async function BracketPageContent({ leagueId, myTeamId }: Props) 
                     {isLastIn && (
                       <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "6px 16px" }}>
                         <div style={{ flex: 1, height: 2, background: "var(--accent-border)", borderRadius: 1 }} />
-                        <span style={{ fontSize: 10, fontWeight: 700, color: "#c9b6ff", textTransform: "uppercase", letterSpacing: "0.06em", flexShrink: 0 }}>Playoff line</span>
+                        <span style={{ fontSize: 10, fontWeight: 700, color: "var(--accent-strong)", textTransform: "uppercase", letterSpacing: "0.06em", flexShrink: 0 }}>Playoff line</span>
                         <div style={{ flex: 1, height: 2, background: "var(--accent-border)", borderRadius: 1 }} />
                       </div>
                     )}
@@ -173,8 +173,8 @@ export default async function BracketPageContent({ leagueId, myTeamId }: Props) 
       {hasPlayoffs && !bracketResult?.bracket && (
         <section style={card}>
           <div style={{ padding: 40, textAlign: "center" }}>
-            <div style={{ fontSize: 14, color: "#94a3b8", marginBottom: 8 }}>⏳ Bracket is being set up</div>
-            <div style={{ fontSize: 12, color: "#64748b" }}>Check back shortly.</div>
+            <div style={{ fontSize: 14, color: "var(--dim)", marginBottom: 8 }}>⏳ Bracket is being set up</div>
+            <div style={{ fontSize: 12, color: "var(--faint)" }}>Check back shortly.</div>
           </div>
         </section>
       )}

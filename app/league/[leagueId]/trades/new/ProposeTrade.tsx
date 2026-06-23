@@ -54,7 +54,7 @@ function MyRosterPicker({
 
   return (
     <div>
-      <div style={{ fontSize: 12, color: "#94a3b8", marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+      <div style={{ fontSize: 12, color: "var(--dim)", marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.05em" }}>
         {label}
       </div>
       <div style={{ display: "flex", gap: 6, marginBottom: 8 }}>
@@ -65,8 +65,8 @@ function MyRosterPicker({
           onChange={(e) => setSearch(e.target.value)}
           style={{
             flex: 1, padding: "7px 10px", borderRadius: 6,
-            background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)",
-            color: "#e2e8f0", fontSize: 13,
+            background: "var(--surface)", border: "1px solid var(--border)",
+            color: "var(--text)", fontSize: 13,
           }}
         />
         <button
@@ -74,8 +74,8 @@ function MyRosterPicker({
           onClick={() => setSortBy((s) => s === "fp" ? "pos" : "fp")}
           style={{
             padding: "7px 10px", borderRadius: 6, fontSize: 12, cursor: "pointer",
-            background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)",
-            color: "#94a3b8", whiteSpace: "nowrap",
+            background: "var(--surface)", border: "1px solid var(--border)",
+            color: "var(--dim)", whiteSpace: "nowrap",
           }}
         >
           {sortBy === "fp" ? "↓ FP" : "↓ Pos"}
@@ -83,7 +83,7 @@ function MyRosterPicker({
       </div>
       <div style={{ maxHeight: 280, overflowY: "auto" }}>
         {filtered.length === 0 ? (
-          <div style={{ color: "#64748b", fontSize: 13, padding: 8 }}>No players found.</div>
+          <div style={{ color: "var(--faint)", fontSize: 13, padding: 8 }}>No players found.</div>
         ) : (
           filtered.map((p) => {
             const isSelected = selected.has(p.playerId);
@@ -95,17 +95,17 @@ function MyRosterPicker({
                 style={{
                   display: "flex", alignItems: "center", justifyContent: "space-between",
                   width: "100%", padding: "8px 10px", borderRadius: 6, marginBottom: 3,
-                  background: isSelected ? "rgba(99,102,241,0.2)" : "rgba(255,255,255,0.03)",
-                  border: isSelected ? "1px solid rgba(99,102,241,0.5)" : "1px solid rgba(255,255,255,0.06)",
-                  cursor: "pointer", color: isSelected ? "#a5b4fc" : "#e2e8f0", textAlign: "left",
+                  background: isSelected ? "rgba(143,193,232,0.2)" : "var(--bg-raised)",
+                  border: isSelected ? "1px solid rgba(143,193,232,0.5)" : "1px solid var(--surface)",
+                  cursor: "pointer", color: isSelected ? "var(--accent-strong)" : "var(--text)", textAlign: "left",
                 }}
               >
                 <span>
                   <span style={{ fontWeight: 600, fontSize: 13 }}>{p.name}</span>
                   {" "}
-                  <span style={{ fontSize: 11, color: "#64748b" }}>{p.position}</span>
+                  <span style={{ fontSize: 11, color: "var(--faint)" }}>{p.position}</span>
                 </span>
-                <span style={{ fontSize: 12, color: isSelected ? "#a5b4fc" : "#475569" }}>
+                <span style={{ fontSize: 12, color: isSelected ? "var(--accent-strong)" : "var(--faint)" }}>
                   {isSelected ? "✓" : ""} {p.fp > 0 ? `${p.fp} FP` : ""}
                 </span>
               </button>
@@ -114,7 +114,7 @@ function MyRosterPicker({
         )}
       </div>
       {selected.size > 0 && (
-        <div style={{ marginTop: 6, fontSize: 12, color: "#a5b4fc" }}>
+        <div style={{ marginTop: 6, fontSize: 12, color: "var(--accent-strong)" }}>
           {selected.size} selected
         </div>
       )}
@@ -152,10 +152,10 @@ function LeaguePlayerPicker({
 
   return (
     <div>
-      <div style={{ fontSize: 12, color: "#94a3b8", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+      <div style={{ fontSize: 12, color: "var(--dim)", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.05em" }}>
         {label}
       </div>
-      <div style={{ fontSize: 11, color: "#475569", marginBottom: 8 }}>
+      <div style={{ fontSize: 11, color: "var(--faint)", marginBottom: 8 }}>
         Search by player name or team to filter the list
       </div>
       <div style={{ display: "flex", gap: 6, marginBottom: 8 }}>
@@ -166,8 +166,8 @@ function LeaguePlayerPicker({
           onChange={(e) => setSearch(e.target.value)}
           style={{
             flex: 1, padding: "7px 10px", borderRadius: 6,
-            background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)",
-            color: "#e2e8f0", fontSize: 13,
+            background: "var(--surface)", border: "1px solid var(--border)",
+            color: "var(--text)", fontSize: 13,
           }}
         />
         <button
@@ -175,8 +175,8 @@ function LeaguePlayerPicker({
           onClick={() => setSortBy((s) => s === "fp" ? "pos" : "fp")}
           style={{
             padding: "7px 10px", borderRadius: 6, fontSize: 12, cursor: "pointer",
-            background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)",
-            color: "#94a3b8", whiteSpace: "nowrap",
+            background: "var(--surface)", border: "1px solid var(--border)",
+            color: "var(--dim)", whiteSpace: "nowrap",
           }}
         >
           {sortBy === "fp" ? "↓ FP" : "↓ Pos"}
@@ -184,7 +184,7 @@ function LeaguePlayerPicker({
       </div>
       <div style={{ maxHeight: 280, overflowY: "auto" }}>
         {filtered.length === 0 ? (
-          <div style={{ color: "#64748b", fontSize: 13, padding: 8 }}>No players found.</div>
+          <div style={{ color: "var(--faint)", fontSize: 13, padding: 8 }}>No players found.</div>
         ) : (
           filtered.map((p) => {
             const isSelected = selected.has(p.playerId);
@@ -199,15 +199,15 @@ function LeaguePlayerPicker({
                   display: "flex", alignItems: "center", justifyContent: "space-between",
                   width: "100%", padding: "8px 10px", borderRadius: 6, marginBottom: 3,
                   background: isSelected
-                    ? "rgba(99,102,241,0.2)"
+                    ? "rgba(143,193,232,0.2)"
                     : isWrongTeam
-                    ? "rgba(255,255,255,0.01)"
-                    : "rgba(255,255,255,0.03)",
+                    ? "var(--bg-raised)"
+                    : "var(--bg-raised)",
                   border: isSelected
-                    ? "1px solid rgba(99,102,241,0.5)"
-                    : "1px solid rgba(255,255,255,0.06)",
+                    ? "1px solid rgba(143,193,232,0.5)"
+                    : "1px solid var(--surface)",
                   cursor: isWrongTeam ? "not-allowed" : "pointer",
-                  color: isSelected ? "#a5b4fc" : isWrongTeam ? "#334155" : "#e2e8f0",
+                  color: isSelected ? "var(--accent-strong)" : isWrongTeam ? "var(--faint)" : "var(--text)",
                   textAlign: "left",
                   opacity: isWrongTeam ? 0.4 : 1,
                 }}
@@ -215,11 +215,11 @@ function LeaguePlayerPicker({
                 <span>
                   <span style={{ fontWeight: 600, fontSize: 13 }}>{p.name}</span>
                   {" "}
-                  <span style={{ fontSize: 11, color: isWrongTeam ? "#334155" : "#64748b" }}>
+                  <span style={{ fontSize: 11, color: isWrongTeam ? "var(--faint)" : "var(--faint)" }}>
                     {p.position} · {p.teamName}
                   </span>
                 </span>
-                <span style={{ fontSize: 12, color: isSelected ? "#a5b4fc" : "#475569" }}>
+                <span style={{ fontSize: 12, color: isSelected ? "var(--accent-strong)" : "var(--faint)" }}>
                   {isSelected ? "✓" : ""} {p.fp > 0 ? `${p.fp} FP` : ""}
                 </span>
               </button>
@@ -228,7 +228,7 @@ function LeaguePlayerPicker({
         )}
       </div>
       {selected.size > 0 && (
-        <div style={{ marginTop: 6, fontSize: 12, color: "#a5b4fc" }}>
+        <div style={{ marginTop: 6, fontSize: 12, color: "var(--accent-strong)" }}>
           {selected.size} selected
         </div>
       )}
@@ -353,13 +353,13 @@ export default function ProposeTrade({
         {counterOfId ? "Counter Offer" : "Propose Trade"}
       </h1>
       {lockedTeamName && (
-        <p style={{ margin: "0 0 20px", fontSize: 14, color: "#94a3b8" }}>
-          Trading with <strong style={{ color: "#e2e8f0" }}>{lockedTeamName}</strong>
+        <p style={{ margin: "0 0 20px", fontSize: 14, color: "var(--dim)" }}>
+          Trading with <strong style={{ color: "var(--text)" }}>{lockedTeamName}</strong>
           {" "}
           <button
             type="button"
             onClick={() => { setLockedTeamId(null); setTheirSelected(new Set()); }}
-            style={{ background: "none", border: "none", color: "#64748b", fontSize: 12, cursor: "pointer", textDecoration: "underline" }}
+            style={{ background: "none", border: "none", color: "var(--faint)", fontSize: 12, cursor: "pointer", textDecoration: "underline" }}
           >
             change
           </button>
@@ -377,7 +377,7 @@ export default function ProposeTrade({
 
       {!lockedTeamId && (
         <div style={{ marginBottom: 20 }}>
-          <div style={{ fontSize: 12, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 10 }}>
+          <div style={{ fontSize: 12, color: "var(--dim)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 10 }}>
             Select a trading partner
           </div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
@@ -390,8 +390,8 @@ export default function ProposeTrade({
                   onClick={() => setLockedTeamId(teamId)}
                   style={{
                     padding: "8px 16px", borderRadius: 20, fontSize: 13, cursor: "pointer",
-                    background: "rgba(99,102,241,0.08)", border: "1px solid rgba(99,102,241,0.25)",
-                    color: "#a5b4fc", fontWeight: 600,
+                    background: "rgba(143,193,232,0.08)", border: "1px solid rgba(143,193,232,0.25)",
+                    color: "var(--accent-strong)", fontWeight: 600,
                   }}
                 >
                   {teamName}
@@ -405,8 +405,8 @@ export default function ProposeTrade({
       <form onSubmit={handleSubmit}>
         {/* Player pickers side by side */}
         <div style={{
-          background: "rgba(255,255,255,0.04)",
-          border: "1px solid rgba(255,255,255,0.08)",
+          background: "var(--surface)",
+          border: "1px solid var(--border)",
           borderRadius: 12, padding: 20, marginBottom: 20,
         }}>
           <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", gap: 20, alignItems: "start" }}>
@@ -416,7 +416,7 @@ export default function ProposeTrade({
               onToggle={toggleMyPlayer}
               label={`${myTeamName} gives`}
             />
-            <div style={{ paddingTop: 32, color: "#475569", fontSize: 22, textAlign: "center" }}>⇄</div>
+            <div style={{ paddingTop: 32, color: "var(--faint)", fontSize: 22, textAlign: "center" }}>⇄</div>
             <LeaguePlayerPicker
               players={lockedTeamId ? leaguePlayers.filter((p) => p.teamId === lockedTeamId) : leaguePlayers}
               selected={theirSelected}
@@ -430,8 +430,8 @@ export default function ProposeTrade({
         {/* Trade summary */}
         {(mySelected.size > 0 || theirSelected.size > 0) && (
           <div style={{
-            background: "rgba(99,102,241,0.08)", border: "1px solid rgba(99,102,241,0.2)",
-            borderRadius: 10, padding: "12px 16px", marginBottom: 16, fontSize: 13, color: "#a5b4fc",
+            background: "rgba(143,193,232,0.08)", border: "1px solid rgba(143,193,232,0.2)",
+            borderRadius: 10, padding: "12px 16px", marginBottom: 16, fontSize: 13, color: "var(--accent-strong)",
           }}>
             {mySelected.size > 0 && <div>You give: {mySelectedNames.join(", ")}</div>}
             {theirSelected.size > 0 && <div>You receive: {theirSelectedNames.join(", ")}</div>}
@@ -440,10 +440,10 @@ export default function ProposeTrade({
 
         {/* Message */}
         <div style={{
-          background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)",
+          background: "var(--surface)", border: "1px solid var(--border)",
           borderRadius: 12, padding: 20, marginBottom: 20,
         }}>
-          <label style={{ fontSize: 14, fontWeight: 600, color: "#e2e8f0", display: "block", marginBottom: 8 }}>
+          <label style={{ fontSize: 14, fontWeight: 600, color: "var(--text)", display: "block", marginBottom: 8 }}>
             Message (optional)
           </label>
           <textarea
@@ -454,8 +454,8 @@ export default function ProposeTrade({
             placeholder="Add a note to your proposal..."
             style={{
               width: "100%", padding: "10px 14px", borderRadius: 8,
-              background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)",
-              color: "#e2e8f0", fontSize: 13, resize: "vertical", boxSizing: "border-box",
+              background: "var(--surface)", border: "1px solid var(--border)",
+              color: "var(--text)", fontSize: 13, resize: "vertical", boxSizing: "border-box",
             }}
           />
         </div>
@@ -466,8 +466,8 @@ export default function ProposeTrade({
             disabled={!canSubmit || isPending}
             style={{
               padding: "12px 24px", borderRadius: 8, border: "none",
-              background: canSubmit ? "rgba(99,102,241,0.85)" : "rgba(99,102,241,0.3)",
-              color: "#fff", fontSize: 14, fontWeight: 600,
+              background: canSubmit ? "rgba(143,193,232,0.85)" : "rgba(143,193,232,0.3)",
+              color: "var(--accent-ink)", fontSize: 14, fontWeight: 600,
               cursor: canSubmit && !isPending ? "pointer" : "not-allowed",
               opacity: isPending ? 0.6 : 1,
             }}
@@ -477,8 +477,8 @@ export default function ProposeTrade({
           <a
             href={tradeBase}
             style={{
-              padding: "12px 24px", borderRadius: 8, border: "1px solid rgba(148,163,184,0.3)",
-              background: "transparent", color: "#94a3b8", fontSize: 14,
+              padding: "12px 24px", borderRadius: 8, border: "1px solid var(--border)",
+              background: "transparent", color: "var(--dim)", fontSize: 14,
               textDecoration: "none", lineHeight: "normal", display: "inline-flex", alignItems: "center",
             }}
           >

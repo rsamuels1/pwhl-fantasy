@@ -20,7 +20,7 @@ export default function EmptyState({ message, subtext, actionHref, actionLabel }
     }}>
       <p style={{ fontSize: 14, color: "var(--muted)", margin: 0 }}>{message}</p>
       {subtext && (
-        <p style={{ fontSize: 13, color: "#475569", margin: 0 }}>{subtext}</p>
+        <p style={{ fontSize: 13, color: "var(--faint)", margin: 0 }}>{subtext}</p>
       )}
       {actionHref && actionLabel && (
         <Link href={actionHref} style={{

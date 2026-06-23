@@ -44,8 +44,8 @@ export default function AnnouncementForm({
         placeholder="Post a note to the whole league — reminders, schedule changes, trash talk…"
         style={{
           width: "100%", resize: "vertical", boxSizing: "border-box",
-          background: "rgba(255,255,255,0.03)", color: "#e2e8f0",
-          border: "1px solid rgba(148,163,184,0.18)", borderRadius: 10,
+          background: "var(--bg-raised)", color: "var(--text)",
+          border: "1px solid var(--border)", borderRadius: 10,
           padding: "10px 12px", fontSize: 14, fontFamily: "inherit",
         }}
       />
@@ -55,8 +55,8 @@ export default function AnnouncementForm({
           disabled={saving}
           style={{
             fontSize: 13, fontWeight: 700, padding: "8px 16px", borderRadius: 10,
-            border: "1px solid rgba(99,102,241,0.3)", cursor: saving ? "default" : "pointer",
-            background: "rgba(99,102,241,0.15)", color: "#a5b4fc", opacity: saving ? 0.6 : 1,
+            border: "1px solid rgba(143,193,232,0.3)", cursor: saving ? "default" : "pointer",
+            background: "rgba(143,193,232,0.15)", color: "var(--accent-strong)", opacity: saving ? 0.6 : 1,
           }}
         >
           {saving ? "Saving…" : "Post announcement"}
@@ -67,15 +67,15 @@ export default function AnnouncementForm({
             disabled={saving}
             style={{
               fontSize: 13, fontWeight: 600, padding: "8px 14px", borderRadius: 10,
-              border: "1px solid rgba(148,163,184,0.15)", cursor: "pointer",
-              background: "transparent", color: "#64748b",
+              border: "1px solid var(--border)", cursor: "pointer",
+              background: "transparent", color: "var(--faint)",
             }}
           >
             Clear
           </button>
         )}
-        {savedMsg && <span style={{ fontSize: 12, color: "#64748b" }}>{savedMsg}</span>}
-        <span style={{ fontSize: 11, color: "#475569", marginLeft: "auto" }}>{value.length}/500</span>
+        {savedMsg && <span style={{ fontSize: 12, color: "var(--faint)" }}>{savedMsg}</span>}
+        <span style={{ fontSize: 11, color: "var(--faint)", marginLeft: "auto" }}>{value.length}/500</span>
       </div>
     </div>
   );

@@ -7,3 +7,4 @@
 - [End-of-season findings](end-of-season-findings.md) — playoff/champion/renewal dead states; non-qualifying team sees "Season hasn't started," renewal makes new league silently
 - [Draft room findings](draft-room-findings.md) — live 4-mgr walkthrough; generic error banner swallows specific server errors, sticky errors, raw entry error, star=queue confusion
 - [Emoji policy](emoji-policy.md) — DS-002 "no emoji" ban is dead/contradicts FEEL brief; recommend tiered policy; standings chips are color-only (a11y fix)
+- [Redesign bundle provenance](redesign-bundle-provenance.md) — v3_1.zip is canonical (Parts 1–8); "request 3" zip is a truncated color-only subset; real Sprint 22 gaps live in v3_1 Parts 5–8

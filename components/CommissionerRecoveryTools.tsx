@@ -64,8 +64,8 @@ function ReplaceOwnerSection({ leagueId, teams }: { leagueId: string; teams: Tea
 
   return (
     <div>
-      <h3 style={{ fontSize: 15, margin: "0 0 10px", color: "#e2e8f0" }}>Replace inactive manager</h3>
-      <p style={{ fontSize: 13, color: "#64748b", margin: "0 0 12px" }}>
+      <h3 style={{ fontSize: 15, margin: "0 0 10px", color: "var(--text)" }}>Replace inactive manager</h3>
+      <p style={{ fontSize: 13, color: "var(--faint)", margin: "0 0 12px" }}>
         Transfer a team to a new owner. Their roster, standings, and matchups are preserved.
       </p>
       <div style={{ display: "grid", gap: 8 }}>
@@ -130,10 +130,10 @@ function UndoTransactionSection({ leagueId, teams, isDraftPaused }: { leagueId: 
 
   return (
     <div>
-      <h3 style={{ fontSize: 15, margin: "0 0 10px", color: "#e2e8f0" }}>Undo last transaction</h3>
+      <h3 style={{ fontSize: 15, margin: "0 0 10px", color: "var(--text)" }}>Undo last transaction</h3>
       <div style={{ display: "grid", gap: 8 }}>
         <div>
-          <p style={{ fontSize: 13, color: "#64748b", margin: "0 0 8px" }}>Waiver move — reverses the most recent add or drop for a team:</p>
+          <p style={{ fontSize: 13, color: "var(--faint)", margin: "0 0 8px" }}>Waiver move — reverses the most recent add or drop for a team:</p>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
             <select value={selectedTeam} onChange={(e) => setSelectedTeam(e.target.value)} style={{ ...inputStyle, flex: 1, minWidth: 160 }}>
               <option value="">Select team…</option>
@@ -146,7 +146,7 @@ function UndoTransactionSection({ leagueId, teams, isDraftPaused }: { leagueId: 
         </div>
         {isDraftPaused && (
           <div>
-            <p style={{ fontSize: 13, color: "#64748b", margin: "0 0 8px" }}>Draft pick — reverts the most recent pick (draft is paused):</p>
+            <p style={{ fontSize: 13, color: "var(--faint)", margin: "0 0 8px" }}>Draft pick — reverts the most recent pick (draft is paused):</p>
             <button onClick={() => handleUndo("draft-pick")} disabled={busy} style={btnStyle(busy)}>
               {busy ? "Undoing…" : "Undo last draft pick"}
             </button>
@@ -201,8 +201,8 @@ function ForceRosterMoveSection({ leagueId, teams }: { leagueId: string; teams: 
 
   return (
     <div>
-      <h3 style={{ fontSize: 15, margin: "0 0 10px", color: "#e2e8f0" }}>Force roster move</h3>
-      <p style={{ fontSize: 13, color: "#64748b", margin: "0 0 12px" }}>
+      <h3 style={{ fontSize: 15, margin: "0 0 10px", color: "var(--text)" }}>Force roster move</h3>
+      <p style={{ fontSize: 13, color: "var(--faint)", margin: "0 0 12px" }}>
         Move a player on behalf of any team. Respects eligibility rules. Cannot move locked players.
       </p>
       <div style={{ display: "grid", gap: 8 }}>
@@ -271,8 +271,8 @@ function UnlockPlayerSection({ leagueId, teams }: { leagueId: string; teams: Tea
 
   return (
     <div>
-      <h3 style={{ fontSize: 15, margin: "0 0 10px", color: "#e2e8f0" }}>Unlock locked player</h3>
-      <p style={{ fontSize: 13, color: "#64748b", margin: "0 0 12px" }}>
+      <h3 style={{ fontSize: 15, margin: "0 0 10px", color: "var(--text)" }}>Unlock locked player</h3>
+      <p style={{ fontSize: 13, color: "var(--faint)", margin: "0 0 12px" }}>
         Clear period-lock on a player (e.g., due to cancelled game). Does not bypass play-lock.
       </p>
       <div style={{ display: "grid", gap: 8 }}>
@@ -302,15 +302,15 @@ function UnlockPlayerSection({ leagueId, teams }: { leagueId: string; teams: Tea
 }
 
 const inputStyle: React.CSSProperties = {
-  padding: "8px 12px", borderRadius: 8, border: "1px solid rgba(148,163,184,0.2)",
-  background: "rgba(255,255,255,0.04)", color: "#e2e8f0", fontSize: 14, width: "100%", boxSizing: "border-box",
+  padding: "8px 12px", borderRadius: 8, border: "1px solid var(--border)",
+  background: "var(--surface)", color: "var(--text)", fontSize: 14, width: "100%", boxSizing: "border-box",
 };
 
 function btnStyle(disabled: boolean): React.CSSProperties {
   return {
     padding: "9px 16px", borderRadius: 10, border: "none",
     cursor: disabled ? "not-allowed" : "pointer",
-    background: disabled ? "rgba(99,102,241,0.3)" : "#6366f1",
-    color: "#fff", fontWeight: 700, fontSize: 14,
+    background: disabled ? "rgba(143,193,232,0.3)" : "var(--accent)",
+    color: "var(--accent-ink)", fontWeight: 700, fontSize: 14,
   };
 }

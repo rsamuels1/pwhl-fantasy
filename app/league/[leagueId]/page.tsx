@@ -276,10 +276,10 @@ export default async function LeagueOverviewPage({
       {isWelcome && myTeam && (
         <div style={{
           padding: "16px 20px", borderRadius: 16,
-          background: "rgba(95,169,140,0.07)", border: "1px solid rgba(95,169,140,0.2)",
+          background: "rgba(81,216,138,0.07)", border: "1px solid rgba(81,216,138,0.2)",
           display: "flex", flexDirection: "column", gap: 6,
         }}>
-          <p style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "#5fa98c" }}>
+          <p style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "var(--green)" }}>
             {myTeam.name} is registered.
           </p>
           {league.draft?.status === "COMPLETE" ? (
@@ -304,13 +304,13 @@ export default async function LeagueOverviewPage({
           display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap",
         }}>
           <div>
-            <div style={{ fontSize: 13, fontWeight: 700, color: "#e3c989" }}>{commishAction.label}</div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: "var(--gold)" }}>{commishAction.label}</div>
             <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 2 }}>{commishAction.sublabel}</div>
           </div>
           <Link href={commishAction.href} style={{
             fontSize: 12, fontWeight: 700, padding: "6px 14px", borderRadius: 8, flexShrink: 0,
-            background: "rgba(214,169,78,0.15)", color: "#e3c989",
-            border: "1px solid rgba(214,169,78,0.30)", textDecoration: "none",
+            background: "rgba(245,201,123,0.15)", color: "var(--gold)",
+            border: "1px solid rgba(245,201,123,0.30)", textDecoration: "none",
           }}>
             Take action →
           </Link>
@@ -326,7 +326,7 @@ export default async function LeagueOverviewPage({
         {currentWeek !== null && (
           <span style={{
             fontSize: 12, fontWeight: 700, padding: "3px 10px", borderRadius: 20,
-            background: "var(--accent-dim)", color: "#c9b6ff",
+            background: "var(--accent-dim)", color: "var(--accent-strong)",
             border: "1px solid var(--accent-border)",
           }}>
             Week {currentWeek}
@@ -344,24 +344,24 @@ export default async function LeagueOverviewPage({
           {league.playoffStatus === "COMPLETE" && championTeamName && (
             <section style={{
               ...card,
-              background: "linear-gradient(135deg, rgba(251,191,36,0.1), rgba(245,158,11,0.04))",
-              border: "2px solid rgba(251,191,36,0.35)",
+              background: "linear-gradient(135deg, rgba(245,201,123,0.1), rgba(245,158,11,0.04))",
+              border: "2px solid rgba(245,201,123,0.35)",
             }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
                     <path d="M6 9H4a2 2 0 0 1-2-2V5h4"/><path d="M18 9h2a2 2 0 0 0 2-2V5h-4"/><path d="M12 17v4"/><path d="M8 21h8"/><path d="M6 9a6 6 0 0 0 12 0V3H6z"/>
                   </svg>
                   <div>
-                    <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: "#d97706", marginBottom: 2 }}>Season Complete</div>
-                    <div style={{ fontSize: 14, fontWeight: 600, color: "#e2e8f0" }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--gold)", marginBottom: 2 }}>Season Complete</div>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: "var(--text)" }}>
                       {championTeamName} are champions!
                     </div>
                   </div>
                 </div>
                 <Link href={`/league/${leagueId}/bracket`} style={ctaLink}>View bracket →</Link>
               </div>
-              <p style={{ color: "#78716c", margin: 0, fontSize: 13 }}>
+              <p style={{ color: "var(--faint)", margin: 0, fontSize: 13 }}>
                 Congratulations to {championTeamName} on a great season. See you next year!
               </p>
             </section>
@@ -416,7 +416,7 @@ export default async function LeagueOverviewPage({
                           {m.homeTeam.name}
                           {scored && <span className="font-stats" style={{ marginLeft: 6, fontWeight: 700 }}>{m.homeScore!.toFixed(1)}</span>}
                         </span>
-                        <span style={{ fontSize: 10, color: "#334155", fontWeight: 700, letterSpacing: "0.5px" }}>
+                        <span style={{ fontSize: 10, color: "var(--dim)", fontWeight: 700, letterSpacing: "0.5px" }}>
                           {scored ? "FINAL" : "VS"}
                         </span>
                         <span style={{
@@ -460,16 +460,16 @@ export default async function LeagueOverviewPage({
                     if (!race) {
                       const inNow = rank <= teamsInPlayoff;
                       return inNow
-                        ? { label: "IN", bg: "rgba(95,169,140,0.12)", color: "#7fc2a6", border: "rgba(95,169,140,0.25)" }
+                        ? { label: "IN", bg: "rgba(81,216,138,0.12)", color: "var(--green)", border: "rgba(81,216,138,0.25)" }
                         : rank === teamsInPlayoff + 1
-                        ? { label: "BUBBLE", bg: "rgba(214,169,78,0.12)", color: "#e3c989", border: "rgba(214,169,78,0.28)" }
+                        ? { label: "BUBBLE", bg: "rgba(245,201,123,0.12)", color: "var(--gold)", border: "rgba(245,201,123,0.28)" }
                         : { label: "OUT", bg: "rgba(100,116,139,0.1)", color: "var(--faint)", border: "rgba(100,116,139,0.15)" };
                     }
                     switch (race.status) {
-                      case "clinched":   return { label: "CLINCHED", bg: "rgba(95,169,140,0.12)", color: "#7fc2a6", border: "rgba(95,169,140,0.30)" };
-                      case "in":         return { label: "IN", bg: "rgba(95,169,140,0.08)", color: "#7fc2a6", border: "rgba(95,169,140,0.20)" };
-                      case "bubble":     return { label: "BUBBLE", bg: "rgba(214,169,78,0.12)", color: "#e3c989", border: "rgba(214,169,78,0.28)" };
-                      case "eliminated": return { label: "ELIM", bg: "rgba(194,119,108,0.12)", color: "#c2776c", border: "rgba(194,119,108,0.28)" };
+                      case "clinched":   return { label: "CLINCHED", bg: "rgba(81,216,138,0.12)", color: "var(--green)", border: "rgba(81,216,138,0.30)" };
+                      case "in":         return { label: "IN", bg: "rgba(81,216,138,0.08)", color: "var(--green)", border: "rgba(81,216,138,0.20)" };
+                      case "bubble":     return { label: "BUBBLE", bg: "rgba(245,201,123,0.12)", color: "var(--gold)", border: "rgba(245,201,123,0.28)" };
+                      case "eliminated": return { label: "ELIM", bg: "rgba(246,131,127,0.12)", color: "var(--red)", border: "rgba(246,131,127,0.28)" };
                       case "out":        return { label: `${race.gamesBack} GB`, bg: "rgba(100,116,139,0.1)", color: "var(--faint)", border: "rgba(100,116,139,0.15)" };
                     }
                   })();
@@ -477,7 +477,7 @@ export default async function LeagueOverviewPage({
                   return (
                     <div key={s.fantasyTeamId}>
                       {isLastIn && (
-                        <div style={{ borderBottom: "1px dashed rgba(148,163,184,0.18)", margin: "5px 0" }} />
+                        <div style={{ borderBottom: "1px dashed var(--border)", margin: "5px 0" }} />
                       )}
                       <div style={{
                         display: "grid",
@@ -594,7 +594,7 @@ export default async function LeagueOverviewPage({
                         {m.homeTeam.name}
                         {scored && <span className="font-stats" style={{ marginLeft: 6, fontWeight: 700 }}>{m.homeScore!.toFixed(1)}</span>}
                       </span>
-                      <span style={{ fontSize: 10, color: "#334155", fontWeight: 700, letterSpacing: "0.5px" }}>
+                      <span style={{ fontSize: 10, color: "var(--dim)", fontWeight: 700, letterSpacing: "0.5px" }}>
                         {scored ? "·" : "VS"}
                       </span>
                       <span style={{
@@ -627,10 +627,10 @@ export default async function LeagueOverviewPage({
                   const alerts = alertsByTeam.get(t.id) ?? 0;
                   const isMe = t.id === myTeam?.id;
                   const chip = !periodForGames
-                    ? { label: "—", bg: "rgba(100,116,139,0.08)", color: "#475569" }
+                    ? { label: "—", bg: "rgba(100,116,139,0.08)", color: "var(--faint)" }
                     : alerts > 0
-                    ? { label: `${alerts} ${alerts === 1 ? "issue" : "issues"}`, bg: "rgba(214,169,78,0.10)", color: "#e3c989" }
-                    : { label: "Set", bg: "rgba(95,169,140,0.10)", color: "#5fa98c" };
+                    ? { label: `${alerts} ${alerts === 1 ? "issue" : "issues"}`, bg: "rgba(245,201,123,0.10)", color: "var(--gold)" }
+                    : { label: "Set", bg: "rgba(81,216,138,0.10)", color: "var(--green)" };
                   return (
                     <div key={t.id} style={{
                       display: "flex", alignItems: "center", justifyContent: "space-between",
@@ -656,7 +656,7 @@ export default async function LeagueOverviewPage({
                 })}
               </div>
               {periodForGames && (
-                <div style={{ fontSize: 11, color: "#334155", marginTop: 10 }}>
+                <div style={{ fontSize: 11, color: "var(--dim)", marginTop: 10 }}>
                   Games remaining through {fmt(new Date(periodForGames.endsAt.getTime() - 1))}
                 </div>
               )}
@@ -675,14 +675,15 @@ export default async function LeagueOverviewPage({
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {activity.map((evt) => {
                   const ACT_META: Record<string, { label: string; color: string; bg: string }> = {
-                    PLAYER_ADD:            { label: "Add",    color: "#5fa98c", bg: "rgba(95,169,140,0.12)" },
-                    PLAYER_DROP:           { label: "Drop",   color: "#d18b7f", bg: "rgba(209,139,127,0.12)" },
-                    DRAFT_PICK:            { label: "Draft",  color: "var(--accent-strong)", bg: "rgba(143,193,232,0.14)" },
-                    PLAYOFF_QUALIFICATION: { label: "Playoff",color: "#e3c989", bg: "rgba(214,169,78,0.12)" },
-                    MAJOR_PERFORMANCE:     { label: "Perf",   color: "#e3c989", bg: "rgba(214,169,78,0.10)" },
-                    LEAGUE_STORYLINE:      { label: "Story",  color: "#aab2c8", bg: "rgba(150,160,200,0.08)" },
+                    PLAYER_ADD:            { label: "➕ Add",     color: "var(--green)", bg: "rgba(81,216,138,0.12)" },
+                    PLAYER_DROP:           { label: "➖ Drop",    color: "var(--red)",   bg: "rgba(246,131,127,0.12)" },
+                    DRAFT_PICK:            { label: "🏒 Draft",  color: "var(--accent-strong)", bg: "rgba(143,193,232,0.14)" },
+                    TRADE:                 { label: "🔄 Trade",  color: "var(--accent-strong)", bg: "rgba(143,193,232,0.10)" },
+                    PLAYOFF_QUALIFICATION: { label: "🏆 Playoff",color: "var(--gold)",  bg: "rgba(245,201,123,0.12)" },
+                    MAJOR_PERFORMANCE:     { label: "⚡ Perf",   color: "var(--gold)",  bg: "rgba(245,201,123,0.10)" },
+                    LEAGUE_STORYLINE:      { label: "Story",      color: "var(--muted)", bg: "rgba(150,160,200,0.08)" },
                   };
-                  const m = ACT_META[evt.type] ?? { label: "Event", color: "#6f788e", bg: "rgba(150,160,200,0.06)" };
+                  const m = ACT_META[evt.type] ?? { label: "Event", color: "var(--faint)", bg: "rgba(150,160,200,0.06)" };
                   return (
                     <div key={evt.id} style={{ display: "flex", justifyContent: "space-between", gap: 10, alignItems: "flex-start" }}>
                       <div style={{ display: "flex", gap: 8, alignItems: "flex-start", flex: 1 }}>
@@ -735,7 +736,7 @@ export default async function LeagueOverviewPage({
 
 function LeagueLeaderRow({ player, rank, variant }: { player: LeaguePerformerRow; rank: number; variant: "top" | "low" }) {
   const rankColor = rank === 1 ? "var(--amber)" : rank === 2 ? "var(--dim)" : "var(--faint)";
-  const fpColor = variant === "top" ? "#5fa98c" : "#d18b7f";
+  const fpColor = variant === "top" ? "var(--green)" : "var(--red)";
   return (
     <div style={{
       display: "flex", alignItems: "center", gap: 8,

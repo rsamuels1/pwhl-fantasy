@@ -205,13 +205,13 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
           return (
             <div>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-                <p style={{ fontSize: 11, fontWeight: 700, color: "#6366f1", textTransform: "uppercase", letterSpacing: "1px", margin: 0 }}>
+                <p style={{ fontSize: 11, fontWeight: 700, color: "var(--accent)", textTransform: "uppercase", letterSpacing: "1px", margin: 0 }}>
                   Step {displayStep} of {displayTotal}
                 </p>
                 {step < TOTAL_STEPS && (
                   <button
                     onClick={handleCancel}
-                    style={{ fontSize: 12, color: "#475569", textDecoration: "none", background: "none", border: "none", cursor: "pointer" }}
+                    style={{ fontSize: 12, color: "var(--faint)", textDecoration: "none", background: "none", border: "none", cursor: "pointer" }}
                   >
                     Cancel
                   </button>
@@ -225,13 +225,13 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
                       flex: 1,
                       height: 6,
                       borderRadius: 3,
-                      background: i < Math.min(displayStep - 1, displayTotal) ? "#6366f1" : "rgba(255,255,255,0.08)",
+                      background: i < Math.min(displayStep - 1, displayTotal) ? "var(--accent)" : "var(--border)",
                       transition: "background 0.3s ease",
                     }}
                   />
                 ))}
               </div>
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "#64748b" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "var(--faint)" }}>
                 {stepLabels.map((label) => (
                   <span key={label}>{label}</span>
                 ))}
@@ -252,7 +252,7 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
             <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
               <div>
                 <h1 style={{ margin: "0 0 6px", fontSize: 22 }}>Name your league</h1>
-                <p style={{ margin: 0, color: "#64748b", fontSize: 14 }}>
+                <p style={{ margin: 0, color: "var(--faint)", fontSize: 14 }}>
                   Hi {userDisplayName}! Let&apos;s set up your league. You can change this anytime.
                 </p>
               </div>
@@ -266,7 +266,7 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
                   placeholder="e.g. Friday Night Hockey League"
                   autoFocus
                 />
-                <span style={{ fontSize: 11, color: name.length > 45 ? "#f59e0b" : "#475569", marginTop: 4, display: "block" }}>
+                <span style={{ fontSize: 11, color: name.length > 45 ? "var(--amber)" : "var(--faint)", marginTop: 4, display: "block" }}>
                   {name.length}/50
                 </span>
               </label>
@@ -283,7 +283,7 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
                 >
                   <span style={{
                     width: 36, height: 20, borderRadius: 99, flexShrink: 0,
-                    background: isPublic ? "#6366f1" : "rgba(255,255,255,0.08)",
+                    background: isPublic ? "var(--accent)" : "var(--bg-raised)",
                     display: "inline-flex", alignItems: "center",
                     padding: "0 3px", transition: "background 0.2s",
                   }}>
@@ -294,10 +294,10 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
                     }} />
                   </span>
                   <div>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: "#e2e8f0" }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text)" }}>
                       List on public league directory
                     </div>
-                    <div style={{ fontSize: 11, color: "#64748b" }}>
+                    <div style={{ fontSize: 11, color: "var(--faint)" }}>
                       Your league name and invite link will appear on the Leagues page so new players can find it.
                     </div>
                   </div>
@@ -320,7 +320,7 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
             <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
               <div>
                 <h1 style={{ margin: "0 0 6px", fontSize: 22 }}>How many teams?</h1>
-                <p style={{ margin: 0, color: "#64748b", fontSize: 14 }}>
+                <p style={{ margin: 0, color: "var(--faint)", fontSize: 14 }}>
                   Choose a size that matches your friend group. You&apos;re not locked in until the draft.
                 </p>
               </div>
@@ -335,8 +335,8 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
                       style={{
                         padding: "14px 18px",
                         borderRadius: 14,
-                        border: `1.5px solid ${selected ? "#6366f1" : "rgba(148,163,184,0.18)"}`,
-                        background: selected ? "rgba(99,102,241,0.1)" : "rgba(255,255,255,0.02)",
+                        border: `1.5px solid ${selected ? "var(--accent)" : "var(--border)"}`,
+                        background: selected ? "rgba(143,193,232,0.1)" : "var(--bg-raised)",
                         cursor: "pointer",
                         textAlign: "left",
                         transition: "all 0.15s",
@@ -347,28 +347,28 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
                     >
                       <div style={{
                         width: 18, height: 18, borderRadius: "50%", flexShrink: 0,
-                        border: `2px solid ${selected ? "#6366f1" : "rgba(148,163,184,0.3)"}`,
-                        background: selected ? "#6366f1" : "transparent",
+                        border: `2px solid ${selected ? "var(--accent)" : "rgba(148,163,184,0.3)"}`,
+                        background: selected ? "var(--accent)" : "transparent",
                         display: "flex", alignItems: "center", justifyContent: "center",
                       }}>
                         {selected && <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#fff" }} />}
                       </div>
                       <div style={{ flex: 1 }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                          <span style={{ fontSize: 14, fontWeight: 700, color: selected ? "#a5b4fc" : "#e2e8f0" }}>
+                          <span style={{ fontSize: 14, fontWeight: 700, color: selected ? "var(--accent-strong)" : "var(--text)" }}>
                             {opt.label}
                           </span>
                           {recommended && (
                             <span style={{
                               fontSize: 10, fontWeight: 700, padding: "1px 7px", borderRadius: 10,
-                              background: "rgba(95,169,140,0.15)", color: "#5fa98c",
-                              border: "1px solid rgba(95,169,140,0.25)",
+                              background: "rgba(81,216,138,0.12)", color: "var(--green)",
+                              border: "1px solid rgba(81,216,138,0.25)",
                             }}>
                               Recommended
                             </span>
                           )}
                         </div>
-                        <div style={{ fontSize: 12, color: "#64748b", marginTop: 2 }}>{opt.note}</div>
+                        <div style={{ fontSize: 12, color: "var(--faint)", marginTop: 2 }}>{opt.note}</div>
                       </div>
                     </button>
                   );
@@ -386,7 +386,7 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
             <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
               <div>
                 <h1 style={{ margin: "0 0 6px", fontSize: 22 }}>Season & draft date</h1>
-                <p style={{ margin: 0, color: "#64748b", fontSize: 14 }}>
+                <p style={{ margin: 0, color: "var(--faint)", fontSize: 14 }}>
                   Choose whether to play the live 2026-27 season or try a completed replay season.
                 </p>
               </div>
@@ -405,8 +405,8 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
                       style={{
                         padding: "16px 14px",
                         borderRadius: 14,
-                        border: `1.5px solid ${sel ? "#6366f1" : "rgba(148,163,184,0.18)"}`,
-                        background: sel ? "rgba(99,102,241,0.1)" : "rgba(255,255,255,0.02)",
+                        border: `1.5px solid ${sel ? "var(--accent)" : "var(--border)"}`,
+                        background: sel ? "rgba(143,193,232,0.1)" : "var(--bg-raised)",
                         cursor: "pointer",
                         textAlign: "left",
                         transition: "all 0.15s",
@@ -416,8 +416,8 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
                       }}
                     >
                       <span style={{ fontSize: 20 }}>{icon}</span>
-                      <span style={{ fontSize: 13, fontWeight: 700, color: sel ? "#a5b4fc" : "#e2e8f0" }}>{label}</span>
-                      <span style={{ fontSize: 12, color: "#64748b", lineHeight: 1.4 }}>{desc}</span>
+                      <span style={{ fontSize: 13, fontWeight: 700, color: sel ? "var(--accent-strong)" : "var(--text)" }}>{label}</span>
+                      <span style={{ fontSize: 12, color: "var(--faint)", lineHeight: 1.4 }}>{desc}</span>
                     </button>
                   );
                 })}
@@ -428,21 +428,21 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
                 {!isReplay && (
                   <div style={{
                     padding: "12px 14px", borderRadius: 10,
-                    background: "rgba(99,102,241,0.06)",
-                    border: "1px solid rgba(99,102,241,0.15)",
-                    fontSize: 12, color: "#94a3b8", lineHeight: 1.5,
+                    background: "rgba(143,193,232,0.06)",
+                    border: "1px solid rgba(143,193,232,0.15)",
+                    fontSize: 12, color: "var(--dim)", lineHeight: 1.5,
                   }}>
-                    <strong style={{ color: "#a78bfa" }}>🏒 Live season</strong> — draft this fall, compete all season long with real-time games and standings.
+                    <strong style={{ color: "var(--accent-strong)" }}>🏒 Live season</strong> — draft this fall, compete all season long with real-time games and standings.
                   </div>
                 )}
                 {isReplay && (
                   <div style={{
                     padding: "12px 14px", borderRadius: 10,
-                    background: "rgba(245,158,11,0.06)",
-                    border: "1px solid rgba(245,158,11,0.2)",
-                    fontSize: 12, color: "#94a3b8", lineHeight: 1.5,
+                    background: "rgba(245,201,123,0.06)",
+                    border: "1px solid rgba(245,201,123,0.2)",
+                    fontSize: 12, color: "var(--dim)", lineHeight: 1.5,
                   }}>
-                    <strong style={{ color: "#fbbf24" }}>⏪ Replay mode</strong> — your league is a sandbox using a completed 2025-26 season.
+                    <strong style={{ color: "var(--gold)" }}>⏪ Replay mode</strong> — your league is a sandbox using a completed 2025-26 season.
                     You control the pace (advance by day or week). Great for trying the app or playing with a friend.
                   </div>
                 )}
@@ -459,7 +459,7 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
                       value={draftDate}
                       onChange={(e) => setDraftDate(e.target.value)}
                     />
-                    <span style={{ fontSize: 12, color: "#475569", marginTop: 4, display: "block" }}>
+                    <span style={{ fontSize: 12, color: "var(--faint)", marginTop: 4, display: "block" }}>
                       Try late November 2026 (when the PWHL season opens). You can always change this from the admin panel.
                     </span>
                   </label>
@@ -498,7 +498,7 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
                 <>
                   <div>
                     <h1 style={{ margin: "0 0 6px", fontSize: 22 }}>Your beta replay league</h1>
-                    <p style={{ margin: 0, color: "#64748b", fontSize: 14 }}>
+                    <p style={{ margin: 0, color: "var(--faint)", fontSize: 14 }}>
                       Everything is pre-configured. Here&apos;s what you&apos;re getting into.
                     </p>
                   </div>
@@ -506,22 +506,22 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
                   {/* Beta timeline callout */}
                   <div style={{
                     padding: "14px 16px", borderRadius: 12,
-                    background: "rgba(245,158,11,0.06)",
-                    border: "1px solid rgba(245,158,11,0.2)",
-                    fontSize: 13, color: "#94a3b8", lineHeight: 1.6,
+                    background: "rgba(245,201,123,0.06)",
+                    border: "1px solid rgba(245,201,123,0.2)",
+                    fontSize: 13, color: "var(--dim)", lineHeight: 1.6,
                   }}>
-                    <div style={{ fontWeight: 700, color: "#fbbf24", marginBottom: 6 }}>⏱ How it works</div>
+                    <div style={{ fontWeight: 700, color: "var(--gold)", marginBottom: 6 }}>⏱ How it works</div>
                     <div>
-                      <strong style={{ color: "#e2e8f0" }}>Draft</strong> — starts right away. You pick players from the 2025-26 roster.
+                      <strong style={{ color: "var(--text)" }}>Draft</strong> — starts right away. You pick players from the 2025-26 roster.
                     </div>
                     <div>
-                      <strong style={{ color: "#e2e8f0" }}>Week 1</strong> — kicks off the day after your draft ends.
+                      <strong style={{ color: "var(--text)" }}>Week 1</strong> — kicks off the day after your draft ends.
                     </div>
                     <div>
-                      <strong style={{ color: "#e2e8f0" }}>2-week regular season</strong> — all vs. all VP scoring using real 2025-26 game data.
+                      <strong style={{ color: "var(--text)" }}>2-week regular season</strong> — all vs. all VP scoring using real 2025-26 game data.
                     </div>
                     <div>
-                      <strong style={{ color: "#e2e8f0" }}>4-team playoffs</strong> — semi-final week, then championship week.
+                      <strong style={{ color: "var(--text)" }}>4-team playoffs</strong> — semi-final week, then championship week.
                     </div>
                   </div>
 
@@ -533,8 +533,8 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
                         {["Goal = 2 pts", "Assist = 1.5 pts", "PPP = +0.5 pts", "Win (G) = 5 pts", "Shutout (G) = 3 pts"].map(lbl => (
                           <span key={lbl} style={{
                             padding: "2px 8px", borderRadius: 5, fontSize: 11, fontWeight: 600,
-                            background: "rgba(255,255,255,0.04)", border: "1px solid rgba(148,163,184,0.12)",
-                            color: "#94a3b8",
+                            background: "var(--bg-raised)", border: "1px solid var(--border)",
+                            color: "var(--dim)",
                           }}>{lbl}</span>
                         ))}
                       </div>
@@ -546,9 +546,9 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
 
                   <div style={{
                     padding: "12px 16px", borderRadius: 12,
-                    background: "rgba(99,102,241,0.06)",
-                    border: "1px solid rgba(99,102,241,0.15)",
-                    fontSize: 13, color: "#94a3b8",
+                    background: "rgba(143,193,232,0.06)",
+                    border: "1px solid rgba(143,193,232,0.15)",
+                    fontSize: 13, color: "var(--dim)",
                   }}>
                     💡 Next, you&apos;ll name your own team before inviting others.
                   </div>
@@ -564,49 +564,88 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
                 <>
                   <div>
                     <h1 style={{ margin: "0 0 6px", fontSize: 22 }}>Standard rules</h1>
-                    <p style={{ margin: 0, color: "#64748b", fontSize: 14 }}>
-                      Your league uses these defaults. They&apos;re the most competitive settings for the PWHL.
+                    <p style={{ margin: 0, color: "var(--faint)", fontSize: 14 }}>
+                      Your league uses these defaults — the most competitive settings for the PWHL.
                     </p>
                   </div>
 
-                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                    <RuleRow icon="👥" label="Roster" value="3 F · 2 D · 1 UTIL (any skater: F or D) · 1 G · 6 Bench = 13 slots, all drafted" />
+                  {/* Rule sheet card */}
+                  <div style={{ background: "var(--bg-raised)", border: "1px solid var(--border)", borderRadius: 14, overflow: "hidden" }}>
 
-                    <RuleRow icon="📊" label="Standings" value={<>Victory Points (VP) — win your matchup AND score more than anyone else<VpExplainer /></>} />
-                    <RuleRow icon="🏆" label="Scoring" value={
-                      <div style={{ display: "flex", flexWrap: "wrap", gap: 5, marginTop: 4 }}>
-                        {["Goal = 2 pts", "Assist = 1.5 pts", "PPP = +0.5 pts", "Win (G) = 5 pts", "Shutout (G) = 3 pts"].map(lbl => (
-                          <span key={lbl} style={{
-                            padding: "2px 8px", borderRadius: 5, fontSize: 11, fontWeight: 600,
-                            background: "rgba(255,255,255,0.04)", border: "1px solid rgba(148,163,184,0.12)",
-                            color: "#94a3b8",
-                          }}>{lbl}</span>
+                    {/* Roster */}
+                    <div style={{ padding: "14px 16px", borderBottom: "1px solid var(--border-soft)" }}>
+                      <div style={{ fontSize: 12, color: "var(--dim)", marginBottom: 8 }}>Roster</div>
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 6 }}>
+                        {[["3", "F"], ["2", "D"], ["1", "UTIL"], ["1", "G"], ["6", "Bench"]].map(([count, pos]) => (
+                          <span key={pos} style={{
+                            display: "inline-flex", alignItems: "center", gap: 4,
+                            padding: "3px 10px", borderRadius: 6,
+                            background: "var(--card)", border: "1px solid var(--border)",
+                          }}>
+                            <span style={{ fontSize: 12, fontWeight: 700, color: "var(--accent)", fontVariantNumeric: "tabular-nums" }}>{count}</span>
+                            <span style={{ fontSize: 12, color: "var(--text)" }}>{pos}</span>
+                          </span>
                         ))}
                       </div>
-                    } />
-                    <RuleRow icon="🏒" label="Playoffs" value="Top 4 teams, single-elimination, no byes" />
-                    <RuleRow icon="📅" label="Season" value={isReplay ? `2025-26 replay season · ${maxTeams} teams` : `2026-27 live PWHL season · ${maxTeams} teams`} />
+                      <div style={{ fontSize: 11, color: "var(--faint)" }}>UTIL takes any skater (F or D).</div>
+                    </div>
+
+                    {/* Scoring */}
+                    <div style={{ padding: "14px 16px", borderBottom: "1px solid var(--border-soft)" }}>
+                      <div style={{ fontSize: 12, color: "var(--dim)", marginBottom: 10 }}>Scoring</div>
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 20px" }}>
+                        <div>
+                          <div style={{ fontSize: 11, fontWeight: 700, color: "var(--faint)", marginBottom: 6 }}>Skaters</div>
+                          {[["Goal", "+2.0"], ["Assist", "+1.5"], ["Power-play point", "+0.5"]].map(([stat, val], i) => (
+                            <div key={stat} style={{ display: "flex", justifyContent: "space-between", fontSize: 12, padding: "4px 0", borderTop: i > 0 ? "1px solid var(--border-soft)" : "none" }}>
+                              <span style={{ color: "var(--muted)" }}>{stat}</span>
+                              <span style={{ color: "var(--green)", fontVariantNumeric: "tabular-nums", fontWeight: 600 }}>{val}</span>
+                            </div>
+                          ))}
+                        </div>
+                        <div>
+                          <div style={{ fontSize: 11, fontWeight: 700, color: "var(--faint)", marginBottom: 6 }}>Goalies</div>
+                          {[["Win", "+5.0"], ["Save", "+0.2"], ["Shutout", "+3.0"], ["Goal against", "−1.0"]].map(([stat, val], i) => (
+                            <div key={stat} style={{ display: "flex", justifyContent: "space-between", fontSize: 12, padding: "4px 0", borderTop: i > 0 ? "1px solid var(--border-soft)" : "none" }}>
+                              <span style={{ color: "var(--muted)" }}>{stat}</span>
+                              <span style={{ color: val.startsWith("−") ? "var(--red)" : "var(--green)", fontVariantNumeric: "tabular-nums", fontWeight: 600 }}>{val}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Standings */}
+                    <div style={{ padding: "14px 16px", borderBottom: "1px solid var(--border-soft)", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                      <span style={{ fontSize: 12, color: "var(--dim)" }}>Standings</span>
+                      <span style={{ fontSize: 13, color: "var(--text)", display: "flex", alignItems: "center" }}>
+                        Ranked by <strong style={{ marginLeft: 4 }}>Victory Points (VP)</strong><VpExplainer />
+                      </span>
+                    </div>
+
+                    {/* Playoffs */}
+                    <div style={{ padding: "14px 16px", borderBottom: "1px solid var(--border-soft)", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                      <span style={{ fontSize: 12, color: "var(--dim)" }}>Playoffs</span>
+                      <span style={{ fontSize: 13, color: "var(--text)", textAlign: "right" }}>Top 4 teams · single elimination · no byes</span>
+                    </div>
+
+                    {/* Season */}
+                    <div style={{ padding: "14px 16px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                      <span style={{ fontSize: 12, color: "var(--dim)" }}>Season</span>
+                      <span style={{ fontSize: 13, color: "var(--text)", textAlign: "right" }}>
+                        {isReplay ? `2025-26 replay · ${maxTeams} teams` : `2026-27 live PWHL · ${maxTeams} teams`}
+                      </span>
+                    </div>
                   </div>
 
                   <div style={{
-                    padding: "12px 16px", borderRadius: 12,
-                    background: "rgba(99,102,241,0.06)",
-                    border: "1px solid rgba(99,102,241,0.15)",
-                    fontSize: 13, color: "#94a3b8",
+                    padding: "12px 14px", borderRadius: 10,
+                    background: "rgba(143,193,232,0.06)",
+                    border: "1px solid rgba(143,193,232,0.15)",
+                    fontSize: 13, color: "var(--dim)",
                   }}>
-                    💡 Next, you&apos;ll name your own team before inviting others.
+                    💡 Scoring, roster slots, and playoff format can all be changed from the admin panel before the draft.
                   </div>
-
-                  {!isReplay && (
-                    <div style={{
-                      padding: "12px 16px", borderRadius: 12,
-                      background: "rgba(255,255,255,0.02)",
-                      border: "1px solid rgba(148,163,184,0.1)",
-                      fontSize: 13, color: "#475569",
-                    }}>
-                      Scoring, roster slots, and playoff format can be adjusted from the admin panel before the draft.
-                    </div>
-                  )}
 
                   <div style={{ display: "flex", gap: 10, justifyContent: "space-between" }}>
                     <button className="button-secondary" onClick={goBack} style={{ flex: 1 }}>← Back</button>
@@ -625,7 +664,7 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
             <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
               <div>
                 <h1 style={{ margin: "0 0 6px", fontSize: 22 }}>Create your team</h1>
-                <p style={{ margin: 0, color: "#64748b", fontSize: 14 }}>
+                <p style={{ margin: 0, color: "var(--faint)", fontSize: 14 }}>
                   You&apos;ll be the commissioner, but you also need a team to draft and play. Choose your team name.
                 </p>
               </div>
@@ -640,7 +679,7 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
                   placeholder="e.g. Poulin Power Play"
                   autoFocus
                 />
-                <span style={{ fontSize: 11, color: teamName.length > 45 ? "#f59e0b" : "#475569", marginTop: 4, display: "block" }}>
+                <span style={{ fontSize: 11, color: teamName.length > 45 ? "var(--amber)" : "var(--faint)", marginTop: 4, display: "block" }}>
                   {teamName.length}/50
                 </span>
               </label>
@@ -665,20 +704,20 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
             <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
               <div style={{
                 padding: "14px 16px", borderRadius: 12,
-                background: "rgba(52,211,153,0.07)",
-                border: "1px solid rgba(52,211,153,0.2)",
+                background: "rgba(81,216,138,0.07)",
+                border: "1px solid rgba(81,216,138,0.2)",
               }}>
-                <p style={{ margin: "0 0 4px", fontSize: 15, fontWeight: 700, color: "#34d399" }}>
+                <p style={{ margin: "0 0 4px", fontSize: 15, fontWeight: 700, color: "var(--green)" }}>
                   ✓ League created!
                 </p>
-                <p style={{ margin: 0, fontSize: 13, color: "#64748b" }}>
+                <p style={{ margin: 0, fontSize: 13, color: "var(--faint)" }}>
                   {name} is ready. Invite your managers below.
                 </p>
               </div>
 
               <div>
                 <h2 style={{ margin: "0 0 8px", fontSize: 18 }}>Invite managers</h2>
-                <p style={{ margin: "0 0 14px", color: "#64748b", fontSize: 14 }}>
+                <p style={{ margin: "0 0 14px", color: "var(--faint)", fontSize: 14 }}>
                   Share this link. Anyone who opens it can join your league in one step — no league ID needed.
                 </p>
                 <InviteLinkButton leagueId={createdLeagueId} />
@@ -704,7 +743,7 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
               <div>
                 <p style={{ fontSize: 28, margin: "0 0 8px" }}>🎉</p>
                 <h1 style={{ margin: "0 0 6px", fontSize: 22 }}>You&apos;re all set!</h1>
-                <p style={{ margin: 0, color: "#64748b", fontSize: 14 }}>
+                <p style={{ margin: 0, color: "var(--faint)", fontSize: 14 }}>
                   {name} is created. Here&apos;s how to get ready for draft day.
                 </p>
               </div>
@@ -738,18 +777,18 @@ function WizardError({ message }: { message: string }) {
     <div style={{
       display: "flex", alignItems: "flex-start", gap: 10,
       padding: "12px 14px", borderRadius: 10,
-      background: "rgba(239,68,68,0.08)",
-      border: "1px solid rgba(239,68,68,0.25)",
+      background: "rgba(246,131,127,0.08)",
+      border: "1px solid rgba(246,131,127,0.25)",
     }}>
-      <span style={{ fontSize: 14, flexShrink: 0, marginTop: 1, color: "#f87171" }}>!</span>
-      <div style={{ fontSize: 13, color: "#fca5a5", lineHeight: 1.4 }}>
+      <span style={{ fontSize: 14, flexShrink: 0, marginTop: 1, color: "var(--red)" }}>!</span>
+      <div style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.4 }}>
         {message}
         {isAuthError && (
           <>
             {" "}
             <a
               href="/login"
-              style={{ color: "#f87171", fontWeight: 700, textDecoration: "underline" }}
+              style={{ color: "var(--red)", fontWeight: 700, textDecoration: "underline" }}
             >
               Sign in again
             </a>
@@ -765,15 +804,15 @@ function RuleRow({ icon, label, value }: { icon: string; label: string; value: R
     <div style={{
       display: "flex", alignItems: "flex-start", gap: 12,
       padding: "12px 14px", borderRadius: 12,
-      background: "rgba(255,255,255,0.03)",
-      border: "1px solid rgba(148,163,184,0.08)",
+      background: "var(--bg-raised)",
+      border: "1px solid var(--border)",
     }}>
       <span style={{ fontSize: 16, flexShrink: 0, marginTop: 1 }}>{icon}</span>
       <div>
-        <div style={{ fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 2 }}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: "var(--faint)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 2 }}>
           {label}
         </div>
-        <div style={{ fontSize: 13, color: "#e2e8f0" }}>{value}</div>
+        <div style={{ fontSize: 13, color: "var(--text)" }}>{value}</div>
       </div>
     </div>
   );
@@ -784,25 +823,25 @@ function PrepStep({ num, label, desc, done }: { num: number; label: string; desc
     <div style={{
       display: "flex", alignItems: "flex-start", gap: 12,
       padding: "12px 14px", borderRadius: 12,
-      background: done ? "rgba(52,211,153,0.05)" : "rgba(255,255,255,0.02)",
-      border: `1px solid ${done ? "rgba(52,211,153,0.15)" : "rgba(148,163,184,0.08)"}`,
+      background: done ? "rgba(81,216,138,0.05)" : "var(--bg-raised)",
+      border: `1px solid ${done ? "rgba(81,216,138,0.15)" : "var(--border)"}`,
     }}>
       <div style={{
         width: 22, height: 22, borderRadius: "50%", flexShrink: 0,
         display: "flex", alignItems: "center", justifyContent: "center",
         fontSize: 11, fontWeight: 700,
-        background: done ? "rgba(52,211,153,0.15)" : "rgba(99,102,241,0.1)",
-        color: done ? "#34d399" : "#a5b4fc",
-        border: `1.5px solid ${done ? "#34d399" : "#6366f1"}`,
+        background: done ? "rgba(81,216,138,0.15)" : "rgba(143,193,232,0.1)",
+        color: done ? "var(--green)" : "var(--accent-strong)",
+        border: `1.5px solid ${done ? "var(--green)" : "var(--accent)"}`,
         marginTop: 1,
       }}>
         {done ? "✓" : num}
       </div>
       <div>
-        <div style={{ fontSize: 13, fontWeight: 700, color: done ? "#64748b" : "#e2e8f0", textDecoration: done ? "line-through" : "none" }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: done ? "var(--faint)" : "var(--text)", textDecoration: done ? "line-through" : "none" }}>
           {label}
         </div>
-        <div style={{ fontSize: 12, color: "#475569", marginTop: 2 }}>{desc}</div>
+        <div style={{ fontSize: 12, color: "var(--faint)", marginTop: 2 }}>{desc}</div>
       </div>
     </div>
   );

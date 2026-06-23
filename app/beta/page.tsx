@@ -41,7 +41,7 @@ export default function BetaPage() {
   return (
     <main style={{
       minHeight: "100vh",
-      background: "radial-gradient(ellipse 80% 60% at 50% -10%, rgba(124,58,237,0.18) 0%, transparent 70%), #090b12",
+      background: "radial-gradient(ellipse 80% 60% at 50% -10%, rgba(143,193,232,0.18) 0%, transparent 70%), var(--bg)",
       display: "flex",
       flexDirection: "column",
       alignItems: "center",
@@ -54,10 +54,10 @@ export default function BetaPage() {
           <span style={{
             display: "inline-flex", alignItems: "center", gap: 8,
             fontSize: 11, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase",
-            color: "#c9b6ff", background: "rgba(124,58,237,0.14)",
-            border: "1px solid rgba(124,58,237,0.30)", borderRadius: 30, padding: "7px 16px",
+            color: "var(--accent-strong)", background: "rgba(143,193,232,0.14)",
+            border: "1px solid rgba(143,193,232,0.30)", borderRadius: 30, padding: "7px 16px",
           }}>
-            <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#a78bfa", animation: "pulse 2s infinite", flexShrink: 0 }} />
+            <span style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--accent-strong)", animation: "pulse 2s infinite", flexShrink: 0 }} />
             Beta · Replay Season
           </span>
         </div>
@@ -67,14 +67,14 @@ export default function BetaPage() {
           <h1 style={{
             fontSize: "clamp(44px, 10vw, 72px)",
             fontWeight: 900, lineHeight: 0.96,
-            letterSpacing: "-0.03em", color: "#f6f7fb", margin: "0 0 20px",
+            letterSpacing: "-0.03em", color: "var(--text)", margin: "0 0 20px",
           }}>
             Be a<br />
-            <span style={{ background: "linear-gradient(135deg, #a78bfa, #7c3aed)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+            <span style={{ background: "linear-gradient(135deg, var(--accent-strong), var(--accent))", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
               Founding GM.
             </span>
           </h1>
-          <p style={{ fontSize: 17, lineHeight: 1.65, color: "#9aa3bd", margin: 0, maxWidth: 480, marginInline: "auto" }}>
+          <p style={{ fontSize: 17, lineHeight: 1.65, color: "var(--dim)", margin: 0, maxWidth: 480, marginInline: "auto" }}>
             Help us build the best PWHL fantasy experience before we go live.
             Beta leagues use a real historical PWHL season — full stats, real players, real games.
             Spots are limited.
@@ -93,23 +93,23 @@ export default function BetaPage() {
           ].map(({ icon, label }) => (
             <div key={label} style={{ textAlign: "center" }}>
               <div style={{ fontSize: 22, marginBottom: 4 }}>{icon}</div>
-              <div style={{ fontSize: 12, fontWeight: 600, color: "#7c8aa8", letterSpacing: "0.04em" }}>{label}</div>
+              <div style={{ fontSize: 12, fontWeight: 600, color: "var(--faint)", letterSpacing: "0.04em" }}>{label}</div>
             </div>
           ))}
         </div>
 
         {/* Commissioner callout */}
         <div style={{
-          background: "rgba(124,58,237,0.08)", border: "1px solid rgba(124,58,237,0.22)",
+          background: "rgba(143,193,232,0.08)", border: "1px solid rgba(143,193,232,0.22)",
           borderRadius: 12, padding: "16px 20px", marginBottom: 24,
           display: "flex", gap: 14, alignItems: "flex-start",
         }}>
           <span style={{ fontSize: 22, flexShrink: 0, marginTop: 1 }}>🏆</span>
           <div>
-            <div style={{ fontSize: 13, fontWeight: 700, color: "#c4b5fd", marginBottom: 4 }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: "var(--accent-strong)", marginBottom: 4 }}>
               Looking for league commissioners
             </div>
-            <p style={{ fontSize: 13, color: "#8b93a7", lineHeight: 1.5, margin: 0 }}>
+            <p style={{ fontSize: 13, color: "var(--dim)", lineHeight: 1.5, margin: 0 }}>
               Commissioners set up leagues, customize scoring, send invites, and run the draft.
               If you want to be in the GM seat from day one, check the box below.
             </p>
@@ -123,10 +123,10 @@ export default function BetaPage() {
               <div style={{ fontSize: 40, marginBottom: 16 }}>
                 {state === "already" ? "👋" : "🎉"}
               </div>
-              <h2 style={{ fontSize: 24, fontWeight: 800, color: "#f3f5fb", margin: "0 0 12px" }}>
+              <h2 style={{ fontSize: 24, fontWeight: 800, color: "var(--text)", margin: "0 0 12px" }}>
                 {state === "already" ? "You're already on the list." : "You're on the list."}
               </h2>
-              <p style={{ fontSize: 15, color: "#9aa3bd", lineHeight: 1.6, margin: "0 0 24px" }}>
+              <p style={{ fontSize: 15, color: "var(--dim)", lineHeight: 1.6, margin: "0 0 24px" }}>
                 {state === "already"
                   ? "We already have your email. We'll be in touch when beta opens."
                   : wantsToCommission
@@ -135,7 +135,7 @@ export default function BetaPage() {
               </p>
               <Link href="/" style={{
                 display: "inline-flex", alignItems: "center", gap: 8,
-                fontSize: 14, color: "#a78bfa", textDecoration: "none", fontWeight: 600,
+                fontSize: 14, color: "var(--accent-strong)", textDecoration: "none", fontWeight: 600,
               }}>
                 ← Back to PWHL GM
               </Link>
@@ -143,7 +143,7 @@ export default function BetaPage() {
           ) : (
             <form onSubmit={handleSubmit}>
               <div style={{ marginBottom: 20 }}>
-                <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#c9d1e0", marginBottom: 8 }}>
+                <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "var(--muted)", marginBottom: 8 }}>
                   Email address
                 </label>
                 <input
@@ -154,18 +154,18 @@ export default function BetaPage() {
                   placeholder="you@example.com"
                   style={{
                     width: "100%", boxSizing: "border-box",
-                    background: "#111827", border: "1px solid rgba(148,163,184,0.18)",
+                    background: "var(--bg-raised)", border: "1px solid var(--border)",
                     borderRadius: 10, padding: "13px 15px",
-                    fontSize: 15, color: "#f3f5fb",
+                    fontSize: 15, color: "var(--text)",
                     outline: "none", transition: "border-color 0.15s",
                   }}
-                  onFocus={e => (e.currentTarget.style.borderColor = "rgba(124,58,237,0.55)")}
+                  onFocus={e => (e.currentTarget.style.borderColor = "rgba(143,193,232,0.55)")}
                   onBlur={e => (e.currentTarget.style.borderColor = "rgba(148,163,184,0.18)")}
                 />
               </div>
 
               <div style={{
-                background: "rgba(124,58,237,0.07)", border: "1px solid rgba(124,58,237,0.18)",
+                background: "rgba(143,193,232,0.07)", border: "1px solid rgba(143,193,232,0.18)",
                 borderRadius: 10, padding: "14px 16px", marginBottom: 24,
                 cursor: "pointer",
               }}
@@ -175,7 +175,7 @@ export default function BetaPage() {
                   <div style={{
                     width: 18, height: 18, borderRadius: 5, flexShrink: 0, marginTop: 2,
                     border: wantsToCommission ? "none" : "2px solid rgba(148,163,184,0.35)",
-                    background: wantsToCommission ? "linear-gradient(135deg,#7c3aed,#6d28d9)" : "transparent",
+                    background: wantsToCommission ? "linear-gradient(135deg,var(--accent),var(--accent-deep))" : "transparent",
                     display: "flex", alignItems: "center", justifyContent: "center",
                     transition: "all 0.15s",
                   }}>
@@ -186,10 +186,10 @@ export default function BetaPage() {
                     )}
                   </div>
                   <div>
-                    <div style={{ fontSize: 14, fontWeight: 600, color: "#e2e8f0", marginBottom: 3 }}>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: "var(--text)", marginBottom: 3 }}>
                       I'd like to be a league commissioner for beta testing
                     </div>
-                    <div style={{ fontSize: 12, color: "#7c8aa8", lineHeight: 1.5 }}>
+                    <div style={{ fontSize: 12, color: "var(--faint)", lineHeight: 1.5 }}>
                       Commissioners create leagues, invite up to 7 friends, and run the draft.
                     </div>
                   </div>
@@ -200,7 +200,7 @@ export default function BetaPage() {
                 <div style={{
                   background: "rgba(248,113,113,0.1)", border: "1px solid rgba(248,113,113,0.25)",
                   borderRadius: 8, padding: "10px 14px", marginBottom: 16,
-                  fontSize: 13, color: "#fca5a5",
+                  fontSize: 13, color: "var(--red)",
                 }}>
                   {errorMsg}
                 </div>
@@ -211,8 +211,8 @@ export default function BetaPage() {
                 disabled={state === "loading"}
                 style={{
                   width: "100%", padding: "15px 24px",
-                  background: state === "loading" ? "rgba(124,58,237,0.5)" : "linear-gradient(135deg,#7c3aed,#6d28d9)",
-                  color: "#fff", border: "none", borderRadius: 11,
+                  background: state === "loading" ? "rgba(143,193,232,0.5)" : "linear-gradient(135deg,var(--accent),var(--accent-deep))",
+                  color: "var(--accent-ink)", border: "none", borderRadius: 11,
                   fontSize: 16, fontWeight: 700, cursor: state === "loading" ? "not-allowed" : "pointer",
                   display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
                   transition: "opacity 0.15s",
@@ -237,7 +237,7 @@ export default function BetaPage() {
                 )}
               </button>
 
-              <p style={{ textAlign: "center", fontSize: 12, color: "#6f788e", margin: "16px 0 0" }}>
+              <p style={{ textAlign: "center", fontSize: 12, color: "var(--faint)", margin: "16px 0 0" }}>
                 No spam. Ever. We&apos;ll only email you about beta access.
               </p>
             </form>
@@ -245,9 +245,9 @@ export default function BetaPage() {
         </div>
 
         {/* Footer note */}
-        <p style={{ textAlign: "center", fontSize: 12.5, color: "#555f78", marginTop: 32, lineHeight: 1.6 }}>
+        <p style={{ textAlign: "center", fontSize: 12.5, color: "var(--faint)", marginTop: 32, lineHeight: 1.6 }}>
           PWHL GM is a free-to-play fantasy platform built by fans of the{" "}
-          <span style={{ color: "#7c8aa8" }}>Professional Women&apos;s Hockey League</span>.
+          <span style={{ color: "var(--faint)" }}>Professional Women&apos;s Hockey League</span>.
           <br />Not affiliated with the PWHL.
         </p>
       </div>

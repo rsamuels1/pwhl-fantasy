@@ -10,12 +10,12 @@ const CHIP_COLORS: Record<StatChipType["type"], string> = {
   league_record: "#fbbf24",
   streak: "#fb923c",
   projection_swing_up: "#5fa98c",
-  projection_swing_down: "#94a3b8",
+  projection_swing_down: "var(--dim)",
 };
 
 export default function StatChip({ chip }: { chip: StatChipType }) {
   const copy = getChipCopy(chip.type);
-  const color = CHIP_COLORS[chip.type] ?? "#a78bfa";
+  const color = CHIP_COLORS[chip.type] ?? "var(--accent-strong)";
   return (
     <span
       className="stat-chip-pulse"

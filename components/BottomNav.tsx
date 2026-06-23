@@ -89,7 +89,7 @@ export default function BottomNav({ teamId, leagueId }: Props) {
       {TABS.map((tab) => {
         const href = tab.hrefFn(teamId, leagueId);
         const active = pathname === href || (tab.key !== "more" && tab.key !== "league" && pathname.startsWith(href));
-        const color = active ? "#a78bfa" : "#6f788e";
+        const color = active ? "var(--accent-strong)" : "var(--faint)";
         return (
           <Link
             key={tab.key}

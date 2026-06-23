@@ -25,7 +25,7 @@ export default function InfoTooltip({ text }: { text: string }) {
           border: "none",
           cursor: "pointer",
           fontSize: 13,
-          color: "var(--dim, #64748b)",
+          color: "var(--dim)",
           lineHeight: 1,
           borderRadius: 6,
         }}
@@ -40,7 +40,7 @@ export default function InfoTooltip({ text }: { text: string }) {
             background: "rgba(100,116,139,0.10)",
             borderRadius: 8,
             fontSize: 12,
-            color: "var(--muted, #94a3b8)",
+            color: "var(--muted)",
             lineHeight: 1.5,
             maxWidth: 280,
           }}

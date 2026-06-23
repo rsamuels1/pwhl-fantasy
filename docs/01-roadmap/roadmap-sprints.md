@@ -1411,7 +1411,7 @@ Goal: Make every Tuesday feel like something happened. Surface what already exis
 
 ---
 
-## Sprint 22 — "Inviting Dark Redesign" · PLANNED · Track F · P1
+## Sprint 22 — "Inviting Dark Redesign" · IN PROGRESS · Track F · P1
 
 Goal: Execute the "Inviting Dark" visual redesign defined in `docs/branding/pwhl_redesign_bundle_v3_1.zip`. This sprint is pure UI/CSS — no schema changes, no new API routes, no new data models. It covers the full token replacement, inline hex sweep, emoji restoration, flagship page redesigns (league overview + team matchup), remaining page recolor sweep, and a set of emotional UX additions (Momentum Strip, prestige gradient, gold prestige moments, empty state copy, wizard summary panel).
 
@@ -1419,16 +1419,18 @@ Also absorbs 7 carry-in items from the Sprint 19 Playwright UX walkthrough that 
 
 Spec authority: `docs/branding/pwhl_redesign_bundle_v3_1.zip` (contains `globals.tokens.css`, `color-replacement-map.md`, `page-inventory.md`, and reference HTML files for league overview and team matchup).
 
+**Progress: 8/23 shipped (P1 core track complete; P2 stories and RD-005/006 flagship redesigns remain)**
+
 | Story | Track | Size | Priority | Status |
 |---|---|---|---|---|
-| RD-001 — Token swap: replace `:root` in `globals.css` with Inviting Dark tokens + 3 follow-up edits (body radial-gradient, `.button-primary` accent-ink text, `.section-accent` drop violet) | UX | S | P1 | Open |
-| RD-002 — Inline hex sweep across `app/**` + `components/**` per `color-replacement-map.md`; verify button/badge contrast after | Refactor | M | P1 | Open |
-| RD-003 — Emoji policy restoration: apply tiered policy; restore glyph chips (✓ CLINCHED, ✗ OUT, ◉ BUBBLE), activity-feed emoji, recap emoji, lock emoji; remove blanket-ban relics | UX | S | P1 | Open |
-| RD-004 — VP popover fix + Create League Wizard rebuild: fix `components/VpExplainer.tsx` anchored popover; rebuild `app/create-league/CreateLeagueWizard.tsx` with rule-sheet layout, scoring two-column table, slot pills | Feature | L | P1 | Open |
+| RD-001 — Token swap: replace `:root` in `globals.css` with Inviting Dark tokens + 3 follow-up edits (body radial-gradient, `.button-primary` accent-ink text, `.section-accent` drop violet) | UX | S | P1 | ✅ SHIPPED |
+| RD-002 — Inline hex sweep across `app/**` + `components/**` per `color-replacement-map.md`; verify button/badge contrast after | Refactor | M | P1 | ✅ SHIPPED |
+| RD-003 — Emoji policy restoration: apply tiered policy; restore glyph chips (✓ CLINCHED, ✗ OUT, ◉ BUBBLE), activity-feed emoji, recap emoji, lock emoji; remove blanket-ban relics | UX | S | P1 | ✅ SHIPPED |
+| RD-004 — VP popover fix + Create League Wizard rebuild: fix `components/VpExplainer.tsx` anchored popover; rebuild `app/create-league/CreateLeagueWizard.tsx` with rule-sheet layout, scoring two-column table, slot pills | Feature | L | P1 | ✅ SHIPPED (also covers UX-051, UX-057) |
 | RD-005 — League overview flagship redesign: `app/league/[leagueId]/page.tsx` per `references/League Overview.dc.html`; gold commissioner strip, glyph chips, My Matchup widget sky-accent recolor, league leaders layout | Feature | L | P1 | Open |
 | RD-006 — Team matchup flagship redesign: `app/team/[teamId]/matchup/page.tsx` per `references/Team Matchup.dc.html`; DuelHero warm gradient + gold radial, score semantics → token vars, prestige RecapCard, all-set banner | Feature | L | P1 | Open |
-| RD-007 — Remaining page recolor sweep: walk `page-inventory.md` [recolor] screens: dashboard, standings, bracket, admin, roster, draft, trades, auth pages, founder console, shared components | Refactor | L | P1 | Open |
-| RD-008 — Momentum Strip component: new `components/MomentumStrip.tsx`; placed under matchup score header; hidden pre-game, collapses when matchup complete; shows +X pts since yesterday, N players remaining, opponent status | Feature | M | P1 | Open |
+| RD-007 — Remaining page recolor sweep: walk `page-inventory.md` [recolor] screens: dashboard, standings, bracket, admin, roster, draft, trades, auth pages, founder console, shared components | Refactor | L | P1 | ✅ SHIPPED (covers RD-005/006 recolor portions; `app/founder/` intentionally preserved) |
+| RD-008 — Momentum Strip component: new `components/MomentumStrip.tsx`; placed under matchup score header; hidden pre-game, collapses when matchup complete; shows +X pts since yesterday, N players remaining, opponent status | Feature | M | P1 | ✅ SHIPPED (completes LL-002) |
 | RD-009 — Prestige gradient token: add `--prestige-gradient` CSS variable to `app/globals.css`; apply to champion cards, clinched playoff banners, weekly recap hero; never on buttons/nav | UX | S | P2 | Open |
 | RD-010 — Gold prestige moments: apply `--gold` to weekly high score badge, first-place indicator, hot streak chip, clinched banner, champion card; keep gold intentionally rare | Feature | M | P2 | Open |
 | RD-011 — Empty state personality copy: update `components/EmptyState.tsx` and inline empty states with warm copy | UX | S | P2 | Open |
@@ -1437,10 +1439,10 @@ Spec authority: `docs/branding/pwhl_redesign_bundle_v3_1.zip` (contains `globals
 | RD-015 — Settings editor rule-sheet restructure: `SettingsEditor.tsx` scoring section → two-column Skaters/Goalies table; roster slots → pill badges matching wizard; sentence-case section headers; presentation-only — all save/validation tests pass | UX | M | P2 | Open |
 | RD-016 — Brand theme naming decision ("Northern Ice"): confirm theme name; apply to `globals.css` header comment + branding README; no functional change | Decision | S | P2 | Open |
 | RD-017 — Emotional Design North-Star Principles: `docs/branding/emotional-design-principles.md`; "should feel / avoid feeling" list; signature-moment gold rule; "arena concourse" north-star line; linked from sprint exit criteria and branding README | Doc | S | P2 | Open |
-| BF-018 — `/league-rules` 404: create minimal `app/league-rules/page.tsx` or remove all dead links (carry-in from Sprint 19) | Bug | S | P1 | Open |
-| UX-051 — VP popover overflow on mobile in wizard Rules step (handled alongside RD-004 `VpExplainer.tsx` changes; carry-in from Sprint 19) | UX | S | P1 | Open |
-| UX-052 — Invite landing: add 3+ bullet-point fantasy primer above join form for logged-out cold users (carry-in from Sprint 19) | UX | M | P1 | Open |
-| UX-057 — Wizard Rules step jargon wall: add inline PPP + UTIL definitions; restructure alongside RD-004 wizard rebuild (carry-in from Sprint 19) | UX | M | P1 | Open |
+| BF-018 — `/league-rules` 404: create minimal `app/league-rules/page.tsx` or remove all dead links (carry-in from Sprint 19) | Bug | S | P1 | ✅ SHIPPED (`app/league-rules/page.tsx` created; public static page, 5 sections) |
+| UX-051 — VP popover overflow on mobile in wizard Rules step (handled alongside RD-004 `VpExplainer.tsx` changes; carry-in from Sprint 19) | UX | S | P1 | ✅ SHIPPED (via RD-004) |
+| UX-052 — Invite landing: add 3+ bullet-point fantasy primer above join form for logged-out cold users (carry-in from Sprint 19) | UX | M | P1 | ✅ SHIPPED (`app/invite/[leagueId]/page.tsx` — "New to fantasy sports?" section with 4 plain-language steps) |
+| UX-057 — Wizard Rules step jargon wall: add inline PPP + UTIL definitions; restructure alongside RD-004 wizard rebuild (carry-in from Sprint 19) | UX | M | P1 | ✅ SHIPPED (via RD-004) |
 | UX-054 — Replay CTA context copy: add ≤15-word subtitle to "Try a Replay" CTA on landing page (carry-in from Sprint 19) | UX | S | P2 | Open |
 | UX-055 — Wizard step count: show step summary on welcome/beta screen before step 1 (carry-in from Sprint 19) | UX | S | P2 | Open |
 | UX-056 — Commissioner draft checklist: add plain-language snake-draft primer in admin panel pre-draft section (carry-in from Sprint 19) | UX | S | P2 | Open |
@@ -1582,7 +1584,7 @@ Items below are acknowledged but have no sprint assignment. They become candidat
 | Sprint 19 — IA Restructure: Franchise-First Nav + DnD Lineup | ✅ COMPLETE (Jun 23, 2026) | 5/5 parts shipped: Part 1 emoji policy + colorblind chips (0d00092) · Part 2 Trades→My Franchise + TeamNav (a2cd617) · Part 3 league overview commissioner-only (3ceb056) · Part 4 DnD lineup on roster page (01075f9) · Part 5 commissioner god-mode (b4986a6). No schema changes. |
 | Sprint 20 — VTF Navigation Rename | ✅ COMPLETE (Jun 23, 2026) | 2/2 items shipped: BF-018 league nav "Schedule" → "Results" + VTF explainer subtitle (commit ad4185a) · UX-049 team nav "Schedule" → "My Season" + section rename. No schema changes. |
 | Sprint 21 — Living League: Weekly Delight | ✅ COMPLETE | 5/5 stories shipped: LL-001 Weekly Awards Ceremony (`computeWeeklyAwards()` + `emitWeeklyAwards()` in `storyline-service.ts`, award cards in `WeekHighlights.tsx`) · LL-002 Momentum Strip data layer (`scoreDeltaSinceYesterday`, `playersRemainingTonight`, `opponentFinished` on `ActiveMatchup`) · LL-003 Animated Stat Chips (`StatChip.tsx`, `computeStatChips()` in `dashboard.ts`) · LL-017 Plain-Language Explainers (`lib/copy/living-league-glossary.ts`, `InfoTooltip.tsx`) · LL-018 Negative Award Tone Calibration (recovery CTAs, `showNegativeAwards` toggle, `NegativeAwardsToggle.tsx`, `PATCH /api/leagues/[leagueId]/settings`). No schema changes. 6 commits. |
-| Sprint 22 — Inviting Dark Redesign | 🔵 PLANNED | 23 stories (RD-001–RD-012 + RD-014–RD-017 + 7 carry-ins): Inviting Dark/Northern Ice token swap, hex sweep, emoji policy, VP popover + wizard rebuild, flagship redesigns, recolor sweep, Momentum Strip, prestige gradient, gold moments, empty state copy, wizard summary panel, trend arrows + upset chip (RD-014), settings rule-sheet restructure (RD-015), theme naming (RD-016), emotional design principles doc (RD-017), /league-rules fix, invite primer, Replay CTA copy, wizard step count, draft checklist. No schema changes. |
+| Sprint 22 — Inviting Dark Redesign | 🟡 IN PROGRESS (8/23 shipped) | RD-001 token swap ✅ · RD-002 hex sweep ✅ · RD-003 emoji policy ✅ · RD-004 VP popover + wizard rebuild ✅ (covers UX-051 + UX-057) · RD-007 remaining page recolor ✅ · RD-008 MomentumStrip ✅ (completes LL-002) · BF-018 /league-rules page ✅ · UX-052 invite primer ✅. Remaining: RD-005/006 flagship redesigns · RD-009–012 P2 emotional design · RD-014–017 · UX-054/055/056. No schema changes. |
 | Sprint 23 — Living League: The Race | ✅ COMPLETE | 7/7 stories shipped: LL-004 Magic Number (`computeRace()` + magicNumber + standings chip) · LL-005 Playoff Clinch Celebration (`emitClinchEvents()` + `ClinchBanner.tsx`) · LL-007 Bubble Watch (`BubbleWatch.tsx` on standings) · LL-008 Upset Tracker (`upset-service.ts` + `UpsetCard.tsx`) · LL-019 First-Result Explainer (`FirstResultCard.tsx`, localStorage-gated) · LL-021 Small-Win Encouragement (`MilestoneToast.tsx`, lineup + first-add) · RD-013 Team Identity Colors (`FantasyTeam.accentColor` + `TeamColorPicker.tsx` + PATCH route). Schema migration: `FantasyTeam.accentColor String?`. |
 | Sprint 24 — Living League: Season Story | 🔵 PLANNED | 5 stories: LL-006 Season Timeline · LL-010 League Record Book · LL-011 Franchise Identity · LL-012 Manager Superlatives · LL-023 Empty States for Legacy Systems. New `/league/[leagueId]/records` page. No schema changes. |
 | Sprint 25 — Living League: Legacy | 🔵 PLANNED | 3 stories: LL-009 Trophy Cabinet (schema: Achievement model) · LL-014 Opening Day Card · LL-015 Championship Banner. Schema migration required (Achievement + AchievementType). |

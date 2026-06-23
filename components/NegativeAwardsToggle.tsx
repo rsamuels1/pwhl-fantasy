@@ -41,7 +41,7 @@ export default function NegativeAwardsToggle({
           checked={enabled}
           onChange={(e) => handleChange(e.target.checked)}
           disabled={status === "saving"}
-          style={{ width: 16, height: 16, accentColor: "#a78bfa", cursor: "pointer" }}
+          style={{ width: 16, height: 16, accentColor: "var(--accent-strong)", cursor: "pointer" }}
         />
         <span style={{ fontSize: 13, color: "var(--text)" }}>
           Show negative awards (🧊 Frozen Stick, 💀 Heartbreaker, 📉 Collapse of the Week)

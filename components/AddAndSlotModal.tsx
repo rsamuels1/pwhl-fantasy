@@ -108,8 +108,8 @@ export default function AddAndSlotModal({
       padding: 16,
     }}>
       <div style={{
-        background: "#1e293b",
-        border: "1px solid rgba(148,163,184,0.15)",
+        background: "var(--card)",
+        border: "1px solid var(--border)",
         borderRadius: 16, padding: 24, maxWidth: 420, width: "100%",
         display: "flex", flexDirection: "column", gap: 16,
         boxShadow: "0 20px 60px rgba(0,0,0,0.5)",
@@ -119,21 +119,21 @@ export default function AddAndSlotModal({
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <span style={{
               fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 5,
-              background: `${POS_COLORS[player.position] ?? "#64748b"}22`,
-              color: POS_COLORS[player.position] ?? "#94a3b8",
+              background: `${POS_COLORS[player.position] ?? "var(--faint)"}22`,
+              color: POS_COLORS[player.position] ?? "var(--dim)",
             }}>
               {player.position[0]}
             </span>
-            <span style={{ fontWeight: 700, fontSize: 16, color: "#e2e8f0" }}>
+            <span style={{ fontWeight: 700, fontSize: 16, color: "var(--text)" }}>
               {player.name}
             </span>
           </div>
-          <div style={{ marginTop: 6, fontSize: 13, color: "#64748b" }}>
+          <div style={{ marginTop: 6, fontSize: 13, color: "var(--faint)" }}>
             {player.gamesThisPeriod != null
               ? `${player.gamesThisPeriod} game${player.gamesThisPeriod !== 1 ? "s" : ""} remaining this period`
               : "Added to your roster"}
             {slotOptions.length > 0 && (
-              <>{" · "}<span style={{ color: "#a5b4fc" }}>Slot them now?</span></>
+              <>{" · "}<span style={{ color: "var(--accent-strong)" }}>Slot them now?</span></>
             )}
           </div>
         </div>
@@ -156,7 +156,7 @@ export default function AddAndSlotModal({
             padding: "12px 14px", borderRadius: 10,
             background: "rgba(100,116,139,0.1)",
             border: "1px solid rgba(100,116,139,0.2)",
-            color: "#94a3b8", fontSize: 13,
+            color: "var(--dim)", fontSize: 13,
           }}>
             No active slots available — {player.name} has been benched.
           </div>
@@ -167,7 +167,7 @@ export default function AddAndSlotModal({
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             <div style={{
               fontSize: 11, fontWeight: 700, textTransform: "uppercase",
-              letterSpacing: "0.07em", color: "#475569",
+              letterSpacing: "0.07em", color: "var(--faint)",
             }}>
               Move to active slot
             </div>
@@ -179,8 +179,8 @@ export default function AddAndSlotModal({
                 style={{
                   display: "flex", alignItems: "center", justifyContent: "space-between",
                   padding: "10px 14px", borderRadius: 10,
-                  border: "1px solid rgba(99,102,241,0.25)",
-                  background: "rgba(99,102,241,0.07)",
+                  border: "1px solid rgba(143,193,232,0.25)",
+                  background: "rgba(143,193,232,0.07)",
                   cursor: slotting ? "not-allowed" : "pointer",
                   opacity: slotting ? 0.6 : 1,
                   textAlign: "left",
@@ -190,24 +190,24 @@ export default function AddAndSlotModal({
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                   <span style={{
                     fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 5,
-                    background: "rgba(99,102,241,0.2)", color: "#a5b4fc",
+                    background: "rgba(143,193,232,0.2)", color: "var(--accent-strong)",
                     minWidth: 32, textAlign: "center",
                   }}>
                     {SLOT_LABELS[opt.slot] ?? opt.slot}
                   </span>
-                  <span style={{ fontSize: 13, color: opt.occupant ? "#e2e8f0" : "#475569" }}>
+                  <span style={{ fontSize: 13, color: opt.occupant ? "var(--text)" : "var(--faint)" }}>
                     {opt.occupant ? opt.occupant.name : "Empty slot"}
                   </span>
                   {opt.occupant && (
                     <span style={{
                       fontSize: 10, fontWeight: 700,
-                      color: POS_COLORS[opt.occupant.position] ?? "#64748b",
+                      color: POS_COLORS[opt.occupant.position] ?? "var(--faint)",
                     }}>
                       {opt.occupant.position[0]}
                     </span>
                   )}
                 </div>
-                <span style={{ fontSize: 12, color: "#6366f1", flexShrink: 0 }}>Move →</span>
+                <span style={{ fontSize: 12, color: "var(--accent)", flexShrink: 0 }}>Move →</span>
               </button>
             ))}
           </div>
@@ -233,8 +233,8 @@ export default function AddAndSlotModal({
             aria-label="Add to bench and close"
             style={{
               padding: "10px", borderRadius: 10,
-              border: "1px solid rgba(148,163,184,0.12)",
-              background: "transparent", color: "#64748b", fontSize: 13,
+              border: "1px solid var(--border)",
+              background: "transparent", color: "var(--faint)", fontSize: 13,
               cursor: "pointer", opacity: slotting ? 0.5 : 1, width: "100%",
             }}
           >

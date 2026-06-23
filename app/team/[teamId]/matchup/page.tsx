@@ -18,6 +18,7 @@ import StatChip from "@/components/StatChip";
 import ClinchBanner from "@/components/ClinchBanner";
 import FirstResultCard from "@/components/FirstResultCard";
 import TeamColorPicker from "@/components/TeamColorPicker";
+import MomentumStrip from "@/components/MomentumStrip";
 
 export default async function TeamMatchupPage({
   params,
@@ -140,15 +141,15 @@ export default async function TeamMatchupPage({
       {/* ── 0. Champion card — top of page when playoffs complete and I won ── */}
       {isChampion && championInfo && (
         <div style={{
-          background: "linear-gradient(135deg, rgba(251,191,36,0.12), rgba(245,158,11,0.06))",
-          border: "2px solid rgba(251,191,36,0.4)",
+          background: "linear-gradient(135deg, rgba(245,201,123,0.12), rgba(245,158,11,0.06))",
+          border: "2px solid rgba(245,201,123,0.4)",
           borderRadius: 20, padding: "20px 24px",
           display: "flex", flexDirection: "column", gap: 10,
         }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <span style={{ fontSize: 32 }}>🏆</span>
             <div>
-              <div style={{ fontSize: 20, fontWeight: 800, color: "#fbbf24", lineHeight: 1.1 }}>
+              <div style={{ fontSize: 20, fontWeight: 800, color: "var(--gold)", lineHeight: 1.1 }}>
                 Champions!
               </div>
               <div style={{ fontSize: 13, color: "var(--dim)", marginTop: 4 }}>
@@ -158,14 +159,14 @@ export default async function TeamMatchupPage({
           </div>
           <div style={{
             display: "flex", alignItems: "center", gap: 16, padding: "12px 16px",
-            background: "rgba(251,191,36,0.06)", borderRadius: 12,
-            border: "1px solid rgba(251,191,36,0.15)",
+            background: "rgba(245,201,123,0.06)", borderRadius: 12,
+            border: "1px solid rgba(245,201,123,0.15)",
           }}>
             <div>
-              <div style={{ fontSize: 11, fontWeight: 700, color: "#92400e", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: "var(--gold)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>
                 {championInfo.teamName}
               </div>
-              <div style={{ fontSize: 28, fontWeight: 900, color: "#fbbf24", fontVariantNumeric: "tabular-nums" }}>
+              <div style={{ fontSize: 28, fontWeight: 900, color: "var(--gold)", fontVariantNumeric: "tabular-nums" }}>
                 {championInfo.myScore.toFixed(1)}
               </div>
             </div>
@@ -184,8 +185,8 @@ export default async function TeamMatchupPage({
           </div>
           <Link href={`/league/${leagueId}/bracket`} style={{
             display: "inline-block", fontSize: 12, fontWeight: 700, padding: "6px 14px", borderRadius: 8,
-            background: "rgba(251,191,36,0.15)", color: "#fbbf24",
-            border: "1px solid rgba(251,191,36,0.3)", textDecoration: "none", alignSelf: "flex-start",
+            background: "rgba(245,201,123,0.15)", color: "var(--gold)",
+            border: "1px solid rgba(245,201,123,0.3)", textDecoration: "none", alignSelf: "flex-start",
           }}>
             View bracket →
           </Link>
@@ -195,15 +196,15 @@ export default async function TeamMatchupPage({
       {/* ── 1. Lineup alerts — top of page, always visible when present ── */}
       {lineupAlerts.length > 0 && (
         <div style={{
-          background: "rgba(214,169,78,0.08)",
-          border: "1px solid rgba(214,169,78,0.30)",
+          background: "rgba(245,201,123,0.08)",
+          border: "1px solid rgba(245,201,123,0.30)",
           borderRadius: 14, padding: "18px 20px",
           display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 14, flexWrap: "wrap",
         }}>
           <div style={{ display: "flex", alignItems: "flex-start", gap: 14 }}>
             <div style={{
               width: 34, height: 34, borderRadius: 9, flexShrink: 0,
-              background: "rgba(214,169,78,0.16)", border: "1px solid rgba(214,169,78,0.40)",
+              background: "rgba(245,201,123,0.16)", border: "1px solid rgba(245,201,123,0.40)",
               display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16,
             }}>⚠️</div>
             <div>
@@ -216,8 +217,8 @@ export default async function TeamMatchupPage({
               <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 8 }}>
                 {lineupAlerts.map((a) => (
                   <span key={a.playerId} style={{
-                    fontSize: 12, fontWeight: 600, color: "#e3c989",
-                    background: "rgba(214,169,78,0.12)", border: "1px solid rgba(214,169,78,0.28)",
+                    fontSize: 12, fontWeight: 600, color: "var(--gold)",
+                    background: "rgba(245,201,123,0.12)", border: "1px solid rgba(245,201,123,0.28)",
                     borderRadius: 7, padding: "6px 11px",
                   }}>{a.name}</span>
                 ))}
@@ -226,8 +227,8 @@ export default async function TeamMatchupPage({
           </div>
           <Link href={`/team/${teamId}/lineup`} style={{
             fontSize: 12, fontWeight: 700, padding: "6px 14px", borderRadius: 8,
-            background: "rgba(214,169,78,0.15)", color: "#e3c989",
-            border: "1px solid rgba(214,169,78,0.30)", textDecoration: "none", flexShrink: 0,
+            background: "rgba(245,201,123,0.15)", color: "var(--gold)",
+            border: "1px solid rgba(245,201,123,0.30)", textDecoration: "none", flexShrink: 0,
           }}>
             Fix lineup →
           </Link>
@@ -249,8 +250,8 @@ export default async function TeamMatchupPage({
               display: "flex", alignItems: "center", gap: 10,
             }}>
               <span style={{ fontSize: 15, flexShrink: 0 }}>✅</span>
-              <span style={{ fontSize: 13, color: "#7fc2a6" }}>
-                Your lineup is set — <strong style={{ color: "#c2e8da" }}>{activeStarters.length} starter{activeStarters.length !== 1 ? "s" : ""}</strong> active this period
+              <span style={{ fontSize: 13, color: "var(--green)" }}>
+                Your lineup is set — <strong style={{ color: "var(--green)" }}>{activeStarters.length} starter{activeStarters.length !== 1 ? "s" : ""}</strong> active this period
               </span>
             </div>
           );
@@ -260,8 +261,8 @@ export default async function TeamMatchupPage({
       {/* ── 1a. Between-weeks lineup nudge ── */}
       {activeMatchup?.status === "upcoming" && (activeMatchup.myPlayers.length < activeSlotCount) && (
         <div style={{
-          background: "rgba(214,169,78,0.08)",
-          border: "1px solid rgba(214,169,78,0.30)",
+          background: "rgba(245,201,123,0.08)",
+          border: "1px solid rgba(245,201,123,0.30)",
           borderRadius: 14, padding: "18px 20px",
           display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap",
         }}>
@@ -277,8 +278,8 @@ export default async function TeamMatchupPage({
           </div>
           <Link href={`/team/${teamId}/lineup`} style={{
             fontSize: 12, fontWeight: 700, padding: "6px 14px", borderRadius: 8,
-            background: "rgba(214,169,78,0.15)", color: "#e3c989",
-            border: "1px solid rgba(214,169,78,0.30)", textDecoration: "none", flexShrink: 0,
+            background: "rgba(245,201,123,0.15)", color: "var(--gold)",
+            border: "1px solid rgba(245,201,123,0.30)", textDecoration: "none", flexShrink: 0,
           }}>
             Set lineup →
           </Link>
@@ -401,6 +402,12 @@ export default async function TeamMatchupPage({
 
       {/* ── Z3. Live situation grid: Playing Tonight + Swing (left) | Roster Status (right) ── */}
       {activeMatchup?.status === "active" && (
+        <>
+        <MomentumStrip
+          scoreDeltaSinceYesterday={activeMatchup.scoreDeltaSinceYesterday ?? null}
+          playersRemainingTonight={activeMatchup.playersRemainingTonight}
+          opponentFinished={activeMatchup.opponentFinished}
+        />
         <div className="matchup-2col" style={{ alignItems: "start" }}>
           {/* Left: Playing Tonight + Swing Players */}
           <div style={{ display: "grid", gap: 12 }}>
@@ -495,7 +502,7 @@ export default async function TeamMatchupPage({
                           {p.team === "mine" ? "Your player" : "Opponent"}
                         </span>
                       </div>
-                      <span className="font-stats" style={{ fontSize: 19, fontWeight: 700, flexShrink: 0, color: p.team === "mine" ? "#5fa98c" : "#c2776c" }}>
+                      <span className="font-stats" style={{ fontSize: 19, fontWeight: 700, flexShrink: 0, color: p.team === "mine" ? "var(--green)" : "var(--red)" }}>
                         {p.projectedImpact > 0 ? "+" : ""}{p.projectedImpact.toFixed(1)}
                       </span>
                     </div>
@@ -508,6 +515,7 @@ export default async function TeamMatchupPage({
           {/* Right: Roster Status widget */}
           <RosterStatusWidget matchup={activeMatchup} activeSlotCount={activeSlotCount} teamId={teamId} />
         </div>
+        </>
       )}
 
       {/* ── Z3b. Roster Status widget (upcoming state, full width) ── */}
@@ -662,8 +670,8 @@ function RosterStatusWidget({
   const statusLabel = hasIssues
     ? `⚠ ${filledCount}/${activeSlotCount} starters set`
     : `✓ ${filledCount}/${activeSlotCount} starters`;
-  const statusColor = hasIssues ? "#fbbf24" : "#7fc2a6";
-  const projColor = hasIssues ? "#fbbf24" : "var(--accent)";
+  const statusColor = hasIssues ? "var(--gold)" : "var(--green)";
+  const projColor = hasIssues ? "var(--gold)" : "var(--accent)";
 
   return (
     <Card>
@@ -708,7 +716,7 @@ function RosterStatusWidget({
 function RecapCard({ recap }: { recap: WeeklyRecap }) {
   const won = recap.result === "win";
   const tie = recap.result === "tie";
-  const color = won ? "#5fa98c" : tie ? "var(--dim)" : "#d18b7f";
+  const color = won ? "var(--green)" : tie ? "var(--dim)" : "var(--red)";
   const borderColor = won ? "rgba(95,169,140,0.25)" : tie ? "var(--border)" : "rgba(209,139,127,0.25)";
   const verb = won ? "Won" : "Lost";
 
@@ -765,7 +773,7 @@ function RecapCard({ recap }: { recap: WeeklyRecap }) {
           </span>
         )}
         {recap.highestScore && recap.myRank === 1 && (
-          <span style={{ color: "#fbbf24", fontWeight: 700 }}>
+          <span style={{ color: "var(--gold)", fontWeight: 700 }}>
             🏆 League-high score!
           </span>
         )}
@@ -775,8 +783,8 @@ function RecapCard({ recap }: { recap: WeeklyRecap }) {
 }
 
 function LeaguePerformerItem({ player, rank, variant }: { player: LeaguePerformerRow; rank: number; variant: "top" | "low" }) {
-  const rankColor = rank === 1 ? "#f59e0b" : rank === 2 ? "var(--dim)" : "var(--faint)";
-  const fpColor = variant === "top" ? "#5fa98c" : "#d18b7f";
+  const rankColor = rank === 1 ? "var(--amber)" : rank === 2 ? "var(--dim)" : "var(--faint)";
+  const fpColor = variant === "top" ? "var(--green)" : "var(--red)";
   return (
     <div style={{
       display: "flex", alignItems: "center", gap: 8,
@@ -830,8 +838,8 @@ const editLink: React.CSSProperties = {
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
 function getScoreColor(myScore: number, oppScore: number): string {
-  if (myScore > oppScore) return "#34d399";
-  if (myScore < oppScore) return "#f87171";
+  if (myScore > oppScore) return "var(--green)";
+  if (myScore < oppScore) return "var(--red)";
   return "var(--text)";
 }
 
@@ -864,7 +872,7 @@ function FieldHero({ matchup, teamId, leagueId }: { matchup: ActiveMatchup; team
   // Score display: upcoming → projected FP, setup → "—", active → points earned
   const myScoreDisplay = showDash ? "—" : isUpcoming ? matchup.myProjected.toFixed(1) : matchup.myTeam.score.toFixed(1);
   const scoreLabel = showDash ? "Games starting soon" : isUpcoming ? "Projected FP" : "Points earned";
-  const recordColor = wins > losses ? "var(--accent-strong)" : losses > wins ? "#c2776c" : "var(--muted)";
+  const recordColor = wins > losses ? "var(--accent-strong)" : losses > wins ? "var(--red)" : "var(--muted)";
   const myScoreColor = showDash ? "var(--dim)" : recordColor;
 
   // Starters with games this period (for footer CTA)
@@ -899,13 +907,13 @@ function FieldHero({ matchup, teamId, leagueId }: { matchup: ActiveMatchup; team
           </span>
         </div>
         {isUpcoming && (
-          <span style={{ display: "inline-flex", alignItems: "center", gap: 8, fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "#e3c989", background: "rgba(214,169,78,0.12)", border: "1px solid rgba(214,169,78,0.32)", borderRadius: 30, padding: "6px 13px" }}>
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#e3c989" strokeWidth="2.4"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 8, fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--gold)", background: "rgba(245,201,123,0.12)", border: "1px solid rgba(245,201,123,0.32)", borderRadius: 30, padding: "6px 13px" }}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" strokeWidth="2.4"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
             Set lineup now
           </span>
         )}
         {isSetupPhase && (
-          <span style={{ display: "inline-flex", alignItems: "center", gap: 8, fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "#e3c989", background: "rgba(214,169,78,0.12)", border: "1px solid rgba(214,169,78,0.32)", borderRadius: 30, padding: "6px 13px" }}>
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 8, fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--gold)", background: "rgba(245,201,123,0.12)", border: "1px solid rgba(245,201,123,0.32)", borderRadius: 30, padding: "6px 13px" }}>
             Games starting soon
           </span>
         )}
@@ -983,7 +991,7 @@ function FieldHero({ matchup, teamId, leagueId }: { matchup: ActiveMatchup; team
       <div style={{ position: "relative", display: "flex", alignItems: "center", gap: 12, padding: "18px 30px 24px", borderTop: "1px solid var(--border)", flexWrap: "wrap" }}>
         <span style={{ flex: 1, fontSize: 12.5, color: "var(--dim)", minWidth: 160 }}>
           {isUpcoming
-            ? <>Set your lineup before puck drop — you have <strong style={{ color: "#e3c989", fontWeight: 700 }}>{startersWithGames} starter{startersWithGames !== 1 ? "s" : ""}</strong> with games this period.</>
+            ? <>Set your lineup before puck drop — you have <strong style={{ color: "var(--gold)", fontWeight: 700 }}>{startersWithGames} starter{startersWithGames !== 1 ? "s" : ""}</strong> with games this period.</>
             : <>{startersWithGames} starter{startersWithGames !== 1 ? "s" : ""} active this period.</>
           }
         </span>
@@ -1080,13 +1088,13 @@ function DuelHero({
           </span>
         </div>
         {isUpcoming && (
-          <span style={{ display: "inline-flex", alignItems: "center", gap: 8, fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "#e3c989", background: "rgba(214,169,78,0.12)", border: "1px solid rgba(214,169,78,0.32)", borderRadius: 30, padding: "6px 13px" }}>
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#e3c989" strokeWidth="2.4"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 8, fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--gold)", background: "rgba(245,201,123,0.12)", border: "1px solid rgba(245,201,123,0.32)", borderRadius: 30, padding: "6px 13px" }}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" strokeWidth="2.4"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
             Set lineup now
           </span>
         )}
         {isSetupPhase && (
-          <span style={{ display: "inline-flex", alignItems: "center", gap: 8, fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "#e3c989", background: "rgba(214,169,78,0.12)", border: "1px solid rgba(214,169,78,0.32)", borderRadius: 30, padding: "6px 13px" }}>
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 8, fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--gold)", background: "rgba(245,201,123,0.12)", border: "1px solid rgba(245,201,123,0.32)", borderRadius: 30, padding: "6px 13px" }}>
             Games starting soon
           </span>
         )}
@@ -1158,7 +1166,7 @@ function DuelHero({
         <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 14, textAlign: "right" }}>
           {/* Avatar + team name */}
           <div style={{ display: "flex", alignItems: "center", gap: 13, flexDirection: "row-reverse" }}>
-            <span style={{ width: 52, height: 52, borderRadius: 14, background: "linear-gradient(135deg, #3a4258, #222a3d)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, fontWeight: 800, color: "#dfe3ee", boxShadow: oppAccentColor ? `0 0 0 2px ${oppAccentColor}` : undefined, flexShrink: 0 }}>
+            <span style={{ width: 52, height: 52, borderRadius: 14, background: "linear-gradient(135deg, #3a4258, #222a3d)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, fontWeight: 800, color: "var(--muted)", boxShadow: oppAccentColor ? `0 0 0 2px ${oppAccentColor}` : undefined, flexShrink: 0 }}>
               {opponent.name.charAt(0).toUpperCase()}
             </span>
             <div>
@@ -1212,7 +1220,7 @@ function DuelHero({
       <div style={{ position: "relative", display: "flex", alignItems: "center", gap: 12, padding: "18px 30px 24px", borderTop: "1px solid var(--border)", flexWrap: "wrap" }}>
         <span style={{ flex: 1, fontSize: 12.5, color: "var(--dim)", minWidth: 160 }}>
           {isUpcoming
-            ? <>Set your lineup before puck drop — you have <strong style={{ color: "#e3c989", fontWeight: 700 }}>{startersWithGames} starter{startersWithGames !== 1 ? "s" : ""}</strong> with games this period.</>
+            ? <>Set your lineup before puck drop — you have <strong style={{ color: "var(--gold)", fontWeight: 700 }}>{startersWithGames} starter{startersWithGames !== 1 ? "s" : ""}</strong> with games this period.</>
             : <>{startersWithGames} starter{startersWithGames !== 1 ? "s" : ""} active this period.</>
           }
         </span>
@@ -1244,11 +1252,11 @@ const SLOT_LABELS: Record<string, string> = {
   FORWARD: "F", DEFENSE: "D", GOALIE: "G", UTIL: "Flex", BENCH: "BN", IR: "IR",
 };
 const POS_COLORS: Record<string, string> = {
-  FORWARD: "#60a5fa", DEFENSE: "#5fa98c", GOALIE: "#f59e0b",
+  FORWARD: "#60a5fa", DEFENSE: "var(--green)", GOALIE: "var(--amber)",
 };
 const SLOT_COLORS: Record<string, string> = {
-  FORWARD: "#60a5fa", DEFENSE: "#5fa98c", GOALIE: "#f59e0b",
-  UTIL: "var(--accent-strong)", BENCH: "var(--faint)", IR: "#ef4444",
+  FORWARD: "#60a5fa", DEFENSE: "var(--green)", GOALIE: "var(--amber)",
+  UTIL: "var(--accent-strong)", BENCH: "var(--faint)", IR: "var(--red)",
 };
 
 function RosterTable({ players, isMyTeam }: { players: PlayerMatchupRow[]; isMyTeam?: boolean }) {
@@ -1300,7 +1308,7 @@ function RosterTable({ players, isMyTeam }: { players: PlayerMatchupRow[]; isMyT
                     <span key={b.label} style={{
                       fontSize: 10, padding: "1px 6px", borderRadius: 999,
                       background: b.points >= 0 ? "rgba(95,169,140,0.1)" : "rgba(209,139,127,0.1)",
-                      color: b.points >= 0 ? "#5fa98c" : "#d18b7f",
+                      color: b.points >= 0 ? "var(--green)" : "var(--red)",
                     }}>
                       {b.label}{b.stat > 1 ? ` ×${b.stat}` : ""}
                     </span>
@@ -1315,7 +1323,7 @@ function RosterTable({ players, isMyTeam }: { players: PlayerMatchupRow[]; isMyT
                   fontSize: 10, fontWeight: 700,
                   padding: "2px 5px", borderRadius: 4,
                   background: p.gamesThisPeriod === 0 ? "rgba(239,68,68,0.12)" : "var(--accent-dim)",
-                  color: p.gamesThisPeriod === 0 ? "#d18b7f" : "var(--accent-strong)",
+                  color: p.gamesThisPeriod === 0 ? "var(--red)" : "var(--accent-strong)",
                   border: p.gamesThisPeriod > 0 ? "1px solid var(--accent-border)" : undefined,
                 }}>
                   {p.gamesThisPeriod === 0 ? "0" : `${p.gamesThisPeriod}G`}

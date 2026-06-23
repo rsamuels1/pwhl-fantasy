@@ -47,7 +47,7 @@ export default function ClinchBanner({ leagueId, season, seed, clinchWeek, teamN
           <div style={{ fontSize: 14, fontWeight: 800, color: "#7fc2a6", letterSpacing: "-0.01em" }}>
             PLAYOFF BERTH CLINCHED
           </div>
-          <div style={{ fontSize: 12, color: "#94a3b8", marginTop: 2 }}>
+          <div style={{ fontSize: 12, color: "var(--dim)", marginTop: 2 }}>
             {teamName} clinched the {ordinal(seed)} seed in Week {clinchWeek}
           </div>
         </div>
@@ -65,7 +65,7 @@ export default function ClinchBanner({ leagueId, season, seed, clinchWeek, teamN
           aria-label="Dismiss clinch banner"
           style={{
             background: "none", border: "none", cursor: "pointer",
-            color: "#64748b", fontSize: 18, padding: "4px 8px", lineHeight: 1,
+            color: "var(--faint)", fontSize: 18, padding: "4px 8px", lineHeight: 1,
             minWidth: 44, minHeight: 44, display: "flex", alignItems: "center", justifyContent: "center",
           }}
         >

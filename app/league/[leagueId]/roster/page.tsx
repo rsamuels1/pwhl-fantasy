@@ -49,7 +49,7 @@ export default async function RosterPage({ params, searchParams }: Props) {
     <div style={{ display: "grid", gap: 20 }}>
       <section style={panelStyle}>
         <h1 style={{ fontSize: 24, marginBottom: 10 }}>All Rosters</h1>
-        <p style={{ color: "#94a3b8", marginBottom: 20 }}>
+        <p style={{ color: "var(--dim)", marginBottom: 20 }}>
           Review every fantasy team roster and their lineup composition.
         </p>
 
@@ -64,9 +64,9 @@ export default async function RosterPage({ params, searchParams }: Props) {
                 style={{
                   padding: "7px 14px", borderRadius: 999, fontSize: 13, fontWeight: 600,
                   textDecoration: "none",
-                  background: isActive ? "rgba(99,102,241,0.25)" : "rgba(255,255,255,0.05)",
-                  color: isActive ? "#a5b4fc" : "#94a3b8",
-                  border: `1px solid ${isActive ? "rgba(99,102,241,0.4)" : "rgba(148,163,184,0.1)"}`,
+                  background: isActive ? "rgba(143,193,232,0.25)" : "var(--surface)",
+                  color: isActive ? "var(--accent-strong)" : "var(--dim)",
+                  border: `1px solid ${isActive ? "rgba(143,193,232,0.4)" : "var(--border)"}`,
                   transition: "background 0.1s",
                 }}
               >
@@ -84,13 +84,13 @@ export default async function RosterPage({ params, searchParams }: Props) {
           }}>
             <div>
               <h2 style={{ fontSize: 18, marginBottom: 4 }}>{activeTeam.name}</h2>
-              <p style={{ color: "#94a3b8", fontSize: 13 }}>Owner: {activeTeam.owner.displayName}</p>
+              <p style={{ color: "var(--dim)", fontSize: 13 }}>Owner: {activeTeam.owner.displayName}</p>
             </div>
-            <span style={{ color: "#e2e8f0", fontWeight: 700 }}>{activeTeam.roster.length} players</span>
+            <span style={{ color: "var(--text)", fontWeight: 700 }}>{activeTeam.roster.length} players</span>
           </div>
 
           {activeTeam.roster.length === 0 ? (
-            <p style={{ color: "#94a3b8" }}>No roster entries yet.</p>
+            <p style={{ color: "var(--dim)" }}>No roster entries yet.</p>
           ) : (
             <div style={{ display: "grid", gap: 10 }}>
               {activeTeam.roster.map((entry) => (
@@ -103,9 +103,9 @@ export default async function RosterPage({ params, searchParams }: Props) {
                 >
                   <div>
                     <div style={{ fontWeight: 600 }}>{formatPlayer(entry.player)}</div>
-                    <div style={{ color: "#94a3b8", fontSize: 13 }}>{entry.slot}</div>
+                    <div style={{ color: "var(--dim)", fontSize: 13 }}>{entry.slot}</div>
                   </div>
-                  <span style={{ color: "#94a3b8", fontSize: 13 }}>
+                  <span style={{ color: "var(--dim)", fontSize: 13 }}>
                     {new Date(entry.acquired).toLocaleDateString()}
                   </span>
                 </div>
@@ -119,8 +119,8 @@ export default async function RosterPage({ params, searchParams }: Props) {
 }
 
 const panelStyle: React.CSSProperties = {
-  background: "rgba(255,255,255,0.04)",
-  border: "1px solid rgba(148,163,184,0.14)",
+  background: "var(--surface)",
+  border: "1px solid var(--border)",
   borderRadius: 20,
   padding: 20,
 };

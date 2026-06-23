@@ -322,8 +322,8 @@ img { max-width: 100%; display: block; }
   gap: 8px;
   border-radius: 999px;
   padding: 10px 14px;
-  background: rgba(99,102,241,0.12);
-  color: #fff;
+  background: var(--accent-dim);
+  color: var(--accent-ink);
   font-size: 0.92rem;
 }
 
@@ -349,17 +349,6 @@ img { max-width: 100%; display: block; }
 .panel-text,
 .footer-note {
   color: var(--muted);
-}
-
-.matchup-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  border-radius: 999px;
-  padding: 10px 14px;
-  background: rgba(99,102,241,0.12);
-  color: #fff;
-  font-size: 0.92rem;
 }
 
 @media (max-width: 700px) {
@@ -620,8 +609,8 @@ img { max-width: 100%; display: block; }
 /* Draft room custom scrollbar */
 .draft-scroll::-webkit-scrollbar { width: 8px; height: 8px; }
 .draft-scroll::-webkit-scrollbar-track { background: transparent; }
-.draft-scroll::-webkit-scrollbar-thumb { background: rgba(124,58,237,0.35); border-radius: 4px; }
-.draft-scroll::-webkit-scrollbar-thumb:hover { background: rgba(124,58,237,0.55); }
+.draft-scroll::-webkit-scrollbar-thumb { background: rgba(143,193,232,0.35); border-radius: 4px; }
+.draft-scroll::-webkit-scrollbar-thumb:hover { background: rgba(143,193,232,0.55); }
 
 /* ── Accessibility: keyboard focus indicators ─────────────────── */
 button:focus-visible,

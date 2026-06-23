@@ -30,8 +30,8 @@ function PerformerCard({ title, players, variant }: {
         <div key={p.playerId} style={{ marginBottom: 10 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-              <span style={{ fontSize: 14, color: "#e2e8f0" }}>{p.name}</span>
-              <span style={{ fontSize: 10, fontWeight: 700, color: POS_COLORS[p.position] ?? "#94a3b8" }}>
+              <span style={{ fontSize: 14, color: "var(--text)" }}>{p.name}</span>
+              <span style={{ fontSize: 10, fontWeight: 700, color: POS_COLORS[p.position] ?? "var(--dim)" }}>
                 {p.position[0]}
               </span>
             </div>
@@ -139,7 +139,7 @@ export default async function TeamAnalysisPage({
       {!hasPerformers && !dashboardData?.activeMatchup && (
         <div style={{ padding: "14px 18px", borderRadius: 12, background: "var(--card)", border: "1px solid var(--border)", color: "var(--faint)", fontSize: 13 }}>
           This week&apos;s performers will appear here once the season is underway.{" "}
-          <Link href={`/team/${teamId}/lineup`} style={{ color: "#818cf8" }}>Set your lineup →</Link>
+          <Link href={`/team/${teamId}/lineup`} style={{ color: "var(--accent-strong)" }}>Set your lineup →</Link>
         </div>
       )}
     </div>

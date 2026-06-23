@@ -68,7 +68,7 @@ export default function InviteJoinForm({ leagueId }: { leagueId: string }) {
       </label>
 
       <label className="form-label">
-        Display name <span style={{ color: "#475569", fontWeight: 400 }}>(optional)</span>
+        Display name <span style={{ color: "var(--faint)", fontWeight: 400 }}>(optional)</span>
         <input
           className="form-input"
           value={displayName}

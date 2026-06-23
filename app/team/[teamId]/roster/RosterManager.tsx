@@ -70,7 +70,7 @@ const SLOT_ORDER: Record<string, number> = {
 };
 const SLOT_COLORS: Record<string, string> = {
   FORWARD: "#60a5fa", DEFENSE: "#5fa98c", GOALIE: "#f59e0b",
-  UTIL: "#a78bfa", BENCH: "#64748b", IR: "#ef4444",
+  UTIL: "var(--accent-strong)", BENCH: "var(--faint)", IR: "#ef4444",
 };
 const POS_COLORS: Record<string, string> = {
   FORWARD: "#60a5fa", DEFENSE: "#5fa98c", GOALIE: "#f59e0b",
@@ -654,7 +654,7 @@ function RosterRow({ player, index, readonly, onDrop, disabled }: {
     <div style={{
       display: "grid", gridTemplateColumns: cols, gap: 8,
       padding: "9px 14px", alignItems: "center",
-      borderTop: index === 0 ? "none" : "1px solid rgba(148,163,184,0.05)",
+      borderTop: index === 0 ? "none" : "1px solid var(--border)",
       background: index % 2 === 0 ? "transparent" : "var(--bg-raised)",
     }}>
       <span style={{ fontSize: 10, fontWeight: 700, textAlign: "center", padding: "3px 0", borderRadius: 5, width: 36, background: `${SLOT_COLORS[player.slot] ?? "var(--faint)"}20`, color: SLOT_COLORS[player.slot] ?? "var(--faint)" }}>
@@ -781,7 +781,7 @@ function FaRow({ player, index, isFull, rosterPlayers, pendingAdd, dropForAdd,
   const fmtSvPct = (v: number | null) => v != null ? v.toFixed(3).replace(/^0/, "") : "—";
 
   return (
-    <div style={{ borderTop: index === 0 ? "none" : "1px solid rgba(148,163,184,0.05)" }}>
+    <div style={{ borderTop: index === 0 ? "none" : "1px solid var(--border)" }}>
       <div style={{
         display: "grid", gridTemplateColumns: cols, gap: 8,
         padding: "9px 14px", alignItems: "center",

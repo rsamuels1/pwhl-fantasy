@@ -43,10 +43,10 @@ export default function TradeSettingsForm({
   return (
     <div style={{ display: "grid", gap: 16 }}>
       <div>
-        <label style={{ fontSize: 14, fontWeight: 600, color: "#e2e8f0", display: "block", marginBottom: 6 }}>
+        <label style={{ fontSize: 14, fontWeight: 600, color: "var(--text)", display: "block", marginBottom: 6 }}>
           Veto review window
         </label>
-        <p style={{ fontSize: 13, color: "#64748b", margin: "0 0 10px" }}>
+        <p style={{ fontSize: 13, color: "var(--faint)", margin: "0 0 10px" }}>
           Accepted trades sit in a review window before executing. Set to 0 to execute immediately.
         </p>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -58,11 +58,11 @@ export default function TradeSettingsForm({
             onChange={(e) => setReviewHours(Math.max(0, parseInt(e.target.value) || 0))}
             style={{
               width: 80, padding: "8px 12px", borderRadius: 8,
-              background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)",
-              color: "#e2e8f0", fontSize: 14,
+              background: "var(--surface)", border: "1px solid var(--border)",
+              color: "var(--text)", fontSize: 14,
             }}
           />
-          <span style={{ color: "#94a3b8", fontSize: 13 }}>hours</span>
+          <span style={{ color: "var(--dim)", fontSize: 13 }}>hours</span>
         </div>
       </div>
 
@@ -72,13 +72,13 @@ export default function TradeSettingsForm({
             type="checkbox"
             checked={requireApproval}
             onChange={(e) => setRequireApproval(e.target.checked)}
-            style={{ width: 16, height: 16, accentColor: "#6366f1", cursor: "pointer" }}
+            style={{ width: 16, height: 16, accentColor: "var(--accent)", cursor: "pointer" }}
           />
-          <span style={{ fontSize: 14, fontWeight: 600, color: "#e2e8f0" }}>
+          <span style={{ fontSize: 14, fontWeight: 600, color: "var(--text)" }}>
             Require commissioner approval for all trades
           </span>
         </label>
-        <p style={{ fontSize: 13, color: "#64748b", margin: "6px 0 0 26px" }}>
+        <p style={{ fontSize: 13, color: "var(--faint)", margin: "6px 0 0 26px" }}>
           When enabled, no trade executes without your explicit approval.
         </p>
       </div>
@@ -93,7 +93,7 @@ export default function TradeSettingsForm({
           disabled={isPending}
           style={{
             padding: "8px 20px", borderRadius: 8, border: "none",
-            background: "rgba(99,102,241,0.8)", color: "#fff",
+            background: "rgba(143,193,232,0.8)", color: "var(--accent-ink)",
             fontSize: 13, fontWeight: 600,
             cursor: isPending ? "not-allowed" : "pointer",
             opacity: isPending ? 0.6 : 1,

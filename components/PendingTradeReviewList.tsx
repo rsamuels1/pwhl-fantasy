@@ -60,29 +60,29 @@ export default function PendingTradeReviewList({ leagueId, trades, playerNames, 
           <div
             key={trade.id}
             style={{
-              background: "rgba(255,255,255,0.04)",
+              background: "var(--surface)",
               border: "1px solid rgba(251,191,36,0.2)",
               borderRadius: 12, padding: "16px 20px",
             }}
           >
             <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", gap: 16, marginBottom: 14, alignItems: "start" }}>
               <div>
-                <div style={{ fontSize: 11, color: "#94a3b8", marginBottom: 4 }}>
+                <div style={{ fontSize: 11, color: "var(--dim)", marginBottom: 4 }}>
                   {teamNames[trade.proposingTeamId] ?? "Team"} gives
                 </div>
                 {propItems.map((i) => (
-                  <div key={i.id} style={{ fontSize: 14, color: "#e2e8f0" }}>
+                  <div key={i.id} style={{ fontSize: 14, color: "var(--text)" }}>
                     {playerNames[i.playerId] ?? i.playerId}
                   </div>
                 ))}
               </div>
-              <div style={{ paddingTop: 16, color: "#64748b" }}>⇄</div>
+              <div style={{ paddingTop: 16, color: "var(--faint)" }}>⇄</div>
               <div>
-                <div style={{ fontSize: 11, color: "#94a3b8", marginBottom: 4 }}>
+                <div style={{ fontSize: 11, color: "var(--dim)", marginBottom: 4 }}>
                   {teamNames[trade.receivingTeamId] ?? "Team"} gives
                 </div>
                 {recItems.map((i) => (
-                  <div key={i.id} style={{ fontSize: 14, color: "#e2e8f0" }}>
+                  <div key={i.id} style={{ fontSize: 14, color: "var(--text)" }}>
                     {playerNames[i.playerId] ?? i.playerId}
                   </div>
                 ))}
@@ -101,7 +101,7 @@ export default function PendingTradeReviewList({ leagueId, trades, playerNames, 
                 disabled={isPending}
                 style={{
                   padding: "8px 16px", borderRadius: 8, border: "none",
-                  background: "#22c55e", color: "#fff", fontSize: 13, fontWeight: 600,
+                  background: "#22c55e", color: "var(--accent-ink)", fontSize: 13, fontWeight: 600,
                   cursor: isPending ? "not-allowed" : "pointer", opacity: isPending ? 0.6 : 1,
                 }}
               >

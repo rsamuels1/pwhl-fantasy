@@ -96,13 +96,13 @@ function TopBar({
         {onClockTeamId && draft?.status === "IN_PROGRESS" && (
           <div style={{
             display: "flex", flexDirection: "column",
-            borderLeft: "3px solid rgba(124,58,237,0.30)",
+            borderLeft: "3px solid rgba(143,193,232,0.30)",
             paddingLeft: 12,
           }}>
             <span style={{ fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--dim)", fontWeight: 700 }}>
               On the clock
             </span>
-            <span style={{ fontSize: 18, fontWeight: 700, color: isMyTurn ? "#c9b6ff" : "var(--text)", lineHeight: 1.15 }}>
+            <span style={{ fontSize: 18, fontWeight: 700, color: isMyTurn ? "var(--accent-strong)" : "var(--text)", lineHeight: 1.15 }}>
               {isMyTurn ? "Your pick!" : (teamNames[onClockTeamId] ?? "…" + onClockTeamId.slice(-6))}
             </span>
             <span className="font-stats" style={{ fontSize: 11, color: "var(--faint)" }}>
@@ -165,8 +165,8 @@ function Clock({ expiresAt, isMyTurn }: { expiresAt: number | null; isMyTurn: bo
   if (secs == null) return null;
   const warn = secs <= 10;
   const pct = maxSecsRef.current ? Math.max(0, Math.min(100, Math.round((secs / maxSecsRef.current) * 100))) : 100;
-  const numColor = warn ? "var(--clock-warn)" : isMyTurn ? "#c9b6ff" : "var(--muted)";
-  const barColor = warn ? "var(--clock-warn)" : isMyTurn ? "#7c3aed" : "#4c3a7a";
+  const numColor = warn ? "var(--clock-warn)" : isMyTurn ? "var(--accent-strong)" : "var(--muted)";
+  const barColor = warn ? "var(--clock-warn)" : isMyTurn ? "var(--accent)" : "rgba(143,193,232,0.3)";
 
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
@@ -180,7 +180,7 @@ function Clock({ expiresAt, isMyTurn }: { expiresAt: number | null; isMyTurn: bo
       <div style={{ width: 128, height: 4, borderRadius: 2, background: "rgba(150,160,200,0.15)", overflow: "hidden" }}>
         <div style={{
           height: "100%", width: `${pct}%`, borderRadius: 2,
-          background: `linear-gradient(90deg, ${barColor}, ${warn ? "#ef4444" : "#a78bfa"})`,
+          background: `linear-gradient(90deg, ${barColor}, ${warn ? "var(--red)" : "var(--accent-strong)"})`,
           transition: "width 0.5s linear, background 0.3s",
         }} />
       </div>
@@ -273,7 +273,7 @@ function PickBoard({
                           : `#${slot.overall} — ${teamNames[slot.fantasyTeamId] ?? slot.fantasyTeamId}`
                       }
                     >
-                      <div className="font-stats" style={{ fontSize: 9, color: isOnClock ? "#c9b6ff" : "var(--faint)" }}>
+                      <div className="font-stats" style={{ fontSize: 9, color: isOnClock ? "var(--accent-strong)" : "var(--faint)" }}>
                         #{slot.overall}
                       </div>
                       <div style={{ fontSize: 11, fontWeight: isMe ? 700 : 400, color: isOnClock ? "var(--text)" : pick ? "var(--text)" : "var(--faint)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 46 }}>
@@ -443,7 +443,7 @@ function TeamSpreadPanel({
       <div style={{ fontSize: 11, color: "var(--muted)", marginBottom: 6, lineHeight: 1.5 }}>
         High concentration from one team increases injury/absence risk.
         <br />
-        <span style={{ color: "var(--green)" }}>Green</span> = 1–2 players (fine) · <span style={{ color: "#f59e0b" }}>Amber</span> = 3 players (some risk) · <span style={{ color: "var(--clock-warn)" }}>Red</span> = 4+ players (high risk)
+        <span style={{ color: "var(--green)" }}>Green</span> = 1–2 players (fine) · <span style={{ color: "var(--amber)" }}>Amber</span> = 3 players (some risk) · <span style={{ color: "var(--clock-warn)" }}>Red</span> = 4+ players (high risk)
       </div>
       {rows.length === 0 ? (
         <div style={{ fontSize: 12, color: "var(--muted)" }}>No picks yet</div>
@@ -451,9 +451,9 @@ function TeamSpreadPanel({
         rows.map(([team, count]) => {
           const isHigh = count >= 4;
           const isMid = count === 3;
-          const barColor = isHigh ? "var(--clock-warn)" : isMid ? "#f59e0b" : "var(--green)";
-          const barBg = isHigh ? "rgba(249,115,22,0.18)" : isMid ? "rgba(245,158,11,0.14)" : "rgba(34,197,94,0.12)";
-          const countColor = isHigh ? "var(--clock-warn)" : isMid ? "#f59e0b" : "var(--text)";
+          const barColor = isHigh ? "var(--clock-warn)" : isMid ? "var(--amber)" : "var(--green)";
+          const barBg = isHigh ? "rgba(249,115,22,0.18)" : isMid ? "rgba(245,201,123,0.14)" : "rgba(81,216,138,0.12)";
+          const countColor = isHigh ? "var(--clock-warn)" : isMid ? "var(--amber)" : "var(--text)";
           const maxCount = rows[0][1];
           const pct = maxCount > 0 ? Math.round((count / maxCount) * 100) : 0;
           return (
@@ -508,24 +508,24 @@ function NeedsPanel({
         const done = remaining === 0;
         const critical = !done && remaining <= 1;
         const pct = need > 0 ? Math.min(100, Math.round((have / need) * 100)) : 0;
-        const barColor = done ? "#5fa98c" : have > 0 ? "#a78bfa" : "#d6a94e";
+        const barColor = done ? "var(--green)" : have > 0 ? "var(--accent-strong)" : "var(--gold)";
         const rowBg = done
-          ? "rgba(95,169,140,0.07)"
+          ? "rgba(81,216,138,0.07)"
           : critical
-          ? "rgba(214,169,78,0.06)"
+          ? "rgba(245,201,123,0.06)"
           : "rgba(150,160,200,0.03)";
-        const countColor = done ? "#7fc2a6" : critical ? "#e3c989" : "var(--muted)";
+        const countColor = done ? "var(--green)" : critical ? "var(--gold)" : "var(--muted)";
         return (
           <div key={slot} style={{ marginBottom: 6 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "7px 10px", borderRadius: 8, background: rowBg, fontSize: 12 }}>
-              <span className="font-stats" style={{ flex: 1, fontSize: 14, fontWeight: 600, color: done ? "#7fc2a6" : critical ? "#e3c989" : "var(--text)" }}>
+              <span className="font-stats" style={{ flex: 1, fontSize: 14, fontWeight: 600, color: done ? "var(--green)" : critical ? "var(--gold)" : "var(--text)" }}>
                 {SLOT_LABELS[slot] ?? slot}
               </span>
               <span style={{ color: countColor, fontWeight: 700, fontVariantNumeric: "tabular-nums", fontSize: 12 }}>
                 {have}/{need}
               </span>
               {done && (
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#7fc2a6" strokeWidth="2.5"><path d="M20 6 9 17l-5-5"/></svg>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--green)" strokeWidth="2.5"><path d="M20 6 9 17l-5-5"/></svg>
               )}
             </div>
             <div style={{ height: 6, borderRadius: 3, background: "rgba(150,160,200,0.10)", overflow: "hidden", marginTop: 3, marginLeft: 10, marginRight: 10 }}>
@@ -711,7 +711,7 @@ function PlayerPanel({
           {(["available", "queue"] as const).map((tab) => (
             <button
               key={tab}
-              style={{ ...styles.tab, background: activeTab === tab ? "var(--accent)" : "rgba(150,160,200,0.08)", color: activeTab === tab ? "#fff" : "var(--muted)" }}
+              style={{ ...styles.tab, background: activeTab === tab ? "var(--accent)" : "rgba(150,160,200,0.08)", color: activeTab === tab ? "var(--accent-ink)" : "var(--muted)" }}
               onClick={() => setActiveTab(tab)}
             >
               {tab === "available" ? "Available" : `My List (${queuedPlayers.length})`}
@@ -733,7 +733,7 @@ function PlayerPanel({
                 {(["", "FORWARD", "DEFENSE", "GOALIE"] as const).map((pos) => (
                   <button
                     key={pos || "all"}
-                    style={{ ...styles.tab, minHeight: 44, padding: "0 12px", background: posFilter === pos ? "var(--accent)" : "rgba(150,160,200,0.08)", color: posFilter === pos ? "#fff" : "var(--muted)" }}
+                    style={{ ...styles.tab, minHeight: 44, padding: "0 12px", background: posFilter === pos ? "var(--accent)" : "rgba(150,160,200,0.08)", color: posFilter === pos ? "var(--accent-ink)" : "var(--muted)" }}
                     onClick={() => handlePosFilter(pos)}
                   >
                     {pos === "" ? "All" : pos === "FORWARD" ? "F" : pos === "DEFENSE" ? "D" : "G"}
@@ -748,7 +748,7 @@ function PlayerPanel({
               </div>
             )}
 
-            <div style={{ fontSize: 11, color: "#a78bfa", marginBottom: 8 }}>
+            <div style={{ fontSize: 11, color: "var(--accent-strong)", marginBottom: 8 }}>
               🏒 4 expansion teams join 2026-27 — DET · HAM · LV · SJ
             </div>
 
@@ -757,7 +757,7 @@ function PlayerPanel({
               <button
                 type="button"
                 onClick={() => setGlossaryOpen((v) => !v)}
-                style={{ fontSize: 11, color: "var(--accent-strong, #a78bfa)", background: "none", border: "none", cursor: "pointer", padding: 0 }}
+                style={{ fontSize: 11, color: "var(--accent-strong)", background: "none", border: "none", cursor: "pointer", padding: 0 }}
               >
                 {glossaryOpen ? "▴ Hide" : "What do these stats mean? ▾"}
               </button>
@@ -834,7 +834,7 @@ function PlayerPanel({
                               title={queue.includes(p.id) ? "Remove from queue" : "Add to queue"}
                             >
                               {queue.includes(p.id)
-                                ? <svg width="16" height="16" viewBox="0 0 24 24" fill="#a78bfa" stroke="#a78bfa" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                                ? <svg width="16" height="16" viewBox="0 0 24 24" fill="var(--accent-strong)" stroke="var(--accent-strong)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
                                 : <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
                               }
                             </button>
@@ -898,8 +898,8 @@ function PosTag({ pos }: { pos: string }) {
   return (
     <span
       style={{
-        background: "rgba(91,33,182,0.6)",
-        color: "#fff",
+        background: "rgba(143,193,232,0.6)",
+        color: "var(--accent-ink)",
         borderRadius: 5,
         padding: "3px 7px",
         fontSize: 9.5,
@@ -1087,7 +1087,7 @@ function DraftRoomContent({
               href={`/team/${teamId}/lineup`}
               style={{
                 display: "inline-block", padding: "8px 18px", borderRadius: 8,
-                background: "var(--accent, #6366f1)", color: "#fff",
+                background: "var(--accent)", color: "var(--accent-ink)",
                 fontWeight: 700, fontSize: 13, textDecoration: "none",
               }}
             >
@@ -1097,9 +1097,9 @@ function DraftRoomContent({
               href={`/league/${leagueId}`}
               style={{
                 display: "inline-block", padding: "8px 18px", borderRadius: 8,
-                background: "rgba(255,255,255,0.06)", color: "var(--text)",
+                background: "var(--surface)", color: "var(--text)",
                 fontWeight: 600, fontSize: 13, textDecoration: "none",
-                border: "1px solid rgba(255,255,255,0.1)",
+                border: "1px solid var(--border)",
               }}
             >
               View league
@@ -1302,7 +1302,7 @@ const styles = {
     height: 52,
     background: "rgba(10,14,26,0.92)",
     backdropFilter: "blur(14px)",
-    borderBottom: "1px solid rgba(150,160,200,0.10)",
+    borderBottom: "1px solid var(--border)",
     flexShrink: 0,
     position: "sticky" as const,
     top: 0,
@@ -1323,7 +1323,7 @@ const styles = {
   },
   btnPrimary: {
     background: "var(--accent)",
-    color: "#fff",
+    color: "var(--accent-ink)",
     border: "none",
     borderRadius: 6,
     padding: "7px 16px",
@@ -1393,7 +1393,7 @@ const styles = {
     flexDirection: "column" as const,
     gap: 16,
     padding: "20px 16px 24px",
-    borderRight: "1px solid rgba(150,160,200,0.08)",
+    borderRight: "1px solid var(--border)",
     overflowY: "auto" as const,
     // applied as className="draft-scroll" on the element
   },
@@ -1401,7 +1401,7 @@ const styles = {
     flex: 1,
     padding: "20px 20px 24px",
     overflowY: "auto" as const,
-    borderRight: "1px solid rgba(150,160,200,0.08)",
+    borderRight: "1px solid var(--border)",
     display: "flex" as const,
     flexDirection: "column" as const,
     gap: 16,
@@ -1417,8 +1417,8 @@ const styles = {
     gap: 16,
   },
   card: {
-    background: "#121829",
-    border: "1px solid rgba(150,160,200,0.10)",
+    background: "var(--card)",
+    border: "1px solid var(--border)",
     borderRadius: 16,
     padding: "18px 20px",
   },
@@ -1430,7 +1430,7 @@ const styles = {
     fontWeight: 700,
     letterSpacing: "0.14em",
     textTransform: "uppercase" as const,
-    color: "#c7d2e0",
+    color: "var(--muted)",
     marginBottom: 16,
   },
   table: {
@@ -1478,7 +1478,7 @@ const styles = {
   },
   yourPickBanner: {
     background: "var(--accent)",
-    color: "#fff",
+    color: "var(--accent-ink)",
     borderRadius: 6,
     padding: "8px 14px",
     fontWeight: 600,
@@ -1516,21 +1516,21 @@ const styles = {
     transition: "opacity 0.2s",
   },
   completeBanner: {
-    background: "#052e16",
+    background: "rgba(81,216,138,0.08)",
     color: "var(--green)",
     padding: "8px 20px",
     fontSize: 13,
-    borderBottom: "1px solid var(--green)",
+    borderBottom: "1px solid rgba(81,216,138,0.2)",
   },
   pendingBanner: {
     display: "flex" as const,
     alignItems: "center" as const,
     gap: 12,
-    background: "rgba(59,130,246,0.12)",
-    color: "#93c5fd",
+    background: "var(--accent-dim)",
+    color: "var(--accent-strong)",
     padding: "10px 20px",
     fontSize: 13,
-    borderBottom: "1px solid rgba(59,130,246,0.3)",
+    borderBottom: "1px solid var(--accent-border)",
   },
   pausedBanner: {
     background: "rgba(249,115,22,0.12)",

@@ -60,7 +60,7 @@ export default function NotificationBell({
           cursor: "pointer",
           padding: "4px 8px",
           position: "relative",
-          color: "var(--text-muted, #888)",
+          color: "var(--dim)",
         }}
       >
         🔔
@@ -70,8 +70,8 @@ export default function NotificationBell({
               position: "absolute",
               top: 0,
               right: 0,
-              background: "#e53e3e",
-              color: "#fff",
+              background: "var(--red)",
+              color: "var(--accent-ink)",
               borderRadius: "999px",
               fontSize: "10px",
               padding: "1px 5px",
@@ -91,7 +91,7 @@ export default function NotificationBell({
             position: "absolute",
             right: 0,
             top: "calc(100% + 4px)",
-            background: "var(--surface, #1a1a2e)",
+            background: "var(--surface)",
             border: "1px solid var(--border, #333)",
             borderRadius: "8px",
             width: "280px",
@@ -106,17 +106,17 @@ export default function NotificationBell({
               borderBottom: "1px solid var(--border, #333)",
               fontSize: "13px",
               fontWeight: 600,
-              color: "var(--text, #eee)",
+              color: "var(--text)",
             }}
           >
             Notifications
           </div>
           {notifications === null ? (
-            <div style={{ padding: "12px 14px", fontSize: "13px", color: "var(--text-muted, #888)" }}>
+            <div style={{ padding: "12px 14px", fontSize: "13px", color: "var(--dim)" }}>
               Loading…
             </div>
           ) : notifications.length === 0 ? (
-            <div style={{ padding: "12px 14px", fontSize: "13px", color: "var(--text-muted, #888)" }}>
+            <div style={{ padding: "12px 14px", fontSize: "13px", color: "var(--dim)" }}>
               You&apos;re all caught up.
             </div>
           ) : (
@@ -128,15 +128,15 @@ export default function NotificationBell({
                     padding: "10px 14px",
                     borderBottom: "1px solid var(--border, #2a2a3e)",
                     fontSize: "13px",
-                    color: n.readAt ? "var(--text-muted, #888)" : "var(--text, #eee)",
-                    background: n.readAt ? "transparent" : "rgba(99,102,241,0.06)",
+                    color: n.readAt ? "var(--dim)" : "var(--text)",
+                    background: n.readAt ? "transparent" : "rgba(143,193,232,0.06)",
                   }}
                 >
                   {n.actionUrl ? (
                     <a href={n.actionUrl} style={{ textDecoration: "none", color: "inherit" }}>
                       <div style={{ fontWeight: 600 }}>{n.title ?? TYPE_LABEL[n.type] ?? n.type}</div>
                       {(n.body ?? (typeof n.data.teamName === "string" ? n.data.teamName : undefined)) && (
-                        <div style={{ marginTop: "2px", color: "var(--text-muted, #888)" }}>
+                        <div style={{ marginTop: "2px", color: "var(--dim)" }}>
                           {n.body ?? (n.data.teamName as string)}
                         </div>
                       )}
@@ -145,7 +145,7 @@ export default function NotificationBell({
                     <>
                       <div style={{ fontWeight: 600 }}>{n.title ?? TYPE_LABEL[n.type] ?? n.type}</div>
                       {(n.body ?? (typeof n.data.teamName === "string" ? n.data.teamName : undefined)) && (
-                        <div style={{ marginTop: "2px", color: "var(--text-muted, #888)" }}>
+                        <div style={{ marginTop: "2px", color: "var(--dim)" }}>
                           {n.body ?? (n.data.teamName as string)}
                         </div>
                       )}

@@ -1,6 +1,6 @@
 ---
 name: beta-feedback-bugs
-description: Beta bug tracker — BF-001/002 RESOLVED (Sprint 9); BF-012–017 SHIPPED Sprint 18; BF-018 (/league-rules 404) reassigned to Sprint 22 (ID collision: Sprint 20 reused BF-018 for nav rename)
+description: Beta bug tracker — BF-001/002 RESOLVED (Sprint 9); BF-012–017 SHIPPED Sprint 18; BF-018 (/league-rules 404) SHIPPED Sprint 22; next new ID: BF-020
 metadata:
   type: project
 ---
@@ -63,14 +63,14 @@ These are a coherent set suggesting a deeper "League vs Franchise" nav split —
 
 **BF-017 ✅ SHIPPED** (commit 622ac9a) — Auto-set/bench-upgrade hint suggesting players with 0 games; null-coalescing fix. Files: `lib/lineup.ts`, `LineupManager.tsx`
 
-## Sprint 22 bugs (current)
+## Sprint 22 bugs
 
-**BF-018 (Sprint 22, P1)** — `/league-rules` 404 dead link on every dashboard load. Fix: create `/app/league-rules/page.tsx` or remove all references. See `roadmap-features.md` § BF-018.
+**BF-018 (Sprint 22, P1) ✅ SHIPPED (Jun 23, 2026)** — `/league-rules` 404 dead link fixed. `app/league-rules/page.tsx` created: public static page, no auth required, five sections (scoring, roster, draft, standings, playoffs). Fixes dead links from WelcomeFlow and BetaWelcomeStep.
 
-**IMPORTANT — BF-018 ID collision:** Sprint 20 reused the BF-018 ID for the league nav "Schedule"→"Results" rename (commit ad4185a). That item shipped. The `/league-rules` 404 bug is the ORIGINAL BF-018 from the Sprint 19 Playwright walkthrough — it is still open and now assigned to Sprint 22. If creating a new bug tracker entry, use a different label or note the collision.
+**IMPORTANT — BF-018 ID collision:** Sprint 20 reused the BF-018 ID for the league nav "Schedule"→"Results" rename (commit ad4185a). The `/league-rules` 404 bug was the ORIGINAL BF-018 from the Sprint 19 Playwright walkthrough — now SHIPPED in Sprint 22.
 
 **BF-019 (email-blocked)** — Password reset / forgot password. Blocked on email infra.
 
 **Next BF-NNN: BF-020**
 
-**How to apply:** BF-001/002 stale OPEN in DB is cosmetic. BF-012/013/014/015/016/017 all confirmed shipped Sprint 18. Active bug is BF-018 (/league-rules 404, Sprint 22). BF-019 blocked on email infra. Next new bug ID is BF-020.
+**How to apply:** BF-001/002 stale OPEN in DB is cosmetic. BF-012/013/014/015/016/017 all confirmed shipped Sprint 18. BF-018 (/league-rules 404) shipped Sprint 22. BF-019 blocked on email infra. Next new bug ID is BF-020.

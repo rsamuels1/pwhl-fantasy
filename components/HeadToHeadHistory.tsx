@@ -33,11 +33,11 @@ export function HeadToHeadHistory({
       <div
         style={{
           padding: "12px 14px",
-          background: "rgba(148,163,184,0.04)",
-          border: "1px solid rgba(148,163,184,0.1)",
+          background: "var(--border)",
+          border: "1px solid var(--border)",
           borderRadius: 8,
           fontSize: 13,
-          color: "#94a3b8",
+          color: "var(--dim)",
         }}
       >
         No head-to-head matchups yet.
@@ -62,10 +62,10 @@ export function HeadToHeadHistory({
   return (
     <div style={{ display: "grid", gap: 12 }}>
       <div>
-        <p style={{ margin: "0 0 8px", fontSize: 12, color: "#94a3b8", fontWeight: 600, textTransform: "uppercase" }}>
+        <p style={{ margin: "0 0 8px", fontSize: 12, color: "var(--dim)", fontWeight: 600, textTransform: "uppercase" }}>
           Season Series vs {opponentName}
         </p>
-        <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: "#e2e8f0" }}>
+        <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: "var(--text)" }}>
           {recordStr}
         </p>
       </div>
@@ -86,8 +86,8 @@ export function HeadToHeadHistory({
                 alignItems: "center",
                 gap: 12,
                 padding: "10px 12px",
-                background: "rgba(255,255,255,0.02)",
-                border: "1px solid rgba(148,163,184,0.07)",
+                background: "var(--bg-raised)",
+                border: "1px solid var(--border)",
                 borderRadius: 6,
                 fontSize: 13,
               }}
@@ -95,10 +95,10 @@ export function HeadToHeadHistory({
               <span style={{ color: wonColor, fontWeight: 700, minWidth: 24 }}>
                 {won}
               </span>
-              <span style={{ color: "#94a3b8", flex: 1 }}>
+              <span style={{ color: "var(--dim)", flex: 1 }}>
                 {new Date(m.startsAt).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
               </span>
-              <span style={{ fontWeight: 700, color: "#e2e8f0" }}>
+              <span style={{ fontWeight: 700, color: "var(--text)" }}>
                 {myScore} – {oppScore}
               </span>
             </div>

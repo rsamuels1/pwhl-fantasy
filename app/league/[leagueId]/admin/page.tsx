@@ -162,25 +162,25 @@ export default async function AdminPage({ params, searchParams }: Props) {
     <div style={{ display: "grid", gap: 24 }}>
       <div>
         <h1 style={{ fontSize: 28, marginBottom: 6 }}>League setup</h1>
-        <p style={{ color: "#94a3b8" }}>{league.name} · Commissioner controls</p>
+        <p style={{ color: "var(--dim)" }}>{league.name} · Commissioner controls</p>
       </div>
 
       {/* ── Renewed banner ── */}
       {isRenewed && (
         <div style={{
           padding: "16px 20px", borderRadius: 16,
-          background: "rgba(99,102,241,0.07)",
-          border: "1px solid rgba(99,102,241,0.2)",
+          background: "rgba(143,193,232,0.07)",
+          border: "1px solid rgba(143,193,232,0.2)",
           display: "grid", gap: 12,
         }}>
-          <p style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "#a5b4fc" }}>
+          <p style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "var(--accent-strong)" }}>
             ✓ New season created!
           </p>
-          <p style={{ margin: 0, fontSize: 13, color: "#64748b" }}>
+          <p style={{ margin: 0, fontSize: 13, color: "var(--faint)" }}>
             Set up the draft to get ready for the next season. Invite returning managers to re-join — they need a new link for this league.
           </p>
           <div>
-            <p style={{ margin: "0 0 8px", fontSize: 12, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+            <p style={{ margin: "0 0 8px", fontSize: 12, fontWeight: 700, color: "var(--dim)", textTransform: "uppercase", letterSpacing: "0.06em" }}>
               Share invite link
             </p>
             <InviteLinkButton leagueId={leagueId} />
@@ -198,7 +198,7 @@ export default async function AdminPage({ params, searchParams }: Props) {
           <p style={{ margin: "0 0 4px", fontSize: 16, fontWeight: 700, color: "#34d399" }}>
             ✓ League created!
           </p>
-          <p style={{ margin: 0, fontSize: 13, color: "#64748b" }}>
+          <p style={{ margin: 0, fontSize: 13, color: "var(--faint)" }}>
             Follow the checklist below to get ready for draft day. Start by inviting your managers.
           </p>
         </div>
@@ -216,8 +216,8 @@ export default async function AdminPage({ params, searchParams }: Props) {
             ⏸ Draft is currently PAUSED
           </p>
           <Link href={`/draft/${leagueId}`} style={{
-            color: "#a5b4fc", fontSize: 13, fontWeight: 600,
-            background: "rgba(99,102,241,0.1)", padding: "6px 12px", borderRadius: 8,
+            color: "var(--accent-strong)", fontSize: 13, fontWeight: 600,
+            background: "rgba(143,193,232,0.1)", padding: "6px 12px", borderRadius: 8,
             textDecoration: "none",
           }}>
             Go to draft room →
@@ -229,17 +229,17 @@ export default async function AdminPage({ params, searchParams }: Props) {
       {completedCount < checklistSteps.length && <section style={panelStyle}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16, flexWrap: "wrap", gap: 8 }}>
           <h2 style={{ fontSize: 18, margin: 0 }}>Setup checklist</h2>
-          <span style={{ fontSize: 13, color: progressPct === 100 ? "#34d399" : "#94a3b8", fontWeight: 600 }}>
+          <span style={{ fontSize: 13, color: progressPct === 100 ? "#34d399" : "var(--dim)", fontWeight: 600 }}>
             {completedCount}/{checklistSteps.length} complete
           </span>
         </div>
 
         {/* Progress bar */}
-        <div style={{ height: 6, borderRadius: 3, background: "rgba(255,255,255,0.07)", marginBottom: 20, overflow: "hidden" }}>
+        <div style={{ height: 6, borderRadius: 3, background: "var(--bg-raised)", marginBottom: 20, overflow: "hidden" }}>
           <div style={{
             height: "100%", borderRadius: 3,
             width: `${progressPct}%`,
-            background: progressPct === 100 ? "#34d399" : "linear-gradient(90deg, #6366f1, #818cf8)",
+            background: progressPct === 100 ? "#34d399" : "linear-gradient(90deg, var(--accent), var(--accent-strong))",
             transition: "width 0.4s ease",
           }} />
         </div>
@@ -252,11 +252,11 @@ export default async function AdminPage({ params, searchParams }: Props) {
                 display: "flex", alignItems: "flex-start", gap: 12,
                 padding: "12px 14px", borderRadius: 12,
                 background: isNext
-                  ? "rgba(99,102,241,0.07)"
-                  : "rgba(255,255,255,0.02)",
+                  ? "rgba(143,193,232,0.07)"
+                  : "var(--bg-raised)",
                 border: `1px solid ${isNext
-                  ? "rgba(99,102,241,0.2)"
-                  : "rgba(148,163,184,0.07)"}`,
+                  ? "rgba(143,193,232,0.2)"
+                  : "var(--border)"}`,
               }}>
                 <div style={{
                   width: 22, height: 22, borderRadius: "50%", flexShrink: 0,
@@ -265,10 +265,10 @@ export default async function AdminPage({ params, searchParams }: Props) {
                   background: step.done
                     ? "rgba(52,211,153,0.15)"
                     : isNext
-                    ? "rgba(99,102,241,0.15)"
-                    : "rgba(255,255,255,0.05)",
-                  color: step.done ? "#34d399" : isNext ? "#a5b4fc" : "#475569",
-                  border: `1.5px solid ${step.done ? "#34d399" : isNext ? "#6366f1" : "rgba(148,163,184,0.15)"}`,
+                    ? "rgba(143,193,232,0.15)"
+                    : "var(--surface)",
+                  color: step.done ? "#34d399" : isNext ? "var(--accent-strong)" : "var(--faint)",
+                  border: `1.5px solid ${step.done ? "#34d399" : isNext ? "var(--accent)" : "var(--border)"}`,
                   marginTop: 1,
                 }}>
                   {step.done ? "✓" : i + 1}
@@ -276,12 +276,12 @@ export default async function AdminPage({ params, searchParams }: Props) {
                 <div>
                   <div style={{
                     fontSize: 14, fontWeight: 600,
-                    color: step.done ? "#94a3b8" : "#e2e8f0",
+                    color: step.done ? "var(--dim)" : "var(--text)",
                     textDecoration: step.done ? "line-through" : "none",
                   }}>
                     {step.label}
                   </div>
-                  <div style={{ fontSize: 12, color: "#64748b", marginTop: 2 }}>{step.detail}</div>
+                  <div style={{ fontSize: 12, color: "var(--faint)", marginTop: 2 }}>{step.detail}</div>
                 </div>
               </div>
             );
@@ -293,12 +293,12 @@ export default async function AdminPage({ params, searchParams }: Props) {
       {!draftDone && (
         <section style={panelStyle}>
           <h2 style={{ fontSize: 18, marginBottom: 8 }}>Invite managers</h2>
-          <p style={{ color: "#94a3b8", fontSize: 14, marginBottom: 16 }}>
+          <p style={{ color: "var(--dim)", fontSize: 14, marginBottom: 16 }}>
             Share this link. Anyone who opens it sees your league and can join in one step —
             no league ID needed.
           </p>
           <InviteLinkButton leagueId={leagueId} />
-          <p style={{ marginTop: 12, fontSize: 12, color: "#475569" }}>
+          <p style={{ marginTop: 12, fontSize: 12, color: "var(--faint)" }}>
             {league.teams.length}/{league.maxTeams} spots filled
             {league.maxTeams - league.teams.length > 0
               ? ` · ${league.maxTeams - league.teams.length} remaining`
@@ -317,14 +317,14 @@ export default async function AdminPage({ params, searchParams }: Props) {
             {league.teams.map((t) => (
               <div key={t.id} style={rowStyle}>
                 <span style={{ fontWeight: 600 }}>{t.name}</span>
-                <span style={{ color: "#64748b", fontSize: 13 }}>
+                <span style={{ color: "var(--faint)", fontSize: 13 }}>
                   #{t.draftOrder ?? "—"} draft order
                 </span>
               </div>
             ))}
           </div>
         ) : (
-          <p style={{ color: "#94a3b8", marginBottom: 20 }}>
+          <p style={{ color: "var(--dim)", marginBottom: 20 }}>
             No teams yet — share the invite link above to get managers to join.
           </p>
         )}
@@ -349,7 +349,7 @@ export default async function AdminPage({ params, searchParams }: Props) {
 
             {!draftDone && (
               <div>
-                <p style={{ color: "#94a3b8", fontSize: 14, marginBottom: 14 }}>
+                <p style={{ color: "var(--dim)", fontSize: 14, marginBottom: 14 }}>
                   Send each manager their personal draft room link:
                 </p>
                 <div style={{ display: "grid", gap: 8 }}>
@@ -359,9 +359,9 @@ export default async function AdminPage({ params, searchParams }: Props) {
                       <Link
                         href={`/draft/${leagueId}?team=${t.id}`}
                         style={{
-                          color: "#a5b4fc", fontSize: 13, fontWeight: 600,
+                          color: "var(--accent-strong)", fontSize: 13, fontWeight: 600,
                           textDecoration: "none",
-                          background: "rgba(99,102,241,0.1)",
+                          background: "rgba(143,193,232,0.1)",
                           padding: "4px 10px", borderRadius: 8,
                         }}
                       >
@@ -379,27 +379,27 @@ export default async function AdminPage({ params, searchParams }: Props) {
                     style={{
                       display: "inline-block",
                       marginTop: 12,
-                      color: "#fff",
+                      color: "var(--accent-ink)",
                       fontSize: 14,
                       fontWeight: 600,
                       textDecoration: "none",
-                      background: "#6366f1",
+                      background: "var(--accent)",
                       padding: "10px 16px",
                       borderRadius: 8,
                       transition: "background 0.15s",
                     }}
                     onMouseEnter={(e) => {
-                      (e.currentTarget as HTMLElement).style.background = "#4f46e5";
+                      (e.currentTarget as HTMLElement).style.background = "var(--accent-deep)";
                     }}
                     onMouseLeave={(e) => {
-                      (e.currentTarget as HTMLElement).style.background = "#6366f1";
+                      (e.currentTarget as HTMLElement).style.background = "var(--accent)";
                     }}
                   >
                     ▶ Go to draft room to start →
                   </Link>
                 )}
                 {!isDev && !commTeam && (
-                  <p style={{ marginTop: 12, fontSize: 12, color: "#475569" }}>
+                  <p style={{ marginTop: 12, fontSize: 12, color: "var(--faint)" }}>
                     You start the draft from inside the draft room once everyone is connected.
                   </p>
                 )}
@@ -415,7 +415,7 @@ export default async function AdminPage({ params, searchParams }: Props) {
                 <p style={{ margin: 0, color: "#34d399", fontWeight: 600, fontSize: 14 }}>
                   ✓ Draft complete — all rosters are set.
                 </p>
-                <p style={{ margin: "6px 0 0", color: "#64748b", fontSize: 13 }}>
+                <p style={{ margin: "6px 0 0", color: "var(--faint)", fontSize: 13 }}>
                   Start the season below to generate matchups and unlock lineup management.
                 </p>
               </div>
@@ -423,14 +423,14 @@ export default async function AdminPage({ params, searchParams }: Props) {
           </div>
         ) : hasEnoughTeams ? (
           <div>
-            <p style={{ color: "#94a3b8", marginBottom: 16, fontSize: 14 }}>
+            <p style={{ color: "var(--dim)", marginBottom: 16, fontSize: 14 }}>
               You have {league.teams.length} team{league.teams.length !== 1 ? "s" : ""} ready.
               Create the draft board to generate pick order and enable the draft room.
             </p>
             <SetupDraftButton leagueId={leagueId} />
           </div>
         ) : (
-          <p style={{ color: "#94a3b8", fontSize: 14 }}>
+          <p style={{ color: "var(--dim)", fontSize: 14 }}>
             Add at least 2 teams before setting up the draft.
           </p>
         )}
@@ -439,7 +439,7 @@ export default async function AdminPage({ params, searchParams }: Props) {
       {/* ── League announcement ── */}
       <section style={panelStyle}>
         <h2 style={{ fontSize: 18, marginBottom: 8 }}>League announcement</h2>
-        <p style={{ color: "#94a3b8", fontSize: 14, marginBottom: 16 }}>
+        <p style={{ color: "var(--dim)", fontSize: 14, marginBottom: 16 }}>
           Pinned to the top of the league overview for every manager. Leave empty to hide it.
         </p>
         <AnnouncementForm leagueId={leagueId} initial={league.announcement} />
@@ -451,7 +451,7 @@ export default async function AdminPage({ params, searchParams }: Props) {
         {draftDone ? (
           league.isReplay ? (
             <div>
-              <p style={{ color: "#94a3b8", fontSize: 14, marginBottom: 12 }}>
+              <p style={{ color: "var(--dim)", fontSize: 14, marginBottom: 12 }}>
                 Use the <strong>Sim →</strong> page to manage replay league progression.
               </p>
               <Link
@@ -459,10 +459,10 @@ export default async function AdminPage({ params, searchParams }: Props) {
                 style={{
                   display: "inline-block",
                   padding: "10px 14px",
-                  background: "rgba(99, 102, 241, 0.15)",
-                  border: "1px solid rgba(99, 102, 241, 0.3)",
+                  background: "rgba(143,193,232,0.15)",
+                  border: "1px solid rgba(143,193,232,0.3)",
                   borderRadius: 8,
-                  color: "#a5b4fc",
+                  color: "var(--accent-strong)",
                   textDecoration: "none",
                   fontSize: 13,
                   fontWeight: 600,
@@ -472,12 +472,12 @@ export default async function AdminPage({ params, searchParams }: Props) {
               </Link>
             </div>
           ) : (
-            <p style={{ color: "#94a3b8", fontSize: 14 }}>
+            <p style={{ color: "var(--dim)", fontSize: 14 }}>
               Live season — players advance automatically through the PWHL schedule.
             </p>
           )
         ) : (
-          <p style={{ color: "#94a3b8", fontSize: 14 }}>
+          <p style={{ color: "var(--dim)", fontSize: 14 }}>
             Season controls become available after the draft is complete.
           </p>
         )}
@@ -487,12 +487,12 @@ export default async function AdminPage({ params, searchParams }: Props) {
       <section style={panelStyle}>
         <h2 style={{ fontSize: 18, marginBottom: 16 }}>League settings</h2>
         {draftDone && (
-          <p style={{ color: "#94a3b8", fontSize: 14, marginBottom: 16 }}>
+          <p style={{ color: "var(--dim)", fontSize: 14, marginBottom: 16 }}>
             Scoring and roster settings are locked after the draft. You can still update visibility.
           </p>
         )}
         {!draftDone && (
-          <p style={{ color: "#94a3b8", fontSize: 14, marginBottom: 16 }}>
+          <p style={{ color: "var(--dim)", fontSize: 14, marginBottom: 16 }}>
             Adjust max teams and draft type before the draft begins. Changes are logged in the audit trail.
           </p>
         )}
@@ -526,7 +526,7 @@ export default async function AdminPage({ params, searchParams }: Props) {
       {draftDone && (
         <section style={panelStyle}>
           <h2 style={{ fontSize: 18, marginBottom: 4 }}>Commissioner tools</h2>
-          <p style={{ color: "#94a3b8", fontSize: 13, marginBottom: 20 }}>
+          <p style={{ color: "var(--dim)", fontSize: 13, marginBottom: 20 }}>
             Recovery actions for unexpected situations. All actions are logged in the audit trail below.
           </p>
           <CommissionerRecoveryTools
@@ -542,7 +542,7 @@ export default async function AdminPage({ params, searchParams }: Props) {
       {draftDone && (
         <section style={panelStyle}>
           <h2 style={{ fontSize: 18, marginBottom: 8 }}>Trade settings</h2>
-          <p style={{ color: "#94a3b8", fontSize: 14, marginBottom: 16 }}>
+          <p style={{ color: "var(--dim)", fontSize: 14, marginBottom: 16 }}>
             Control how trades are processed in your league. Changes take effect for new trades immediately.
           </p>
           <TradeSettingsForm
@@ -559,7 +559,7 @@ export default async function AdminPage({ params, searchParams }: Props) {
           <h2 style={{ fontSize: 18, marginBottom: 8, color: "#fbbf24" }}>
             Trades pending review ({pendingTrades.length})
           </h2>
-          <p style={{ color: "#94a3b8", fontSize: 14, marginBottom: 16 }}>
+          <p style={{ color: "var(--dim)", fontSize: 14, marginBottom: 16 }}>
             These trades have been accepted but require your review before executing.
           </p>
           <PendingTradeReviewList
@@ -584,14 +584,14 @@ export default async function AdminPage({ params, searchParams }: Props) {
                 <div key={entry.id} style={{
                   display: "flex", alignItems: "flex-start", gap: 12,
                   padding: "10px 14px", borderRadius: 10,
-                  background: "rgba(255,255,255,0.02)",
-                  border: "1px solid rgba(148,163,184,0.07)",
+                  background: "var(--bg-raised)",
+                  border: "1px solid var(--border)",
                   fontSize: 13,
                 }}>
-                  <span style={{ color: "#475569", flexShrink: 0, minWidth: 120 }}>
+                  <span style={{ color: "var(--faint)", flexShrink: 0, minWidth: 120 }}>
                     {new Date(entry.createdAt).toLocaleDateString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
                   </span>
-                  <span style={{ color: "#a5b4fc", fontWeight: 600, textTransform: "capitalize" }}>
+                  <span style={{ color: "var(--accent-strong)", fontWeight: 600, textTransform: "capitalize" }}>
                     {action.toLowerCase()}{target}
                   </span>
                 </div>
@@ -603,9 +603,9 @@ export default async function AdminPage({ params, searchParams }: Props) {
 
       {/* ── Start next season ── */}
       {league.playoffStatus === "COMPLETE" && (
-        <section style={{ ...panelStyle, border: "1px solid rgba(99,102,241,0.25)" }}>
+        <section style={{ ...panelStyle, border: "1px solid rgba(143,193,232,0.25)" }}>
           <h2 style={{ fontSize: 18, marginBottom: 8 }}>Start next season</h2>
-          <p style={{ color: "#94a3b8", fontSize: 14, marginBottom: 16 }}>
+          <p style={{ color: "var(--dim)", fontSize: 14, marginBottom: 16 }}>
             Create a new league for the next season. Your teams, rosters, and matchup history stay
             in this league. Managers will need to re-join and re-draft for the new season.
           </p>
@@ -614,10 +614,10 @@ export default async function AdminPage({ params, searchParams }: Props) {
       )}
 
       {/* ── League settings ── */}
-      <section style={{ ...panelStyle, borderColor: "rgba(148,163,184,0.07)" }}>
+      <section style={{ ...panelStyle, borderColor: "var(--border)" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <h2 style={{ fontSize: 16, margin: 0, color: "#94a3b8" }}>League settings</h2>
-          <Link href={`/league/${leagueId}/settings`} style={{ color: "#6366f1", fontSize: 13 }}>
+          <h2 style={{ fontSize: 16, margin: 0, color: "var(--dim)" }}>League settings</h2>
+          <Link href={`/league/${leagueId}/settings`} style={{ color: "var(--accent)", fontSize: 13 }}>
             View / edit →
           </Link>
         </div>
@@ -635,26 +635,26 @@ export default async function AdminPage({ params, searchParams }: Props) {
 function Row({ label, value }: { label: string; value: string }) {
   return (
     <div style={{ display: "flex", justifyContent: "space-between", gap: 16, fontSize: 14 }}>
-      <span style={{ color: "#64748b" }}>{label}</span>
-      <span style={{ fontWeight: 600, color: "#e2e8f0" }}>{value}</span>
+      <span style={{ color: "var(--faint)" }}>{label}</span>
+      <span style={{ fontWeight: 600, color: "var(--text)" }}>{value}</span>
     </div>
   );
 }
 
 function StatTile({ label, value }: { label: string; value: string }) {
   return (
-    <div style={{ background: "rgba(255,255,255,0.03)", borderRadius: 12, padding: "12px 14px" }}>
-      <p style={{ color: "#64748b", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 4px" }}>
+    <div style={{ background: "var(--bg-raised)", borderRadius: 12, padding: "12px 14px" }}>
+      <p style={{ color: "var(--faint)", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 4px" }}>
         {label}
       </p>
-      <p style={{ fontSize: 16, fontWeight: 700, margin: 0, color: "#e2e8f0" }}>{value}</p>
+      <p style={{ fontSize: 16, fontWeight: 700, margin: 0, color: "var(--text)" }}>{value}</p>
     </div>
   );
 }
 
 const panelStyle: React.CSSProperties = {
-  background: "rgba(255,255,255,0.04)",
-  border: "1px solid rgba(148,163,184,0.14)",
+  background: "var(--surface)",
+  border: "1px solid var(--border)",
   borderRadius: 20,
   padding: 20,
 };
@@ -665,6 +665,6 @@ const rowStyle: React.CSSProperties = {
   alignItems: "center",
   gap: 12,
   padding: "10px 14px",
-  background: "rgba(255,255,255,0.03)",
+  background: "var(--bg-raised)",
   borderRadius: 12,
 };

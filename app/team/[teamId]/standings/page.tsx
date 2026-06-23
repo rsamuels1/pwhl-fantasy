@@ -5,8 +5,8 @@ import { computeStandings } from "@/lib/playoffs/seeding";
 import { computeVpStandings } from "@/lib/scoring/vp";
 
 const card: React.CSSProperties = {
-  background: "rgba(255,255,255,0.03)",
-  border: "1px solid rgba(148,163,184,0.1)",
+  background: "var(--bg-raised)",
+  border: "1px solid var(--border)",
   borderRadius: 16,
   padding: "20px 18px",
 };
@@ -17,13 +17,13 @@ const thStyle: React.CSSProperties = {
   fontWeight: 600,
   letterSpacing: "0.04em",
   textTransform: "uppercase",
-  color: "#64748b",
+  color: "var(--faint)",
 };
 
 const tdStyle: React.CSSProperties = {
   padding: "10px 10px",
   fontSize: 14,
-  borderBottom: "1px solid rgba(148,163,184,0.06)",
+  borderBottom: "1px solid var(--border)",
 };
 
 export default async function TeamStandingsPage({
@@ -78,24 +78,24 @@ export default async function TeamStandingsPage({
     <div style={{ display: "grid", gap: 20 }}>
       <section style={card}>
         <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 4, flexWrap: "wrap", gap: 8 }}>
-          <h2 style={{ fontSize: 18, margin: 0, color: "#e2e8f0" }}>
+          <h2 style={{ fontSize: 18, margin: 0, color: "var(--text)" }}>
             {vpStandings ? "Victory Points" : league.name}
           </h2>
           {playoffCutoff !== null && !playoffsStarted && (
-            <span style={{ fontSize: 12, color: "#64748b" }}>
+            <span style={{ fontSize: 12, color: "var(--faint)" }}>
               Top {playoffCutoff} qualify for playoffs
             </span>
           )}
         </div>
         {vpStandings && (
-          <p style={{ margin: "0 0 16px", fontSize: 12, color: "#475569" }}>
+          <p style={{ margin: "0 0 16px", fontSize: 12, color: "var(--faint)" }}>
             Win matchup +2 VP · 1st place score +2 VP · 2nd place score +1 VP
           </p>
         )}
         <div style={{ overflowX: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", minWidth: vpStandings ? 480 : 420 }}>
             <thead>
-              <tr style={{ color: "#64748b", textAlign: "left", borderBottom: "1px solid rgba(148,163,184,0.2)" }}>
+              <tr style={{ color: "var(--faint)", textAlign: "left", borderBottom: "1px solid var(--border)" }}>
                 <th style={thStyle}>#</th>
                 <th style={thStyle}>Team</th>
                 {vpStandings ? (
@@ -125,34 +125,34 @@ export default async function TeamStandingsPage({
                   <tr
                     key={s.fantasyTeamId}
                     style={{
-                      background: isMe ? "rgba(99,102,241,0.08)" : "transparent",
+                      background: isMe ? "rgba(143,193,232,0.08)" : "transparent",
                       borderBottom: atPlayoffLine
-                        ? "2px dashed rgba(99,102,241,0.3)"
-                        : "1px solid rgba(148,163,184,0.06)",
-                      outline: isMe ? "1px solid rgba(99,102,241,0.2)" : undefined,
+                        ? "2px dashed rgba(143,193,232,0.3)"
+                        : "1px solid var(--border)",
+                      outline: isMe ? "1px solid rgba(143,193,232,0.2)" : undefined,
                     }}
                   >
-                    <td style={{ ...tdStyle, color: "#475569", fontWeight: 700 }}>{i + 1}</td>
-                    <td style={{ ...tdStyle, fontWeight: isMe ? 700 : undefined, color: isMe ? "#a5b4fc" : "#e2e8f0" }}>
+                    <td style={{ ...tdStyle, color: "var(--faint)", fontWeight: 700 }}>{i + 1}</td>
+                    <td style={{ ...tdStyle, fontWeight: isMe ? 700 : undefined, color: isMe ? "var(--accent-strong)" : "var(--text)" }}>
                       {s.teamName}
-                      {isMe && <span style={{ fontSize: 10, color: "#6366f1", marginLeft: 6 }}>YOU</span>}
+                      {isMe && <span style={{ fontSize: 10, color: "var(--accent)", marginLeft: 6 }}>YOU</span>}
                     </td>
                     {vp ? (
                       <>
-                        <td style={{ ...tdStyle, fontWeight: 800, color: "#e2e8f0", fontVariantNumeric: "tabular-nums" }}>{vp.totalVP}</td>
-                        <td style={{ ...tdStyle, color: "#94a3b8", fontVariantNumeric: "tabular-nums" }}>
+                        <td style={{ ...tdStyle, fontWeight: 800, color: "var(--text)", fontVariantNumeric: "tabular-nums" }}>{vp.totalVP}</td>
+                        <td style={{ ...tdStyle, color: "var(--dim)", fontVariantNumeric: "tabular-nums" }}>
                           {vp.wins}–{vp.losses}{vp.ties > 0 ? `–${vp.ties}` : ""}
                         </td>
-                        <td style={{ ...tdStyle, color: "#818cf8", fontVariantNumeric: "tabular-nums" }}>{vp.matchupVP}</td>
+                        <td style={{ ...tdStyle, color: "var(--accent-strong)", fontVariantNumeric: "tabular-nums" }}>{vp.matchupVP}</td>
                         <td style={{ ...tdStyle, color: "#34d399", fontVariantNumeric: "tabular-nums" }}>{vp.rankVP}</td>
-                        <td style={{ ...tdStyle, color: "#64748b", fontVariantNumeric: "tabular-nums" }}>{vp.pointsFor.toFixed(1)}</td>
+                        <td style={{ ...tdStyle, color: "var(--faint)", fontVariantNumeric: "tabular-nums" }}>{vp.pointsFor.toFixed(1)}</td>
                       </>
                     ) : (
                       <>
                         <td style={{ ...tdStyle, color: "#34d399", fontVariantNumeric: "tabular-nums" }}>{s.wins}</td>
                         <td style={{ ...tdStyle, color: "#f87171", fontVariantNumeric: "tabular-nums" }}>{s.losses}</td>
-                        <td style={{ ...tdStyle, color: "#94a3b8", fontVariantNumeric: "tabular-nums" }}>{s.ties}</td>
-                        <td style={{ ...tdStyle, color: "#64748b", fontVariantNumeric: "tabular-nums" }}>{s.pointsFor.toFixed(1)}</td>
+                        <td style={{ ...tdStyle, color: "var(--dim)", fontVariantNumeric: "tabular-nums" }}>{s.ties}</td>
+                        <td style={{ ...tdStyle, color: "var(--faint)", fontVariantNumeric: "tabular-nums" }}>{s.pointsFor.toFixed(1)}</td>
                       </>
                     )}
                   </tr>

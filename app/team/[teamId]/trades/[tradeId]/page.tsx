@@ -47,7 +47,7 @@ export default async function TeamTradeDetailPage({ params }: Props) {
       <div style={{ marginBottom: 20 }}>
         <Link
           href={`/team/${teamId}/trades`}
-          style={{ color: "#94a3b8", textDecoration: "none", fontSize: 13 }}
+          style={{ color: "var(--dim)", textDecoration: "none", fontSize: 13 }}
         >
           ← Trade Center
         </Link>

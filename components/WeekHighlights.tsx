@@ -9,17 +9,17 @@ import InfoTooltip from "@/components/InfoTooltip";
 import Link from "next/link";
 
 const KIND_COLOR: Record<string, string> = {
-  closest_match: "#a78bfa",
-  high_score: "#e3c989",
-  player_standout: "#5fa98c",
+  closest_match: "var(--accent-strong)",
+  high_score: "var(--gold)",
+  player_standout: "var(--green)",
 };
 
 const AWARD_COLOR: Record<string, string> = {
-  ice_cold_closer: "#e3c989",
-  heater: "#fb923c",
-  heartbreaker: "#f87171",
-  collapse: "#f87171",
-  frozen_stick: "#94a3b8",
+  ice_cold_closer: "var(--gold)",
+  heater: "var(--amber)",
+  heartbreaker: "var(--red)",
+  collapse: "var(--red)",
+  frozen_stick: "var(--dim)",
 };
 
 export default function WeekHighlights({
@@ -69,7 +69,7 @@ export default function WeekHighlights({
           }}
         >
           {storylines.map((s) => {
-            const accentColor = KIND_COLOR[s.kind] ?? "#a78bfa";
+            const accentColor = KIND_COLOR[s.kind] ?? "var(--accent-strong)";
             return (
               <div
                 key={s.kind}
@@ -126,7 +126,7 @@ export default function WeekHighlights({
           >
             {visibleAwards.map((award) => {
               const copy = getAwardCopy(award.awardType);
-              const accentColor = AWARD_COLOR[award.awardType] ?? "#a78bfa";
+              const accentColor = AWARD_COLOR[award.awardType] ?? "var(--accent-strong)";
               const recoveryLink =
                 copy.recoveryLink && teamId
                   ? resolveRecoveryLink(copy, teamId)

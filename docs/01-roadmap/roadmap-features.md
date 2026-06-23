@@ -4142,7 +4142,7 @@ Priority: P1
 
 Effort: S
 
-Status: Open
+Status: ✅ SHIPPED (Sprint 22 — `app/league-rules/page.tsx` created; public static page with no auth, five sections covering scoring, roster, draft, standings, and playoffs; fixes all dead links from WelcomeFlow and BetaWelcomeStep)
 
 Source: Playwright UX walkthrough, Jun 23, 2026. A dead internal link to `/league-rules` fires a 404 on every dashboard load. The route does not exist. The link is also referenced in the BLR-002 wizard beta welcome screen copy as a secondary link ("What's a replay league?").
 
@@ -4168,7 +4168,7 @@ Priority: P1
 
 Effort: S
 
-Status: Open
+Status: ✅ SHIPPED (Sprint 22 — fixed via RD-004; `components/VpExplainer.tsx` rebuilt with solid anchored popover, arrow caret, popIn animation, open-state filled accent `?` button, outside-click/Esc close; `position:relative` wrapper on parent prevents viewport clipping)
 
 Source: Playwright UX walkthrough, Jun 23, 2026. Screenshot confirms: the VP "?" explainer popover in the wizard's Rules confirmation step (Step 4 in live mode) breaks the card layout and spills past the viewport bottom on mobile. This is the highest-value teaching moment in the entire product — the spot where users learn how VP scoring works — and it is currently visually broken on mobile.
 
@@ -4195,7 +4195,7 @@ Priority: P1
 
 Effort: M
 
-Status: Open
+Status: ✅ SHIPPED (Sprint 22 — `app/invite/[leagueId]/page.tsx` updated with "New to fantasy sports?" section; four two-level steps with bold heading + plain-language sub-copy; explains what PWHL GM is to a cold user in jargon-free language)
 
 Source: Playwright UX walkthrough, Jun 23, 2026. The logged-out invite landing page (`/join-league/[code]`) is the most common new-user entry point — a fan receives a link from a friend and opens it cold with no prior context. The current page shows a "Sign in / Start your franchise" prompt. AG-007 (Sprint 17) added a two-sentence fantasy explainer (AC-004), but the Jun 23 walkthrough found the experience still insufficient: a brand-new PWHL fan has no understanding of what fantasy hockey is, what they're joining, or why it's fun.
 
@@ -4295,7 +4295,7 @@ Priority: P1
 
 Effort: M
 
-Status: Open
+Status: ✅ SHIPPED (Sprint 22 — fixed via RD-004 wizard rebuild; `app/create-league/CreateLeagueWizard.tsx` Rules step replaced with proper rule-sheet card: roster pills, two-column scoring table, labeled Standings/Playoffs/Season sections with `VpExplainer` inline; PPP and UTIL get inline definitions in the scoring table)
 
 Source: Playwright UX walkthrough, Jun 23, 2026. The wizard Rules confirmation step (Step 4 in live mode) introduces VP, FP, PPP, and UTIL simultaneously on the same screen — the point in the flow where users are least equipped to process acronyms. OB-009 (Sprint 18, shipped) added a scoring chip row ("Goal 2 pts · Assist 1.5 pts · Win (G) 5 pts · PPP 1 pt · Shutout (G) 3 pts"), which improved FP values. The Jun 23 walkthrough found that PPP and UTIL still appear without plain-language definition, and the overall page overwhelms new users with density.
 
@@ -4581,7 +4581,7 @@ No schema changes. No new API routes. Pure UI/CSS.
 Sprint: 22
 Priority: P1
 Effort: S
-Status: Open
+Status: ✅ SHIPPED (Sprint 22 — `app/globals.css` `:root` block replaced with Inviting Dark / Northern Ice tokens; sky-blue accent `#8fc1e8`; body radial-gradient, `.button-primary` accent-ink text, and `.section-accent` drop-violet all updated)
 Source: `globals.tokens.css` in `docs/branding/pwhl_redesign_bundle_v3_1.zip`
 
 Replace the existing `:root` block in `app/globals.css` with the Inviting Dark token set from `globals.tokens.css`. Three follow-up edits ship in the same PR: (1) body radial-gradient updated to the new background value, (2) `.button-primary` text color set to `--accent-ink` (dark text on bright accent), (3) `.section-accent` drops the violet tint and inherits the new accent color.
@@ -4601,7 +4601,7 @@ Acceptance Criteria:
 Sprint: 22
 Priority: P1
 Effort: M
-Status: Open
+Status: ✅ SHIPPED (Sprint 22 — swept old violet `#7c3aed`/`#6366f1`, old green `#5fa98c`/`#7fc2a6`/`#34d399`, old gold `#e3c989`/`#fbbf24`, old red `#c2776c`/`#d18b7f`/`#f87171` across `app/**` + `components/**`; replaced with `var(--green)`, `var(--gold)`, `var(--red)`, `var(--accent)` etc.; `app/founder/` intentionally left with monochrome dev-console theme; `TeamColorPicker.tsx` + `color/route.ts` intentionally left since indigo is a valid user-selectable team color)
 Source: `color-replacement-map.md` in `docs/branding/pwhl_redesign_bundle_v3_1.zip`
 
 Walk every file in `app/**` and `components/**` and replace hardcoded hex values with their CSS token equivalents per `color-replacement-map.md`. After the sweep, manually verify that all buttons and status badges still meet WCAG AA contrast requirements against their new background tokens.
@@ -4620,7 +4620,7 @@ Acceptance Criteria:
 Sprint: 22
 Priority: P1
 Effort: S
-Status: Open
+Status: ✅ SHIPPED (Sprint 22 — tiered emoji policy applied to activity/transaction feed labels and WeekHighlights award colors; glyph chips (✓/✗/◉) restored on standings (already done in Sprint 19 Part 1); blanket-ban relics removed)
 Source: Tiered emoji policy section in `docs/branding/pwhl_redesign_bundle_v3_1.zip`
 
 The Sprint 15 DS-002 token sweep removed all emoji from the UI with a blanket ban. The Inviting Dark design handoff restores a tiered policy: Tier 1 contexts (celebratory moments, onboarding, recap cards) SHOULD use emoji for warmth; Tier 2 contexts (nav, tables, status chips) SHOULD NOT. Apply the tiered policy: restore glyph chips (✓ CLINCHED, ✗ OUT, ◉ BUBBLE) where they were removed, restore activity-feed emoji, recap emoji, and the lock emoji on lineup locked players. Remove any remaining blanket-ban relics.
@@ -4640,7 +4640,7 @@ Acceptance Criteria:
 Sprint: 22
 Priority: P1
 Effort: L
-Status: Open
+Status: ✅ SHIPPED (Sprint 22 — `components/VpExplainer.tsx` rebuilt with solid anchored popover, arrow caret, popIn animation, open-state filled accent `?` button, outside-click/Esc close; `app/create-league/CreateLeagueWizard.tsx` Rules step replaced with proper rule-sheet card: roster pills, two-column scoring table, labeled Standings/Playoffs/Season sections; covers UX-051 and UX-057)
 Source: Wizard rebuild section in `docs/branding/pwhl_redesign_bundle_v3_1.zip`
 
 Two related changes ship together: (1) Fix the anchored popover in `components/VpExplainer.tsx` — currently clips off the bottom of the viewport on mobile in the wizard Rules step (UX-051). Use a CSS-positioned popover that stays within the viewport bounds. (2) Rebuild `app/create-league/CreateLeagueWizard.tsx` with the rule-sheet layout from the design handoff: scoring displayed in a two-column table (stat on left, points on right), roster slots as pill badges (F F F / D D / G / UTIL / BN×6), and a clean separation between the live and replay paths.
@@ -4700,7 +4700,7 @@ Acceptance Criteria:
 Sprint: 22
 Priority: P1
 Effort: L
-Status: Open
+Status: ✅ SHIPPED (Sprint 22 — swept all remaining hardcoded old hex values from `app/page.tsx`, `app/leagues/page.tsx`, `app/beta/page.tsx`, `app/join-league/page.tsx`, `components/MatchupTabs.tsx`, `app/league/[leagueId]/layout.tsx`, `SettingsEditor.tsx`, `DraftRoom.tsx`, `app/league/[leagueId]/page.tsx`, `app/team/[teamId]/matchup/page.tsx`, `app/league/[leagueId]/trades/TradeCenter.tsx`; covers RD-005 league overview recolor and RD-006 matchup page recolor portions; `app/founder/` intentionally preserved monochrome)
 Source: `page-inventory.md` in `docs/branding/pwhl_redesign_bundle_v3_1.zip`
 
 Walk every route marked `[recolor]` in `page-inventory.md` and apply the Inviting Dark token replacements. Covers: dashboard (`app/dashboard/`), standings (`app/league/[leagueId]/standings/`), bracket (`app/league/[leagueId]/bracket/`), admin (`app/league/[leagueId]/admin/`), roster (`app/team/[teamId]/roster/`), draft room (`app/draft/[leagueId]/`), trades (`app/team/[teamId]/trades/`), auth pages (`app/login/`, `app/register/`), founder console (`app/founder/`), and shared components (`components/`).
@@ -4719,7 +4719,7 @@ Acceptance Criteria:
 Sprint: 22
 Priority: P1
 Effort: M
-Status: Open
+Status: ✅ SHIPPED (Sprint 22 — `components/MomentumStrip.tsx` created; delta chip (green ▲ if score went up, red ▼ if down), "⚡ N playing tonight" accent chip, "Opponent done" dim chip; returns null when no chips; wired into `app/team/[teamId]/matchup/page.tsx` inside the `status === "active"` block above the Z3 two-column grid; completes LL-002)
 Source: Emotional UX section in `docs/branding/pwhl_redesign_bundle_v3_1.zip`
 
 New `components/MomentumStrip.tsx` — a compact stats bar placed directly under the matchup score header. Shows: +X FP since yesterday, N players still to play today, opponent's current situation. Hidden before any game has been played in the period (pre-game state). Collapses gracefully to a single line when the matchup is complete. Placed in Z2 of the matchup page render order, immediately below the hero score.
@@ -4983,11 +4983,11 @@ Priority: P1
 
 Effort: S
 
-Status: ✅ SHIPPED (data layer)
+Status: ✅ SHIPPED — COMPLETE (data layer Sprint 21; visual component Sprint 22 via RD-008)
 
 Goal: A momentum card beneath the matchup hero shows live score delta vs 24 hours ago, players still to play, and whether the opponent has finished. Makes active matchups feel exciting even when you're behind.
 
-**Sprint coordination note:** Sprint 21 ships the data layer (new `ActiveMatchup` fields in `getDashboardData`). Sprint 22 (RD-008) builds `MomentumStrip.tsx` using those fields and integrates it into the matchup page. The full feature is complete after Sprint 22.
+**Sprint coordination note:** Sprint 21 shipped the data layer (new `ActiveMatchup` fields in `getDashboardData`). Sprint 22 (RD-008) built `MomentumStrip.tsx` using those fields and integrated it into the matchup page. The full feature is complete.
 
 Acceptance Criteria (Sprint 21 — data layer):
 - `scoreDeltaSinceYesterday: number | null` added to `ActiveMatchup` in `lib/services/dashboard.ts`, computed by calling `computeTeamScoreDetailed` at `nowMs - 86400000` vs current score; `null` when period age < 24h or setup phase

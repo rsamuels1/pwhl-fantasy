@@ -21,7 +21,7 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 const STATUS_COLORS: Record<string, string> = {
-  PROPOSED: "#a5b4fc",
+  PROPOSED: "var(--accent-strong)",
   COUNTERED: "#fcd34d",
   ACCEPTED: "#6ee7b7",
   PENDING_REVIEW: "#fbbf24",
@@ -93,7 +93,7 @@ export default function TradeDetailView({
     }
   }
 
-  const statusColor = STATUS_COLORS[trade.status] ?? "#94a3b8";
+  const statusColor = STATUS_COLORS[trade.status] ?? "var(--dim)";
 
   return (
     <div style={{ maxWidth: 700 }}>
@@ -120,51 +120,51 @@ export default function TradeDetailView({
 
       {/* Trade breakdown */}
       <div style={{
-        background: "rgba(255,255,255,0.04)",
+        background: "var(--surface)",
         border: "1px solid rgba(255,255,255,0.08)",
         borderRadius: 12, padding: 24, marginBottom: 20,
       }}>
         <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", gap: 24, alignItems: "start" }}>
           {/* Proposing team gives */}
           <div>
-            <div style={{ fontSize: 12, color: "#94a3b8", marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+            <div style={{ fontSize: 12, color: "var(--dim)", marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.05em" }}>
               {teamMap[trade.proposingTeamId] ?? "Team"} gives
             </div>
             {proposingItems.length === 0 ? (
-              <span style={{ color: "#64748b", fontSize: 13 }}>Nothing</span>
+              <span style={{ color: "var(--faint)", fontSize: 13 }}>Nothing</span>
             ) : (
               proposingItems.map((item) => {
                 const p = playerMap[item.playerId];
                 return (
                   <div key={item.id} style={{ marginBottom: 8 }}>
-                    <div style={{ fontSize: 15, fontWeight: 600, color: "#e2e8f0" }}>
+                    <div style={{ fontSize: 15, fontWeight: 600, color: "var(--text)" }}>
                       {p?.name ?? item.playerId}
                     </div>
-                    <div style={{ fontSize: 12, color: "#64748b" }}>{p?.position}</div>
+                    <div style={{ fontSize: 12, color: "var(--faint)" }}>{p?.position}</div>
                   </div>
                 );
               })
             )}
           </div>
 
-          <div style={{ paddingTop: 24, color: "#64748b", fontSize: 24, textAlign: "center" }}>⇄</div>
+          <div style={{ paddingTop: 24, color: "var(--faint)", fontSize: 24, textAlign: "center" }}>⇄</div>
 
           {/* Receiving team gives */}
           <div>
-            <div style={{ fontSize: 12, color: "#94a3b8", marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+            <div style={{ fontSize: 12, color: "var(--dim)", marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.05em" }}>
               {teamMap[trade.receivingTeamId] ?? "Team"} gives
             </div>
             {receivingItems.length === 0 ? (
-              <span style={{ color: "#64748b", fontSize: 13 }}>Nothing</span>
+              <span style={{ color: "var(--faint)", fontSize: 13 }}>Nothing</span>
             ) : (
               receivingItems.map((item) => {
                 const p = playerMap[item.playerId];
                 return (
                   <div key={item.id} style={{ marginBottom: 8 }}>
-                    <div style={{ fontSize: 15, fontWeight: 600, color: "#e2e8f0" }}>
+                    <div style={{ fontSize: 15, fontWeight: 600, color: "var(--text)" }}>
                       {p?.name ?? item.playerId}
                     </div>
-                    <div style={{ fontSize: 12, color: "#64748b" }}>{p?.position}</div>
+                    <div style={{ fontSize: 12, color: "var(--faint)" }}>{p?.position}</div>
                   </div>
                 );
               })
@@ -176,7 +176,7 @@ export default function TradeDetailView({
           <div style={{
             marginTop: 20, paddingTop: 16,
             borderTop: "1px solid rgba(255,255,255,0.06)",
-            color: "#94a3b8", fontSize: 13, fontStyle: "italic",
+            color: "var(--dim)", fontSize: 13, fontStyle: "italic",
           }}>
             Message: "{trade.message}"
           </div>
@@ -184,14 +184,14 @@ export default function TradeDetailView({
 
         {trade.resolvedReason && (
           <div style={{
-            marginTop: 12, fontSize: 12, color: "#64748b",
+            marginTop: 12, fontSize: 12, color: "var(--faint)",
           }}>
             Reason: {trade.resolvedReason}
           </div>
         )}
 
         {trade.executedAt && (
-          <div style={{ marginTop: 8, fontSize: 12, color: "#64748b" }}>
+          <div style={{ marginTop: 8, fontSize: 12, color: "var(--faint)" }}>
             Executed: {new Date(trade.executedAt).toLocaleString()}
           </div>
         )}
@@ -205,11 +205,11 @@ export default function TradeDetailView({
 
       {/* Counter-offer note */}
       {trade.counterOfId && (
-        <div style={{ marginBottom: 16, fontSize: 13, color: "#94a3b8" }}>
+        <div style={{ marginBottom: 16, fontSize: 13, color: "var(--dim)" }}>
           This is a counter-offer.{" "}
           <Link
             href={`${tradeBase}/${trade.counterOfId}`}
-            style={{ color: "#a5b4fc", textDecoration: "none" }}
+            style={{ color: "var(--accent-strong)", textDecoration: "none" }}
           >
             View original proposal →
           </Link>
@@ -225,7 +225,7 @@ export default function TradeDetailView({
               disabled={isPending}
               style={{
                 padding: "10px 22px", borderRadius: 8, border: "none",
-                background: "#22c55e", color: "#fff", fontSize: 14, fontWeight: 600,
+                background: "#22c55e", color: "var(--accent-ink)", fontSize: 14, fontWeight: 600,
                 cursor: isPending ? "not-allowed" : "pointer", opacity: isPending ? 0.6 : 1,
               }}
             >
@@ -249,7 +249,7 @@ export default function TradeDetailView({
                 style={{
                   padding: "10px 22px", borderRadius: 8,
                   border: "1px solid rgba(165,180,252,0.4)",
-                  background: "transparent", color: "#a5b4fc",
+                  background: "transparent", color: "var(--accent-strong)",
                   fontSize: 14, textDecoration: "none",
                 }}
               >
@@ -265,8 +265,8 @@ export default function TradeDetailView({
             disabled={isPending}
             style={{
               padding: "10px 22px", borderRadius: 8,
-              border: "1px solid rgba(148,163,184,0.3)",
-              background: "transparent", color: "#94a3b8",
+              border: "1px solid var(--border)",
+              background: "transparent", color: "var(--dim)",
               fontSize: 14, cursor: isPending ? "not-allowed" : "pointer", opacity: isPending ? 0.6 : 1,
             }}
           >
@@ -281,7 +281,7 @@ export default function TradeDetailView({
               disabled={isPending}
               style={{
                 padding: "10px 22px", borderRadius: 8, border: "none",
-                background: "#22c55e", color: "#fff", fontSize: 14, fontWeight: 600,
+                background: "#22c55e", color: "var(--accent-ink)", fontSize: 14, fontWeight: 600,
                 cursor: isPending ? "not-allowed" : "pointer", opacity: isPending ? 0.6 : 1,
               }}
             >
