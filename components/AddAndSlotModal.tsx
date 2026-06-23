@@ -93,7 +93,7 @@ export default function AddAndSlotModal({
 
     if (!res.ok) {
       const data = await res.json() as { error?: string };
-      setError(data.error ?? "Could not move player — try the Lineup page.");
+      setError(data.error ?? "Added to bench — slot them from your Lineup page if needed.");
       setSlotting(false);
       return;
     }
@@ -230,6 +230,7 @@ export default function AddAndSlotModal({
           <button
             onClick={onComplete}
             disabled={slotting}
+            aria-label="Add to bench and close"
             style={{
               padding: "10px", borderRadius: 10,
               border: "1px solid rgba(148,163,184,0.12)",

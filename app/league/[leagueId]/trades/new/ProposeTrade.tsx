@@ -150,8 +150,11 @@ function LeaguePlayerPicker({
 
   return (
     <div>
-      <div style={{ fontSize: 12, color: "#94a3b8", marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+      <div style={{ fontSize: 12, color: "#94a3b8", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.05em" }}>
         {label}
+      </div>
+      <div style={{ fontSize: 11, color: "#475569", marginBottom: 8 }}>
+        Search by player name or team to filter the list
       </div>
       <div style={{ display: "flex", gap: 6, marginBottom: 8 }}>
         <input
@@ -369,38 +372,31 @@ export default function ProposeTrade({
       )}
 
       {!lockedTeamId && (
-        <div style={{ marginBottom: 16 }}>
-          <label style={{ fontSize: 12, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.05em", display: "block", marginBottom: 8 }}>
-            Trading with
-          </label>
-          <select
-            value=""
-            onChange={(e) => {
-              const teamId = e.target.value;
-              if (teamId) setLockedTeamId(teamId);
-            }}
-            style={{
-              width: "100%", padding: "10px 12px", borderRadius: 8,
-              background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)",
-              color: "#e2e8f0", fontSize: 13,
-            }}
-          >
-            <option value="">Select a team to trade with…</option>
+        <div style={{ marginBottom: 20 }}>
+          <div style={{ fontSize: 12, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 10 }}>
+            Select a trading partner
+          </div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
             {[...new Set(leaguePlayers.map((p) => p.teamId))].map((teamId) => {
               const teamName = leaguePlayers.find((p) => p.teamId === teamId)?.teamName ?? teamId;
               return (
-                <option key={teamId} value={teamId}>
+                <button
+                  key={teamId}
+                  type="button"
+                  onClick={() => setLockedTeamId(teamId)}
+                  style={{
+                    padding: "8px 16px", borderRadius: 20, fontSize: 13, cursor: "pointer",
+                    background: "rgba(99,102,241,0.08)", border: "1px solid rgba(99,102,241,0.25)",
+                    color: "#a5b4fc", fontWeight: 600,
+                  }}
+                >
                   {teamName}
-                </option>
+                </button>
               );
             })}
-          </select>
+          </div>
         </div>
       )}
-
-      <div style={{ marginBottom: 16, fontSize: 13, color: "#64748b" }}>
-        💡 Search by player name or team name to quickly find who you want.
-      </div>
 
       <form onSubmit={handleSubmit}>
         {/* Player pickers side by side */}

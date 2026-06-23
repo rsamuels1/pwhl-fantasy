@@ -21,6 +21,7 @@ const TYPE_META: Record<string, { label: string; color: string; bg: string }> = 
   TRADE:                    { label: "Trade",   color: "#c9b6ff", bg: "rgba(124,58,237,0.10)" },
   PLAYOFF_QUALIFICATION:    { label: "Playoff", color: "#e3c989", bg: "rgba(214,169,78,0.12)" },
   MAJOR_PERFORMANCE:        { label: "Perf",   color: "#e3c989", bg: "rgba(214,169,78,0.10)" },
+  LEAGUE_STORYLINE:         { label: "Story",  color: "#aab2c8", bg: "rgba(150,160,200,0.08)" },
   WAIVER_CLAIM_SUBMITTED:   { label: "Waiver", color: "#aab2c8", bg: "rgba(150,160,200,0.10)" },
   WAIVER_CLAIM_AWARDED:     { label: "Add",    color: "#5fa98c", bg: "rgba(95,169,140,0.12)" },
   WAIVER_CLAIM_DENIED:      { label: "Denied", color: "#d18b7f", bg: "rgba(209,139,127,0.10)" },

@@ -9,13 +9,18 @@ Two long-lived environments: **Production** and **Staging**. One Vercel project,
 ```
 GitHub
 ├── main ──────────────► Vercel Production ──► Neon branch: main    ──► Render: pwhl-draft-server
-│                         fantasy.dykedb.org                              (prod WebSocket, :8080)
-│                         [locked to /beta until go-live gate cleared]
+│                         fantasy.dykedb.org        ↑                    (prod WebSocket, :8080)
+│                         [locked to /beta —        │ same DB
+│                          signup/discovery only]   │
+│                         beta.fantasy.dykedb.org ──┘
+│                         [full app — beta testers use this]
 │
 └── dev ───────────────► Vercel Preview ────► Neon branch: preview  ──► Render: pwhl-draft-server-staging
                           fantasydev.dykedb.org                           (staging WebSocket, optional)
                           [full app, anyone with the URL can access]
 ```
+
+**Beta domain split:** Both `fantasy.dykedb.org` and `beta.fantasy.dykedb.org` point at the same Vercel Production deployment and the same Neon `main` database. The middleware's `BETA_HOST=fantasy.dykedb.org` lock applies only to the public-facing domain. Beta testers who signed up on `fantasy.dykedb.org` can immediately log in at `beta.fantasy.dykedb.org` once you've set up their leagues — same user records, same data.
 
 **Day-to-day workflow:**
 ```
@@ -30,8 +35,9 @@ hotfix → branch off main → PR directly to main (then fast-forward dev from m
 **One project.** Vercel maps `main` → Production and all other branches → Preview automatically.
 
 ### Production (main branch)
-- Domain: `fantasy.dykedb.org`
-- Currently serves only `/beta` (middleware `BETA_HOST` lock — see Go-Live Gate below)
+- Domains: `fantasy.dykedb.org` and `beta.fantasy.dykedb.org` (both on the same Vercel project)
+- `fantasy.dykedb.org` — locked to `/beta` via `BETA_HOST` middleware; public signup/discovery only
+- `beta.fantasy.dykedb.org` — full app; beta testers use this after you set up their leagues
 - All `vercel.json` crons (waiver processing) run here only
 
 ### Preview / Staging (dev branch)
@@ -60,7 +66,7 @@ hotfix → branch off main → PR directly to main (then fast-forward dev from m
 
 | Branch | Used by | Notes |
 |---|---|---|
-| `main` | Production (`fantasy.dykedb.org`) | Beta users' leagues live here. Treat as sacred. |
+| `main` | `fantasy.dykedb.org` and `beta.fantasy.dykedb.org` | Beta users' leagues live here. Treat as sacred. Both prod domains share this branch. |
 | `preview` | Staging (`fantasydev.dykedb.org`) | Copy-on-write branch of main. Safe to break. Reset from main anytime. |
 
 **Refreshing the preview branch** (when you want a clean copy of prod data):
@@ -97,7 +103,7 @@ Set in Vercel → Project → Settings → Environment Variables. Scope each car
 | `AUTH_SECRET` | set | set | Can differ — sessions won't carry across envs (fine). |
 | `FOUNDER_EMAILS` | your email(s) | your email(s) | Gates `/founder`. Keep tight in prod — founder tools have sim/override controls over live leagues. |
 | `NEXT_PUBLIC_DRAFT_WS_URL` | Render prod URL | Render staging URL | |
-| `BETA_HOST` | `fantasy.dykedb.org` (or unset — same effect) | **unset** | Controls which host is locked to `/beta`. Unset on staging so it serves the full app. Set to empty string on prod to open prod to the full app (see Go-Live Gate). |
+| `BETA_HOST` | `fantasy.dykedb.org` (or unset — same effect) | **unset** | Controls which single host is locked to `/beta`. The code default is `"fantasy.dykedb.org"`, so deleting the var has the same effect as setting it to that value. `beta.fantasy.dykedb.org` is intentionally NOT listed here — it shares the same deployment but passes through as a normal app host. Set to `""` to open `fantasy.dykedb.org` to the full app at go-live. |
 | `ALLOW_SIM_DATE` | **do not set** | optional `true` | Enables the dev-sim cookie to rewind the clock. Never in production — a user could time-warp all live leagues. |
 | `NODE_ENV` | `production` | `production` | Vercel sets this automatically. Sim controls (`/season/advance`) are gated by `ALLOW_SEASON_ADVANCE=true` env var, not `NODE_ENV`, in practice. |
 | `STATS_SOURCE_API_KEY` | set if ingest runs | optional | HockeyTech creds. Ingestion is script-only, not app code. |

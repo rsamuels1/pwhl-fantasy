@@ -28,7 +28,7 @@ export default async function NewTradePage({ params, searchParams }: Props) {
   });
   if (!league) notFound();
 
-  if (league.status !== "IN_SEASON" || league.playoffStatus !== "NOT_STARTED") {
+  if (league.playoffStatus !== "NOT_STARTED") {
     redirect(`/league/${leagueId}/trades`);
   }
 

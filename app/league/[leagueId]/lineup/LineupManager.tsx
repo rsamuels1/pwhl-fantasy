@@ -167,9 +167,7 @@ export default function LineupManager({
   function moveTo(targetSlot: SlotType, targetPlayerId?: string) {
     if (!selected) return;
     if (targetPlayerId === selected.playerId) { setSelectedId(null); return; }
-    const newSlot = targetPlayerId
-      ? roster.find((p) => p.playerId === targetPlayerId)?.slot ?? targetSlot
-      : targetSlot;
+    const newSlot = targetSlot;
     if (newSlot === selected.slot) { setSelectedId(null); return; }
 
     setError(null);
@@ -539,8 +537,10 @@ export default function LineupManager({
               if (fp <= worstStarterProj.fp) return best;
               // Only suggest if bench player can play the worst starter's slot
               if (!p.eligibleSlots.includes(worstStarterProj.slot)) return best;
-              // Only suggest if bench player has games remaining this period
-              if ((p.gamesThisPeriod ?? 1) === 0) return best;
+              // Only suggest if bench player has games remaining this period.
+              // Note: gamesThisPeriod can be null (unknown), 0 (confirmed no games), or positive.
+              // Exclude only when explicitly 0; treat null as unknown and include it.
+              if (p.gamesThisPeriod === 0) return best;
               if (!best || fp > best.fp) return { name: p.name, fp };
               return best;
             }, null);
@@ -568,6 +568,15 @@ export default function LineupManager({
               return (
                 <div
                   key={`${slot}-${index}`}
+                  role={(player && !player.lockedAt) || isTarget ? "button" : undefined}
+                  tabIndex={(player && !player.lockedAt) || isTarget ? 0 : undefined}
+                  aria-label={
+                    isTarget && selected
+                      ? `Move ${selected.name} to ${slot.toLowerCase()} slot${player ? `, swapping with ${player.name}` : ""}`
+                      : player && !player.lockedAt
+                      ? `Select ${player.name}`
+                      : undefined
+                  }
                   onClick={() => {
                     if (isTarget && selected) {
                       moveTo(slot, player?.playerId);
@@ -575,6 +584,14 @@ export default function LineupManager({
                       selectPlayer(player.playerId);
                     } else if (isTarget) {
                       moveTo(slot);
+                    }
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      if (isTarget && selected) moveTo(slot, player?.playerId);
+                      else if (player && !player.lockedAt) selectPlayer(player.playerId);
+                      else if (isTarget) moveTo(slot);
                     }
                   }}
                   style={{
@@ -628,11 +645,25 @@ export default function LineupManager({
                 return (
                   <div
                     key={player.playerId}
+                    role="button"
+                    tabIndex={0}
+                    aria-label={
+                      isTarget && selected
+                        ? `Move ${selected.name} to bench, swapping with ${player.name}`
+                        : `Select ${player.name}`
+                    }
                     onClick={() => {
                       if (isTarget && selected) {
                         moveTo(player.slot, player.playerId);
                       } else {
                         selectPlayer(player.playerId);
+                      }
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        if (isTarget && selected) moveTo(player.slot, player.playerId);
+                        else selectPlayer(player.playerId);
                       }
                     }}
                     style={{

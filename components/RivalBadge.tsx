@@ -16,7 +16,6 @@ interface Props {
 export function RivalBadge({ rival, compact = false, lastResultAgainstRival = null }: Props) {
   if (!rival) return null;
 
-  const recordStr = `${rival.record.wins}-${rival.record.losses}${rival.record.ties > 0 ? `-${rival.record.ties}` : ""}`;
   const showCelebratory = lastResultAgainstRival?.won;
 
   if (compact) {
@@ -103,16 +102,6 @@ export function RivalBadge({ rival, compact = false, lastResultAgainstRival = nu
         </div>
       )}
 
-      <div style={{ display: "grid", gap: 6 }}>
-        <div>
-          <p style={{ margin: "0 0 4px", color: "#94a3b8", fontSize: 11, fontWeight: 600, textTransform: "uppercase" }}>
-            Season Series
-          </p>
-          <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: "#e2e8f0" }}>
-            {recordStr}
-          </p>
-        </div>
-      </div>
     </div>
   );
 }

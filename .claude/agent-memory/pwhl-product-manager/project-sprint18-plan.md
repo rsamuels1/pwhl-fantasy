@@ -1,13 +1,14 @@
 ---
 name: sprint18-plan
-description: Sprint 18 IN PROGRESS — BLR-001 shipped; BLR-002 spec written (copy approved, ready for eng); beta invites Jul 7, 2026; 20 stories total
+description: Sprint 18 — all P0s complete (BLR-002 confirmed shipped, OPS-001/002/003 passed gates); one manual action pending (CRON_SECRET in Vercel before Jul 7); beta invites Jul 7, 2026
 metadata:
   type: project
 ---
 
 Sprint 18 is IN PROGRESS as of Jun 22, 2026. Target: beta invites go out **Jul 7, 2026**.
+All P0 stories are complete. 0 remaining P0 items.
 
-## Shipped in Sprint 18 so far
+## All P0s shipped
 
 **BLR-001 ✅ SHIPPED** (commits cc77196 + ecc7290, Jun 22, 2026)
 - `POST /api/founder/beta-leagues` — creates pre-configured 8-team replay league (4 curated weeks, 2-round playoffs)
@@ -19,54 +20,48 @@ Sprint 18 is IN PROGRESS as of Jun 22, 2026. Target: beta invites go out **Jul 7
 - Beta banner in league + team layouts; TeamNav "Draft Queue" tab pre-draft
 - `/team/[teamId]/draft-prep` — new route for player rankings + queue manager
 
-**Engineering risks in BLR-001 (not yet mitigated):**
+**Engineering risks in BLR-001 (not yet mitigated — verify before first beta draft):**
 - `pickRandomWeeks(20, 4)` hardcodes `total: 20` — should derive actual period count dynamically
-- `computeSeasonState` may show phantom period statuses for beta leagues with only 4 ScoringPeriod rows — verify before first beta draft
+- `computeSeasonState` may show phantom period statuses for beta leagues with only 4 ScoringPeriod rows
 
-**Settings API isPublic fix ✅ SHIPPED** (commit 971cd11) — unblocks AG-001 public/private toggle
+**BLR-002 ✅ CONFIRMED SHIPPED**
+`CreateLeagueWizard.tsx` line 220: `{isBetaMode && step === 0 && <BetaWelcomeStep onContinue={() => setStep(1)} />}`.
+Heading: "You're in. Welcome, Founding GM." 3 cards + "Build my league →" CTA. Progress bar hidden on step 0 (`{step > 0 && ...}`).
+`NEXT_PUBLIC_BETA_MODE=true` in `.env.local`. No schema change.
 
-**Deploy config ✅ SHIPPED** (commit e24b508) — `prisma migrate deploy` in build step; migrations now auto-apply on Vercel deploys; advances GATE-3
+**BF-009 ✅ RESOLVED** — Playwright false-negative; Analysis nav confirmed working
 
-**Beta UX polish ✅ SHIPPED** (commit eed7d35) — nav hidden on /beta page; completed admin checklist auto-hides
+**OB-002 ✅ SHIPPED** — VpExplainer inline in step 4; UTIL relabeled
 
-## BLR-002 (P0) — SPEC WRITTEN, ready for engineering
+**OB-003 ✅ SHIPPED** — "Next, you'll name your own team" callout moved up
 
-BLR-002 is the **wizard step-0 beta welcome screen**. Spec finalized Jun 22, 2026.
+**OB-004 ✅ SHIPPED** — Cancel dialog copy updated; logic already correct
 
-**Display condition:** `NEXT_PUBLIC_BETA_MODE=true` env var (Option A — no schema change). Removes itself at public launch by dropping the env var.
+**Settings API isPublic fix ✅ SHIPPED** (commit 971cd11)
 
-**Placement:** Step 0, inside the existing `dashboard-panel` wizard card. Progress bar and Cancel are hidden on step 0. No full-screen overlay.
+**Deploy config ✅ SHIPPED** (commit e24b508) — `prisma migrate deploy` in build step
 
-**Approved copy:**
-- Eyebrow: `Beta · Replay Season` (purple pulse badge matching `/beta/page.tsx`)
-- Heading: `You're in. Welcome, Founding GM.`
-- Intro: 3 sentences explaining the beta (small cohort), the league format (4 real 2025-26 weeks), and the purpose (shape what we build next)
-- Card 1 (⏪): "Real PWHL stats. Condensed timeline." — 4 weeks, full snake draft, VP scoring
-- Card 2 (💬): "Send us feedback. All of it." — feedback button, bottom-right, we read every one
-- Card 3 (🏒): "Founding GMs get first access in November." — early invite at live launch
-- CTA: `Build my league →`
-- Secondary link: `What's a replay league?` → tooltip or `/league-rules` anchor
+**Beta UX polish ✅ SHIPPED** (commit eed7d35)
 
-**Key behavioral decisions:**
-- CTA calls `setStep(1)` directly — no async, no flag
-- No Skip, no Cancel on step 0
-- Progress bar hidden (`step > 0 &&` guard)
-- `useState(isBetaMode ? 0 : 1)` initializer
-- `onboardingCompletedAt` writes on mount as today (no conflict)
+**OPS-001 ✅ GATE-1 PASS** — Zero P0 findings. 6 P1 findings deferred post-beta.
+Report: `docs/04-operations/security-audit-sprint-18.md`
 
-Full spec: `docs/01-roadmap/roadmap-features.md` § BLR-002
+**OPS-002 ✅ GATE-2 PASS** — 20 concurrent leagues × 4 teams = 80 WebSocket connections.
+All drafts completed with correct pick counts and no cross-league player duplication.
+Report: `docs/04-operations/load-test-sprint-18.md`
 
-## 4 Tracks
+**OPS-003 ✅ GATE-3 CONDITIONAL PASS**
+- `process-waivers` cron: confirmed at `0 8 * * *` (08:00 UTC = 03:00 ET) in `vercel.json` ✅
+- `check-incomplete-lineups`: new route `app/api/cron/check-incomplete-lineups/route.ts` + `vercel.json` entry at 12:00 UTC ✅
+- `CRON_SECRET` guard implemented in both routes ✅
+- Error monitoring: not configured (P1 post-beta)
+- Neon PITR: manual verification required
+- **⚠ One manual action pending before Jul 7: set `CRON_SECRET` in Vercel production dashboard**
+Report: `docs/04-operations/ops-verification-sprint-18.md`
 
-**Track A — BLR (1 remaining)**
-- BLR-001 ✅ SHIPPED
-- BLR-002 (M, P0): wizard beta welcome screen — copy TBD
+## Remaining (P1 and below)
 
-**Track B — Sprint 13 carry-forwards (11 items)**
-- BF-009 (S, P0): Analysis page navigation broken mid-season
-- OB-002 (S, P0): Wizard Step 4 VP explanation missing
-- OB-003 (S, P0): Wizard no warning before team-creation step
-- OB-004 (M, P0): Canceling mid-wizard orphans league silently
+**Track B — Sprint 13 carry-forwards (P1)**
 - UX-046 (S, P1): Season series block renders twice on matchup page
 - UX-047 (M, P1): Trade proposal has no trading-partner-first step
 - UX-048 (S, P1): Trade form search hint hidden below player list
@@ -80,14 +75,8 @@ Full spec: `docs/01-roadmap/roadmap-features.md` § BLR-002
 - BF-013 (S, P1): Trades cannot be proposed between draft completion and season start
 - BF-014 (S, P2): VTF matchup schedule page confusing (SPEC NEEDED)
 
-**Track D — Ops gates (advance GATE-1/2/3 toward GREEN)**
-- OPS-001 (M, P0): Internal OWASP Top 10 security review
-- OPS-002 (M, P0): Load test — 20–30 concurrent live drafts, 80–240 WebSocket connections
-- OPS-003 (S, P0): Vercel ops verification — CRON_SECRET, waiver cron, check-incomplete-lineups
+**Track D**
 - OPS-004 (M, P1): Accessibility audit
-
-## Min-ship (must land by Jul 7)
-BLR-001 ✅ SHIPPED · BLR-002, BF-009, OB-002, OB-003, OB-004, OPS-001, OPS-002, OPS-003 = 8 remaining P0 stories
 
 ## Story ID state
 - Next OB-NNN: OB-012
@@ -96,6 +85,11 @@ BLR-001 ✅ SHIPPED · BLR-002, BF-009, OB-002, OB-003, OB-004, OPS-001, OPS-002
 - Next BF-NNN: BF-015
 - Next OPS-NNN: OPS-005
 
-**Why:** BLR-001 shipped 5 commits post-Sprint 17 (eed7d35, 971cd11, cc77196, ecc7290, e24b508). BLR-002 was not in any of those commits — the wizard welcome screen copy was TBD. Beta date is Jul 7, 2026 (firm). Track B/C/D items all remain.
+**Why:** All 4 remaining P0 items (BLR-002, OPS-001, OPS-002, OPS-003) confirmed complete Jun 22, 2026.
+BLR-002 was already in the codebase — `BetaWelcomeStep` on line 220 was confirmed present.
+GATE-3 is CONDITIONAL because error monitoring and Neon PITR are not confirmed, and `CRON_SECRET`
+must be set manually in Vercel. This is non-blocking for beta invites.
 
-**How to apply:** BLR-002 needs copy approval before implementation can start — flag this immediately. The BLR-001 engineering risks (`pickRandomWeeks` hardcoded 20, `computeSeasonState` with 4 periods) should be verified manually by the founder before the first beta draft invites go out.
+**How to apply:** The one remaining action before beta is the CRON_SECRET manual set in Vercel production.
+The BLR-001 engineering risks (pickRandomWeeks hardcoded 20, computeSeasonState with 4 periods) should
+still be verified by the founder before the first beta draft.
