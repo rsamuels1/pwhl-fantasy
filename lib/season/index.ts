@@ -23,7 +23,7 @@ import { parseScoringSettings } from "@/lib/scoring/settings";
 import { computeSeasonState, pendingWeeks, validateSeasonBoundary, type SeasonState } from "./lifecycle";
 import { startPlayoffs } from "@/lib/services/playoff-service";
 import { initializeWaiverPriority } from "@/lib/services/waiver-service";
-import { emitWeeklyStorylines } from "@/lib/services/storyline-service";
+import { emitWeeklyStorylines, emitWeeklyAwards } from "@/lib/services/storyline-service";
 import { calculatePlayoffRounds, getPlayoffSettings } from "@/lib/playoffs/lifecycle";
 
 // Load everything needed for the lifecycle engine from the DB, then run the pure engine.
@@ -175,8 +175,9 @@ export async function advanceSeason(
       await scoreVtfWeek(leagueId, period.week, period, prisma);
     }
     scoredWeeks.push(period.week);
-    // Emit storylines after scoring — fire-and-forget, never blocks the advance.
+    // Emit storylines and awards after scoring — fire-and-forget, never blocks the advance.
     void emitWeeklyStorylines(leagueId, period.week, period.startsAt, period.endsAt, prisma).catch(() => {});
+    void emitWeeklyAwards(leagueId, period.week, period.startsAt, period.endsAt, prisma).catch(() => {});
   }
 
   let playoffError: string | undefined;
