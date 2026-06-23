@@ -1196,10 +1196,10 @@ Source: `cmqniggbz000kb5xpiks9tfim`. Trade deadline logic in `lib/services/trade
 when playoffs have started OR season is complete. The pre-season window should allow trades.
 Files: `lib/services/trade-service.ts`, `app/league/[leagueId]/trades/page.tsx`
 
-**BF-014: VTF Matchup Schedule Page Is Confusing** · S · P2 · Spec needed
+**BF-014: VTF Matchup Schedule Page Is Confusing** · S · P2 · ✅ SHIPPED (commit dc05f03)
 Source: `cmqpqywet000911ngv1887pij`. Matchup schedule page shows 1v1 pairs in VTF mode where all teams play
-the entire field each week. The page needs a VTF-mode variant.
-Spec needed before implementation.
+the entire field each week. Fix: added VTF-mode ranked view (rank · team · FP score · W-L-T record);
+keeps VP 1v1 pair-card layout unchanged; added "vs Field" badge to week header. No schema changes.
 
 ---
 
@@ -1256,15 +1256,13 @@ Produce a findings list; fix all P0 a11y blockers. P1/P2 findings go to the post
 | OB-009: Wizard FP values in rules step | B | S | P1 | ✅ SHIPPED — always-visible scoring chip row in Step 4 (both live + replay paths); removed showScoring toggle |
 | OPS-001: Security review (internal OWASP) | D | M | P0 | ✅ GATE-1 PASS — zero P0 findings; 6 P1 findings post-beta; report: docs/04-operations/security-audit-sprint-18.md |
 | OPS-002: Load test (draft room, 30 leagues) | D | M | P0 | ✅ GATE-2 PASS — 20 leagues × 4 teams = 80 connections; all picks correct, no cross-league duplication; report: docs/04-operations/load-test-sprint-18.md |
-| OPS-003: Vercel ops verification | D | S | P0 | ✅ GATE-3 CONDITIONAL PASS — crons added; CRON_SECRET manual action pending before Jul 7; report: docs/04-operations/ops-verification-sprint-18.md |
+| OPS-003: Vercel ops verification | D | S | P0 | ✅ GATE-3 PASS — crons added; CRON_SECRET set in Vercel production; report: docs/04-operations/ops-verification-sprint-18.md |
 | OPS-004: Accessibility audit | D | M | P1 | ✅ SHIPPED — P0 a11y blockers: focus-visible CSS globally; aria-label + keyboard handlers on draft pick buttons and lineup slot divs; aria-label on AddAndSlotModal bench button |
 | BF-014: VTF matchup page confusion | C | S | P2 | Spec needed |
 
-**Min-ship (P0 only, must land by Jul 7):** ~~BLR-001~~ ✅ SHIPPED · ~~BLR-002~~ ✅ SHIPPED · ~~BF-009~~ ✅ RESOLVED · ~~OB-002~~ ✅ SHIPPED · ~~OB-003~~ ✅ SHIPPED · ~~OB-004~~ ✅ SHIPPED · ~~OPS-001~~ ✅ GATE-1 PASS · ~~OPS-002~~ ✅ GATE-2 PASS · ~~OPS-003~~ ✅ GATE-3 CONDITIONAL PASS = **0 remaining P0 stories**
+**Min-ship (P0 only, must land by Jul 7):** ~~BLR-001~~ ✅ SHIPPED · ~~BLR-002~~ ✅ SHIPPED · ~~BF-009~~ ✅ RESOLVED · ~~OB-002~~ ✅ SHIPPED · ~~OB-003~~ ✅ SHIPPED · ~~OB-004~~ ✅ SHIPPED · ~~OPS-001~~ ✅ GATE-1 PASS · ~~OPS-002~~ ✅ GATE-2 PASS · ~~OPS-003~~ ✅ GATE-3 PASS = **0 remaining P0 stories**
 
-**Ops note:** OPS-003 has one manual action pending — `CRON_SECRET` must be set in Vercel production dashboard before Jul 7. `check-incomplete-lineups` cron route and `vercel.json` entry are shipped. Error monitoring is P1 post-beta.
-
-**Exit:** BLR leagues creatable by founder and joinable by invitees (BLR-001 ✅); BLR-002 welcome messaging shipped ✅; all 4 P0 onboarding wizard bugs fixed ✅; Analysis page navigates correctly ✅; draft load test passes at 20-league scale ✅; security audit complete with zero P0 findings ✅; CRON_SECRET manual verification pending (non-blocking for beta invites). Beta invites go out Jul 7, 2026.
+**Exit:** BLR leagues creatable by founder and joinable by invitees (BLR-001 ✅); BLR-002 welcome messaging shipped ✅; all 4 P0 onboarding wizard bugs fixed ✅; Analysis page navigates correctly ✅; draft load test passes at 20-league scale ✅; security audit complete with zero P0 findings ✅; CRON_SECRET set in Vercel production ✅; all P1s shipped ✅. Beta invites go out Jul 7, 2026.
 
 ---
 
