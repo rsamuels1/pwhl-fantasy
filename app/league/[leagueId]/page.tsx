@@ -13,7 +13,9 @@ import { getReplayNow } from "@/lib/replayTime";
 import Link from "next/link";
 import AnnouncementForm from "@/components/AnnouncementForm";
 import WeekHighlights from "@/components/WeekHighlights";
+import UpsetCard from "@/components/UpsetCard";
 import type { Storyline, WeeklyAward } from "@/lib/services/storyline-service";
+import { getLeagueUpsets } from "@/lib/services/upset-service";
 
 export default async function LeagueOverviewPage({
   params,
@@ -52,7 +54,7 @@ export default async function LeagueOverviewPage({
   const nowMs = getReplayNow(league, await getDevNow());
   const now = new Date(nowMs);
 
-  const [matchups, seasonState, activity] = await Promise.all([
+  const [matchups, seasonState, activity, upsets] = await Promise.all([
     prisma.matchup.findMany({
       where: { leagueId },
       orderBy: [{ week: "asc" }, { startsAt: "asc" }],
@@ -60,6 +62,7 @@ export default async function LeagueOverviewPage({
     }),
     getSeasonState(leagueId, nowMs, prisma),
     getLeagueActivity(leagueId, 6, prisma).catch(() => []),
+    getLeagueUpsets(leagueId, prisma).catch(() => []),
   ]);
 
   // Determine champion for COMPLETE playoffs
@@ -280,15 +283,15 @@ export default async function LeagueOverviewPage({
             {myTeam.name} is registered.
           </p>
           {league.draft?.status === "COMPLETE" ? (
-            <p style={{ margin: 0, fontSize: 13, color: "#64748b" }}>
-              The draft is done. <Link href={`/team/${myTeam.id}/lineup`} style={{ color: "#a5b4fc" }}>Set your lineup →</Link>
+            <p style={{ margin: 0, fontSize: 13, color: "var(--faint)" }}>
+              The draft is done. <Link href={`/team/${myTeam.id}/lineup`} style={{ color: "var(--accent-strong)" }}>Set your lineup →</Link>
             </p>
           ) : league.draft?.status === "IN_PROGRESS" ? (
-            <p style={{ margin: 0, fontSize: 13, color: "#64748b" }}>
-              The draft is live right now! <Link href={`/draft/${leagueId}?team=${myTeam.id}`} style={{ color: "#a5b4fc" }}>Join the draft room →</Link>
+            <p style={{ margin: 0, fontSize: 13, color: "var(--faint)" }}>
+              The draft is live right now! <Link href={`/draft/${leagueId}?team=${myTeam.id}`} style={{ color: "var(--accent-strong)" }}>Join the draft room →</Link>
             </p>
           ) : (
-            <p style={{ margin: 0, fontSize: 13, color: "#64748b" }}>
+            <p style={{ margin: 0, fontSize: 13, color: "var(--faint)" }}>
               The commissioner will share a draft room link when it&apos;s time to pick.
             </p>
           )}
@@ -317,7 +320,7 @@ export default async function LeagueOverviewPage({
       {/* ── League header ── */}
       <div style={{ display: "flex", alignItems: "baseline", gap: 12, flexWrap: "wrap" }}>
         <h1 style={{ fontSize: 28, margin: 0 }}>{league.name}</h1>
-        <span style={{ fontSize: 13, color: "#64748b" }}>
+        <span style={{ fontSize: 13, color: "var(--faint)" }}>
           Season {league.season} · {league.teams.length} teams
         </span>
         {currentWeek !== null && (
@@ -401,13 +404,13 @@ export default async function LeagueOverviewPage({
                       <div key={m.id} style={{
                         display: "grid", gridTemplateColumns: "1fr auto 1fr",
                         gap: "4px 8px", padding: "8px 10px", borderRadius: 8, alignItems: "center",
-                        background: isMyMatchup ? "rgba(99,102,241,0.07)" : "rgba(255,255,255,0.02)",
-                        border: isMyMatchup ? "1px solid rgba(99,102,241,0.2)" : "1px solid rgba(148,163,184,0.06)",
+                        background: isMyMatchup ? "rgba(143,193,232,0.07)" : "var(--bg-raised)",
+                        border: isMyMatchup ? "1px solid rgba(143,193,232,0.2)" : "1px solid var(--border)",
                       }}>
                         <span style={{
                           fontSize: 13, textAlign: "right", overflow: "hidden",
                           textOverflow: "ellipsis", whiteSpace: "nowrap",
-                          color: m.homeTeamId === myTeam?.id ? "#e2e8f0" : "#94a3b8",
+                          color: m.homeTeamId === myTeam?.id ? "var(--text)" : "var(--dim)",
                           fontWeight: m.homeTeamId === myTeam?.id ? 600 : 400,
                         }}>
                           {m.homeTeam.name}
@@ -419,7 +422,7 @@ export default async function LeagueOverviewPage({
                         <span style={{
                           fontSize: 13, overflow: "hidden",
                           textOverflow: "ellipsis", whiteSpace: "nowrap",
-                          color: m.awayTeamId === myTeam?.id ? "#e2e8f0" : "#94a3b8",
+                          color: m.awayTeamId === myTeam?.id ? "var(--text)" : "var(--dim)",
                           fontWeight: m.awayTeamId === myTeam?.id ? 600 : 400,
                         }}>
                           {scored && <span className="font-stats" style={{ marginRight: 6, fontWeight: 700 }}>{m.awayScore!.toFixed(1)}</span>}
@@ -439,9 +442,9 @@ export default async function LeagueOverviewPage({
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
                 <div>
                   {cardLabel("Playoff race", 2)}
-                  <div style={{ fontSize: 12, color: "#475569" }}>Top {teamsInPlayoff} advance</div>
+                  <div style={{ fontSize: 12, color: "var(--faint)" }}>Top {teamsInPlayoff} advance</div>
                 </div>
-                <Link href={`/league/${leagueId}/standings`} style={{ fontSize: 12, color: "#64748b", textDecoration: "none" }}>
+                <Link href={`/league/${leagueId}/standings`} style={{ fontSize: 12, color: "var(--faint)", textDecoration: "none" }}>
                   Full standings →
                 </Link>
               </div>
@@ -486,7 +489,7 @@ export default async function LeagueOverviewPage({
                         <span style={{ fontSize: 12, color: "var(--faint)", fontWeight: 700 }}>{rank}</span>
                         <span style={{
                           fontSize: 14, fontWeight: isMe ? 700 : 400,
-                          color: isMe ? "#c9b6ff" : "var(--text)",
+                          color: isMe ? "var(--accent-strong)" : "var(--text)",
                           overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
                         }}>
                           {s.teamName}
@@ -515,7 +518,7 @@ export default async function LeagueOverviewPage({
           {!hasResults && league.status !== "IN_SEASON" && (
             <section style={card}>
               {cardLabel("Standings")}
-              <p style={{ color: "#475569", fontSize: 13, margin: "10px 0 0" }}>
+              <p style={{ color: "var(--faint)", fontSize: 13, margin: "10px 0 0" }}>
                 Standings will appear once the season starts.
               </p>
               {league.status === "PRE_DRAFT" && (
@@ -543,7 +546,7 @@ export default async function LeagueOverviewPage({
               {cardLabel(`League leaders · Week ${currentWeek}`, 14)}
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
                 <div>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase" as const, letterSpacing: "0.06em", marginBottom: 8 }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: "var(--faint)", textTransform: "uppercase" as const, letterSpacing: "0.06em", marginBottom: 8 }}>
                     Scoring leaders
                   </div>
                   {leagueLeaders.top.map((p, i) => (
@@ -551,7 +554,7 @@ export default async function LeagueOverviewPage({
                   ))}
                 </div>
                 <div>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase" as const, letterSpacing: "0.06em", marginBottom: 8 }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: "var(--faint)", textTransform: "uppercase" as const, letterSpacing: "0.06em", marginBottom: 8 }}>
                     Underperforming
                   </div>
                   {leagueLeaders.disappointing.map((p, i) => (
@@ -567,7 +570,7 @@ export default async function LeagueOverviewPage({
             <section style={card}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
                 {cardLabel(currentWeek !== null ? `Week ${currentWeek} matchups` : "Matchups", 0)}
-                <Link href={`/league/${leagueId}/matchups`} style={{ fontSize: 12, color: "#475569", textDecoration: "none" }}>
+                <Link href={`/league/${leagueId}/matchups`} style={{ fontSize: 12, color: "var(--faint)", textDecoration: "none" }}>
                   Full schedule →
                 </Link>
               </div>
@@ -579,13 +582,13 @@ export default async function LeagueOverviewPage({
                     <div key={m.id} style={{
                       display: "grid", gridTemplateColumns: "1fr auto 1fr",
                       gap: "4px 8px", padding: "6px 8px", borderRadius: 8, alignItems: "center",
-                      background: isMyMatchup ? "rgba(99,102,241,0.05)" : "transparent",
-                      border: isMyMatchup ? "1px solid rgba(99,102,241,0.15)" : "1px solid transparent",
+                      background: isMyMatchup ? "rgba(143,193,232,0.05)" : "transparent",
+                      border: isMyMatchup ? "1px solid rgba(143,193,232,0.15)" : "1px solid transparent",
                     }}>
                       <span style={{
                         fontSize: 13, textAlign: "right", overflow: "hidden",
                         textOverflow: "ellipsis", whiteSpace: "nowrap",
-                        color: m.homeTeamId === myTeam?.id ? "#e2e8f0" : "#94a3b8",
+                        color: m.homeTeamId === myTeam?.id ? "var(--text)" : "var(--dim)",
                         fontWeight: m.homeTeamId === myTeam?.id ? 600 : 400,
                       }}>
                         {m.homeTeam.name}
@@ -597,7 +600,7 @@ export default async function LeagueOverviewPage({
                       <span style={{
                         fontSize: 13, overflow: "hidden",
                         textOverflow: "ellipsis", whiteSpace: "nowrap",
-                        color: m.awayTeamId === myTeam?.id ? "#e2e8f0" : "#94a3b8",
+                        color: m.awayTeamId === myTeam?.id ? "var(--text)" : "var(--dim)",
                         fontWeight: m.awayTeamId === myTeam?.id ? 600 : 400,
                       }}>
                         {scored && <span className="font-stats" style={{ marginRight: 6, fontWeight: 700 }}>{m.awayScore!.toFixed(1)}</span>}
@@ -632,15 +635,15 @@ export default async function LeagueOverviewPage({
                     <div key={t.id} style={{
                       display: "flex", alignItems: "center", justifyContent: "space-between",
                       padding: "6px 8px", borderRadius: 8,
-                      background: isMe ? "rgba(99,102,241,0.06)" : "transparent",
+                      background: isMe ? "rgba(143,193,232,0.06)" : "transparent",
                     }}>
                       <span style={{
                         fontSize: 13, fontWeight: isMe ? 600 : 400,
-                        color: isMe ? "#a5b4fc" : "#94a3b8",
+                        color: isMe ? "var(--accent-strong)" : "var(--dim)",
                         overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1,
                       }}>
                         {t.name}
-                        {isMe && <span style={{ marginLeft: 5, fontSize: 10, color: "#6366f1" }}>You</span>}
+                        {isMe && <span style={{ marginLeft: 5, fontSize: 10, color: "var(--accent)" }}>You</span>}
                       </span>
                       <span style={{
                         fontSize: 11, fontWeight: 700, padding: "2px 7px", borderRadius: 6,
@@ -660,6 +663,9 @@ export default async function LeagueOverviewPage({
             </section>
           )}
 
+          {/* Biggest upsets this season */}
+          {upsets.length > 0 && <UpsetCard upsets={upsets} />}
+
           {/* League activity */}
           <section style={card}>
             {sideLabel("League activity")}
@@ -671,7 +677,7 @@ export default async function LeagueOverviewPage({
                   const ACT_META: Record<string, { label: string; color: string; bg: string }> = {
                     PLAYER_ADD:            { label: "Add",    color: "#5fa98c", bg: "rgba(95,169,140,0.12)" },
                     PLAYER_DROP:           { label: "Drop",   color: "#d18b7f", bg: "rgba(209,139,127,0.12)" },
-                    DRAFT_PICK:            { label: "Draft",  color: "#a78bfa", bg: "rgba(124,58,237,0.14)" },
+                    DRAFT_PICK:            { label: "Draft",  color: "var(--accent-strong)", bg: "rgba(143,193,232,0.14)" },
                     PLAYOFF_QUALIFICATION: { label: "Playoff",color: "#e3c989", bg: "rgba(214,169,78,0.12)" },
                     MAJOR_PERFORMANCE:     { label: "Perf",   color: "#e3c989", bg: "rgba(214,169,78,0.10)" },
                     LEAGUE_STORYLINE:      { label: "Story",  color: "#aab2c8", bg: "rgba(150,160,200,0.08)" },
@@ -704,7 +710,7 @@ export default async function LeagueOverviewPage({
           background: "var(--accent-dim)", border: "1px solid var(--accent-border)",
         }}>
           <div style={{ marginBottom: isCommissioner ? 12 : 0 }}>
-            <div style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "#c9b6ff", marginBottom: 6 }}>
+            <div style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--accent-strong)", marginBottom: 6 }}>
               Commissioner note
             </div>
             {league.announcement ? (
@@ -728,22 +734,22 @@ export default async function LeagueOverviewPage({
 }
 
 function LeagueLeaderRow({ player, rank, variant }: { player: LeaguePerformerRow; rank: number; variant: "top" | "low" }) {
-  const rankColor = rank === 1 ? "#f59e0b" : rank === 2 ? "#94a3b8" : "#475569";
+  const rankColor = rank === 1 ? "var(--amber)" : rank === 2 ? "var(--dim)" : "var(--faint)";
   const fpColor = variant === "top" ? "#5fa98c" : "#d18b7f";
   return (
     <div style={{
       display: "flex", alignItems: "center", gap: 8,
       padding: "6px 8px", borderRadius: 8, marginBottom: 3,
-      background: player.isMyPlayer ? "rgba(99,102,241,0.07)" : "transparent",
-      borderLeft: player.isMyPlayer ? "2px solid rgba(99,102,241,0.35)" : "2px solid transparent",
+      background: player.isMyPlayer ? "rgba(143,193,232,0.07)" : "transparent",
+      borderLeft: player.isMyPlayer ? "2px solid rgba(143,193,232,0.35)" : "2px solid transparent",
     }}>
       <span style={{ fontSize: 11, fontWeight: 800, color: rankColor, width: 14, flexShrink: 0, textAlign: "center" }}>{rank}</span>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 12, fontWeight: 600, color: player.isMyPlayer ? "#a5b4fc" : "#e2e8f0", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+        <div style={{ fontSize: 12, fontWeight: 600, color: player.isMyPlayer ? "var(--accent-strong)" : "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
           {player.name}
-          {player.isMyPlayer && <span style={{ marginLeft: 4, fontSize: 9, color: "#6366f1", fontWeight: 700 }}>YOU</span>}
+          {player.isMyPlayer && <span style={{ marginLeft: 4, fontSize: 9, color: "var(--accent)", fontWeight: 700 }}>YOU</span>}
         </div>
-        <div style={{ fontSize: 10, color: "#475569" }}>{player.fantasyTeamName}</div>
+        <div style={{ fontSize: 10, color: "var(--faint)" }}>{player.fantasyTeamName}</div>
       </div>
       <span style={{ fontSize: 13, fontWeight: 700, color: fpColor, fontVariantNumeric: "tabular-nums", flexShrink: 0 }}>
         {player.points.toFixed(1)}
@@ -772,9 +778,9 @@ const sideLabel = (text: string, mb = 12) => (
 
 const ctaLink: React.CSSProperties = {
   display: "inline-block",
-  fontSize: 13, fontWeight: 600, color: "#a5b4fc",
+  fontSize: 13, fontWeight: 600, color: "var(--accent-strong)",
   padding: "6px 14px", borderRadius: 999,
-  background: "rgba(99,102,241,0.12)",
-  border: "1px solid rgba(99,102,241,0.3)",
+  background: "rgba(143,193,232,0.12)",
+  border: "1px solid rgba(143,193,232,0.3)",
   textDecoration: "none",
 };
