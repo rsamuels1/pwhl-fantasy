@@ -6,7 +6,7 @@ export function VpExplainer() {
   const [open, setOpen] = useState(false);
 
   return (
-    <span style={{ display: "inline-flex", alignItems: "center", gap: "0.25rem", marginLeft: "0.5rem" }}>
+    <span style={{ display: "inline-flex", alignItems: "center", gap: "0.25rem", marginLeft: "0.5rem", position: "relative" }}>
       <button
         onClick={() => setOpen((v) => !v)}
         aria-label="How does VP work?"
@@ -32,6 +32,8 @@ export function VpExplainer() {
         <span
           style={{
             position: "absolute",
+            top: "calc(100% + 6px)",
+            right: 0,
             zIndex: 50,
             background: "var(--surface, #1e1e2e)",
             border: "1px solid var(--border, #333)",
