@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import MilestoneToast from "@/components/MilestoneToast";
 import {
   DndContext,
   DragOverlay,
@@ -67,7 +68,7 @@ const SLOT_LABEL: Record<string, string> = {
 };
 const SLOT_COLORS: Record<string, string> = {
   FORWARD: "#60a5fa", DEFENSE: "#5fa98c", GOALIE: "#f59e0b",
-  UTIL: "#a78bfa", BENCH: "#475569", IR: "#ef4444",
+  UTIL: "var(--accent-strong)", BENCH: "var(--faint)", IR: "#ef4444",
 };
 const BENCH_SLOTS = new Set(["BENCH", "IR"]);
 const ACTIVE_SLOT_ORDER: Record<string, number> = {
@@ -91,13 +92,13 @@ function GamesLeftBadge({ count }: { count: number | null }) {
   if (count === null) return null;
   if (count === 0) {
     return (
-      <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 6px", borderRadius: 4, background: "rgba(100,116,139,0.15)", color: "#64748b" }}>
+      <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 6px", borderRadius: 4, background: "rgba(100,116,139,0.15)", color: "var(--faint)" }}>
         0G left
       </span>
     );
   }
   return (
-    <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 6px", borderRadius: 4, background: "rgba(99,102,241,0.1)", color: "#a5b4fc" }}>
+    <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 6px", borderRadius: 4, background: "rgba(143,193,232,0.1)", color: "var(--accent-strong)" }}>
       {count}G left
     </span>
   );
@@ -118,8 +119,8 @@ function PlayerRow({ entry, statsLabel: label, isOver, isDragging, isActive = fa
       display: "flex", alignItems: "center", gap: 10,
       padding: "10px 14px",
       borderRadius: 10,
-      background: isOver ? "rgba(99,102,241,0.12)" : isDragging ? "rgba(255,255,255,0.02)" : "transparent",
-      border: isOver ? "1px solid rgba(99,102,241,0.4)" : "1px solid transparent",
+      background: isOver ? "rgba(143,193,232,0.12)" : isDragging ? "var(--bg-raised)" : "transparent",
+      border: isOver ? "1px solid rgba(143,193,232,0.4)" : "1px solid transparent",
       opacity: isDragging ? 0.4 : 1,
       transition: "background 0.12s, border-color 0.12s",
       minHeight: 44,
@@ -127,8 +128,8 @@ function PlayerRow({ entry, statsLabel: label, isOver, isDragging, isActive = fa
       {/* Slot badge */}
       <span style={{
         fontSize: 10, fontWeight: 700, padding: "2px 6px", borderRadius: 5,
-        background: `${SLOT_COLORS[entry.slot] ?? "#475569"}18`,
-        color: SLOT_COLORS[entry.slot] ?? "#475569",
+        background: `${SLOT_COLORS[entry.slot] ?? "var(--faint)"}18`,
+        color: SLOT_COLORS[entry.slot] ?? "var(--faint)",
         minWidth: 32, textAlign: "center", flexShrink: 0,
       }}>
         {SLOT_LABEL[entry.slot] ?? entry.slot}
@@ -143,13 +144,13 @@ function PlayerRow({ entry, statsLabel: label, isOver, isDragging, isActive = fa
 
       {/* Player info */}
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 13, fontWeight: 600, color: "#e2e8f0", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+        <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
           {entry.name}
           {entry.hasPlayedThisPeriod && !isLocked && (
             <span style={{ marginLeft: 5, fontSize: 9, color: "#5fa98c", fontWeight: 700 }}>✓ PLAYED</span>
           )}
         </div>
-        <div style={{ fontSize: 11, color: "#64748b" }}>
+        <div style={{ fontSize: 11, color: "var(--faint)" }}>
           {entry.position[0]}{entry.teamAbbr ? ` · ${entry.teamAbbr}` : ""}
           {" · "}{label}
         </div>
@@ -236,6 +237,7 @@ export default function LineupDnD({
   });
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [showLineupCompleteToast, setShowLineupCompleteToast] = useState(false);
   const [activeEntryId, setActiveEntryId] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
@@ -319,7 +321,7 @@ export default function LineupDnD({
           swapWithPlayerId: target.playerId,
         }),
       });
-      const data = await res.json() as { error?: string };
+      const data = await res.json() as { error?: string; milestoneTriggered?: "lineup_complete" | null };
       if (!res.ok || data.error) {
         // Revert optimistic update
         setRoster(initialRoster);
@@ -327,6 +329,7 @@ export default function LineupDnD({
         return;
       }
       setSuccess(`Swapped ${dragged.name} ↔ ${target.name}`);
+      if (data.milestoneTriggered === "lineup_complete") setShowLineupCompleteToast(true);
       router.refresh();
     });
   }
@@ -342,6 +345,14 @@ export default function LineupDnD({
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      {/* Lineup-complete milestone toast */}
+      {showLineupCompleteToast && (
+        <MilestoneToast
+          milestoneKey={`milestone-lineup-${leagueId}`}
+          message="Lineup set — all starters locked in!"
+        />
+      )}
+
       {/* Commissioner mode badge */}
       {forceMove && (
         <div style={{
@@ -363,8 +374,8 @@ export default function LineupDnD({
             style={{
               padding: "5px 12px", borderRadius: 8, border: "none", cursor: t.disabled ? "default" : "pointer",
               fontSize: 12, fontWeight: 600,
-              background: statsTab === t.key ? "rgba(99,102,241,0.2)" : "rgba(255,255,255,0.04)",
-              color: statsTab === t.key ? "#a5b4fc" : t.disabled ? "#334155" : "#64748b",
+              background: statsTab === t.key ? "rgba(143,193,232,0.2)" : "var(--surface)",
+              color: statsTab === t.key ? "var(--accent-strong)" : t.disabled ? "var(--faint)" : "var(--faint)",
               transition: "background 0.12s",
             }}
           >
@@ -388,8 +399,8 @@ export default function LineupDnD({
       <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
         {/* Active starters */}
         <div style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 14, overflow: "hidden" }}>
-          <div style={{ padding: "8px 14px 4px", borderBottom: "1px solid rgba(148,163,184,0.08)" }}>
-            <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#475569" }}>
+          <div style={{ padding: "8px 14px 4px", borderBottom: "1px solid var(--border)" }}>
+            <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--faint)" }}>
               Active Starters · {activeEntries.length} slots
             </span>
             <span style={{ marginLeft: 8, fontSize: 11, color: "#334155" }}>Drag ⠿ to swap</span>
@@ -411,8 +422,8 @@ export default function LineupDnD({
 
         {/* Bench */}
         <div style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 14, overflow: "hidden" }}>
-          <div style={{ padding: "8px 14px 4px", borderBottom: "1px solid rgba(148,163,184,0.08)" }}>
-            <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#475569" }}>
+          <div style={{ padding: "8px 14px 4px", borderBottom: "1px solid var(--border)" }}>
+            <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--faint)" }}>
               Bench · {benchEntries.length} slots
             </span>
           </div>
@@ -435,7 +446,7 @@ export default function LineupDnD({
         <DragOverlay>
           {draggedEntry && (
             <div style={{
-              background: "var(--card)", border: "1px solid rgba(99,102,241,0.5)",
+              background: "var(--card)", border: "1px solid rgba(143,193,232,0.5)",
               borderRadius: 10, boxShadow: "0 8px 24px rgba(0,0,0,0.4)", cursor: "grabbing",
               opacity: 0.95,
             }}>

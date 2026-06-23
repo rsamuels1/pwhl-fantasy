@@ -266,5 +266,14 @@ export async function PUT(
     data: { slot: targetSlot },
   });
 
-  return NextResponse.json({ success: true });
+  // Detect lineup-complete milestone: all active slots are now filled.
+  const finalRoster = await prisma.rosterEntry.findMany({
+    where: { fantasyTeamId: body.teamId },
+    select: { slot: true },
+  });
+  const activeFilled = finalRoster.filter((e) => ACTIVE_SLOTS.includes(e.slot as (typeof ACTIVE_SLOTS)[number])).length;
+  const totalActiveSlots = (settings.forward ?? 3) + (settings.defense ?? 2) + (settings.goalie ?? 1) + (settings.util ?? 1);
+  const milestoneTriggered = activeFilled >= totalActiveSlots ? "lineup_complete" : null;
+
+  return NextResponse.json({ success: true, milestoneTriggered });
 }
