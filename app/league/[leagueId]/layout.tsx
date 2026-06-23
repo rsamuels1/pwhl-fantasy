@@ -44,7 +44,7 @@ export default async function LeagueLayout({ children, params }: LeagueLayoutPro
   const navItems = [
     { label: "Overview", href: `${basePath}` },
     { label: "Standings", href: `${basePath}/standings` },
-    { label: "Schedule", href: `${basePath}/matchups` },
+    { label: "Results", href: `${basePath}/matchups` },
     { label: "Playoffs", href: `${basePath}/bracket` },
     { label: "Rosters", href: `${basePath}/roster` },
     { label: "Transactions", href: `${basePath}/transactions` },

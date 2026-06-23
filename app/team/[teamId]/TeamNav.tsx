@@ -26,7 +26,7 @@ function TeamNavInner({ teamId, leagueId, leagueName, playoffStatus, leagueStatu
     { label: "My Roster",    href: rosterPath,                           active: isRosterActive || pathname.startsWith(`/team/${teamId}/lineup`) },
     { label: "Trades",       href: tradesPath,                           active: isTradesActive },
     { label: "Standings",    href: `/team/${teamId}/standings`,          active: pathname.startsWith(`/team/${teamId}/standings`) },
-    { label: "Schedule",     href: `/team/${teamId}/schedule`,           active: pathname.startsWith(`/team/${teamId}/schedule`) },
+    { label: "My Season",    href: `/team/${teamId}/schedule`,           active: pathname.startsWith(`/team/${teamId}/schedule`) },
     { label: "Transactions", href: `/team/${teamId}/transactions`,       active: pathname.startsWith(`/team/${teamId}/transactions`) },
     { label: "Analysis",     href: `/team/${teamId}/analysis`,           active: pathname.startsWith(`/team/${teamId}/analysis`) },
     ...(leagueStatus === "PRE_DRAFT"

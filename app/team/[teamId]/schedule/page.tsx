@@ -262,7 +262,7 @@ export default async function SchedulePage({ params }: Props) {
       {/* ── This Week's Schedule ────────────────────────────────────── */}
       <div>
         <h2 style={{ fontSize: 17, margin: "0 0 4px", fontWeight: 600 }}>
-          {displayPeriod ? `PWHL Week ${displayPeriod.week} Schedule` : "Upcoming PWHL Schedule"}
+          {displayPeriod ? `Your Players This Week` : "Upcoming PWHL Schedule"}
         </h2>
         {displayPeriod && (
           <p style={{ margin: "0 0 12px", fontSize: 13, color: "#64748b" }}>

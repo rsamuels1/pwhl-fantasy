@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PWHL GM · Shipped Inventory</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'JetBrains Mono', monospace;
+      background-color: #0a0a0a;
+      color: #e0e0e0;
+      line-height: 1.5;
+    }
+    header {
+      background: #111;
+      border-bottom: 1px solid #222;
+      padding: 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    header h1 { font-size: 1.2rem; font-weight: 700; letter-spacing: 0.05em; }
+    .header-right { text-align: right; font-size: 0.85rem; }
+    .header-meta { color: #888; margin-top: 0.25rem; }
+    .item-count { font-weight: 700; color: #22c55e; }
+    .filters {
+      background: #0f0f0f;
+      border-bottom: 1px solid #1a1a1a;
+      padding: 1rem 1.5rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      align-items: center;
+    }
+    .filter-group { display: flex; gap: 0.4rem; align-items: center; }
+    .filter-group label { font-size: 0.75rem; color: #888; text-transform: uppercase; letter-spacing: 0.05em; margin-right: 0.25rem; }
+    .filter-btn {
+      padding: 0.3rem 0.65rem;
+      background: #111;
+      border: 1px solid #2a2a2a;
+      border-radius: 4px;
+      color: #888;
+      cursor: pointer;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      transition: all 0.15s;
+    }
+    .filter-btn:hover { border-color: #444; color: #ccc; }
+    .filter-btn.active { background: #22c55e; border-color: #22c55e; color: #000; font-weight: 700; }
+    select.filter-select {
+      padding: 0.3rem 0.65rem;
+      background: #111;
+      border: 1px solid #2a2a2a;
+      border-radius: 4px;
+      color: #e0e0e0;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      cursor: pointer;
+      outline: none;
+    }
+    select.filter-select:focus { border-color: #444; }
+    .table-wrap { padding: 1.5rem; overflow-x: auto; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.875rem;
+    }
+    th {
+      background: #0a0a0a;
+      padding: 0.65rem 0.75rem;
+      text-align: left;
+      border-bottom: 2px solid #222;
+      font-weight: 700;
+      color: #888;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      white-space: nowrap;
+    }
+    td { padding: 0.55rem 0.75rem; border-bottom: 1px solid #141414; vertical-align: middle; }
+    tr { border-left: 3px solid #22c55e; }
+    tr:hover td { background: #0f0f0f; }
+    .sprint-badge {
+      display: inline-block;
+      padding: 0.15rem 0.5rem;
+      border-radius: 3px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      background: rgba(34,197,94,0.1);
+      color: #22c55e;
+      white-space: nowrap;
+    }
+    .cat-badge {
+      display: inline-block;
+      padding: 0.15rem 0.5rem;
+      border-radius: 3px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .cat-Feature { background: rgba(99,102,241,0.15); color: #818cf8; }
+    .cat-Bug     { background: rgba(239,68,68,0.1);  color: #f87171; }
+    .cat-UX      { background: rgba(245,158,11,0.12); color: #f59e0b; }
+    .cat-Ops     { background: rgba(20,184,166,0.12); color: #2dd4bf; }
+    .cat-Refactor{ background: rgba(107,114,128,0.12); color: #9ca3af; }
+    .id-cell { color: #888; font-size: 0.8rem; white-space: nowrap; }
+    .title-cell { max-width: 420px; }
+    .shipped-dot { color: #22c55e; margin-right: 0.35rem; }
+    .hidden { display: none; }
+    .result-count { font-size: 0.8rem; color: #888; margin-bottom: 1rem; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>PWHL GM &middot; Shipped Inventory</h1>
+  <div class="header-right">
+    <div class="item-count" id="total-count">— items</div>
+    <div class="header-meta">Last updated: June 23, 2026</div>
+  </div>
+</header>
+
+<div class="filters">
+  <div class="filter-group">
+    <label>Category:</label>
+    <button class="filter-btn active" onclick="filterCat('all')">All</button>
+    <button class="filter-btn" onclick="filterCat('Feature')">Feature</button>
+    <button class="filter-btn" onclick="filterCat('Bug')">Bug</button>
+    <button class="filter-btn" onclick="filterCat('UX')">UX</button>
+    <button class="filter-btn" onclick="filterCat('Ops')">Ops</button>
+    <button class="filter-btn" onclick="filterCat('Refactor')">Refactor</button>
+  </div>
+  <div class="filter-group">
+    <label>Sprint:</label>
+    <select class="filter-select" id="sprint-select" onchange="filterSprint(this.value)">
+      <option value="all">All Sprints</option>
+      <option value="20">Sprint 20</option>
+      <option value="19">Sprint 19</option>
+      <option value="18">Sprint 18</option>
+      <option value="17">Sprint 17</option>
+      <option value="16">Sprint 16</option>
+      <option value="15">Sprint 15</option>
+      <option value="14">Sprint 14</option>
+      <option value="13">Sprint 13 (partial)</option>
+      <option value="12">Sprint 12</option>
+      <option value="11b">Sprint 11b</option>
+      <option value="11a">Sprint 11a</option>
+      <option value="10">Sprint 10</option>
+      <option value="9">Sprint 9</option>
+      <option value="8">Sprint 8</option>
+      <option value="7">Sprint 7</option>
+      <option value="6">Sprint 6</option>
+      <option value="5">Sprint 5</option>
+      <option value="4">Sprint 4</option>
+      <option value="3">Sprint 3</option>
+      <option value="2">Sprint 2</option>
+      <option value="1">Sprint 1</option>
+      <option value="0">Sprint 0</option>
+    </select>
+  </div>
+</div>
+
+<div class="table-wrap">
+  <div class="result-count" id="result-count"></div>
+  <table>
+    <thead>
+      <tr>
+        <th style="width:7rem;">Sprint</th>
+        <th style="width:7rem;">ID</th>
+        <th>Title</th>
+        <th style="width:6.5rem;">Category</th>
+      </tr>
+    </thead>
+    <tbody id="shipped-rows">
+      <tr data-sprint="20" data-category="UX"><td><span class="sprint-badge">Sprint 20</span></td><td class="id-cell">BF-018</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>League "Schedule" → "Results" Tab + VTF Explainer Subtitle</td><td><span class="cat-badge cat-UX">UX</span></td></tr>
+      <tr data-sprint="20" data-category="UX"><td><span class="sprint-badge">Sprint 20</span></td><td class="id-cell">UX-049</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Team Nav "Schedule" → "My Season" + "Your Players This Week" Section Rename</td><td><span class="cat-badge cat-UX">UX</span></td></tr>
+      <tr data-sprint="19" data-category="UX"><td><span class="sprint-badge">Sprint 19</span></td><td class="id-cell">UX-048b</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>League Overview → Commissioner-Only Management Dashboard (Part 3)</td><td><span class="cat-badge cat-UX">UX</span></td></tr>
+      <tr data-sprint="19" data-category="UX"><td><span class="sprint-badge">Sprint 19</span></td><td class="id-cell">UX-047b</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Trades Nav Renamed "My Franchise" + Team-Scoped Playoffs/Transactions Nav (Part 2)</td><td><span class="cat-badge cat-UX">UX</span></td></tr>
+      <tr data-sprint="19" data-category="UX"><td><span class="sprint-badge">Sprint 19</span></td><td class="id-cell">UX-046b</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Standings Colorblind Fix (Part 1)</td><td><span class="cat-badge cat-UX">UX</span></td></tr>
+      <tr data-sprint="19" data-category="Ops"><td><span class="sprint-badge">Sprint 19</span></td><td class="id-cell">&mdash;</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Emoji Policy Doc Added to CLAUDE.md (Part 1)</td><td><span class="cat-badge cat-Ops">Ops</span></td></tr>
+      <tr data-sprint="18" data-category="Feature"><td><span class="sprint-badge">Sprint 18</span></td><td class="id-cell">BLR-001</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Founder-Created Beta Replay Leagues</td><td><span class="cat-badge cat-Feature">Feature</span></td></tr>
+      <tr data-sprint="18" data-category="Feature"><td><span class="sprint-badge">Sprint 18</span></td><td class="id-cell">BLR-002</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Wizard Beta Welcome Screen</td><td><span class="cat-badge cat-Feature">Feature</span></td></tr>
+      <tr data-sprint="18" data-category="Feature"><td><span class="sprint-badge">Sprint 18</span></td><td class="id-cell">BLR-003</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Expansion Team Teaser in Beta Welcome Screen + Draft Room</td><td><span class="cat-badge cat-Feature">Feature</span></td></tr>
+      <tr data-sprint="18" data-category="Bug"><td><span class="sprint-badge">Sprint 18</span></td><td class="id-cell">BF-009</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Analysis Page Navigation Broken (confirmed resolved — Playwright false-negative)</td><td><span class="cat-badge cat-Bug">Bug</span></td></tr>
+      <tr data-sprint="18" data-category="UX"><td><span class="sprint-badge">Sprint 18</span></td><td class="id-cell">OB-002</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Wizard Step 4: VP Explainer + UTIL tooltip added</td><td><span class="cat-badge cat-UX">UX</span></td></tr>
+      <tr data-sprint="18" data-category="UX"><td><span class="sprint-badge">Sprint 18</span></td><td class="id-cell">OB-003</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Wizard Team-Creation Warning ("Next, you'll name your own team")</td><td><span class="cat-badge cat-UX">UX</span></td></tr>
+      <tr data-sprint="18" data-category="UX"><td><span class="sprint-badge">Sprint 18</span></td><td class="id-cell">OB-004</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Wizard Cancel Confirm Dialog After League Created</td><td><span class="cat-badge cat-UX">UX</span></td></tr>
+      <tr data-sprint="18" data-category="UX"><td><span class="sprint-badge">Sprint 18</span></td><td class="id-cell">UX-046</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Season Series Block Rendered Twice on Matchup Page</td><td><span class="cat-badge cat-UX">UX</span></td></tr>
+      <tr data-sprint="18" data-category="UX"><td><span class="sprint-badge">Sprint 18</span></td><td class="id-cell">UX-047</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Trade Proposal: Select Dropdown Replaced with Partner-First Pill Row</td><td><span class="cat-badge cat-UX">UX</span></td></tr>
+      <tr data-sprint="18" data-category="UX"><td><span class="sprint-badge">Sprint 18</span></td><td class="id-cell">UX-048</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Trade Form Search Hint Moved Above Player List</td><td><span class="cat-badge cat-UX">UX</span></td></tr>
+      <tr data-sprint="18" data-category="UX"><td><span class="sprint-badge">Sprint 18</span></td><td class="id-cell">OB-005</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Removed Public Home Page QuickDraftJoin Form</td><td><span class="cat-badge cat-UX">UX</span></td></tr>
+      <tr data-sprint="18" data-category="UX"><td><span class="sprint-badge">Sprint 18</span></td><td class="id-cell">OB-006</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Replay Mode Description Visible Before Clicking Option</td><td><span class="cat-badge cat-UX">UX</span></td></tr>
+      <tr data-sprint="18" data-category="UX"><td><span class="sprint-badge">Sprint 18</span></td><td class="id-cell">OB-007</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Login Page "All 8 Teams" → "All 12 Teams" Copy Fix</td><td><span class="cat-badge cat-UX">UX</span></td></tr>
+      <tr data-sprint="18" data-category="UX"><td><span class="sprint-badge">Sprint 18</span></td><td class="id-cell">OB-009</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Wizard Rules Step: Always-Visible FP Values Chip Row</td><td><span class="cat-badge cat-UX">UX</span></td></tr>
+      <tr data-sprint="18" data-category="Bug"><td><span class="sprint-badge">Sprint 18</span></td><td class="id-cell">BF-012</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>FA Add Shows Error But Player IS Added — Error Copy Clarified</td><td><span class="cat-badge cat-Bug">Bug</span></td></tr>
+      <tr data-sprint="18" data-category="Bug"><td><span class="sprint-badge">Sprint 18</span></td><td class="id-cell">BF-013</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Trades Blocked Between Draft Completion and Season Start</td><td><span class="cat-badge cat-Bug">Bug</span></td></tr>
+      <tr data-sprint="18" data-category="Bug"><td><span class="sprint-badge">Sprint 18</span></td><td class="id-cell">BF-014</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>VTF Matchup Schedule Page Confusing — Ranked View Added</td><td><span class="cat-badge cat-Bug">Bug</span></td></tr>
+      <tr data-sprint="18" data-category="Bug"><td><span class="sprint-badge">Sprint 18</span></td><td class="id-cell">BF-015</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>UTIL Slot False Error on Valid Forward Move (stale-closure in multi-move batch)</td><td><span class="cat-badge cat-Bug">Bug</span></td></tr>
+      <tr data-sprint="18" data-category="Bug"><td><span class="sprint-badge">Sprint 18</span></td><td class="id-cell">BF-016</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Activity Feed Shows Raw LEAGUE_STORYLINE Enum String</td><td><span class="cat-badge cat-Bug">Bug</span></td></tr>
+      <tr data-sprint="18" data-category="Bug"><td><span class="sprint-badge">Sprint 18</span></td><td class="id-cell">BF-017</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Auto-Set and Bench-Upgrade Hint Suggest Players with 0 Games</td><td><span class="cat-badge cat-Bug">Bug</span></td></tr>
+      <tr data-sprint="18" data-category="Ops"><td><span class="sprint-badge">Sprint 18</span></td><td class="id-cell">OPS-001</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Security Review — Internal OWASP Audit (GATE-1 PASS)</td><td><span class="cat-badge cat-Ops">Ops</span></td></tr>
+      <tr data-sprint="18" data-category="Ops"><td><span class="sprint-badge">Sprint 18</span></td><td class="id-cell">OPS-002</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Load Test — Draft Room 20 Leagues × 80 Connections (GATE-2 PASS)</td><td><span class="cat-badge cat-Ops">Ops</span></td></tr>
+      <tr data-sprint="18" data-category="Ops"><td><span class="sprint-badge">Sprint 18</span></td><td class="id-cell">OPS-003</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Vercel Ops Verification: CRON_SECRET + cron routes (GATE-3 PASS)</td><td><span class="cat-badge cat-Ops">Ops</span></td></tr>
+      <tr data-sprint="18" data-category="Ops"><td><span class="sprint-badge">Sprint 18</span></td><td class="id-cell">OPS-004</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Accessibility Audit: focus-visible CSS, aria-labels on draft + lineup</td><td><span class="cat-badge cat-Ops">Ops</span></td></tr>
+      <tr data-sprint="18" data-category="Bug"><td><span class="sprint-badge">Sprint 18</span></td><td class="id-cell">&mdash;</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Wizard 401 Fix: Middleware exemption for /api/leagues/create + WizardError component</td><td><span class="cat-badge cat-Bug">Bug</span></td></tr>
+      <tr data-sprint="17" data-category="Feature"><td><span class="sprint-badge">Sprint 17</span></td><td class="id-cell">AG-001</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Leagues Page Overhaul: "What's Happening" + Open-League Directory; FantasyLeague.isPublic field</td><td><span class="cat-badge cat-Feature">Feature</span></td></tr>
+      <tr data-sprint="17" data-category="UX"><td><span class="sprint-badge">Sprint 17</span></td><td class="id-cell">AG-002</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Matchup Page Restructure: Z7 performers to Analysis; Z8/Z9 to league overview</td><td><span class="cat-badge cat-UX">UX</span></td></tr>
+      <tr data-sprint="17" data-category="UX"><td><span class="sprint-badge">Sprint 17</span></td><td class="id-cell">AG-003</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>FP/VP Comprehension Copy: VP bridge sentence, "vs the field" visible text, setup-phase "—" fix</td><td><span class="cat-badge cat-UX">UX</span></td></tr>
+      <tr data-sprint="17" data-category="UX"><td><span class="sprint-badge">Sprint 17</span></td><td class="id-cell">AG-004</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Terminology Standardization: FPts → FP, slot legend on lineup, draft stat glossary open by default</td><td><span class="cat-badge cat-UX">UX</span></td></tr>
+      <tr data-sprint="17" data-category="Feature"><td><span class="sprint-badge">Sprint 17</span></td><td class="id-cell">AG-005</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Non-Qualifying Playoff Empty State (eliminated-team detection in dashboard)</td><td><span class="cat-badge cat-Feature">Feature</span></td></tr>
+      <tr data-sprint="17" data-category="UX"><td><span class="sprint-badge">Sprint 17</span></td><td class="id-cell">AG-006</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Season Renewal Two-Step Confirmation in RenewLeagueForm</td><td><span class="cat-badge cat-UX">UX</span></td></tr>
+      <tr data-sprint="17" data-category="UX"><td><span class="sprint-badge">Sprint 17</span></td><td class="id-cell">AG-007</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Pre-Login UX: Plain-language features grid; "Try a Replay" CTA; invite join page explainer</td><td><span class="cat-badge cat-UX">UX</span></td></tr>
+      <tr data-sprint="17" data-category="UX"><td><span class="sprint-badge">Sprint 17</span></td><td class="id-cell">AG-008</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>VP Education Reinforcement: "How VP works" callout in FieldHero + dashboard</td><td><span class="cat-badge cat-UX">UX</span></td></tr>
+      <tr data-sprint="17" data-category="UX"><td><span class="sprint-badge">Sprint 17</span></td><td class="id-cell">AG-009</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Lineup Lock Contextual Tooltip on Lock Indicator</td><td><span class="cat-badge cat-UX">UX</span></td></tr>
+      <tr data-sprint="16" data-category="UX"><td><span class="sprint-badge">Sprint 16</span></td><td class="id-cell">DS-004</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Emotional Design: Score colors, count-up animation, Saira Condensed font, RecapCard elevation, card entrance animations</td><td><span class="cat-badge cat-UX">UX</span></td></tr>
+      <tr data-sprint="16" data-category="UX"><td><span class="sprint-badge">Sprint 16</span></td><td class="id-cell">&mdash;</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Win Probability Bar Spring Easing (cubic-bezier)</td><td><span class="cat-badge cat-UX">UX</span></td></tr>
+      <tr data-sprint="15" data-category="UX"><td><span class="sprint-badge">Sprint 15</span></td><td class="id-cell">DS-001</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Homepage Rewrite + Sticky Header</td><td><span class="cat-badge cat-UX">UX</span></td></tr>
+      <tr data-sprint="15" data-category="UX"><td><span class="sprint-badge">Sprint 15</span></td><td class="id-cell">DS-002</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Design Token Sweep All Pages + Emoji Removal</td><td><span class="cat-badge cat-UX">UX</span></td></tr>
+      <tr data-sprint="15" data-category="UX"><td><span class="sprint-badge">Sprint 15</span></td><td class="id-cell">DS-003</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>League Overview + WeekHighlights Full Redesign</td><td><span class="cat-badge cat-UX">UX</span></td></tr>
+      <tr data-sprint="15" data-category="Bug"><td><span class="sprint-badge">Sprint 15</span></td><td class="id-cell">BF-008</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Standings Page Shows No Playoff Clinch/Elimination for Non-Active Periods</td><td><span class="cat-badge cat-Bug">Bug</span></td></tr>
+      <tr data-sprint="15" data-category="UX"><td><span class="sprint-badge">Sprint 15</span></td><td class="id-cell">OB-001</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Welcome Flow: Replace Boring Dashboard Arrival with Onboarding-First CTA</td><td><span class="cat-badge cat-UX">UX</span></td></tr>
+      <tr data-sprint="15" data-category="UX"><td><span class="sprint-badge">Sprint 15</span></td><td class="id-cell">OB-008</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Wizard: Invite Link Step Shows No Next-Step Guidance</td><td><span class="cat-badge cat-UX">UX</span></td></tr>
+      <tr data-sprint="14" data-category="UX"><td><span class="sprint-badge">Sprint 14</span></td><td class="id-cell">OB-010</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Wizard Replay Bar: Mode indicator shown in wizard header during replay setup</td><td><span class="cat-badge cat-UX">UX</span></td></tr>
+      <tr data-sprint="14" data-category="UX"><td><span class="sprint-badge">Sprint 14</span></td><td class="id-cell">UX-049</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>FA Direct Nav Link from Dashboard</td><td><span class="cat-badge cat-UX">UX</span></td></tr>
+      <tr data-sprint="14" data-category="UX"><td><span class="sprint-badge">Sprint 14</span></td><td class="id-cell">UX-050</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Win Probability Label Clarification</td><td><span class="cat-badge cat-UX">UX</span></td></tr>
+      <tr data-sprint="14" data-category="UX"><td><span class="sprint-badge">Sprint 14</span></td><td class="id-cell">UX-033</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Setup Phase Copy: "Season hasn't started" state on matchup page</td><td><span class="cat-badge cat-UX">UX</span></td></tr>
+      <tr data-sprint="13" data-category="Bug"><td><span class="sprint-badge">Sprint 13</span></td><td class="id-cell">BF-008</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Standings Playoff Clinch/Elimination Missing (via Sprint 15 batch)</td><td><span class="cat-badge cat-Bug">Bug</span></td></tr>
+      <tr data-sprint="13" data-category="UX"><td><span class="sprint-badge">Sprint 13</span></td><td class="id-cell">OB-001</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Welcome Flow First-Run Onboarding (via Sprint 15 batch)</td><td><span class="cat-badge cat-UX">UX</span></td></tr>
+      <tr data-sprint="13" data-category="UX"><td><span class="sprint-badge">Sprint 13</span></td><td class="id-cell">OB-008</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Wizard Invite Link Step: Next-Step Guidance (via Sprint 15 batch)</td><td><span class="cat-badge cat-UX">UX</span></td></tr>
+      <tr data-sprint="12" data-category="Bug"><td><span class="sprint-badge">Sprint 12</span></td><td class="id-cell">BF-004</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Lineup UTIL Slot Fix</td><td><span class="cat-badge cat-Bug">Bug</span></td></tr>
+      <tr data-sprint="12" data-category="UX"><td><span class="sprint-badge">Sprint 12</span></td><td class="id-cell">UX-043</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Landing Page Jargon Reduction</td><td><span class="cat-badge cat-UX">UX</span></td></tr>
+      <tr data-sprint="12" data-category="UX"><td><span class="sprint-badge">Sprint 12</span></td><td class="id-cell">UX-039</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Claim vs Add Tooltips on FA Panel</td><td><span class="cat-badge cat-UX">UX</span></td></tr>
+      <tr data-sprint="12" data-category="UX"><td><span class="sprint-badge">Sprint 12</span></td><td class="id-cell">UX-038</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>UI Polish: Admin panel, season page, matchup hero</td><td><span class="cat-badge cat-UX">UX</span></td></tr>
+      <tr data-sprint="12" data-category="UX"><td><span class="sprint-badge">Sprint 12</span></td><td class="id-cell">UX-040</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>UI Polish: Standings + bracket visual consistency</td><td><span class="cat-badge cat-UX">UX</span></td></tr>
+      <tr data-sprint="12" data-category="UX"><td><span class="sprint-badge">Sprint 12</span></td><td class="id-cell">UX-042</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>UI Polish: Mobile touch targets + nav</td><td><span class="cat-badge cat-UX">UX</span></td></tr>
+      <tr data-sprint="12" data-category="UX"><td><span class="sprint-badge">Sprint 12</span></td><td class="id-cell">UX-044</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>UI Polish: Draft room header + pick board improvements</td><td><span class="cat-badge cat-UX">UX</span></td></tr>
+      <tr data-sprint="11b" data-category="UX"><td><span class="sprint-badge">Sprint 11b</span></td><td class="id-cell">UX-006</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>League Nav White Text + Indigo Underline Active State</td><td><span class="cat-badge cat-UX">UX</span></td></tr>
+      <tr data-sprint="11b" data-category="UX"><td><span class="sprint-badge">Sprint 11b</span></td><td class="id-cell">UX-005/007</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>"⊕ Front Office" → "⚙ Admin"; Removed "Front Office" Subtext</td><td><span class="cat-badge cat-UX">UX</span></td></tr>
+      <tr data-sprint="11b" data-category="UX"><td><span class="sprint-badge">Sprint 11b</span></td><td class="id-cell">UX-008</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>AnnouncementForm Moved Below Primary Content on League Overview</td><td><span class="cat-badge cat-UX">UX</span></td></tr>
+      <tr data-sprint="11b" data-category="UX"><td><span class="sprint-badge">Sprint 11b</span></td><td class="id-cell">UX-014/015</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Wizard Buttons Inside Card; 6-Segment Filled Progress Bar</td><td><span class="cat-badge cat-UX">UX</span></td></tr>
+      <tr data-sprint="11b" data-category="UX"><td><span class="sprint-badge">Sprint 11b</span></td><td class="id-cell">UX-016</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Pre-Season Empty State on Matchup Page</td><td><span class="cat-badge cat-UX">UX</span></td></tr>
+      <tr data-sprint="11b" data-category="UX"><td><span class="sprint-badge">Sprint 11b</span></td><td class="id-cell">UX-017</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Register Headline "Build Your Franchise"</td><td><span class="cat-badge cat-UX">UX</span></td></tr>
+      <tr data-sprint="11b" data-category="UX"><td><span class="sprint-badge">Sprint 11b</span></td><td class="id-cell">UX-019</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Free Agent Banner Explaining Immediate Adds During Season</td><td><span class="cat-badge cat-UX">UX</span></td></tr>
+      <tr data-sprint="11b" data-category="UX"><td><span class="sprint-badge">Sprint 11b</span></td><td class="id-cell">UX-020</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Free Agents / Waiver Wire Tabs with Hover Tooltips</td><td><span class="cat-badge cat-UX">UX</span></td></tr>
+      <tr data-sprint="11b" data-category="UX"><td><span class="sprint-badge">Sprint 11b</span></td><td class="id-cell">UX-002/003</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Auth Pages: Reduced Padding, Season Timing Chip, "(optional)" Inline</td><td><span class="cat-badge cat-UX">UX</span></td></tr>
+      <tr data-sprint="11b" data-category="Bug"><td><span class="sprint-badge">Sprint 11b</span></td><td class="id-cell">BF-007/UX-008</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Nav "Account" Label Fix; Hydration Bug Prevents "Login" Flash</td><td><span class="cat-badge cat-Bug">Bug</span></td></tr>
+      <tr data-sprint="11a" data-category="UX"><td><span class="sprint-badge">Sprint 11a</span></td><td class="id-cell">UX-024</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>VTF Record Label Clarification</td><td><span class="cat-badge cat-UX">UX</span></td></tr>
+      <tr data-sprint="11a" data-category="UX"><td><span class="sprint-badge">Sprint 11a</span></td><td class="id-cell">UX-025</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Hockey-Score-Look-Alike Record Format</td><td><span class="cat-badge cat-UX">UX</span></td></tr>
+      <tr data-sprint="11a" data-category="Bug"><td><span class="sprint-badge">Sprint 11a</span></td><td class="id-cell">UX-026</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>0-0-7 W/L/T Display Bug Fixed</td><td><span class="cat-badge cat-Bug">Bug</span></td></tr>
+      <tr data-sprint="11a" data-category="UX"><td><span class="sprint-badge">Sprint 11a</span></td><td class="id-cell">UX-027/028</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Projection Labels; Button Hierarchy Polish</td><td><span class="cat-badge cat-UX">UX</span></td></tr>
+      <tr data-sprint="11a" data-category="UX"><td><span class="sprint-badge">Sprint 11a</span></td><td class="id-cell">UX-029/030/031</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Standings Tooltips; Rival Prominence; VP Education Improvements</td><td><span class="cat-badge cat-UX">UX</span></td></tr>
+      <tr data-sprint="10" data-category="Bug"><td><span class="sprint-badge">Sprint 10</span></td><td class="id-cell">BF-003</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Activity Feed: LEAGUE_STORYLINE Raw Type Fixed (description field)</td><td><span class="cat-badge cat-Bug">Bug</span></td></tr>
+      <tr data-sprint="10" data-category="Bug"><td><span class="sprint-badge">Sprint 10</span></td><td class="id-cell">BF-004</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Lineup "UTIL Slot Is Full" False Positive When Moving to Empty Forward</td><td><span class="cat-badge cat-Bug">Bug</span></td></tr>
+      <tr data-sprint="10" data-category="Bug"><td><span class="sprint-badge">Sprint 10</span></td><td class="id-cell">BF-005</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Draft Room "Opened in Another Tab" False Positive</td><td><span class="cat-badge cat-Bug">Bug</span></td></tr>
+      <tr data-sprint="10" data-category="Bug"><td><span class="sprint-badge">Sprint 10</span></td><td class="id-cell">BF-006</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Standings VP Total Shows Incorrect Value After Week 2+</td><td><span class="cat-badge cat-Bug">Bug</span></td></tr>
+      <tr data-sprint="10" data-category="UX"><td><span class="sprint-badge">Sprint 10</span></td><td class="id-cell">UX-001/010/011/018/023</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>5 UX Fixes: Nav polish, empty states, score hero, activity feed copy</td><td><span class="cat-badge cat-UX">UX</span></td></tr>
+      <tr data-sprint="10" data-category="Feature"><td><span class="sprint-badge">Sprint 10</span></td><td class="id-cell">DATA-001</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Initial 2026-27 Expansion Roster Load (4 new teams)</td><td><span class="cat-badge cat-Feature">Feature</span></td></tr>
+      <tr data-sprint="9" data-category="Feature"><td><span class="sprint-badge">Sprint 9</span></td><td class="id-cell">REBRAND-001</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Core Identity: LogoShield, "PWHL GM" rename, home page hero rewrite</td><td><span class="cat-badge cat-Feature">Feature</span></td></tr>
+      <tr data-sprint="9" data-category="UX"><td><span class="sprint-badge">Sprint 9</span></td><td class="id-cell">REBRAND-002</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Voice Consistency: "Your Franchises", "Front Office" nav, invite copy</td><td><span class="cat-badge cat-UX">UX</span></td></tr>
+      <tr data-sprint="9" data-category="UX"><td><span class="sprint-badge">Sprint 9</span></td><td class="id-cell">REBRAND-003</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Detail Polish: "Fantasy pts" removed; "PWHL GM — Draft Room" header</td><td><span class="cat-badge cat-UX">UX</span></td></tr>
+      <tr data-sprint="9" data-category="UX"><td><span class="sprint-badge">Sprint 9</span></td><td class="id-cell">REBRAND-004</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Design Token System: --accent, .rebrand-card, .chip-*, .font-stats, Archivo + Saira Condensed</td><td><span class="cat-badge cat-UX">UX</span></td></tr>
+      <tr data-sprint="9" data-category="UX"><td><span class="sprint-badge">Sprint 9</span></td><td class="id-cell">REBRAND-005</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Matchup Page IA Restructure (Z1–Z9 order); isSetupPhase fix; Analysis promoted to own route</td><td><span class="cat-badge cat-UX">UX</span></td></tr>
+      <tr data-sprint="9" data-category="UX"><td><span class="sprint-badge">Sprint 9</span></td><td class="id-cell">REBRAND-006</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Draft Room Visual Redesign: Pick glow, position-colored NeedsPanel, TeamSpreadPanel polish</td><td><span class="cat-badge cat-UX">UX</span></td></tr>
+      <tr data-sprint="9" data-category="UX"><td><span class="sprint-badge">Sprint 9</span></td><td class="id-cell">REBRAND-007</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Secondary Pages Token Pass: Lineup, Roster, Bracket, League Overview</td><td><span class="cat-badge cat-UX">UX</span></td></tr>
+      <tr data-sprint="9" data-category="Ops"><td><span class="sprint-badge">Sprint 9</span></td><td class="id-cell">REBRAND-008</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>QA Pass: Zero "PWHL Fantasy" strings; tsc clean; 202 tests pass</td><td><span class="cat-badge cat-Ops">Ops</span></td></tr>
+      <tr data-sprint="9" data-category="Bug"><td><span class="sprint-badge">Sprint 9</span></td><td class="id-cell">BF-001</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Draft Room False Eviction on Hard Refresh</td><td><span class="cat-badge cat-Bug">Bug</span></td></tr>
+      <tr data-sprint="9" data-category="Bug"><td><span class="sprint-badge">Sprint 9</span></td><td class="id-cell">BF-002</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Performance Tab Week Number Shows "Week 1" Mid-Season</td><td><span class="cat-badge cat-Bug">Bug</span></td></tr>
+      <tr data-sprint="8" data-category="Ops"><td><span class="sprint-badge">Sprint 8</span></td><td class="id-cell">OPS</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Waiver Cron: process-waivers route + vercel.json at 08:00 UTC</td><td><span class="cat-badge cat-Ops">Ops</span></td></tr>
+      <tr data-sprint="8" data-category="Feature"><td><span class="sprint-badge">Sprint 8</span></td><td class="id-cell">&mdash;</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Auto-Set Projection Safety: try/catch + disabled state when no projections</td><td><span class="cat-badge cat-Feature">Feature</span></td></tr>
+      <tr data-sprint="8" data-category="Bug"><td><span class="sprint-badge">Sprint 8</span></td><td class="id-cell">&mdash;</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>7 Beta Bug Fixes: Playoff period anchor, auto-set in playoffs, roster refresh, lineup sort, FA suggestions sim-date, bracket default 6→4</td><td><span class="cat-badge cat-Bug">Bug</span></td></tr>
+      <tr data-sprint="8" data-category="Bug"><td><span class="sprint-badge">Sprint 8</span></td><td class="id-cell">&mdash;</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>P0/P1 Pre-Beta Fixes: Force-move play-lock, undo-waiver P2002, add/slot capacity validation, waiver cancel confirm</td><td><span class="cat-badge cat-Bug">Bug</span></td></tr>
+      <tr data-sprint="7" data-category="Feature"><td><span class="sprint-badge">Sprint 7</span></td><td class="id-cell">#7</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Trade System: 9-state engine, 7 API routes, Trade Center UI, commissioner review, 22 tests</td><td><span class="cat-badge cat-Feature">Feature</span></td></tr>
+      <tr data-sprint="7" data-category="Feature"><td><span class="sprint-badge">Sprint 7</span></td><td class="id-cell">#11</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>League-Wide Matchup Storylines: computeWeeklyStorylines, WeekHighlights component</td><td><span class="cat-badge cat-Feature">Feature</span></td></tr>
+      <tr data-sprint="7" data-category="Feature"><td><span class="sprint-badge">Sprint 7</span></td><td class="id-cell">#39</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>GM Command Center / Replay Simulator Rebuild: 5-phase /league/[id]/sim route</td><td><span class="cat-badge cat-Feature">Feature</span></td></tr>
+      <tr data-sprint="7" data-category="Ops"><td><span class="sprint-badge">Sprint 7</span></td><td class="id-cell">PLAYOFF-AUDIT-001</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Playoff System Verification: simulate-season end-to-end, 3 bugs fixed, 180/180 tests</td><td><span class="cat-badge cat-Ops">Ops</span></td></tr>
+      <tr data-sprint="6" data-category="Feature"><td><span class="sprint-badge">Sprint 6</span></td><td class="id-cell">#34</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Auto-Set Lineup: computeOptimalLineup, staged save model, fa-suggestions API</td><td><span class="cat-badge cat-Feature">Feature</span></td></tr>
+      <tr data-sprint="6" data-category="Feature"><td><span class="sprint-badge">Sprint 6</span></td><td class="id-cell">#29</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Weekly Performance Dashboard: performance-service, schedule tab overhauled</td><td><span class="cat-badge cat-Feature">Feature</span></td></tr>
+      <tr data-sprint="6" data-category="Feature"><td><span class="sprint-badge">Sprint 6</span></td><td class="id-cell">#35</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>FA Schedule Awareness + Add &amp; Slot: Games-remaining badge, AddAndSlotModal</td><td><span class="cat-badge cat-Feature">Feature</span></td></tr>
+      <tr data-sprint="6" data-category="Feature"><td><span class="sprint-badge">Sprint 6</span></td><td class="id-cell">&mdash;</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Beta Feedback Infrastructure: FeedbackWidget, FeedbackSubmission model, founder feedback console</td><td><span class="cat-badge cat-Feature">Feature</span></td></tr>
+      <tr data-sprint="6" data-category="Feature"><td><span class="sprint-badge">Sprint 6</span></td><td class="id-cell">#5</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Waiver Wire: WaiverEntry/Claim/Priority models, waiver-service, cron script, WaiverWirePanel</td><td><span class="cat-badge cat-Feature">Feature</span></td></tr>
+      <tr data-sprint="6" data-category="Feature"><td><span class="sprint-badge">Sprint 6</span></td><td class="id-cell">#25</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Team Analysis &amp; Insights: analysis-service, Player Trends, Position Groups, FA Upgrade cards</td><td><span class="cat-badge cat-Feature">Feature</span></td></tr>
+      <tr data-sprint="6" data-category="Bug"><td><span class="sprint-badge">Sprint 6</span></td><td class="id-cell">&mdash;</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Replay League Bug Fix: auto-start season after draft, fix endpoint routing, fix test mocks</td><td><span class="cat-badge cat-Bug">Bug</span></td></tr>
+      <tr data-sprint="6" data-category="Ops"><td><span class="sprint-badge">Sprint 6</span></td><td class="id-cell">#37</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Code Review &amp; Pre-Beta Audit: P0 renewal race, draft concurrent-pick P2002, auto-timeout guard</td><td><span class="cat-badge cat-Ops">Ops</span></td></tr>
+      <tr data-sprint="5" data-category="Bug"><td><span class="sprint-badge">Sprint 5</span></td><td class="id-cell">&mdash;</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Replay Gap Bug Fix: "Score week N" button bridges all-star break gap</td><td><span class="cat-badge cat-Bug">Bug</span></td></tr>
+      <tr data-sprint="5" data-category="Feature"><td><span class="sprint-badge">Sprint 5</span></td><td class="id-cell">&mdash;</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>"Sim to Playoffs" Button: scores all remaining regular-season weeks in one click</td><td><span class="cat-badge cat-Feature">Feature</span></td></tr>
+      <tr data-sprint="5" data-category="Ops"><td><span class="sprint-badge">Sprint 5</span></td><td class="id-cell">&mdash;</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Draft Reliability Certification: duplicate-tab handling, concurrent load, reconnect stress test</td><td><span class="cat-badge cat-Ops">Ops</span></td></tr>
+      <tr data-sprint="5" data-category="Feature"><td><span class="sprint-badge">Sprint 5</span></td><td class="id-cell">&mdash;</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Founder Operations Console: /founder/ dashboard, league explorer, throwaway season validator</td><td><span class="cat-badge cat-Feature">Feature</span></td></tr>
+      <tr data-sprint="5" data-category="Feature"><td><span class="sprint-badge">Sprint 5</span></td><td class="id-cell">#30</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Playoff Experience UX: champion card, elimination detection, advance-playoff-round, activity events</td><td><span class="cat-badge cat-Feature">Feature</span></td></tr>
+      <tr data-sprint="4" data-category="Feature"><td><span class="sprint-badge">Sprint 4</span></td><td class="id-cell">NT-002</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>LINEUP_INCOMPLETE Notification: checkAndEmitScheduledNotifications on dashboard load</td><td><span class="cat-badge cat-Feature">Feature</span></td></tr>
+      <tr data-sprint="4" data-category="Feature"><td><span class="sprint-badge">Sprint 4</span></td><td class="id-cell">#1</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Commissioner Dashboard Gaps: pause/restart, force-draft-start, unlock-player, settings editor</td><td><span class="cat-badge cat-Feature">Feature</span></td></tr>
+      <tr data-sprint="4" data-category="Feature"><td><span class="sprint-badge">Sprint 4</span></td><td class="id-cell">#17</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Rivalries: Rival badge + H2H history on matchup page</td><td><span class="cat-badge cat-Feature">Feature</span></td></tr>
+      <tr data-sprint="4" data-category="Bug"><td><span class="sprint-badge">Sprint 4</span></td><td class="id-cell">&mdash;</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>VP Standings Zeroing Fix: migration adds missing homeVP/awayVP columns; unsafe casts removed</td><td><span class="cat-badge cat-Bug">Bug</span></td></tr>
+      <tr data-sprint="4" data-category="Feature"><td><span class="sprint-badge">Sprint 4</span></td><td class="id-cell">&mdash;</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Playoff Mode + Replay Support: getPlayoffDashboardData, DuelHero, advance controls</td><td><span class="cat-badge cat-Feature">Feature</span></td></tr>
+      <tr data-sprint="3" data-category="Feature"><td><span class="sprint-badge">Sprint 3</span></td><td class="id-cell">#2</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>League Onboarding: WelcomeFlow, 6-step CreateLeagueWizard, manager draft prep guide</td><td><span class="cat-badge cat-Feature">Feature</span></td></tr>
+      <tr data-sprint="3" data-category="Feature"><td><span class="sprint-badge">Sprint 3</span></td><td class="id-cell">#4</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Error Handling: ErrorState, EmptyState, LoadingState; loading.tsx + error.tsx for 11 routes</td><td><span class="cat-badge cat-Feature">Feature</span></td></tr>
+      <tr data-sprint="3" data-category="Feature"><td><span class="sprint-badge">Sprint 3</span></td><td class="id-cell">#3</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Mobile Optimization: Draft room tabbed at ≤900px, 44px touch targets, BottomNav safe-area</td><td><span class="cat-badge cat-Feature">Feature</span></td></tr>
+      <tr data-sprint="3" data-category="Feature"><td><span class="sprint-badge">Sprint 3</span></td><td class="id-cell">NT-001</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>In-App Notification Infrastructure: notification-service, bell UI, Notification/NotificationPreference models</td><td><span class="cat-badge cat-Feature">Feature</span></td></tr>
+      <tr data-sprint="3" data-category="Feature"><td><span class="sprint-badge">Sprint 3</span></td><td class="id-cell">NT-002</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Draft Notifications: DRAFT_STARTING + ON_THE_CLOCK from draft server</td><td><span class="cat-badge cat-Feature">Feature</span></td></tr>
+      <tr data-sprint="3" data-category="Feature"><td><span class="sprint-badge">Sprint 3</span></td><td class="id-cell">#8</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Transaction History: Paginated league log with type/team filters and scroll pagination</td><td><span class="cat-badge cat-Feature">Feature</span></td></tr>
+      <tr data-sprint="3" data-category="Feature"><td><span class="sprint-badge">Sprint 3</span></td><td class="id-cell">IA-011</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Hide Advanced Non-V1 Features: bracket hides bye text, settings renders human-readable rows</td><td><span class="cat-badge cat-Feature">Feature</span></td></tr>
+      <tr data-sprint="2" data-category="Feature"><td><span class="sprint-badge">Sprint 2</span></td><td class="id-cell">CT-001/002</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Commissioner Recovery Tools: force-move, undo-transaction, replace-manager + audit-service</td><td><span class="cat-badge cat-Feature">Feature</span></td></tr>
+      <tr data-sprint="2" data-category="Feature"><td><span class="sprint-badge">Sprint 2</span></td><td class="id-cell">CT-004</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Draft Pause/Resume Audit Writes + Draft-Paused Banner</td><td><span class="cat-badge cat-Feature">Feature</span></td></tr>
+      <tr data-sprint="2" data-category="Feature"><td><span class="sprint-badge">Sprint 2</span></td><td class="id-cell">IA-004</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Season Boundary Validation: validateSeasonBoundary in lifecycle.ts</td><td><span class="cat-badge cat-Feature">Feature</span></td></tr>
+      <tr data-sprint="2" data-category="Feature"><td><span class="sprint-badge">Sprint 2</span></td><td class="id-cell">MS-001/002/003/004</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Multi-Season Schema: parentLeagueId, rulesVersion, scoringVersion, renewal-service, RenewLeagueForm</td><td><span class="cat-badge cat-Feature">Feature</span></td></tr>
+      <tr data-sprint="2" data-category="Feature"><td><span class="sprint-badge">Sprint 2</span></td><td class="id-cell">AN-001</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Analytics Instrumentation: trackEvent, 6 events (user_registered, league_created, draft_started, etc.)</td><td><span class="cat-badge cat-Feature">Feature</span></td></tr>
+      <tr data-sprint="2" data-category="Feature"><td><span class="sprint-badge">Sprint 2</span></td><td class="id-cell">IA-005/006</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>VP Education: VpExplainer component on standings; "Recommended" label on 8-team option</td><td><span class="cat-badge cat-Feature">Feature</span></td></tr>
+      <tr data-sprint="2" data-category="Feature"><td><span class="sprint-badge">Sprint 2</span></td><td class="id-cell">C1/C2/H1/H3</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Draft Reliability: WebSocket exponential backoff, commissioner auth server-side, position-aware auto-pick</td><td><span class="cat-badge cat-Feature">Feature</span></td></tr>
+      <tr data-sprint="1" data-category="Ops"><td><span class="sprint-badge">Sprint 1</span></td><td class="id-cell">&mdash;</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>End-to-End Season Simulation Framework: scripts/simulate-season.ts</td><td><span class="cat-badge cat-Ops">Ops</span></td></tr>
+      <tr data-sprint="1" data-category="Ops"><td><span class="sprint-badge">Sprint 1</span></td><td class="id-cell">&mdash;</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>VP Standings Validation Suite: 28 tests in tests/vp.test.ts</td><td><span class="cat-badge cat-Ops">Ops</span></td></tr>
+      <tr data-sprint="1" data-category="Ops"><td><span class="sprint-badge">Sprint 1</span></td><td class="id-cell">&mdash;</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Playoff Qualification &amp; Seeding Validation: 18 tests in tests/playoffs.test.ts</td><td><span class="cat-badge cat-Ops">Ops</span></td></tr>
+      <tr data-sprint="1" data-category="Feature"><td><span class="sprint-badge">Sprint 1</span></td><td class="id-cell">LC-001</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Period-Based Lineup Lock</td><td><span class="cat-badge cat-Feature">Feature</span></td></tr>
+      <tr data-sprint="0" data-category="Feature"><td><span class="sprint-badge">Sprint 0</span></td><td class="id-cell">IA-001</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Roster Defaults → 3F/2D/1UTIL/1G/6 Bench (13 slots)</td><td><span class="cat-badge cat-Feature">Feature</span></td></tr>
+      <tr data-sprint="0" data-category="Feature"><td><span class="sprint-badge">Sprint 0</span></td><td class="id-cell">IA-002</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Victory Points = Authoritative Standings: computeVpStandings, scoringMode @default("VP")</td><td><span class="cat-badge cat-Feature">Feature</span></td></tr>
+      <tr data-sprint="0" data-category="Feature"><td><span class="sprint-badge">Sprint 0</span></td><td class="id-cell">IA-003</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Playoff Defaults → 4 Teams, No Byes, Single-Week; Bracket Bug Fixed</td><td><span class="cat-badge cat-Feature">Feature</span></td></tr>
+      <tr data-sprint="0" data-category="Refactor"><td><span class="sprint-badge">Sprint 0</span></td><td class="id-cell">IA-007</td><td class="title-cell"><span class="shipped-dot">&#10003;</span>Auto-Draft Rebalanced for 3F Demand</td><td><span class="cat-badge cat-Refactor">Refactor</span></td></tr>
+    </tbody>    </tbody>
+  </table>
+</div>
+
+<script>
+  var activeCat = 'all';
+  var activeSprint = 'all';
+
+  function filterCat(cat) {
+    activeCat = cat;
+    document.querySelectorAll('.filter-group .filter-btn').forEach(function(btn) {
+      btn.classList.remove('active');
+    });
+    event.target.classList.add('active');
+    applyFilters();
+  }
+
+  function filterSprint(val) {
+    activeSprint = val;
+    applyFilters();
+  }
+
+  function applyFilters() {
+    var rows = document.querySelectorAll('#shipped-rows tr');
+    var visible = 0;
+    rows.forEach(function(row) {
+      var catMatch = activeCat === 'all' || row.getAttribute('data-category') === activeCat;
+      var sprintMatch = activeSprint === 'all' || row.getAttribute('data-sprint') === activeSprint;
+      if (catMatch && sprintMatch) {
+        row.classList.remove('hidden');
+        visible++;
+      } else {
+        row.classList.add('hidden');
+      }
+    });
+    document.getElementById('result-count').textContent = visible + ' item' + (visible !== 1 ? 's' : '') + ' shown';
+  }
+
+  // Initialize count
+  (function() {
+    var total = document.querySelectorAll('#shipped-rows tr').length;
+    document.getElementById('total-count').textContent = total + ' items shipped';
+    document.getElementById('result-count').textContent = total + ' items shown';
+  })();
+</script>
+
+</body>
+</html>

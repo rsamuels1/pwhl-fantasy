@@ -93,7 +93,12 @@ export default async function MatchupsPage({ params }: { params: Promise<{ leagu
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
 
-      <h1 style={{ fontSize: 24, margin: 0 }}>Schedule</h1>
+      <div style={{ marginBottom: 4 }}>
+        <h1 style={{ fontSize: 24, margin: "0 0 6px" }}>Weekly Results</h1>
+        <p style={{ margin: 0, fontSize: 13, color: "#64748b" }}>
+          Each week every team&apos;s score is ranked against the field. Your record shows wins vs every other team.
+        </p>
+      </div>
 
       {/* Regular season */}
       {byWeek.size === 0 ? (
