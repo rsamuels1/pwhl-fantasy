@@ -1,6 +1,6 @@
 ---
 name: beta-feedback-bugs
-description: Live FeedbackSubmission DB state as of Jun 22, 2026 — 16 rows total; BF-001/BF-002 CONFIRMED RESOLVED in code (Sprint 9) and in the codebase; DB rows stale OPEN (cosmetic only); new bugs BF-012/013/014 in Sprint 18
+description: Beta bug tracker — BF-001/002 RESOLVED (Sprint 9); BF-012/013/014/015/016/017 all SHIPPED Sprint 18; next BF-NNN is BF-018 (Sprint 19, /league-rules 404)
 metadata:
   type: project
 ---
@@ -53,6 +53,22 @@ Three structural IA suggestions received Jun 22 — deferred to post-launch back
 
 These are a coherent set suggesting a deeper "League vs Franchise" nav split — P2/P3 post-beta scope.
 
-**OPS-004** — Accessibility audit requested via feedback `cmqpryac7000n11ngc9j136a4`. Added to Sprint 18 Track D as P1.
+**OPS-004** — Accessibility audit requested via feedback `cmqpryac7000n11ngc9j136a4`. Shipped Sprint 18 (focus-visible CSS globally; aria-labels on draft pick buttons + lineup slot divs).
 
-**How to apply:** When checking FeedbackSubmission in the founder console, BF-001 and BF-002 showing OPEN is expected and stale — both are confirmed fixed in the codebase (Sprint 9 commits in the rebrand batch). This was verified in the PM second pass on Jun 22, 2026. New actionable bugs are BF-012/013/014. Next BF-NNN is BF-015.
+## Sprint 18 Track E bugs (all SHIPPED Jun 22–23)
+
+**BF-015 ✅ SHIPPED** (commit f400b90) — UTIL slot false error on valid forward move; stale-closure bug in LineupManager multi-move batches. Files: `app/team/[teamId]/lineup/LineupManager.tsx`
+
+**BF-016 ✅ SHIPPED** (commit 70cd536) — Activity feed raw LEAGUE_STORYLINE enum string. Files: `lib/services/activity.ts`
+
+**BF-017 ✅ SHIPPED** (commit 622ac9a) — Auto-set/bench-upgrade hint suggesting players with 0 games; null-coalescing fix. Files: `lib/lineup.ts`, `LineupManager.tsx`
+
+## Sprint 19 bugs (current)
+
+**BF-018 (Sprint 19, P1)** — `/league-rules` 404 dead link on every dashboard load. Fix: create `/app/league-rules/page.tsx` or remove all references. See `roadmap-features.md` § BF-018.
+
+**BF-019 (Sprint 19, email-blocked)** — Password reset / forgot password. Blocked on email infra.
+
+**Next BF-NNN: BF-020**
+
+**How to apply:** BF-001/002 stale OPEN in DB is cosmetic. BF-012/013/014/015/016/017 all confirmed shipped Sprint 18. Active bugs are BF-018 (Sprint 19) and BF-019 (email-blocked). Next new bug ID is BF-020.

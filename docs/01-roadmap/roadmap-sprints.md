@@ -1302,43 +1302,45 @@ Produce a findings list; fix all P0 a11y blockers. P1/P2 findings go to the post
 
 ---
 
-## Sprint 19 — "Onboarding UX: Playwright Walkthrough Fixes" · PLANNED · Track F · P1/P2
+## Sprint 19 — "IA Restructure: Franchise-First Navigation + DnD Lineup" · ✅ COMPLETE · Track F · P1/P2
 
-**Status:** Planned. Sprint 18 is IN PROGRESS (all items shipped). Sprint 19 begins once Sprint 18 is formally closed (target: after Jul 7, 2026 beta invites go out).
+**Status:** COMPLETE. All 5 parts shipped to main. Sprint 19 superseded the originally-planned "Playwright UX Walkthrough Fixes" scope (BF-018, UX-051–057) with a larger IA restructure. The Playwright items remain in the post-sprint backlog for a future UX polish pass.
 
-Goal: Address all P1 and P2 findings from the June 23, 2026 Playwright UX walkthrough of the beta site. These are onboarding, invite, and wizard copy/layout fixes — no schema changes, no new API routes, no logic changes. The two email-infrastructure-blocked items (UX-053 email invite flow, BF-019 password reset) are held for the post-email-infra backlog.
+Goal: Restructure the app's information architecture around a "My Franchise" mental model. Move all personal/transactional surfaces into the `/team/[teamId]/` zone. Make the league overview commissioner-only. Consolidate lineup management and roster into a single DnD-enabled surface. Give commissioners god-mode access to any team's lineup.
 
-**P1 — Must ship before beta widens to broader audience:**
+---
 
-**BF-018: `/league-rules` 404 Dead Link** · S · P1
-A dead internal link to `/league-rules` fires a 404 on every dashboard load and from the BLR-002 wizard welcome screen's secondary link. Fix: create a minimal `/league-rules` route (preferred) or replace all references with a working destination.
-Files: `app/league-rules/page.tsx` (new), or `grep -r "league-rules" app/` to locate all references.
+### Shipped (Sprint 19 — all 5/5 parts complete)
 
-**UX-051: VP Popover Overflows Viewport Bottom on Mobile** · S · P1
-The VP "?" explainer popover in wizard Step 4 breaks layout and clips past the viewport bottom on a 390px phone. Best teaching moment in the product — currently broken on mobile. Fix: `max-height: 60vh; overflow-y: auto` + flip-above-anchor positioning when near viewport bottom.
-Files: `components/VpExplainer.tsx`, `app/globals.css`
+**Part 1 — Emoji Policy + Colorblind Fix** · ✅ SHIPPED (commit 0d00092)
+- `docs/branding/emoji-policy.md`: tiered emoji policy — Tier 1 (celebratory/onboarding) YES; Tier 2 (nav/tables/status) NO.
+- `app/league/[leagueId]/standings/page.tsx`: colorblind chip fix with glyphs — ✓ CLINCHED, ✗ ELIM, ◉ BUBBLE replacing color-only differentiation.
+- `app/globals.css`: added `chip-bubble` (amber) and `chip-out` (gray) CSS classes.
 
-**UX-052: Invite Landing Has Insufficient Fantasy Primer for Cold New Users** · M · P1
-The logged-out invite landing page is the most common new-user entry path. AG-007 (Sprint 17) added a two-sentence explainer; the Jun 23 walkthrough found it still insufficient. Needs 3–4 plain-language bullet points explaining what PWHL GM is, what a fantasy league involves, and what happens next. Zero unexplained acronyms.
-Files: `app/join-league/page.tsx` (or `app/invite/[leagueId]/page.tsx`)
+**Part 2 — Trades → My Franchise** · ✅ SHIPPED (commit a2cd617)
+- New `/team/[teamId]/trades`, `/team/[teamId]/trades/new`, `/team/[teamId]/trades/[tradeId]` routes under team layout.
+- Old `/league/[leagueId]/trades/*` routes redirect to team-scoped equivalents.
+- Trades tab removed from league nav; added to `TeamNav.tsx`.
+- New `/team/[teamId]/bracket` route (team-layout version of playoff bracket).
+- New `/team/[teamId]/transactions` route (team-layout version of transaction log).
+- `TeamNav.tsx` updated: removed Lineup/Free Agents tabs; renamed Rosters → My Roster; Trades/Playoffs/Transactions now link to `/team/[teamId]/` routes.
 
-**UX-057: Wizard Rules Step Is a Jargon Wall (PPP, UTIL Unexplained)** · M · P1
-The Rules confirmation step (Step 4) introduces VP, FP, PPP, and UTIL simultaneously. OB-009 (Sprint 18) added FP values; this item adds inline definitions for PPP ("power play points") and UTIL ("flex slot for any skater"), reorders copy to lead with plain language before acronyms, and considers collapsing the playoff format detail.
-Files: `app/create-league/CreateLeagueWizard.tsx`
+**Part 3 — League Overview → Commissioner-Only** · ✅ SHIPPED (commit 3ceb056)
+- `/league/[leagueId]` now redirects non-commissioners to their team matchup page.
+- Removed My Matchup widget and non-commissioner content from the commissioner overview.
+- `/league/[leagueId]/roster` now requires commissioner access (non-commissioners see their own team roster via My Franchise).
 
-**P2 — Ship in Sprint 19 alongside P1s (all S effort):**
+**Part 4 — Combined My Roster with DnD Lineup Management** · ✅ SHIPPED (commit 01075f9)
+- `@dnd-kit/core`, `@dnd-kit/sortable`, `@dnd-kit/utilities` installed.
+- New `components/LineupDnD.tsx`: drag-to-swap lineup management — stats tabs (Season/This week/Last week/Projected); games-remaining badges; play-lock validation; `DragOverlay`.
+- `app/team/[teamId]/roster/page.tsx` rewritten: fetches all lineup data (lock status, stats tabs, projections, games remaining) and renders `LineupDnD` at top + `RosterManager` below.
+- `/team/[teamId]/lineup` now redirects to `/team/[teamId]/roster`.
 
-**UX-054: Replay CTA on Landing Has No "Why" Context** · S · P2
-The "Try a Replay" button added by AG-007 has no explanatory subtitle. Add ≤15 words explaining the value (e.g., "Try a full PWHL season risk-free using 2025-26 stats — no commitment needed.").
-Files: `app/page.tsx`
-
-**UX-055: Wizard Step Count Hidden on Welcome Screen** · S · P2
-"STEP N OF N" only appears after the welcome/beta screen. Add a step summary ("6 steps · ~3 minutes") to the BetaWelcomeStep and from step 1 onward in non-beta mode.
-Files: `app/create-league/CreateLeagueWizard.tsx`, `components/BetaWelcomeStep.tsx`
-
-**UX-056: Commissioner Draft Checklist Has No Draft Primer** · S · P2
-The pre-draft admin panel checklist has no explanation of what a draft is or what the commissioner's role is. Add a ≤5-sentence primer: snake draft, commissioner starts it, auto-pick fires on timeout, link to draft room.
-Files: `app/league/[leagueId]/admin/page.tsx`
+**Part 5 — Commissioner God-Mode on My Roster** · ✅ SHIPPED (commit b4986a6)
+- Commissioner can view any team's roster via team selector and drag-and-drop their lineup.
+- Uses `/api/leagues/[leagueId]/commissioner/force-move` endpoint (not the regular lineup API).
+- `LineupDnD` shows amber "Commissioner view" banner when `forceMove=true`.
+- `RosterManager` shows "⚙ Commissioner View" chip alongside the "← My Team" back button.
 
 ---
 
@@ -1346,16 +1348,32 @@ Files: `app/league/[leagueId]/admin/page.tsx`
 
 | Story | Size | Priority | Status |
 |---|---|---|---|
-| BF-018: `/league-rules` 404 dead link | S | P1 | Planned |
-| UX-051: VP popover overflow on mobile | S | P1 | Planned |
-| UX-052: Invite landing fantasy primer | M | P1 | Planned |
-| UX-057: Wizard Rules step jargon wall | M | P1 | Planned |
-| UX-054: Replay CTA context copy | S | P2 | Planned |
-| UX-055: Wizard step count on welcome | S | P2 | Planned |
-| UX-056: Draft checklist primer | S | P2 | Planned |
-| **Total** | **4S · 2M** | — | **0/7** |
+| Part 1: Emoji policy + colorblind chip fix | S | P1 | ✅ SHIPPED (0d00092) |
+| Part 2: Trades → My Franchise routes + TeamNav | M | P1 | ✅ SHIPPED (a2cd617) |
+| Part 3: League overview → commissioner-only | M | P1 | ✅ SHIPPED (3ceb056) |
+| Part 4: DnD lineup management on My Roster | L | P1 | ✅ SHIPPED (01075f9) |
+| Part 5: Commissioner god-mode on roster page | M | P2 | ✅ SHIPPED (b4986a6) |
+| **Total** | **1S · 3M · 1L** | — | **5/5** |
 
-**Exit criteria:** All 4 P1 items shipped; all 3 P2 items shipped if capacity allows. `tsc --noEmit` clean. Existing tests pass. No unexplained acronyms on the invite landing page or wizard rules step (verified by manual mobile check at 390px).
+**Schema changes:** None. All changes are routing, UI, and new npm packages only.
+
+**Exit achieved:** All personal/transactional surfaces live under `/team/[teamId]/`. Non-commissioners are redirected from the league overview to their franchise. `/team/[teamId]/roster` is the single page for lineup management and roster operations — click-to-swap replaced by drag-and-drop. Commissioner can view and rearrange any team's lineup from the roster page.
+
+---
+
+### Originally-Planned Sprint 19 Items (from Playwright UX walkthrough Jun 23, 2026)
+
+The following items were originally scoped for Sprint 19 but were superseded by the IA restructure. They remain in the post-sprint backlog:
+
+- BF-018 (P1, S) — `/league-rules` 404 dead link
+- UX-051 (P1, S) — VP popover overflow on mobile in wizard Rules step
+- UX-052 (P1, M) — Invite landing: add fantasy primer for cold new users
+- UX-057 (P1, M) — Wizard Rules step jargon wall (PPP, UTIL unexplained)
+- UX-054 (P2, S) — Replay CTA context copy on landing page
+- UX-055 (P2, S) — Wizard step count hidden until after welcome screen
+- UX-056 (P2, S) — Commissioner draft checklist: add plain-language draft primer
+- UX-053 (P2, M) — Email invite flow — blocked on email infrastructure
+- BF-019 (P2, M) — Password reset / forgot password — blocked on email infrastructure
 
 ---
 
@@ -1489,7 +1507,7 @@ Items below are acknowledged but have no sprint assignment. They become candidat
 | Sprint 16 — Emotional Design Polish | ✅ COMPLETE (Jun 22, 2026) | Score colors by win state + count-up animation, section heading hierarchy, Saira Condensed font loading, RecapCard elevation, card entrance animations. Transforms "Bloomberg terminal" feeling into energetic sports product. Commits: 5ecc116, f1d576c |
 | Sprint 17 — UX Polish: Agent Test Run Fixes | ✅ COMPLETE (Jun 22, 2026) | 9/9 items: AG-001 (LEAGUES overhaul + isPublic schema) + AG-002 (matchup page restructure) + AG-003 (FP/VP copy) + AG-004 (terminology) + AG-005 (playoff eliminated empty state) + AG-006 (renewal confirmation) + AG-007 (pre-login UX) + AG-008 (VP education) + AG-009 (lock tooltip); source: 4-agent parallel UX test run |
 | Sprint 18 — Beta Operations + Onboarding Repair | ✅ COMPLETE (Jun 23, 2026) | All 24 items shipped across 5 tracks: BLR-001/002 ✅ + BF-009 ✅ + OB-002/003/004 ✅ + UX-046/047/048 ✅ + OB-005/006/007/009 ✅ + BF-012/013/014 ✅ + OPS-001/002/003/004 ✅ + BF-015/016/017 ✅ + BLR-003 ✅. GATE-1/2/3 all PASS. Beta invites Jul 7, 2026. |
-| Sprint 19 — Onboarding UX: Playwright Walkthrough Fixes | PLANNED | 7 items (4P1 + 3P2): BF-018 (/league-rules 404) + UX-051 (VP popover mobile) + UX-052 (invite landing primer) + UX-057 (wizard jargon wall) + UX-054/055/056. Source: Playwright UX walkthrough Jun 23, 2026. 2 email-blocked items (UX-053, BF-019) in post-email-infra backlog. |
+| Sprint 19 — IA Restructure: Franchise-First Nav + DnD Lineup | ✅ COMPLETE (Jun 23, 2026) | 5/5 parts shipped: Part 1 emoji policy + colorblind chips (0d00092) · Part 2 Trades→My Franchise + TeamNav (a2cd617) · Part 3 league overview commissioner-only (3ceb056) · Part 4 DnD lineup on roster page (01075f9) · Part 5 commissioner god-mode (b4986a6). No schema changes. |
 
 ---
 

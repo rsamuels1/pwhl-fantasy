@@ -1,6 +1,6 @@
 # PWHL GM Product Roadmap — Index
 
-Last Updated: June 23, 2026 (Sprint 19 planned — 8 items from Playwright UX walkthrough; BF-018, UX-051–057, BF-019)
+Last Updated: June 23, 2026 (Sprint 19 COMPLETE — IA restructure, DnD lineup, commissioner god-mode; 5/5 parts shipped)
 
 ---
 
@@ -167,9 +167,9 @@ Beta invite date: **Jul 7, 2026.** Public launch: **quality-driven** (target ear
 
 ---
 
-## Completed Sprints (7–17)
+## Completed Sprints (7–19)
 
-All sprints from 7–17 are complete and shipped. Sprint 13 is formally absorbed into Sprint 18 (3/14 shipped via Sprint 15 batch; 11 carry-forwards). Detailed plans in `roadmap-sprints.md`.
+All sprints from 7–19 are complete and shipped. Sprint 13 is formally absorbed into Sprint 18 (3/14 shipped via Sprint 15 batch; 11 carry-forwards). Detailed plans in `roadmap-sprints.md`.
 
 - **Sprint 7** ✅ — Retention Layer (Trade System, Storylines, Replay Sim v2 UX)
 - **Sprint 8** ✅ — Beta Hardening (14/14 audit fixes + beta bugs)
@@ -182,12 +182,16 @@ All sprints from 7–17 are complete and shipped. Sprint 13 is formally absorbed
 - **Sprint 15** ✅ — Visual Design System Deep Pass (3 stories: DS-001/002/003; Jun 22, 2026)
 - **Sprint 16** ✅ — Emotional Design Polish (score colors, count-up animation, Saira Condensed font, RecapCard elevation; Jun 22, 2026)
 - **Sprint 17** ✅ — UX Polish: Agent Test Run Fixes (9/9 items: LEAGUES overhaul, matchup restructure, FP/VP copy, terminology, playoff eliminated empty state, renewal confirmation, pre-login UX, VP education, lock tooltip; Jun 22, 2026)
+- **Sprint 18** ✅ — Beta Operations + Onboarding Repair (24/24 items: BLR-001/002, Sprint 13 carry-forwards, ops gates GATE-1/2/3 PASS; Jun 23, 2026)
+- **Sprint 19** ✅ — IA Restructure: Franchise-First Nav + DnD Lineup (5/5 parts: emoji policy, Trades→My Franchise, league overview commissioner-only, DnD lineup on roster, commissioner god-mode; Jun 23, 2026)
 
-**Current Status:** Sprint 18 IN PROGRESS (all P0+P1+P2 complete; beta invites Jul 7, 2026) · **Sprint 19 PLANNED** (7 items from Playwright UX walkthrough Jun 23: BF-018, UX-051–057; begins after Sprint 18 closes) · MVP readiness ~99%
+**Current Status:** Sprint 18 COMPLETE (Jun 23, 2026) · **Sprint 19 COMPLETE** (Jun 23, 2026 — 5/5 parts shipped: IA restructure, DnD lineup, commissioner god-mode) · MVP readiness ~99%
 
 **Sprint 14 (Post-Launch Polish + Emotional Engagement) is COMPLETE (Jun 22, 2026).** 11/12 items shipped: all 5 agent integration test findings (DRC-002, BF-010, BF-011, TR-002, TR-003) ✅; OB-010 wizard Replay progress bar ✅; UX-049 "Free Agents" direct TeamNav link ✅; UX-050 "Win Probability" label in DuelHero ✅; UX-033 setup-phase copy "Games starting soon" ✅; UX-032 edge label ✅; OB-011 draft date picker text ✅. UX-045 (rival win celebration) deferred post-launch — requires schema migration (`RIVALRY_WIN` enum) which carries pre-launch risk. First item in Sprint 17 backlog.
 
-**Sprint 18 (Beta Operations + Onboarding Repair) is IN PROGRESS** (target ship: Jul 7, 2026). BLR-001 ✅ shipped (commits cc77196 + ecc7290): founder-created beta replay leagues with full UI, API routes, draft queue, and beta banner. Settings API `isPublic` fix ✅ (commit 971cd11). Deploy config `prisma migrate deploy` ✅ (commit e24b508). Beta UX polish ✅ (commit eed7d35). BLR-002 (wizard beta welcome messaging, copy TBD) not yet shipped. 11 Sprint 13 carry-forwards (Track B), BF-012/013/014 (Track C), and OPS-001/002/003/004 (Track D) all remain. Full plan in `roadmap-sprints.md`.
+**Sprint 18 (Beta Operations + Onboarding Repair) is COMPLETE (Jun 23, 2026).** All 24 items shipped across 5 tracks: BLR-001/002, Sprint 13 carry-forwards, new live feedback bugs, ops gates, and ad-hoc beta fixes. GATE-1 ✅ GATE-2 ✅ GATE-3 ✅ all pass. Beta invites target: Jul 7, 2026. Full plan in `roadmap-sprints.md`.
+
+**Sprint 19 (IA Restructure: Franchise-First Nav + DnD Lineup) is COMPLETE (Jun 23, 2026).** All 5 parts shipped: Part 1 emoji policy + colorblind chip fix; Part 2 Trades→My Franchise routes + TeamNav restructure; Part 3 league overview redirect to commissioner-only; Part 4 DnD lineup management consolidated onto the roster page; Part 5 commissioner god-mode access to any team's lineup. No schema changes. Full plan in `roadmap-sprints.md`.
 
 **Post-Launch Backlog:** FAAB (#6 — defer to 2027-28 when commissioners request), Growth analytics (GR-001/002/003/004), push notifications, multi-season library (#12), player trends (#23), keeper/dynasty (#19/#20), native apps, AI features, IA reorg (League vs Franchise nav split suggestions from beta feedback). See `roadmap-sprints.md` for details.
 

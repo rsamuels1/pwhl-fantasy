@@ -247,6 +247,12 @@ survives DB resets and schema migrations.
      - **Beta bug fixes** ✅ (BF-012/013/014/015/016/017: FA add error copy clarified, pre-season trade gate removed, VTF matchup ranked view, UTIL slot stale-closure fix, activity feed LEAGUE_STORYLINE label, auto-set 0-game null-coalescing fix)
      - **Ops gates** ✅ (OPS-001 security audit GATE-1 PASS, OPS-002 load test GATE-2 PASS 20 leagues×80 connections, OPS-003 CRON_SECRET GATE-3 PASS, OPS-004 accessibility focus-visible + aria-labels)
      - **Wizard 401 fix** ✅ (middleware exemption for `/api/leagues/create` + WizardError styled component)
+   - **IA Restructure — Sprint 19** ✅ (5 parts, all shipped Jun 23, 2026):
+     - **Part 1: Emoji policy + colorblind fix** ✅ (`docs/branding/emoji-policy.md`; standings chips now use ✓/✗/◉ glyphs for CLINCHED/ELIM/BUBBLE; `chip-bubble` + `chip-out` CSS classes; commit 0d00092)
+     - **Part 2: Trades → My Franchise** ✅ (new `/team/[teamId]/trades`, `/team/[teamId]/trades/new`, `/team/[teamId]/trades/[tradeId]` routes; `/team/[teamId]/bracket` + `/team/[teamId]/transactions` routes; league trades routes redirect to team-scoped equivalents; Trades removed from league nav; `TeamNav.tsx` restructured — Lineup/FA tabs removed, Rosters→My Roster, Trades/Playoffs/Transactions link to team routes; commit a2cd617)
+     - **Part 3: League overview → commissioner-only** ✅ (`/league/[leagueId]` redirects non-commissioners to `/team/[teamId]/matchup`; My Matchup widget and non-commissioner content removed from commissioner overview; `/league/[leagueId]/roster` requires commissioner access; commit 3ceb056)
+     - **Part 4: DnD lineup management on roster page** ✅ (`@dnd-kit/core`, `@dnd-kit/sortable`, `@dnd-kit/utilities` installed; new `components/LineupDnD.tsx` with drag-to-swap, stats tabs, games-remaining badges, play-lock validation, DragOverlay; `app/team/[teamId]/roster/page.tsx` rewritten to fetch all lineup data server-side and render LineupDnD above RosterManager; `/team/[teamId]/lineup` redirects to `/team/[teamId]/roster`; commit 01075f9)
+     - **Part 5: Commissioner god-mode on roster page** ✅ (commissioner can view + DnD any team's lineup via team selector; uses `/api/leagues/[leagueId]/commissioner/force-move` when `forceMove=true`; amber "Commissioner view" banner in LineupDnD; "⚙ Commissioner View" chip in RosterManager; commit b4986a6)
 7. Public launch ~early Nov, drafts ~1 week before opener
 
 ## Draft room UI (`app/draft/[leagueId]/`)
@@ -735,20 +741,24 @@ The URL space is split into two zones:
 
 - **`/team/[teamId]/`** — personal franchise pages. Only the team owner can access these.
   - `/team/[teamId]/matchup` — fantasy home: lineup alerts, score hero, playing tonight, swing players, roster breakdown
-  - `/team/[teamId]/lineup` — set active/bench slots with lock indicators and games-remaining badges
-  - `/team/[teamId]/roster` — personal roster + free agent listings (add/drop)
+  - `/team/[teamId]/roster` — combined lineup management (DnD, `LineupDnD.tsx`) + personal roster + free agent listings (add/drop). **`/team/[teamId]/lineup` redirects here** (Sprint 19).
   - `/team/[teamId]/schedule` — PWHL game schedule for this period, progress bar, per-game player counts
-- **`/league/[leagueId]/`** — communal league views. Any league member can access these.
-  - `/league/[leagueId]/` — overview (standings snapshot, next matchup, recent results)
-  - `/league/[leagueId]/standings` — full standings table (user's row highlighted)
+  - `/team/[teamId]/trades` — trade center (Incoming / Sent / League History tabs)
+  - `/team/[teamId]/trades/new` — propose a trade
+  - `/team/[teamId]/trades/[tradeId]` — trade detail
+  - `/team/[teamId]/bracket` — playoff bracket (team-layout version)
+  - `/team/[teamId]/transactions` — transaction log (team-layout version)
+- **`/league/[leagueId]/`** — commissioner-only views. Non-commissioners are redirected to `/team/[teamId]/matchup` (Sprint 19).
+  - `/league/[leagueId]/` — commissioner overview (playoff race, lineup status, announcements)
+  - `/league/[leagueId]/standings` — full standings table
   - `/league/[leagueId]/matchups` — full schedule with scored/upcoming matchups
-  - `/league/[leagueId]/bracket` — playoff bracket
-  - `/league/[leagueId]/roster` — all rosters across all teams ("All Rosters")
+  - `/league/[leagueId]/bracket` — playoff bracket (league-layout version)
+  - `/league/[leagueId]/roster` — all rosters across all teams ("All Rosters") — commissioner-only (Sprint 19)
   - `/league/[leagueId]/admin` — commissioner-only management panel
   - `/league/[leagueId]/season` — season period table + dev simulation controls
 
-The old `/league/[leagueId]/matchup` and `/league/[leagueId]/lineup` routes still exist as
-redirect stubs that look up the user's team and redirect to `/team/[teamId]/matchup` etc.
+The old `/league/[leagueId]/matchup`, `/league/[leagueId]/lineup`, `/league/[leagueId]/trades/*`
+routes exist as redirect stubs that look up the user's team and redirect to `/team/[teamId]/...`.
 
 The league layout header includes a "My Franchise →" shortcut that links to `/team/[teamId]/matchup`
 for the current user. The team layout includes a "← League" escape hatch.
@@ -985,25 +995,28 @@ Commissioner-only page gated by `requireCommissioner`. Contains:
 
 **`/league/<id>` redirect rules** (`app/league/[leagueId]/page.tsx`):
 - Draft `IN_PROGRESS` → `/draft/<leagueId>?team=<teamId>`
-- All other states → renders the league overview (standings snapshot, recent results, next matchup)
+- Playoffs `IN_PROGRESS` → `/league/<leagueId>/bracket`
+- Non-commissioner (all other states) → `/team/<teamId>/matchup` (Sprint 19: league overview is commissioner-only)
+- Commissioner (all other states) → renders the commissioner overview
 
-The league overview is the communal hub — always reachable regardless of season state. The
-login flow handles landing users on their team page after sign-in; don't redirect from the
-overview itself or it becomes unreachable from the league nav. It has an "Admin panel →" link
-that only appears for commissioners.
+The league overview is now a **commissioner-only hub** (Sprint 19). Non-commissioner members are
+redirected to their franchise page. The commissioner overview shows the playoff race, per-team
+lineup status, announcements, and the commissioner action strip.
 
 ### League layout nav
 
 `app/league/[leagueId]/layout.tsx` is async and fetches the current user + league commissioner.
-Nav items shown to all members: Overview, Standings, Schedule, Bracket, Rosters.
+Nav items shown to members: Overview, Standings, Schedule, Bracket.
 "Admin" is appended only when `user.id === league.commissionerId`.
+"Rosters" (All Rosters) is commissioner-only in the league zone (Sprint 19); members use `/team/[teamId]/roster`.
 A "My Franchise →" button links to `/team/[myTeamId]/matchup` when the user has a team.
-Matchup, Lineup, and Roster are NOT in the league nav — they live in the team layout.
+Matchup, Lineup, Roster, Trades, Transactions, and Bracket also live in the team layout.
 
 The team layout (`app/team/[teamId]/layout.tsx`) renders a persistent tab bar via
-`TeamNav.tsx` (client component, uses `usePathname()` for active state). Tabs:
-**Matchup · Lineup · Rosters · Trades · Standings · Performance · Analysis** (conditionally + **Playoffs** when `playoffStatus !== "NOT_STARTED"`), plus a `"{leagueName} ↗"`
-escape hatch on the right. Active tab has white text + 2px indigo underline; inactive tabs are muted
+`TeamNav.tsx` (client component, uses `usePathname()` for active state). Tabs (Sprint 19):
+**Matchup · My Roster · Trades · Record · Analysis** (conditionally + **Playoffs** when `playoffStatus !== "NOT_STARTED"` + **Transactions**), plus a `"{leagueName} ↗"`
+escape hatch on the right. "Lineup" and "Free Agents" tabs were removed in Sprint 19 — lineup management
+is now on the roster page. Active tab has white text + 2px indigo underline; inactive tabs are muted
 gray. Standings links to `/league/[leagueId]/standings` since standings are league-scoped.
 
 ### Logout

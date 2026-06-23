@@ -4494,6 +4494,80 @@ Acceptance Criteria:
 
 ---
 
+---
+
+# Sprint 19: IA Restructure — Franchise-First Navigation + DnD Lineup
+
+Status: ✅ COMPLETE (Jun 23, 2026)
+
+Sprint: 19
+
+All 5 parts shipped. No schema changes.
+
+---
+
+## Sprint 19 · Part 1 — Emoji Policy + Colorblind Fix
+
+Status: ✅ COMPLETE (commit 0d00092)
+
+Priority: P1
+
+Established a tiered emoji policy for the codebase: Tier 1 (celebratory/onboarding contexts) YES; Tier 2 (navigation, tables, status chips) NO. Applied the policy immediately by fixing colorblind-accessibility gaps in the standings page status chips — replaced color-only differentiation with glyph+color: ✓ CLINCHED, ✗ ELIM, ◉ BUBBLE.
+
+Files: `docs/branding/emoji-policy.md` (new), `app/league/[leagueId]/standings/page.tsx`, `app/globals.css` (added `chip-bubble` amber and `chip-out` gray CSS classes)
+
+---
+
+## Sprint 19 · Part 2 — Trades → My Franchise
+
+Status: ✅ COMPLETE (commit a2cd617)
+
+Priority: P1
+
+Moved the entire trades surface from the league zone (`/league/[leagueId]/trades/`) into the franchise zone (`/team/[teamId]/trades/`). Old routes redirect to the team-scoped equivalents. Added a `/team/[teamId]/bracket` route and a `/team/[teamId]/transactions` route so all personal/transactional surfaces live under one URL prefix. Updated `TeamNav.tsx`: removed Lineup and Free Agents tabs (consolidated into roster); renamed Rosters → My Roster; Trades, Playoffs, and Transactions now all link to `/team/[teamId]/` routes. Removed Trades tab from the league nav.
+
+Files: `app/team/[teamId]/trades/` (new route tree), `app/team/[teamId]/bracket/` (new), `app/team/[teamId]/transactions/` (new), `app/league/[leagueId]/trades/*` (redirect stubs), `app/team/[teamId]/TeamNav.tsx`
+
+---
+
+## Sprint 19 · Part 3 — League Overview → Commissioner-Only
+
+Status: ✅ COMPLETE (commit 3ceb056)
+
+Priority: P1
+
+The `/league/[leagueId]` overview now redirects non-commissioner members directly to their team matchup page (`/team/[teamId]/matchup`). The league overview is now a commissioner dashboard — My Matchup widget and non-commissioner content removed. `/league/[leagueId]/roster` (the "All Rosters" communal view) similarly requires commissioner access; non-commissioners use `/team/[teamId]/roster` (My Roster) for their own roster and can browse other teams' rosters via the team selector on that page.
+
+Files: `app/league/[leagueId]/page.tsx`, `app/league/[leagueId]/roster/page.tsx`
+
+---
+
+## Sprint 19 · Part 4 — Combined My Roster with DnD Lineup Management
+
+Status: ✅ COMPLETE (commit 01075f9)
+
+Priority: P1
+
+Replaced the click-to-swap lineup manager with a drag-and-drop experience built on `@dnd-kit`. The new `LineupDnD.tsx` component lives at the top of the roster page and shows active slots, bench, and IR with drag handles. Features: stats tabs (Season/This week/Last week/Projected); games-remaining badges; play-lock validation; `DragOverlay` for touch support. `app/team/[teamId]/roster/page.tsx` was rewritten to fetch all lineup data server-side (lock status, stats tabs, projections, games remaining) and render `LineupDnD` above `RosterManager`. The old `/team/[teamId]/lineup` route now redirects to `/team/[teamId]/roster`.
+
+New dependencies: `@dnd-kit/core`, `@dnd-kit/sortable`, `@dnd-kit/utilities`
+
+Files: `components/LineupDnD.tsx` (new), `app/team/[teamId]/roster/page.tsx` (rewritten), `app/team/[teamId]/lineup/page.tsx` (redirect stub)
+
+---
+
+## Sprint 19 · Part 5 — Commissioner God-Mode on My Roster
+
+Status: ✅ COMPLETE (commit b4986a6)
+
+Priority: P2
+
+Commissioners can now view and rearrange any team's roster from the roster page. When a commissioner uses the team selector to view another team, `LineupDnD` renders in `forceMove` mode — drag-and-drop calls `/api/leagues/[leagueId]/commissioner/force-move` instead of the regular lineup API, bypassing the ownership check while still enforcing slot eligibility and play-lock rules. An amber "Commissioner view" banner appears in `LineupDnD` when `forceMove=true`. `RosterManager` shows a "⚙ Commissioner View" chip alongside the existing "← My Team" back button to make the mode explicit.
+
+Files: `components/LineupDnD.tsx`, `app/team/[teamId]/roster/RosterManager.tsx`, `app/team/[teamId]/roster/page.tsx`
+
+---
+
 # Architectural Rules
 
 Design for the live season first. Replay is a testing tool, so:

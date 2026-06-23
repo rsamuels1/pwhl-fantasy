@@ -9,10 +9,10 @@
 - [Replay Simulator v2 Spec](project-replay-sim-v2.md) — Week-boundary pause + controls on league overview + matchup page; spec at docs/02-engineering/replay-simulator-v2-spec.md; P1, no schema changes
 - [Sprint 9 — PWHL GM Rebrand](project-sprint9-rebrand.md) — 8 stories, 43 pts; P1 min-ship=11 pts (~8h); REBRAND-001–008; trigger: Sprint 8 complete + commissioners have drafted
 - [Playoff System Audit](project-playoff-audit.md) — PLAYOFF-BUG-001 confirmed (bracket page ?? 6 not ?? 4); Q1 VP filter risk + Q2 bracket hydration risk; spec at docs/02-engineering/playoff-system-spec.md; must resolve before beta invites
-- [Beta Feedback Bugs](project-beta-feedback-bugs.md) — BF-001/BF-002 FIXED in Sprint 9 (DB rows stale OPEN — cosmetic only); new: BF-012 (FA phantom error), BF-013 (pre-season trade block), BF-014 (VTF confusion); next BF-NNN: BF-015
+- [Beta Feedback Bugs](project-beta-feedback-bugs.md) — BF-001/BF-002 FIXED Sprint 9; BF-012–017 all SHIPPED Sprint 18; next BF-NNN: BF-020; BF-018 in Sprint 19 (/league-rules 404)
 - [Sprint 12 — Onboarding & First-Run UX](project-sprint12-onboarding.md) — 9 stories OB-001–009 from Pass 5 critique; 4 P0 (CTA routing, VP in wizard, step telegraphing, cancel safety); next OB-NNN is OB-012; next UX-NNN is UX-051
 - [Sprint 13/14 Plan](project-sprint13-14-plan.md) — Sprint 13 ABSORBED Jun 22 (3/14 shipped, 11 carried to Sprint 18); Sprint 14 COMPLETE Jun 22 (11/12; UX-045 deferred post-launch)
 - [Sprint 15 — Visual Design System](project-sprint15-design-system.md) — 3/3 DS stories + BF-008/OB-001/OB-008 (Sprint 13 partial) all shipped Jun 22, 2026; Sprint 13 now 3/14
 - [Sprint 17 — Agent Test Run Fixes](project-sprint17-agent-test-fixes.md) — 9/9 items AG-001–AG-009 COMPLETE Jun 22; schema: FantasyLeague.isPublic; next story ID: AG-010
-- [Sprint 18 — Beta Operations + Onboarding Repair](project-sprint18-plan.md) — 20 stories (Tracks A/B/C/D); BLR-001 ✅ SHIPPED; BLR-002 spec written (copy approved, ready for eng); beta invites Jul 7, 2026; 8 P0 items remain; next IDs: OB-012, UX-051, AG-010, BF-015
-- [Sprint 19 — Playwright UX Walkthrough Fixes](project-sprint19-plan.md) — 7 items in Sprint 19 (BF-015, UX-051–057); 2 email-blocked (UX-053, BF-016); all layout/copy, no schema; next IDs: UX-058, BF-017
+- [Sprint 18 — Beta Operations + Onboarding Repair](project-sprint18-plan.md) — ✅ COMPLETE Jun 23, 2026; 24 items across 5 tracks; Track E ad-hoc: BF-015/016/017 + BLR-003; next BF-NNN: BF-018
+- [Sprint 19 — IA Restructure COMPLETE](project-sprint19-plan.md) — 5/5 parts shipped Jun 23: emoji policy, Trades→My Franchise, league overview commissioner-only, DnD lineup on roster, commissioner god-mode; Playwright UX items (BF-018, UX-051–057) deferred to backlog
