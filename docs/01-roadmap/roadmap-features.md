@@ -4951,7 +4951,7 @@ Priority: P1
 
 Effort: M
 
-Status: 🔵 PLANNED
+Status: ✅ SHIPPED
 
 Goal: After each week scores, the league automatically generates 5 awards celebrating the week's standout performances. Awards appear on the league overview and in each team's weekly recap. Makes every Tuesday feel like something happened.
 
@@ -4983,7 +4983,7 @@ Priority: P1
 
 Effort: S
 
-Status: 🔵 PLANNED
+Status: ✅ SHIPPED (data layer)
 
 Goal: A momentum card beneath the matchup hero shows live score delta vs 24 hours ago, players still to play, and whether the opponent has finished. Makes active matchups feel exciting even when you're behind.
 
@@ -5011,7 +5011,7 @@ Priority: P2
 
 Effort: S
 
-Status: 🔵 PLANNED
+Status: ✅ SHIPPED
 
 Goal: Small animated pill badges highlight exceptional player moments inline on the matchup and lineup pages. Turns raw stats into emotional signals.
 
@@ -5392,7 +5392,7 @@ Priority: P1
 
 Effort: S
 
-Status: 🔵 PLANNED
+Status: ✅ SHIPPED
 
 Goal: Every award, storyline, and stat chip surfaced by the Living League systems can be tapped to reveal a one-sentence, jargon-free explanation — so a new fan is never shown a label they can't decode.
 
@@ -5416,7 +5416,7 @@ Priority: P1
 
 Effort: S
 
-Status: 🔵 PLANNED
+Status: ✅ SHIPPED
 
 Goal: The "punishment" awards (Heartbreaker, Collapse of the Week, Frozen Stick) are reframed so a brand-new fan having a rough week feels encouraged to come back rather than publicly mocked in front of their friends.
 

@@ -446,13 +446,13 @@
           <span class="status complete">✅ DONE</span>
         </div>
 
-        <div class="sprint-card current" onclick="switchTab('sprints'); setTimeout(() => document.getElementById('sprint-21').scrollIntoView({behavior: 'smooth'}), 100)">
+        <div class="sprint-card complete" onclick="switchTab('sprints'); setTimeout(() => document.getElementById('sprint-21').scrollIntoView({behavior: 'smooth'}), 100)">
           <div class="name">Sprint 21</div>
-          <div class="progress">5 stories · Living League: Weekly Delight</div>
-          <span class="status planned">PLANNED</span>
+          <div class="progress">5/5 stories · Living League: Weekly Delight</div>
+          <span class="status complete">✅ DONE</span>
         </div>
 
-        <div class="sprint-card" onclick="switchTab('sprints'); setTimeout(() => document.getElementById('sprint-22').scrollIntoView({behavior: 'smooth'}), 100)">
+        <div class="sprint-card current" onclick="switchTab('sprints'); setTimeout(() => document.getElementById('sprint-22').scrollIntoView({behavior: 'smooth'}), 100)">
           <div class="name">Sprint 22</div>
           <div class="progress">23 stories · Inviting Dark Redesign</div>
           <span class="status planned">PLANNED</span>
@@ -1454,22 +1454,22 @@
         <div class="exit-criteria"><strong>Exit achieved:</strong> VTF navigation labels updated for clarity — "Results" replaces "Schedule" in the league nav, "My Season" in the team nav. Two targeted polish items shipped.</div>
       </div>
 
-      <div id="sprint-21" class="card current">
+      <div id="sprint-21" class="card">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
           <div>
             <div style="font-weight: 700; font-size: 1rem;">Sprint 21 · "Living League: Weekly Delight"</div>
-            <div style="font-size: 0.8rem; color: #888;">Milestone 1 · PLANNED · 5 stories · no schema changes · LL-002 data layer only (visual ships Sprint 22 RD-008)</div>
+            <div style="font-size: 0.8rem; color: #888;">Milestone 1 · COMPLETE · Jun 23, 2026 · 5/5 stories · no schema changes · 6 commits · LL-002 data layer shipped (visual ships Sprint 22 RD-008)</div>
           </div>
-          <span class="status planned">PLANNED</span>
+          <span class="status complete">✅ COMPLETE</span>
         </div>
         <div>
-          <div class="task-row"><span class="task-check" style="color:#f59e0b">⏳</span><span>LL-001 (P1, M) — Weekly Awards Ceremony: computeWeeklyAwards() in storyline-service.ts; 5 award types; emitted as LEAGUE_STORYLINE events from advanceSeason(); rendered as award cards in WeekHighlights.tsx</span></div>
-          <div class="task-row"><span class="task-check" style="color:#f59e0b">⏳</span><span>LL-002 (P1, S) — Momentum Strip data layer: scoreDeltaSinceYesterday + playersRemainingTonight + opponentFinished added to ActiveMatchup in getDashboardData; full visual component ships in Sprint 22 RD-008</span></div>
-          <div class="task-row"><span class="task-check" style="color:#f59e0b">⏳</span><span>LL-003 (P2, S) — Animated Stat Chips: StatChip.tsx pill badges with CSS pulse; 4 chip types (streak, projection swing, league record, weekly leader); computed server-side in getDashboardData; rendered in matchup page Z6 roster breakdown</span></div>
-          <div class="task-row"><span class="task-check" style="color:#f59e0b">⏳</span><span>LL-017 (P1, S) — Plain-Language Award & Storyline Explainers: tappable ⓘ affordance on every award/chip card; copy from lib/copy/living-league-glossary.ts; fan-first language; ≥44px touch target; links to VpExplainer</span></div>
-          <div class="task-row"><span class="task-check" style="color:#f59e0b">⏳</span><span>LL-018 (P1, S) — Negative Award Tone Calibration: recovery CTA on Heartbreaker/Collapse/Frozen Stick cards; commissioner showNegativeAwards toggle in admin panel</span></div>
+          <div class="task-row"><span class="task-check" style="color:#22c55e">✓</span><span style="color: #666">LL-001 (P1, M) — Weekly Awards Ceremony: computeWeeklyAwards() pure function + emitWeeklyAwards() IO layer in lib/services/storyline-service.ts; 5 awards (ice_cold_closer, heater, heartbreaker, collapse, frozen_stick); called fire-and-forget from advanceSeason() after emitWeeklyStorylines(); WeekHighlights.tsx renders award cards with icon, color-coded borders, recovery CTA links for negative awards ✅ SHIPPED</span></div>
+          <div class="task-row"><span class="task-check" style="color:#22c55e">✓</span><span style="color: #666">LL-002 (P1, S) — Momentum Strip data layer: scoreDeltaSinceYesterday + playersRemainingTonight + opponentFinished added to ActiveMatchup in lib/services/dashboard.ts; full visual MomentumStrip.tsx component deferred to Sprint 22 RD-008 ✅ SHIPPED (data layer)</span></div>
+          <div class="task-row"><span class="task-check" style="color:#22c55e">✓</span><span style="color: #666">LL-003 (P2, S) — Animated Stat Chips: StatChip type + chips: StatChip[] on PlayerMatchupRow; computeStatChips() in lib/services/dashboard.ts (weekly_leader, streak ≥3 games, projection_swing_up/down ±5 FP); StatChip.tsx with chipPulse CSS animation; renders inline in matchup page Z6 RosterTable ✅ SHIPPED</span></div>
+          <div class="task-row"><span class="task-check" style="color:#22c55e">✓</span><span style="color: #666">LL-017 (P1, S) — Plain-Language Award & Storyline Explainers: lib/copy/living-league-glossary.ts single source of truth for all award + chip copy; InfoTooltip.tsx client component — tappable ⓘ, 44px touch target, aria-accessible; every award card on league overview has a tappable ⓘ showing fan-first explainer ✅ SHIPPED</span></div>
+          <div class="task-row"><span class="task-check" style="color:#22c55e">✓</span><span style="color: #666">LL-018 (P1, S) — Negative Award Tone Calibration: recovery CTA links on heartbreaker/collapse/frozen_stick; showNegativeAwards commissioner toggle stored in scoringSettings JSON (no schema migration); NegativeAwardsToggle.tsx in admin panel; PATCH /api/leagues/[leagueId]/settings route ✅ SHIPPED</span></div>
         </div>
-        <div class="exit-criteria"><strong>Exit criteria:</strong> 5 award cards appear in WeekHighlights.tsx after advanceSeason() runs; negative awards include recovery CTA; ⓘ affordance reveals jargon-free helper text. ActiveMatchup type includes all 3 Momentum Strip fields. At least 1 stat chip type renders on the matchup page. All existing tests pass; tsc clean. No schema changes.</div>
+        <div class="exit-criteria"><strong>Exit:</strong> All 5 exit criteria met — 5 award cards render in WeekHighlights.tsx after advanceSeason(); negative awards include recovery CTA; ⓘ affordance reveals jargon-free helper text from lib/copy/living-league-glossary.ts; ActiveMatchup includes all 3 Momentum Strip fields; stat chips render in matchup page Z6; showNegativeAwards toggle in admin panel; all existing tests pass; tsc clean. No schema changes.</div>
       </div>
 
       <div id="sprint-22" class="card current">
