@@ -92,7 +92,8 @@ Set in Vercel → Project → Settings → Environment Variables. Scope each car
 
 | Variable | Production | Staging | Notes |
 |---|---|---|---|
-| `DATABASE_URL` | Neon **main** branch | Neon **preview** branch | **This is the isolation boundary.** If staging points at prod, you're testing against live user data. |
+| `DATABASE_URL` | Neon **main** branch (pooled URL) | Neon **preview** branch (pooled URL) | **This is the isolation boundary.** If staging points at prod, you're testing against live user data. |
+| `DIRECT_URL` | Neon **main** branch (direct URL — no `-pooler` in hostname) | Neon **preview** branch (direct URL) | Required for `prisma migrate deploy`. Pooled connections don't support the advisory lock Prisma needs during migrations. |
 | `AUTH_SECRET` | set | set | Can differ — sessions won't carry across envs (fine). |
 | `FOUNDER_EMAILS` | your email(s) | your email(s) | Gates `/founder`. Keep tight in prod — founder tools have sim/override controls over live leagues. |
 | `NEXT_PUBLIC_DRAFT_WS_URL` | Render prod URL | Render staging URL | |
