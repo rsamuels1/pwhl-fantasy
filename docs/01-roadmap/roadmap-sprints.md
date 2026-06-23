@@ -1245,19 +1245,19 @@ Produce a findings list; fix all P0 a11y blockers. P1/P2 findings go to the post
 | OB-002: Wizard Step 4 VP explanation | B | S | P0 | ✅ SHIPPED |
 | OB-003: Wizard team-creation warning | B | S | P0 | ✅ SHIPPED |
 | OB-004: Wizard cancel confirm dialog | B | M | P0 | ✅ SHIPPED |
-| BF-012: FA add phantom error | C | M | P1 | Ready |
-| BF-013: Pre-season trade block | C | S | P1 | Ready |
-| UX-046: Season series duplicate block | B | S | P1 | Ready |
-| UX-047: Trade partner-first step | B | M | P1 | Ready |
-| UX-048: Trade form hint above list | B | S | P1 | Ready |
-| OB-005: Remove public home QuickDraft form | B | S | P1 | Ready |
-| OB-006: Replay mode upfront description | B | S | P1 | Ready |
-| OB-007: Login "8 teams" copy fix | B | S | P1 | Ready |
-| OB-009: Wizard FP values in rules step | B | S | P1 | Ready |
+| BF-012: FA add phantom error | C | M | P1 | ✅ SHIPPED — error copy clarified to "Added to bench — slot them from your Lineup page if needed." |
+| BF-013: Pre-season trade block | C | S | P1 | ✅ SHIPPED — removed `league.status !== "IN_SEASON"` gate from trade-service.ts + trades/new page.tsx; only playoff status blocks |
+| UX-046: Season series duplicate block | B | S | P1 | ✅ SHIPPED — removed "Season Series" record block from RivalBadge.tsx (HeadToHeadHistory already shows it) |
+| UX-047: Trade partner-first step | B | M | P1 | ✅ SHIPPED — replaced select dropdown with pill-row team buttons in ProposeTrade.tsx |
+| UX-048: Trade form hint above list | B | S | P1 | ✅ SHIPPED — moved hint inside LeaguePlayerPicker, below section label, above search input |
+| OB-005: Remove public home QuickDraft form | B | S | P1 | ✅ CONFIRMED DONE — app/page.tsx has only a Link to /join-league, no inline form |
+| OB-006: Replay mode upfront description | B | S | P1 | ✅ CONFIRMED DONE — wizard Step 3 buttons embed desc text visible before any click |
+| OB-007: Login "8 teams" copy fix | B | S | P1 | ✅ CONFIRMED DONE — login page line 74 already reads "all 12 teams" |
+| OB-009: Wizard FP values in rules step | B | S | P1 | ✅ SHIPPED — always-visible scoring chip row in Step 4 (both live + replay paths); removed showScoring toggle |
 | OPS-001: Security review (internal OWASP) | D | M | P0 | ✅ GATE-1 PASS — zero P0 findings; 6 P1 findings post-beta; report: docs/04-operations/security-audit-sprint-18.md |
 | OPS-002: Load test (draft room, 30 leagues) | D | M | P0 | ✅ GATE-2 PASS — 20 leagues × 4 teams = 80 connections; all picks correct, no cross-league duplication; report: docs/04-operations/load-test-sprint-18.md |
 | OPS-003: Vercel ops verification | D | S | P0 | ✅ GATE-3 CONDITIONAL PASS — crons added; CRON_SECRET manual action pending before Jul 7; report: docs/04-operations/ops-verification-sprint-18.md |
-| OPS-004: Accessibility audit | D | M | P1 | Ready |
+| OPS-004: Accessibility audit | D | M | P1 | ✅ SHIPPED — P0 a11y blockers: focus-visible CSS globally; aria-label + keyboard handlers on draft pick buttons and lineup slot divs; aria-label on AddAndSlotModal bench button |
 | BF-014: VTF matchup page confusion | C | S | P2 | Spec needed |
 
 **Min-ship (P0 only, must land by Jul 7):** ~~BLR-001~~ ✅ SHIPPED · ~~BLR-002~~ ✅ SHIPPED · ~~BF-009~~ ✅ RESOLVED · ~~OB-002~~ ✅ SHIPPED · ~~OB-003~~ ✅ SHIPPED · ~~OB-004~~ ✅ SHIPPED · ~~OPS-001~~ ✅ GATE-1 PASS · ~~OPS-002~~ ✅ GATE-2 PASS · ~~OPS-003~~ ✅ GATE-3 CONDITIONAL PASS = **0 remaining P0 stories**

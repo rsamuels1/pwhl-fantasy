@@ -48,7 +48,6 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
   const [error, setError] = useState<string | null>(null);
   const [createdLeagueId, setCreatedLeagueId] = useState<string | null>(null);
   const [createdTeamId, setCreatedTeamId] = useState<string | null>(null);
-  const [showScoring, setShowScoring] = useState(false);
   const [isPublic, setIsPublic] = useState(false);
 
   // Mark onboarding seen on mount (idempotent)
@@ -477,47 +476,20 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
                 <RuleRow icon="👥" label="Roster" value="3 F · 2 D · 1 UTIL (any skater: F or D) · 1 G · 6 Bench = 13 slots, all drafted" />
 
                 {/* Simplified rules for replay, detailed for live */}
-                {isReplay ? (
-                  <>
-                    <RuleRow icon="📊" label="Standings" value={<>Victory Points (VP) — win your matchup AND score more than anyone else<VpExplainer /></>} />
-                    <RuleRow icon="🏒" label="Playoffs" value="Top 4 teams, single-elimination, no byes" />
-                    <RuleRow icon="📅" label="Season" value={`2025-26 replay season · ${maxTeams} teams`} />
-                  </>
-                ) : (
-                  <>
-                    <RuleRow icon="📊" label="Standings" value={<>Victory Points (VP) — win your matchup AND score more than anyone else<VpExplainer /></>} />
-                    <div>
-                      <p style={{ fontSize: "0.875rem", marginBottom: "0.5rem", color: "#94a3b8" }}>
-                        Goals and assists score the most — you don&apos;t need to memorize this.
-                      </p>
-                      <button
-                        type="button"
-                        onClick={() => setShowScoring((s) => !s)}
-                        style={{ fontSize: "0.8rem", color: "var(--accent, #6366f1)", background: "none", border: "none", cursor: "pointer", padding: 0, marginBottom: "0.5rem" }}
-                      >
-                        {showScoring ? "▴ Hide scoring details" : "▾ See full scoring breakdown"}
-                      </button>
-                      {showScoring && (
-                        <div style={{
-                          padding: "12px 14px", borderRadius: 12,
-                          background: "rgba(255,255,255,0.03)",
-                          border: "1px solid rgba(148,163,184,0.08)",
-                        }}>
-                          <div style={{ fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 8 }}>
-                            Scoring
-                          </div>
-                          <div style={{ fontSize: 13, color: "#e2e8f0", lineHeight: 1.6 }}>
-                            <strong>Skaters:</strong> Goal = 2 pts, Assist = 1.5 pts, Power Play = +0.5 pts, SOG = 0.5 pts, Hit = 0.25 pts, Block = 0.5 pts
-                            <br/>
-                            <strong>Goalies:</strong> Win = 5 pts, Shutout = 3 pts, Save = 0.25 pts, Goal Against = -1 pt
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                    <RuleRow icon="🏒" label="Playoffs" value="Top 4 teams, single-elimination, no byes" />
-                    <RuleRow icon="📅" label="Season" value={`2026-27 live PWHL season · ${maxTeams} teams`} />
-                  </>
-                )}
+                <RuleRow icon="📊" label="Standings" value={<>Victory Points (VP) — win your matchup AND score more than anyone else<VpExplainer /></>} />
+                <RuleRow icon="🏆" label="Scoring" value={
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 5, marginTop: 4 }}>
+                    {["Goal = 2 pts", "Assist = 1.5 pts", "PPP = +0.5 pts", "Win (G) = 5 pts", "Shutout (G) = 3 pts"].map(label => (
+                      <span key={label} style={{
+                        padding: "2px 8px", borderRadius: 5, fontSize: 11, fontWeight: 600,
+                        background: "rgba(255,255,255,0.04)", border: "1px solid rgba(148,163,184,0.12)",
+                        color: "#94a3b8",
+                      }}>{label}</span>
+                    ))}
+                  </div>
+                } />
+                <RuleRow icon="🏒" label="Playoffs" value="Top 4 teams, single-elimination, no byes" />
+                <RuleRow icon="📅" label="Season" value={isReplay ? `2025-26 replay season · ${maxTeams} teams` : `2026-27 live PWHL season · ${maxTeams} teams`} />
               </div>
 
               <div style={{

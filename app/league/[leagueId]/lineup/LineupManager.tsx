@@ -568,6 +568,15 @@ export default function LineupManager({
               return (
                 <div
                   key={`${slot}-${index}`}
+                  role={(player && !player.lockedAt) || isTarget ? "button" : undefined}
+                  tabIndex={(player && !player.lockedAt) || isTarget ? 0 : undefined}
+                  aria-label={
+                    isTarget && selected
+                      ? `Move ${selected.name} to ${slot.toLowerCase()} slot${player ? `, swapping with ${player.name}` : ""}`
+                      : player && !player.lockedAt
+                      ? `Select ${player.name}`
+                      : undefined
+                  }
                   onClick={() => {
                     if (isTarget && selected) {
                       moveTo(slot, player?.playerId);
@@ -575,6 +584,14 @@ export default function LineupManager({
                       selectPlayer(player.playerId);
                     } else if (isTarget) {
                       moveTo(slot);
+                    }
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      if (isTarget && selected) moveTo(slot, player?.playerId);
+                      else if (player && !player.lockedAt) selectPlayer(player.playerId);
+                      else if (isTarget) moveTo(slot);
                     }
                   }}
                   style={{
@@ -628,11 +645,25 @@ export default function LineupManager({
                 return (
                   <div
                     key={player.playerId}
+                    role="button"
+                    tabIndex={0}
+                    aria-label={
+                      isTarget && selected
+                        ? `Move ${selected.name} to bench, swapping with ${player.name}`
+                        : `Select ${player.name}`
+                    }
                     onClick={() => {
                       if (isTarget && selected) {
                         moveTo(player.slot, player.playerId);
                       } else {
                         selectPlayer(player.playerId);
+                      }
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        if (isTarget && selected) moveTo(player.slot, player.playerId);
+                        else selectPlayer(player.playerId);
                       }
                     }}
                     style={{
