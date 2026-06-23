@@ -12,7 +12,6 @@ import { getSeasonState } from "@/lib/season";
 import { Position } from "@prisma/client";
 import RosterManager from "./RosterManager";
 import LineupDnD from "@/components/LineupDnD";
-import TeamColorPicker from "@/components/TeamColorPicker";
 import type { LineupEntry, LineupStats } from "@/components/LineupDnD";
 import type { RosterPlayerRow, FreeAgentRow, SkaterStats, GoalieStats } from "./RosterManager";
 
@@ -532,15 +531,11 @@ export default async function TeamRosterPage({ params, searchParams }: Props) {
             projectedStats={isOwnRoster ? projectedStatsMap : undefined}
             nextWeekLabel={isOwnRoster ? nextWeekLabel : null}
             projectionsAvailable={isOwnRoster ? !!nextWeekLabel : false}
+            rosterSettings={isOwnRoster ? settings : undefined}
             forceMove={!isOwnRoster && isCommissioner}
             forceMoveTeamId={!isOwnRoster ? viewTeamId : undefined}
           />
         </div>
-      )}
-
-      {/* Team color — own team only */}
-      {isOwnRoster && (
-        <TeamColorPicker leagueId={leagueId} teamId={teamId} currentColor={team.accentColor ?? null} />
       )}
 
       {/* Roster management — roster table + FA + waiver wire */}

@@ -43,50 +43,45 @@ export default function TeamColorPicker({ leagueId, teamId, currentColor }: Prop
   }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-      <span style={{ fontSize: 12, color: "var(--dim)", fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase" }}>
-        Team color
-      </span>
-      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
-        {PALETTE.map(({ hex, label }) => (
-          <button
-            key={hex}
-            onClick={() => pick(hex)}
-            disabled={isPending}
-            aria-label={`Set team color to ${label}`}
-            title={label}
-            style={{
-              width: 28, height: 28, borderRadius: "50%",
-              background: hex, border: "none", cursor: "pointer",
-              outline: selected === hex ? `3px solid ${hex}` : "none",
-              outlineOffset: 2,
-              opacity: isPending ? 0.6 : 1,
-              minWidth: 44, minHeight: 44, padding: 0,
-              display: "flex", alignItems: "center", justifyContent: "center",
-            }}
-          >
-            <span style={{
-              width: 20, height: 20, borderRadius: "50%", background: hex,
-              boxShadow: selected === hex ? "0 0 0 2px white inset" : "none",
-              display: "block",
-            }} />
-          </button>
-        ))}
-        {selected && (
-          <button
-            onClick={() => pick(null)}
-            disabled={isPending}
-            title="Remove color"
-            style={{
-              fontSize: 11, color: "var(--faint)", background: "none", border: "1px solid var(--border)",
-              borderRadius: 6, cursor: "pointer", padding: "4px 8px", minWidth: 44, minHeight: 44,
-            }}
-          >
-            Clear
-          </button>
-        )}
-      </div>
-      {error && <p style={{ fontSize: 12, color: "#f87171", margin: 0 }}>{error}</p>}
+    <div style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" }}>
+      {PALETTE.map(({ hex, label }) => (
+        <button
+          key={hex}
+          onClick={() => pick(hex)}
+          disabled={isPending}
+          aria-label={`Set team color to ${label}`}
+          title={label}
+          style={{
+            width: 28, height: 28, borderRadius: "50%",
+            background: hex, border: "none", cursor: "pointer",
+            outline: selected === hex ? `3px solid ${hex}` : "none",
+            outlineOffset: 2,
+            opacity: isPending ? 0.6 : 1,
+            minWidth: 36, minHeight: 36, padding: 0,
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}
+        >
+          <span style={{
+            width: 20, height: 20, borderRadius: "50%", background: hex,
+            boxShadow: selected === hex ? "0 0 0 2px white inset" : "none",
+            display: "block",
+          }} />
+        </button>
+      ))}
+      {selected && (
+        <button
+          onClick={() => pick(null)}
+          disabled={isPending}
+          title="Remove color"
+          style={{
+            fontSize: 11, color: "var(--faint)", background: "none", border: "1px solid var(--border)",
+            borderRadius: 6, cursor: "pointer", padding: "4px 8px", minWidth: 36, minHeight: 36,
+          }}
+        >
+          Clear
+        </button>
+      )}
+      {error && <span style={{ fontSize: 12, color: "#f87171" }}>{error}</span>}
     </div>
   );
 }

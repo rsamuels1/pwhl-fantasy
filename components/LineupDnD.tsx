@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import MilestoneToast from "@/components/MilestoneToast";
+import { computeOptimalLineup, type RosterSettings, type RosterEntryWithProjection } from "@/lib/lineup";
 import {
   DndContext,
   DragOverlay,
@@ -58,6 +59,7 @@ interface Props {
   projectedStats: Record<string, { projectedFp: number; games: number } | null> | undefined;
   nextWeekLabel: string | null;
   projectionsAvailable?: boolean;
+  rosterSettings?: RosterSettings;
   /** When true, calls the commissioner force-move endpoint. forceMoveTeamId is the target team. */
   forceMove?: boolean;
   forceMoveTeamId?: string;
@@ -225,6 +227,7 @@ export default function LineupDnD({
   projectedStats,
   nextWeekLabel,
   projectionsAvailable = true,
+  rosterSettings,
   forceMove = false,
   forceMoveTeamId,
 }: Props) {
@@ -263,6 +266,92 @@ export default function LineupDnD({
 
   function findEntry(id: string) {
     return roster.find((e) => e.entryId === id) ?? null;
+  }
+
+  function autoSet() {
+    if (!rosterSettings || forceMove) return;
+    setError(null);
+    setSuccess(null);
+
+    const rosterForOptimizer: RosterEntryWithProjection[] = roster.map((p) => ({
+      playerId: p.playerId,
+      position: p.position,
+      active: p.eligibleSlots.some((s) => s !== "BENCH" && s !== "IR"),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      slot: p.slot as any,
+      lockedAt: p.lockedAt,
+      hasPlayedThisPeriod: p.hasPlayedThisPeriod,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      eligibleSlots: p.eligibleSlots as any[],
+      projectedFp: projectedStats?.[p.playerId]?.projectedFp ?? null,
+      gamesThisPeriod: p.gamesThisPeriod ?? 0,
+    }));
+
+    const optimalAssignment = computeOptimalLineup(rosterForOptimizer, rosterSettings);
+
+    let hasChanges = false;
+    for (const [playerId, targetSlot] of optimalAssignment) {
+      if (roster.find((p) => p.playerId === playerId)?.slot !== targetSlot) {
+        hasChanges = true;
+        break;
+      }
+    }
+    if (!hasChanges) {
+      setError("Your lineup is already optimal!");
+      return;
+    }
+
+    const originalRoster = roster;
+    const optimisticRoster = roster.map((p) => {
+      const targetSlot = optimalAssignment.get(p.playerId);
+      return targetSlot && targetSlot !== p.slot ? { ...p, slot: targetSlot } : p;
+    });
+    setRoster(optimisticRoster);
+
+    startTransition(async () => {
+      const rosterMap = new Map(optimisticRoster.map((p) => [p.playerId, p.slot]));
+      const savedMap = new Map(originalRoster.map((p) => [p.playerId, p.slot]));
+      const processed = new Set<string>();
+      const moves: Array<{ playerId: string; slot: string; swapWithPlayerId?: string }> = [];
+
+      for (const player of optimisticRoster) {
+        if (processed.has(player.playerId)) continue;
+        const prevSlot = savedMap.get(player.playerId);
+        if (prevSlot === player.slot) continue;
+
+        const swappedWith = optimisticRoster.find((p) =>
+          !processed.has(p.playerId) &&
+          p.playerId !== player.playerId &&
+          savedMap.get(p.playerId) === player.slot &&
+          rosterMap.get(p.playerId) === prevSlot
+        );
+
+        if (swappedWith) {
+          moves.push({ playerId: player.playerId, slot: player.slot, swapWithPlayerId: swappedWith.playerId });
+          processed.add(swappedWith.playerId);
+        } else {
+          moves.push({ playerId: player.playerId, slot: player.slot });
+        }
+        processed.add(player.playerId);
+      }
+
+      for (const move of moves) {
+        const res = await fetch(`/api/leagues/${leagueId}/lineup`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ teamId, ...move }),
+        });
+        if (!res.ok) {
+          const data = await res.json() as { error?: string };
+          setRoster(originalRoster);
+          setError(data.error ?? "Auto-set failed. Please try again.");
+          return;
+        }
+      }
+
+      setSuccess("Lineup optimized!");
+      router.refresh();
+    });
   }
 
   function handleDragStart({ active }: DragStartEvent) {
@@ -364,24 +453,44 @@ export default function LineupDnD({
         </div>
       )}
 
-      {/* Stats tab toggle */}
-      <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
-        {tabs.map((t) => (
+      {/* Stats tab toggle + auto-set */}
+      <div style={{ display: "flex", gap: 4, flexWrap: "wrap", alignItems: "center", justifyContent: "space-between" }}>
+        <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
+          {tabs.map((t) => (
+            <button
+              key={t.key}
+              onClick={() => !t.disabled && setStatsTab(t.key)}
+              disabled={t.disabled}
+              style={{
+                padding: "5px 12px", borderRadius: 8, border: "none", cursor: t.disabled ? "default" : "pointer",
+                fontSize: 12, fontWeight: 600,
+                background: statsTab === t.key ? "rgba(143,193,232,0.2)" : "var(--surface)",
+                color: statsTab === t.key ? "var(--accent-strong)" : t.disabled ? "var(--faint)" : "var(--faint)",
+                transition: "background 0.12s",
+              }}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+        {!forceMove && rosterSettings && (
           <button
-            key={t.key}
-            onClick={() => !t.disabled && setStatsTab(t.key)}
-            disabled={t.disabled}
+            onClick={autoSet}
+            disabled={isPending}
+            title="Automatically set the best lineup based on projections or games remaining"
             style={{
-              padding: "5px 12px", borderRadius: 8, border: "none", cursor: t.disabled ? "default" : "pointer",
-              fontSize: 12, fontWeight: 600,
-              background: statsTab === t.key ? "rgba(143,193,232,0.2)" : "var(--surface)",
-              color: statsTab === t.key ? "var(--accent-strong)" : t.disabled ? "var(--faint)" : "var(--faint)",
+              padding: "5px 14px", borderRadius: 8, fontSize: 12, fontWeight: 700,
+              background: isPending ? "var(--surface)" : "rgba(143,193,232,0.15)",
+              border: "1px solid rgba(143,193,232,0.3)",
+              color: isPending ? "var(--faint)" : "var(--accent-strong)",
+              cursor: isPending ? "default" : "pointer",
               transition: "background 0.12s",
+              minHeight: 32,
             }}
           >
-            {t.label}
+            {isPending ? "Saving…" : "Auto-set"}
           </button>
-        ))}
+        )}
       </div>
 
       {/* Feedback */}

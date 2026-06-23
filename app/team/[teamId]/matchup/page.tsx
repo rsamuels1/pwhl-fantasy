@@ -17,6 +17,7 @@ import { ScoreDisplay } from "@/components/ScoreDisplay";
 import StatChip from "@/components/StatChip";
 import ClinchBanner from "@/components/ClinchBanner";
 import FirstResultCard from "@/components/FirstResultCard";
+import TeamColorPicker from "@/components/TeamColorPicker";
 
 export default async function TeamMatchupPage({
   params,
@@ -391,6 +392,12 @@ export default async function TeamMatchupPage({
           </Link>
         </Card>
       )}
+
+      {/* ── Team color — shown once the DuelHero is visible so the effect is immediately obvious ── */}
+      <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", background: "var(--surface)", borderRadius: 12, border: "1px solid var(--border)" }}>
+        <span style={{ fontSize: 12, color: "var(--dim)", fontWeight: 600, flexShrink: 0 }}>Your team color</span>
+        <TeamColorPicker leagueId={leagueId} teamId={teamId} currentColor={allTeams.find((t) => t.id === teamId)?.accentColor ?? null} />
+      </div>
 
       {/* ── Z3. Live situation grid: Playing Tonight + Swing (left) | Roster Status (right) ── */}
       {activeMatchup?.status === "active" && (
@@ -909,7 +916,7 @@ function FieldHero({ matchup, teamId, leagueId }: { matchup: ActiveMatchup; team
       <div style={{ position: "relative", padding: "28px 30px 22px" }}>
         {/* Identity header: avatar + team name + YOU badge */}
         <div style={{ display: "flex", alignItems: "center", gap: 13, marginBottom: 22 }}>
-          <span style={{ width: 52, height: 52, borderRadius: 14, background: "linear-gradient(135deg, var(--accent-deep), #4c1d95)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, fontWeight: 800, color: "var(--accent-ink)", boxShadow: "0 8px 20px -8px rgba(143,193,232,0.5)", flexShrink: 0 }}>
+          <span style={{ width: 52, height: 52, borderRadius: 14, background: "linear-gradient(135deg, var(--accent-deep), var(--accent))", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, fontWeight: 800, color: "var(--accent-ink)", boxShadow: "0 8px 20px -8px rgba(143,193,232,0.5)", flexShrink: 0 }}>
             {matchup.myTeam.name.charAt(0).toUpperCase()}
           </span>
           <div>
@@ -1093,7 +1100,7 @@ function DuelHero({
         <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 14 }}>
           {/* Avatar + team name */}
           <div style={{ display: "flex", alignItems: "center", gap: 13 }}>
-            <span style={{ width: 52, height: 52, borderRadius: 14, background: "linear-gradient(135deg, var(--accent-deep), #4c1d95)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, fontWeight: 800, color: "var(--accent-ink)", boxShadow: myAccentColor ? `0 0 0 2px ${myAccentColor}, 0 8px 20px -8px rgba(143,193,232,0.5)` : "0 8px 20px -8px rgba(143,193,232,0.5)", flexShrink: 0 }}>
+            <span style={{ width: 52, height: 52, borderRadius: 14, background: "linear-gradient(135deg, var(--accent-deep), var(--accent))", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, fontWeight: 800, color: "var(--accent-ink)", boxShadow: myAccentColor ? `0 0 0 2px ${myAccentColor}, 0 8px 20px -8px rgba(143,193,232,0.5)` : "0 8px 20px -8px rgba(143,193,232,0.5)", flexShrink: 0 }}>
               {matchup.myTeam.name.charAt(0).toUpperCase()}
             </span>
             <div>
