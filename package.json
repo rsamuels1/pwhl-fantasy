@@ -24,6 +24,9 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@dnd-kit/core": "^6.3.1",
+    "@dnd-kit/sortable": "^10.0.0",
+    "@dnd-kit/utilities": "^3.2.2",
     "@prisma/client": "^5.0.0",
     "bcryptjs": "^3.0.3",
     "code": "^5.2.4",
