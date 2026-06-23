@@ -94,6 +94,13 @@ export interface ActiveMatchup {
   opponentProjected: number;
   winProbability: number;
   rivalry: RivalryRecord;
+  // ── Momentum Strip fields (LL-002) ─────────────────────────────────────────
+  // How many FP my team gained in the last 24 hours. null when period < 24h old or setup phase.
+  scoreDeltaSinceYesterday: number | null;
+  // Count of my active starters who still have games left but haven't played yet today.
+  playersRemainingTonight: number;
+  // VP mode only: true when the opponent's active starters have no remaining games this period.
+  opponentFinished: boolean;
 }
 
 export interface LineupAlert {
@@ -286,6 +293,9 @@ export async function getDashboardData(
         opponentProjected: 0,
         winProbability: 0,
         rivalry: { wins: 0, losses: 0, ties: 0 },
+        scoreDeltaSinceYesterday: null,
+        playersRemainingTonight: 0,
+        opponentFinished: false,
       },
     };
   }
@@ -488,6 +498,27 @@ export async function getDashboardData(
 
   const isSetupPhase = myDetailed.players.length > 0 && myDetailed.players.every((p) => p.gameCount === 0);
 
+  // ── Momentum Strip fields (LL-002) ────────────────────────────────────────
+  const periodAgeMs = nowMs - displayPeriod.startsAt.getTime();
+  let scoreDeltaSinceYesterday: number | null = null;
+  if (!isSetupPhase && periodAgeMs >= 86_400_000) {
+    const yesterdayDetailed = await computeTeamScoreDetailed(
+      myTeamId, displayPeriod, scoringSettings, prisma, nowMs - 86_400_000
+    );
+    scoreDeltaSinceYesterday = Math.round((myScore - yesterdayDetailed.total) * 10) / 10;
+  }
+  // Players remaining tonight: active starters with games left but none played yet today
+  const playersRemainingTonight = myPlayers.filter(
+    (p) => !isSetupPhase && (p.gamesThisPeriod ?? 0) > 0 && p.gameCount === 0
+  ).length;
+  // Opponent finished: VP mode only — all opponent starters have no remaining games
+  const opponentFinished =
+    isVpMode && opponentPlayers.length > 0
+      ? opponentPlayers
+          .filter((p) => p.slot !== "BENCH" && p.slot !== "IR")
+          .every((p) => (p.gamesThisPeriod ?? 0) === 0)
+      : false;
+
   return {
     activeMatchup: {
       week: displayPeriod.week,
@@ -507,6 +538,9 @@ export async function getDashboardData(
       opponentProjected: oppProj,
       winProbability: winProb,
       rivalry: { wins: 0, losses: 0, ties: 0 },
+      scoreDeltaSinceYesterday,
+      playersRemainingTonight,
+      opponentFinished,
     },
     remainingPlayers,
     topPerformers,
@@ -829,6 +863,20 @@ async function getPlayoffDashboardData(
 
   const playoffIsSetupPhase = status === "active" && myDetailed.players.length > 0 && myDetailed.players.every((p) => p.gameCount === 0);
 
+  // Momentum Strip for playoffs
+  const playoffPeriodAgeMs = nowMs - period.startsAt.getTime();
+  let playoffScoreDelta: number | null = null;
+  if (!playoffIsSetupPhase && playoffPeriodAgeMs >= 86_400_000) {
+    const yestDetailed = await computeTeamScoreDetailed(myTeamId, period, scoringSettings, prisma, nowMs - 86_400_000);
+    playoffScoreDelta = Math.round((myScore - yestDetailed.total) * 10) / 10;
+  }
+  const playoffPlayersRemaining = opponentPlayers
+    .filter((p) => p.slot !== "BENCH" && p.slot !== "IR")
+    .filter((p) => !playoffIsSetupPhase && (p.gamesThisPeriod ?? 0) > 0 && p.gameCount === 0).length;
+  const playoffOpponentFinished = opponentPlayers
+    .filter((p) => p.slot !== "BENCH" && p.slot !== "IR")
+    .every((p) => (p.gamesThisPeriod ?? 0) === 0);
+
   return {
     activeMatchup: {
       week: myMatchup.week,
@@ -848,6 +896,9 @@ async function getPlayoffDashboardData(
       opponentProjected,
       winProbability: winProb,
       rivalry: { wins: h2hWins, losses: h2hLosses, ties: h2hTies },
+      scoreDeltaSinceYesterday: playoffScoreDelta,
+      playersRemainingTonight: playoffPlayersRemaining,
+      opponentFinished: playoffOpponentFinished,
     },
     remainingPlayers,
     topPerformers,
