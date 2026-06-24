@@ -50,8 +50,8 @@ export default async function TeamTradesPage({ params, searchParams }: Props) {
 
   const isCommissioner = user.id === league.commissionerId;
   const canPropose =
-    (league.status === "IN_SEASON" || league.draft?.status === "COMPLETE") &&
-    league.playoffStatus === "NOT_STARTED";
+    league.playoffStatus === "NOT_STARTED" &&
+    league.status !== "COMPLETE";
 
   const incomingTrades = myTrades.filter(
     (t) => t.receivingTeamId === teamId && (t.status === "PROPOSED" || t.status === "ACCEPTED")

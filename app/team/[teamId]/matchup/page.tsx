@@ -22,6 +22,8 @@ import OpeningDayCard from "@/components/OpeningDayCard";
 import ChampionshipBanner from "@/components/ChampionshipBanner";
 import { computeFranchiseIdentity } from "@/lib/services/franchise-identity";
 import { Position } from "@prisma/client";
+import MorningSkatePreview from "@/components/MorningSkatePreview";
+import type { EditionData } from "@/lib/services/morning-skate-service";
 
 export default async function TeamMatchupPage({
   params,
@@ -231,8 +233,23 @@ export default async function TeamMatchupPage({
     championRecord = `${wins}–${losses}`;
   }
 
+  // ── S28-002: Morning Skate edition preview ───────────────────────────────────
+  const latestEditionRaw = await prisma.morningSkateEdition.findFirst({
+    where: { leagueId },
+    orderBy: { createdAt: "desc" },
+    select: { id: true, leagueId: true, data: true },
+  });
+  const latestEdition = latestEditionRaw
+    ? { ...latestEditionRaw, data: latestEditionRaw.data as unknown as EditionData }
+    : null;
+
   return (
     <div style={{ display: "grid", gap: 16 }}>
+
+      {/* ── Z0 (setup phase only): Morning Skate above the fold when there's no score yet ── */}
+      {latestEdition && activeMatchup?.isSetupPhase && (
+        <MorningSkatePreview edition={latestEdition} />
+      )}
 
       {/* ── LL-015: Championship Banner — full-screen overlay for the champion ── */}
       {isChampion && championInfo && (
@@ -537,6 +554,11 @@ export default async function TeamMatchupPage({
             View schedule →
           </Link>
         </Card>
+      )}
+
+      {/* ── Z2.5. Morning Skate preview (setup phase: above hero; otherwise: below hero) ── */}
+      {latestEdition && !(activeMatchup?.isSetupPhase) && (
+        <MorningSkatePreview edition={latestEdition} />
       )}
 
       {/* ── Z2b. Last week recap (shown above live grid when not actively scoring) ── */}

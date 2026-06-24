@@ -148,6 +148,7 @@ model FantasyLeague {
   waiverPriority          WaiverPriority[]
   trades                  Trade[]
   trophies                Trophy[]
+  morningSkateEditions    MorningSkateEdition[]
 
   @@index([status])
 }
@@ -534,6 +535,17 @@ model TradeItem {
   trade      Trade  @relation(fields: [tradeId], references: [id])
 
   @@index([tradeId])
+}
+
+model MorningSkateEdition {
+  id        String        @id @default(cuid())
+  leagueId  String
+  periodId  String
+  data      Json
+  createdAt DateTime      @default(now())
+  league    FantasyLeague @relation(fields: [leagueId], references: [id])
+
+  @@unique([leagueId, periodId])
 }
 
 model BetaSignup {

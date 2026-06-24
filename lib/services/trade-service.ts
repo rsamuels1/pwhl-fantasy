@@ -111,7 +111,7 @@ export async function proposeTrade(
     select: { status: true, playoffStatus: true, rosterSettings: true, tradeReviewHours: true, requireCommissionerTradeApproval: true },
   });
   if (!league) throw new TradeValidationError("League not found.");
-  if (league.playoffStatus === "IN_PROGRESS" || league.playoffStatus === "COMPLETE") {
+  if (league.playoffStatus !== "NOT_STARTED" || league.status === "COMPLETE") {
     throw new TradeValidationError("The trade deadline has passed — no trades after playoffs begin.");
   }
 
