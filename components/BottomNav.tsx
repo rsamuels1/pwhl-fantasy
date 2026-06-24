@@ -71,13 +71,12 @@ export default function BottomNav({ teamId, leagueId }: Props) {
   const pathname = usePathname();
 
   return (
-    <nav style={{
+    <nav className="bottom-nav" style={{
       position: "fixed",
       bottom: 0,
       left: 0,
       right: 0,
       zIndex: 100,
-      display: "flex",
       justifyContent: "space-around",
       alignItems: "center",
       padding: `9px 6px env(safe-area-inset-bottom, 20px)`,

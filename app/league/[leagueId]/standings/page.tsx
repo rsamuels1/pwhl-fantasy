@@ -218,7 +218,7 @@ export default async function StandingsPage({ params }: { params: { leagueId: st
                     style={{
                       background: isMe ? "var(--accent-dim)" : "transparent",
                       borderBottom: !playoffsStarted && playoffCutoff !== null && index === playoffCutoff - 1
-                        ? "2px dashed var(--accent-border)"
+                        ? "2px dashed rgba(143,193,232,0.55)"
                         : "1px solid var(--border)",
                       borderLeft: isMe ? "3px solid var(--accent)" : undefined,
                     }}
@@ -260,8 +260,8 @@ export default async function StandingsPage({ params }: { params: { leagueId: st
         )}
 
         {!hasResults ? null : !playoffsStarted && playoffCutoff !== null && (
-          <p style={{ fontSize: 12, color: "var(--faint)", marginTop: 14, marginBottom: 0 }}>
-            Dashed line separates the top {playoffCutoff} (playoff qualifiers) from the rest
+          <p style={{ fontSize: 12, color: "var(--dim)", marginTop: 14, marginBottom: 0 }}>
+            Dashed line separates the top {playoffCutoff} playoff spots from the rest
           </p>
         )}
       </section>

@@ -92,9 +92,10 @@ export default function AddAndSlotModal({
     });
 
     if (!res.ok) {
-      const data = await res.json() as { error?: string };
-      setError(data.error ?? "Added to bench — slot them from your Lineup page if needed.");
-      setSlotting(false);
+      // Player was added successfully (on bench) — the slot move failed.
+      // Treat this as a partial success: close the modal and let the caller
+      // show a benign "added to bench" message rather than a blocking error.
+      onComplete();
       return;
     }
     onComplete();

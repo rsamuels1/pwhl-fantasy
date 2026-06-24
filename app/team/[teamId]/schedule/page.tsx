@@ -129,7 +129,7 @@ export default async function SchedulePage({ params }: Props) {
       <div>
         <h1 style={{ fontSize: 22, margin: "0 0 4px" }}>My Season</h1>
         <p style={{ margin: "0 0 16px", fontSize: 13, color: "var(--faint)" }}>
-          Week-by-week fantasy points, record, and ranking vs the field
+          Week-by-week fantasy points and ranking vs the field. W-L-T = how many teams you outscored, underscored, or tied that week — not a single opponent.
         </p>
 
         {/* Season summary header */}
@@ -193,7 +193,7 @@ export default async function SchedulePage({ params }: Props) {
               <span>Week</span>
               <span>Dates</span>
               <span style={{ textAlign: "right" }}>FP</span>
-              <span style={{ textAlign: "center" }}>W-L-T</span>
+              <span style={{ textAlign: "center" }} title="Wins-Losses-Ties vs the field (all teams)">vs Field</span>
               <span style={{ textAlign: "right" }}>Rank</span>
             </div>
 

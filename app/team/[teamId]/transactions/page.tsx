@@ -43,6 +43,7 @@ export default async function TeamTransactionsPage({ params, searchParams }: Pro
   return (
     <TransactionFeed
       leagueId={leagueId}
+      basePath={`/team/${teamId}/transactions`}
       initialEvents={initialData.events}
       initialHasMore={initialData.hasMore}
       teams={teams}

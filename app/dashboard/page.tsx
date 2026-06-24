@@ -153,6 +153,19 @@ export default async function DashboardPage() {
   ];
   const hasTeams = teams.length > 0;
 
+  // Pending trade review counts for commissioner-led leagues
+  const commissionerLeagueIds = teams
+    .filter(t => t.league.commissionerId === user.id)
+    .map(t => t.leagueId);
+  const pendingTradeGroups = commissionerLeagueIds.length > 0
+    ? await prisma.trade.groupBy({
+        by: ["leagueId"],
+        where: { leagueId: { in: commissionerLeagueIds }, status: "PENDING_REVIEW" },
+        _count: { id: true },
+      })
+    : [];
+  const pendingTradesByLeague = new Map(pendingTradeGroups.map(g => [g.leagueId, g._count.id]));
+
   const teamNowMs = (team: (typeof teams)[number]) =>
     getReplayNow({ isReplay: team.league.isReplay, replayCurrentDate: team.league.replayCurrentDate }, devNow);
 
@@ -245,6 +258,18 @@ export default async function DashboardPage() {
           label: `Week ${summary.week} starts soon — prep your lineup`,
           href: `/team/${team.id}/lineup`,
           teamName: team.name,
+        });
+      }
+    }
+
+    // Pending trade reviews — commissioner only
+    if (league.commissionerId === user.id) {
+      const pending = pendingTradesByLeague.get(team.leagueId) ?? 0;
+      if (pending > 0) {
+        actions.push({
+          label: `${pending} trade ${pending === 1 ? "proposal" : "proposals"} waiting for your review`,
+          href: `/league/${team.leagueId}/admin`,
+          teamName: league.name,
         });
       }
     }

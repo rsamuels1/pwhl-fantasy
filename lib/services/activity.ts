@@ -129,6 +129,24 @@ export async function getTransactions(
   const teamMap = new Map(teams.map((t) => [t.id, t.name]));
   const playerMap = new Map(players.map((p) => [p.id, `${p.firstName} ${p.lastName}`]));
 
+  // Human-readable fallback labels for event types that may not carry a description field.
+  const TYPE_FALLBACK: Record<string, string> = {
+    DRAFT_PICK:                 "Draft pick",
+    PLAYER_ADD:                 "Free agent added",
+    PLAYER_DROP:                "Player dropped",
+    TRADE:                      "Trade executed",
+    PLAYOFF_QUALIFICATION:      "Playoff qualification",
+    PLAYOFF_CLINCH:             "Playoff spot clinched",
+    PLAYOFF_ELIMINATION:        "Eliminated from playoffs",
+    CHAMPIONSHIP_WON:           "League championship won",
+    MAJOR_PERFORMANCE:          "Standout performance",
+    LEAGUE_STORYLINE:           "League storyline",
+    WAIVER_CLAIM_SUBMITTED:     "Waiver claim submitted",
+    WAIVER_CLAIM_AWARDED:       "Waiver claim awarded",
+    WAIVER_CLAIM_DENIED:        "Waiver claim denied",
+    WAIVER_CLAIM_CANCELLED:     "Waiver claim cancelled",
+  };
+
   return {
     events: events.map((e) => ({
       id: e.id,
@@ -137,7 +155,9 @@ export async function getTransactions(
       teamName: e.teamId ? (teamMap.get(e.teamId) ?? null) : null,
       playerId: e.playerId,
       playerName: e.playerId ? (playerMap.get(e.playerId) ?? null) : null,
-      description: ((e.data as Record<string, string>)?.description as string) ?? e.type,
+      description: ((e.data as Record<string, string>)?.description as string)
+        ?? TYPE_FALLBACK[e.type]
+        ?? e.type,
       createdAt: e.createdAt.toISOString(),
     })),
     hasMore,

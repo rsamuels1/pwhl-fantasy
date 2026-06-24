@@ -18,17 +18,20 @@ interface Props {
 }
 
 const TYPE_META: Record<string, { label: string; color: string; bg: string }> = {
-  DRAFT_PICK:               { label: "🏒 Draft",   color: "var(--accent-strong)", bg: "rgba(143,193,232,0.14)" },
-  PLAYER_ADD:               { label: "➕ Add",      color: "var(--green)", bg: "rgba(81,216,138,0.12)" },
-  PLAYER_DROP:              { label: "➖ Drop",     color: "var(--red)",   bg: "rgba(246,131,127,0.12)" },
-  TRADE:                    { label: "🔄 Trade",   color: "var(--accent-strong)", bg: "rgba(143,193,232,0.10)" },
-  PLAYOFF_QUALIFICATION:    { label: "🏆 Playoff", color: "var(--gold)",  bg: "rgba(245,201,123,0.12)" },
-  MAJOR_PERFORMANCE:        { label: "⚡ Perf",    color: "var(--gold)",  bg: "rgba(245,201,123,0.10)" },
-  LEAGUE_STORYLINE:         { label: "Story",       color: "var(--muted)", bg: "var(--border)" },
-  WAIVER_CLAIM_SUBMITTED:   { label: "📋 Waiver",  color: "var(--muted)", bg: "var(--border)" },
-  WAIVER_CLAIM_AWARDED:     { label: "➕ Add",      color: "var(--green)", bg: "rgba(81,216,138,0.12)" },
-  WAIVER_CLAIM_DENIED:      { label: "➖ Denied",   color: "var(--red)",   bg: "rgba(246,131,127,0.10)" },
-  WAIVER_CLAIM_CANCELLED:   { label: "Cancel",      color: "var(--faint)", bg: "rgba(100,116,139,0.10)" },
+  DRAFT_PICK:               { label: "Draft",       color: "var(--accent-strong)", bg: "rgba(143,193,232,0.14)" },
+  PLAYER_ADD:               { label: "Add",         color: "var(--green)", bg: "rgba(81,216,138,0.12)" },
+  PLAYER_DROP:              { label: "Drop",        color: "var(--red)",   bg: "rgba(246,131,127,0.12)" },
+  TRADE:                    { label: "Trade",       color: "var(--accent-strong)", bg: "rgba(143,193,232,0.10)" },
+  PLAYOFF_QUALIFICATION:    { label: "Playoff",     color: "var(--gold)",  bg: "rgba(245,201,123,0.12)" },
+  PLAYOFF_CLINCH:           { label: "Clinched",    color: "var(--gold)",  bg: "rgba(245,201,123,0.14)" },
+  PLAYOFF_ELIMINATION:      { label: "Eliminated",  color: "var(--red)",   bg: "rgba(246,131,127,0.08)" },
+  CHAMPIONSHIP_WON:         { label: "Champion",    color: "var(--gold)",  bg: "rgba(245,201,123,0.18)" },
+  MAJOR_PERFORMANCE:        { label: "Perf",        color: "var(--gold)",  bg: "rgba(245,201,123,0.10)" },
+  LEAGUE_STORYLINE:         { label: "Storyline",   color: "var(--muted)", bg: "var(--border)" },
+  WAIVER_CLAIM_SUBMITTED:   { label: "Waiver",      color: "var(--muted)", bg: "var(--border)" },
+  WAIVER_CLAIM_AWARDED:     { label: "Add",         color: "var(--green)", bg: "rgba(81,216,138,0.12)" },
+  WAIVER_CLAIM_DENIED:      { label: "Denied",      color: "var(--red)",   bg: "rgba(246,131,127,0.10)" },
+  WAIVER_CLAIM_CANCELLED:   { label: "Cancelled",   color: "var(--faint)", bg: "rgba(100,116,139,0.10)" },
 };
 
 const TYPE_GROUPS: { label: string; types: string | null }[] = [
@@ -38,7 +41,7 @@ const TYPE_GROUPS: { label: string; types: string | null }[] = [
   { label: "Draft", types: "DRAFT_PICK" },
   { label: "Trades", types: "TRADE" },
   { label: "Commissioner", types: "COMMISSIONER_FORCE_MOVE,COMMISSIONER_UNDO_TRANSACTION,COMMISSIONER_REPLACE_MANAGER,COMMISSIONER_DRAFT_PAUSED,COMMISSIONER_DRAFT_RESUMED,COMMISSIONER_ANNOUNCEMENT,COMMISSIONER_SETTINGS_CHANGED" },
-  { label: "Playoffs", types: "PLAYOFF_QUALIFICATION" },
+  { label: "Playoffs", types: "PLAYOFF_QUALIFICATION,PLAYOFF_CLINCH,PLAYOFF_ELIMINATION,CHAMPIONSHIP_WON" },
 ];
 
 function timeAgo(iso: string, nowMs: number): string {
