@@ -73,6 +73,18 @@ describe("canTransitionTo", () => {
     expect(canTransitionTo("PROPOSED", "ACCEPTED", "proposer")).toBe(false);
   });
 
+  it("proposer can move PROPOSED to PENDING_REVIEW (auto-transition for requireCommissionerTradeApproval)", () => {
+    expect(canTransitionTo("PROPOSED", "PENDING_REVIEW", "proposer")).toBe(true);
+  });
+
+  it("commissioner can move PROPOSED to PENDING_REVIEW", () => {
+    expect(canTransitionTo("PROPOSED", "PENDING_REVIEW", "commissioner")).toBe(true);
+  });
+
+  it("receiver cannot move PROPOSED to PENDING_REVIEW", () => {
+    expect(canTransitionTo("PROPOSED", "PENDING_REVIEW", "receiver")).toBe(false);
+  });
+
   it("commissioner can execute ACCEPTED", () => {
     expect(canTransitionTo("ACCEPTED", "EXECUTED", "commissioner")).toBe(true);
   });

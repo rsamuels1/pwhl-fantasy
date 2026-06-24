@@ -299,6 +299,13 @@ survives DB resets and schema migrations.
      - **LL-022 Phase 2** ✅ — "How it works →" anchor link added to standings page legend in `app/league/[leagueId]/standings/page.tsx`
      - **VTF subtitle update** ✅ — league overview VTF subtitle updated to "Everyone races the same week — your rank is your result"
      - **LL-016 (partial)** ✅ — Inline weekly top-scorer teaser after race table in commissioner overview; trophy leaderboard sidebar widget via `prisma.trophy.groupBy`; "Full record book →" link
+   - **Beta Sweep & Transactions Fix — Sprint 29** ✅ (6 items shipped; Jun 24, 2026):
+     - **S29-001: Rival improvements** ✅ — commit a90a50c; `getRival()` rewritten to pick closest-contested opponent by avg points-apart (≥2 scored weeks), tie-broken by most balanced W/L record; `RivalBadge` now shows "points apart" narrative copy + "Dead even." callout; rival chip + card moved to `/team/[teamId]/standings`; removed from matchup page Z4
+     - **BF-NEW: Transactions legacy guard cleanup** ✅ — removed `(prisma as any).leagueEvent` guard in `app/api/leagues/[leagueId]/waiver/route.ts` milestone-count query; replaced with direct `prisma.leagueEvent.count()` call; no silent failures in first-add milestone detection
+     - **TR-002: Silent trade expiry notification** ✅ — `processExpiredTrades()` in `lib/services/trade-service.ts` now passes `dedupeKey: \`trade-expired-${tradeId}\`` to `createNotification()`; idempotent delivery for expired trade notifications
+     - **TR-003: Trade PROPOSED→PENDING_REVIEW state machine** ✅ — added `PROPOSED → PENDING_REVIEW` transition for `"proposer"` and `"commissioner"` roles in `lib/trades/engine.ts`; `proposeTrade()` in `lib/services/trade-service.ts` always creates trade as `PROPOSED` first then auto-flips to `PENDING_REVIEW` in the same `$transaction` when `requireCommissionerTradeApproval = true`; 3 new tests in `tests/trade.test.ts`
+     - **OB-001: Start Your Franchise → /register** ✅ — verified `app/page.tsx` hero CTA and CTA Band already link to `/register`; no code change required
+     - **BF-021: DnD lineup mobile tap-to-swap** ✅ — `components/LineupDnD.tsx` adds tap-to-swap mode on mobile (≤640px): tap to select (purple ring), valid targets highlight, tap to swap via existing lineup API; cancel hint shown while selection is active; mobile hint text updated to "Tap a player to select, then tap another to swap positions"; DnD preserved on desktop
 7. Public launch ~early Nov, drafts ~1 week before opener
 
 ## Draft room UI (`app/draft/[leagueId]/`)

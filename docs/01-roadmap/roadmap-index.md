@@ -1,6 +1,6 @@
 # PWHL GM Product Roadmap — Index
 
-Last Updated: June 24, 2026 (Sprint 27 COMPLETE — Polish & The Arena Concourse 11/11; Sprint 25 COMPLETE — Living League: Legacy 6/6; Sprint 26 COMPLETE — Beta Defect Sweep BF-024/027 shipped)
+Last Updated: June 24, 2026 (Sprint 29 COMPLETE — Beta Sweep & Transactions Fix 6/6; Sprint 27 COMPLETE — Polish & The Arena Concourse 11/11; Sprint 25 COMPLETE — Living League: Legacy 6/6)
 
 ---
 

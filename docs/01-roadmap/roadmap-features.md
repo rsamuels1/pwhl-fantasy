@@ -418,7 +418,7 @@ Acceptance Criteria:
 
 ## OB-001. "Start Your Franchise" CTA Routes to /login Instead of /register
 
-Sprint: 13
+Sprint: 29 | Status: ✅ DONE (verified — `app/page.tsx` CTAs already link to `/register`; no code change required)
 
 Priority: P0
 
@@ -1091,7 +1091,7 @@ Files: `lib/draft/server.ts` (`bestAvailablePlayerIds()`)
 
 ## BF-021. DnD Lineup Mobile UX Friction
 
-Sprint: 26 | Priority: P2 | Effort: M | Status: Open (new Jun 24, 2026)
+Sprint: 29 | Priority: P2 | Effort: M | Status: ✅ DONE (Sprint 29)
 
 Source: FeedbackSubmission `cmqre68q6` (Jun 24). User reports: "I love the look of the two tabbed My Roster page, but I'm not sure I love the mechanism to change my lineup. Which is better for mobile? This drag and drop situation or the two panel? It just feels like a lot of scrolling as a user to get a full view of my options."
 
@@ -1262,7 +1262,7 @@ Files: `app/league/[leagueId]/layout.tsx` (fetch pending count server-side), `ap
 
 Priority: P1
 
-Status: OPEN
+Status: ✅ DONE (Sprint 29) — `processExpiredTrades()` passes `dedupeKey: \`trade-expired-${tradeId}\`` to `createNotification()`; idempotent expired-trade notification
 
 Issue: When a trade was auto-rejected because the proposing manager dropped an offered player after proposing the trade, the trade silently moved to `REJECTED` status with a `resolvedReason` string, but no in-app notification was sent to the proposing manager.
 
@@ -1282,7 +1282,7 @@ Files: `lib/services/trade-service.ts`, `app/league/[leagueId]/trades/[tradeId]/
 
 Priority: P1
 
-Status: OPEN
+Status: ✅ DONE (Sprint 29) — `PROPOSED → PENDING_REVIEW` transition added for proposer/commissioner in engine; `proposeTrade()` creates as `PROPOSED` then auto-flips to `PENDING_REVIEW` in same `$transaction`; 3 new `canTransitionTo` tests
 
 Issue: When `tradeReviewHours > 0`, calling `POST /trades` (propose) immediately creates the trade in `PENDING_REVIEW` status — bypassing the `PROPOSED` state entirely. The receiving team never sees the trade as something they need to explicitly accept or reject before commissioner review.
 

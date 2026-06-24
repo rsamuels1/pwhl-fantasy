@@ -1,6 +1,6 @@
 ---
 name: sprint20-and-sprint22
-description: Sprint 20/21/22/23/24 COMPLETE; Sprint 24 5/7 (LL-006/010/011/012/023 DONE; UX-058+BF-020 deferred to Sprint 25); Sprint 25 now current
+description: Sprints 20–27 COMPLETE; Sprint 27 shipped Jun 24 (11/11 items: BF-022/023/025/026/028 + LL-024 + LL-022 Phase 1+2 + VTF subtitle + LL-016 partial); Sprint 28 (Morning Skate) is next
 metadata:
   type: project
 ---
@@ -73,14 +73,21 @@ Sprint 24 (Living League: Season Story) is COMPLETE (5/7). No schema changes.
 
 Deferred to Sprint 25: UX-058 (Trade Proposal 4-Step), BF-020 (auto-draft position balance)
 
-Sprint 25 (Living League: Legacy + Carry-Forwards) is BUILT (pending commit) as of Jun 24, 2026. All 6/6 stories are in the working tree as modified/untracked files:
-- LL-009: Trophy Cabinet — `Trophy` model + `TrophyType` enum in `prisma/schema.prisma`; `lib/services/trophy-service.ts`; `TrophyCard.tsx` + `TrophyShelf.tsx`; `/team/[teamId]/trophies/page.tsx`; wired into matchup page Z2
+Sprint 25 (Living League: Legacy + Carry-Forwards) is COMPLETE (commit ab44083). 6/6 stories:
+- LL-009: Trophy Cabinet — `Trophy` model + `TrophyType` enum in schema; `lib/services/trophy-service.ts`; `TrophyCard.tsx` + `TrophyShelf.tsx`; `/team/[teamId]/trophies/page.tsx`; trophy icons in matchup page Z2
 - LL-011b: Franchise Archetypes — `lib/services/franchise-identity.ts`; `FranchiseIdentityChip.tsx` in matchup page Z2
-- LL-014: Opening Day Card — `OpeningDayCard.tsx`; Week 1 only; localStorage dismiss; wired into matchup page
-- LL-015: Championship Banner — `ChampionshipBanner.tsx`; triggered by `CHAMPIONSHIP_WON` notification; wired into matchup page
-- UX-058: Trade Proposal 4-Step — `ProposeTrade.tsx` rebuilt as 4-step state machine (Step 0 pick partner, Step 1 give, Step 2 receive, Step 3 review); confirmed in `app/league/[leagueId]/trades/new/ProposeTrade.tsx`
-- BF-020: Auto-draft position balance — Tier 1b added in `bestAvailablePlayerIds()` in `lib/draft/server.ts`; confirmed via grep
+- LL-014: Opening Day Card — `OpeningDayCard.tsx`; Week 1 only; localStorage dismiss
+- LL-015: Championship Banner — `ChampionshipBanner.tsx`; triggered by `CHAMPIONSHIP_WON` notification
+- UX-058: Trade Proposal 4-Step — `ProposeTrade.tsx` 4-step state machine in `app/league/[leagueId]/trades/new/`
+- BF-020: Auto-draft position balance — Tier 1b in `bestAvailablePlayerIds()` in `lib/draft/server.ts`
 
-Schema note: model is `Trophy` (not `Achievement` as originally planned); `TrophyType` enum with values including CHAMPION.
+Schema note: model is `Trophy` (not `Achievement`); `TrophyType` enum with values including CHAMPION.
 
-**Sprint 26 is now the current sprint.** 10 items: 2 P0 navigation regressions (BF-024 Transactions bounces to league dashboard, BF-027 LEAGUE_STORYLINE regression), 6 P1 bugs/suggestions (BF-022/023/025/026/028, BF-012 carry-forward), 1 P1 carry-forward (BF-013), 1 P2 (BF-021). Next new BF ID: BF-029.
+Sprint 26 (Beta Defect Sweep) is COMPLETE. BF-024 and BF-027 handled by parallel agents. BF-022/023/025/026/028 resolved in Sprint 27. BF-012, BF-013, BF-021 remain open.
+
+Sprint 27 (Polish & The Arena Concourse) is COMPLETE — Jun 24, 2026. 11/11 items:
+- Track A — Bug Fixes: BF-022 (BottomNav desktop hidden), BF-023 (FA adds in transaction history), BF-025 (trade position filter — no code change), BF-026 (standings contrast), BF-028 (commissioner pending trade dashboard visibility)
+- Track B — Hub Assembly: LL-024 (new `/league/[leagueId]/how-it-works` page; 6 sections; nav link), LL-022 Phase 1 (stat tooltips via `components/StatTooltip.tsx`; `SortTh` title props in `RosterManager.tsx`; `tooltip` field in `DraftRoom.tsx`), LL-022 Phase 2 ("How it works →" link on standings page), VTF subtitle update, LL-016 partial (records teaser + trophy leaderboard in commissioner overview)
+- No schema changes in Sprint 27
+
+**Sprint 28 (The Morning Skate — LL-013) is next.** Requires schema migration (`MorningSkateEdition` model). Open bugs still in backlog: BF-012, BF-013, BF-021. Next new BF ID: BF-029.

@@ -1765,6 +1765,27 @@ Goal: Assemble glossary, stat education, and hub information hierarchy into the 
 
 ---
 
+## Sprint 29 — "Beta Sweep & Transactions Fix" · ✅ COMPLETE · Jun 24, 2026 · Track V · P1
+
+Goal: Close the most impactful beta feedback bugs — silent trade notifications, PROPOSED state machine gap, mobile lineup UX, and a legacy code guard cleanup.
+
+**All items shipped:**
+
+| Story | Track | Size | Priority | Status |
+|---|---|---|---|---|
+| S29-001 — Rival improvements (commit a90a50c): `getRival()` picks closest-contested opponent by avg points-apart; `RivalBadge` shows "points apart" narrative; rival chip moved to standings page, removed from matchup page Z4 | Bug+Feature | M | P1 | ✅ DONE |
+| BF-NEW — Transactions legacy guard cleanup: removed `(prisma as any).leagueEvent` guard in waiver route milestone-count; direct `prisma.leagueEvent.count()` now used | Bug | S | P1 | ✅ DONE |
+| TR-002 — Trade auto-expiry notification: `processExpiredTrades()` passes `dedupeKey: \`trade-expired-${tradeId}\`` to `createNotification()` for idempotent expired-trade alerts | Bug | S | P1 | ✅ DONE |
+| TR-003 — Trade PROPOSED→PENDING_REVIEW state: `PROPOSED → PENDING_REVIEW` transition added for proposer/commissioner in engine; `proposeTrade()` creates as `PROPOSED` then auto-flips in same `$transaction`; 3 new tests | Bug | M | P1 | ✅ DONE |
+| OB-001 — Start Your Franchise → /register: verified `app/page.tsx` CTAs already link to `/register`; no code change required | Bug | S | P0 | ✅ DONE (verified) |
+| BF-021 — DnD lineup mobile tap-to-swap: `LineupDnD.tsx` adds tap-to-select/swap on ≤640px with purple ring, target highlight, cancel hint; desktop DnD unchanged | Feature | M | P2 | ✅ DONE |
+
+**No schema changes in this sprint.**
+
+**Result: 6/6 Sprint 29 items shipped.**
+
+---
+
 ## Beyond MVP
 
 - **Q4 2026 (in-season):** Waivers → FAAB; engagement surfaces (#25 analysis, #29 performance dashboard, #30 playoff UX) while the first live season runs. Trade System shipped Sprint 7.
