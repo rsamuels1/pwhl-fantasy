@@ -123,31 +123,33 @@ export default function RosterManager({
     setError(null);
     setSuccessMsg(null);
     startTransition(async () => {
-      const res = await fetch(`/api/leagues/${leagueId}/waiver`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ teamId, addPlayerId, dropPlayerId }),
-      });
-      const data = await res.json() as { roster?: RosterPlayerRow[]; error?: string; onWaivers?: boolean; milestoneTriggered?: "first_add" | null };
-      if (!res.ok || data.error) {
-        if (data.onWaivers) {
-          // Player is on waivers — redirect manager to the waiver wire tab
-          setError("This player is on waivers — use the Waiver Wire tab to submit a claim.");
-          setTab("waiverWire");
-        } else {
-          setError(data.error ?? "Failed to add player.");
+      try {
+        const res = await fetch(`/api/leagues/${leagueId}/waiver`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ teamId, addPlayerId, dropPlayerId }),
+        });
+        const data = await res.json() as { roster?: RosterPlayerRow[]; error?: string; onWaivers?: boolean; milestoneTriggered?: "first_add" | null };
+        if (!res.ok || data.error) {
+          if (data.onWaivers) {
+            setError("This player is on waivers — use the Waiver Wire tab to submit a claim.");
+            setTab("waiverWire");
+          } else {
+            setError(data.error ?? "Failed to add player.");
+          }
+          return;
         }
-        return;
-      }
-      const addedFa = freeAgents.find((p) => p.playerId === addPlayerId);
-      setPendingAdd(null);
-      setDropForAdd(null);
-      setSuccessMsg(`${addedFa?.name ?? "Player"} added to your roster.`);
-      if (data.milestoneTriggered === "first_add") setShowFirstAddToast(true);
-      router.refresh();
-      // Show Add & Slot modal for unlocked players; locked players go straight to bench
-      if (addedFa && !addedFa.isLocked) {
-        setSlottingPlayer(addedFa);
+        const addedFa = freeAgents.find((p) => p.playerId === addPlayerId);
+        setPendingAdd(null);
+        setDropForAdd(null);
+        setSuccessMsg(`${addedFa?.name ?? "Player"} added to your roster.`);
+        if (data.milestoneTriggered === "first_add") setShowFirstAddToast(true);
+        router.refresh();
+        if (addedFa && !addedFa.isLocked) {
+          setSlottingPlayer(addedFa);
+        }
+      } catch {
+        setError("Something went wrong — please try again.");
       }
     });
   }

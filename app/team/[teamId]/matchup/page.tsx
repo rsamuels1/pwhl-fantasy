@@ -21,6 +21,8 @@ import FranchiseIdentityChip from "@/components/FranchiseIdentityChip";
 import OpeningDayCard from "@/components/OpeningDayCard";
 import ChampionshipBanner from "@/components/ChampionshipBanner";
 import { computeFranchiseIdentity } from "@/lib/services/franchise-identity";
+import { computeRace, type RaceInfo } from "@/lib/playoffs/seeding";
+import { computeVpStandings } from "@/lib/scoring/vp";
 import { Position } from "@prisma/client";
 
 export default async function TeamMatchupPage({
@@ -35,7 +37,7 @@ export default async function TeamMatchupPage({
 
   const league = await prisma.fantasyLeague.findUnique({
     where: { id: leagueId },
-    select: { scoringSettings: true, rosterSettings: true, isReplay: true, replayCurrentDate: true, season: true, status: true, maxTeams: true },
+    select: { scoringSettings: true, rosterSettings: true, isReplay: true, replayCurrentDate: true, season: true, status: true, maxTeams: true, playoffStatus: true, playoffSettings: true },
   });
   if (!league) notFound();
 
@@ -60,6 +62,26 @@ export default async function TeamMatchupPage({
     where: { leagueId },
     select: { id: true, name: true, accentColor: true },
   });
+
+  // ── Bubble Watch chip (in-season regular season only) ─────────────────────
+  let myRaceStatus: RaceInfo | null = null;
+  if (league.status === "IN_SEASON" && league.playoffStatus === "NOT_STARTED") {
+    try {
+      const leagueMatchups = await prisma.matchup.findMany({
+        where: { leagueId },
+      });
+      const vpStandings = computeVpStandings(
+        allTeams.map((t) => ({ id: t.id, name: t.name })),
+        leagueMatchups
+      );
+      const playoffCutoff = ((league.playoffSettings as { teamsInPlayoff?: number } | null)?.teamsInPlayoff) ?? 4;
+      const standingsForRace = vpStandings.map((s) => ({ ...s, points: s.totalVP, pointsAgainst: 0 }));
+      const raceMap = computeRace(standingsForRace, leagueMatchups, playoffCutoff);
+      myRaceStatus = raceMap.get(teamId) ?? null;
+    } catch {
+      // non-fatal — bubble watch chip won't show
+    }
+  }
 
   // Swing players are a 1v1 concept — only meaningful in playoff (single-opponent) matchups.
   let swingPlayers: Awaited<ReturnType<typeof getSwingPlayers>> = [];
@@ -667,7 +689,40 @@ export default async function TeamMatchupPage({
         <RosterStatusWidget matchup={activeMatchup} activeSlotCount={activeSlotCount} teamId={teamId} />
       )}
 
-
+      {/* ── Bubble Watch chip — playoff race context for teams in the hunt ── */}
+      {myRaceStatus && (myRaceStatus.status === "bubble" || myRaceStatus.status === "in") && (() => {
+        const isBubble = myRaceStatus.status === "bubble";
+        const chipColor = isBubble ? "rgba(245,201,123,0.18)" : "rgba(143,193,232,0.12)";
+        const chipBorder = isBubble ? "rgba(245,201,123,0.4)" : "rgba(143,193,232,0.3)";
+        const chipText = isBubble ? "var(--gold)" : "var(--accent-strong)";
+        return (
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+            <Link
+              href={`/league/${leagueId}/standings`}
+              style={{
+                display: "inline-flex", alignItems: "center", gap: 8,
+                background: chipColor, border: `1px solid ${chipBorder}`, borderRadius: 20,
+                padding: "6px 14px", textDecoration: "none",
+              }}
+            >
+              <span style={{ fontSize: 12, fontWeight: 700, color: chipText }}>
+                {isBubble ? "Bubble watch" : "Playoff push"}
+              </span>
+              {myRaceStatus.magicNumber !== null && myRaceStatus.magicNumber > 0 && (
+                <span style={{ fontSize: 11, color: "var(--dim)" }}>
+                  Magic: {myRaceStatus.magicNumber}
+                </span>
+              )}
+              {myRaceStatus.cushion !== null && myRaceStatus.cushion > 0 && (
+                <span style={{ fontSize: 11, color: "var(--dim)" }}>
+                  {myRaceStatus.cushion} ahead
+                </span>
+              )}
+              <span style={{ fontSize: 11, color: "var(--faint)" }}>View standings →</span>
+            </Link>
+          </div>
+        );
+      })()}
 
       {/* ── Z6. Rosters ── */}
       {activeMatchup && (

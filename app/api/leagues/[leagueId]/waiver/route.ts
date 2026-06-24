@@ -71,28 +71,35 @@ export async function POST(
   const settings = (team.league.rosterSettings ?? {}) as RosterSettings;
   const maxSize = maxRosterSize(settings);
 
-  await prisma.$transaction(async (tx) => {
-    // Drop first if requested.
-    if (dropPlayerId) {
-      const dropEntry = await tx.rosterEntry.findFirst({
-        where: { fantasyTeamId: teamId, playerId: dropPlayerId },
+  try {
+    await prisma.$transaction(async (tx) => {
+      // Drop first if requested.
+      if (dropPlayerId) {
+        const dropEntry = await tx.rosterEntry.findFirst({
+          where: { fantasyTeamId: teamId, playerId: dropPlayerId },
+        });
+        if (!dropEntry) throw new Error("Drop player not found on your roster.");
+        await tx.rosterEntry.delete({ where: { id: dropEntry.id } });
+      }
+
+      // Check size after any drop.
+      const currentSize = await tx.rosterEntry.count({ where: { fantasyTeamId: teamId } });
+      if (currentSize >= maxSize) {
+        throw new Error(`Roster is full (${maxSize} players). Drop a player first.`);
+      }
+
+      await tx.rosterEntry.create({
+        data: { fantasyTeamId: teamId, playerId: addPlayerId, slot: "BENCH" },
       });
-      if (!dropEntry) throw new Error("Drop player not found on your roster.");
-      await tx.rosterEntry.delete({ where: { id: dropEntry.id } });
-    }
-
-    // Check size after any drop.
-    const currentSize = await tx.rosterEntry.count({ where: { fantasyTeamId: teamId } });
-    if (currentSize >= maxSize) {
-      throw new Error(`Roster is full (${maxSize} players). Drop a player first.`);
-    }
-
-    await tx.rosterEntry.create({
-      data: { fantasyTeamId: teamId, playerId: addPlayerId, slot: "BENCH" },
     });
-  });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : "Failed to add player.";
+    return NextResponse.json({ error: msg }, { status: 422 });
+  }
 
-  // Emit activity events (best-effort — never fail the request)
+  // Everything below is best-effort — the add succeeded; never fail the 200 response.
+
+  // Emit activity events (best-effort)
   const addedPlayer = await prisma.player.findUnique({
     where: { id: addPlayerId }, select: { firstName: true, lastName: true },
   }).catch(() => null);
@@ -109,22 +116,28 @@ export async function POST(
       data: { description: `${team.name} dropped ${droppedName}` } }, prisma).catch(() => {});
   }
 
-  // Detect first-add milestone
+  // Detect first-add milestone (best-effort — never block the 200)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let milestoneTriggered: "first_add" | null = null;
-  if ((prisma as any).leagueEvent) {
-    const addCount = await (prisma as any).leagueEvent.count({
-      where: { leagueId, teamId, type: "PLAYER_ADD" },
-    });
-    if (addCount === 1) milestoneTriggered = "first_add";
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    if ((prisma as any).leagueEvent) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const addCount = await (prisma as any).leagueEvent.count({
+        where: { leagueId, teamId, type: "PLAYER_ADD" },
+      });
+      if (addCount === 1) milestoneTriggered = "first_add";
+    }
+  } catch {
+    // non-fatal — milestone toast won't fire but the add succeeded
   }
 
-  // Return updated roster for optimistic UI refresh.
+  // Return updated roster (client calls router.refresh() anyway, so this is supplementary).
   const updated = await prisma.rosterEntry.findMany({
     where: { fantasyTeamId: teamId },
     include: { player: { include: { team: { select: { abbreviation: true } } } } },
     orderBy: { slot: "asc" },
-  });
+  }).catch(() => []);
 
   return NextResponse.json({
     milestoneTriggered,

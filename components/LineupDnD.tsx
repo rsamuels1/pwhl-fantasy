@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import MilestoneToast from "@/components/MilestoneToast";
 import { computeOptimalLineup, type RosterSettings, type RosterEntryWithProjection } from "@/lib/lineup";
@@ -243,6 +243,15 @@ export default function LineupDnD({
   const [showLineupCompleteToast, setShowLineupCompleteToast] = useState(false);
   const [activeEntryId, setActiveEntryId] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [mobileTab, setMobileTab] = useState<"active" | "bench">("active");
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 640px)");
+    setIsMobile(mq.matches);
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, []);
 
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 6 } }),
@@ -517,14 +526,43 @@ export default function LineupDnD({
         </div>
       )}
 
+      {/* Mobile tab bar — only at ≤640px */}
+      {isMobile && (
+        <div style={{ display: "flex", borderRadius: 10, overflow: "hidden", border: "1px solid var(--border)", marginBottom: 2 }}>
+          {(["active", "bench"] as const).map((tab) => {
+            const count = tab === "active" ? activeEntries.length : benchEntries.length;
+            const isSelected = mobileTab === tab;
+            return (
+              <button
+                key={tab}
+                onClick={() => setMobileTab(tab)}
+                style={{
+                  flex: 1, padding: "10px 0", border: "none", cursor: "pointer",
+                  fontSize: 13, fontWeight: 700,
+                  background: isSelected ? "rgba(143,193,232,0.15)" : "var(--surface)",
+                  color: isSelected ? "var(--accent-strong)" : "var(--faint)",
+                  borderBottom: isSelected ? "2px solid var(--accent)" : "2px solid transparent",
+                  transition: "background 0.12s, color 0.12s",
+                }}
+              >
+                {tab === "active" ? `Active · ${count}` : `Bench · ${count}`}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
       <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-        {/* Active starters */}
-        <div style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 14, overflow: "hidden" }}>
+        {/* Active starters — always rendered in DOM for DnD; hidden on mobile when bench tab active */}
+        <div style={{
+          background: "var(--card)", border: "1px solid var(--border)", borderRadius: 14, overflow: "hidden",
+          display: isMobile && mobileTab === "bench" && !activeEntryId ? "none" : undefined,
+        }}>
           <div style={{ padding: "8px 14px 4px", borderBottom: "1px solid var(--border)" }}>
             <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--faint)" }}>
               Active Starters · {activeEntries.length} slots
             </span>
-            <span style={{ marginLeft: 8, fontSize: 11, color: "#334155" }}>Drag ⠿ to swap</span>
+            {!isMobile && <span style={{ marginLeft: 8, fontSize: 11, color: "#334155" }}>Drag ⠿ to swap</span>}
           </div>
           <div style={{ padding: "6px 0" }}>
             {activeEntries.map((entry) => (
@@ -541,8 +579,11 @@ export default function LineupDnD({
           </div>
         </div>
 
-        {/* Bench */}
-        <div style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 14, overflow: "hidden" }}>
+        {/* Bench — always rendered in DOM for DnD; hidden on mobile when active tab selected */}
+        <div style={{
+          background: "var(--card)", border: "1px solid var(--border)", borderRadius: 14, overflow: "hidden",
+          display: isMobile && mobileTab === "active" && !activeEntryId ? "none" : undefined,
+        }}>
           <div style={{ padding: "8px 14px 4px", borderBottom: "1px solid var(--border)" }}>
             <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--faint)" }}>
               Bench · {benchEntries.length} slots
