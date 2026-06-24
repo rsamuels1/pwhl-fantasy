@@ -148,7 +148,7 @@ export default function WeekHighlights({
                       display: "flex",
                       alignItems: "flex-start",
                       justifyContent: "space-between",
-                      gap: 4,
+                      gap: 8,
                     }}
                   >
                     <div style={{ flex: 1, minWidth: 0 }}>
