@@ -195,7 +195,7 @@ function DraggablePlayerRow({ entry, statsLabel: label, isActive: isActiveSlot, 
           style={{
             position: "absolute", left: 0, top: 0, bottom: 0,
             width: 20, display: "flex", alignItems: "center", justifyContent: "center",
-            cursor: "grab", color: "#334155", fontSize: 14, zIndex: 1,
+            cursor: "grab", color: "var(--faint)", fontSize: 16, zIndex: 1,
           }}
           title="Drag to swap"
         >
@@ -474,24 +474,36 @@ export default function LineupDnD({
           ))}
         </div>
         {!forceMove && rosterSettings && (
-          <button
-            onClick={autoSet}
-            disabled={isPending}
-            title="Automatically set the best lineup based on projections or games remaining"
-            style={{
-              padding: "5px 14px", borderRadius: 8, fontSize: 12, fontWeight: 700,
-              background: isPending ? "var(--surface)" : "rgba(143,193,232,0.15)",
-              border: "1px solid rgba(143,193,232,0.3)",
-              color: isPending ? "var(--faint)" : "var(--accent-strong)",
-              cursor: isPending ? "default" : "pointer",
-              transition: "background 0.12s",
-              minHeight: 32,
-            }}
-          >
-            {isPending ? "Saving…" : "Auto-set"}
-          </button>
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 2 }}>
+            <button
+              onClick={autoSet}
+              disabled={isPending}
+              style={{
+                padding: "5px 14px", borderRadius: 8, fontSize: 12, fontWeight: 700,
+                background: isPending ? "var(--surface)" : "rgba(143,193,232,0.15)",
+                border: "1px solid rgba(143,193,232,0.3)",
+                color: isPending ? "var(--faint)" : "var(--accent-strong)",
+                cursor: isPending ? "default" : "pointer",
+                transition: "background 0.12s",
+                minHeight: 32,
+              }}
+            >
+              {isPending ? "Saving…" : "Auto-set lineup"}
+            </button>
+            <span style={{ fontSize: 10, color: "var(--faint)", whiteSpace: "nowrap" }}>
+              Best players by projections
+            </span>
+          </div>
         )}
       </div>
+
+      {/* Discovery hint */}
+      {!forceMove && (
+        <div style={{ fontSize: 11, color: "var(--faint)", lineHeight: 1.4 }}>
+          Drag <span style={{ fontFamily: "monospace", fontSize: 13, verticalAlign: "middle" }}>⠿</span> to move a player between Active and Bench slots.
+          {rosterSettings && <> Or tap <strong style={{ color: "var(--dim)" }}>Auto-set lineup</strong> to let us pick.</>}
+        </div>
+      )}
 
       {/* Feedback */}
       {(error || success) && (

@@ -17,7 +17,6 @@ import { ScoreDisplay } from "@/components/ScoreDisplay";
 import StatChip from "@/components/StatChip";
 import ClinchBanner from "@/components/ClinchBanner";
 import FirstResultCard from "@/components/FirstResultCard";
-import TeamColorPicker from "@/components/TeamColorPicker";
 import MomentumStrip from "@/components/MomentumStrip";
 
 export default async function TeamMatchupPage({
@@ -401,12 +400,6 @@ export default async function TeamMatchupPage({
         </Card>
       )}
 
-      {/* ── Team color — shown once the DuelHero is visible so the effect is immediately obvious ── */}
-      <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", background: "var(--surface)", borderRadius: 12, border: "1px solid var(--border)" }}>
-        <span style={{ fontSize: 12, color: "var(--dim)", fontWeight: 600, flexShrink: 0 }}>Your team color</span>
-        <TeamColorPicker leagueId={leagueId} teamId={teamId} currentColor={allTeams.find((t) => t.id === teamId)?.accentColor ?? null} />
-      </div>
-
       {/* ── Z3. Live situation grid: Playing Tonight + Swing (left) | Roster Status (right) ── */}
       {activeMatchup?.status === "active" && (
         <>
@@ -530,9 +523,11 @@ export default async function TeamMatchupPage({
         <RosterStatusWidget matchup={activeMatchup} activeSlotCount={activeSlotCount} teamId={teamId} />
       )}
 
+      {/* ── Z5. Last week recap ── */}
+      {lastResult && <RecapCard recap={lastResult} />}
+
       {/* ── Z4. Rival badge — only shown once there are 2+ H2H games ── */}
       {rival && rival.matchupCount >= 2 && (() => {
-        // Check if the last result was against the rival
         let lastResultAgainstRival: { won: boolean; myScore: number; oppScore: number } | null = null;
         if (lastResult && lastResult.opponentTeamId === rival.teamId) {
           lastResultAgainstRival = {
@@ -556,9 +551,6 @@ export default async function TeamMatchupPage({
           </Card>
         );
       })()}
-
-      {/* ── Z5. Last week recap (moved below live situation) ── */}
-      {lastResult && <RecapCard recap={lastResult} />}
 
       {/* ── Z6. Rosters ── */}
       {activeMatchup && (

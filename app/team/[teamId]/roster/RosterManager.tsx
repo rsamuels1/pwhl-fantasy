@@ -58,6 +58,10 @@ interface Props {
   isOwnRoster: boolean;
   isCommissioner?: boolean;
   defaultTab?: Tab;
+  /** Hide the "My Roster" tab — used on Add & Drop tab where LineupDnD already shows the roster */
+  hideRosterTab?: boolean;
+  /** Hide the "Viewing:" team selector — used when ViewingSelector is rendered at page level */
+  hideViewingSelector?: boolean;
 }
 
 // ── constants ─────────────────────────────────────────────────────────────────
@@ -86,10 +90,11 @@ export default function RosterManager({
   leagueId, teamId, teamName, maxRosterSize, rosterSettings,
   initialRoster, freeAgents,
   allTeams, viewTeamId, viewTeamName, viewRoster, isOwnRoster, isCommissioner,
-  defaultTab,
+  defaultTab, hideRosterTab, hideViewingSelector,
 }: Props) {
   const router = useRouter();
-  const [tab, setTab] = useState<Tab>(defaultTab ?? "roster");
+  const resolvedDefault = hideRosterTab && (defaultTab === "roster" || !defaultTab) ? "freeAgents" : (defaultTab ?? "roster");
+  const [tab, setTab] = useState<Tab>(resolvedDefault);
   const [viewMode, setViewMode] = useState<ViewMode>("table");
   const [roster, setRoster] = useState<RosterPlayerRow[]>(initialRoster);
   const [posFilter, setPosFilter] = useState<Position | "ALL">("ALL");
@@ -236,58 +241,60 @@ export default function RosterManager({
       )}
 
       {/* ── Team selector ── */}
-      <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-        <label style={{ fontSize: 12, color: "var(--faint)", fontWeight: 600, flexShrink: 0 }}>
-          Viewing:
-        </label>
-        <select
-          value={viewTeamId}
-          onChange={(e) => router.push(`?view=${e.target.value}`)}
-          style={{
-            background: "var(--surface)", border: "1px solid var(--border)",
-            borderRadius: 8, color: "var(--text)", padding: "6px 10px", fontSize: 13,
-            cursor: "pointer", outline: "none",
-          }}
-        >
-          {allTeams.map((t) => (
-            <option key={t.id} value={t.id} style={{ background: "var(--card)" }}>
-              {t.name}{t.id === teamId ? " (My Team)" : ""}
-            </option>
-          ))}
-        </select>
-        {!isOwnRoster && (
-          <>
-            <button
-              onClick={() => router.push("?")}
-              style={{
-                fontSize: 12, fontWeight: 600, padding: "5px 12px", borderRadius: 8,
-                border: "1px solid rgba(143,193,232,0.3)", cursor: "pointer",
-                background: "rgba(143,193,232,0.1)", color: "var(--accent-strong)",
-              }}
-            >
-              ← My Team
-            </button>
-            {isCommissioner && (
-              <span style={{
-                fontSize: 11, fontWeight: 700, padding: "5px 10px", borderRadius: 8,
-                background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.25)",
-                color: "var(--amber)", letterSpacing: "0.06em",
-              }}>
-                ⚙ Commissioner View
-              </span>
-            )}
-          </>
-        )}
-      </div>
+      {!hideViewingSelector && (
+        <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+          <label style={{ fontSize: 12, color: "var(--faint)", fontWeight: 600, flexShrink: 0 }}>
+            Viewing:
+          </label>
+          <select
+            value={viewTeamId}
+            onChange={(e) => router.push(`?view=${e.target.value}`)}
+            style={{
+              background: "var(--surface)", border: "1px solid var(--border)",
+              borderRadius: 8, color: "var(--text)", padding: "6px 10px", fontSize: 13,
+              cursor: "pointer", outline: "none",
+            }}
+          >
+            {allTeams.map((t) => (
+              <option key={t.id} value={t.id} style={{ background: "var(--card)" }}>
+                {t.name}{t.id === teamId ? " (My Team)" : ""}
+              </option>
+            ))}
+          </select>
+          {!isOwnRoster && (
+            <>
+              <button
+                onClick={() => router.push("?")}
+                style={{
+                  fontSize: 12, fontWeight: 600, padding: "5px 12px", borderRadius: 8,
+                  border: "1px solid rgba(143,193,232,0.3)", cursor: "pointer",
+                  background: "rgba(143,193,232,0.1)", color: "var(--accent-strong)",
+                }}
+              >
+                ← My Team
+              </button>
+              {isCommissioner && (
+                <span style={{
+                  fontSize: 11, fontWeight: 700, padding: "5px 10px", borderRadius: 8,
+                  background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.25)",
+                  color: "var(--amber)", letterSpacing: "0.06em",
+                }}>
+                  ⚙ Commissioner View
+                </span>
+              )}
+            </>
+          )}
+        </div>
+      )}
 
       {/* ── Own-team tabs (hidden when viewing another team) ── */}
       {isOwnRoster && (
         <div style={{ display: "flex", gap: 4, background: "var(--surface)", borderRadius: 10, padding: 3, width: "fit-content", flexWrap: "wrap" }}>
           {([
-            ["roster", `${teamName} (${roster.length}/${maxRosterSize})`, undefined],
-            ["freeAgents", `Free Agents (${freeAgents.filter(p => !rosterIds.has(p.playerId)).length})`, "Add players immediately with no claim period"],
-            ["waiverWire", "Waiver Wire", "Claim players subject to priority and review period"],
-          ] as [Tab, string, string | undefined][]).map(([t, label, subtitle]) => (
+            ...(!hideRosterTab ? [["roster", `${teamName} (${roster.length}/${maxRosterSize})`, undefined] as [Tab, string, string | undefined]] : []),
+            ["freeAgents", `Free Agents (${freeAgents.filter(p => !rosterIds.has(p.playerId)).length})`, "Add players immediately with no claim period"] as [Tab, string, string | undefined],
+            ["waiverWire", "Waiver Wire", "Claim players subject to priority and review period"] as [Tab, string, string | undefined],
+          ]).map(([t, label, subtitle]) => (
             <div key={t} style={{ position: "relative" }}>
               <button onClick={() => setTab(t)} style={{
                 padding: "7px 16px", borderRadius: 8, border: "none", cursor: "pointer",

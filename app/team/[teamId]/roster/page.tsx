@@ -12,6 +12,7 @@ import { getSeasonState } from "@/lib/season";
 import { Position } from "@prisma/client";
 import RosterManager from "./RosterManager";
 import LineupDnD from "@/components/LineupDnD";
+import ViewingSelector from "@/components/ViewingSelector";
 import type { LineupEntry, LineupStats } from "@/components/LineupDnD";
 import type { RosterPlayerRow, FreeAgentRow, SkaterStats, GoalieStats } from "./RosterManager";
 
@@ -89,7 +90,11 @@ export default async function TeamRosterPage({ params, searchParams }: Props) {
   const { teamId } = await params;
   const sp = await searchParams;
   const tabParam = sp?.tab;
-  const defaultTab = tabParam === "freeAgents" || tabParam === "waiverWire" ? tabParam : undefined;
+  // Top-level tabs: "lineup" (default) | "addDrop"
+  // Backward compat: ?tab=freeAgents or ?tab=waiverWire → addDrop tab with that inner tab
+  const isAddDropParam = tabParam === "addDrop" || tabParam === "freeAgents" || tabParam === "waiverWire";
+  const currentTab = isAddDropParam ? "addDrop" : "lineup";
+  const defaultInnerTab = (tabParam === "freeAgents" || tabParam === "waiverWire") ? tabParam as "freeAgents" | "waiverWire" : "freeAgents";
   const user = await requireAuth(`/team/${teamId}/roster`);
   await requireTeamOwner(teamId, user.id);
 
@@ -512,49 +517,102 @@ export default async function TeamRosterPage({ params, searchParams }: Props) {
   const showDnD = isOwnRoster || (isCommissioner && viewedLineupEntries !== null);
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-      {/* DnD Lineup section — own roster, or commissioner viewing another team */}
-      {showDnD && (
-        <div>
-          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--faint)", marginBottom: 12 }}>
-            {isOwnRoster ? "Set Lineup" : `Set Lineup — ${viewTeamName}`}
-          </div>
-          <LineupDnD
-            leagueId={leagueId}
-            teamId={teamId}
-            initialRoster={dndEntries}
-            seasonStats={dndSeasonStats}
-            lastWeekStats={dndLastWeekStats}
-            lastWeekLabel={lastWeekLabel}
-            thisWeekStats={dndThisWeekStats}
-            thisWeekLabel={thisWeekLabel}
-            projectedStats={isOwnRoster ? projectedStatsMap : undefined}
-            nextWeekLabel={isOwnRoster ? nextWeekLabel : null}
-            projectionsAvailable={isOwnRoster ? !!nextWeekLabel : false}
-            rosterSettings={isOwnRoster ? settings : undefined}
-            forceMove={!isOwnRoster && isCommissioner}
-            forceMoveTeamId={!isOwnRoster ? viewTeamId : undefined}
-          />
+    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+
+      {/* Top-level tab bar — own team only */}
+      {isOwnRoster && (
+        <div style={{ display: "flex", gap: 2, background: "var(--surface)", borderRadius: 10, padding: 3, width: "fit-content" }}>
+          {([["lineup", "My Lineup"], ["addDrop", "Add & Drop"]] as const).map(([key, label]) => (
+            <a
+              key={key}
+              href={`?tab=${key}`}
+              style={{
+                padding: "7px 18px", borderRadius: 8, fontSize: 13, fontWeight: 600,
+                textDecoration: "none", display: "inline-block",
+                background: currentTab === key ? "rgba(143,193,232,0.3)" : "transparent",
+                color: currentTab === key ? "var(--accent-strong)" : "var(--faint)",
+                transition: "background 0.12s",
+              }}
+            >
+              {label}
+            </a>
+          ))}
         </div>
       )}
 
-      {/* Roster management — roster table + FA + waiver wire */}
-      <RosterManager
-        leagueId={leagueId}
-        teamId={teamId}
-        teamName={team.name}
-        maxRosterSize={maxRosterSize(settings)}
-        rosterSettings={settings}
-        initialRoster={ownRosterRows}
-        freeAgents={freeAgents}
-        allTeams={allTeams}
-        viewTeamId={viewTeamId}
-        viewTeamName={viewTeamName}
-        viewRoster={viewRoster}
-        isOwnRoster={isOwnRoster}
-        isCommissioner={isCommissioner}
-        defaultTab={defaultTab ?? (isOwnRoster ? "freeAgents" : undefined)}
-      />
+      {/* LINEUP TAB — own roster or commissioner viewing another team */}
+      {currentTab === "lineup" && (
+        <>
+          {/* Viewing selector: scout other teams' lineups */}
+          {allTeams.length > 1 && (
+            <ViewingSelector
+              allTeams={allTeams}
+              viewTeamId={viewTeamId}
+              myTeamId={teamId}
+              isCommissioner={isCommissioner}
+            />
+          )}
+
+          {showDnD ? (
+            <LineupDnD
+              leagueId={leagueId}
+              teamId={teamId}
+              initialRoster={dndEntries}
+              seasonStats={dndSeasonStats}
+              lastWeekStats={dndLastWeekStats}
+              lastWeekLabel={lastWeekLabel}
+              thisWeekStats={dndThisWeekStats}
+              thisWeekLabel={thisWeekLabel}
+              projectedStats={isOwnRoster ? projectedStatsMap : undefined}
+              nextWeekLabel={isOwnRoster ? nextWeekLabel : null}
+              projectionsAvailable={isOwnRoster ? !!nextWeekLabel : false}
+              rosterSettings={isOwnRoster ? settings : undefined}
+              forceMove={!isOwnRoster && isCommissioner}
+              forceMoveTeamId={!isOwnRoster ? viewTeamId : undefined}
+            />
+          ) : !isOwnRoster ? (
+            /* Non-commissioner viewing another team: read-only roster */
+            <RosterManager
+              leagueId={leagueId}
+              teamId={teamId}
+              teamName={team.name}
+              maxRosterSize={maxRosterSize(settings)}
+              rosterSettings={settings}
+              initialRoster={ownRosterRows}
+              freeAgents={[]}
+              allTeams={allTeams}
+              viewTeamId={viewTeamId}
+              viewTeamName={viewTeamName}
+              viewRoster={viewRoster}
+              isOwnRoster={false}
+              isCommissioner={isCommissioner}
+              hideViewingSelector
+            />
+          ) : null}
+        </>
+      )}
+
+      {/* ADD & DROP TAB — own team only */}
+      {currentTab === "addDrop" && isOwnRoster && (
+        <RosterManager
+          leagueId={leagueId}
+          teamId={teamId}
+          teamName={team.name}
+          maxRosterSize={maxRosterSize(settings)}
+          rosterSettings={settings}
+          initialRoster={ownRosterRows}
+          freeAgents={freeAgents}
+          allTeams={allTeams}
+          viewTeamId={teamId}
+          viewTeamName={team.name}
+          viewRoster={ownRosterRows}
+          isOwnRoster={true}
+          isCommissioner={isCommissioner}
+          hideRosterTab
+          hideViewingSelector
+          defaultTab={defaultInnerTab}
+        />
+      )}
     </div>
   );
 }
