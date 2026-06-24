@@ -24,6 +24,7 @@ import { computeSeasonState, pendingWeeks, validateSeasonBoundary, type SeasonSt
 import { startPlayoffs } from "@/lib/services/playoff-service";
 import { initializeWaiverPriority } from "@/lib/services/waiver-service";
 import { emitWeeklyStorylines, emitWeeklyAwards } from "@/lib/services/storyline-service";
+import { emitMorningSkateEdition } from "@/lib/services/morning-skate-service";
 import { calculatePlayoffRounds, getPlayoffSettings } from "@/lib/playoffs/lifecycle";
 import { computeVpStandings } from "@/lib/scoring/vp";
 import { computeRace } from "@/lib/playoffs/seeding";
@@ -243,6 +244,7 @@ export async function advanceSeason(
     void emitWeeklyStorylines(leagueId, period.week, period.startsAt, period.endsAt, prisma).catch(() => {});
     void emitWeeklyAwards(leagueId, period.week, period.startsAt, period.endsAt, prisma).catch(() => {});
     void emitClinchEvents(leagueId, period.week, prisma).catch(() => {});
+    void emitMorningSkateEdition(leagueId, `week-${period.week}`, prisma).catch(() => {});
   }
 
   let playoffError: string | undefined;

@@ -18,6 +18,8 @@ import type { Storyline, WeeklyAward } from "@/lib/services/storyline-service";
 import { getLeagueUpsets } from "@/lib/services/upset-service";
 import { computeSuperlatives } from "@/lib/services/superlatives";
 import SuperlativesCard from "@/components/SuperlativesCard";
+import MorningSkatePreview from "@/components/MorningSkatePreview";
+import type { EditionData } from "@/lib/services/morning-skate-service";
 
 export default async function LeagueOverviewPage({
   params,
@@ -297,6 +299,16 @@ export default async function LeagueOverviewPage({
   const showNegativeAwards =
     ((league.scoringSettings as Record<string, unknown>)?.showNegativeAwards ?? true) !== false;
 
+  // Morning Skate: latest edition for the preview card
+  const latestEditionRaw = await prisma.morningSkateEdition.findFirst({
+    where: { leagueId },
+    orderBy: { createdAt: "desc" },
+    select: { id: true, leagueId: true, data: true },
+  });
+  const latestEdition = latestEditionRaw
+    ? { ...latestEditionRaw, data: latestEditionRaw.data as unknown as EditionData }
+    : null;
+
   // Build a label for the highlights week (e.g. "Week 3")
   const highlightsWeekLabel =
     latestScoredMatchup ? `Week ${latestScoredMatchup.week}` : "";
@@ -406,6 +418,11 @@ export default async function LeagueOverviewPage({
             Take action →
           </Link>
         </div>
+      )}
+
+      {/* ── Morning Skate preview — below commissioner strip, above race table ── */}
+      {latestEdition && (
+        <MorningSkatePreview edition={latestEdition} />
       )}
 
       {/* ── League header ── */}
