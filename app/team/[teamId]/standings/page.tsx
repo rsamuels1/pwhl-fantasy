@@ -1,8 +1,9 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { requireAuth, requireTeamOwner } from "@/lib/auth";
-import { computeStandings } from "@/lib/playoffs/seeding";
+import { computeStandings, getRival } from "@/lib/playoffs/seeding";
 import { computeVpStandings } from "@/lib/scoring/vp";
+import { RivalBadge } from "@/components/RivalBadge";
 
 const card: React.CSSProperties = {
   background: "var(--bg-raised)",
@@ -73,6 +74,7 @@ export default async function TeamStandingsPage({
   const playoffsStarted = league.playoffStatus !== "NOT_STARTED";
 
   const displayStandings = vpStandings ?? standings;
+  const rival = getRival(teamId, league.teams, matchups);
 
   return (
     <div style={{ display: "grid", gap: 20 }}>
@@ -134,8 +136,13 @@ export default async function TeamStandingsPage({
                   >
                     <td style={{ ...tdStyle, color: "var(--faint)", fontWeight: 700 }}>{i + 1}</td>
                     <td style={{ ...tdStyle, fontWeight: isMe ? 700 : undefined, color: isMe ? "var(--accent-strong)" : "var(--text)" }}>
-                      {s.teamName}
-                      {isMe && <span style={{ fontSize: 10, color: "var(--accent)", marginLeft: 6 }}>YOU</span>}
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                        {s.teamName}
+                        {isMe && <span style={{ fontSize: 10, color: "var(--accent)" }}>YOU</span>}
+                        {rival && s.fantasyTeamId === rival.teamId && (
+                          <RivalBadge rival={rival} compact />
+                        )}
+                      </span>
                     </td>
                     {vp ? (
                       <>
@@ -167,6 +174,16 @@ export default async function TeamStandingsPage({
           </p>
         )}
       </section>
+
+      {rival && (
+        <section style={card}>
+          <RivalBadge
+            rival={rival}
+            compact={false}
+            lastResultAgainstRival={rival.lastMatchup}
+          />
+        </section>
+      )}
     </div>
   );
 }

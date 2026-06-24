@@ -11,9 +11,6 @@ import { parseScoringSettings } from "@/lib/scoring/settings";
 import { scoreStatLine, type StatLineInput } from "@/lib/scoring";
 import { getDevNow } from "@/lib/devTime";
 import { getReplayNow } from "@/lib/replayTime";
-import { getRival } from "@/lib/playoffs/seeding";
-import { RivalBadge } from "@/components/RivalBadge";
-import { HeadToHeadHistory } from "@/components/HeadToHeadHistory";
 import { ScoreDisplay } from "@/components/ScoreDisplay";
 import StatChip from "@/components/StatChip";
 import ClinchBanner from "@/components/ClinchBanner";
@@ -59,17 +56,10 @@ export default async function TeamMatchupPage({
 
   const { activeMatchup, remainingPlayers, lineupAlerts, lastResult, eliminationInfo, championInfo, playoffPending, missedPlayoffs, myPlayersLastWeek, lastWeekLabel, firstResultContext } = dashboard;
 
-  // Fetch teams and matchups for rival badge
-  const [allTeams, allMatchups] = await Promise.all([
-    prisma.fantasyTeam.findMany({
-      where: { leagueId },
-      select: { id: true, name: true, accentColor: true },
-    }),
-    prisma.matchup.findMany({
-      where: { leagueId },
-    }),
-  ]);
-  const rival = getRival(teamId, allTeams, allMatchups);
+  const allTeams = await prisma.fantasyTeam.findMany({
+    where: { leagueId },
+    select: { id: true, name: true, accentColor: true },
+  });
 
   // Swing players are a 1v1 concept — only meaningful in playoff (single-opponent) matchups.
   let swingPlayers: Awaited<ReturnType<typeof getSwingPlayers>> = [];
@@ -678,31 +668,6 @@ export default async function TeamMatchupPage({
       )}
 
 
-      {/* ── Z4. Rival badge — only shown once there are 2+ H2H games ── */}
-      {rival && rival.matchupCount >= 2 && (() => {
-        let lastResultAgainstRival: { won: boolean; myScore: number; oppScore: number } | null = null;
-        if (lastResult && lastResult.opponentTeamId === rival.teamId) {
-          lastResultAgainstRival = {
-            won: lastResult.myScore > lastResult.opponentScore,
-            myScore: lastResult.myScore,
-            oppScore: lastResult.opponentScore,
-          };
-        }
-        return (
-          <Card>
-            <RivalBadge rival={rival} compact={false} lastResultAgainstRival={lastResultAgainstRival} />
-            <div style={{ marginTop: 14 }}>
-              <HeadToHeadHistory
-                myTeamId={teamId}
-                opponentTeamId={rival.teamId}
-                opponentName={rival.teamName}
-                matchups={allMatchups}
-                limit={5}
-              />
-            </div>
-          </Card>
-        );
-      })()}
 
       {/* ── Z6. Rosters ── */}
       {activeMatchup && (
