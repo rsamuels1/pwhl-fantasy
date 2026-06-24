@@ -114,6 +114,9 @@ export default function RosterManager({
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [slottingPlayer, setSlottingPlayer] = useState<FreeAgentRow | null>(null);
+  // Snapshot the correct post-add roster size at the moment of success (before router.refresh
+  // may re-render props, and before dropForAdd state is cleared). add+drop is net-zero change.
+  const [slottingRosterSize, setSlottingRosterSize] = useState<number>(0);
   const [showFirstAddToast, setShowFirstAddToast] = useState(false);
 
   const isFull = roster.length >= maxRosterSize;
@@ -140,12 +143,15 @@ export default function RosterManager({
           return;
         }
         const addedFa = freeAgents.find((p) => p.playerId === addPlayerId);
+        // add+drop is net-zero roster change; plain add is +1. Capture before clearing dropForAdd.
+        const expectedSize = dropPlayerId ? roster.length : roster.length + 1;
         setPendingAdd(null);
         setDropForAdd(null);
         setSuccessMsg(`${addedFa?.name ?? "Player"} added to your roster.`);
         if (data.milestoneTriggered === "first_add") setShowFirstAddToast(true);
         router.refresh();
         if (addedFa && !addedFa.isLocked) {
+          setSlottingRosterSize(expectedSize);
           setSlottingPlayer(addedFa);
         }
       } catch {
@@ -421,7 +427,7 @@ export default function RosterManager({
           teamId={teamId}
           leagueId={leagueId}
           onComplete={() => { setSlottingPlayer(null); router.refresh(); }}
-          currentRosterSize={roster.length + 1}
+          currentRosterSize={slottingRosterSize}
           maxRosterSize={maxRosterSize}
         />
       )}
