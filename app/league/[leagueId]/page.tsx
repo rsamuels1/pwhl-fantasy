@@ -16,6 +16,8 @@ import WeekHighlights from "@/components/WeekHighlights";
 import UpsetCard from "@/components/UpsetCard";
 import type { Storyline, WeeklyAward } from "@/lib/services/storyline-service";
 import { getLeagueUpsets } from "@/lib/services/upset-service";
+import { computeSuperlatives } from "@/lib/services/superlatives";
+import SuperlativesCard from "@/components/SuperlativesCard";
 
 export default async function LeagueOverviewPage({
   params,
@@ -77,6 +79,9 @@ export default async function LeagueOverviewPage({
     }
   }
 
+  const isVpMode = (league as { scoringMode?: string }).scoringMode === "VP";
+  const isVtfMode = isVpMode;
+
   const vpStandings = computeVpStandings(
     league.teams,
     matchups.map((m) => ({
@@ -99,10 +104,36 @@ export default async function LeagueOverviewPage({
   const playoffStatus = league.playoffStatus;
   const playoffsStarted = playoffStatus !== "NOT_STARTED";
 
+  // Superlatives (computed once we have matchup data)
+  const superlativesMap = hasResults
+    ? computeSuperlatives(
+        league.teams.map((t) => ({ fantasyTeamId: t.id, teamName: t.name })),
+        matchups.map((m) => ({
+          homeTeamId: m.homeTeamId,
+          awayTeamId: m.awayTeamId,
+          homeScore: m.homeScore,
+          awayScore: m.awayScore,
+          week: m.week,
+          isPlayoff: m.isPlayoff,
+        }))
+      )
+    : null;
+  const superlativeItems = superlativesMap
+    ? league.teams.map((t) => ({
+        teamId: t.id,
+        teamName: t.name,
+        superlatives: superlativesMap.get(t.id) ?? [],
+        isMe: t.id === myTeam?.id,
+      })).filter((t) => t.superlatives.length > 0)
+    : [];
+
   // Bracket is the primary landing during active playoffs (same pattern as draft redirect)
   if (playoffStatus === "IN_PROGRESS") {
     redirect(`/league/${leagueId}/bracket`);
   }
+
+  const fmt = (d: Date) =>
+    new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" }).format(d);
 
   // Current week derivation
   const startedMatchups = matchups.filter((m) => new Date(m.startsAt).getTime() <= nowMs);
@@ -113,8 +144,45 @@ export default async function LeagueOverviewPage({
       ? Math.min(...matchups.map((m) => m.week))
       : null;
   const thisWeekMatchups = currentWeek !== null
-    ? matchups.filter((m) => m.week === currentWeek)
+    ? matchups.filter((m) => m.week === currentWeek && !m.isPlayoff)
     : [];
+
+  // Build VTF ranked list for the current week (replaces misleading pair-card display)
+  type VtfEntry = { teamId: string; teamName: string; score: number | null; wins: number; losses: number; ties: number };
+  let vtfRanked: VtfEntry[] | null = null;
+  if (isVtfMode && thisWeekMatchups.length > 0) {
+    const teamMap = new Map<string, VtfEntry>();
+    for (const m of thisWeekMatchups) {
+      if (!teamMap.has(m.homeTeamId)) {
+        teamMap.set(m.homeTeamId, { teamId: m.homeTeamId, teamName: m.homeTeam.name, score: m.homeScore, wins: 0, losses: 0, ties: 0 });
+      }
+      if (!teamMap.has(m.awayTeamId)) {
+        teamMap.set(m.awayTeamId, { teamId: m.awayTeamId, teamName: m.awayTeam.name, score: m.awayScore, wins: 0, losses: 0, ties: 0 });
+      }
+    }
+    const anyScored = thisWeekMatchups.some((m) => m.homeScore != null && m.awayScore != null);
+    if (anyScored) {
+      for (const m of thisWeekMatchups) {
+        if (m.homeScore == null || m.awayScore == null) continue;
+        const home = teamMap.get(m.homeTeamId)!;
+        const away = teamMap.get(m.awayTeamId)!;
+        if (m.homeScore > m.awayScore) { home.wins++; away.losses++; }
+        else if (m.homeScore < m.awayScore) { home.losses++; away.wins++; }
+        else { home.ties++; away.ties++; }
+      }
+    }
+    vtfRanked = [...teamMap.values()].sort((a, b) => {
+      if (a.score != null && b.score != null) return b.score - a.score;
+      if (a.score != null) return -1;
+      if (b.score != null) return 1;
+      return a.teamName.localeCompare(b.teamName);
+    });
+  }
+
+  // Date range label for this week's chip
+  const thisWeekDateRange = thisWeekMatchups.length > 0
+    ? `${fmt(new Date(thisWeekMatchups[0].startsAt))} – ${fmt(new Date(thisWeekMatchups[0].endsAt))}`
+    : null;
 
   // Race info (only when results exist and playoffs haven't started)
   const raceMap = hasResults && !playoffsStarted && standings.length > 1
@@ -261,9 +329,6 @@ export default async function LeagueOverviewPage({
     // the season page, accessible from the bracket page nav.
   }
 
-  const fmt = (d: Date) =>
-    new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" }).format(d);
-
   return (
     <div style={{
       display: "flex",
@@ -332,7 +397,16 @@ export default async function LeagueOverviewPage({
         <span style={{ fontSize: 13, color: "var(--faint)" }}>
           Season {league.season} · {league.teams.length} teams
         </span>
-        {currentWeek !== null && (
+        {currentWeek !== null && thisWeekDateRange && (
+          <span style={{
+            fontSize: 12, fontWeight: 700, padding: "3px 10px", borderRadius: 20,
+            background: "var(--accent-dim)", color: "var(--accent-strong)",
+            border: "1px solid var(--accent-border)",
+          }}>
+            Week {currentWeek} · {thisWeekDateRange}
+          </span>
+        )}
+        {currentWeek !== null && !thisWeekDateRange && (
           <span style={{
             fontSize: 12, fontWeight: 700, padding: "3px 10px", borderRadius: 20,
             background: "var(--accent-dim)", color: "var(--accent-strong)",
@@ -346,7 +420,7 @@ export default async function LeagueOverviewPage({
       {/* ── Two-column grid ── */}
       <div className="overview-grid">
 
-        {/* LEFT: Playoff race (primary) */}
+        {/* LEFT: Commissioner command center — this week first, then playoff race, then highlights */}
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
 
           {/* Champion announcement */}
@@ -444,6 +518,59 @@ export default async function LeagueOverviewPage({
               </section>
             );
           })()}
+
+          {/* ── This week VTF rankings — primary in-season section ── */}
+          {isVtfMode && vtfRanked && vtfRanked.length > 0 && (
+            <section style={card}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+                <div>
+                  {cardLabel(currentWeek !== null ? `Week ${currentWeek} standings` : "This week", 2)}
+                  <div style={{ fontSize: 12, color: "var(--faint)" }}>Score vs the field — ranked high to low</div>
+                </div>
+                <Link href={`/league/${leagueId}/matchups`} style={{ fontSize: 12, color: "var(--faint)", textDecoration: "none" }}>
+                  Full schedule →
+                </Link>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                {vtfRanked.map((entry, idx) => {
+                  const isMe = entry.teamId === myTeam?.id;
+                  const rank = idx + 1;
+                  const anyScored = entry.score != null;
+                  const scoreStr = anyScored ? entry.score!.toFixed(1) : "—";
+                  const recordStr = anyScored ? `${entry.wins}–${entry.losses}${entry.ties > 0 ? `–${entry.ties}` : ""}` : "";
+                  return (
+                    <div key={entry.teamId} style={{
+                      display: "grid",
+                      gridTemplateColumns: "22px 1fr auto auto",
+                      gap: 8, padding: "9px 10px", borderRadius: 8, alignItems: "center",
+                      background: isMe ? "var(--accent-dim)" : "transparent",
+                      borderLeft: isMe ? "2px solid var(--accent)" : "2px solid transparent",
+                    }}>
+                      <span style={{ fontSize: 12, color: "var(--faint)", fontWeight: 700 }}>{rank}</span>
+                      <span style={{
+                        fontSize: 14, fontWeight: isMe ? 700 : 400,
+                        color: isMe ? "var(--accent-strong)" : "var(--text)",
+                        overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                      }}>
+                        {entry.teamName}
+                        {isMe && <span style={{ marginLeft: 6, fontSize: 10, color: "var(--accent)" }}>You</span>}
+                      </span>
+                      <span className="font-stats" style={{ fontSize: 12, color: "var(--muted)", textAlign: "right", whiteSpace: "nowrap" }}>
+                        {recordStr}
+                      </span>
+                      <span className="font-stats" style={{
+                        fontSize: 15, fontWeight: 700, textAlign: "right", whiteSpace: "nowrap",
+                        color: isMe ? "var(--accent-strong)" : "var(--text)",
+                        minWidth: 52,
+                      }}>
+                        {scoreStr}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+          )}
 
           {/* Playoff race / standings — primary module */}
           {hasResults && !playoffsStarted && standings.length > 0 && (
@@ -564,7 +691,7 @@ export default async function LeagueOverviewPage({
                 </div>
                 <div>
                   <div style={{ fontSize: 11, fontWeight: 700, color: "var(--faint)", textTransform: "uppercase" as const, letterSpacing: "0.06em", marginBottom: 8 }}>
-                    Underperforming
+                    Cold this week
                   </div>
                   {leagueLeaders.disappointing.map((p, i) => (
                     <LeagueLeaderRow key={p.playerId} player={p} rank={i + 1} variant="low" />
@@ -574,83 +701,12 @@ export default async function LeagueOverviewPage({
             </section>
           )}
 
-          {/* ── All matchups this week — compact / secondary ── */}
-          {thisWeekMatchups.length > 0 && (
-            <section style={card}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-                {cardLabel(currentWeek !== null ? `Week ${currentWeek} matchups` : "Matchups", 0)}
-                <Link href={`/league/${leagueId}/matchups`} style={{ fontSize: 12, color: "var(--faint)", textDecoration: "none" }}>
-                  Full schedule →
-                </Link>
-              </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
-                {thisWeekMatchups.map((m) => {
-                  const scored = m.homeScore !== null && m.awayScore !== null;
-                  const isMyMatchup = m.homeTeamId === myTeam?.id || m.awayTeamId === myTeam?.id;
-                  return (
-                    <div key={m.id} style={{
-                      display: "grid", gridTemplateColumns: "1fr auto 1fr",
-                      gap: "4px 8px", padding: "6px 8px", borderRadius: 8, alignItems: "center",
-                      background: isMyMatchup ? "rgba(143,193,232,0.05)" : "transparent",
-                      border: isMyMatchup ? "1px solid rgba(143,193,232,0.15)" : "1px solid transparent",
-                    }}>
-                      <span style={{
-                        fontSize: 13, textAlign: "right", overflow: "hidden",
-                        textOverflow: "ellipsis", whiteSpace: "nowrap",
-                        color: m.homeTeamId === myTeam?.id ? "var(--text)" : "var(--dim)",
-                        fontWeight: m.homeTeamId === myTeam?.id ? 600 : 400,
-                      }}>
-                        {m.homeTeam.name}
-                        {scored && <span className="font-stats" style={{ marginLeft: 6, fontWeight: 700 }}>{m.homeScore!.toFixed(1)}</span>}
-                      </span>
-                      <span style={{ fontSize: 10, color: "var(--dim)", fontWeight: 700, letterSpacing: "0.5px" }}>
-                        {scored ? "·" : "VS"}
-                      </span>
-                      <span style={{
-                        fontSize: 13, overflow: "hidden",
-                        textOverflow: "ellipsis", whiteSpace: "nowrap",
-                        color: m.awayTeamId === myTeam?.id ? "var(--text)" : "var(--dim)",
-                        fontWeight: m.awayTeamId === myTeam?.id ? 600 : 400,
-                      }}>
-                        {scored && <span className="font-stats" style={{ marginRight: 6, fontWeight: 700 }}>{m.awayScore!.toFixed(1)}</span>}
-                        {m.awayTeam.name}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            </section>
-          )}
         </div>
 
-        {/* RIGHT: My matchup + lineup status + activity */}
+        {/* RIGHT: Lineup status (in-season priority) + My Franchise + activity */}
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
 
-          {/* My Franchise quick-link — sky-accent commissioner card */}
-          {myTeam && (
-            <section style={{
-              background: "linear-gradient(135deg, rgba(143,193,232,0.10), rgba(143,193,232,0.04))",
-              border: "1px solid rgba(143,193,232,0.28)",
-              borderRadius: 14, padding: "14px 18px",
-              display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12,
-            }}>
-              <div>
-                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--accent)", marginBottom: 3 }}>
-                  My Franchise
-                </div>
-                <div style={{ fontSize: 14, fontWeight: 700, color: "var(--text)" }}>{myTeam.name}</div>
-              </div>
-              <Link href={`/team/${myTeam.id}/matchup`} style={{
-                fontSize: 12, fontWeight: 700, padding: "7px 14px", borderRadius: 8,
-                background: "rgba(143,193,232,0.15)", color: "var(--accent-strong)",
-                border: "1px solid rgba(143,193,232,0.30)", textDecoration: "none", flexShrink: 0,
-              }}>
-                My Matchup →
-              </Link>
-            </section>
-          )}
-
-          {/* Team lineup status widget */}
+          {/* Team lineup status widget — first in sidebar during in-season, most urgent commissioner view */}
           {league.status === "IN_SEASON" && league.teams.length > 0 && (
             <section style={card}>
               {sideLabel("Lineup status")}
@@ -695,8 +751,37 @@ export default async function LeagueOverviewPage({
             </section>
           )}
 
+          {/* My Franchise quick-link — sky-accent commissioner card */}
+          {myTeam && (
+            <section style={{
+              background: "linear-gradient(135deg, rgba(143,193,232,0.10), rgba(143,193,232,0.04))",
+              border: "1px solid rgba(143,193,232,0.28)",
+              borderRadius: 14, padding: "14px 18px",
+              display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12,
+            }}>
+              <div>
+                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--accent)", marginBottom: 3 }}>
+                  My Franchise
+                </div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: "var(--text)" }}>{myTeam.name}</div>
+              </div>
+              <Link href={`/team/${myTeam.id}/matchup`} style={{
+                fontSize: 12, fontWeight: 700, padding: "7px 14px", borderRadius: 8,
+                background: "rgba(143,193,232,0.15)", color: "var(--accent-strong)",
+                border: "1px solid rgba(143,193,232,0.30)", textDecoration: "none", flexShrink: 0,
+              }}>
+                My Matchup →
+              </Link>
+            </section>
+          )}
+
           {/* Biggest upsets this season */}
           {upsets.length > 0 && <UpsetCard upsets={upsets} />}
+
+          {/* Season superlatives */}
+          {superlativeItems.length > 0 && (
+            <SuperlativesCard items={superlativeItems} />
+          )}
 
           {/* League activity */}
           <section style={card}>
@@ -707,13 +792,13 @@ export default async function LeagueOverviewPage({
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {activity.map((evt) => {
                   const ACT_META: Record<string, { label: string; color: string; bg: string }> = {
-                    PLAYER_ADD:            { label: "➕ Add",     color: "var(--green)", bg: "rgba(81,216,138,0.12)" },
-                    PLAYER_DROP:           { label: "➖ Drop",    color: "var(--red)",   bg: "rgba(246,131,127,0.12)" },
-                    DRAFT_PICK:            { label: "🏒 Draft",  color: "var(--accent-strong)", bg: "rgba(143,193,232,0.14)" },
-                    TRADE:                 { label: "🔄 Trade",  color: "var(--accent-strong)", bg: "rgba(143,193,232,0.10)" },
-                    PLAYOFF_QUALIFICATION: { label: "🏆 Playoff",color: "var(--gold)",  bg: "rgba(245,201,123,0.12)" },
-                    MAJOR_PERFORMANCE:     { label: "⚡ Perf",   color: "var(--gold)",  bg: "rgba(245,201,123,0.10)" },
-                    LEAGUE_STORYLINE:      { label: "Story",      color: "var(--muted)", bg: "rgba(150,160,200,0.08)" },
+                    PLAYER_ADD:            { label: "Add",     color: "var(--green)", bg: "rgba(81,216,138,0.12)" },
+                    PLAYER_DROP:           { label: "Drop",    color: "var(--red)",   bg: "rgba(246,131,127,0.12)" },
+                    DRAFT_PICK:            { label: "Draft",  color: "var(--accent-strong)", bg: "rgba(143,193,232,0.14)" },
+                    TRADE:                 { label: "Trade",  color: "var(--accent-strong)", bg: "rgba(143,193,232,0.10)" },
+                    PLAYOFF_QUALIFICATION: { label: "Playoff",color: "var(--gold)",  bg: "rgba(245,201,123,0.12)" },
+                    MAJOR_PERFORMANCE:     { label: "Perf",   color: "var(--gold)",  bg: "rgba(245,201,123,0.10)" },
+                    LEAGUE_STORYLINE:      { label: "Story",  color: "var(--muted)", bg: "rgba(150,160,200,0.08)" },
                   };
                   const m = ACT_META[evt.type] ?? { label: "Event", color: "var(--faint)", bg: "rgba(150,160,200,0.06)" };
                   return (
