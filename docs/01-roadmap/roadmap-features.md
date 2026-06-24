@@ -93,9 +93,6 @@
 - **UX-032. "+X EDGE" Label** — ✅ DONE (Sprint 14, commit 972362d)
 - **UX-051. VP Popover Overflows Viewport on Mobile** — ✅ DONE (Sprint 22 via RD-004)
 - **UX-052. Invite Landing Page Fantasy Primer** — ✅ DONE (Sprint 22)
-- **UX-054. Replay CTA Context Copy on Landing Page** — ✅ DONE (Sprint 22)
-- **UX-055. Wizard Step Count Before Welcome Screen** — ✅ DONE (Sprint 22)
-- **UX-056. Commissioner Draft Checklist Plain-Language Primer** — ✅ DONE (Sprint 22)
 - **UX-057. Wizard Rules Step Jargon Wall** — ✅ DONE (Sprint 22 via RD-004)
 - **REBRAND-001 through REBRAND-008** — ✅ DONE (Sprint 9)
 - **DS-001. Homepage Rewrite** — ✅ DONE (Sprint 15)
@@ -108,19 +105,9 @@
 - **RD-002. Inline Hex Sweep** — ✅ DONE (Sprint 22)
 - **RD-003. Emoji Policy Restoration** — ✅ DONE (Sprint 22)
 - **RD-004. VP Popover Fix + Wizard Rebuild** — ✅ DONE (Sprint 22)
-- **RD-005. League Overview Flagship Redesign** — ✅ DONE (Sprint 22)
-- **RD-006. Team Matchup Flagship Redesign** — ✅ DONE (Sprint 22)
 - **RD-007. Remaining Page Recolor Sweep** — ✅ DONE (Sprint 22)
 - **RD-008. Momentum Strip Component** — ✅ DONE (Sprint 22)
-- **RD-009. Prestige Gradient Token** — ✅ DONE (Sprint 22)
-- **RD-010. Gold Prestige Moments** — ✅ DONE (Sprint 22)
-- **RD-011. Empty State Personality Copy** — ✅ DONE (Sprint 22)
-- **RD-012. Wizard "Your League at a Glance" Summary Panel** — ✅ DONE (Sprint 22)
 - **RD-013. Team Identity Colors** — ✅ DONE (Sprint 23)
-- **RD-014. Live Matchup Excitement Indicators** — ✅ DONE (Sprint 22)
-- **RD-015. Settings Editor Rule-Sheet Restructure** — ✅ DONE (Sprint 22)
-- **RD-016. Brand Theme Naming — "Northern Ice"** — ✅ DONE (Sprint 22)
-- **RD-017. Emotional Design North-Star Principles** — ✅ DONE (Sprint 22)
 - **LL-001. Weekly Awards Ceremony** — ✅ DONE (Sprint 21)
 - **LL-002. Matchup Momentum Strip** — ✅ DONE (Sprint 21 data / Sprint 22 visual)
 - **LL-003. Animated Stat Chips** — ✅ DONE (Sprint 21)
@@ -585,135 +572,67 @@ Issue: GP/G/A/PTS/PPP/SOG/HIT/BLK/FPTS columns have no hover tooltips (invisible
 
 ---
 
-## UX-037. FPTS Is the Rightmost Column but the Most Important One
+## UX-037. FPTS Is Rightmost Column but Most Important
 
-Sprint: Post-launch backlog
-Priority: P2
-Effort: S
+Sprint: Post-launch backlog | Priority: P2 | Effort: S | Files: `app/team/[teamId]/roster/RosterManager.tsx`
 
-Issue: The natural left-to-right reading order leads through six hockey stats before reaching FPTS — the actual reason a player is on or off the roster.
-
-Files: `app/team/[teamId]/roster/RosterManager.tsx`
-
-Acceptance Criteria:
-- AC-001: FPTS column appears immediately after GP (second column), not as the last column.
-- AC-002: The column order change applies to both the roster table and the free-agent table.
-- AC-003: Sort behavior is unchanged — FPTS remains sortable.
+Issue: 6 hockey stats before FPTS. Fix: move FPTS to 2nd column (after GP) in both roster and FA tables; sort unchanged.
 
 ---
 
-## UX-038. "WK" Games-Remaining Circles Have No Column Header in the FA List
+## UX-038. Games-Remaining Circles No Column Header in FA List
 
-Sprint: Post-launch backlog
-Priority: P2
-Effort: S
+Sprint: Post-launch backlog | Priority: P2 | Effort: S | Files: `app/team/[teamId]/roster/RosterManager.tsx`
 
-Issue: Purple numbered circles (1, 2, 3) in the Free Agents list show games remaining this week with no column header.
-
-Files: `app/team/[teamId]/roster/RosterManager.tsx`
-
-Acceptance Criteria:
-- AC-001: The games-remaining column in the FA table has a visible header label: "Wk" or "Games".
-- AC-002: A tooltip on the header reads: "Games remaining for this player's PWHL team in the current scoring period".
+Issue: Purple numbered circles have no column header. Fix: add "Wk" or "Games" header with tooltip "Games remaining for this player's PWHL team in the current scoring period".
 
 ---
 
-## UX-039. "Claim" vs "Add" Button Distinction Is Unexplained
+## UX-039. "Claim" vs "Add" Button Distinction Unexplained
 
-Sprint: Post-launch backlog
-Priority: P2
-Effort: S
+Sprint: Post-launch backlog | Priority: P2 | Effort: S | Files: `app/team/[teamId]/roster/RosterManager.tsx`
 
-Issue: Some players show "On Waivers" with a "Claim" button; others show "Add". There is no inline explanation of what happens differently.
-
-Files: `app/team/[teamId]/roster/RosterManager.tsx`
-
-Acceptance Criteria:
-- AC-001: Rows with "Claim" display a one-line tooltip: "On waivers — your claim will be processed in priority order within 48 hours".
-- AC-002: Rows with immediate "Add" display no additional note (or a tooltip: "Immediate — added to your roster now").
-- AC-003: The distinction is visible without navigating to the Waiver Wire tab.
+Issue: No explanation of Claim (waiver queue) vs Add (immediate). Fix: tooltip on "Claim" rows: "On waivers — processed in priority order within 48 hours".
 
 ---
 
-## UX-040. Standings "Games Back" Copy Uses Basketball Idiom
+## UX-040. Standings "Games Back" Uses Basketball Idiom
 
-Sprint: Post-launch backlog
-Priority: P2
-Effort: S
+Sprint: Post-launch backlog | Priority: P2 | Effort: S | Files: `app/league/[leagueId]/standings/page.tsx`
 
-Issue: The standings banner reads "2.0 games clear of the bubble." "Games back" and "the bubble" are basketball/March Madness vocabulary.
-
-Files: `app/league/[leagueId]/standings/page.tsx`
-
-Acceptance Criteria:
-- AC-001: "Games back" / "games clear" / "the bubble" phrasing is replaced with VP-based language: "You're 3rd — 2 VP ahead of the cutoff. Top 4 make playoffs".
-- AC-002: The banner does not use sport-idiom language without explanation.
-- AC-003: The replacement copy is 25 words or fewer.
+Issue: "2.0 games clear of the bubble" is basketball vocabulary. Fix: VP-based language: "You're 3rd — 2 VP ahead of the cutoff. Top 4 make playoffs" (≤25 words).
 
 ---
 
-## UX-041. Analysis Tab "vs Median" Numbers Have No Unit Label
+## UX-041. Analysis "vs Median" No Unit Label
 
-Sprint: Post-launch backlog
-Priority: P2
-Effort: S
+Sprint: Post-launch backlog | Priority: P2 | Effort: S | Files: `app/team/[teamId]/analysis/page.tsx`
 
-Issue: The Position Groups table shows "+6.3" for Goalie vs median with no unit label.
-
-Files: `app/team/[teamId]/analysis/page.tsx`
-
-Acceptance Criteria:
-- AC-001: Each delta displays a unit suffix or column header: "+6.3 FP" or a column header "vs Median (FP this week)".
-- AC-002: The unit label is correct for the time window shown.
+Issue: "+6.3" has no unit. Fix: suffix "FP" or column header "vs Median (FP this week)".
 
 ---
 
-## UX-042. Negative FP Values in Player Trends Have No Explanation
+## UX-042. Negative FP Values Have No Explanation
 
-Sprint: Post-launch backlog
-Priority: P2
-Effort: S
+Sprint: Post-launch backlog | Priority: P2 | Effort: S | Files: `app/team/[teamId]/analysis/page.tsx`
 
-Issue: The Player Trends table shows negative values (e.g., "-3.5 in Week 2") with no explanation. First-time users assume this is a bug.
-
-Files: `app/team/[teamId]/analysis/page.tsx`
-
-Acceptance Criteria:
-- AC-001: A note near or on hover of the Player Trends table explains: "Some scoring categories can contribute negative points (e.g., goals allowed for goalies)".
-- AC-002: The note renders without overflow at 390px mobile.
+Issue: Negative FP in trends table looks like a bug. Fix: add a note near the table: "Some categories contribute negative points (e.g., goals allowed for goalies)".
 
 ---
 
-## UX-043. Landing Page "Work the Wire" Jargon Is Opaque
+## UX-043. Landing Page "Work the Wire" Jargon
 
-Sprint: Post-launch backlog
-Priority: P2
-Effort: S
+Sprint: Post-launch backlog | Priority: P2 | Effort: S | Files: `app/page.tsx`
 
-Issue: The landing page "How it works" reads "Build rosters, set lineups, work the wire." "The wire" is waiver-wire jargon — opaque to the PWHL-curious newcomer.
-
-Files: `app/page.tsx`
-
-Acceptance Criteria:
-- AC-001: "Work the wire" is replaced with plain language: "Pick up free agents to strengthen your roster" or "Add and drop players during the season".
-- AC-002: No other fantasy jargon in the "How it works" list appears without definition.
+Issue: "Work the wire" is opaque to newcomers. Fix: "Pick up free agents to strengthen your roster" or equivalent plain language.
 
 ---
 
-## UX-044. "Season Series: 0-0" Shows Before Any Matchup Has Been Played
+## UX-044. "Season Series: 0-0" Shows Before First Matchup
 
-Sprint: Post-launch backlog
-Priority: P3
-Effort: S
+Sprint: Post-launch backlog | Priority: P3 | Effort: S | Files: `app/team/[teamId]/matchup/page.tsx`, `components/DuelHero.tsx`
 
-Issue: The matchup page displays "0-0 season series" before the two teams have played each other.
-
-Files: `app/team/[teamId]/matchup/page.tsx`, `components/DuelHero.tsx`
-
-Acceptance Criteria:
-- AC-001: When the H2H record is 0-0-0, the display shows "First meeting this season" or is hidden.
-- AC-002: The record appears once at least one completed matchup exists.
-- AC-003: Active (in-progress) matchups are not counted in the series record.
+Issue: H2H record shows "0-0" before any matchup. Fix: hide or show "First meeting this season" when record is 0-0-0.
 
 ---
 

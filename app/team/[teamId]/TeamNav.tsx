@@ -26,10 +26,11 @@ function TeamNavInner({ teamId, leagueId, leagueName, playoffStatus, leagueStatu
     { label: "My Roster",    href: rosterPath,                           active: isRosterActive || pathname.startsWith(`/team/${teamId}/lineup`) },
     { label: "Trades",       href: tradesPath,                           active: isTradesActive },
     { label: "Standings",    href: `/team/${teamId}/standings`,          active: pathname.startsWith(`/team/${teamId}/standings`) },
-    { label: "Scoreboard",  href: `/league/${leagueId}/matchups`,       active: pathname.startsWith(`/league/${leagueId}/matchups`) },
+    { label: "Scoreboard",   href: `/team/${teamId}/scoreboard`,         active: pathname.startsWith(`/team/${teamId}/scoreboard`) },
     { label: "My Season",    href: `/team/${teamId}/schedule`,           active: pathname.startsWith(`/team/${teamId}/schedule`) },
     { label: "Transactions", href: `/team/${teamId}/transactions`,       active: pathname.startsWith(`/team/${teamId}/transactions`) },
     { label: "Analysis",     href: `/team/${teamId}/analysis`,           active: pathname.startsWith(`/team/${teamId}/analysis`) },
+    { label: "Settings",     href: `/team/${teamId}/settings`,           active: pathname.startsWith(`/team/${teamId}/settings`) },
     ...(leagueStatus === "PRE_DRAFT"
       ? [{ label: "Draft Queue", href: `/team/${teamId}/draft-prep`,     active: pathname.startsWith(`/team/${teamId}/draft-prep`) }]
       : []),
