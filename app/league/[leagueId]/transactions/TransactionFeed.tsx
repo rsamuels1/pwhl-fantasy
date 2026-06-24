@@ -6,6 +6,9 @@ import type { EnrichedTransactionEvent } from "@/lib/services/activity";
 
 interface Props {
   leagueId: string;
+  /** Base path for filter navigation, e.g. "/league/abc/transactions" or "/team/xyz/transactions".
+   *  When omitted, defaults to the league-scoped path (backward compat). */
+  basePath?: string;
   initialEvents: EnrichedTransactionEvent[];
   initialHasMore: boolean;
   teams: { id: string; name: string }[];
@@ -52,6 +55,7 @@ function timeAgo(iso: string, nowMs: number): string {
 
 export default function TransactionFeed({
   leagueId,
+  basePath,
   initialEvents,
   initialHasMore,
   teams,
@@ -59,6 +63,7 @@ export default function TransactionFeed({
   selectedType,
   nowMs,
 }: Props) {
+  const filterBase = basePath ?? `/league/${leagueId}/transactions`;
   const router = useRouter();
   const [events, setEvents] = useState<EnrichedTransactionEvent[]>(initialEvents);
   const [hasMore, setHasMore] = useState(initialHasMore);
@@ -129,7 +134,7 @@ export default function TransactionFeed({
       url.searchParams.delete(key);
     }
     const search = url.searchParams.toString();
-    router.push(`/league/${leagueId}/transactions${search ? `?${search}` : ""}`);
+    router.push(`${filterBase}${search ? `?${search}` : ""}`);
   }
 
   const typeMeta = (type: string) => {

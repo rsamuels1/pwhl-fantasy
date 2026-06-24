@@ -171,9 +171,13 @@ export async function PUT(
   if (!entry) return NextResponse.json({ error: "Player not on roster" }, { status: 404 });
 
   // Check lock: locked if team has played any game this scoring period.
+  // Lock only applies when moving a player OUT of an active slot (active → bench/IR).
+  // Moving a player INTO an active slot (bench → active) is always allowed — this is how
+  // managers pick up their goalie or fill open starters mid-week.
   const playerTeamId = entry.player.team?.id ?? null;
   const locked = lockTime(playerTeamId, periodGamesPut, nowMsPut, activePeriodPut?.startsAt.getTime());
-  if (locked) {
+  const isMovingOutOfActiveSlot = ACTIVE_SLOTS.includes(entry.slot) && !ACTIVE_SLOTS.includes(targetSlot);
+  if (locked && isMovingOutOfActiveSlot) {
     return NextResponse.json({
       error: `${entry.player.firstName} ${entry.player.lastName} is locked — they played on ${locked.toISOString().slice(0, 10)} this week.`,
     }, { status: 409 });

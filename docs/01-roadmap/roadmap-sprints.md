@@ -1666,20 +1666,41 @@ Goal: Give the league a narrative. A scrollable season timeline, a record book, 
 
 ---
 
-## Sprint 25 — "Living League: Legacy + Carry-Forwards" · PLANNED · Milestone 3 depth + Milestone 5 · P1/P2
+## Sprint 25 — "Living League: Legacy + Carry-Forwards" · BUILT (pending commit) · Milestone 3 depth + Milestone 5 · P1/P2
 
 Goal: Seasons contribute to franchise identity. Win something and it stays with you forever. The champion gets a banner; the season opener gets a card. Includes two carry-forwards from Sprint 24 (UX-058, BF-020) and the franchise archetype system that was out-of-scope in Sprint 24 (LL-011b).
 
 | Story | Track | Size | Priority | Status |
 |---|---|---|---|---|
-| LL-009 — Trophy Cabinet: `Achievement` model + `AchievementType` enum in schema; achievements written at lifecycle hooks (clinch, championship, weekly high score, regular season winner); `/team/[teamId]/trophies` page; "Trophies" in `TeamNav.tsx`; trophy icons in matchup page header (Z2) | Feature | L | P1 | Open |
-| LL-011b — Franchise Identity Archetypes: `computeFranchiseIdentity()` in `lib/services/analysis-service.ts`; 4 archetypes (Boom or Bust, Defensive Fortress, Sniper Factory, Goaltender Driven); archetype chip in team matchup page Z2 area; requires ≥4 scored weeks; no schema change | Feature | M | P2 | Open |
-| LL-014 — Opening Day Card: dismissible hero card at Z0 on matchup page during Week 1 only (`activePeriod.number === 1`); content: season year, week count, manager count, "1 Champion"; dismiss flag in `localStorage` keyed on `leagueId + season` | Feature | S | P2 | Open |
-| LL-015 — Championship Banner: dismissible banner on matchup page for league champion after `playoffStatus === COMPLETE`; triggered by unread `CHAMPIONSHIP_WON` notification; `createNotification()` called from `advance-playoff-round` route when final round scores; dismiss calls `markAllRead()` | Feature | S | P1 | Open |
-| UX-058 — Trade Proposal 4-Step Guided Experience: replace the single-form 80-player wall with a 4-step state machine in `ProposeTrade.tsx`; Step 1 pick a GM (team cards with accent color + W-L), Step 2 want (partner's ~13 players only), Step 3 offer (your eligible players only), Step 4 review (FP give/get subtotals); sticky FP delta bar; same `POST /trades` endpoint; no schema changes | UX Fix | M | P1 | Open (carried from Sprint 24) |
-| BF-020 — Auto-draft position balance: split Tier 2 in `bestAvailablePlayerIds()` so defenders filling D slots rank above forwards; ensures every auto-drafted team has ≥2 defenders; existing Tier 1 (goalie) and Tier 3 (bench) unchanged | Bug | S | P2 | Open (carried from Sprint 24) |
+| LL-009 — Trophy Cabinet: `Trophy` model + `TrophyType` enum in schema (`prisma/schema.prisma`); achievements written at lifecycle hooks; `/team/[teamId]/trophies` page; `TrophyCard.tsx` + `TrophyShelf.tsx`; trophy icons in matchup page header (Z2); `lib/services/trophy-service.ts` | Feature | L | P1 | BUILT (pending commit) |
+| LL-011b — Franchise Identity Archetypes: `computeFranchiseIdentity()` in `lib/services/franchise-identity.ts`; archetype chip in team matchup page Z2 area via `FranchiseIdentityChip.tsx`; requires ≥4 scored weeks; no schema change | Feature | M | P2 | BUILT (pending commit) |
+| LL-014 — Opening Day Card: dismissible hero card at Z0 on matchup page during Week 1 only (`activePeriod.number === 1`); `OpeningDayCard.tsx` imported in `app/team/[teamId]/matchup/page.tsx`; dismiss flag in `localStorage` keyed on `leagueId + season` | Feature | S | P2 | BUILT (pending commit) |
+| LL-015 — Championship Banner: dismissible banner on matchup page for league champion after `playoffStatus === COMPLETE`; `ChampionshipBanner.tsx` imported in `app/team/[teamId]/matchup/page.tsx`; triggered by unread `CHAMPIONSHIP_WON` notification; dismiss calls `markAllRead()` | Feature | S | P1 | BUILT (pending commit) |
+| UX-058 — Trade Proposal 4-Step Guided Experience: 4-step state machine in `app/league/[leagueId]/trades/new/ProposeTrade.tsx` confirmed; Step 0 pick partner, Step 1 select players to give, Step 2 select players to receive, Step 3 review + send; progress bar component; same `POST /trades` endpoint | UX Fix | M | P1 | BUILT (pending commit) |
+| BF-020 — Auto-draft position balance: Tier 1b added in `bestAvailablePlayerIds()` in `lib/draft/server.ts`; defensemen filling open D slots now ranked at same priority as goalies (comment "BF-020" confirmed at line 469/525) | Bug | S | P2 | BUILT (pending commit) |
 
-**Exit criteria:** `Achievement` model and `AchievementType` enum migrated and in schema. After the final playoff round scores, the champion's owner sees the championship banner on their matchup page; the banner dismisses correctly. A `CHAMPION` `Achievement` row is written for the winning team. `/team/[teamId]/trophies` page loads and renders the trophy grid. Opening Day card appears on the matchup page when `activePeriod?.number === 1` and disappears after dismiss. Franchise archetype chip renders on at least one team's matchup page when ≥4 weeks of `StatLine` data exists. Trade proposal flow navigates through all 4 steps and submits via the existing `POST /trades` endpoint. Every auto-drafted team has ≥2 defenders after a complete auto-draft. Schema migration clean (`npx prisma migrate dev`); all existing tests pass; `tsc --noEmit` clean.
+**Result: 6/6 BUILT — all code exists in working tree as modified/untracked files; not yet committed. Schema change: `Trophy` model + `TrophyType` enum in `prisma/schema.prisma` (note: model is named `Trophy`, not `Achievement` as originally planned).**
+
+---
+
+## Sprint 26 — "Beta Defect Sweep + Trade Polish" · PLANNED · Track V+F · P0/P1/P2
+
+Goal: Resolve all open beta defects surfaced by the Jun 24 feedback batch before public launch. Two P0 navigation regressions (BF-024, BF-027) must ship first; P1 items follow. Includes carry-forwards from Sprints 18/24 (BF-012, BF-013) that remain open.
+
+| Story | Track | Size | Priority | Status |
+|---|---|---|---|---|
+| BF-024 — Transactions team nav bounces to league dashboard: `/team/[teamId]/transactions` renders `TransactionFeed` in team layout instead of redirecting; `TeamNav.tsx` "Transactions" link targets team-scoped route | Bug | S | P0 | Open |
+| BF-027 — Activity feed LEAGUE_STORYLINE regression: raw enum string still appearing in newer leagues; investigate whether `getLeagueActivity()` LEAGUE_STORYLINE case is partial or a new regression path; verify fix in both league overview activity feed and standalone transactions feed | Bug | S | P0 | Open |
+| BF-022 — BottomNav visible on laptop/desktop: hide `BottomNav` at ≥768px (or ≥900px, matching `useIsMobile` breakpoint); desktop TeamNav tab bar continues to serve non-mobile users | Bug | S | P1 | Open |
+| BF-023 — Transaction history missing FA adds: investigate whether `PLAYER_ADD` `LeagueEvent` is emitted from the direct FA add path (vs waiver claim path only); if not, add event emission in the waiver API route for direct adds | Bug | M | P1 | Open |
+| BF-025 — Trade UI forces same-position matching: remove position filter from ProposeTrade.tsx Step 1/2 player selection; trade engine `checkRosterLegal` still validates legality at execution, not at proposal time | Bug | S | P1 | Open |
+| BF-026 — Standings playoff cutoff text hard to read: improve contrast of "Top 4 teams advance to the playoffs — dashed line marks the cutoff" subtitle to WCAG AA standard | Bug | S | P1 | Open |
+| BF-012 — FA add confirms success but shows error modal: trace `handleAdd` + `AddAndSlotModal` capacity check; ensure success path never shows "roster is full" error when DB state is correct (second report Jun 24 confirms still open) | Bug | M | P1 | Open (carried from Sprint 18) |
+| BF-013 — Trades blocked between draft completion and season start: `proposeTrade()` in `lib/services/trade-service.ts` incorrectly blocks in `POST_DRAFT` window; fix: only block when `playoffStatus !== "NOT_STARTED"` OR `status === "COMPLETE"`; update Trade Center CTA visibility | Bug | S | P1 | Open (carried from Sprint 18) |
+| BF-028 — Commissioner has no pending trade visibility: badge or count on "Admin" nav link when trades are in `PENDING_REVIEW` status, OR pending-review callout in commissioner overview action strip; no schema change | Suggestion | S | P1 | Open (new Jun 24) |
+| BF-021 — DnD lineup mobile UX friction: on viewports ≤768px reduce scrolling needed to compare bench vs active slots; verify 44px drag handles; no desktop regression | Suggestion | M | P2 | Open (new Jun 24) |
+
+**Exit criteria:** No raw "LEAGUE_STORYLINE" string appears in any activity feed across any league state. `TransactionFeed` renders correctly inside the team layout without a league-layout redirect. `BottomNav` is not visible at laptop/desktop viewport widths. After a successful FA add the UI does not show a "roster is full" error. Trades can be proposed immediately after draft completion. Commissioner sees a count of pending trades on the league dashboard without visiting the admin panel. `tsc --noEmit` clean; all existing tests pass.
 
 ---
 

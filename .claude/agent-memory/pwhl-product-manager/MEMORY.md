@@ -9,11 +9,11 @@
 - [Replay Simulator v2 Spec](project-replay-sim-v2.md) — Week-boundary pause + controls on league overview + matchup page; spec at docs/02-engineering/replay-simulator-v2-spec.md; P1, no schema changes
 - [Sprint 9 — PWHL GM Rebrand](project-sprint9-rebrand.md) — 8 stories, 43 pts; P1 min-ship=11 pts (~8h); REBRAND-001–008; trigger: Sprint 8 complete + commissioners have drafted
 - [Playoff System Audit](project-playoff-audit.md) — PLAYOFF-BUG-001 confirmed (bracket page ?? 6 not ?? 4); Q1 VP filter risk + Q2 bracket hydration risk; spec at docs/02-engineering/playoff-system-spec.md; must resolve before beta invites
-- [Beta Feedback Bugs](project-beta-feedback-bugs.md) — BF-001/BF-002 FIXED Sprint 9; BF-012–017 SHIPPED Sprint 18; BF-018 SHIPPED Sprint 22; BF-019 blocked (email); BF-020 DEFERRED Sprint 25 (auto-draft position balance); next new ID: BF-021
+- [Beta Feedback Bugs](project-beta-feedback-bugs.md) — Full triage Jun 24: BF-001–020 resolved/tracked; BF-020 BUILT Sprint 25; BF-021–028 new Jun 24 items in Sprint 26 backlog; next ID: BF-029
 - [Sprint 12 — Onboarding & First-Run UX](project-sprint12-onboarding.md) — 9 stories OB-001–009 from Pass 5 critique; 4 P0 (CTA routing, VP in wizard, step telegraphing, cancel safety); next OB-NNN is OB-012; next UX-NNN is UX-051
 - [Sprint 13/14 Plan](project-sprint13-14-plan.md) — Sprint 13 ABSORBED Jun 22 (3/14 shipped, 11 carried to Sprint 18); Sprint 14 COMPLETE Jun 22 (11/12; UX-045 deferred post-launch)
 - [Sprint 15 — Visual Design System](project-sprint15-design-system.md) — 3/3 DS stories + BF-008/OB-001/OB-008 (Sprint 13 partial) all shipped Jun 22, 2026; Sprint 13 now 3/14
 - [Sprint 17 — Agent Test Run Fixes](project-sprint17-agent-test-fixes.md) — 9/9 items AG-001–AG-009 COMPLETE Jun 22; schema: FantasyLeague.isPublic; next story ID: AG-010
 - [Sprint 18 — Beta Operations + Onboarding Repair](project-sprint18-plan.md) — ✅ COMPLETE Jun 23, 2026; 24 items across 5 tracks; Track E ad-hoc: BF-015/016/017 + BLR-003; next BF-NNN: BF-018
 - [Sprint 19 — IA Restructure COMPLETE](project-sprint19-plan.md) — 5/5 parts shipped Jun 23: emoji policy, Trades→My Franchise, league overview commissioner-only, DnD lineup on roster, commissioner god-mode; Playwright UX items (BF-018, UX-051–057) reassigned to Sprint 22
-- [Sprint 20–24 History](project-sprint20-and-sprint22.md) — Sprint 20/21/22/23 COMPLETE; Sprint 24 COMPLETE 5/7 (LL-006/010/011/012/023 DONE; UX-058+BF-020 deferred to Sprint 25); Sprint 25 now current
+- [Sprint 20–25 History](project-sprint20-and-sprint22.md) — Sprint 24 COMPLETE 5/7; Sprint 25 BUILT 6/6 (LL-009/011b/014/015/UX-058/BF-020 in working tree, pending commit); Sprint 26 is current — 10 items, 2 P0 regressions (BF-024/027)

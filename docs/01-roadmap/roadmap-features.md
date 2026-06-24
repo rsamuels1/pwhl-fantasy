@@ -125,6 +125,12 @@
 - **LL-012. Manager Superlatives** — ✅ DONE (Sprint 24)
 - **LL-023. Empty States** — ✅ DONE (Sprint 24)
 - **Sprint 18 Beta Operations + Onboarding Repair (24 items across 5 tracks)** — ✅ DONE (Sprint 18)
+- **LL-009. Trophy Cabinet** — BUILT Sprint 25 (pending commit; `Trophy` model + `TrophyType` enum in schema; `lib/services/trophy-service.ts`; `/team/[teamId]/trophies` page; `TrophyCard.tsx`, `TrophyShelf.tsx`; trophy icons in matchup page Z2)
+- **LL-011b. Franchise Identity Archetypes** — BUILT Sprint 25 (pending commit; `lib/services/franchise-identity.ts`; `FranchiseIdentityChip.tsx` in matchup page Z2)
+- **LL-014. Opening Day Card** — BUILT Sprint 25 (pending commit; `OpeningDayCard.tsx` imported in matchup page; Week 1 only; localStorage dismiss)
+- **LL-015. Championship Banner** — BUILT Sprint 25 (pending commit; `ChampionshipBanner.tsx` imported in matchup page; triggered by `CHAMPIONSHIP_WON` notification)
+- **UX-058. Trade Proposal 4-Step Guided Experience** — BUILT Sprint 25 (pending commit; 4-step state machine in `ProposeTrade.tsx`; Step 0 pick partner, Step 1 give, Step 2 receive, Step 3 review)
+- **BF-020. Auto-Draft Position Balance** — BUILT Sprint 25 (pending commit; Tier 1b added in `bestAvailablePlayerIds()` in `lib/draft/server.ts`)
 
 ---
 
@@ -1069,6 +1075,177 @@ Acceptance Criteria:
 Effort: Backend S
 
 Files: `lib/draft/server.ts` (`bestAvailablePlayerIds()`)
+
+> **Note:** BF-020 is BUILT in Sprint 25 (Tier 1b added in `lib/draft/server.ts`; pending commit).
+
+---
+
+## BF-021. DnD Lineup Mobile UX Friction
+
+Sprint: 26 | Priority: P2 | Effort: M | Status: Open (new Jun 24, 2026)
+
+Source: FeedbackSubmission `cmqre68q6` (Jun 24). User reports: "I love the look of the two tabbed My Roster page, but I'm not sure I love the mechanism to change my lineup. Which is better for mobile? This drag and drop situation or the two panel? It just feels like a lot of scrolling as a user to get a full view of my options."
+
+On mobile, the DnD roster page requires excessive scrolling to compare bench vs. active slots side-by-side. The active slots and bench section are stacked vertically, pushing bench options below the fold.
+
+Acceptance Criteria:
+- AC-001: On viewports ≤768px, a manager can see at least their active slots summary and at least 2 bench options without scrolling.
+- AC-002: Drag handle touch targets remain ≥44px (matches mobile spec from Sprint 3).
+- AC-003: Desktop DnD behavior is unchanged.
+- AC-004: `tsc --noEmit` clean.
+
+Effort: Frontend M
+
+Files: `components/LineupDnD.tsx`, `app/team/[teamId]/roster/page.tsx`, `app/globals.css`
+
+---
+
+## BF-022. BottomNav Visible on Laptop/Desktop
+
+Sprint: 26 | Priority: P1 | Effort: S | Status: Open (new Jun 24, 2026)
+
+Source: FeedbackSubmission `cmqrlxl7n` (Jun 24). User reports: "the bottom navigation is showing on my laptop, i think they should just be for mobile?"
+
+The `BottomNav` component renders at all viewport widths. It was designed for mobile-only use (Sprint 3: safe-area-inset-bottom, 44px targets). On laptop/desktop it overlaps or crowds the existing `TeamNav` tab bar, creating a duplicate nav.
+
+Acceptance Criteria:
+- AC-001: `BottomNav` is hidden at viewport widths ≥768px (or ≥900px, matching the existing `useIsMobile` hook breakpoint used in the draft room).
+- AC-002: The `TeamNav` tab bar at the top of team pages continues to serve desktop/laptop users without regression.
+- AC-003: `tsc --noEmit` clean.
+
+Effort: Frontend S
+
+Files: `components/BottomNav.tsx` (or wherever it is mounted in team layout), `app/globals.css`
+
+---
+
+## BF-023. Transaction History Missing FA Adds
+
+Sprint: 26 | Priority: P1 | Effort: M | Status: Open (new Jun 24, 2026)
+
+Source: FeedbackSubmission `cmqrm14o1` (Jun 24). User reports: "I don't think transaction history is working for free agents. I picked up multiple Free Agents but it's not showing there."
+
+The transaction history at `/team/[teamId]/transactions` (and `/league/[leagueId]/transactions`) does not show `PLAYER_ADD` events from direct free agent adds. Waiver claim events may emit correctly; direct FA adds (immediate adds, not waiver claims) may not emit a `LeagueEvent`.
+
+Investigation path:
+1. Check `app/api/leagues/[leagueId]/waiver/route.ts` — does the direct FA add path call `emitEvent(PLAYER_ADD, ...)`?
+2. Compare with the waiver claim execution path in `lib/services/waiver-service.ts`.
+3. Check `TransactionFeed.tsx` filter logic — is `PLAYER_ADD` included in the filter set?
+
+Acceptance Criteria:
+- AC-001: After a successful direct FA add, a `PLAYER_ADD` `LeagueEvent` row is created.
+- AC-002: The `PLAYER_ADD` event appears in the transaction feed at `/team/[teamId]/transactions` with the correct player name and timestamp.
+- AC-003: Filtering by "Adds" type surfaces the event.
+- AC-004: `tsc --noEmit` clean; existing waiver tests pass.
+
+Effort: Backend M · Frontend S · Testing S
+
+Files: `app/api/leagues/[leagueId]/waiver/route.ts`, `lib/services/activity.ts`, `app/league/[leagueId]/transactions/TransactionFeed.tsx`
+
+---
+
+## BF-024. Transactions from Team Nav Bounces to League Dashboard
+
+Sprint: 26 | Priority: P0 | Effort: S | Status: Open (new Jun 24, 2026)
+
+Source: FeedbackSubmission `cmqrm1rwe` (Jun 24). User reports: "I dont like how TRANSACTIONS from the My Franchise menu bounces you back to the league dashboard."
+
+Sprint 19 created `/team/[teamId]/transactions` as a route stub. If the route redirects to `/league/[leagueId]/transactions` instead of rendering `TransactionFeed` inline in the team layout, the user exits the franchise zone.
+
+Acceptance Criteria:
+- AC-001: `/team/[teamId]/transactions` renders `TransactionFeed` (or equivalent component) inside the team layout, not the league layout.
+- AC-002: The feed is scoped to this team's relevant events, or shows all league transactions with a team-filter pre-applied.
+- AC-003: `TeamNav.tsx` "Transactions" link targets `/team/[teamId]/transactions`.
+- AC-004: `tsc --noEmit` clean.
+
+Effort: Frontend S
+
+Files: `app/team/[teamId]/transactions/page.tsx`, `app/team/[teamId]/TeamNav.tsx`, `app/league/[leagueId]/transactions/TransactionFeed.tsx`
+
+---
+
+## BF-025. Trade UI Forces Same-Position Matching
+
+Sprint: 26 | Priority: P1 | Effort: S | Status: Open (new Jun 24, 2026)
+
+Source: FeedbackSubmission `cmqrm3n0d` (Jun 24). User reports: "When trading, it's forcing me to only trade for people in the same position. A user should be able to trade any position for any other position."
+
+The trade proposal UI (UX-058 4-step flow in `ProposeTrade.tsx`) appears to filter the partner's or proposer's player list by position. The trade engine (`lib/trades/engine.ts`) does not restrict position-matching — `applyTrade` + `checkRosterLegal` validate roster legality at execution time only. The position filter is a UI-only constraint that is not correct product behavior.
+
+Acceptance Criteria:
+- AC-001: The ProposeTrade step 1 (want) and step 2 (offer) player lists are not filtered by position — any player on either roster is selectable.
+- AC-002: Cross-position trades (e.g., forward for defender) are proposable.
+- AC-003: The trade engine's `checkRosterLegal` still validates that the resulting rosters are legal at execution time, not at proposal time.
+- AC-004: `tsc --noEmit` clean; existing 22 trade engine tests pass.
+
+Effort: Frontend S
+
+Files: `app/league/[leagueId]/trades/new/ProposeTrade.tsx` (player list filter logic in Step 1/2)
+
+---
+
+## BF-026. Standings Playoff Cutoff Text Hard to Read
+
+Sprint: 26 | Priority: P1 | Effort: S | Status: Open (new Jun 24, 2026)
+
+Source: FeedbackSubmission `cmqrm4gwb` (Jun 24). User reports: "I think this text on the standings page is really hard to read: 'Top 4 teams advance to the playoffs — dashed line marks the cutoff'"
+
+The playoff cutoff subtitle on the standings page does not meet WCAG AA contrast requirements (4.5:1) against the page background.
+
+Acceptance Criteria:
+- AC-001: The playoff cutoff subtitle text meets WCAG AA contrast ratio (4.5:1 minimum).
+- AC-002: The text is legible on both mobile and desktop viewport widths.
+- AC-003: No other standings functionality changes.
+
+Effort: Frontend S
+
+Files: `app/league/[leagueId]/standings/page.tsx`, `app/globals.css`
+
+---
+
+## BF-027. Activity Feed LEAGUE_STORYLINE Regression
+
+Sprint: 26 | Priority: P0 | Effort: S | Status: Open (new Jun 24, 2026 — regression of BF-016)
+
+Source: FeedbackSubmission `cmqrm9a1d` (Jun 24). User reports: "We're still getting some 'LEAGUE_STORYLINE' text in the League Activity page on the league dashboard." BF-016 was marked shipped in Sprint 18 (ad-hoc fix), but the symptom recurs in newer leagues.
+
+Hypothesis: BF-016 fixed the `emitWeeklyStorylines()` call path but a separate code path (possibly in `getLeagueActivity()` or a different event emitter) does not include the `description` field, causing the fallback to render the raw enum string.
+
+Investigation path:
+1. Audit all call sites of `emitEvent()` or `createLeagueEvent()` that emit `LEAGUE_STORYLINE` type.
+2. Verify every emit includes a `description` field in the `data` JSON.
+3. Verify `getLeagueActivity()` in `lib/services/activity.ts` handles `LEAGUE_STORYLINE` in all execution paths (not just the `emitWeeklyStorylines` path).
+
+Acceptance Criteria:
+- AC-001: No `LEAGUE_STORYLINE` raw string appears in the activity feed across any league state or scoring path.
+- AC-002: All storyline events render their human-readable `headline` (or `description` field).
+- AC-003: Fix is verified in both the league overview activity feed and the standalone `/league/[leagueId]/transactions` feed.
+- AC-004: `tsc --noEmit` clean; existing tests pass.
+
+Effort: Backend S
+
+Files: `lib/services/storyline-service.ts`, `lib/services/activity.ts`
+
+---
+
+## BF-028. Commissioner Has No Pending Trade Visibility
+
+Sprint: 26 | Priority: P1 | Effort: S | Status: Open (new Jun 24, 2026)
+
+Source: FeedbackSubmission `cmqrmcoei` (Jun 24). User reports: "There's currently a trade proposed in my league but it doesn't tell the commish that anywhere on the league dashboard. Maybe there could be a notification dot on transactions that shows the pending trade offers?"
+
+When `tradeReviewHours > 0 || requireCommissionerTradeApproval` is set, trades that have been accepted by both parties land in `PENDING_REVIEW` status. The commissioner currently has no dashboard-level indicator — they must navigate to the admin panel to discover trades awaiting review.
+
+Acceptance Criteria:
+- AC-001: When at least one `Trade` row is in `PENDING_REVIEW` status in the league, the commissioner sees an indicator on the league dashboard. Acceptable implementations: (a) a numeric badge on the "Admin" nav link in `app/league/[leagueId]/layout.tsx`; (b) a pending-review callout in the commissioner overview action strip on `app/league/[leagueId]/page.tsx`.
+- AC-002: The indicator shows the count of `PENDING_REVIEW` trades (badge disappears at 0).
+- AC-003: Clicking the indicator navigates to the Trade Review section of the admin panel (`/league/[leagueId]/admin`).
+- AC-004: No schema change — query the existing `Trade` table for `status === PENDING_REVIEW` rows scoped to `leagueId`.
+- AC-005: `tsc --noEmit` clean.
+
+Effort: Backend S · Frontend S
+
+Files: `app/league/[leagueId]/layout.tsx` (fetch pending count server-side), `app/league/[leagueId]/page.tsx` (optional action strip callout)
 
 ---
 

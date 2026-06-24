@@ -43,7 +43,9 @@ class DraftRoom {
   }
 
   private rescheduleTimer() {
-    // Calculate expiration time based on current pick position
+    // Calculate expiration time based on current pick position.
+    // Called from the constructor after a server restart so the on-clock team gets
+    // a fresh pick window rather than an expired/null clock.
     const currentTeamSlot = this.state.order[this.state.currentOverall - 1];
     if (!currentTeamSlot) return;
 
@@ -52,6 +54,10 @@ class DraftRoom {
     const expiresAt = Date.now() + timerSecs * 1000;
     this.state.expiresAt = expiresAt;
     this.scheduleTimer(expiresAt);
+    // Broadcast the updated expiresAt to any sockets that are already registered.
+    // After a server restart this is a no-op (no sockets yet), but it ensures that
+    // any reconnect or re-join happening concurrently sees the correct clock immediately.
+    this.broadcast({ type: "STATE", state: toWireState(this.state) });
   }
 
   private isCommissioner(ws: WebSocket): boolean {

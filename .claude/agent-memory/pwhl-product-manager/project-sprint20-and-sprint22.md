@@ -73,4 +73,14 @@ Sprint 24 (Living League: Season Story) is COMPLETE (5/7). No schema changes.
 
 Deferred to Sprint 25: UX-058 (Trade Proposal 4-Step), BF-020 (auto-draft position balance)
 
-**Sprint 25 is now the current sprint.** It includes LL-009 (Trophy Cabinet, schema migration required), LL-011b (franchise archetypes), LL-014 (Opening Day Card), LL-015 (Championship Banner), UX-058 (Trade Proposal 4-Step), BF-020 (auto-draft balance).
+Sprint 25 (Living League: Legacy + Carry-Forwards) is BUILT (pending commit) as of Jun 24, 2026. All 6/6 stories are in the working tree as modified/untracked files:
+- LL-009: Trophy Cabinet — `Trophy` model + `TrophyType` enum in `prisma/schema.prisma`; `lib/services/trophy-service.ts`; `TrophyCard.tsx` + `TrophyShelf.tsx`; `/team/[teamId]/trophies/page.tsx`; wired into matchup page Z2
+- LL-011b: Franchise Archetypes — `lib/services/franchise-identity.ts`; `FranchiseIdentityChip.tsx` in matchup page Z2
+- LL-014: Opening Day Card — `OpeningDayCard.tsx`; Week 1 only; localStorage dismiss; wired into matchup page
+- LL-015: Championship Banner — `ChampionshipBanner.tsx`; triggered by `CHAMPIONSHIP_WON` notification; wired into matchup page
+- UX-058: Trade Proposal 4-Step — `ProposeTrade.tsx` rebuilt as 4-step state machine (Step 0 pick partner, Step 1 give, Step 2 receive, Step 3 review); confirmed in `app/league/[leagueId]/trades/new/ProposeTrade.tsx`
+- BF-020: Auto-draft position balance — Tier 1b added in `bestAvailablePlayerIds()` in `lib/draft/server.ts`; confirmed via grep
+
+Schema note: model is `Trophy` (not `Achievement` as originally planned); `TrophyType` enum with values including CHAMPION.
+
+**Sprint 26 is now the current sprint.** 10 items: 2 P0 navigation regressions (BF-024 Transactions bounces to league dashboard, BF-027 LEAGUE_STORYLINE regression), 6 P1 bugs/suggestions (BF-022/023/025/026/028, BF-012 carry-forward), 1 P1 carry-forward (BF-013), 1 P2 (BF-021). Next new BF ID: BF-029.
