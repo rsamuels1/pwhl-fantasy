@@ -9,3 +9,4 @@
 - [Emoji policy](emoji-policy.md) — DS-002 "no emoji" ban is dead/contradicts FEEL brief; recommend tiered policy; standings chips are color-only (a11y fix)
 - [Redesign bundle provenance](redesign-bundle-provenance.md) — v3_1.zip is canonical (Parts 1–8); "request 3" zip is a truncated color-only subset; real Sprint 22 gaps live in v3_1 Parts 5–8
 - [Trade proposal findings](trade-proposal-findings.md) — flat all-at-once trade-new layout overwhelms new fans; recommended stepped Pick-GM→Want→Give→Review redesign
+- [Rival feature findings](rival-feature-findings.md) — most-played rival broken in VTF (picks weakest opp); two standings pages (team-scoped is the one managers see); redesign critique

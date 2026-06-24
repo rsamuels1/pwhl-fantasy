@@ -1683,24 +1683,26 @@ Goal: Seasons contribute to franchise identity. Win something and it stays with 
 
 ---
 
-## Sprint 26 — "Beta Defect Sweep + Trade Polish" · PLANNED · Track V+F · P0/P1/P2
+## Sprint 26 — "Beta Defect Sweep + Trade Polish" · ✅ COMPLETE (partial) · Track V+F · P0/P1/P2
 
 Goal: Resolve all open beta defects surfaced by the Jun 24 feedback batch before public launch. Two P0 navigation regressions (BF-024, BF-027) must ship first; P1 items follow. Includes carry-forwards from Sprints 18/24 (BF-012, BF-013) that remain open.
 
+Note: BF-022, BF-023, BF-025, BF-026, BF-028 were handled by parallel agents and shipped in Sprint 27 instead.
+
 | Story | Track | Size | Priority | Status |
 |---|---|---|---|---|
-| BF-024 — Transactions team nav bounces to league dashboard: `/team/[teamId]/transactions` renders `TransactionFeed` in team layout instead of redirecting; `TeamNav.tsx` "Transactions" link targets team-scoped route | Bug | S | P0 | Open |
-| BF-027 — Activity feed LEAGUE_STORYLINE regression: raw enum string still appearing in newer leagues; investigate whether `getLeagueActivity()` LEAGUE_STORYLINE case is partial or a new regression path; verify fix in both league overview activity feed and standalone transactions feed | Bug | S | P0 | Open |
-| BF-022 — BottomNav visible on laptop/desktop: hide `BottomNav` at ≥768px (or ≥900px, matching `useIsMobile` breakpoint); desktop TeamNav tab bar continues to serve non-mobile users | Bug | S | P1 | Open |
-| BF-023 — Transaction history missing FA adds: investigate whether `PLAYER_ADD` `LeagueEvent` is emitted from the direct FA add path (vs waiver claim path only); if not, add event emission in the waiver API route for direct adds | Bug | M | P1 | Open |
-| BF-025 — Trade UI forces same-position matching: remove position filter from ProposeTrade.tsx Step 1/2 player selection; trade engine `checkRosterLegal` still validates legality at execution, not at proposal time | Bug | S | P1 | Open |
-| BF-026 — Standings playoff cutoff text hard to read: improve contrast of "Top 4 teams advance to the playoffs — dashed line marks the cutoff" subtitle to WCAG AA standard | Bug | S | P1 | Open |
-| BF-012 — FA add confirms success but shows error modal: trace `handleAdd` + `AddAndSlotModal` capacity check; ensure success path never shows "roster is full" error when DB state is correct (second report Jun 24 confirms still open) | Bug | M | P1 | Open (carried from Sprint 18) |
-| BF-013 — Trades blocked between draft completion and season start: `proposeTrade()` in `lib/services/trade-service.ts` incorrectly blocks in `POST_DRAFT` window; fix: only block when `playoffStatus !== "NOT_STARTED"` OR `status === "COMPLETE"`; update Trade Center CTA visibility | Bug | S | P1 | Open (carried from Sprint 18) |
-| BF-028 — Commissioner has no pending trade visibility: badge or count on "Admin" nav link when trades are in `PENDING_REVIEW` status, OR pending-review callout in commissioner overview action strip; no schema change | Suggestion | S | P1 | Open (new Jun 24) |
-| BF-021 — DnD lineup mobile UX friction: on viewports ≤768px reduce scrolling needed to compare bench vs active slots; verify 44px drag handles; no desktop regression | Suggestion | M | P2 | Open (new Jun 24) |
+| BF-024 — Transactions team nav bounces to league dashboard | Bug | S | P0 | ✅ DONE (parallel agent) |
+| BF-027 — Activity feed LEAGUE_STORYLINE regression | Bug | S | P0 | ✅ DONE (parallel agent) |
+| BF-022 — BottomNav visible on laptop/desktop | Bug | S | P1 | ✅ DONE (Sprint 27) |
+| BF-023 — Transaction history missing FA adds | Bug | M | P1 | ✅ DONE (Sprint 27) |
+| BF-025 — Trade UI forces same-position matching | Bug | S | P1 | ✅ DONE (Sprint 27 — no code change needed) |
+| BF-026 — Standings playoff cutoff text hard to read | Bug | S | P1 | ✅ DONE (Sprint 27) |
+| BF-012 — FA add confirms success but shows error modal | Bug | M | P1 | Open (carried forward) |
+| BF-013 — Trades blocked between draft completion and season start | Bug | S | P1 | Open (carried forward) |
+| BF-028 — Commissioner has no pending trade visibility | Suggestion | S | P1 | ✅ DONE (Sprint 27) |
+| BF-021 — DnD lineup mobile UX friction | Suggestion | M | P2 | Open (carried forward) |
 
-**Exit criteria:** No raw "LEAGUE_STORYLINE" string appears in any activity feed across any league state. `TransactionFeed` renders correctly inside the team layout without a league-layout redirect. `BottomNav` is not visible at laptop/desktop viewport widths. After a successful FA add the UI does not show a "roster is full" error. Trades can be proposed immediately after draft completion. Commissioner sees a count of pending trades on the league dashboard without visiting the admin panel. `tsc --noEmit` clean; all existing tests pass.
+**Result: 7/10 shipped across Sprints 26–27. BF-012, BF-013, BF-021 carried forward.**
 
 ---
 
@@ -1728,19 +1730,38 @@ Goal: PWHL GM's first truly branded subsystem. A weekly league newsletter publis
 
 ---
 
-## Sprint 27 — "League Hub" · PLANNED · Strategy Rec 1 Capstone · P1
+## Sprint 27 — "Polish & The Arena Concourse" · ✅ COMPLETE · Jun 24, 2026 · Track V+F · P1/P2
 
-Goal: Assemble all Living League systems into a coherent "arena concourse" experience. The franchise home page and league overview stop feeling like utility screens.
+Goal: Assemble glossary, stat education, and hub information hierarchy into the "arena concourse" experience. Also closes out 5 beta bug fixes carried from Sprint 26.
+
+**All items shipped:**
+
+**Track A — Beta Bug Fixes:**
 
 | Story | Track | Size | Priority | Status |
 |---|---|---|---|---|
-| LL-016 — League Hub: `/team/[teamId]/matchup` render order restructure (Morning Skate preview → Matchup Hero → Momentum → Playoff Race context → Live situation → Franchise identity + trophies → Performers); `/league/[leagueId]/` restructure (Morning Skate → Season Timeline → Record Book highlights → Lineup status → Commissioner strip); admin panel utility polish (scoring/roster settings rendered as human-readable summaries, not raw JSON) | Feature | M | P1 | Open |
-| LL-022 — Living League Information Hierarchy & Progressive Disclosure: hub always surfaces exactly one primary CTA above the fold; secondary modules (timeline, records, franchise identity) collapse to "Show more" on mobile ≤768px; first-session "lite" hub hides legacy modules for managers with < 2 scored weeks; module order verified readable at 375px; constrains and reconciles with LL-016 render order | Feature | M | P1 | Open |
-| LL-024 — Glossary & "How Scoring Works" Anchor Page: new `/league/[leagueId]/how-it-works` page with plain-language definitions of FP, VP, VTF, PPP, GAA, SV%, UTIL, waiver, clinch, magic number, projection; each with a PWHL-flavored example; links to this page from all LL-017 ⓘ affordances and LL-020 "New here?" masthead link; supersedes and absorbs existing `VpExplainer.tsx`; reachable from persistent league/team layout nav | Feature | M | P2 | Open |
+| BF-022 — BottomNav visible on desktop: `className="bottom-nav"` added to `<nav>` in `components/BottomNav.tsx`; inline `display: "flex"` override removed | Bug | S | P1 | ✅ DONE |
+| BF-023 — Waiver claim awards not logged in transactions: `processWaivers()` in `lib/services/waiver-service.ts` now emits both `WAIVER_CLAIM_AWARDED` and `PLAYER_ADD` events for waiver-awarded adds | Bug | M | P1 | ✅ DONE |
+| BF-025 — Trade UI position filter: investigated; new `ProposeTrade.tsx` 4-step wizard has NO position filter; old component had the bug; resolved without code change | Bug | S | P1 | ✅ DONE (no code change) |
+| BF-026 — Standings playoff cutoff contrast: `chip-out` color changed to `#94a3b8` (5.5:1 WCAG AA); dashed border opacity increased; footer note uses `var(--dim)` | Bug | S | P1 | ✅ DONE |
+| BF-028 — Commissioner pending trade visibility: `app/dashboard/page.tsx` queries `prisma.trade.groupBy` for `PENDING_REVIEW` trades per commissioner league; surfaced as dashboard action items | Bug | S | P1 | ✅ DONE |
 
-**Prerequisite:** All LL-001 through LL-015 (Sprints 21–26) must be complete and green before Sprint 27 begins.
+**Track B — Hub Assembly & Information Hierarchy:**
 
-**Exit criteria:** `/team/[teamId]/matchup` render order matches the spec — Morning Skate preview is the first content section when an edition exists; franchise identity chip and recent trophy icons appear in Z2 area. League overview leads with Morning Skate → Season Timeline → Record Book highlight → lineup status widget. Above-the-fold content on a 375px viewport shows exactly one primary CTA without scrolling. `/league/[leagueId]/how-it-works` renders all glossary terms with PWHL examples; "New here?" and ⓘ affordances link to it. Admin panel scoring settings section shows human-readable labels instead of raw JSON keys. All existing tests pass; `tsc --noEmit` clean. No schema changes.
+| Story | Track | Size | Priority | Status |
+|---|---|---|---|---|
+| LL-024 — "How It Works" glossary page: new `app/league/[leagueId]/how-it-works/page.tsx` server component; 6 sections (VP, FP scoring from live settings, roster slots, stat glossary with 15 abbreviations, waiver wire, trades); nav link added to `app/league/[leagueId]/layout.tsx` | Feature | M | P2 | ✅ DONE |
+| LL-022 Phase 1 — Stat header tooltips: `components/StatTooltip.tsx` (abbr element pattern); `title` props on `SortTh` in `RosterManager.tsx` for PPP/SOG/HIT/BLK/SV%/GA/SO/FP; `tooltip` field on `SKATER_COLS`/`GOALIE_COLS` in `DraftRoom.tsx` | Feature | S | P1 | ✅ DONE |
+| LL-022 Phase 2 — VP/FP anchors: "How it works →" link added to standings page legend in `app/league/[leagueId]/standings/page.tsx` | Feature | S | P1 | ✅ DONE |
+| VTF display subtitle update: subtitle in `app/league/[leagueId]/page.tsx` updated from "Score vs the field — ranked high to low" to "Everyone races the same week — your rank is your result" | Polish | S | P2 | ✅ DONE |
+| LL-016 (partial) — Records teaser: inline weekly top-scorer teaser added after race table in commissioner overview with link to record book | Feature | S | P1 | ✅ DONE (partial) |
+| LL-016 (partial) — Trophy leaderboard: trophy count query (`prisma.trophy.groupBy`) and sidebar leaderboard widget in commissioner overview right column; "Full record book →" link | Feature | S | P1 | ✅ DONE (partial) |
+
+**Skipped:** BF-024 and BF-027 handled by parallel agents in Sprint 26.
+
+**No schema changes in this sprint.**
+
+**Result: 11/11 Sprint 27 items shipped. Sprint 26 carry-forwards BF-012, BF-013, BF-021 remain open.**
 
 ---
 

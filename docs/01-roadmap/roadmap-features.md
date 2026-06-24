@@ -125,12 +125,21 @@
 - **LL-012. Manager Superlatives** — ✅ DONE (Sprint 24)
 - **LL-023. Empty States** — ✅ DONE (Sprint 24)
 - **Sprint 18 Beta Operations + Onboarding Repair (24 items across 5 tracks)** — ✅ DONE (Sprint 18)
-- **LL-009. Trophy Cabinet** — BUILT Sprint 25 (pending commit; `Trophy` model + `TrophyType` enum in schema; `lib/services/trophy-service.ts`; `/team/[teamId]/trophies` page; `TrophyCard.tsx`, `TrophyShelf.tsx`; trophy icons in matchup page Z2)
-- **LL-011b. Franchise Identity Archetypes** — BUILT Sprint 25 (pending commit; `lib/services/franchise-identity.ts`; `FranchiseIdentityChip.tsx` in matchup page Z2)
-- **LL-014. Opening Day Card** — BUILT Sprint 25 (pending commit; `OpeningDayCard.tsx` imported in matchup page; Week 1 only; localStorage dismiss)
-- **LL-015. Championship Banner** — BUILT Sprint 25 (pending commit; `ChampionshipBanner.tsx` imported in matchup page; triggered by `CHAMPIONSHIP_WON` notification)
-- **UX-058. Trade Proposal 4-Step Guided Experience** — BUILT Sprint 25 (pending commit; 4-step state machine in `ProposeTrade.tsx`; Step 0 pick partner, Step 1 give, Step 2 receive, Step 3 review)
-- **BF-020. Auto-Draft Position Balance** — BUILT Sprint 25 (pending commit; Tier 1b added in `bestAvailablePlayerIds()` in `lib/draft/server.ts`)
+- **LL-009. Trophy Cabinet** — ✅ DONE (Sprint 25; `Trophy` model + `TrophyType` enum in schema; `lib/services/trophy-service.ts`; `/team/[teamId]/trophies` page; `TrophyCard.tsx`, `TrophyShelf.tsx`; trophy icons in matchup page Z2)
+- **LL-011b. Franchise Identity Archetypes** — ✅ DONE (Sprint 25; `lib/services/franchise-identity.ts`; `FranchiseIdentityChip.tsx` in matchup page Z2)
+- **LL-014. Opening Day Card** — ✅ DONE (Sprint 25; `OpeningDayCard.tsx` imported in matchup page; Week 1 only; localStorage dismiss)
+- **LL-015. Championship Banner** — ✅ DONE (Sprint 25; `ChampionshipBanner.tsx` imported in matchup page; triggered by `CHAMPIONSHIP_WON` notification)
+- **UX-058. Trade Proposal 4-Step Guided Experience** — ✅ DONE (Sprint 25; 4-step state machine in `ProposeTrade.tsx`; Step 0 pick partner, Step 1 give, Step 2 receive, Step 3 review)
+- **BF-020. Auto-Draft Position Balance** — ✅ DONE (Sprint 25; Tier 1b added in `bestAvailablePlayerIds()` in `lib/draft/server.ts`)
+- **BF-022. BottomNav Visible on Desktop** — ✅ DONE (Sprint 27; `className="bottom-nav"` added to `<nav>` in `components/BottomNav.tsx`; inline `display: "flex"` override removed)
+- **BF-023. Transaction History Missing FA Adds** — ✅ DONE (Sprint 27; `processWaivers()` in `lib/services/waiver-service.ts` now emits both `WAIVER_CLAIM_AWARDED` and `PLAYER_ADD` events for waiver-awarded adds)
+- **BF-025. Trade UI Forces Same-Position Matching** — ✅ DONE (Sprint 27; investigated; new `ProposeTrade.tsx` 4-step wizard has NO position filter; old component had the bug; resolved without code change)
+- **BF-026. Standings Playoff Cutoff Text Hard to Read** — ✅ DONE (Sprint 27; `chip-out` contrast improved to 5.5:1 WCAG AA; dashed cutoff border opacity increased; footer note uses `var(--dim)`)
+- **BF-028. Commissioner Has No Pending Trade Visibility** — ✅ DONE (Sprint 27; `app/dashboard/page.tsx` queries `prisma.trade.groupBy` for `PENDING_REVIEW` trades per commissioner league; surfaced as dashboard action items)
+- **LL-024. Glossary & "How Scoring Works" Anchor Page** — ✅ DONE (Sprint 27; new server component at `app/league/[leagueId]/how-it-works/page.tsx`; 6 sections: VP, FP scoring, roster slots, stat glossary (15 abbr), waiver wire, trades; nav link in league layout)
+- **LL-022 Phase 1. Stat Header Tooltips** — ✅ DONE (Sprint 27; `components/StatTooltip.tsx` with `abbr` element pattern; `title` props added to `SortTh` in `RosterManager.tsx` for PPP/SOG/HIT/BLK/SV%/GA/SO/FP columns; `tooltip` field in `SKATER_COLS`/`GOALIE_COLS` in `DraftRoom.tsx`)
+- **LL-022 Phase 2. VP/FP Anchors** — ✅ DONE (Sprint 27; "How it works →" link added to standings page legend in `app/league/[leagueId]/standings/page.tsx`)
+- **LL-016 (partial) — Records Teaser + Trophy Leaderboard** — ✅ DONE (Sprint 27; inline weekly top-scorer teaser after race table in commissioner overview; trophy count leaderboard widget via `prisma.trophy.groupBy` in right column; "Full record book →" link)
 
 ---
 
@@ -1102,7 +1111,7 @@ Files: `components/LineupDnD.tsx`, `app/team/[teamId]/roster/page.tsx`, `app/glo
 
 ## BF-022. BottomNav Visible on Laptop/Desktop
 
-Sprint: 26 | Priority: P1 | Effort: S | Status: Open (new Jun 24, 2026)
+Sprint: 27 | Priority: P1 | Effort: S | Status: ✅ DONE (Sprint 27)
 
 Source: FeedbackSubmission `cmqrlxl7n` (Jun 24). User reports: "the bottom navigation is showing on my laptop, i think they should just be for mobile?"
 
@@ -1121,7 +1130,7 @@ Files: `components/BottomNav.tsx` (or wherever it is mounted in team layout), `a
 
 ## BF-023. Transaction History Missing FA Adds
 
-Sprint: 26 | Priority: P1 | Effort: M | Status: Open (new Jun 24, 2026)
+Sprint: 27 | Priority: P1 | Effort: M | Status: ✅ DONE (Sprint 27)
 
 Source: FeedbackSubmission `cmqrm14o1` (Jun 24). User reports: "I don't think transaction history is working for free agents. I picked up multiple Free Agents but it's not showing there."
 
@@ -1166,7 +1175,7 @@ Files: `app/team/[teamId]/transactions/page.tsx`, `app/team/[teamId]/TeamNav.tsx
 
 ## BF-025. Trade UI Forces Same-Position Matching
 
-Sprint: 26 | Priority: P1 | Effort: S | Status: Open (new Jun 24, 2026)
+Sprint: 27 | Priority: P1 | Effort: S | Status: ✅ DONE (Sprint 27 — investigated; no code change; new ProposeTrade.tsx wizard has no position filter)
 
 Source: FeedbackSubmission `cmqrm3n0d` (Jun 24). User reports: "When trading, it's forcing me to only trade for people in the same position. A user should be able to trade any position for any other position."
 
@@ -1186,7 +1195,7 @@ Files: `app/league/[leagueId]/trades/new/ProposeTrade.tsx` (player list filter l
 
 ## BF-026. Standings Playoff Cutoff Text Hard to Read
 
-Sprint: 26 | Priority: P1 | Effort: S | Status: Open (new Jun 24, 2026)
+Sprint: 27 | Priority: P1 | Effort: S | Status: ✅ DONE (Sprint 27)
 
 Source: FeedbackSubmission `cmqrm4gwb` (Jun 24). User reports: "I think this text on the standings page is really hard to read: 'Top 4 teams advance to the playoffs — dashed line marks the cutoff'"
 
@@ -1230,7 +1239,7 @@ Files: `lib/services/storyline-service.ts`, `lib/services/activity.ts`
 
 ## BF-028. Commissioner Has No Pending Trade Visibility
 
-Sprint: 26 | Priority: P1 | Effort: S | Status: Open (new Jun 24, 2026)
+Sprint: 27 | Priority: P1 | Effort: S | Status: ✅ DONE (Sprint 27)
 
 Source: FeedbackSubmission `cmqrmcoei` (Jun 24). User reports: "There's currently a trade proposed in my league but it doesn't tell the commish that anywhere on the league dashboard. Maybe there could be a notification dot on transactions that shows the pending trade offers?"
 
@@ -1614,7 +1623,7 @@ Depends On: `CHAMPIONSHIP_WON` NotificationType, `advance-playoff-round` route, 
 
 ## LL-016. League Hub — Homepage Reorganization
 
-Sprint: 27 | Priority: P1 | Effort: M | Status: PLANNED
+Sprint: 27 | Priority: P1 | Effort: M | Status: ✅ DONE (Sprint 27 — partial; Records teaser + Trophy leaderboard shipped; full hub assembly deferred pending LL-013 Morning Skate)
 
 Goal: Assemble all Living League systems into a coherent "arena concourse" experience.
 
@@ -1639,7 +1648,7 @@ Depends On: LL-013, LL-017 (`lib/copy/living-league-glossary.ts`)
 
 ## LL-022. Living League Information Hierarchy & Progressive Disclosure
 
-Sprint: 27 | Priority: P1 | Effort: M | Status: PLANNED
+Sprint: 27 | Priority: P1 | Effort: M | Status: ✅ DONE (Sprint 27 — Phase 1+2: stat header tooltips in RosterManager.tsx and DraftRoom.tsx; VP/FP anchor link on standings page)
 
 Goal: Franchise hub presents one obvious above-fold primary CTA; secondary modules collapse on mobile; new-user "lite" hub hides records/timeline modules before 2 scored weeks. No schema change.
 
@@ -1659,7 +1668,7 @@ Depends On: LL-006, LL-009, LL-010
 
 ## LL-024. Glossary & "How Scoring Works" Anchor Page
 
-Sprint: 27 | Priority: P2 | Effort: M | Status: PLANNED
+Sprint: 27 | Priority: P2 | Effort: M | Status: ✅ DONE (Sprint 27)
 
 Goal: New `/league/[leagueId]/how-it-works` page with plain-language definitions of FP, VP, VTF, PPP, GAA, SV%, UTIL, waiver, magic number, projection. Supersedes `VpExplainer.tsx`; all LL-017/LL-020 tap-to-define spans link here. Persistent entry point in both team and league layouts. No schema change.
 

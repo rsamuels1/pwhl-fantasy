@@ -49,6 +49,7 @@ export default async function LeagueLayout({ children, params }: LeagueLayoutPro
     { label: "Records", href: `${basePath}/records` },
     { label: "Rosters", href: `${basePath}/roster` },
     { label: "Transactions", href: `${basePath}/transactions` },
+    { label: "How it works", href: `${basePath}/how-it-works` },
     ...(league?.isReplay && isCommissioner ? [{ label: "Sim →", href: `${basePath}/sim` }] : []),
   ];
   const adminItem = isCommissioner

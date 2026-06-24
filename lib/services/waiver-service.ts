@@ -309,6 +309,17 @@ export async function processWaivers(
       },
       prisma
     ).catch(() => {});
+    // Also emit PLAYER_ADD so the "Adds/Drops" transaction filter includes waiver-claim additions
+    emitEvent(
+      {
+        leagueId,
+        teamId: winner.fantasyTeamId,
+        playerId: winner.addPlayerId,
+        type: "PLAYER_ADD",
+        data: { description: "Added via waiver claim" },
+      },
+      prisma
+    ).catch(() => {});
 
     for (const loser of losers) {
       emitEvent(

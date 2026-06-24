@@ -590,8 +590,11 @@ function ColHeader({ isGoalie, readonly, sortKey, sortAsc, onSort }: {
     : "44px minmax(80px,1fr) 46px 46px 60px 50px 46px 60px 48px";
   const cols = isGoalie ? goalieCols : skaterCols;
 
-  function SortTh({ label, k }: { label: string; k: SortKey }) {
+  function SortTh({ label, k, title }: { label: string; k: SortKey; title?: string }) {
     const active = sortKey === k;
+    const labelEl = title
+      ? <abbr title={title} style={{ textDecoration: "underline dotted", textDecorationColor: "var(--faint)", textUnderlineOffset: 2, cursor: "help", fontStyle: "normal" }}>{label}</abbr>
+      : <>{label}</>;
     return (
       <button onClick={() => onSort(k)} style={{
         background: "none", border: "none", cursor: "pointer", textAlign: "right",
@@ -599,7 +602,7 @@ function ColHeader({ isGoalie, readonly, sortKey, sortAsc, onSort }: {
         color: active ? "var(--accent-strong)" : "var(--faint)", padding: 0,
         display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 3,
       }}>
-        {label}{active ? (sortAsc ? " ↑" : " ↓") : ""}
+        {labelEl}{active ? (sortAsc ? " ↑" : " ↓") : ""}
       </button>
     );
   }
@@ -618,10 +621,10 @@ function ColHeader({ isGoalie, readonly, sortKey, sortAsc, onSort }: {
         <>
           <SortTh label="GP" k="gp" />
           <SortTh label="W" k="wins" />
-          <SortTh label="SV%" k="savePct" />
-          <SortTh label="GA" k="goalsAgainst" />
-          <SortTh label="SO" k="shutouts" />
-          <SortTh label="FP" k="fp" />
+          <SortTh label="SV%" k="savePct" title="Save percentage — saves ÷ shots faced" />
+          <SortTh label="GA" k="goalsAgainst" title="Goals against — goals allowed" />
+          <SortTh label="SO" k="shutouts" title="Shutouts — full game, zero goals allowed" />
+          <SortTh label="FP" k="fp" title="Fantasy points this season" />
         </>
       ) : (
         <>
@@ -629,11 +632,11 @@ function ColHeader({ isGoalie, readonly, sortKey, sortAsc, onSort }: {
           <SortTh label="G" k="goals" />
           <SortTh label="A" k="assists" />
           <SortTh label="PTS" k="pts" />
-          <SortTh label="PPP" k="ppp" />
-          <SortTh label="SOG" k="shots" />
-          <SortTh label="HIT" k="hits" />
-          <SortTh label="BLK" k="blocks" />
-          <SortTh label="FP" k="fp" />
+          <SortTh label="PPP" k="ppp" title="Power play points" />
+          <SortTh label="SOG" k="shots" title="Shots on goal" />
+          <SortTh label="HIT" k="hits" title="Hits delivered" />
+          <SortTh label="BLK" k="blocks" title="Shots blocked (not by the goalie)" />
+          <SortTh label="FP" k="fp" title="Fantasy points this season" />
         </>
       )}
       {!readonly && <span />}
@@ -746,10 +749,10 @@ function FaColHeader({ isGoalie, sortKey, sortAsc, onSort }: {
         <>
           <SortTh label="GP" k="gp" />
           <SortTh label="W" k="wins" />
-          <SortTh label="SV%" k="savePct" />
-          <SortTh label="GA" k="goalsAgainst" />
-          <SortTh label="SO" k="shutouts" />
-          <SortTh label="FP" k="fp" />
+          <SortTh label="SV%" k="savePct" title="Save percentage — saves ÷ shots faced" />
+          <SortTh label="GA" k="goalsAgainst" title="Goals against — goals allowed" />
+          <SortTh label="SO" k="shutouts" title="Shutouts — full game, zero goals allowed" />
+          <SortTh label="FP" k="fp" title="Fantasy points this season" />
         </>
       ) : (
         <>
@@ -757,11 +760,11 @@ function FaColHeader({ isGoalie, sortKey, sortAsc, onSort }: {
           <SortTh label="G" k="goals" />
           <SortTh label="A" k="assists" />
           <SortTh label="PTS" k="pts" />
-          <SortTh label="PPP" k="ppp" />
-          <SortTh label="SOG" k="shots" />
-          <SortTh label="HIT" k="hits" />
-          <SortTh label="BLK" k="blocks" />
-          <SortTh label="FP" k="fp" />
+          <SortTh label="PPP" k="ppp" title="Power play points" />
+          <SortTh label="SOG" k="shots" title="Shots on goal" />
+          <SortTh label="HIT" k="hits" title="Hits delivered" />
+          <SortTh label="BLK" k="blocks" title="Shots blocked (not by the goalie)" />
+          <SortTh label="FP" k="fp" title="Fantasy points this season" />
         </>
       )}
       <span />

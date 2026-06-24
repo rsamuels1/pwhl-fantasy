@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { computeRace } from "@/lib/playoffs/seeding";
@@ -155,8 +156,9 @@ export default async function StandingsPage({ params }: { params: { leagueId: st
         <p style={{ margin: "0 0 8px", fontSize: 12, color: "var(--faint)" }}>
           Win matchup +2 VP · 1st place weekly score +2 VP · 2nd place score +1 VP
         </p>
-        <p style={{ margin: "0 0 16px", fontSize: "0.7rem", color: "var(--faint)" }}>
-          VP = Victory Points · MTCH VP = points for winning your weekly matchup · RNK VP = bonus for top-3 FP finish · PF = total fantasy points scored
+        <p style={{ margin: "0 0 16px", fontSize: "0.7rem", color: "var(--faint)", display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+          <span>VP = Victory Points · MTCH VP = points for winning your weekly matchup · RNK VP = bonus for top-3 FP finish · PF = total fantasy points scored</span>
+          <Link href={`/league/${leagueId}/how-it-works`} style={{ color: "var(--accent)", textDecoration: "none", whiteSpace: "nowrap" }}>How it works →</Link>
         </p>
 
         {!hasResults ? (

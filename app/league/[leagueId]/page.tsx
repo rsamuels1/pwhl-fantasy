@@ -232,6 +232,23 @@ export default async function LeagueOverviewPage({
     }
   }
 
+  // ── Trophy counts per team (for sidebar leaderboard) ──
+  const teamIds = league.teams.map((t) => t.id);
+  const trophyGroups = teamIds.length > 0
+    ? await prisma.trophy.groupBy({
+        by: ["teamId"],
+        where: { teamId: { in: teamIds } },
+        _count: { id: true },
+        orderBy: { _count: { id: "desc" } },
+      })
+    : [];
+  const trophyCountByTeam = new Map(trophyGroups.map((g) => [g.teamId, g._count.id]));
+  const teamsWithTrophies = league.teams
+    .map((t) => ({ id: t.id, name: t.name, count: trophyCountByTeam.get(t.id) ?? 0 }))
+    .filter((t) => t.count > 0)
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 5);
+
   // ── Storylines for the most recently scored regular-season week ──
   const leagueEventModel = (prisma as unknown as Record<string, unknown>).leagueEvent as
     | typeof prisma.leagueEvent
@@ -525,7 +542,7 @@ export default async function LeagueOverviewPage({
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
                 <div>
                   {cardLabel(currentWeek !== null ? `Week ${currentWeek} standings` : "This week", 2)}
-                  <div style={{ fontSize: 12, color: "var(--faint)" }}>Score vs the field — ranked high to low</div>
+                  <div style={{ fontSize: 12, color: "var(--faint)" }}>Everyone races the same week — your rank is your result</div>
                 </div>
                 <Link href={`/league/${leagueId}/matchups`} style={{ fontSize: 12, color: "var(--faint)", textDecoration: "none" }}>
                   Full schedule →
@@ -650,6 +667,25 @@ export default async function LeagueOverviewPage({
             </section>
           )}
 
+          {/* ── Record Book teaser ── */}
+          {hasResults && leagueLeaders.top.length > 0 && (
+            <div style={{
+              display: "flex", alignItems: "center", justifyContent: "space-between",
+              padding: "10px 12px", borderRadius: 8,
+              background: "rgba(143,193,232,0.06)", border: "1px solid var(--border)",
+            }}>
+              <div style={{ fontSize: 13, color: "var(--dim)" }}>
+                <span style={{ color: "var(--faint)", fontSize: 11, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase" as const }}>Top this week</span>
+                <span style={{ marginLeft: 8, color: "var(--text)", fontWeight: 600 }}>{leagueLeaders.top[0]!.name}</span>
+                <span style={{ marginLeft: 6, color: "var(--faint)" }}>—</span>
+                <span className="font-stats" style={{ marginLeft: 6, color: "var(--accent-strong)", fontWeight: 700 }}>{leagueLeaders.top[0]!.points.toFixed(1)} FP</span>
+              </div>
+              <Link href={`/league/${leagueId}/records`} style={{ fontSize: 12, color: "var(--accent)", textDecoration: "none", flexShrink: 0 }}>
+                Record book →
+              </Link>
+            </div>
+          )}
+
           {/* Pre-season / no results yet — commissioner sees admin link */}
           {!hasResults && league.status !== "IN_SEASON" && (
             <section style={card}>
@@ -771,6 +807,29 @@ export default async function LeagueOverviewPage({
                 border: "1px solid rgba(143,193,232,0.30)", textDecoration: "none", flexShrink: 0,
               }}>
                 My Matchup →
+              </Link>
+            </section>
+          )}
+
+          {/* Trophy leaderboard */}
+          {teamsWithTrophies.length > 0 && (
+            <section style={card}>
+              {sideLabel("Trophy cabinet")}
+              <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 4 }}>
+                {teamsWithTrophies.map((t, i) => (
+                  <div key={t.id} style={{ display: "flex", alignItems: "center", gap: 8, justifyContent: "space-between" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <span style={{ fontSize: 11, color: "var(--faint)", minWidth: 14, textAlign: "right" }}>{i + 1}</span>
+                      <span style={{ fontSize: 13, color: t.id === myTeam?.id ? "var(--accent-strong)" : "var(--text)" }}>{t.name}</span>
+                    </div>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: "var(--gold)" }}>
+                      {t.count === 1 ? "1 trophy" : `${t.count} trophies`}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              <Link href={`/league/${leagueId}/records`} style={{ display: "block", marginTop: 10, fontSize: 12, color: "var(--faint)", textDecoration: "none" }}>
+                Full record book →
               </Link>
             </section>
           )}

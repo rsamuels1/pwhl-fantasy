@@ -549,24 +549,24 @@ function NeedsPanel({
 
 type SortKey = "points" | "goals" | "assists" | "ppp" | "shots" | "hits" | "blocks" | "wins" | "saves" | "savePct" | "shutouts" | "gp" | "goalsAgainst";
 
-const SKATER_COLS: { key: SortKey; label: string; mobile?: boolean }[] = [
+const SKATER_COLS: { key: SortKey; label: string; tooltip?: string; mobile?: boolean }[] = [
   { key: "gp", label: "GP" },
   { key: "goals", label: "G" },
   { key: "assists", label: "A" },
   { key: "points", label: "PTS" },
-  { key: "ppp", label: "PPP", mobile: true },
-  { key: "shots", label: "SOG", mobile: true },
-  { key: "hits", label: "HIT", mobile: true },
-  { key: "blocks", label: "BLK", mobile: true },
+  { key: "ppp", label: "PPP", tooltip: "Power play points", mobile: true },
+  { key: "shots", label: "SOG", tooltip: "Shots on goal", mobile: true },
+  { key: "hits", label: "HIT", tooltip: "Hits delivered", mobile: true },
+  { key: "blocks", label: "BLK", tooltip: "Shots blocked (not by the goalie)", mobile: true },
 ];
 
-const GOALIE_COLS: { key: SortKey; label: string; mobile?: boolean }[] = [
+const GOALIE_COLS: { key: SortKey; label: string; tooltip?: string; mobile?: boolean }[] = [
   { key: "gp", label: "GP" },
   { key: "wins", label: "W" },
-  { key: "saves", label: "SV", mobile: true },
-  { key: "goalsAgainst", label: "GA", mobile: true },
-  { key: "savePct", label: "SV%" },
-  { key: "shutouts", label: "SO", mobile: true },
+  { key: "saves", label: "SV", tooltip: "Saves", mobile: true },
+  { key: "goalsAgainst", label: "GA", tooltip: "Goals against — goals allowed", mobile: true },
+  { key: "savePct", label: "SV%", tooltip: "Save percentage — saves ÷ shots faced" },
+  { key: "shutouts", label: "SO", tooltip: "Shutouts — full game, zero goals allowed", mobile: true },
 ];
 
 function PlayerPanel({
@@ -800,9 +800,11 @@ function PlayerPanel({
                           className={c.mobile ? "stat-secondary" : undefined}
                           style={{ ...styles.th, textAlign: "right", cursor: "pointer", color: sortKey === c.key ? "var(--accent-strong)" : "var(--muted)", userSelect: "none" }}
                           onClick={() => setSortKey(c.key)}
-                          title={`Sort by ${c.label}`}
                         >
-                          {c.label}{sortKey === c.key ? " ▾" : ""}
+                          {c.tooltip
+                            ? <abbr title={c.tooltip} style={{ textDecoration: "underline dotted", textDecorationColor: "rgba(150,160,200,0.4)", textUnderlineOffset: 2, cursor: "pointer", fontStyle: "normal" }}>{c.label}</abbr>
+                            : c.label
+                          }{sortKey === c.key ? " ▾" : ""}
                         </th>
                       ))}
                       <th />
