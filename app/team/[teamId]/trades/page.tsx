@@ -26,7 +26,7 @@ export default async function TeamTradesPage({ params, searchParams }: Props) {
   const [league, teams, myTrades] = await Promise.all([
     prisma.fantasyLeague.findUnique({
       where: { id: leagueId },
-      select: { name: true, commissionerId: true, status: true, playoffStatus: true },
+      select: { name: true, commissionerId: true, status: true, playoffStatus: true, draft: { select: { status: true } } },
     }),
     prisma.fantasyTeam.findMany({
       where: { leagueId },
@@ -49,7 +49,9 @@ export default async function TeamTradesPage({ params, searchParams }: Props) {
   const teamMap = Object.fromEntries(teams.map((t) => [t.id, t.name]));
 
   const isCommissioner = user.id === league.commissionerId;
-  const canPropose = league.status === "IN_SEASON" && league.playoffStatus === "NOT_STARTED";
+  const canPropose =
+    (league.status === "IN_SEASON" || league.draft?.status === "COMPLETE") &&
+    league.playoffStatus === "NOT_STARTED";
 
   const incomingTrades = myTrades.filter(
     (t) => t.receivingTeamId === teamId && (t.status === "PROPOSED" || t.status === "ACCEPTED")

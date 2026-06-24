@@ -224,9 +224,13 @@ export default function TransactionFeed({
 
       {/* Empty state */}
       {events.length === 0 && !loading && (
-        <p style={{ color: "var(--faint)", fontSize: 13, fontStyle: "italic" }}>
-          No transactions yet. Actions like draft picks, player adds, and drops will appear here.
-        </p>
+        <div style={{ textAlign: "center", padding: "48px 24px" }}>
+          <div style={{ fontSize: 24, marginBottom: 10, opacity: 0.4 }}>📋</div>
+          <p style={{ margin: "0 0 4px", fontSize: 14, fontWeight: 600, color: "var(--muted)" }}>No moves yet</p>
+          <p style={{ margin: 0, fontSize: 13, color: "var(--faint)" }}>
+            Your first add, drop, or trade will show up here.
+          </p>
+        </div>
       )}
 
       {/* Event list */}

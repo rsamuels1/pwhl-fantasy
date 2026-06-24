@@ -10,9 +10,10 @@ interface Props {
   leagueName: string;
   playoffStatus: string;
   leagueStatus?: string;
+  hasTrophies?: boolean;
 }
 
-function TeamNavInner({ teamId, leagueId, leagueName, playoffStatus, leagueStatus }: Props) {
+function TeamNavInner({ teamId, leagueId, leagueName, playoffStatus, leagueStatus, hasTrophies }: Props) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const rosterPath = `/team/${teamId}/roster`;
@@ -36,6 +37,9 @@ function TeamNavInner({ teamId, leagueId, leagueName, playoffStatus, leagueStatu
       : []),
     ...(playoffStatus !== "NOT_STARTED"
       ? [{ label: "Playoffs", href: `/team/${teamId}/bracket`,           active: pathname.startsWith(`/team/${teamId}/bracket`) }]
+      : []),
+    ...(hasTrophies
+      ? [{ label: "Trophies", href: `/team/${teamId}/trophies`,          active: pathname.startsWith(`/team/${teamId}/trophies`) }]
       : []),
   ];
 

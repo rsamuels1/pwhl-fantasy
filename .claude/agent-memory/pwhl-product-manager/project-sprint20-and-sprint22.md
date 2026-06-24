@@ -1,6 +1,6 @@
 ---
 name: sprint20-and-sprint22
-description: Sprint 20/21/23 COMPLETE; Sprint 22 Inviting Dark redesign IN PROGRESS (8/23 shipped Jun 23); Sprint 23 Living League The Race COMPLETE (7/7, accentColor schema)
+description: Sprint 20/21/22/23/24 COMPLETE; Sprint 24 5/7 (LL-006/010/011/012/023 DONE; UX-058+BF-020 deferred to Sprint 25); Sprint 25 now current
 metadata:
   type: project
 ---
@@ -63,3 +63,14 @@ Sprint 23 (Living League: The Race) is COMPLETE. 7/7 stories shipped:
 - RD-013: Team Identity Colors — `FantasyTeam.accentColor String?` schema field + migration; `TeamColorPicker.tsx`; `PATCH /api/leagues/[leagueId]/teams/[teamId]/color`; avatar ring + name tint in DuelHero and standings
 
 Schema migration: `FantasyTeam.accentColor String?` (RD-013). Commit: 6a959d9 (roadmap docs).
+
+Sprint 24 (Living League: Season Story) is COMPLETE (5/7). No schema changes.
+- LL-006: Season Timeline — `lib/services/timeline-service.ts` + `SeasonTimeline.tsx`; `/team/[teamId]/schedule` extended with W-L-T header; page title "My Season"
+- LL-010: League Record Book — `/league/[leagueId]/records` page; `lib/services/superlatives.ts`; `components/SuperlativesCard.tsx`; "Records" in league nav
+- LL-011 (partial): Team Name Editing only — `PATCH /api/leagues/[leagueId]/teams/[teamId]/name`; `components/TeamNameEditor.tsx`; archetype system (Boom or Bust etc.) deferred to Sprint 25 as LL-011b
+- LL-012: Manager Superlatives — `lib/services/superlatives.ts`; 5 awards (Top Scorer, Feast or Famine, Steady Eddie, Hot Start, Strong Finish); `SuperlativesCard.tsx` in league overview sidebar + Analysis page gold callout
+- LL-023: Empty States — personality copy across Trades (all 3 tabs), Transactions feed, Analysis page
+
+Deferred to Sprint 25: UX-058 (Trade Proposal 4-Step), BF-020 (auto-draft position balance)
+
+**Sprint 25 is now the current sprint.** It includes LL-009 (Trophy Cabinet, schema migration required), LL-011b (franchise archetypes), LL-014 (Opening Day Card), LL-015 (Championship Banner), UX-058 (Trade Proposal 4-Step), BF-020 (auto-draft balance).

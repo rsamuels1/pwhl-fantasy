@@ -1,6 +1,6 @@
 ---
 name: beta-feedback-bugs
-description: Beta bug tracker — BF-001/002 RESOLVED (Sprint 9); BF-012–017 SHIPPED Sprint 18; BF-018 (/league-rules 404) SHIPPED Sprint 22; next new ID: BF-020
+description: Beta bug tracker — BF-001/002 RESOLVED (Sprint 9); BF-012–017 SHIPPED Sprint 18; BF-018 (/league-rules 404) SHIPPED Sprint 22; BF-019 blocked (email); BF-020 DEFERRED to Sprint 25 (auto-draft position balance); next new ID: BF-021
 metadata:
   type: project
 ---
@@ -71,6 +71,10 @@ These are a coherent set suggesting a deeper "League vs Franchise" nav split —
 
 **BF-019 (email-blocked)** — Password reset / forgot password. Blocked on email infra.
 
-**Next BF-NNN: BF-020**
+## BF-020 — Auto-Draft Position Balance (OPEN, Sprint 25)
 
-**How to apply:** BF-001/002 stale OPEN in DB is cosmetic. BF-012/013/014/015/016/017 all confirmed shipped Sprint 18. BF-018 (/league-rules 404) shipped Sprint 22. BF-019 blocked on email infra. Next new bug ID is BF-020.
+**BF-020 (Sprint 25, P2, S)** — Auto-draft position balance: minimum defenders/goalies not enforced. When the pick clock expires, `bestAvailablePlayerIds()` in `lib/draft/server.ts` sorts forwards and defenders together by proxy FP, causing all-forward auto-drafted teams. Fix: split Tier 2 into Tier 2a (defender filling D slot) and Tier 2b (forward/skater filling F/UTIL slot). Spec in `roadmap-features.md` § BF-020. Was Sprint 24; deferred when Sprint 24 shipped 5/7 stories.
+
+**Next BF-NNN: BF-021**
+
+**How to apply:** BF-001/002 stale OPEN in DB is cosmetic. BF-012/013/014/015/016/017 all confirmed shipped Sprint 18. BF-018 (/league-rules 404) shipped Sprint 22. BF-019 blocked on email infra. BF-020 deferred to Sprint 25. Next new bug ID is BF-021.

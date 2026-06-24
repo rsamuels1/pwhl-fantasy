@@ -20,10 +20,13 @@ export default async function TeamLayout({ children, params }: TeamLayoutProps) 
   const cookieStore = await cookies();
 
   // Fetch betaStatus and league status (for TeamNav "Draft Queue" tab and beta banner).
-  const leagueExtra = await prisma.fantasyLeague.findUnique({
-    where: { id: team.league.id },
-    select: { betaStatus: true, status: true },
-  });
+  const [leagueExtra, trophyCount] = await Promise.all([
+    prisma.fantasyLeague.findUnique({
+      where: { id: team.league.id },
+      select: { betaStatus: true, status: true },
+    }),
+    prisma.trophy.count({ where: { teamId } }),
+  ]);
 
   // Lightweight matchup context: find current week's matchup, falling back to playoff matchup
   const currentMatchup = await prisma.matchup.findFirst({
@@ -89,6 +92,7 @@ export default async function TeamLayout({ children, params }: TeamLayoutProps) 
           leagueName={team.league.name}
           playoffStatus={team.league.playoffStatus ?? "NOT_STARTED"}
           leagueStatus={leagueExtra?.status ?? undefined}
+          hasTrophies={trophyCount > 0}
         />
 
 

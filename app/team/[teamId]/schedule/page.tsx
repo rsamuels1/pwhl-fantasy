@@ -113,15 +113,56 @@ export default async function SchedulePage({ params }: Props) {
     (w) => w.status === "COMPLETE" || w.status === "ACTIVE"
   );
 
+  // Overall record summary
+  const completedWeeks = weeklyPerf.filter((w) => w.status === "COMPLETE");
+  const totalWins = completedWeeks.reduce((acc, w) => acc + w.wins, 0);
+  const totalLosses = completedWeeks.reduce((acc, w) => acc + w.losses, 0);
+  const totalTies = completedWeeks.reduce((acc, w) => acc + w.ties, 0);
+  const totalFp = weeklyPerf
+    .filter((w) => w.status === "COMPLETE" || w.status === "ACTIVE")
+    .reduce((acc, w) => acc + w.myFp, 0);
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 28 }}>
 
       {/* ── Performance History ─────────────────────────────────────── */}
       <div>
-        <h1 style={{ fontSize: 22, margin: "0 0 4px" }}>Season Performance</h1>
+        <h1 style={{ fontSize: 22, margin: "0 0 4px" }}>My Season</h1>
         <p style={{ margin: "0 0 16px", fontSize: 13, color: "var(--faint)" }}>
           Week-by-week fantasy points, record, and ranking vs the field
         </p>
+
+        {/* Season summary header */}
+        {hasHistory && (
+          <div style={{
+            display: "flex", gap: 20, flexWrap: "wrap",
+            background: "var(--bg-raised)",
+            border: "1px solid rgba(148,163,184,0.08)",
+            borderRadius: 14, padding: "14px 20px",
+            marginBottom: 12,
+          }}>
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: "var(--faint)", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 3 }}>Record</div>
+              <div style={{ fontSize: 18, fontWeight: 700, color: "var(--text)", fontVariantNumeric: "tabular-nums" }}>
+                {totalWins}&ndash;{totalLosses}{totalTies > 0 ? `–${totalTies}` : ""}
+              </div>
+            </div>
+            <div style={{ width: 1, background: "rgba(148,163,184,0.12)", alignSelf: "stretch" }} />
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: "var(--faint)", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 3 }}>Total FP</div>
+              <div style={{ fontSize: 18, fontWeight: 700, color: "var(--text)", fontVariantNumeric: "tabular-nums" }}>
+                {totalFp.toFixed(1)}
+              </div>
+            </div>
+            <div style={{ width: 1, background: "rgba(148,163,184,0.12)", alignSelf: "stretch" }} />
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: "var(--faint)", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 3 }}>Weeks Played</div>
+              <div style={{ fontSize: 18, fontWeight: 700, color: "var(--text)", fontVariantNumeric: "tabular-nums" }}>
+                {completedWeeks.length}
+              </div>
+            </div>
+          </div>
+        )}
 
         {!hasHistory ? (
           <div style={{

@@ -7,6 +7,7 @@ import { getDashboardData, type PlayerPerfSummary } from "@/lib/services/dashboa
 import AnalysisTab from "@/components/AnalysisTab";
 import { getDevNow } from "@/lib/devTime";
 import { getReplayNow } from "@/lib/replayTime";
+import { computeSuperlatives } from "@/lib/services/superlatives";
 
 const POS_COLORS: Record<string, string> = {
   FORWARD: "#60a5fa", DEFENSE: "#5fa98c", GOALIE: "#f59e0b",
@@ -76,20 +77,68 @@ export default async function TeamAnalysisPage({
 
   const nowMs = getReplayNow(league, await getDevNow());
 
-  const [analysis, dashboardData] = await Promise.all([
+  const [analysis, dashboardData, allMatchups, allTeams] = await Promise.all([
     getTeamAnalysis(leagueId, teamId, nowMs, prisma).catch((err: unknown) => {
       console.error("[analysis] getTeamAnalysis failed:", err);
       return null;
     }),
     getDashboardData(leagueId, teamId, nowMs, prisma).catch(() => null),
+    prisma.matchup.findMany({
+      where: { leagueId, isPlayoff: false, homeScore: { not: null } },
+      select: { homeTeamId: true, awayTeamId: true, homeScore: true, awayScore: true, week: true, isPlayoff: true },
+    }),
+    prisma.fantasyTeam.findMany({
+      where: { leagueId },
+      select: { id: true, name: true },
+    }),
   ]);
 
   const topPerformers = dashboardData?.topPerformers ?? [];
   const disappointments = dashboardData?.disappointments ?? [];
   const hasPerformers = topPerformers.length > 0 || disappointments.length > 0;
 
+  const superlativesMap = allMatchups.length > 0
+    ? computeSuperlatives(
+        allTeams.map((t) => ({ fantasyTeamId: t.id, teamName: t.name })),
+        allMatchups.map((m) => ({
+          homeTeamId: m.homeTeamId,
+          awayTeamId: m.awayTeamId,
+          homeScore: m.homeScore,
+          awayScore: m.awayScore,
+          week: m.week,
+          isPlayoff: m.isPlayoff,
+        }))
+      )
+    : null;
+  const mySuperlatives = superlativesMap?.get(teamId) ?? [];
+
   return (
     <div style={{ display: "grid", gap: 16 }}>
+
+      {/* ── Season awards (superlatives) ── */}
+      {mySuperlatives.length > 0 && (
+        <section style={{
+          background: "linear-gradient(135deg, rgba(245,201,123,0.07), rgba(245,158,11,0.03))",
+          border: "1px solid rgba(245,201,123,0.25)",
+          borderRadius: 16,
+          padding: "16px 20px",
+        }}>
+          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--gold)", marginBottom: 12 }}>
+            Season Awards
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {mySuperlatives.map((s, i) => (
+              <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
+                <span style={{ fontSize: 20, flexShrink: 0, lineHeight: 1 }}>{s.icon}</span>
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: "var(--text)" }}>{s.label}</div>
+                  <div style={{ fontSize: 12, color: "var(--faint)", marginTop: 2 }}>{s.description}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* ── This week's performers (moved from matchup page Z7) ── */}
       {hasPerformers && (
@@ -130,7 +179,7 @@ export default async function TeamAnalysisPage({
 
       {!hasPerformers && dashboardData?.activeMatchup?.status === "active" && (
         <div style={{ padding: "14px 18px", borderRadius: 12, background: "var(--card)", border: "1px solid var(--border)", color: "var(--faint)", fontSize: 13 }}>
-          No games played this period yet — check back once your players have taken the ice.
+          Stats will populate as your players take the ice — check back mid-week.
         </div>
       )}
 
@@ -138,8 +187,8 @@ export default async function TeamAnalysisPage({
 
       {!hasPerformers && !dashboardData?.activeMatchup && (
         <div style={{ padding: "14px 18px", borderRadius: 12, background: "var(--card)", border: "1px solid var(--border)", color: "var(--faint)", fontSize: 13 }}>
-          This week&apos;s performers will appear here once the season is underway.{" "}
-          <Link href={`/team/${teamId}/lineup`} style={{ color: "var(--accent-strong)" }}>Set your lineup →</Link>
+          Your analysis will build up as the season gets going.{" "}
+          <Link href={`/team/${teamId}/roster`} style={{ color: "var(--accent-strong)" }}>Set your lineup →</Link>
         </div>
       )}
     </div>

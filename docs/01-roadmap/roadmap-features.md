@@ -119,6 +119,11 @@
 - **LL-018. Negative Award Tone Calibration** — ✅ DONE (Sprint 21)
 - **LL-019. First-Result Explainer** — ✅ DONE (Sprint 23)
 - **LL-021. Small-Win Encouragement** — ✅ DONE (Sprint 23)
+- **LL-006. Season Timeline** — ✅ DONE (Sprint 24)
+- **LL-010. League Record Book** — ✅ DONE (Sprint 24)
+- **LL-011. Franchise Identity (Team Name Editing)** — ✅ DONE (Sprint 24; scope: team name editing via `TeamNameEditor.tsx` + `PATCH .../teams/[teamId]/name`; franchise archetype system deferred to Sprint 25 as LL-011b)
+- **LL-012. Manager Superlatives** — ✅ DONE (Sprint 24)
+- **LL-023. Empty States** — ✅ DONE (Sprint 24)
 - **Sprint 18 Beta Operations + Onboarding Repair (24 items across 5 tracks)** — ✅ DONE (Sprint 18)
 
 ---
@@ -681,49 +686,57 @@ Files: `app/team/[teamId]/matchup/page.tsx` (Z4 section), any component renderin
 
 ## UX-047. Trade Proposal Flow Has No Trading-Partner-First Step
 
-Sprint: 12
+Sprint: Superseded by UX-058
 
 Priority: P1
 
-Status: OPEN
-
-Source: Pass 2 end-user walkthrough (June 2026). The Propose Trade page shows all opposing teams' players in one unsorted list. Every major fantasy platform requires the proposer to select a trading partner team first.
-
-Fix: Add a team-picker step above the "WANT FROM LEAGUE" player list. Option (a) preferred: a horizontal pill row of opponent team names; selecting a team filters the list to only that team's players. "All teams" shows everyone (preserves backward compat).
-
-Acceptance Criteria:
-- AC-001: A team picker (pill row or select) appears above the "WANT FROM LEAGUE" section.
-- AC-002: Selecting a team filters the player list to only that team's rostered players.
-- AC-003: An "All teams" option (or no selection) restores the full list.
-- AC-004: The search input still works when a team is selected (searches within the filtered list).
-- AC-005: `tsc --noEmit` clean; trade proposal can still be submitted successfully.
-
-Effort: Frontend M
-
-Files: `app/league/[leagueId]/trades/new/page.tsx` (or the ProposeTradeForm client component)
+Status: SUPERSEDED — UX-058 replaces this with a full 4-step guided flow.
 
 ---
 
 ## UX-048. Trade Form Search/Filter Hint Hidden Below Player List
 
-Sprint: 12
+Sprint: Superseded by UX-058
 
 Priority: P1
 
-Status: OPEN
+Status: SUPERSEDED — addressed by UX-058 step-by-step flow, which eliminates the wall-of-players problem entirely.
 
-Source: Pass 2 end-user walkthrough (June 2026). The instructional text "Search by player name or team name and click a player to start building your trade" appears below the scrollable list of 80+ player buttons — meaning users encounter the player list before they see the instruction.
+---
 
-Fix: Move the hint text above the player list, immediately below the "WANT FROM LEAGUE" heading and above the search input. If UX-047's team picker is implemented, update hint copy to reference team-first workflow.
+## UX-058. Trade Proposal — 4-Step Guided Experience
+
+Sprint: 25
+
+Priority: P1
+
+Effort: M (~60–90 min dev time)
+
+Status: OPEN (deferred from Sprint 24)
+
+Source: UX critique session (June 2026). The current Propose Trade page dumps ~80 players in one unsorted list and renders all decisions simultaneously. This is the single highest-friction moment in the trade flow, especially for new PWHL fans.
+
+Replace the current single-form with a 4-step state machine inside the existing `ProposeTrade.tsx` component (no new routes, no schema changes, same `POST /trades` endpoint):
+
+- **Step 1 — Pick a GM:** Team cards showing accent color bar, W-L record, and standing.
+- **Step 2 — Who do you want?** Only the selected partner's ~13 roster players shown.
+- **Step 3 — What do you offer?** Only your eligible roster players shown.
+- **Step 4 — Review & Send:** FP give/get subtotals as a trust signal; human-readable error copy.
+- Sticky safe-area-padded bottom action bar showing running FP delta tally throughout.
+
+Data addition: add `accentColor` to the `fantasyTeam` select in `app/team/[teamId]/trades/new/page.tsx` (already on the `FantasyTeam` model from Sprint 23 RD-013).
 
 Acceptance Criteria:
-- AC-001: The search/filter hint appears above the player list, below the "WANT FROM LEAGUE" heading.
-- AC-002: The hint is visible on initial render without scrolling.
-- AC-003: If UX-047 is also shipped, the hint copy references the team-picker workflow.
+- AC-001: Step 1 renders team cards with accent color, W-L record, and standing. Selecting a team advances to step 2.
+- AC-002: Step 2 shows only the selected partner's rostered players (~13 rows). No other team's players visible.
+- AC-003: Step 3 shows only the proposer's own eligible roster players.
+- AC-004: Step 4 shows FP subtotals for "you give" and "you get" sides before submission.
+- AC-005: A sticky bottom bar shows the running FP delta (give vs. get) across steps 2–4.
+- AC-006: The same `POST /trades` endpoint is called on submit — no new API route.
+- AC-007: No schema changes.
+- AC-008: `tsc --noEmit` clean; existing trade engine tests pass.
 
-Effort: Frontend S
-
-Files: Same as UX-047 (ProposeTradeForm or `trades/new/page.tsx`)
+Files: `app/team/[teamId]/trades/new/page.tsx`, `ProposeTrade.tsx` (or equivalent client component)
 
 ---
 
@@ -1026,6 +1039,39 @@ Acceptance Criteria (for when unblocked):
 
 ---
 
+## BF-020. Auto-Draft Position Balance — Minimum Defenders/Goalies Not Enforced
+
+Sprint: 25
+
+Priority: P2
+
+Effort: S
+
+Status: Open (deferred from Sprint 24)
+
+Source: Internal — identified from auto-draft behavior in replay and unattended draft leagues.
+
+When the draft clock expires and a team auto-picks, `bestAvailablePlayerIds()` in `lib/draft/server.ts` lumps forwards and defenders in the same priority tier (Tier 2: "skater filling a needed F/D/UTIL slot") and sorts by proxy FP within that tier. Since forwards accumulate higher FP totals in the proxy formula (goals × 2 + assists × 1.5), auto-drafted teams end up with all forwards and no defenders. The 3F/2D/1UTIL roster requirement is not enforced by the tier system — defenders are only drafted once forward slots are full, which may never happen if bench slots absorb them first.
+
+Fix: Split Tier 2 in `bestAvailablePlayerIds()` into:
+- Tier 2a (new): Defender filling an unfilled DEFENSE slot — ranked before any forward can claim a D slot
+- Tier 2b (existing): Forward or defender filling an unfilled FORWARD or UTIL slot
+
+This keeps the existing outer tier structure (Tier 1: goalie filling a needed G slot → Tier 2: skater filling a starter slot → Tier 3: bench) and only adds a defender-priority sub-tier within starter-slot selection.
+
+Acceptance Criteria:
+- AC-001: After a complete auto-draft (all picks timeout), every team has at least 2 defenders on their roster.
+- AC-002: The auto-draft still fills GOALIE slots before any skater slots (Tier 1 unchanged).
+- AC-003: Manual picks made within the pick clock are not affected by this change.
+- AC-004: `scripts/simulate-season.ts` completes cleanly with auto-drafted teams having valid rosters.
+- AC-005: `tsc --noEmit` clean; existing `tests/draft.test.ts` passes.
+
+Effort: Backend S
+
+Files: `lib/draft/server.ts` (`bestAvailablePlayerIds()`)
+
+---
+
 ## TR-002. Trade Auto-Rejection Is Silent — No Notification to Proposer
 
 Priority: P1
@@ -1298,9 +1344,9 @@ Acceptance Criteria:
 
 ## LL-006. Season Timeline
 
-Sprint: 24 | Priority: P2 | Effort: M | Status: PLANNED
+Sprint: 24 | Priority: P2 | Effort: M | Status: ✅ DONE
 
-Goal: Scrollable timeline on league overview of significant moments (trades, clinches, records, champion). `lib/services/timeline-service.ts` — `getSeasonTimeline()` sourced from existing `LeagueEvent` rows; no new schema writes. `SeasonTimeline.tsx` collapses when fewer than 3 events.
+Goal: Scrollable timeline on league overview of significant moments (trades, clinches, records, champion). `lib/services/timeline-service.ts` — `getSeasonTimeline()` sourced from existing `LeagueEvent` rows; no new schema writes. `SeasonTimeline.tsx` collapses when fewer than 3 events. `/team/[teamId]/schedule` extended with W-L-T summary header; page title updated to "My Season".
 
 Depends On: `LeagueEvent` (TRADE, PLAYOFF_CLINCH, CHAMPIONSHIP_WON)
 
@@ -1325,9 +1371,9 @@ Depends On: schema migration, `advanceSeason()`, `advance-playoff-round` route
 
 ## LL-010. League Record Book
 
-Sprint: 24 | Priority: P1 | Effort: M | Status: PLANNED
+Sprint: 24 | Priority: P1 | Effort: M | Status: ✅ DONE
 
-Goal: Historical records (Highest Week Score, Longest Streak, Biggest Blowout, Closest Win) give managers bragging rights. New `/league/[leagueId]/records` page — "This Season" and "All Time" tabs (lineage via `parentLeagueId`). Computed from `Matchup`/`StatLine`; no schema change.
+Goal: Historical records (Highest Week Score, Longest Streak, Biggest Blowout, Closest Win) give managers bragging rights. New `/league/[leagueId]/records` page — "This Season" and "All Time" tabs (lineage via `parentLeagueId`). Computed from `Matchup`/`StatLine`; no schema change. Records: highest weekly score, best season record, biggest blowout, top-5 individual player weeks. "Records" in league nav. `components/SuperlativesCard.tsx`; `lib/services/superlatives.ts`.
 
 Depends On: `Matchup`, `StatLine`, `parentLeagueId` lineage
 
@@ -1335,19 +1381,19 @@ Depends On: `Matchup`, `StatLine`, `parentLeagueId` lineage
 
 ## LL-011. Franchise Identity
 
-Sprint: 24 | Priority: P2 | Effort: M | Status: PLANNED
+Sprint: 24 | Priority: P2 | Effort: M | Status: ✅ DONE (team name editing only; archetype system deferred to Sprint 25 as LL-011b)
 
-Goal: Each team auto-earns a personality archetype from play data. Archetypes: Boom or Bust, Defensive Fortress, Sniper Factory, Goaltender Driven. `computeFranchiseIdentity()` in `lib/services/analysis-service.ts` returns `null` before 4 scored weeks. Displayed as a chip in matchup page Z2. No schema change.
+Goal: Team name editing shipped: `PATCH /api/leagues/[leagueId]/teams/[teamId]/name` (ownership-gated, 1-50 chars); `components/TeamNameEditor.tsx` inline edit on Settings page. NOTE: franchise archetype system (Boom or Bust, Defensive Fortress, Sniper Factory, Goaltender Driven) was NOT built in Sprint 24 — deferred to Sprint 25 as LL-011b.
 
-Depends On: `lib/services/analysis-service.ts`, `lib/services/dashboard.ts`
+Depends On: `lib/services/analysis-service.ts`, `lib/services/dashboard.ts` (for LL-011b archetypes)
 
 ---
 
 ## LL-012. Manager Superlatives
 
-Sprint: 24 | Priority: P2 | Effort: M | Status: PLANNED
+Sprint: 24 | Priority: P2 | Effort: M | Status: ✅ DONE
 
-Goal: Post-championship, each manager earns one superlative based on play style. Categories: Waiver Wizard, Trade Shark, Draft Sniper, Iron Lineup, Snakebitten. `computeManagerSuperlatives()` in `lib/services/storyline-service.ts`; only when `playoffStatus === COMPLETE`; emitted as `LEAGUE_STORYLINE` events. No schema change.
+Goal: Post-championship, each manager earns one superlative based on play style. `lib/services/superlatives.ts` pure function; 5 awards: Top Scorer, Feast or Famine, Steady Eddie, Hot Start, Strong Finish; `SuperlativesCard.tsx` in league overview sidebar; team's own superlatives as gold callout on Analysis page. Only when `playoffStatus === COMPLETE`; emitted as `LEAGUE_STORYLINE` events. No schema change.
 
 Depends On: `LeagueEvent` (PLAYER_ADD, TRADE, DRAFT_PICK), `playoffStatus === COMPLETE`
 
@@ -1426,9 +1472,9 @@ Depends On: LL-016, LL-023, `User.onboardingCompletedAt`, `getSeasonState`
 
 ## LL-023. Empty-State & Pre-History Copy for Legacy Systems
 
-Sprint: 24 | Priority: P2 | Effort: S | Status: PLANNED
+Sprint: 24 | Priority: P2 | Effort: S | Status: ✅ DONE
 
-Goal: Record Book, Trophy Cabinet, Season Timeline, and trophies page each get purposeful empty states with forward-looking copy ("No records yet — these fill in as you play."). Uses existing `EmptyState.tsx`. No schema change.
+Goal: Personality copy across Trades (all 3 tabs), Transactions feed, and Analysis page. Uses existing `EmptyState.tsx`. No schema change. NOTE: scope was expanded from Record Book / Trophy Cabinet / Season Timeline to include active-use surfaces (Trades, Transactions, Analysis) in addition to the legacy-system empty states originally planned.
 
 Depends On: LL-006, LL-009, LL-010
 

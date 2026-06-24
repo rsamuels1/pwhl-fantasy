@@ -1,6 +1,7 @@
 import { requireAuth, requireTeamOwner } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import TeamColorPicker from "@/components/TeamColorPicker";
+import TeamNameEditor from "@/components/TeamNameEditor";
 
 export default async function FranchiseSettingsPage({ params }: { params: Promise<{ teamId: string }> }) {
   const { teamId } = await params;
@@ -32,8 +33,12 @@ export default async function FranchiseSettingsPage({ params }: { params: Promis
         </h2>
 
         <div style={{ marginBottom: 20 }}>
-          <div style={{ fontSize: 13, color: "var(--dim)", marginBottom: 4 }}>Team name</div>
-          <div style={{ fontSize: 16, fontWeight: 600, color: "var(--text)" }}>{teamData?.name}</div>
+          <div style={{ fontSize: 13, color: "var(--dim)", marginBottom: 8 }}>Team name</div>
+          <TeamNameEditor
+            leagueId={team.league.id}
+            teamId={teamId}
+            currentName={teamData?.name ?? ""}
+          />
         </div>
 
         <div>

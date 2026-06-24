@@ -405,10 +405,32 @@ export default function TradeCenter({
           textAlign: "center", padding: "48px 24px",
           color: "var(--faint)", fontSize: 14,
         }}>
-          {tab === "incoming" && "No incoming trade offers."}
-          {tab === "sent" && "You haven't proposed any trades yet."}
-          {tab === "review" && "No trades pending review."}
-          {tab === "history" && "No completed trades yet this season."}
+          {tab === "incoming" && (
+            <>
+              <div style={{ fontSize: 24, marginBottom: 10, opacity: 0.4 }}>🔄</div>
+              <p style={{ margin: "0 0 4px", fontWeight: 600, color: "var(--muted)" }}>No trade offers yet</p>
+              <p style={{ margin: 0, fontSize: 13 }}>When another manager sends you a deal, it&apos;ll show up here.</p>
+            </>
+          )}
+          {tab === "sent" && (
+            <>
+              <div style={{ fontSize: 24, marginBottom: 10, opacity: 0.4 }}>📤</div>
+              <p style={{ margin: "0 0 4px", fontWeight: 600, color: "var(--muted)" }}>No trades proposed yet</p>
+              <p style={{ margin: 0, fontSize: 13 }}>Browse another team&apos;s roster and make them an offer.</p>
+            </>
+          )}
+          {tab === "review" && (
+            <>
+              <p style={{ margin: 0 }}>No trades pending review.</p>
+            </>
+          )}
+          {tab === "history" && (
+            <>
+              <div style={{ fontSize: 24, marginBottom: 10, opacity: 0.4 }}>📋</div>
+              <p style={{ margin: "0 0 4px", fontWeight: 600, color: "var(--muted)" }}>No completed trades yet</p>
+              <p style={{ margin: 0, fontSize: 13 }}>Trades that go through will appear here for the whole league to see.</p>
+            </>
+          )}
           {tab === "incoming" && canPropose && (
             <div style={{ marginTop: 16 }}>
               <Link

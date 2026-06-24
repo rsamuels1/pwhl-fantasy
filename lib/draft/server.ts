@@ -465,8 +465,9 @@ class DraftRoom {
   }
 
   // Position-aware, value-ranked auto-pick list for the given team.
-  // Tier 1: fills an unfilled goalie slot (goalies can't fill UTIL — most constrained).
-  // Tier 2: fills an unfilled skater starter or UTIL slot.
+  // Tier 1: fills a position-locked unfilled slot — goalie (can't fill UTIL) or
+  //         defenseman when D slots remain open (BF-020: prevents 0-defender rosters).
+  // Tier 2: fills an unfilled skater starter or UTIL slot (positional overflow).
   // Tier 3: bench only (all starting slots for this position are full).
   // Within each tier: proxy FP (goals × 2 + assists × 1.5 + win × 5 + shutout × 3) desc.
   private async bestAvailablePlayerIds(teamId: string): Promise<string[]> {
@@ -518,11 +519,17 @@ class DraftRoom {
       );
       let tier: number;
       if (pos === "GOALIE" && needed.goalie) {
+        // Tier 1a: fills the only slot goalies can occupy
+        tier = 1;
+      } else if (pos === "DEFENSE" && needed.defense) {
+        // Tier 1b: defensemen filling open D slot — same priority as goalies (BF-020)
+        // This ensures auto-drafted rosters don't end up with 0–1 defenders.
         tier = 1;
       } else if (
         (pos === "FORWARD" || pos === "DEFENSE") &&
-        (needed.forward || needed.defense || needed.util)
+        (needed.forward || needed.util)
       ) {
+        // Tier 2: fills an unfilled skater/UTIL slot (positional overflow)
         tier = 2;
       } else {
         tier = 3;

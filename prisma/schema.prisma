@@ -147,6 +147,7 @@ model FantasyLeague {
   waiverClaims            WaiverClaim[]
   waiverPriority          WaiverPriority[]
   trades                  Trade[]
+  trophies                Trophy[]
 
   @@index([status])
 }
@@ -169,6 +170,7 @@ model FantasyTeam {
   roster          RosterEntry[]
   waiverClaims    WaiverClaim[]
   waiverPriority  WaiverPriority[]
+  trophies        Trophy[]
 
   @@unique([leagueId, ownerId])
   @@index([leagueId])
@@ -468,6 +470,29 @@ model WaiverPriority {
 
   @@id([leagueId, fantasyTeamId])
   @@unique([leagueId, priority])
+}
+
+enum TrophyType {
+  CHAMPION
+  BEST_RECORD
+  TOP_SCORER
+  MOST_IMPROVED
+  MOST_TRANSACTIONS
+}
+
+model Trophy {
+  id        String        @id @default(cuid())
+  leagueId  String
+  teamId    String
+  season    String
+  type      TrophyType
+  data      Json          @default("{}")
+  awardedAt DateTime      @default(now())
+  league    FantasyLeague @relation(fields: [leagueId], references: [id])
+  team      FantasyTeam   @relation(fields: [teamId], references: [id])
+
+  @@index([teamId])
+  @@index([leagueId])
 }
 
 enum TradeStatus {

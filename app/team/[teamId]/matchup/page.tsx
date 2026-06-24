@@ -8,6 +8,7 @@ import LiveScoreRefresh from "@/components/LiveScoreRefresh";
 import { LogoShield } from "@/components/LogoShield";
 import { getSwingPlayers } from "@/lib/matchups/swingPlayers";
 import { parseScoringSettings } from "@/lib/scoring/settings";
+import { scoreStatLine, type StatLineInput } from "@/lib/scoring";
 import { getDevNow } from "@/lib/devTime";
 import { getReplayNow } from "@/lib/replayTime";
 import { getRival } from "@/lib/playoffs/seeding";
@@ -18,6 +19,12 @@ import StatChip from "@/components/StatChip";
 import ClinchBanner from "@/components/ClinchBanner";
 import FirstResultCard from "@/components/FirstResultCard";
 import MomentumStrip from "@/components/MomentumStrip";
+import TrophyShelf from "@/components/TrophyShelf";
+import FranchiseIdentityChip from "@/components/FranchiseIdentityChip";
+import OpeningDayCard from "@/components/OpeningDayCard";
+import ChampionshipBanner from "@/components/ChampionshipBanner";
+import { computeFranchiseIdentity } from "@/lib/services/franchise-identity";
+import { Position } from "@prisma/client";
 
 export default async function TeamMatchupPage({
   params,
@@ -31,7 +38,7 @@ export default async function TeamMatchupPage({
 
   const league = await prisma.fantasyLeague.findUnique({
     where: { id: leagueId },
-    select: { scoringSettings: true, rosterSettings: true, isReplay: true, replayCurrentDate: true, season: true },
+    select: { scoringSettings: true, rosterSettings: true, isReplay: true, replayCurrentDate: true, season: true, status: true, maxTeams: true },
   });
   if (!league) notFound();
 
@@ -114,8 +121,150 @@ export default async function TeamMatchupPage({
 
   const isChampion = championInfo && championInfo.teamId === teamId;
 
+  // ── LL-009: Trophy Shelf — recent trophies for Z7 area ──────────────────────
+  const recentTrophies = await prisma.trophy.findMany({
+    where: { teamId },
+    orderBy: { awardedAt: "desc" },
+    take: 3,
+    select: { id: true, type: true, season: true },
+  });
+
+  // ── LL-011b: Franchise Identity — compute from scored regular-season matchups ─
+  let franchiseIdentity: ReturnType<typeof computeFranchiseIdentity> = null;
+  if (league.status === "IN_SEASON") {
+    try {
+      // Get scored regular-season matchups for this team
+      const scoredMatchups = await prisma.matchup.findMany({
+        where: {
+          leagueId,
+          isPlayoff: false,
+          homeScore: { not: null },
+          OR: [{ homeTeamId: teamId }, { awayTeamId: teamId }],
+        },
+        select: { homeTeamId: true, homeScore: true, awayTeamId: true, awayScore: true, week: true },
+        orderBy: { week: "asc" },
+      });
+
+      if (scoredMatchups.length >= 3) {
+        // In VTF, each matchup row = this team's score as homeTeamId
+        const weeklyScores = scoredMatchups.map((m) =>
+          m.homeTeamId === teamId ? (m.homeScore ?? 0) : (m.awayScore ?? 0)
+        );
+
+        // Get last 5 periods' stat lines for FP breakdown
+        const recentWeeks = [...new Set(scoredMatchups.map((m) => m.week))].sort((a, b) => b - a).slice(0, 5);
+        const recentMatchupPeriods = scoredMatchups.filter((m) => recentWeeks.includes(m.week));
+
+        // Find the date range: earliest startsAt of last 5 periods' matchups
+        // We need period start/end — use the last 5 weeks' matchup rows as proxy
+        // Instead, just query roster players' stat lines for the season
+        const myRosterPlayerIds = await prisma.rosterEntry.findMany({
+          where: { fantasyTeamId: teamId },
+          select: { playerId: true, player: { select: { position: true } } },
+        });
+
+        if (myRosterPlayerIds.length > 0) {
+          const playerIds = myRosterPlayerIds.map((e) => e.playerId);
+          const posMap = new Map(myRosterPlayerIds.map((e) => [e.playerId, e.player.position]));
+
+          const statLines = await prisma.statLine.findMany({
+            where: {
+              playerId: { in: playerIds },
+              game: { season: league.season },
+            },
+            select: {
+              playerId: true, goals: true, assists: true, shots: true, plusMinus: true,
+              penaltyMinutes: true, powerPlayPts: true, hits: true, blocks: true,
+              saves: true, goalsAgainst: true, shutout: true, win: true,
+            },
+          });
+
+          let goalsFp = 0, defenseFp = 0, goalieFp = 0, totalFp = 0;
+          for (const sl of statLines) {
+            const pos = posMap.get(sl.playerId) ?? Position.FORWARD;
+            const fp = scoreStatLine(sl as StatLineInput, pos, scoringSettings);
+            totalFp += fp;
+            if (pos === Position.GOALIE) {
+              goalieFp += fp;
+            } else {
+              // Goals + PPP => sniper portion; BLK+HIT => defense portion
+              goalsFp += (sl.goals * scoringSettings.skater.goal) + (sl.powerPlayPts * scoringSettings.skater.powerPlayPoint);
+              defenseFp += (sl.blocks * scoringSettings.skater.block) + (sl.hits * scoringSettings.skater.hit);
+            }
+          }
+
+          franchiseIdentity = computeFranchiseIdentity(weeklyScores, goalsFp, defenseFp, goalieFp, totalFp);
+        }
+      }
+    } catch {
+      // non-fatal — franchise identity is a nice-to-have
+    }
+  }
+
+  // ── LL-014: Opening Day Card data ────────────────────────────────────────────
+  const allPeriods = await prisma.matchup.findMany({
+    where: { leagueId, isPlayoff: false },
+    select: { week: true, startsAt: true },
+    orderBy: { week: "asc" },
+  });
+  const periodCount = [...new Set(allPeriods.map((m) => m.week))].length;
+  const firstPeriodStartsAt = allPeriods.length > 0 ? allPeriods[0].startsAt : null;
+
+  // Team count for opening day card
+  const teamCount = await prisma.fantasyTeam.count({ where: { leagueId } });
+
+  // ── LL-015: Championship Banner — winner record computation ──────────────────
+  let championRecord = "";
+  if (isChampion && championInfo) {
+    // Compute this team's regular-season W-L for the record string
+    const rsMatchups = await prisma.matchup.findMany({
+      where: { leagueId, isPlayoff: false, homeScore: { not: null }, homeTeamId: teamId },
+    });
+    // VTF: all matchups for this team are as homeTeam; compute wins vs field
+    const weekGroups = new Map<number, { myScore: number; allScores: number[] }>();
+    // We need all teams' scores per week to compute W-L
+    const allRsMatchups = await prisma.matchup.findMany({
+      where: { leagueId, isPlayoff: false, homeScore: { not: null } },
+      select: { homeTeamId: true, homeScore: true, week: true },
+    });
+    const byWeek = new Map<number, number[]>();
+    for (const m of allRsMatchups) {
+      if (!byWeek.has(m.week)) byWeek.set(m.week, []);
+      byWeek.get(m.week)!.push(m.homeScore ?? 0);
+    }
+    let wins = 0, losses = 0;
+    for (const m of rsMatchups) {
+      const allScores = byWeek.get(m.week) ?? [];
+      wins += allScores.filter((s) => s < (m.homeScore ?? 0)).length;
+      losses += allScores.filter((s) => s > (m.homeScore ?? 0)).length;
+    }
+    championRecord = `${wins}–${losses}`;
+  }
+
   return (
     <div style={{ display: "grid", gap: 16 }}>
+
+      {/* ── LL-015: Championship Banner — full-screen overlay for the champion ── */}
+      {isChampion && championInfo && (
+        <ChampionshipBanner
+          leagueId={leagueId}
+          teamName={team.name}
+          season={league.season}
+          record={championRecord}
+          trophiesHref={`/team/${teamId}/trophies`}
+        />
+      )}
+
+      {/* ── LL-014: Opening Day Card — shown 72h after first period starts ── */}
+      {league.status === "IN_SEASON" && firstPeriodStartsAt && (
+        <OpeningDayCard
+          leagueId={leagueId}
+          season={league.season}
+          weekCount={periodCount}
+          managerCount={teamCount}
+          periodStartsAt={firstPeriodStartsAt.toISOString()}
+        />
+      )}
 
       {/* ── Clinch banner — dismissible, shown once when playoff berth is clinched ── */}
       {clinchEvent && !isChampion && (() => {
@@ -400,6 +549,11 @@ export default async function TeamMatchupPage({
         </Card>
       )}
 
+      {/* ── Z2b. Last week recap (shown above live grid when not actively scoring) ── */}
+      {lastResult && activeMatchup?.status !== "active" && (
+        <RecapCard recap={lastResult} />
+      )}
+
       {/* ── Z3. Live situation grid: Playing Tonight + Swing (left) | Roster Status (right) ── */}
       {activeMatchup?.status === "active" && (
         <>
@@ -523,8 +677,6 @@ export default async function TeamMatchupPage({
         <RosterStatusWidget matchup={activeMatchup} activeSlotCount={activeSlotCount} teamId={teamId} />
       )}
 
-      {/* ── Z5. Last week recap ── */}
-      {lastResult && <RecapCard recap={lastResult} />}
 
       {/* ── Z4. Rival badge — only shown once there are 2+ H2H games ── */}
       {rival && rival.matchupCount >= 2 && (() => {
@@ -599,6 +751,11 @@ export default async function TeamMatchupPage({
         </div>
       )}
 
+      {/* ── Z5. Last week recap (shown above last-week stats during active scoring) ── */}
+      {lastResult && activeMatchup?.status === "active" && (
+        <RecapCard recap={lastResult} />
+      )}
+
       {/* ── Z6b. Last week's stats (SETUP phase fallback) ── */}
       {lastWeekLabel && myPlayersLastWeek && myPlayersLastWeek.length > 0 && (
         <Card>
@@ -610,6 +767,26 @@ export default async function TeamMatchupPage({
           </h2>
           <RosterTable players={myPlayersLastWeek} />
         </Card>
+      )}
+
+      {/* ── Z7: Trophy Shelf + Franchise Identity ── */}
+      {recentTrophies.length > 0 && (
+        <TrophyShelf
+          trophies={recentTrophies.map((t) => ({ id: t.id, type: t.type, season: t.season }))}
+          trophiesHref={`/team/${teamId}/trophies`}
+        />
+      )}
+      {franchiseIdentity && (
+        <div style={{
+          display: "flex", alignItems: "center", gap: 10,
+          padding: "10px 16px",
+          background: "var(--card)",
+          border: "1px solid var(--border)",
+          borderRadius: 12,
+        }}>
+          <span style={{ fontSize: 12, color: "var(--dim)", fontWeight: 600 }}>Franchise style:</span>
+          <FranchiseIdentityChip identity={franchiseIdentity} />
+        </div>
       )}
 
     </div>

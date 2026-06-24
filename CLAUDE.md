@@ -272,6 +272,12 @@ survives DB resets and schema migrations.
      - **RD-013: Team Identity Colors** ✅ (`FantasyTeam.accentColor String?` schema field + migration; `TeamColorPicker.tsx` in team settings with 6–8 AA-compliant swatches; `PATCH /api/leagues/[leagueId]/teams/[teamId]/color` route; avatar ring + team-name tint render in DuelHero and standings rows; never overrides semantic win/loss colors)
    - **Inviting Dark Redesign — Sprint 22** ✅ COMPLETE (23/23 stories shipped; no schema changes). See `docs/01-roadmap/roadmap-sprints.md` for full item list. Includes: RD-001–012, RD-014–017, BF-018, UX-051/052/054/055/056/057 — all shipped across commits 047cd20 and 6c294d0.
    - **Franchise Zone UX Fixes** ✅ COMPLETE (commit 28c02ae): BF-019 Scoreboard nav no longer bounces to league layout (team-scoped `/team/[teamId]/scoreboard` + `ScoreboardPageContent` shared component); UX-060 new `/team/[teamId]/settings` page with team color picker; RD-006 partial — color picker removed from matchup page, Z5 Recap promoted above Z4 Rival.
+   - **Living League: Season Story — Sprint 24** ✅ (5/7 stories shipped; UX-058/BF-020 deferred to Sprint 25):
+     - **LL-006: Season Timeline** ✅ — `/team/[teamId]/schedule` extended with W-L-T summary header; page title "My Season"
+     - **LL-010: League Record Book** ✅ — new `/league/[leagueId]/records` page (member-visible); records: highest weekly score, best season record, biggest blowout, top-5 individual player weeks; "Records" in league nav; `components/SuperlativesCard.tsx`; `lib/services/superlatives.ts`
+     - **LL-011: Franchise Identity (Team Name Editing)** ✅ — `PATCH /api/leagues/[leagueId]/teams/[teamId]/name` (ownership-gated, 1–50 chars); `components/TeamNameEditor.tsx` inline edit on Settings page; NOTE: franchise archetype system (Boom or Bust etc.) deferred to Sprint 25 as LL-011b
+     - **LL-012: Manager Superlatives** ✅ — `lib/services/superlatives.ts` pure function; 5 awards: Top Scorer, Feast or Famine, Steady Eddie, Hot Start, Strong Finish; `SuperlativesCard.tsx` in league overview sidebar; team's own superlatives as gold callout on Analysis page
+     - **LL-023: Empty States** ✅ — personality copy across Trades (all 3 tabs), Transactions feed, Analysis page
 7. Public launch ~early Nov, drafts ~1 week before opener
 
 ## Draft room UI (`app/draft/[leagueId]/`)
