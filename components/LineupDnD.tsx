@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useEffect } from "react";
+import React, { useState, useTransition, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import MilestoneToast from "@/components/MilestoneToast";
 import { computeOptimalLineup, type RosterSettings, type RosterEntryWithProjection } from "@/lib/lineup";
@@ -167,9 +167,14 @@ function PlayerRow({ entry, statsLabel: label, isOver, isDragging, isActive = fa
 
 interface DraggableRowProps extends RowProps {
   onDrop: (targetEntryId: string) => void;
+  /** Mobile tap-to-swap: is this row the currently selected player? */
+  isTapSelected?: boolean;
+  /** Mobile tap-to-swap: is this row a valid swap target for the selected player? */
+  isTapTarget?: boolean;
+  onTap?: (entryId: string) => void;
 }
 
-function DraggablePlayerRow({ entry, statsLabel: label, isActive: isActiveSlot, onDrop }: DraggableRowProps) {
+function DraggablePlayerRow({ entry, statsLabel: label, isActive: isActiveSlot, onDrop, isTapSelected, isTapTarget, onTap }: DraggableRowProps) {
   const isLocked = !!entry.lockedAt;
   const { attributes, listeners, setNodeRef: setDragRef, isDragging } = useDraggable({
     id: entry.entryId,
@@ -182,12 +187,19 @@ function DraggablePlayerRow({ entry, statsLabel: label, isActive: isActiveSlot, 
     setDropRef(el);
   };
 
+  const tapRingStyle: React.CSSProperties = isTapSelected
+    ? { outline: "2px solid var(--accent)", outlineOffset: 2, borderRadius: 10 }
+    : isTapTarget
+      ? { outline: "2px solid rgba(143,193,232,0.6)", outlineOffset: 2, borderRadius: 10 }
+      : {};
+
   return (
     <div
       ref={setRef}
-      style={{ position: "relative" }}
+      style={{ position: "relative", ...tapRingStyle }}
+      onClick={onTap && !isLocked ? () => onTap(entry.entryId) : undefined}
     >
-      {/* Drag handle */}
+      {/* Drag handle (desktop only) */}
       {!isLocked && (
         <span
           {...attributes}
@@ -206,7 +218,7 @@ function DraggablePlayerRow({ entry, statsLabel: label, isActive: isActiveSlot, 
         <PlayerRow
           entry={entry}
           statsLabel={label}
-          isOver={isOver}
+          isOver={isOver || (isTapTarget ?? false)}
           isDragging={isDragging}
           isActive={isActiveSlot}
         />
@@ -245,6 +257,9 @@ export default function LineupDnD({
   const [isPending, startTransition] = useTransition();
   const [mobileTab, setMobileTab] = useState<"active" | "bench">("active");
   const [isMobile, setIsMobile] = useState(false);
+  // Mobile tap-to-swap: track the selected entry ID (null = nothing selected)
+  const [tapSelectedId, setTapSelectedId] = useState<string | null>(null);
+
   useEffect(() => {
     const mq = window.matchMedia("(max-width: 640px)");
     setIsMobile(mq.matches);
@@ -434,6 +449,97 @@ export default function LineupDnD({
 
   const draggedEntry = activeEntryId ? findEntry(activeEntryId) : null;
 
+  // ── Mobile tap-to-swap ────────────────────────────────────────────────────
+  // On mobile (≤640px), tapping a player selects it; tapping a valid target swaps.
+
+  function isTapSwapTarget(targetEntryId: string): boolean {
+    if (!tapSelectedId || !isMobile) return false;
+    const selected = findEntry(tapSelectedId);
+    const target = findEntry(targetEntryId);
+    if (!selected || !target || selected.entryId === target.entryId) return false;
+    // Both direction eligibility must pass
+    if (!selected.eligibleSlots.includes(target.slot)) return false;
+    if (!target.eligibleSlots.includes(selected.slot)) return false;
+    // Play-lock: can't move active player to bench if already played
+    if (BENCH_SLOTS.has(target.slot) && selected.hasPlayedThisPeriod) return false;
+    return true;
+  }
+
+  function handleTap(tappedEntryId: string) {
+    if (!isMobile) return;
+    setError(null);
+    setSuccess(null);
+
+    if (!tapSelectedId) {
+      // First tap: select this player
+      setTapSelectedId(tappedEntryId);
+      return;
+    }
+
+    if (tapSelectedId === tappedEntryId) {
+      // Tap same player: deselect
+      setTapSelectedId(null);
+      return;
+    }
+
+    // Second tap: attempt swap
+    const selected = findEntry(tapSelectedId);
+    const target = findEntry(tappedEntryId);
+    setTapSelectedId(null);
+
+    if (!selected || !target) return;
+
+    // Validate eligibility for both directions
+    if (!selected.eligibleSlots.includes(target.slot)) {
+      setError(`${selected.name} can't play ${SLOT_LABEL[target.slot] ?? target.slot}.`);
+      return;
+    }
+    if (!target.eligibleSlots.includes(selected.slot)) {
+      setError(`${target.name} can't play ${SLOT_LABEL[selected.slot] ?? selected.slot}.`);
+      return;
+    }
+    if (BENCH_SLOTS.has(target.slot) && selected.hasPlayedThisPeriod) {
+      setError(`${selected.name} has played this week and can't be benched.`);
+      return;
+    }
+
+    // Optimistic update
+    setRoster((prev) =>
+      prev.map((e) => {
+        if (e.entryId === selected.entryId) return { ...e, slot: target.slot };
+        if (e.entryId === target.entryId) return { ...e, slot: selected.slot };
+        return e;
+      })
+    );
+
+    startTransition(async () => {
+      const targetTeamId = forceMove ? (forceMoveTeamId ?? teamId) : teamId;
+      const url = forceMove
+        ? `/api/leagues/${leagueId}/commissioner/force-move`
+        : `/api/leagues/${leagueId}/lineup`;
+      const method = forceMove ? "POST" : "PUT";
+      const res = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          teamId: targetTeamId,
+          playerId: selected.playerId,
+          slot: target.slot,
+          swapWithPlayerId: target.playerId,
+        }),
+      });
+      const data = await res.json() as { error?: string; milestoneTriggered?: "lineup_complete" | null };
+      if (!res.ok || data.error) {
+        setRoster(initialRoster);
+        setError(data.error ?? "Lineup update failed.");
+        return;
+      }
+      setSuccess(`Swapped ${selected.name} ↔ ${target.name}`);
+      if (data.milestoneTriggered === "lineup_complete") setShowLineupCompleteToast(true);
+      router.refresh();
+    });
+  }
+
   const tabs: { key: StatsTab; label: string; disabled: boolean }[] = [
     { key: "season", label: "Season", disabled: false },
     { key: "thisWeek", label: thisWeekLabel ? `This week` : "This week", disabled: !thisWeekLabel },
@@ -509,8 +615,28 @@ export default function LineupDnD({
       {/* Discovery hint */}
       {!forceMove && (
         <div style={{ fontSize: 11, color: "var(--faint)", lineHeight: 1.4 }}>
-          Drag <span style={{ fontFamily: "monospace", fontSize: 13, verticalAlign: "middle" }}>⠿</span> to move a player between Active and Bench slots.
+          {isMobile
+            ? <>Tap a player to select, then tap another to swap positions.</>
+            : <>Drag <span style={{ fontFamily: "monospace", fontSize: 13, verticalAlign: "middle" }}>⠿</span> to move a player between Active and Bench slots.</>
+          }
           {rosterSettings && <> Or tap <strong style={{ color: "var(--dim)" }}>Auto-set lineup</strong> to let us pick.</>}
+        </div>
+      )}
+      {/* Mobile selection state: show cancel hint when a player is selected */}
+      {isMobile && tapSelectedId && (
+        <div style={{
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          padding: "8px 14px", borderRadius: 8, fontSize: 12, fontWeight: 600,
+          background: "rgba(143,193,232,0.12)", border: "1px solid rgba(143,193,232,0.3)",
+          color: "var(--accent-strong)",
+        }}>
+          <span>{findEntry(tapSelectedId)?.name ?? ""} selected — tap a valid slot to swap</span>
+          <button
+            onClick={() => setTapSelectedId(null)}
+            style={{ border: "none", background: "none", color: "var(--faint)", cursor: "pointer", fontSize: 13, padding: "0 4px" }}
+          >
+            Cancel
+          </button>
         </div>
       )}
 
@@ -574,6 +700,9 @@ export default function LineupDnD({
                 isDragging={entry.entryId === activeEntryId}
                 isActive
                 onDrop={() => {}}
+                isTapSelected={isMobile && tapSelectedId === entry.entryId}
+                isTapTarget={isMobile && isTapSwapTarget(entry.entryId)}
+                onTap={isMobile ? handleTap : undefined}
               />
             ))}
           </div>
@@ -599,6 +728,9 @@ export default function LineupDnD({
                 isDragging={entry.entryId === activeEntryId}
                 isActive={false}
                 onDrop={() => {}}
+                isTapSelected={isMobile && tapSelectedId === entry.entryId}
+                isTapTarget={isMobile && isTapSwapTarget(entry.entryId)}
+                onTap={isMobile ? handleTap : undefined}
               />
             ))}
           </div>

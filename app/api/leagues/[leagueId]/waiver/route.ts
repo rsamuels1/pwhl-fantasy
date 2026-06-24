@@ -117,17 +117,12 @@ export async function POST(
   }
 
   // Detect first-add milestone (best-effort — never block the 200)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let milestoneTriggered: "first_add" | null = null;
   try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    if ((prisma as any).leagueEvent) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const addCount = await (prisma as any).leagueEvent.count({
-        where: { leagueId, teamId, type: "PLAYER_ADD" },
-      });
-      if (addCount === 1) milestoneTriggered = "first_add";
-    }
+    const addCount = await prisma.leagueEvent.count({
+      where: { leagueId, teamId, type: "PLAYER_ADD" },
+    });
+    if (addCount === 1) milestoneTriggered = "first_add";
   } catch {
     // non-fatal — milestone toast won't fire but the add succeeded
   }

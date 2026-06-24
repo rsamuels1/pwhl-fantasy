@@ -278,6 +278,27 @@ survives DB resets and schema migrations.
      - **LL-011: Franchise Identity (Team Name Editing)** ✅ — `PATCH /api/leagues/[leagueId]/teams/[teamId]/name` (ownership-gated, 1–50 chars); `components/TeamNameEditor.tsx` inline edit on Settings page; NOTE: franchise archetype system (Boom or Bust etc.) deferred to Sprint 25 as LL-011b
      - **LL-012: Manager Superlatives** ✅ — `lib/services/superlatives.ts` pure function; 5 awards: Top Scorer, Feast or Famine, Steady Eddie, Hot Start, Strong Finish; `SuperlativesCard.tsx` in league overview sidebar; team's own superlatives as gold callout on Analysis page
      - **LL-023: Empty States** ✅ — personality copy across Trades (all 3 tabs), Transactions feed, Analysis page
+   - **Living League: Legacy — Sprint 25** ✅ (6/6 stories shipped; commit ab44083):
+     - **LL-009: Trophy Cabinet** ✅ — `Trophy` model + `TrophyType` enum in `prisma/schema.prisma`; `lib/services/trophy-service.ts`; `/team/[teamId]/trophies` page; `TrophyCard.tsx`, `TrophyShelf.tsx`; trophy icons in matchup page Z2
+     - **LL-011b: Franchise Identity Archetypes** ✅ — `computeFranchiseIdentity()` in `lib/services/franchise-identity.ts`; `FranchiseIdentityChip.tsx` in matchup page Z2; requires ≥4 scored weeks; no schema change
+     - **LL-014: Opening Day Card** ✅ — `OpeningDayCard.tsx` in `app/team/[teamId]/matchup/page.tsx`; Week 1 only (`activePeriod.number === 1`); localStorage dismiss keyed on `leagueId + season`
+     - **LL-015: Championship Banner** ✅ — `ChampionshipBanner.tsx` in matchup page; triggered by unread `CHAMPIONSHIP_WON` notification; dismiss calls `markAllRead()`
+     - **UX-058: Trade Proposal 4-Step Guided Experience** ✅ — 4-step state machine in `ProposeTrade.tsx`; Step 0 pick partner, Step 1 give, Step 2 receive, Step 3 review; same `POST /trades` endpoint
+     - **BF-020: Auto-Draft Position Balance** ✅ — Tier 1b (defenders filling open D slots) added in `bestAvailablePlayerIds()` in `lib/draft/server.ts`
+   - **Beta Defect Sweep — Sprint 26** ✅ (BF-024 and BF-027 shipped by parallel agents):
+     - **BF-024** ✅ — `/team/[teamId]/transactions` renders `TransactionFeed` inside team layout; no league-layout redirect
+     - **BF-027** ✅ — LEAGUE_STORYLINE raw enum regression resolved; all `getLeagueActivity()` paths now emit human-readable descriptions
+   - **Polish & The Arena Concourse — Sprint 27** ✅ (11/11 items shipped; Jun 24, 2026):
+     - **BF-022** ✅ — `BottomNav` hidden on desktop; `className="bottom-nav"` added to `<nav>` in `components/BottomNav.tsx`; inline `display: "flex"` override removed
+     - **BF-023** ✅ — `processWaivers()` in `lib/services/waiver-service.ts` emits both `WAIVER_CLAIM_AWARDED` and `PLAYER_ADD` events so waiver-awarded adds appear in transaction history
+     - **BF-025** ✅ — Trade UI position filter investigated; new `ProposeTrade.tsx` 4-step wizard has no position filter; old bug confirmed resolved without code change
+     - **BF-026** ✅ — Standings playoff cutoff contrast improved to WCAG AA (5.5:1) in `app/league/[leagueId]/standings/page.tsx`; `chip-out` color `#94a3b8`; dashed border opacity 0.55; footer uses `var(--dim)`
+     - **BF-028** ✅ — Commissioner dashboard now surfaces `PENDING_REVIEW` trade count as action item; `app/dashboard/page.tsx` queries `prisma.trade.groupBy`
+     - **LL-024** ✅ — New `app/league/[leagueId]/how-it-works/page.tsx` server component; 6 sections: VP explained, FP scoring (live from league settings), roster slots, stat glossary (15 abbreviations), waiver wire, trades; "How it works" nav link in `app/league/[leagueId]/layout.tsx`
+     - **LL-022 Phase 1** ✅ — `components/StatTooltip.tsx` (abbr element pattern); `title` prop on `SortTh` in `app/team/[teamId]/roster/RosterManager.tsx` for PPP/SOG/HIT/BLK/SV%/GA/SO/FP; `tooltip` field on `SKATER_COLS`/`GOALIE_COLS` in `app/draft/[leagueId]/DraftRoom.tsx`
+     - **LL-022 Phase 2** ✅ — "How it works →" anchor link added to standings page legend in `app/league/[leagueId]/standings/page.tsx`
+     - **VTF subtitle update** ✅ — league overview VTF subtitle updated to "Everyone races the same week — your rank is your result"
+     - **LL-016 (partial)** ✅ — Inline weekly top-scorer teaser after race table in commissioner overview; trophy leaderboard sidebar widget via `prisma.trophy.groupBy`; "Full record book →" link
 7. Public launch ~early Nov, drafts ~1 week before opener
 
 ## Draft room UI (`app/draft/[leagueId]/`)

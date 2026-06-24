@@ -129,26 +129,48 @@ export async function proposeTrade(
     throw new TradeValidationError(result.reason ?? "Trade proposal is invalid.");
   }
 
-  const trade = await prisma.trade.create({
-    data: {
-      leagueId,
-      proposingTeamId,
-      receivingTeamId,
-      status: "PROPOSED",
-      message: message?.trim() || null,
-      items: {
-        create: items.map((i) => ({
-          fromTeamId: i.fromTeamId,
-          toTeamId: i.toTeamId,
-          playerId: i.playerId,
-        })),
+  const requireApproval = league.requireCommissionerTradeApproval ?? false;
+
+  // Always create as PROPOSED first so the proposer's "Sent" tab shows the trade
+  // in PROPOSED state before it transitions. If commissioner approval is required,
+  // we immediately flip it to PENDING_REVIEW in the same transaction.
+  const trade = await prisma.$transaction(async (tx) => {
+    const created = await tx.trade.create({
+      data: {
+        leagueId,
+        proposingTeamId,
+        receivingTeamId,
+        status: "PROPOSED",
+        message: message?.trim() || null,
+        items: {
+          create: items.map((i) => ({
+            fromTeamId: i.fromTeamId,
+            toTeamId: i.toTeamId,
+            playerId: i.playerId,
+          })),
+        },
       },
-    },
-    include: { items: true },
+      include: { items: true },
+    });
+
+    if (requireApproval) {
+      // Flip to PENDING_REVIEW so commissioner sees it immediately
+      return tx.trade.update({
+        where: { id: created.id },
+        data: { status: "PENDING_REVIEW" },
+        include: { items: true },
+      });
+    }
+
+    return created;
   });
 
-  // Notify the receiving team owner
-  void notifyReceiver(trade.id, leagueId, receivingTeamId, proposingTeamId, "received", prisma).catch(() => {});
+  // Notify the receiving team owner (skip if going straight to commissioner review)
+  if (!requireApproval) {
+    void notifyReceiver(trade.id, leagueId, receivingTeamId, proposingTeamId, "received", prisma).catch(() => {});
+  } else {
+    void notifyCommissionerReview(trade.id, leagueId, prisma).catch(() => {});
+  }
 
   // Analytics fire-and-forget
   try {
@@ -626,6 +648,7 @@ export async function processExpiredTrades(
           body: "Your trade proposal was not accepted within 72 hours and has expired.",
           teamId: trade.proposingTeamId,
           actionUrl: `/league/${leagueId}/trades`,
+          dedupeKey: `trade-expired-${trade.id}`,
         }).catch(() => {});
       }
     }

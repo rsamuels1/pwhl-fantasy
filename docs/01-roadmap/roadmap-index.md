@@ -1,6 +1,6 @@
 # PWHL GM Product Roadmap — Index
 
-Last Updated: June 23, 2026 (Sprint 22 COMPLETE — Inviting Dark Redesign 23/23; Sprint 23 COMPLETE — Living League: The Race 7/7; Sprints 24–27 Living League arc planned)
+Last Updated: June 24, 2026 (Sprint 27 COMPLETE — Polish & The Arena Concourse 11/11; Sprint 25 COMPLETE — Living League: Legacy 6/6; Sprint 26 COMPLETE — Beta Defect Sweep BF-024/027 shipped)
 
 ---
 
@@ -106,21 +106,15 @@ MVP proves a league can go **Create → Invite → Draft → Set Lineups → Com
 
 ## What To Build Next
 
-Sprint 6 is complete (7/7). Sprint 7 is complete (3/4 items done — #11 Storylines ✅; #39 Replay Sim V2 UX ✅; PLAYOFF-AUDIT-001 ✅; #7 Trade System deferred; #38 Replay V2 deferred). Sprint 8 (Beta Hardening) is complete — all 14 items done. Sprint 9 (PWHL GM Rebrand) is COMPLETE — all 8 stories shipped: REBRAND-001/002/003/004/005/006/007/008 all done. The product is now fully rebranded as PWHL GM with 202/202 tests passing and zero "PWHL Fantasy" strings in the live UI.
+**Sprint 27 (Polish & The Arena Concourse) is COMPLETE (Jun 24, 2026).** 11/11 items shipped across 2 tracks: Track A beta bug fixes (BF-022/023/025/026/028) and Track B hub assembly (LL-024 glossary page, LL-022 stat tooltips + VP/FP anchors, VTF subtitle update, LL-016 partial records teaser + trophy leaderboard). No schema changes. Full plan in `roadmap-sprints.md`.
 
-**Sprint 10 (Beta Bug Sweep + Launch Polish) is COMPLETE (Jun 21, 2026).** 4 bugs from founding commissioner feedback plus 5 high-priority UX fixes: BF-003 activity feed raw type ✅; BF-004 UTIL slot error ✅; BF-005 draft false eviction ✅; BF-006 zero-games bench hint ✅; UX-001 landing trust copy ✅; UX-010 admin CTA gate ✅; UX-011 standings table headers ✅; UX-018 lineup instruction pre-draft ✅; UX-023 Trade Center no propose CTA ✅. BF-007 and UX-008 bumped to Sprint 11. Full plan in `roadmap-sprints.md`.
+**Sprint 26 (Beta Defect Sweep) is COMPLETE (Jun 24, 2026).** BF-024 and BF-027 shipped by parallel agents. BF-022/023/025/026/028 resolved in Sprint 27. BF-012, BF-013, BF-021 remain open in backlog.
 
-**Sprint 11a & 11b (UX Polish: Vocabulary + Navigation + Wizard + Empty States) is COMPLETE (Jun 21, 2026).** 24 total items: 11a shipped 8 P0/P1 items (UX-024–031); 11b shipped 16 P1/P2 items (UX-002–021, BF-007). League nav alignment, wizard layout, empty state copy, register copy, FA context banners, auth hydration nav — all done. Full plan in `roadmap-sprints.md`.
+**Sprint 25 (Living League: Legacy) is COMPLETE.** 6/6 stories shipped (commit ab44083): LL-009 Trophy Cabinet, LL-011b Franchise Identity Archetypes, LL-014 Opening Day Card, LL-015 Championship Banner, UX-058 Trade Proposal 4-Step Guided Experience, BF-020 Auto-Draft Position Balance.
 
-**Sprint 12 (Pre-Beta Polish) is COMPLETE (Jun 21, 2026).** Shipped: BF-004 lineup UTIL slot fix ✅; UX-043 landing page jargon reduction ✅; UX-039 Claim vs Add tooltips ✅; UX-038/040/042/044 UI polish ✅; DATA-002 roster update script ✅. **MVP readiness: ~99%.** All critical bugs cleared. DATA-002 script ready (waits on HockeyTech rosters). Beta invites target: Jul 7, 2026. Full plan in `roadmap-sprints.md`.
+**Sprint 24 (Living League: Season Story) is COMPLETE (5/7).** LL-006/010/011/012/023 shipped; UX-058/BF-020 deferred to Sprint 25 and now complete.
 
-**Sprint 13 (UX Audit + Onboarding First-Run) is ABSORBED into Sprint 18.** Of the original 14 items, 3 shipped (BF-008 ✅, OB-001 ✅, OB-008 ✅ — via Sprint 15 batch commit 4b67b44). The remaining 11 items (BF-009, OB-002–007, OB-009, UX-046–048) are carried into Sprint 18 as the P0/P1 foundation. Sprint 13 is formally closed.
-
-**Sprint 15 (Visual Design System Deep Pass) is COMPLETE (Jun 22, 2026).** 3 stories shipped: DS-001 homepage rewrite + sticky header ✅, DS-002 token sweep + emoji removal ✅, DS-003 league overview + WeekHighlights redesign ✅. Full plan in `roadmap-sprints.md`.
-
-**Sprint 16 (Emotional Design Polish) is COMPLETE (Jun 22, 2026).** Matchup page emotional energy pass — score colors respond to win state (green if winning, red if losing), scores count-up animate on load (1.2s), section headings elevated from 12px uppercase to 14px normal for hierarchy, Saira Condensed font loads and applies to all scores, RecapCard styled with colored borders and contextual copy, card entrance animations with staggered delays, win probability bar animates with spring easing. Transforms the app from "Bloomberg terminal" to energetic sports product. Commits: 5ecc116 (main pass) + f1d576c (section headings + count-up). Full details in memory and `roadmap-features.md`.
-
-**Sprint 17 (UX Polish — Agent Test Run Fixes) is COMPLETE (Jun 22, 2026).** All 9 items shipped: AG-001 LEAGUES page overhaul + `isPublic` schema field; AG-002 matchup page restructure (Z7 performers to Analysis tab, Z8/Z9 to league overview, FieldHero standings removed, "all set" lineup state); AG-003 FP/VP comprehension copy (VP bridge sentence, "vs the field" visible text, setup-phase "—" fix); AG-004 terminology standardization (FPts → FP, VpExplainer FP/VP sentence, slot legend, glossary open by default); AG-005 non-qualifying playoff empty state (eliminated teams see regular-season rank + bracket link); AG-006 renewal two-step confirmation + invite step; AG-007 pre-login UX improvements (plain-language features copy, Replay CTA, invite page draft date + explainer); AG-008 VP education reinforcement on FieldHero + dashboard card; AG-009 lineup lock contextual tooltip. Full plan in `roadmap-sprints.md`.
+Earlier sprints (7–23): all complete. Details in `roadmap-sprints.md`.
 
 **Shipped (Sprint 6 — all complete):**
 - **League Onboarding (#2)** · ✅ Welcome flow, 6-step wizard, manager draft prep guide; `User.onboardingCompletedAt` schema field. (Sprint 3)
@@ -167,9 +161,9 @@ Beta invite date: **Jul 7, 2026.** Public launch: **quality-driven** (target ear
 
 ---
 
-## Completed Sprints (7–20)
+## Completed Sprints (7–27)
 
-All sprints from 7–20 are complete and shipped. Sprint 13 is formally absorbed into Sprint 18 (3/14 shipped via Sprint 15 batch; 11 carry-forwards). Detailed plans in `roadmap-sprints.md`.
+All sprints from 7–27 are complete and shipped. Sprint 13 is formally absorbed into Sprint 18 (3/14 shipped via Sprint 15 batch; 11 carry-forwards). Detailed plans in `roadmap-sprints.md`.
 
 - **Sprint 7** ✅ — Retention Layer (Trade System, Storylines, Replay Sim v2 UX)
 - **Sprint 8** ✅ — Beta Hardening (14/14 audit fixes + beta bugs)
@@ -187,8 +181,12 @@ All sprints from 7–20 are complete and shipped. Sprint 13 is formally absorbed
 - **Sprint 20** ✅ — VTF Navigation Rename (2/2 items: BF-018 league nav "Schedule"→"Results", UX-049 team nav "Schedule"→"My Season"; Jun 23, 2026)
 - **Sprint 21** ✅ — Living League: Weekly Delight (5/5 stories: LL-001 Weekly Awards Ceremony, LL-002 Momentum Strip data layer, LL-003 Animated Stat Chips, LL-017 Plain-Language Explainers, LL-018 Negative Award Tone Calibration; Jun 23, 2026)
 - **Sprint 23** ✅ — Living League: The Race (7/7 stories: LL-004 Magic Number, LL-005 Playoff Clinch Celebration, LL-007 Bubble Watch, LL-008 Upset Tracker, LL-019 First-Result Explainer, LL-021 Small-Win Encouragement, RD-013 Team Identity Colors; schema migration: `FantasyTeam.accentColor`)
+- **Sprint 24** ✅ — Living League: Season Story (5/7 stories: LL-006/010/011/012/023; UX-058/BF-020 deferred to Sprint 25)
+- **Sprint 25** ✅ — Living League: Legacy (6/6 stories: LL-009/011b/014/015 + UX-058 + BF-020; commit ab44083)
+- **Sprint 26** ✅ — Beta Defect Sweep (BF-024/027 shipped by parallel agents; Jun 24, 2026)
+- **Sprint 27** ✅ — Polish & The Arena Concourse (11/11 items: BF-022/023/025/026/028 + LL-024 + LL-022 Phase 1+2 + VTF subtitle + LL-016 partial; Jun 24, 2026)
 
-**Current Status:** Sprint 22 COMPLETE — "Inviting Dark" Redesign (23/23 shipped: all RD-001–017 + UX-051/052/054/055/056/057 + BF-018) · Sprint 23 COMPLETE — Living League: The Race (7/7 stories; LL-004/005/007/008/019/021 + RD-013) · Sprints 24–27 Living League arc planned · MVP readiness ~99%
+**Current Status:** Sprint 27 COMPLETE — "Polish & The Arena Concourse" (11/11 shipped: BF-022/023/025/026/028 + LL-024 + LL-022 Phase 1+2 + VTF subtitle + LL-016 partial) · Sprint 25 COMPLETE — Living League: Legacy (6/6; LL-009/011b/014/015 + UX-058 + BF-020) · Sprint 26 COMPLETE — Beta Defect Sweep (BF-024/027 shipped by parallel agents) · MVP readiness ~99%
 
 **Sprint 14 (Post-Launch Polish + Emotional Engagement) is COMPLETE (Jun 22, 2026).** 11/12 items shipped: all 5 agent integration test findings (DRC-002, BF-010, BF-011, TR-002, TR-003) ✅; OB-010 wizard Replay progress bar ✅; UX-049 "Free Agents" direct TeamNav link ✅; UX-050 "Win Probability" label in DuelHero ✅; UX-033 setup-phase copy "Games starting soon" ✅; UX-032 edge label ✅; OB-011 draft date picker text ✅. UX-045 (rival win celebration) deferred post-launch — requires schema migration (`RIVALRY_WIN` enum) which carries pre-launch risk. First item in Sprint 17 backlog.
 
@@ -206,10 +204,11 @@ All sprints from 7–20 are complete and shipped. Sprint 13 is formally absorbed
 - Sprint 21 — Weekly Delight (awards, momentum, stat chips) ✅ COMPLETE
 - Sprint 22 — Inviting Dark Redesign (design system) — ✅ COMPLETE (23/23)
 - Sprint 23 — The Race (magic number, clinch moments, bubble watch, upset tracker) ✅ COMPLETE
-- Sprint 24 — Season Story (timeline, record book, franchise identity, manager superlatives)
-- Sprint 25 — Legacy (trophy cabinet, opening day card, championship banner)
-- Sprint 26 — The Morning Skate (weekly league newsletter, own nav entry, archive page)
-- Sprint 27 — League Hub (assemble all systems into franchise home page)
+- Sprint 24 — Season Story (timeline, record book, franchise identity, manager superlatives) ✅ COMPLETE (5/7)
+- Sprint 25 — Legacy (trophy cabinet, opening day card, championship banner) ✅ COMPLETE (6/6)
+- Sprint 26 — Beta Defect Sweep (BF-024/027 shipped by parallel agents) ✅ COMPLETE
+- Sprint 27 — Polish & The Arena Concourse (glossary, stat tooltips, hub assembly) ✅ COMPLETE (11/11)
+- Sprint 28 — The Morning Skate (LL-013 weekly league newsletter — next up)
 
 Full feature cards: `roadmap-features.md` Phase 9 (LL-001 through LL-016).
 

@@ -55,6 +55,8 @@ const TRANSITIONS: Record<TradeStatus, Partial<Record<TradeStatus, ActorRole[]>>
     COUNTERED: ["receiver"],
     CANCELLED: ["proposer"],
     EXPIRED: ["commissioner"],
+    // Auto-transition when requireCommissionerTradeApproval is set at proposal time
+    PENDING_REVIEW: ["proposer", "commissioner"],
   },
   COUNTERED: {
     // A counter is itself a new Trade row (PROPOSED). The original trade that was
