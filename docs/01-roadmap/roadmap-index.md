@@ -1,6 +1,6 @@
 # PWHL GM Product Roadmap — Index
 
-Last Updated: June 23, 2026 (Sprint 23 COMPLETE — Living League: The Race 7/7; Sprint 22 IN PROGRESS — 8/23 Inviting Dark Redesign stories shipped; Sprints 24–27 Living League arc planned)
+Last Updated: June 23, 2026 (Sprint 22 COMPLETE — Inviting Dark Redesign 23/23; Sprint 23 COMPLETE — Living League: The Race 7/7; Sprints 24–27 Living League arc planned)
 
 ---
 
@@ -188,7 +188,7 @@ All sprints from 7–20 are complete and shipped. Sprint 13 is formally absorbed
 - **Sprint 21** ✅ — Living League: Weekly Delight (5/5 stories: LL-001 Weekly Awards Ceremony, LL-002 Momentum Strip data layer, LL-003 Animated Stat Chips, LL-017 Plain-Language Explainers, LL-018 Negative Award Tone Calibration; Jun 23, 2026)
 - **Sprint 23** ✅ — Living League: The Race (7/7 stories: LL-004 Magic Number, LL-005 Playoff Clinch Celebration, LL-007 Bubble Watch, LL-008 Upset Tracker, LL-019 First-Result Explainer, LL-021 Small-Win Encouragement, RD-013 Team Identity Colors; schema migration: `FantasyTeam.accentColor`)
 
-**Current Status:** Sprint 23 COMPLETE — Living League: The Race (7/7 stories; LL-004/005/007/008/019/021 + RD-013) · **Sprint 22 IN PROGRESS** — "Inviting Dark" Redesign (8/23 shipped: RD-001/002/003/004/007/008 + BF-018 + UX-052) · Sprints 24–27 Living League arc planned · MVP readiness ~99%
+**Current Status:** Sprint 22 COMPLETE — "Inviting Dark" Redesign (23/23 shipped: all RD-001–017 + UX-051/052/054/055/056/057 + BF-018) · Sprint 23 COMPLETE — Living League: The Race (7/7 stories; LL-004/005/007/008/019/021 + RD-013) · Sprints 24–27 Living League arc planned · MVP readiness ~99%
 
 **Sprint 14 (Post-Launch Polish + Emotional Engagement) is COMPLETE (Jun 22, 2026).** 11/12 items shipped: all 5 agent integration test findings (DRC-002, BF-010, BF-011, TR-002, TR-003) ✅; OB-010 wizard Replay progress bar ✅; UX-049 "Free Agents" direct TeamNav link ✅; UX-050 "Win Probability" label in DuelHero ✅; UX-033 setup-phase copy "Games starting soon" ✅; UX-032 edge label ✅; OB-011 draft date picker text ✅. UX-045 (rival win celebration) deferred post-launch — requires schema migration (`RIVALRY_WIN` enum) which carries pre-launch risk. First item in Sprint 17 backlog.
 
@@ -200,11 +200,11 @@ All sprints from 7–20 are complete and shipped. Sprint 13 is formally absorbed
 
 **Sprint 21 (Living League: Weekly Delight) is COMPLETE (Jun 23, 2026).** 5/5 stories shipped: LL-001 Weekly Awards Ceremony (`computeWeeklyAwards()` + `emitWeeklyAwards()` in `lib/services/storyline-service.ts`, `WeekHighlights.tsx` award cards with icon + color-coded borders + recovery CTA links); LL-002 Momentum Strip data layer (`scoreDeltaSinceYesterday`, `playersRemainingTonight`, `opponentFinished` added to `ActiveMatchup` in `getDashboardData` — visual `MomentumStrip.tsx` shipped Sprint 22 RD-008, completing the feature); LL-003 Animated Stat Chips (`StatChip.tsx` with `chipPulse` CSS animation, `computeStatChips()` in `dashboard.ts`, rendered in matchup page Z6); LL-017 Plain-Language Explainers (`lib/copy/living-league-glossary.ts` single source of truth, `InfoTooltip.tsx` with ≥44px touch target + aria-accessible); LL-018 Negative Award Tone Calibration (`showNegativeAwards` toggle in `scoringSettings` JSON, `NegativeAwardsToggle.tsx` in admin panel, `PATCH /api/leagues/[leagueId]/settings`). No schema changes. 6 commits.
 
-**Sprint 22 (Inviting Dark Redesign) is IN PROGRESS.** 8 of 23 stories shipped Jun 23, 2026: RD-001 token swap, RD-002 hex sweep, RD-003 emoji policy, RD-004 VP popover + wizard rebuild (also covers UX-051 + UX-057), RD-007 remaining page recolor sweep, RD-008 MomentumStrip (completes LL-002), BF-018 /league-rules page, UX-052 invite primer. Remaining: RD-005/006 flagship redesigns, RD-009–012 P2 emotional design stories, RD-014–017, UX-054/055/056. No schema changes. Spec authority: `docs/branding/pwhl_redesign_bundle_v3_1.zip`. Full plan in `roadmap-sprints.md`.
+**Sprint 22 (Inviting Dark Redesign) is COMPLETE.** All 23/23 stories shipped: RD-001–008 P1 core track, RD-005/006 flagship redesigns (league overview + team matchup), RD-009–012/014–017 P2 emotional design and docs, BF-018 /league-rules page, UX-051/052/054/055/056/057. "Northern Ice" confirmed as theme name; `docs/branding/emotional-design-principles.md` created. No schema changes. Full plan in `roadmap-sprints.md`.
 
 **Living League Arc (Sprints 23–27) is PLANNED.** Source: `docs/01-roadmap/living-league-product-strategy.md` + `docs/01-roadmap/living-league-roadmap.md`. Evolves PWHL GM from "fantasy hockey software" into a living league that remembers, celebrates, and tells stories. 7 total sprints (21–27):
 - Sprint 21 — Weekly Delight (awards, momentum, stat chips) ✅ COMPLETE
-- Sprint 22 — Inviting Dark Redesign (design system) — 🟡 IN PROGRESS (8/23)
+- Sprint 22 — Inviting Dark Redesign (design system) — ✅ COMPLETE (23/23)
 - Sprint 23 — The Race (magic number, clinch moments, bubble watch, upset tracker) ✅ COMPLETE
 - Sprint 24 — Season Story (timeline, record book, franchise identity, manager superlatives)
 - Sprint 25 — Legacy (trophy cabinet, opening day card, championship banner)
