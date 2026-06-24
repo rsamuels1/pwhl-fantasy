@@ -349,6 +349,27 @@ export default async function AdminPage({ params, searchParams }: Props) {
 
             {!draftDone && (
               <div>
+                {/* Plain-language snake draft primer (UX-056) */}
+                <div style={{
+                  background: "var(--bg-raised)", border: "1px solid var(--border)",
+                  borderRadius: 12, padding: "14px 16px", marginBottom: 18,
+                }}>
+                  <p style={{ fontSize: 13, fontWeight: 700, color: "var(--text)", margin: "0 0 8px" }}>
+                    How the draft works
+                  </p>
+                  <ul style={{ margin: 0, paddingLeft: 18, display: "grid", gap: 5 }}>
+                    {[
+                      "Each manager takes turns picking one player — 13 rounds total.",
+                      "Round 1: pick 1, pick 2, … pick N. Round 2 reverses: pick N goes first. This is called snake order.",
+                      "You have 30 seconds per pick. Miss your turn and the system auto-picks for you.",
+                      "Fill 3 Forwards, 2 Defense, 1 Goalie, 1 Utility (any skater), and 6 Bench spots.",
+                      "Start the draft from inside the draft room — everyone needs to be connected first.",
+                    ].map((tip, i) => (
+                      <li key={i} style={{ fontSize: 12, color: "var(--dim)", lineHeight: 1.5 }}>{tip}</li>
+                    ))}
+                  </ul>
+                </div>
+
                 <p style={{ color: "var(--dim)", fontSize: 14, marginBottom: 14 }}>
                   Send each manager their personal draft room link:
                 </p>

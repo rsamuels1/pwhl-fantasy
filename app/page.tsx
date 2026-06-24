@@ -80,6 +80,9 @@ export default async function Home() {
             <Link href="/create-league?replay=1" style={{ color: "var(--accent)", textDecoration: "none" }}>
               Replay a past PWHL season →
             </Link>
+            <span style={{ display: "block", marginTop: 3, fontSize: 11, color: "var(--dim)" }}>
+              Real stats, real players — no commitment needed.
+            </span>
           </p>
         </div>
 

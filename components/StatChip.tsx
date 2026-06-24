@@ -6,10 +6,10 @@ import type { StatChip as StatChipType } from "@/lib/services/dashboard";
 import { getChipCopy } from "@/lib/copy/living-league-glossary";
 
 const CHIP_COLORS: Record<StatChipType["type"], string> = {
-  weekly_leader: "#e3c989",
-  league_record: "#fbbf24",
-  streak: "#fb923c",
-  projection_swing_up: "#5fa98c",
+  weekly_leader: "var(--gold)",
+  league_record: "var(--gold)",
+  streak: "var(--gold)",
+  projection_swing_up: "var(--green)",
   projection_swing_down: "var(--dim)",
 };
 

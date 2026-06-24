@@ -14,13 +14,14 @@ export default function EmptyState({ message, subtext, actionHref, actionLabel }
       flexDirection: "column",
       alignItems: "center",
       justifyContent: "center",
-      padding: "40px 24px",
+      padding: "48px 24px",
       textAlign: "center",
-      gap: 8,
+      gap: 10,
     }}>
-      <p style={{ fontSize: 14, color: "var(--muted)", margin: 0 }}>{message}</p>
+      <div style={{ fontSize: 28, marginBottom: 4, opacity: 0.5 }}>🏒</div>
+      <p style={{ fontSize: 14, fontWeight: 600, color: "var(--muted)", margin: 0 }}>{message}</p>
       {subtext && (
-        <p style={{ fontSize: 13, color: "var(--faint)", margin: 0 }}>{subtext}</p>
+        <p style={{ fontSize: 13, color: "var(--faint)", margin: 0, maxWidth: 320 }}>{subtext}</p>
       )}
       {actionHref && actionLabel && (
         <Link href={actionHref} style={{

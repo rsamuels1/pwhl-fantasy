@@ -748,6 +748,29 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
                 </p>
               </div>
 
+              {/* Your league at a glance (RD-012) */}
+              <div style={{
+                background: "var(--bg-raised)", border: "1px solid var(--border)",
+                borderRadius: 14, padding: "16px",
+              }}>
+                <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--dim)", margin: "0 0 12px" }}>
+                  Your league at a glance
+                </p>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                  {[
+                    { label: "League", value: name },
+                    { label: "Size", value: `${maxTeams} teams` },
+                    { label: "Mode", value: isReplay ? "⏪ Replay" : "Live season" },
+                    { label: "Scoring", value: "VP standings" },
+                  ].map(({ label, value }) => (
+                    <div key={label} style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                      <span style={{ fontSize: 10, fontWeight: 700, color: "var(--faint)", textTransform: "uppercase", letterSpacing: "0.07em" }}>{label}</span>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text)" }}>{value}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 <PrepStep num={1} label="Invite managers" desc="Share your league invite link so everyone can join." done />
                 <PrepStep num={2} label="Set up the draft" desc="Go to the admin panel → Draft → set up the draft board." />

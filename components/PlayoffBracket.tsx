@@ -10,7 +10,7 @@ interface Props {
 }
 
 function seedStyle(seed: number | null | undefined): React.CSSProperties {
-  if (seed === 1) return { background: "rgba(251,191,36,0.2)", color: "#fbbf24" };
+  if (seed === 1) return { background: "rgba(212,175,55,0.18)", color: "var(--gold)" };
   if (seed === 2) return { background: "var(--border)", color: "var(--dim)" };
   return { background: "rgba(100,116,139,0.1)", color: "var(--faint)" };
 }
@@ -47,7 +47,7 @@ export default function PlayoffBracket({ bracket, myTeamId }: Props) {
                 marginBottom: 14, paddingBottom: 10,
                 borderBottom: "1px solid var(--border)",
               }}>
-                <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: isChampionship ? "#fbbf24" : "var(--dim)" }}>
+                <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: isChampionship ? "var(--gold)" : "var(--dim)" }}>
                   {getRoundLabel(rIdx + 1, totalRounds)}
                 </div>
                 <div style={{ fontSize: 11, color: "var(--faint)", marginTop: 2 }}>
@@ -113,9 +113,9 @@ function TeamRow({
   const isLoser = scored && winner && team && winner.fantasyTeamId !== team.fantasyTeamId;
   const isMe = !!myTeamId && !!team && team.fantasyTeamId === myTeamId;
 
-  const winColor = isChampionship ? "#fbbf24" : "#5fa98c";
+  const winColor = isChampionship ? "var(--gold)" : "#5fa98c";
   const winBg = isChampionship ? "rgba(251,191,36,0.07)" : "rgba(95,169,140,0.06)";
-  const winBorder = isChampionship ? "#fbbf24" : "#5fa98c";
+  const winBorder = isChampionship ? "var(--gold)" : "#5fa98c";
 
   return (
     <div style={{
@@ -137,7 +137,7 @@ function TeamRow({
       {/* Name */}
       <span style={{
         flex: 1, fontSize: 13, fontWeight: isWinner ? 700 : isMe ? 600 : 500,
-        color: isWinner ? (isChampionship ? "#fbbf24" : "var(--text)") : isLoser ? "var(--faint)" : isMe ? "var(--accent-strong)" : "var(--muted)",
+        color: isWinner ? (isChampionship ? "var(--gold)" : "var(--text)") : isLoser ? "var(--faint)" : isMe ? "var(--accent-strong)" : "var(--muted)",
         overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
       }}>
         {team ? team.teamName : <em style={{ color: "var(--dim)" }}>TBD</em>}

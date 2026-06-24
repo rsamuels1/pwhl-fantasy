@@ -67,8 +67,13 @@ export default function BetaWelcomeStep({ onContinue }: Props) {
         </div>
       </div>
 
+      {/* Step count hint */}
+      <p style={{ textAlign: "center", fontSize: 12, color: "var(--faint)", margin: 0 }}>
+        4 quick steps to your league — takes about 2 minutes.
+      </p>
+
       {/* CTA and secondary link */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 12, alignItems: "center", marginTop: 12 }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 12, alignItems: "center", marginTop: 4 }}>
         <button
           onClick={onContinue}
           className="button-primary"

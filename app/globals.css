@@ -2,6 +2,7 @@
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+/* ── Northern Ice — Inviting Dark theme ────────────────────────── */
 :root {
   /* ── Surfaces ──────────────────────────────────────────────────── */
   --bg:          #0f1117;
@@ -41,6 +42,9 @@
   /* ── Type ──────────────────────────────────────────────────────── */
   --font-body:  'Archivo', -apple-system, sans-serif;
   --font-stats: 'Saira Condensed', 'Archivo', sans-serif;
+
+  /* ── Prestige ──────────────────────────────────────────────────── */
+  --prestige-gradient: linear-gradient(135deg, rgba(212,175,55,.16), rgba(255,255,255,0));
 
   /* ── Legacy aliases (backwards compat) ────────────────────────── */
   --panel-strong: rgba(143,193,232,0.16);
@@ -599,11 +603,25 @@ img { max-width: 100%; display: block; }
   background: var(--accent-dim);
 }
 
-/* Bracket champion card glow */
+/* Bracket champion card — prestige gradient + gold glow */
 .bracket-champion {
-  background: linear-gradient(135deg, #0e1a24, var(--card)) !important;
-  border: 1px solid var(--accent-border) !important;
-  box-shadow: 0 0 32px var(--accent-glow) !important;
+  background: var(--prestige-gradient), var(--card) !important;
+  border: 1px solid rgba(212,175,55,0.40) !important;
+  box-shadow: 0 0 32px rgba(212,175,55,0.18) !important;
+}
+
+/* Clinched banner — prestige gradient background */
+.clinch-banner {
+  background: var(--prestige-gradient);
+  border: 1px solid rgba(212,175,55,0.30);
+  border-radius: 10px;
+  padding: 12px 16px;
+}
+
+/* Weekly recap card hero — prestige tint when positive result */
+.recap-card-win {
+  background: var(--prestige-gradient), var(--card);
+  border-color: rgba(212,175,55,0.22);
 }
 
 /* Draft room custom scrollbar */

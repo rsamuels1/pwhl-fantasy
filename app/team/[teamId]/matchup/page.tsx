@@ -244,15 +244,22 @@ export default async function TeamMatchupPage({
           if (activeStarters.length === 0) return null;
           return (
             <div style={{
-              background: "rgba(95,169,140,0.07)",
-              border: "1px solid rgba(95,169,140,0.22)",
-              borderRadius: 14, padding: "12px 18px",
-              display: "flex", alignItems: "center", gap: 10,
+              background: "linear-gradient(135deg, rgba(81,216,138,0.07), rgba(81,216,138,0.03))",
+              border: "1px solid rgba(81,216,138,0.25)",
+              borderRadius: 14, padding: "14px 20px",
+              display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap",
             }}>
-              <span style={{ fontSize: 15, flexShrink: 0 }}>✅</span>
-              <span style={{ fontSize: 13, color: "var(--green)" }}>
-                Your lineup is set — <strong style={{ color: "var(--green)" }}>{activeStarters.length} starter{activeStarters.length !== 1 ? "s" : ""}</strong> active this period
-              </span>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <span style={{ width: 30, height: 30, borderRadius: "50%", background: "rgba(81,216,138,0.15)", border: "1px solid rgba(81,216,138,0.30)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, flexShrink: 0 }}>✓</span>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: "var(--green)" }}>
+                    Lineup locked in
+                  </div>
+                  <div style={{ fontSize: 12, color: "var(--dim)", marginTop: 1 }}>
+                    {activeStarters.length} starter{activeStarters.length !== 1 ? "s" : ""} active — you&apos;re good to go
+                  </div>
+                </div>
+              </div>
             </div>
           );
         })()
@@ -717,8 +724,9 @@ function RecapCard({ recap }: { recap: WeeklyRecap }) {
   const won = recap.result === "win";
   const tie = recap.result === "tie";
   const color = won ? "var(--green)" : tie ? "var(--dim)" : "var(--red)";
-  const borderColor = won ? "rgba(95,169,140,0.25)" : tie ? "var(--border)" : "rgba(209,139,127,0.25)";
+  const borderColor = won ? "rgba(95,169,140,0.30)" : tie ? "var(--border)" : "rgba(209,139,127,0.25)";
   const verb = won ? "Won" : "Lost";
+  const isLeagueHigh = won && recap.highestScore;
 
   const periodLabel = recap.isPlayoff && recap.roundLabel
     ? recap.roundLabel
@@ -731,9 +739,9 @@ function RecapCard({ recap }: { recap: WeeklyRecap }) {
     : "Tough week. You'll bounce back.";
 
   return (
-    <div style={{
-      background: "var(--card)",
-      border: `1px solid ${borderColor}`,
+    <div className={isLeagueHigh ? "recap-card-win" : undefined} style={{
+      background: won ? "linear-gradient(135deg, rgba(81,216,138,0.05), transparent)" : "var(--card)",
+      border: `1px solid ${isLeagueHigh ? "rgba(212,175,55,0.30)" : borderColor}`,
       borderRadius: 14,
       padding: "18px 20px",
       display: "flex",
@@ -896,7 +904,7 @@ function FieldHero({ matchup, teamId, leagueId }: { matchup: ActiveMatchup; team
       boxShadow: "0 40px 90px -45px rgba(0,0,0,0.8)",
     }}>
       {/* Ambient glow overlay */}
-      <div style={{ position: "absolute", inset: 0, pointerEvents: "none", background: "radial-gradient(620px 280px at 18% -20%, rgba(143,193,232,0.20), transparent 70%), radial-gradient(560px 260px at 92% 120%, rgba(143,193,232,0.16), transparent 70%)" }} />
+      <div style={{ position: "absolute", inset: 0, pointerEvents: "none", background: "radial-gradient(620px 280px at 18% -20%, rgba(143,193,232,0.20), transparent 70%), radial-gradient(560px 260px at 92% 120%, rgba(143,193,232,0.16), transparent 70%), radial-gradient(400px 200px at 50% 100%, rgba(212,175,55,0.07), transparent 70%)" }} />
 
       {/* Top bar */}
       <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, padding: "20px 26px", borderBottom: "1px solid var(--border)" }}>
@@ -1054,6 +1062,15 @@ function DuelHero({
   const diff = Math.abs(myProj - oppProj).toFixed(1);
   const marginLabel = myProj >= oppProj ? `+${diff} pt edge` : `${diff} pt underdog`;
 
+  // RD-014: trend arrow from yesterday's delta
+  const delta = matchup.scoreDeltaSinceYesterday;
+  const trendArrow = !isSetupPhase && delta !== null && Math.abs(delta) >= 0.5
+    ? { label: delta > 0 ? `▲ +${delta.toFixed(1)}` : `▼ ${delta.toFixed(1)}`, color: delta > 0 ? "var(--green)" : "var(--red)" }
+    : null;
+
+  // RD-014: upset chip — trailing with 10–40% win probability
+  const isUpset = !isUpcoming && !isSetupPhase && winPct >= 10 && winPct <= 40;
+
   // Starters with games this period
   const startersWithGames = matchup.myPlayers.filter(
     (p) => p.slot !== "BENCH" && p.slot !== "IR" && (p.gamesThisPeriod ?? 0) > 0
@@ -1077,7 +1094,7 @@ function DuelHero({
       boxShadow: "0 40px 90px -45px rgba(0,0,0,0.8)",
     }}>
       {/* Ambient glow overlay */}
-      <div style={{ position: "absolute", inset: 0, pointerEvents: "none", background: "radial-gradient(620px 280px at 18% -20%, rgba(143,193,232,0.20), transparent 70%), radial-gradient(560px 260px at 92% 120%, rgba(143,193,232,0.16), transparent 70%)" }} />
+      <div style={{ position: "absolute", inset: 0, pointerEvents: "none", background: "radial-gradient(620px 280px at 18% -20%, rgba(143,193,232,0.20), transparent 70%), radial-gradient(560px 260px at 92% 120%, rgba(143,193,232,0.16), transparent 70%), radial-gradient(400px 200px at 50% 100%, rgba(212,175,55,0.07), transparent 70%)" }} />
 
       {/* Top bar */}
       <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, padding: "20px 26px", borderBottom: "1px solid var(--border)" }}>
@@ -1199,8 +1216,15 @@ function DuelHero({
 
       {/* Win probability bar */}
       <div style={{ position: "relative", padding: "0 30px 24px" }}>
-        <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--faint)", textAlign: "center", marginBottom: 10 }}>
-          Win Probability
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, marginBottom: 10 }}>
+          <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--faint)" }}>
+            Win Probability
+          </span>
+          {trendArrow && (
+            <span style={{ fontSize: 11, fontWeight: 700, color: trendArrow.color, fontVariantNumeric: "tabular-nums" }}>
+              {trendArrow.label} today
+            </span>
+          )}
         </div>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
           <span style={{ fontSize: 12, fontWeight: 700, color: "var(--accent-strong)", fontVariantNumeric: "tabular-nums" }}>{winPct}% — You</span>
@@ -1210,6 +1234,14 @@ function DuelHero({
         <div style={{ height: 9, borderRadius: 6, overflow: "hidden", background: "var(--border)" }}>
           <div className="win-prob-bar" style={{ height: "100%", width: `${winPct}%`, background: "linear-gradient(90deg, var(--accent-strong), var(--accent))" }} />
         </div>
+        {/* RD-014: upset chip — trailing but still in it */}
+        {isUpset && (
+          <div style={{ textAlign: "center", marginTop: 10 }}>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 700, color: "var(--amber)", background: "rgba(245,158,11,0.10)", border: "1px solid rgba(245,158,11,0.28)", borderRadius: 30, padding: "4px 12px" }}>
+              ⚡ {winPct}% chance to steal the win
+            </span>
+          </div>
+        )}
         {/* FP/VP bridging note */}
         <p style={{ fontSize: "0.75rem", color: "var(--faint)", textAlign: "center", margin: "12px 0 0" }}>
           Fantasy points (FP) decide who wins the week. Winning earns Victory Points (VP) in the standings.

@@ -322,7 +322,7 @@ export function SettingsEditor({
 
       {/* Basic Settings */}
       <section style={card}>
-        <SectionBar title="Basic Settings" />
+        <SectionBar title="Basic settings" />
         <SubNote>Format is locked once the draft is complete.</SubNote>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 13 }}>
           <InfoCard label="Season" value={season} />
@@ -332,29 +332,37 @@ export function SettingsEditor({
         </div>
       </section>
 
-      {/* Skater Scoring */}
+      {/* Scoring — two-column table: Skaters | Goalies */}
       <section style={card}>
-        <SectionBar title="Scoring · Skaters" />
+        <SectionBar title="Scoring" />
         <SubNote>
-          Fantasy points awarded per stat, per game.
+          Fantasy points per stat, per game.
           {scoringLocked && !isCommissioner && " Read-only — commissioner only."}
           {scoringLocked && isCommissioner && " Locked after draft."}
         </SubNote>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 12 }}>
-          {skaterFields.map(({ key, label }) => (
-            <ScoringCard key={key} label={label} value={scoring.skater[key]} onChange={(v) => setSkater(key, v)} disabled={scoringLocked} />
-          ))}
-        </div>
-      </section>
-
-      {/* Goalie Scoring */}
-      <section style={card}>
-        <SectionBar title="Scoring · Goalies" />
-        <SubNote>Goaltender scoring is tracked on a separate line.</SubNote>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 12 }}>
-          {goalieFields.map(({ key, label }) => (
-            <ScoringCard key={key} label={label} value={scoring.goalie[key]} onChange={(v) => setGoalie(key, v)} disabled={scoringLocked} />
-          ))}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 18, alignItems: "start" }}>
+          {/* Skaters column */}
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase" as const, color: "var(--dim)", marginBottom: 8 }}>
+              Skaters
+            </div>
+            <div style={{ display: "grid", gap: 8 }}>
+              {skaterFields.map(({ key, label }) => (
+                <ScoringCard key={key} label={label} value={scoring.skater[key]} onChange={(v) => setSkater(key, v)} disabled={scoringLocked} />
+              ))}
+            </div>
+          </div>
+          {/* Goalies column */}
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase" as const, color: "var(--dim)", marginBottom: 8 }}>
+              Goalies
+            </div>
+            <div style={{ display: "grid", gap: 8 }}>
+              {goalieFields.map(({ key, label }) => (
+                <ScoringCard key={key} label={label} value={scoring.goalie[key]} onChange={(v) => setGoalie(key, v)} disabled={scoringLocked} />
+              ))}
+            </div>
+          </div>
         </div>
       </section>
 
@@ -363,11 +371,26 @@ export function SettingsEditor({
 
         {/* Roster Structure */}
         <section style={{ ...card, marginBottom: 0 }}>
-          <SectionBar title="Roster Structure" />
+          <SectionBar title="Roster structure" />
           <SubNote>
             Starting slots plus bench and injured reserve.
             {scoringLocked && isCommissioner && " Locked after draft."}
           </SubNote>
+          {/* Pill badge summary */}
+          <div style={{ display: "flex", flexWrap: "wrap" as const, gap: 6, marginBottom: 16 }}>
+            {[
+              { label: `${roster.forward}F`, active: roster.forward > 0 },
+              { label: `${roster.defense}D`, active: roster.defense > 0 },
+              { label: `${roster.goalie}G`, active: roster.goalie > 0 },
+              { label: `${roster.util}UTIL`, active: roster.util > 0 },
+              { label: `${roster.bench}B`, active: roster.bench > 0 },
+              ...(roster.ir > 0 ? [{ label: `${roster.ir}IR`, active: true }] : []),
+            ].map(({ label, active }) => (
+              <span key={label} style={{ fontSize: 11, fontWeight: 700, padding: "3px 9px", borderRadius: 99, background: active ? "rgba(143,193,232,0.12)" : "var(--surface)", border: `1px solid ${active ? "rgba(143,193,232,0.28)" : "var(--border)"}`, color: active ? "var(--accent-strong)" : "var(--faint)" }}>
+                {label}
+              </span>
+            ))}
+          </div>
           {(
             [
               { key: "forward" as const, label: "Forward", note: "F" },
@@ -388,7 +411,7 @@ export function SettingsEditor({
 
         {/* Playoffs */}
         <section style={{ ...card, marginBottom: 0 }}>
-          <SectionBar title="Playoffs" />
+          <SectionBar title="Playoff format" />
           <SubNote>
             How the postseason bracket is built.
             {playoffLocked && isPlayoffStarted && " Locked — playoffs in progress."}

@@ -298,19 +298,28 @@ export default async function LeagueOverviewPage({
         </div>
       )}
 
-      {/* ── Commissioner action strip ── */}
+      {/* ── Commissioner action strip — gold strip ── */}
       {commishAction && (
-        <div className="alert-amber" style={{
+        <div style={{
+          background: "linear-gradient(135deg, rgba(212,175,55,0.10), rgba(212,175,55,0.04))",
+          border: "1px solid rgba(212,175,55,0.30)",
+          borderLeft: "3px solid var(--gold)",
+          borderRadius: 14, padding: "16px 20px",
           display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap",
         }}>
-          <div>
-            <div style={{ fontSize: 13, fontWeight: 700, color: "var(--gold)" }}>{commishAction.label}</div>
-            <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 2 }}>{commishAction.sublabel}</div>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" strokeWidth="2" style={{ flexShrink: 0 }}>
+              <path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/>
+            </svg>
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: "var(--gold)" }}>{commishAction.label}</div>
+              <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 2 }}>{commishAction.sublabel}</div>
+            </div>
           </div>
           <Link href={commishAction.href} style={{
-            fontSize: 12, fontWeight: 700, padding: "6px 14px", borderRadius: 8, flexShrink: 0,
-            background: "rgba(245,201,123,0.15)", color: "var(--gold)",
-            border: "1px solid rgba(245,201,123,0.30)", textDecoration: "none",
+            fontSize: 12, fontWeight: 700, padding: "7px 16px", borderRadius: 8, flexShrink: 0,
+            background: "rgba(212,175,55,0.18)", color: "var(--gold)",
+            border: "1px solid rgba(212,175,55,0.35)", textDecoration: "none",
           }}>
             Take action →
           </Link>
@@ -466,10 +475,10 @@ export default async function LeagueOverviewPage({
                         : { label: "OUT", bg: "rgba(100,116,139,0.1)", color: "var(--faint)", border: "rgba(100,116,139,0.15)" };
                     }
                     switch (race.status) {
-                      case "clinched":   return { label: "CLINCHED", bg: "rgba(81,216,138,0.12)", color: "var(--green)", border: "rgba(81,216,138,0.30)" };
+                      case "clinched":   return { label: "✓ CLINCHED", bg: "rgba(81,216,138,0.12)", color: "var(--green)", border: "rgba(81,216,138,0.30)" };
                       case "in":         return { label: "IN", bg: "rgba(81,216,138,0.08)", color: "var(--green)", border: "rgba(81,216,138,0.20)" };
-                      case "bubble":     return { label: "BUBBLE", bg: "rgba(245,201,123,0.12)", color: "var(--gold)", border: "rgba(245,201,123,0.28)" };
-                      case "eliminated": return { label: "ELIM", bg: "rgba(246,131,127,0.12)", color: "var(--red)", border: "rgba(246,131,127,0.28)" };
+                      case "bubble":     return { label: "◉ BUBBLE", bg: "rgba(245,201,123,0.12)", color: "var(--gold)", border: "rgba(245,201,123,0.28)" };
+                      case "eliminated": return { label: "✗ ELIM", bg: "rgba(246,131,127,0.12)", color: "var(--red)", border: "rgba(246,131,127,0.28)" };
                       case "out":        return { label: `${race.gamesBack} GB`, bg: "rgba(100,116,139,0.1)", color: "var(--faint)", border: "rgba(100,116,139,0.15)" };
                     }
                   })();
@@ -617,6 +626,29 @@ export default async function LeagueOverviewPage({
         {/* RIGHT: My matchup + lineup status + activity */}
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
 
+          {/* My Franchise quick-link — sky-accent commissioner card */}
+          {myTeam && (
+            <section style={{
+              background: "linear-gradient(135deg, rgba(143,193,232,0.10), rgba(143,193,232,0.04))",
+              border: "1px solid rgba(143,193,232,0.28)",
+              borderRadius: 14, padding: "14px 18px",
+              display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12,
+            }}>
+              <div>
+                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--accent)", marginBottom: 3 }}>
+                  My Franchise
+                </div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: "var(--text)" }}>{myTeam.name}</div>
+              </div>
+              <Link href={`/team/${myTeam.id}/matchup`} style={{
+                fontSize: 12, fontWeight: 700, padding: "7px 14px", borderRadius: 8,
+                background: "rgba(143,193,232,0.15)", color: "var(--accent-strong)",
+                border: "1px solid rgba(143,193,232,0.30)", textDecoration: "none", flexShrink: 0,
+              }}>
+                My Matchup →
+              </Link>
+            </section>
+          )}
 
           {/* Team lineup status widget */}
           {league.status === "IN_SEASON" && league.teams.length > 0 && (

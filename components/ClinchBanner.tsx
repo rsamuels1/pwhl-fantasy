@@ -35,16 +35,16 @@ export default function ClinchBanner({ leagueId, season, seed, clinchWeek, teamN
 
   return (
     <div style={{
-      background: "linear-gradient(135deg, rgba(95,169,140,0.12), rgba(95,169,140,0.06))",
-      border: "1px solid rgba(95,169,140,0.35)",
+      background: "linear-gradient(135deg, rgba(212,175,55,.13), rgba(212,175,55,.04))",
+      border: "1px solid rgba(212,175,55,0.35)",
       borderRadius: 16, padding: "16px 20px",
       display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12,
       flexWrap: "wrap",
     }}>
       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-        <span style={{ fontSize: 24 }}>🏒</span>
+        <span style={{ fontSize: 24 }}>★</span>
         <div>
-          <div style={{ fontSize: 14, fontWeight: 800, color: "#7fc2a6", letterSpacing: "-0.01em" }}>
+          <div style={{ fontSize: 14, fontWeight: 800, color: "var(--gold)", letterSpacing: "-0.01em" }}>
             PLAYOFF BERTH CLINCHED
           </div>
           <div style={{ fontSize: 12, color: "var(--dim)", marginTop: 2 }}>
@@ -55,8 +55,8 @@ export default function ClinchBanner({ leagueId, season, seed, clinchWeek, teamN
       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
         <Link href={bracketHref} style={{
           fontSize: 12, fontWeight: 700, padding: "6px 14px", borderRadius: 8,
-          background: "rgba(95,169,140,0.15)", color: "#7fc2a6",
-          border: "1px solid rgba(95,169,140,0.3)", textDecoration: "none",
+          background: "rgba(212,175,55,0.14)", color: "var(--gold)",
+          border: "1px solid rgba(212,175,55,0.30)", textDecoration: "none",
         }}>
           View bracket →
         </Link>
