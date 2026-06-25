@@ -16,6 +16,9 @@ export async function POST(req: NextRequest) {
     if (!leagueName) {
       return NextResponse.json({ error: "League name is required." }, { status: 400 });
     }
+    if (leagueName.length > 50) {
+      return NextResponse.json({ error: "League name must be 50 characters or fewer." }, { status: 400 });
+    }
 
     // Prefer authenticated session; fall back to email-based creation for backward compat.
     const sessionEmail = req.cookies.get(SESSION_COOKIE)?.value;

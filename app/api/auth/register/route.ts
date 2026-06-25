@@ -11,6 +11,13 @@ export async function POST(req: NextRequest) {
     const displayName =
       String(body.displayName || "").trim() || email.split("@")[0];
     const password = body.password ? String(body.password) : null;
+
+    if (body.displayName && String(body.displayName).trim().length > 80) {
+      return NextResponse.json(
+        { error: "Display name must be 80 characters or fewer." },
+        { status: 400 }
+      );
+    }
     const returnTo = String(body.returnTo || "").trim();
 
     if (!email) {
