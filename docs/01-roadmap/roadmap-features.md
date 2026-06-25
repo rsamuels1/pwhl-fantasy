@@ -1062,7 +1062,7 @@ Priority: P2
 
 Effort: S
 
-Status: Open (deferred from Sprint 24)
+Status: ✅ DONE (Sprint 25 — Tier 1b added in `bestAvailablePlayerIds()` in `lib/draft/server.ts`; defenders filling open D slots now ranked before forwards)
 
 Source: Internal — identified from auto-draft behavior in replay and unattended draft leagues.
 
@@ -1155,7 +1155,7 @@ Files: `app/api/leagues/[leagueId]/waiver/route.ts`, `lib/services/activity.ts`,
 
 ## BF-024. Transactions from Team Nav Bounces to League Dashboard
 
-Sprint: 26 | Priority: P0 | Effort: S | Status: Open (new Jun 24, 2026)
+Sprint: 26 | Priority: P0 | Effort: S | Status: ✅ DONE (Sprint 26 — shipped by parallel agent)
 
 Source: FeedbackSubmission `cmqrm1rwe` (Jun 24). User reports: "I dont like how TRANSACTIONS from the My Franchise menu bounces you back to the league dashboard."
 
@@ -1214,7 +1214,7 @@ Files: `app/league/[leagueId]/standings/page.tsx`, `app/globals.css`
 
 ## BF-027. Activity Feed LEAGUE_STORYLINE Regression
 
-Sprint: 26 | Priority: P0 | Effort: S | Status: Open (new Jun 24, 2026 — regression of BF-016)
+Sprint: 26 | Priority: P0 | Effort: S | Status: ✅ DONE (Sprint 26 — shipped by parallel agent)
 
 Source: FeedbackSubmission `cmqrm9a1d` (Jun 24). User reports: "We're still getting some 'LEAGUE_STORYLINE' text in the League Activity page on the league dashboard." BF-016 was marked shipped in Sprint 18 (ad-hoc fix), but the symptom recurs in newer leagues.
 
