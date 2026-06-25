@@ -200,7 +200,10 @@ export default function LoginPage() {
                 <button
                   type="button"
                   onClick={() => {
-                    setShowPassword((v) => !v);
+                    setShowPassword((v) => {
+                      if (v) setPassword(""); // clear on way back to magic link
+                      return !v;
+                    });
                     setStatus(null);
                   }}
                   style={{
@@ -214,7 +217,7 @@ export default function LoginPage() {
                   }}
                 >
                   {showPassword
-                    ? "Send me a link instead"
+                    ? "Forgot your password? Email me a sign-in link instead"
                     : "Sign in with a password instead"}
                 </button>
               </form>

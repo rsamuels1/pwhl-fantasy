@@ -130,7 +130,7 @@ export async function sendInvite(
   leagueName: string,
   inviterName: string
 ): Promise<void> {
-  const joinUrl = `${APP_URL}/invite/${leagueId}`;
+  const joinUrl = `${APP_URL}/invite/${leagueId}?email=${encodeURIComponent(email)}`;
 
   if (!enabled()) {
     console.log(`[EMAIL] sendInvite to ${email}: ${joinUrl}`);

@@ -3,13 +3,21 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-export default function InviteJoinForm({ leagueId }: { leagueId: string }) {
+export default function InviteJoinForm({
+  leagueId,
+  prefillEmail,
+}: {
+  leagueId: string;
+  prefillEmail?: string;
+}) {
   const router = useRouter();
   const [teamName, setTeamName] = useState("");
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(prefillEmail ?? "");
   const [displayName, setDisplayName] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  const emailLocked = Boolean(prefillEmail);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,10 +69,17 @@ export default function InviteJoinForm({ leagueId }: { leagueId: string }) {
           className="form-input"
           type="email"
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          onChange={emailLocked ? undefined : (e) => setEmail(e.target.value)}
+          readOnly={emailLocked}
           required
           placeholder="you@example.com"
+          style={emailLocked ? { opacity: 0.6, cursor: "default" } : undefined}
         />
+        {emailLocked && (
+          <span style={{ fontSize: 11, color: "var(--faint)", marginTop: -4 }}>
+            This is the email your invitation was sent to.
+          </span>
+        )}
       </label>
 
       <label className="form-label">

@@ -8,14 +8,16 @@ import InviteJoinForm from "./InviteJoinForm";
 
 interface Props {
   params: Promise<{ leagueId: string }>;
+  searchParams: Promise<{ email?: string }>;
 }
 
 function fmt(d: Date): string {
   return d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" });
 }
 
-export default async function InvitePage({ params }: Props) {
+export default async function InvitePage({ params, searchParams }: Props) {
   const { leagueId } = await params;
+  const { email: prefillEmail } = await searchParams;
 
   const league = await prisma.fantasyLeague.findUnique({
     where: { id: leagueId },
@@ -157,7 +159,7 @@ export default async function InvitePage({ params }: Props) {
             borderRadius: 20, padding: "24px 28px",
           }}>
             <h2 style={{ margin: "0 0 18px", fontSize: 18, fontWeight: 700 }}>Claim your spot</h2>
-            <InviteJoinForm leagueId={leagueId} />
+            <InviteJoinForm leagueId={leagueId} prefillEmail={prefillEmail} />
           </div>
         )}
 
