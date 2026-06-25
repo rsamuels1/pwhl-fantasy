@@ -14,6 +14,7 @@ export type TradeStatus =
   | "ACCEPTED"
   | "PENDING_REVIEW"
   | "EXECUTED"
+  | "VETOED"
   | "REVERSED"
   | "REJECTED"
   | "CANCELLED"
@@ -72,11 +73,12 @@ const TRANSITIONS: Record<TradeStatus, Partial<Record<TradeStatus, ActorRole[]>>
   },
   PENDING_REVIEW: {
     EXECUTED: ["commissioner"],
-    REVERSED: ["commissioner"],
+    VETOED: ["commissioner"],
   },
   EXECUTED: {
     REVERSED: ["commissioner"],
   },
+  VETOED: {},
   REVERSED: {},
   REJECTED: {},
   CANCELLED: {},

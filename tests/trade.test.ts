@@ -88,16 +88,24 @@ describe("canTransitionTo", () => {
     expect(canTransitionTo("ACCEPTED", "EXECUTED", "commissioner")).toBe(true);
   });
 
-  it("commissioner can veto PENDING_REVIEW", () => {
-    expect(canTransitionTo("PENDING_REVIEW", "REVERSED", "commissioner")).toBe(true);
+  it("commissioner can veto PENDING_REVIEW → VETOED", () => {
+    expect(canTransitionTo("PENDING_REVIEW", "VETOED", "commissioner")).toBe(true);
   });
 
   it("commissioner can approve PENDING_REVIEW", () => {
     expect(canTransitionTo("PENDING_REVIEW", "EXECUTED", "commissioner")).toBe(true);
   });
 
+  it("commissioner can reverse an already-executed trade", () => {
+    expect(canTransitionTo("EXECUTED", "REVERSED", "commissioner")).toBe(true);
+  });
+
+  it("PENDING_REVIEW cannot transition to REVERSED (use VETOED instead)", () => {
+    expect(canTransitionTo("PENDING_REVIEW", "REVERSED", "commissioner")).toBe(false);
+  });
+
   it("no transitions from terminal states", () => {
-    expect(canTransitionTo("EXECUTED", "PROPOSED", "commissioner")).toBe(false);
+    expect(canTransitionTo("VETOED", "PROPOSED", "commissioner")).toBe(false);
     expect(canTransitionTo("REJECTED", "PROPOSED", "receiver")).toBe(false);
     expect(canTransitionTo("CANCELLED", "PROPOSED", "proposer")).toBe(false);
     expect(canTransitionTo("EXPIRED", "PROPOSED", "commissioner")).toBe(false);

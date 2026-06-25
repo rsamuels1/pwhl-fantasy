@@ -457,7 +457,7 @@ export async function reviewTrade(
     const updated = await prisma.trade.update({
       where: { id: tradeId },
       data: {
-        status: "REVERSED",
+        status: "VETOED",
         resolvedReason: `Vetoed by commissioner (id: ${commissionerId})`,
       },
       include: { items: true },

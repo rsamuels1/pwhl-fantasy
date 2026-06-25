@@ -16,7 +16,7 @@ import {
 import type { TradeItemInput } from "@/lib/trades/engine";
 
 // GET /api/leagues/[leagueId]/trades?team=<teamId>&history=1
-// history=1 returns all EXECUTED/REVERSED trades league-wide (no team filter)
+// history=1 returns all EXECUTED/VETOED/REVERSED trades league-wide (no team filter)
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ leagueId: string }> }
@@ -36,7 +36,7 @@ export async function GET(
 
   if (history) {
     const trades = await getLeagueTrades(leagueId, prisma);
-    const executed = trades.filter((t) => t.status === "EXECUTED" || t.status === "REVERSED");
+    const executed = trades.filter((t) => t.status === "EXECUTED" || t.status === "VETOED" || t.status === "REVERSED");
     return NextResponse.json({ trades: executed });
   }
 
