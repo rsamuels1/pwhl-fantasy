@@ -59,8 +59,8 @@ function round2(n: number) {
 // ---------------------------------------------------------------------------
 
 const card: React.CSSProperties = {
-  background: "#121829",
-  border: "1px solid rgba(150,160,200,0.10)",
+  background: "var(--card)",
+  border: "1px solid var(--border)",
   borderRadius: 16,
   padding: "20px 22px",
   marginBottom: 18,
@@ -69,22 +69,22 @@ const card: React.CSSProperties = {
 function SectionBar({ title, amber }: { title: string; amber?: boolean }) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
-      <span style={{ width: 3, height: 15, borderRadius: 2, background: amber ? "linear-gradient(#d6a94e,#a07a2a)" : "linear-gradient(#a78bfa,#6d28d9)", flexShrink: 0 }} />
-      <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase" as const, color: amber ? "#e3c989" : "#c7d2e0" }}>{title}</span>
+      <span style={{ width: 3, height: 15, borderRadius: 2, background: amber ? "linear-gradient(var(--amber),rgba(245,201,123,0.5))" : "linear-gradient(var(--accent-strong),var(--accent-deep))", flexShrink: 0 }} />
+      <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase" as const, color: amber ? "var(--gold)" : "var(--muted)" }}>{title}</span>
     </div>
   );
 }
 
 function SubNote({ children }: { children: React.ReactNode }) {
-  return <div style={{ fontSize: 12, color: "#6f788e", marginBottom: 18, marginLeft: 13 }}>{children}</div>;
+  return <div style={{ fontSize: 12, color: "var(--faint)", marginBottom: 18, marginLeft: 13 }}>{children}</div>;
 }
 
 function InfoCard({ label, value, dot }: { label: string; value: string; dot?: string }) {
   return (
-    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, background: "rgba(150,160,200,0.04)", border: "1px solid rgba(150,160,200,0.10)", borderRadius: 11, padding: "14px 16px" }}>
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, background: "var(--bg-raised)", border: "1px solid var(--border)", borderRadius: 11, padding: "14px 16px" }}>
       <div>
-        <div style={{ fontSize: 11, color: "#8b93a7", letterSpacing: "0.04em", marginBottom: 3 }}>{label}</div>
-        <div style={{ fontSize: 14.5, fontWeight: 600, color: "#eef1f8" }}>{value}</div>
+        <div style={{ fontSize: 11, color: "var(--dim)", letterSpacing: "0.04em", marginBottom: 3 }}>{label}</div>
+        <div style={{ fontSize: 14.5, fontWeight: 600, color: "var(--text)" }}>{value}</div>
       </div>
       {dot && <span style={{ width: 9, height: 9, borderRadius: "50%", background: dot, boxShadow: `0 0 0 4px ${dot}26`, flexShrink: 0 }} />}
     </div>
@@ -98,9 +98,9 @@ function Btn({ onClick, disabled, children, size = 28 }: { onClick?: () => void;
       disabled={disabled}
       style={{
         width: size, height: size, borderRadius: 8,
-        background: disabled ? "rgba(150,160,200,0.06)" : "rgba(124,58,237,0.12)",
-        border: disabled ? "1px solid rgba(150,160,200,0.12)" : "1px solid rgba(124,58,237,0.26)",
-        color: disabled ? "#4b5268" : "#c9b6ff",
+        background: disabled ? "rgba(150,160,200,0.06)" : "rgba(143,193,232,0.12)",
+        border: disabled ? "1px solid rgba(150,160,200,0.12)" : "1px solid rgba(143,193,232,0.26)",
+        color: disabled ? "var(--faint)" : "var(--accent-strong)",
         fontSize: size === 28 ? 17 : 18, fontWeight: 700,
         cursor: disabled ? "not-allowed" : "pointer",
         lineHeight: 1, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
@@ -115,8 +115,8 @@ function ScoringCard({
   label: string; value: number; onChange: (v: number) => void; disabled?: boolean;
 }) {
   return (
-    <div style={{ background: "rgba(150,160,200,0.04)", border: "1px solid rgba(150,160,200,0.10)", borderRadius: 12, padding: "13px 14px" }}>
-      <div style={{ fontSize: 11, color: "#9aa3bd", letterSpacing: "0.03em", marginBottom: 10, minHeight: 26 }}>{label}</div>
+    <div style={{ background: "var(--bg-raised)", border: "1px solid var(--border)", borderRadius: 12, padding: "13px 14px" }}>
+      <div style={{ fontSize: 11, color: "var(--dim)", letterSpacing: "0.03em", marginBottom: 10, minHeight: 26 }}>{label}</div>
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
         <Btn disabled={disabled} onClick={() => onChange(round2(value - 0.25))}>−</Btn>
         <input
@@ -124,7 +124,7 @@ function ScoringCard({
           value={fmt(value)}
           disabled={disabled}
           onChange={(e) => { const v = parseFloat(e.target.value.replace("−", "-").replace("+", "")); if (!isNaN(v)) onChange(v); }}
-          style={{ flex: 1, minWidth: 0, textAlign: "center", background: "transparent", border: "none", color: disabled ? "#4b5268" : "#f3f5fb", fontFamily: "'Saira Condensed',sans-serif", fontWeight: 700, fontSize: 22, outline: "none", cursor: disabled ? "not-allowed" : "text" }}
+          style={{ flex: 1, minWidth: 0, textAlign: "center", background: "transparent", border: "none", color: disabled ? "var(--faint)" : "var(--text)", fontFamily: "'Saira Condensed',sans-serif", fontWeight: 700, fontSize: 22, outline: "none", cursor: disabled ? "not-allowed" : "text" }}
         />
         <Btn disabled={disabled} onClick={() => onChange(round2(value + 0.25))}>+</Btn>
       </div>
@@ -138,14 +138,14 @@ function RosterRow({
   label: string; note: string; value: number; onChange: (v: number) => void; disabled?: boolean;
 }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "10px 0", borderBottom: "1px solid rgba(150,160,200,0.07)" }}>
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "10px 0", borderBottom: "1px solid var(--border)" }}>
       <div>
-        <div style={{ fontSize: 13.5, fontWeight: 600, color: disabled ? "#5b6480" : "#eef1f8" }}>{label}</div>
-        <div style={{ fontSize: 11, color: "#6f788e", marginTop: 1 }}>{note}</div>
+        <div style={{ fontSize: 13.5, fontWeight: 600, color: disabled ? "#5b6480" : "var(--text)" }}>{label}</div>
+        <div style={{ fontSize: 11, color: "var(--faint)", marginTop: 1 }}>{note}</div>
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: 11 }}>
         <Btn size={30} disabled={disabled || value <= 0} onClick={() => onChange(Math.max(0, value - 1))}>−</Btn>
-        <span style={{ fontFamily: "'Saira Condensed',sans-serif", fontWeight: 700, fontSize: 22, color: disabled ? "#4b5268" : "#f3f5fb", minWidth: 24, textAlign: "center" as const }}>{value}</span>
+        <span style={{ fontFamily: "'Saira Condensed',sans-serif", fontWeight: 700, fontSize: 22, color: disabled ? "var(--faint)" : "var(--text)", minWidth: 24, textAlign: "center" as const }}>{value}</span>
         <Btn size={30} disabled={disabled} onClick={() => onChange(value + 1)}>+</Btn>
       </div>
     </div>
@@ -158,14 +158,14 @@ function PlayoffRow({
   label: string; note: string; value: number; onChange: (v: number) => void; disabled?: boolean; min?: number; max?: number;
 }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "11px 0", borderBottom: "1px solid rgba(150,160,200,0.07)" }}>
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "11px 0", borderBottom: "1px solid var(--border)" }}>
       <div>
-        <div style={{ fontSize: 13.5, fontWeight: 600, color: disabled ? "#5b6480" : "#eef1f8" }}>{label}</div>
-        <div style={{ fontSize: 11, color: "#6f788e", marginTop: 1 }}>{note}</div>
+        <div style={{ fontSize: 13.5, fontWeight: 600, color: disabled ? "#5b6480" : "var(--text)" }}>{label}</div>
+        <div style={{ fontSize: 11, color: "var(--faint)", marginTop: 1 }}>{note}</div>
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: 11 }}>
         <Btn size={30} disabled={disabled || (min !== undefined && value <= min)} onClick={() => onChange(value - 1)}>−</Btn>
-        <span style={{ fontFamily: "'Saira Condensed',sans-serif", fontWeight: 700, fontSize: 22, color: disabled ? "#4b5268" : "#f3f5fb", minWidth: 24, textAlign: "center" as const }}>{value}</span>
+        <span style={{ fontFamily: "'Saira Condensed',sans-serif", fontWeight: 700, fontSize: 22, color: disabled ? "var(--faint)" : "var(--text)", minWidth: 24, textAlign: "center" as const }}>{value}</span>
         <Btn size={30} disabled={disabled || (max !== undefined && value >= max)} onClick={() => onChange(value + 1)}>+</Btn>
       </div>
     </div>
@@ -174,7 +174,7 @@ function PlayoffRow({
 
 function Toggle({ value, onChange, disabled }: { value: boolean; onChange: (v: boolean) => void; disabled?: boolean }) {
   return (
-    <button onClick={() => !disabled && onChange(!value)} style={{ width: 46, height: 26, borderRadius: 99, border: "none", cursor: disabled ? "not-allowed" : "pointer", position: "relative" as const, transition: "background .2s", background: disabled ? "rgba(150,160,200,0.12)" : value ? "#6d28d9" : "rgba(150,160,200,0.20)", flexShrink: 0, opacity: disabled ? 0.45 : 1 }}>
+    <button onClick={() => !disabled && onChange(!value)} style={{ width: 46, height: 26, borderRadius: 99, border: "none", cursor: disabled ? "not-allowed" : "pointer", position: "relative" as const, transition: "background .2s", background: disabled ? "rgba(150,160,200,0.12)" : value ? "var(--accent-deep)" : "rgba(150,160,200,0.20)", flexShrink: 0, opacity: disabled ? 0.45 : 1 }}>
       <span style={{ position: "absolute" as const, top: 3, width: 20, height: 20, borderRadius: "50%", background: "#fff", transition: "left .2s", left: value ? 23 : 3 }} />
     </button>
   );
@@ -307,9 +307,9 @@ export function SettingsEditor({
       {/* Title block */}
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 18, flexWrap: "wrap" as const, marginBottom: 24 }}>
         <div>
-          <h1 style={{ fontSize: 26, fontWeight: 800, letterSpacing: "-0.02em", color: "#f6f7fb", margin: 0 }}>League Settings</h1>
-          <div style={{ fontSize: 13, color: "#8b93a7", marginTop: 5, lineHeight: 1.5 }}>
-            Configure scoring, roster structure, and playoffs for <strong style={{ color: "#c7d2e0" }}>{leagueName}</strong>.
+          <h1 style={{ fontSize: 26, fontWeight: 800, letterSpacing: "-0.02em", color: "var(--text)", margin: 0 }}>League Settings</h1>
+          <div style={{ fontSize: 13, color: "var(--dim)", marginTop: 5, lineHeight: 1.5 }}>
+            Configure scoring, roster structure, and playoffs for <strong style={{ color: "var(--muted)" }}>{leagueName}</strong>.
           </div>
         </div>
         {isCommissioner && (
@@ -322,7 +322,7 @@ export function SettingsEditor({
 
       {/* Basic Settings */}
       <section style={card}>
-        <SectionBar title="Basic Settings" />
+        <SectionBar title="Basic settings" />
         <SubNote>Format is locked once the draft is complete.</SubNote>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 13 }}>
           <InfoCard label="Season" value={season} />
@@ -332,29 +332,37 @@ export function SettingsEditor({
         </div>
       </section>
 
-      {/* Skater Scoring */}
+      {/* Scoring — two-column table: Skaters | Goalies */}
       <section style={card}>
-        <SectionBar title="Scoring · Skaters" />
+        <SectionBar title="Scoring" />
         <SubNote>
-          Fantasy points awarded per stat, per game.
+          Fantasy points per stat, per game.
           {scoringLocked && !isCommissioner && " Read-only — commissioner only."}
           {scoringLocked && isCommissioner && " Locked after draft."}
         </SubNote>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 12 }}>
-          {skaterFields.map(({ key, label }) => (
-            <ScoringCard key={key} label={label} value={scoring.skater[key]} onChange={(v) => setSkater(key, v)} disabled={scoringLocked} />
-          ))}
-        </div>
-      </section>
-
-      {/* Goalie Scoring */}
-      <section style={card}>
-        <SectionBar title="Scoring · Goalies" />
-        <SubNote>Goaltender scoring is tracked on a separate line.</SubNote>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 12 }}>
-          {goalieFields.map(({ key, label }) => (
-            <ScoringCard key={key} label={label} value={scoring.goalie[key]} onChange={(v) => setGoalie(key, v)} disabled={scoringLocked} />
-          ))}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 18, alignItems: "start" }}>
+          {/* Skaters column */}
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase" as const, color: "var(--dim)", marginBottom: 8 }}>
+              Skaters
+            </div>
+            <div style={{ display: "grid", gap: 8 }}>
+              {skaterFields.map(({ key, label }) => (
+                <ScoringCard key={key} label={label} value={scoring.skater[key]} onChange={(v) => setSkater(key, v)} disabled={scoringLocked} />
+              ))}
+            </div>
+          </div>
+          {/* Goalies column */}
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase" as const, color: "var(--dim)", marginBottom: 8 }}>
+              Goalies
+            </div>
+            <div style={{ display: "grid", gap: 8 }}>
+              {goalieFields.map(({ key, label }) => (
+                <ScoringCard key={key} label={label} value={scoring.goalie[key]} onChange={(v) => setGoalie(key, v)} disabled={scoringLocked} />
+              ))}
+            </div>
+          </div>
         </div>
       </section>
 
@@ -363,11 +371,26 @@ export function SettingsEditor({
 
         {/* Roster Structure */}
         <section style={{ ...card, marginBottom: 0 }}>
-          <SectionBar title="Roster Structure" />
+          <SectionBar title="Roster structure" />
           <SubNote>
             Starting slots plus bench and injured reserve.
             {scoringLocked && isCommissioner && " Locked after draft."}
           </SubNote>
+          {/* Pill badge summary */}
+          <div style={{ display: "flex", flexWrap: "wrap" as const, gap: 6, marginBottom: 16 }}>
+            {[
+              { label: `${roster.forward}F`, active: roster.forward > 0 },
+              { label: `${roster.defense}D`, active: roster.defense > 0 },
+              { label: `${roster.goalie}G`, active: roster.goalie > 0 },
+              { label: `${roster.util}UTIL`, active: roster.util > 0 },
+              { label: `${roster.bench}B`, active: roster.bench > 0 },
+              ...(roster.ir > 0 ? [{ label: `${roster.ir}IR`, active: true }] : []),
+            ].map(({ label, active }) => (
+              <span key={label} style={{ fontSize: 11, fontWeight: 700, padding: "3px 9px", borderRadius: 99, background: active ? "rgba(143,193,232,0.12)" : "var(--surface)", border: `1px solid ${active ? "rgba(143,193,232,0.28)" : "var(--border)"}`, color: active ? "var(--accent-strong)" : "var(--faint)" }}>
+                {label}
+              </span>
+            ))}
+          </div>
           {(
             [
               { key: "forward" as const, label: "Forward", note: "F" },
@@ -380,15 +403,15 @@ export function SettingsEditor({
           ).map(({ key, label, note }) => (
             <RosterRow key={key} label={label} note={note} value={roster[key]} onChange={(v) => setRosterKey(key, v)} disabled={scoringLocked} />
           ))}
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 15, background: "rgba(124,58,237,0.08)", border: "1px solid rgba(124,58,237,0.20)", borderRadius: 10, padding: "12px 15px" }}>
-            <span style={{ fontSize: 12, fontWeight: 600, letterSpacing: "0.04em", color: "#c9b6ff", textTransform: "uppercase" as const }}>Total roster size</span>
-            <span style={{ fontFamily: "'Saira Condensed',sans-serif", fontWeight: 700, fontSize: 24, color: "#f3f5fb" }}>{rosterTotal}</span>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 15, background: "var(--accent-dim)", border: "1px solid var(--accent-border)", borderRadius: 10, padding: "12px 15px" }}>
+            <span style={{ fontSize: 12, fontWeight: 600, letterSpacing: "0.04em", color: "var(--accent-strong)", textTransform: "uppercase" as const }}>Total roster size</span>
+            <span style={{ fontFamily: "'Saira Condensed',sans-serif", fontWeight: 700, fontSize: 24, color: "var(--text)" }}>{rosterTotal}</span>
           </div>
         </section>
 
         {/* Playoffs */}
         <section style={{ ...card, marginBottom: 0 }}>
-          <SectionBar title="Playoffs" />
+          <SectionBar title="Playoff format" />
           <SubNote>
             How the postseason bracket is built.
             {playoffLocked && isPlayoffStarted && " Locked — playoffs in progress."}
@@ -399,8 +422,8 @@ export function SettingsEditor({
           <PlayoffRow label="Round length" note="Scoring periods per round" value={playoff.roundDurationPeriods} onChange={(v) => setPlayoffKey("roundDurationPeriods", Math.max(1, Math.min(3, v)))} disabled={playoffLocked} min={1} max={3} />
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "13px 0 4px" }}>
             <div>
-              <div style={{ fontSize: 13.5, fontWeight: 600, color: playoffLocked ? "#5b6480" : "#eef1f8" }}>Higher seed wins ties</div>
-              <div style={{ fontSize: 11, color: "#6f788e", marginTop: 1 }}>Break tied matchups by seed</div>
+              <div style={{ fontSize: 13.5, fontWeight: 600, color: playoffLocked ? "#5b6480" : "var(--text)" }}>Higher seed wins ties</div>
+              <div style={{ fontSize: 11, color: "var(--faint)", marginTop: 1 }}>Break tied matchups by seed</div>
             </div>
             <Toggle value={playoff.higherSeedWinsTies} onChange={(v) => setPlayoffKey("higherSeedWinsTies", v)} disabled={playoffLocked} />
           </div>
@@ -424,20 +447,20 @@ export function SettingsEditor({
       {/* Floating save bar */}
       {dirty && (
         <div style={{ position: "fixed" as const, left: 0, right: 0, bottom: 0, zIndex: 60, display: "flex", alignItems: "center", justifyContent: "center", padding: 14, pointerEvents: "none" as const }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 18, background: "rgba(18,24,41,0.96)", backdropFilter: "blur(12px)", border: "1px solid rgba(124,58,237,0.40)", borderRadius: 14, padding: "12px 14px 12px 20px", boxShadow: "0 12px 40px rgba(0,0,0,0.5)", pointerEvents: "auto" as const }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 18, background: "rgba(18,24,41,0.96)", backdropFilter: "blur(12px)", border: "1px solid rgba(143,193,232,0.40)", borderRadius: 14, padding: "12px 14px 12px 20px", boxShadow: "0 12px 40px rgba(0,0,0,0.5)", pointerEvents: "auto" as const }}>
             {saveError ? (
-              <span style={{ fontSize: 13, color: "#f87171", fontWeight: 500 }}>{saveError}</span>
+              <span style={{ fontSize: 13, color: "var(--red)", fontWeight: 500 }}>{saveError}</span>
             ) : (
-              <span style={{ fontSize: 13, color: "#e7eaf3", fontWeight: 500, display: "flex", alignItems: "center", gap: 9 }}>
-                <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#d6a94e", flexShrink: 0 }} />
+              <span style={{ fontSize: 13, color: "var(--text)", fontWeight: 500, display: "flex", alignItems: "center", gap: 9 }}>
+                <span style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--amber)", flexShrink: 0 }} />
                 {changeCount === 1 ? "1 unsaved change" : `${changeCount} unsaved changes`}
               </span>
             )}
             <div style={{ display: "flex", gap: 9 }}>
-              <button onClick={handleDiscard} disabled={saving} style={{ background: "transparent", border: "1px solid rgba(150,160,200,0.22)", color: "#aab2c8", padding: "10px 16px", borderRadius: 9, fontWeight: 600, fontSize: 13, fontFamily: "Archivo,sans-serif", cursor: "pointer" }}>
+              <button onClick={handleDiscard} disabled={saving} style={{ background: "transparent", border: "1px solid var(--border)", color: "var(--muted)", padding: "10px 16px", borderRadius: 9, fontWeight: 600, fontSize: 13, fontFamily: "Archivo,sans-serif", cursor: "pointer" }}>
                 Discard
               </button>
-              <button onClick={handleSave} disabled={saving} style={{ background: "linear-gradient(135deg,#7c3aed,#6d28d9)", color: "#fff", border: "none", padding: "10px 20px", borderRadius: 9, fontWeight: 700, fontSize: 13, fontFamily: "Archivo,sans-serif", cursor: saving ? "wait" : "pointer", opacity: saving ? 0.7 : 1 }}>
+              <button onClick={handleSave} disabled={saving} style={{ background: "linear-gradient(135deg,var(--accent),var(--accent-deep))", color: "var(--accent-ink)", border: "none", padding: "10px 20px", borderRadius: 9, fontWeight: 700, fontSize: 13, fontFamily: "Archivo,sans-serif", cursor: saving ? "wait" : "pointer", opacity: saving ? 0.7 : 1 }}>
                 {saving ? "Saving…" : "Save changes"}
               </button>
             </div>

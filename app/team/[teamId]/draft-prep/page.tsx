@@ -120,10 +120,10 @@ export default async function DraftPrepPage({ params }: Props) {
     <div>
       <div style={{ marginBottom: 20 }}>
         <h2 style={{ fontSize: 18, fontWeight: 700, margin: 0, marginBottom: 4 }}>Draft Queue</h2>
-        <p style={{ fontSize: 13, color: "#64748b", margin: 0 }}>
+        <p style={{ fontSize: 13, color: "var(--faint)", margin: 0 }}>
           Star players to add them to your queue. Your queue is used for auto-picks during the live draft.
           {statSeason && (
-            <> Stats from the <strong style={{ color: "#94a3b8" }}>{statSeason}</strong> season.</>
+            <> Stats from the <strong style={{ color: "var(--dim)" }}>{statSeason}</strong> season.</>
           )}
         </p>
       </div>

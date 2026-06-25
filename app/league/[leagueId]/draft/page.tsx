@@ -35,7 +35,7 @@ export default async function LeagueDraftPage({ params }: { params: { leagueId: 
     <div style={{ display: "grid", gap: 20 }}>
       <section style={panelStyle}>
         <h1 style={{ fontSize: 26, marginBottom: 10 }}>Draft setup</h1>
-        <p style={{ color: "#94a3b8", marginBottom: 20 }}>
+        <p style={{ color: "var(--dim)", marginBottom: 20 }}>
           Prepare and launch the league draft for {league.name}. Use the draft server for live selection and ask managers to join using their team IDs.
         </p>
 
@@ -63,7 +63,7 @@ export default async function LeagueDraftPage({ params }: { params: { leagueId: 
                   <div key={team.id} style={teamRowStyle}>
                     <div>
                       <p style={{ margin: 0, fontWeight: 700 }}>{team.name}</p>
-                      <p style={{ margin: 0, color: "#94a3b8", fontSize: 13 }}>Team ID: {team.id}</p>
+                      <p style={{ margin: 0, color: "var(--dim)", fontSize: 13 }}>Team ID: {team.id}</p>
                     </div>
                     <a
                       href={`/draft/${leagueId}?team=${team.id}`}
@@ -91,8 +91,8 @@ export default async function LeagueDraftPage({ params }: { params: { leagueId: 
 }
 
 const panelStyle: React.CSSProperties = {
-  background: "rgba(255,255,255,0.04)",
-  border: "1px solid rgba(148,163,184,0.14)",
+  background: "var(--surface)",
+  border: "1px solid var(--border)",
   borderRadius: 20,
   padding: 20,
 };
@@ -110,12 +110,12 @@ const teamRowStyle: React.CSSProperties = {
   gap: 12,
   padding: 14,
   borderRadius: 16,
-  background: "rgba(255,255,255,0.02)",
+  background: "var(--bg-raised)",
 };
 
 const joinLinkStyle: React.CSSProperties = {
-  color: "#fff",
-  background: "#6366f1",
+  color: "var(--accent-ink)",
+  background: "var(--accent)",
   padding: "10px 14px",
   borderRadius: 14,
   textDecoration: "none",
@@ -123,10 +123,10 @@ const joinLinkStyle: React.CSSProperties = {
 };
 
 const infoStyle: React.CSSProperties = {
-  background: "rgba(255,255,255,0.02)",
+  background: "var(--bg-raised)",
   borderRadius: 16,
   padding: 18,
-  color: "#e2e8f0",
+  color: "var(--text)",
   lineHeight: 1.7,
 };
 

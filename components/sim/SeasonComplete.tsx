@@ -23,15 +23,15 @@ export default function SeasonComplete({
         textAlign: "center",
       }}
     >
-      <h2 style={{ fontSize: 32, fontWeight: 700, marginTop: 0, marginBottom: 16, color: "#e2e8f0" }}>
+      <h2 style={{ fontSize: 32, fontWeight: 700, marginTop: 0, marginBottom: 16, color: "var(--text)" }}>
         🏁 Regular Season Complete
       </h2>
 
       <div style={{ marginBottom: 32 }}>
-        <p style={{ fontSize: 16, color: "#94a3b8", marginBottom: 8 }}>
+        <p style={{ fontSize: 16, color: "var(--dim)", marginBottom: 8 }}>
           The regular season has concluded. You finished your final matchup!
         </p>
-        <p style={{ fontSize: 14, color: "#64748b" }}>
+        <p style={{ fontSize: 14, color: "var(--faint)" }}>
           Check the standings to see final rankings and playoff seeding.
         </p>
       </div>
@@ -45,10 +45,10 @@ export default function SeasonComplete({
             padding: 20,
           }}
         >
-          <p style={{ fontSize: 12, color: "#a5b4fc", fontWeight: 600, marginTop: 0, marginBottom: 8 }}>
+          <p style={{ fontSize: 12, color: "var(--accent-strong)", fontWeight: 600, marginTop: 0, marginBottom: 8 }}>
             FINAL STANDINGS
           </p>
-          <p style={{ fontSize: 14, color: "#cbd5e1", margin: 0 }}>
+          <p style={{ fontSize: 14, color: "var(--muted)", margin: 0 }}>
             View the final regular season standings and playoff bracket setup.
           </p>
         </div>
@@ -64,7 +64,7 @@ export default function SeasonComplete({
           <p style={{ fontSize: 12, color: "#34d399", fontWeight: 600, marginTop: 0, marginBottom: 8 }}>
             PLAYOFFS READY
           </p>
-          <p style={{ fontSize: 14, color: "#cbd5e1", margin: 0 }}>
+          <p style={{ fontSize: 14, color: "var(--muted)", margin: 0 }}>
             The top 4 teams are seeded and ready. Begin the playoff tournament now.
           </p>
         </div>
@@ -75,8 +75,8 @@ export default function SeasonComplete({
         disabled={isSimulating}
         style={{
           padding: "16px 32px",
-          background: isSimulating ? "#6366f1" : "#6366f1",
-          color: "#fff",
+          background: isSimulating ? "var(--accent)" : "var(--accent)",
+          color: "var(--accent-ink)",
           border: "none",
           borderRadius: 8,
           fontSize: 16,
@@ -89,9 +89,9 @@ export default function SeasonComplete({
         ▶ Start Playoffs
       </button>
 
-      <p style={{ fontSize: 13, color: "#64748b", margin: 0 }}>
+      <p style={{ fontSize: 13, color: "var(--faint)", margin: 0 }}>
         After playoffs begin, navigate to{" "}
-        <span style={{ color: "#a5b4fc", fontWeight: 600 }}>Bracket</span> to advance through the rounds.
+        <span style={{ color: "var(--accent-strong)", fontWeight: 600 }}>Bracket</span> to advance through the rounds.
       </p>
     </div>
   );

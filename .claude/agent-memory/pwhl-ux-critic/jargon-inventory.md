@@ -9,7 +9,7 @@ Inventory of jargon that appears repeatedly WITHOUT inline explanation, ranked b
 
 **VP (Victory Points)** — explained well in 3 places (WelcomeFlow, wizard step 4, VpExplainer "?" on standings) but appears RAW on: home page mini-standings, dashboard MatchupHero, league overview race table chips. The explanation is opt-in (must click "?"). Reasonable coverage; the gap is surfaces outside standings.
 
-**FP (Fantasy Points)** — used as a bare axis label ("Projected FP", "Points earned", "PF") on matchup hero, lineup, standings. NEVER expanded to "Fantasy Points" anywhere user-facing. New fans won't know FP and VP are different currencies. This is the single most confusing collision — two point systems, two abbreviations, no Rosetta stone on one screen.
+**FP (Fantasy Points)** — used as a bare axis label ("Projected FP", "Points earned", "PF") on matchup hero, lineup, standings. As of Sprint 22 the FieldHero now carries a bridge sentence "Fantasy points (FP) decide who wins the week. Winning earns Victory Points (VP) in the standings." (matchup/page.tsx ~L958) and the VpExplainer popover footer also bridges FP→VP. So the Rosetta stone now exists on the matchup hero and standings. REMAINING GAP: still bare on lineup/roster/draft tables and the standings PF column. The two-currency collision is mitigated on the two flagship surfaces but not eliminated app-wide.
 
 **VTF / "vs the field"** — see [[vtf-field-model]]. The matchup hero says "W-L vs field" with no explanation of what "the field" is.
 

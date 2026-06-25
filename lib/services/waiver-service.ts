@@ -84,9 +84,10 @@ export async function enterWaiverWire(
   leagueId: string,
   playerId: string,
   windowHours: number,
-  prisma: PrismaClient
+  prisma: PrismaClient,
+  nowMs = Date.now()
 ): Promise<void> {
-  const expiresAt = new Date(Date.now() + windowHours * 60 * 60 * 1000);
+  const expiresAt = new Date(nowMs + windowHours * 60 * 60 * 1000);
   await prisma.waiverEntry.upsert({
     where: { leagueId_playerId: { leagueId, playerId } },
     update: { expiresAt },
@@ -306,6 +307,17 @@ export async function processWaivers(
         playerId: winner.addPlayerId,
         type: "WAIVER_CLAIM_AWARDED",
         data: { description: "Waiver claim awarded" },
+      },
+      prisma
+    ).catch(() => {});
+    // Also emit PLAYER_ADD so the "Adds/Drops" transaction filter includes waiver-claim additions
+    emitEvent(
+      {
+        leagueId,
+        teamId: winner.fantasyTeamId,
+        playerId: winner.addPlayerId,
+        type: "PLAYER_ADD",
+        data: { description: "Added via waiver claim" },
       },
       prisma
     ).catch(() => {});

@@ -77,7 +77,7 @@ const POS_COLORS: Record<string, string> = {
 
 const SLOT_COLORS: Record<SlotType, string> = {
   FORWARD: "#60a5fa", DEFENSE: "#34d399", GOALIE: "#f59e0b",
-  UTIL: "#a78bfa", BENCH: "#64748b", IR: "#ef4444",
+  UTIL: "var(--accent-strong)", BENCH: "var(--faint)", IR: "#ef4444",
 };
 
 function buildActiveSeats(settings: RosterSettings): Array<{ slot: SlotType; index: number }> {
@@ -342,13 +342,13 @@ export default function LineupManager({
     return (
       <div style={{ display: "flex", flexDirection: "column", gap: 16, padding: "40px 20px", textAlign: "center", alignItems: "center", minHeight: "50vh", justifyContent: "center" }}>
         <div style={{ fontSize: 16, fontWeight: 600, color: "var(--text)", marginBottom: 8 }}>Your roster is empty</div>
-        <div style={{ fontSize: 14, color: "#94a3b8", marginBottom: 20 }}>Draft players first to set your lineup.</div>
+        <div style={{ fontSize: 14, color: "var(--dim)", marginBottom: 20 }}>Draft players first to set your lineup.</div>
         <a href={`/league/${leagueId}`} style={{
           display: "inline-block",
           padding: "10px 20px",
           borderRadius: 8,
           background: "var(--accent)",
-          color: "#fff",
+          color: "var(--accent-ink)",
           fontSize: 13,
           fontWeight: 600,
           textDecoration: "none",
@@ -392,7 +392,7 @@ export default function LineupManager({
       <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", justifyContent: "space-between" }}>
         <div style={{ display: "flex", alignItems: "baseline", gap: 12, flexWrap: "wrap" }}>
           <h1 style={{ fontSize: 22, margin: 0 }}>{teamName}</h1>
-          <span style={{ color: "#64748b", fontSize: 13 }}>
+          <span style={{ color: "var(--faint)", fontSize: 13 }}>
             {activeCount} active · {benchPlayers.length} bench
           </span>
         </div>
@@ -406,7 +406,7 @@ export default function LineupManager({
               minHeight: 44, padding: "0 16px", borderRadius: 8, border: "none", cursor: hasPendingChanges && !isSaving ? "pointer" : "default",
               fontSize: 13, fontWeight: 700,
               background: justSaved ? "rgba(52,211,153,0.2)" : hasPendingChanges && !isSaving ? "var(--accent)" : "rgba(255,255,255,0.08)",
-              color: justSaved ? "#34d399" : hasPendingChanges && !isSaving ? "#0f172a" : "#64748b",
+              color: justSaved ? "#34d399" : hasPendingChanges && !isSaving ? "#0f172a" : "var(--faint)",
               transition: "background 0.2s, color 0.2s",
               opacity: isSaving ? 0.6 : 1,
             }}
@@ -428,10 +428,10 @@ export default function LineupManager({
                 disabled={autoSetDisabled}
                 title={autoSetTitle}
                 style={{
-                  minHeight: 44, padding: "0 14px", borderRadius: 8, border: "1px solid rgba(99,102,241,0.3)", cursor: !autoSetDisabled ? "pointer" : "default",
+                  minHeight: 44, padding: "0 14px", borderRadius: 8, border: "1px solid rgba(143,193,232,0.3)", cursor: !autoSetDisabled ? "pointer" : "default",
                   fontSize: 12, fontWeight: 600,
-                  background: !autoSetDisabled ? "transparent" : "rgba(255,255,255,0.02)",
-                  color: !autoSetDisabled ? "#818cf8" : "#64748b",
+                  background: !autoSetDisabled ? "transparent" : "var(--bg-raised)",
+                  color: !autoSetDisabled ? "var(--accent-strong)" : "var(--faint)",
                   transition: "background 0.2s, color 0.2s, border-color 0.2s",
                   opacity: autoSetDisabled ? 0.5 : 1,
                 }}
@@ -442,7 +442,7 @@ export default function LineupManager({
           })()}
 
           {/* Stats view toggle */}
-          <div style={{ display: "flex", gap: 4, background: "rgba(255,255,255,0.05)", borderRadius: 8, padding: 3 }}>
+          <div style={{ display: "flex", gap: 4, background: "var(--surface)", borderRadius: 8, padding: 3 }}>
             {tabOptions.map((view) => {
               const label = view === "projected" ? "Matchup Proj" : view === "season" ? "Season" : view === "lastWeek" ? "Last week" : "This week";
               const disabled = (view === "thisWeek" && !thisWeekLabel) || (view === "projected" && (!nextWeekLabel || !projectionsAvailable));
@@ -453,8 +453,8 @@ export default function LineupManager({
                   disabled={disabled}
                   style={{
                     minHeight: 36, padding: "0 12px", borderRadius: 6, border: "none", cursor: disabled ? "default" : "pointer", fontSize: 12, fontWeight: 600,
-                    background: statsView === view ? "rgba(99,102,241,0.3)" : "transparent",
-                    color: disabled ? "#334155" : statsView === view ? "#a5b4fc" : "#64748b",
+                    background: statsView === view ? "rgba(143,193,232,0.3)" : "transparent",
+                    color: disabled ? "var(--faint)" : statsView === view ? "var(--accent-strong)" : "var(--faint)",
                     transition: "background 0.1s, color 0.1s",
                   }}
                 >
@@ -467,13 +467,13 @@ export default function LineupManager({
       </div>
 
       {(statsView === "projected" && nextWeekLabel) && (
-        <div style={{ fontSize: 12, color: "#64748b" }}>Matchup projections for {nextWeekLabel} · rolling 5-game avg × scheduled games</div>
+        <div style={{ fontSize: 12, color: "var(--faint)" }}>Matchup projections for {nextWeekLabel} · rolling 5-game avg × scheduled games</div>
       )}
       {(statsView === "lastWeek" && lastWeekLabel) && (
-        <div style={{ fontSize: 12, color: "#64748b" }}>{lastWeekLabel}</div>
+        <div style={{ fontSize: 12, color: "var(--faint)" }}>{lastWeekLabel}</div>
       )}
       {(statsView === "thisWeek" && thisWeekLabel) && (
-        <div style={{ fontSize: 12, color: "#64748b" }}>{thisWeekLabel}</div>
+        <div style={{ fontSize: 12, color: "var(--faint)" }}>{thisWeekLabel}</div>
       )}
 
       {/* Entry-state instruction tip or empty state */}
@@ -481,7 +481,7 @@ export default function LineupManager({
         <div style={{
           padding: "10px 14px", borderRadius: 10,
           background: "rgba(100,116,139,0.08)", border: "1px solid rgba(100,116,139,0.15)",
-          fontSize: 12, color: "#94a3b8",
+          fontSize: 12, color: "var(--dim)",
         }}>
           {roster.length === 0 ? (
             <>Your roster will appear here after the draft. Check back when the draft is complete!</>
@@ -495,7 +495,7 @@ export default function LineupManager({
         <div style={{
           padding: "10px 14px", borderRadius: 10,
           background: "var(--accent-dim)", border: "1px solid var(--accent-border)",
-          fontSize: 13, color: "#c9b6ff",
+          fontSize: 13, color: "var(--accent-strong)",
         }}>
           <strong style={{ color: "var(--text)" }}>{selected.name}</strong> selected —
           click a highlighted slot to move them, or click them again to cancel.
@@ -547,14 +547,14 @@ export default function LineupManager({
             return (
               <div style={{
                 marginBottom: 12, padding: "8px 12px", borderRadius: 8,
-                background: "rgba(99,102,241,0.08)", border: "1px solid rgba(99,102,241,0.15)",
+                background: "rgba(143,193,232,0.08)", border: "1px solid rgba(143,193,232,0.15)",
                 display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center",
               }}>
-                <span style={{ fontSize: 12, color: "#94a3b8" }}>Starters projected:</span>
+                <span style={{ fontSize: 12, color: "var(--dim)" }}>Starters projected:</span>
                 <span style={{ fontSize: 13, fontWeight: 700, color: "#fbbf24" }}>{starterTotal.toFixed(1)} pts</span>
                 {benchUpgrade && (
-                  <span style={{ fontSize: 12, color: "#64748b" }}>
-                    · Consider starting <span style={{ color: "#a5b4fc" }}>{benchUpgrade.name}</span> ({benchUpgrade.fp.toFixed(1)} proj) over {worstStarterProj.name}
+                  <span style={{ fontSize: 12, color: "var(--faint)" }}>
+                    · Consider starting <span style={{ color: "var(--accent-strong)" }}>{benchUpgrade.name}</span> ({benchUpgrade.fp.toFixed(1)} proj) over {worstStarterProj.name}
                   </span>
                 )}
               </div>
@@ -603,7 +603,7 @@ export default function LineupManager({
                       ? "var(--accent-dim)"
                       : isSelected
                       ? "var(--accent-dim)"
-                      : "rgba(255,255,255,0.02)",
+                      : "var(--bg-raised)",
                     cursor: (player && !player.lockedAt) || isTarget ? "pointer" : "default",
                     transition: "background 0.1s, border-color 0.1s",
                     outline: isSelected ? "2px solid var(--accent)" : isTarget ? "1px solid var(--accent-border)" : "none",
@@ -616,7 +616,7 @@ export default function LineupManager({
                   {player ? (
                     <PlayerInfo player={player} isSelected={isSelected} stats={getStats(player.playerId)} statsView={statsView} projectedStats={projectedStats} />
                   ) : (
-                    <span style={{ color: isTarget ? "#a5b4fc" : "#475569", fontSize: 13, fontStyle: isTarget ? "normal" : "italic" }}>
+                    <span style={{ color: isTarget ? "var(--accent-strong)" : "var(--faint)", fontSize: 13, fontStyle: isTarget ? "normal" : "italic" }}>
                       {isTarget ? "Move here" : "Empty"}
                     </span>
                   )}
@@ -635,7 +635,7 @@ export default function LineupManager({
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
               {benchPlayers.length === 0 && (
-                <span style={{ color: "#475569", fontSize: 13, fontStyle: "italic" }}>Empty</span>
+                <span style={{ color: "var(--faint)", fontSize: 13, fontStyle: "italic" }}>Empty</span>
               )}
               {benchPlayers.map((player) => {
                 const isSelected = player.playerId === selectedId;
@@ -675,7 +675,7 @@ export default function LineupManager({
                         ? "var(--accent-dim)"
                         : isSelected
                         ? "var(--accent-dim)"
-                        : "rgba(150,160,200,0.02)",
+                        : "var(--border)",
                       cursor: "pointer",
                       transition: "background 0.1s, border-color 0.1s",
                       outline: isSelected ? "2px solid var(--accent)" : "none",
@@ -700,7 +700,7 @@ export default function LineupManager({
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                 {irPlayers.length === 0 && (
-                  <span style={{ color: "#475569", fontSize: 13, fontStyle: "italic" }}>Empty — IR for inactive players only</span>
+                  <span style={{ color: "var(--faint)", fontSize: 13, fontStyle: "italic" }}>Empty — IR for inactive players only</span>
                 )}
                 {irPlayers.map((player) => {
                   const isSelected = player.playerId === selectedId;
@@ -712,8 +712,8 @@ export default function LineupManager({
                         display: "grid", gridTemplateColumns: "36px 1fr",
                         gap: 10, alignItems: "start",
                         padding: "9px 12px", borderRadius: 10,
-                        border: `1px solid ${isSelected ? "rgba(99,102,241,0.4)" : "rgba(239,68,68,0.15)"}`,
-                        background: isSelected ? "rgba(99,102,241,0.08)" : "rgba(239,68,68,0.05)",
+                        border: `1px solid ${isSelected ? "rgba(143,193,232,0.4)" : "rgba(239,68,68,0.15)"}`,
+                        background: isSelected ? "rgba(143,193,232,0.08)" : "rgba(239,68,68,0.05)",
                         cursor: "pointer",
                       }}
                     >
@@ -733,7 +733,7 @@ export default function LineupManager({
       {selected && (
         <button
           onClick={() => setSelectedId(null)}
-          style={{ alignSelf: "flex-start", background: "none", border: "none", color: "#64748b", fontSize: 13, cursor: "pointer", minHeight: 44, padding: "0 12px" }}
+          style={{ alignSelf: "flex-start", background: "none", border: "none", color: "var(--faint)", fontSize: 13, cursor: "pointer", minHeight: 44, padding: "0 12px" }}
         >
           ✕ Cancel selection
         </button>
@@ -749,8 +749,8 @@ function SlotBadge({ slot }: { slot: SlotType }) {
     <span style={{
       display: "inline-block", textAlign: "center",
       fontSize: 11, fontWeight: 700, padding: "3px 5px", borderRadius: 6,
-      background: isActive ? `${color}22` : "rgba(148,163,184,0.08)",
-      color: isActive ? color : "#64748b",
+      background: isActive ? `${color}22` : "var(--border)",
+      color: isActive ? color : "var(--faint)",
       minWidth: 28,
     }}>
       {SLOT_LABELS[slot]}
@@ -774,7 +774,7 @@ function PlayerInfo({
       <div style={{ display: "flex", alignItems: "center", gap: 6, minWidth: 0, overflow: "hidden" }}>
         <span style={{
           fontWeight: 600, fontSize: 14,
-          color: isSelected ? "#e2e8f0" : "#cbd5e1",
+          color: isSelected ? "var(--text)" : "var(--muted)",
           whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
         }}>
           {player.name}
@@ -783,7 +783,7 @@ function PlayerInfo({
           {player.position[0]}
         </span>
         {player.teamAbbr && (
-          <span style={{ fontSize: 11, color: "#475569", flexShrink: 0 }}>{player.teamAbbr}</span>
+          <span style={{ fontSize: 11, color: "var(--faint)", flexShrink: 0 }}>{player.teamAbbr}</span>
         )}
         {!player.active && (
           <span style={{ fontSize: 10, color: "#ef4444", background: "rgba(239,68,68,0.12)", padding: "1px 5px", borderRadius: 4, flexShrink: 0 }}>
@@ -818,10 +818,10 @@ function PlayerInfo({
               padding: "1px 5px", borderRadius: 4,
               background: player.gamesThisPeriod === 0 ? "rgba(100,116,139,0.15)" : "var(--accent-dim)",
               border: player.gamesThisPeriod === 0 ? "none" : "1px solid var(--accent-border)",
-              color: player.gamesThisPeriod === 0 ? "var(--faint)" : "#c9b6ff",
+              color: player.gamesThisPeriod === 0 ? "var(--faint)" : "var(--accent-strong)",
             }}
           >
-            {player.gamesThisPeriod === 0 ? "0 left" : `${player.gamesThisPeriod}G left`}
+            {player.gamesThisPeriod === 0 ? "0 gm" : `${player.gamesThisPeriod} gm`}
           </span>
         )}
       </div>

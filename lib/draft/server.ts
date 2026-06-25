@@ -17,6 +17,8 @@ import { emitEvent, type LeagueEventType } from "../services/activity";
 import { trackEvent } from "../analytics";
 import { logCommissionerAction, type CommissionerEventType } from "../services/audit-service";
 import { createNotification } from "../services/notification-service";
+import { sendOnClock } from "../services/email-service";
+import { generateMagicLinkToken } from "../auth";
 import { startSeason, getSeasonState } from "../season/index";
 
 const prisma = new PrismaClient();
@@ -43,7 +45,9 @@ class DraftRoom {
   }
 
   private rescheduleTimer() {
-    // Calculate expiration time based on current pick position
+    // Calculate expiration time based on current pick position.
+    // Called from the constructor after a server restart so the on-clock team gets
+    // a fresh pick window rather than an expired/null clock.
     const currentTeamSlot = this.state.order[this.state.currentOverall - 1];
     if (!currentTeamSlot) return;
 
@@ -52,6 +56,10 @@ class DraftRoom {
     const expiresAt = Date.now() + timerSecs * 1000;
     this.state.expiresAt = expiresAt;
     this.scheduleTimer(expiresAt);
+    // Broadcast the updated expiresAt to any sockets that are already registered.
+    // After a server restart this is a no-op (no sockets yet), but it ensures that
+    // any reconnect or re-join happening concurrently sees the correct clock immediately.
+    this.broadcast({ type: "STATE", state: toWireState(this.state) });
   }
 
   private isCommissioner(ws: WebSocket): boolean {
@@ -298,6 +306,38 @@ class DraftRoom {
           actionUrl: `/draft/${this.leagueId}?team=${slot.fantasyTeamId}`,
         }
       );
+
+      // Only email if the team has no active WebSocket connection (not already in the room)
+      const isConnected = [...this.sockets.values()].some(
+        (teamId) => teamId === slot.fantasyTeamId
+      );
+      if (!isConnected && process.env.EMAIL_RESEND_ENABLED === "true") {
+        void (async () => {
+          try {
+            const owner = await prisma.user.findUnique({
+              where: { id: team.ownerId },
+              select: { email: true, displayName: true },
+            });
+            if (owner && !owner.email.endsWith("@dev.local")) {
+              // Generate a magic link so clicking the email logs them into the draft room
+              const { rawToken, tokenHash, expiresAt } = generateMagicLinkToken();
+              await prisma.user.update({
+                where: { id: team.ownerId },
+                data: { magicLinkToken: tokenHash, magicLinkExpiresAt: expiresAt },
+              });
+              await sendOnClock(
+                owner.email,
+                owner.displayName,
+                rawToken,
+                this.leagueId,
+                slot.fantasyTeamId,
+                this.state.currentOverall,
+                this.state.order.length
+              );
+            }
+          } catch {}
+        })();
+      }
     } catch {
       // fire-and-forget — never block the draft
     }
@@ -465,8 +505,9 @@ class DraftRoom {
   }
 
   // Position-aware, value-ranked auto-pick list for the given team.
-  // Tier 1: fills an unfilled goalie slot (goalies can't fill UTIL — most constrained).
-  // Tier 2: fills an unfilled skater starter or UTIL slot.
+  // Tier 1: fills a position-locked unfilled slot — goalie (can't fill UTIL) or
+  //         defenseman when D slots remain open (BF-020: prevents 0-defender rosters).
+  // Tier 2: fills an unfilled skater starter or UTIL slot (positional overflow).
   // Tier 3: bench only (all starting slots for this position are full).
   // Within each tier: proxy FP (goals × 2 + assists × 1.5 + win × 5 + shutout × 3) desc.
   private async bestAvailablePlayerIds(teamId: string): Promise<string[]> {
@@ -518,11 +559,17 @@ class DraftRoom {
       );
       let tier: number;
       if (pos === "GOALIE" && needed.goalie) {
+        // Tier 1a: fills the only slot goalies can occupy
+        tier = 1;
+      } else if (pos === "DEFENSE" && needed.defense) {
+        // Tier 1b: defensemen filling open D slot — same priority as goalies (BF-020)
+        // This ensures auto-drafted rosters don't end up with 0–1 defenders.
         tier = 1;
       } else if (
         (pos === "FORWARD" || pos === "DEFENSE") &&
-        (needed.forward || needed.defense || needed.util)
+        (needed.forward || needed.util)
       ) {
+        // Tier 2: fills an unfilled skater/UTIL slot (positional overflow)
         tier = 2;
       } else {
         tier = 3;

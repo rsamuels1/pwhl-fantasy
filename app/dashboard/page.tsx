@@ -18,7 +18,7 @@ function teamCrest(name: string): string {
 }
 
 const RECORD_COLOR = { win: "#5fa98c", loss: "#d18b7f", neutral: "#c7d2e0" } as const;
-const BAR_COLOR    = { win: "#5fa98c", loss: "rgba(209,139,127,0.7)", neutral: "#a78bfa" } as const;
+const BAR_COLOR    = { win: "#5fa98c", loss: "rgba(209,139,127,0.7)", neutral: "var(--accent-strong)" } as const;
 
 /* ── Matchup score block ─────────────────────────────────────────────────── */
 
@@ -36,14 +36,14 @@ function MatchupHero({ summary, teamName }: { summary: MatchupQuickSummary; team
     summary.wins > summary.losses ? "win" : summary.losses > summary.wins ? "loss" : "neutral";
 
   const scoreBg = isActive
-    ? "linear-gradient(135deg, rgba(124,58,237,0.16), rgba(124,58,237,0.05))"
-    : "rgba(150,160,200,0.04)";
-  const scoreBorder = isActive ? "rgba(124,58,237,0.28)" : "var(--border)";
+    ? "linear-gradient(135deg, rgba(143,193,232,0.16), rgba(143,193,232,0.05))"
+    : "var(--bg-raised)";
+  const scoreBorder = isActive ? "rgba(143,193,232,0.28)" : "var(--border)";
 
   return (
     <div style={{ padding: 16, borderRadius: 14, background: scoreBg, border: `1px solid ${scoreBorder}` }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-        <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: isActive ? "#a78bfa" : "var(--dim)" }}>
+        <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: isActive ? "var(--accent-strong)" : "var(--dim)" }}>
           Week {summary.week} · {label}
         </span>
       </div>
@@ -54,7 +54,7 @@ function MatchupHero({ summary, teamName }: { summary: MatchupQuickSummary; team
           <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 12 }}>
             <div>
               <div style={{ fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--faint)", marginBottom: 3 }}>Your score</div>
-              <div className="font-stats" style={{ fontSize: 42, fontWeight: 700, lineHeight: 0.78, color: summary.wins === -1 ? "var(--faint)" : "#f6f7fb" }}>
+              <div className="font-stats" style={{ fontSize: 42, fontWeight: 700, lineHeight: 0.78, color: summary.wins === -1 ? "var(--faint)" : "var(--text)" }}>
                 {summary.wins === -1 ? "—" : summary.myScore.toFixed(1)}
               </div>
             </div>
@@ -107,7 +107,7 @@ function MatchupHero({ summary, teamName }: { summary: MatchupQuickSummary; team
       ) : (
         /* Upcoming — no scores yet */
         <div>
-          <div style={{ fontSize: 14, fontWeight: 700, color: "#f6f7fb", marginBottom: 4 }}>{teamName}</div>
+          <div style={{ fontSize: 14, fontWeight: 700, color: "var(--text)", marginBottom: 4 }}>{teamName}</div>
           <div style={{ fontSize: 12, color: "var(--dim)" }}>vs all {opponents} teams · Week {summary.week}</div>
         </div>
       )}
@@ -152,6 +152,19 @@ export default async function DashboardPage() {
     ...extraTeams.map(t => ({ ...t, isOwned: t.ownerId === user.id })),
   ];
   const hasTeams = teams.length > 0;
+
+  // Pending trade review counts for commissioner-led leagues
+  const commissionerLeagueIds = teams
+    .filter(t => t.league.commissionerId === user.id)
+    .map(t => t.leagueId);
+  const pendingTradeGroups = commissionerLeagueIds.length > 0
+    ? await prisma.trade.groupBy({
+        by: ["leagueId"],
+        where: { leagueId: { in: commissionerLeagueIds }, status: "PENDING_REVIEW" },
+        _count: { id: true },
+      })
+    : [];
+  const pendingTradesByLeague = new Map(pendingTradeGroups.map(g => [g.leagueId, g._count.id]));
 
   const teamNowMs = (team: (typeof teams)[number]) =>
     getReplayNow({ isReplay: team.league.isReplay, replayCurrentDate: team.league.replayCurrentDate }, devNow);
@@ -248,6 +261,18 @@ export default async function DashboardPage() {
         });
       }
     }
+
+    // Pending trade reviews — commissioner only
+    if (league.commissionerId === user.id) {
+      const pending = pendingTradesByLeague.get(team.leagueId) ?? 0;
+      if (pending > 0) {
+        actions.push({
+          label: `${pending} trade ${pending === 1 ? "proposal" : "proposals"} waiting for your review`,
+          href: `/league/${team.leagueId}/admin`,
+          teamName: league.name,
+        });
+      }
+    }
   });
 
   const inSeason = teams.filter((t) => t.league.status === "IN_SEASON").length;
@@ -261,7 +286,7 @@ export default async function DashboardPage() {
         <header style={{ marginTop: 16 }}>
           {hasTeams ? (
             <>
-              <p className="hero-eyebrow" style={{ color: "#a78bfa", letterSpacing: "0.2em" }}>My Leagues</p>
+              <p className="hero-eyebrow" style={{ color: "var(--accent-strong)", letterSpacing: "0.2em" }}>My Leagues</p>
               <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 16, flexWrap: "wrap", margin: "10px 0 0" }}>
                 <div>
                   <h1 style={{ margin: 0, fontSize: "clamp(1.6rem, 3.2vw, 2.4rem)", fontWeight: 900, letterSpacing: "-0.025em", lineHeight: 1 }}>
@@ -277,7 +302,7 @@ export default async function DashboardPage() {
             </>
           ) : (
             <>
-              <p className="hero-eyebrow" style={{ color: "#a78bfa", letterSpacing: "0.2em" }}>PWHL GM</p>
+              <p className="hero-eyebrow" style={{ color: "var(--accent-strong)", letterSpacing: "0.2em" }}>PWHL GM</p>
               <h1 style={{ margin: "8px 0 0" }}>Welcome, {user.displayName}.</h1>
               <p className="hero-text" style={{ marginTop: 8 }}>Join a league or create one to get started.</p>
               <div className="hero-actions" style={{ marginTop: 20 }}>
@@ -306,7 +331,7 @@ export default async function DashboardPage() {
             {actions.map((a, idx) => (
               <Link key={idx} href={a.href} style={{ display: "flex", alignItems: "center", gap: 12, textDecoration: "none" }}>
                 <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#e3c989", flexShrink: 0 }} />
-                <span style={{ fontSize: 14, color: "#eef1f8", fontWeight: 500 }}>{a.label}</span>
+                <span style={{ fontSize: 14, color: "var(--text)", fontWeight: 500 }}>{a.label}</span>
                 <span style={{ fontSize: 12, color: "var(--dim)" }}>{a.teamName}</span>
                 <span style={{ marginLeft: "auto", fontSize: 12.5, fontWeight: 700, color: "#e3c989", whiteSpace: "nowrap" }}>Open →</span>
               </Link>
@@ -328,7 +353,7 @@ export default async function DashboardPage() {
                 const topPerformers = topPerformersList[i];
                 const isActive = summary?.status === "active";
                 const crestBg = isActive
-                  ? "linear-gradient(135deg,#7c3aed,#4c1d95)"
+                  ? "linear-gradient(135deg,var(--accent-deep),var(--accent))"
                   : "linear-gradient(135deg,#3a4258,#222a3d)";
                 return (
                   <div
@@ -341,17 +366,17 @@ export default async function DashboardPage() {
                       <span style={{
                         width: 44, height: 44, borderRadius: 12, flexShrink: 0,
                         display: "flex", alignItems: "center", justifyContent: "center",
-                        fontSize: 17, fontWeight: 800, color: "#fff", background: crestBg,
+                        fontSize: 17, fontWeight: 800, color: "var(--accent-ink)", background: crestBg,
                       }}>
                         {teamCrest(team.name)}
                       </span>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                          <h3 style={{ margin: 0, fontSize: 16.5, fontWeight: 800, letterSpacing: "-0.01em", color: "#f6f7fb", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                          <h3 style={{ margin: 0, fontSize: 16.5, fontWeight: 800, letterSpacing: "-0.01em", color: "var(--text)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                             {team.name}
                           </h3>
                           {!team.isOwned && (
-                            <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 7px", borderRadius: 5, background: "var(--accent-dim)", color: "#c9b6ff", textTransform: "uppercase", letterSpacing: "0.05em", flexShrink: 0 }}>
+                            <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 7px", borderRadius: 5, background: "var(--accent-dim)", color: "var(--accent-strong)", textTransform: "uppercase", letterSpacing: "0.05em", flexShrink: 0 }}>
                               Commish
                             </span>
                           )}
@@ -369,7 +394,7 @@ export default async function DashboardPage() {
                     ) : (
                       <div style={{
                         padding: 16, borderRadius: 14,
-                        background: "rgba(150,160,200,0.04)", border: "1px solid var(--border)",
+                        background: "var(--bg-raised)", border: "1px solid var(--border)",
                         fontSize: 13, color: "var(--faint)",
                       }}>
                         No matchup scheduled yet
@@ -386,10 +411,10 @@ export default async function DashboardPage() {
                           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                             {topPerformers.map((p, j) => (
                               <div key={j} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 9 }}>
-                                <span style={{ fontSize: 12.5, color: "#dfe3ee", fontWeight: 500, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                <span style={{ fontSize: 12.5, color: "var(--text)", fontWeight: 500, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                                   {p.name}
                                 </span>
-                                <span className="font-stats" style={{ fontSize: 14, fontWeight: 700, color: "#a78bfa", flexShrink: 0 }}>{p.points} pts</span>
+                                <span className="font-stats" style={{ fontSize: 14, fontWeight: 700, color: "var(--accent-strong)", flexShrink: 0 }}>{p.points} pts</span>
                               </div>
                             ))}
                           </div>

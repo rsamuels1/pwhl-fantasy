@@ -105,7 +105,7 @@ export default async function SimPage({ params }: Props) {
   }
 
   return (
-    <div style={{ minHeight: "100vh", background: "#0f1117", color: "#e2e8f0" }}>
+    <div style={{ minHeight: "100vh", background: "#0f1117", color: "var(--text)" }}>
       <div style={{ maxWidth: 1200, margin: "0 auto", padding: "24px 16px" }}>
         <GMCommandCenter
           phase={phase}

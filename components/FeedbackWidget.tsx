@@ -95,8 +95,8 @@ export default function FeedbackWidget({ leagueId }: Props) {
           bottom: 80,
           right: 20,
           zIndex: 1000,
-          background: "rgba(99,102,241,0.9)",
-          color: "#fff",
+          background: "rgba(143,193,232,0.9)",
+          color: "var(--accent-ink)",
           border: "none",
           borderRadius: 999,
           padding: "10px 16px",
@@ -120,7 +120,7 @@ export default function FeedbackWidget({ leagueId }: Props) {
             position: "fixed",
             inset: 0,
             zIndex: 2000,
-            background: "rgba(0,0,0,0.6)",
+            background: "rgba(0,0,0,0.7)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -129,8 +129,8 @@ export default function FeedbackWidget({ leagueId }: Props) {
         >
           <div
             style={{
-              background: "#1e2130",
-              border: "1px solid #2d3148",
+              background: "var(--card)",
+              border: "1px solid var(--border)",
               borderRadius: 12,
               padding: 24,
               width: "100%",
@@ -151,7 +151,7 @@ export default function FeedbackWidget({ leagueId }: Props) {
                 right: 12,
                 background: "none",
                 border: "none",
-                color: "#94a3b8",
+                color: "var(--dim)",
                 fontSize: 20,
                 cursor: "pointer",
                 lineHeight: 1,
@@ -161,7 +161,7 @@ export default function FeedbackWidget({ leagueId }: Props) {
               ×
             </button>
 
-            <h2 style={{ margin: "0 0 16px", fontSize: 16, fontWeight: 700, color: "#e2e8f0" }}>
+            <h2 style={{ margin: "0 0 16px", fontSize: 16, fontWeight: 700, color: "var(--text)" }}>
               Send Feedback
             </h2>
 
@@ -181,9 +181,9 @@ export default function FeedbackWidget({ leagueId }: Props) {
                         flex: 1,
                         padding: "8px 0",
                         borderRadius: 8,
-                        border: `1px solid ${type === ft.value ? "#6366f1" : "#2d3148"}`,
-                        background: type === ft.value ? "rgba(99,102,241,0.15)" : "transparent",
-                        color: type === ft.value ? "#a5b4fc" : "#94a3b8",
+                        border: `1px solid ${type === ft.value ? "var(--accent)" : "var(--border)"}`,
+                        background: type === ft.value ? "rgba(143,193,232,0.15)" : "transparent",
+                        color: type === ft.value ? "var(--accent-strong)" : "var(--dim)",
                         fontWeight: type === ft.value ? 700 : 400,
                         fontSize: 13,
                         cursor: "pointer",
@@ -209,11 +209,11 @@ export default function FeedbackWidget({ leagueId }: Props) {
                   maxLength={2000}
                   style={{
                     width: "100%",
-                    background: "#0f1117",
-                    border: "1px solid #2d3148",
+                    background: "var(--bg)",
+                    border: "1px solid var(--border)",
                     borderRadius: 8,
                     padding: "10px 12px",
-                    color: "#e2e8f0",
+                    color: "var(--text)",
                     fontSize: 14,
                     resize: "vertical",
                     boxSizing: "border-box",
@@ -221,7 +221,7 @@ export default function FeedbackWidget({ leagueId }: Props) {
                     lineHeight: 1.5,
                   }}
                 />
-                <div style={{ fontSize: 11, color: "#64748b", textAlign: "right", marginTop: 4 }}>
+                <div style={{ fontSize: 11, color: "var(--faint)", textAlign: "right", marginTop: 4 }}>
                   {body.length}/2000
                 </div>
 
@@ -236,8 +236,8 @@ export default function FeedbackWidget({ leagueId }: Props) {
                     marginTop: 16,
                     width: "100%",
                     padding: "11px 0",
-                    background: isSubmitting ? "#3730a3" : "#6366f1",
-                    color: "#fff",
+                    background: isSubmitting ? "var(--accent-deep)" : "var(--accent)",
+                    color: "var(--accent-ink)",
                     border: "none",
                     borderRadius: 8,
                     fontSize: 14,

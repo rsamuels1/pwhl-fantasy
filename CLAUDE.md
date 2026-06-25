@@ -120,10 +120,11 @@ from each end before `JSON.parse`. No auth headers, no cookies, no rate-limit ob
 
 **2026-27 roster notes:**
 - The expansion draft + PWHL draft occurred the week of June 21, 2026.
-- Pre-season rosters (season_id=10) reflect initial expansion draft allocations: ~10 players per expansion team, ~8–10 per original team. Full rosters will fill in as contracts are signed.
+- Pre-season rosters (season_id=10) reflect initial expansion draft allocations: 10–17 players per team (Jun 24 snapshot). Full rosters will fill in as contracts are signed through summer 2026.
 - Expansion team names in DB: Detroit Hockey Team, Hamilton Hockey Team, Las Vegas Hockey Team, San Jose Hockey Team.
 - HockeyTech numeric team IDs → DB externalIds: 1=bos, 2=min, 3=mtl, 4=nyc, 5=ott, 6=tor, 8=sea, 9=van, 10=det, 11=ham, 12=lv, 13=sj.
-- The `ingest` script requires a schedule to be present (season_id=10 has no games yet). Use the dedicated roster update script instead:
+- **Why a separate script:** The main `ingest` script discovers team IDs from the schedule. season_id=10 has no games yet, so it gets 0 team IDs and fetches nothing. The update script fetches rosters directly by hardcoded HockeyTech numeric team IDs.
+- **Run weekly** until the 2026-27 schedule is published. Once a schedule exists, `npm run ingest -- --season 2026-27 --no-stats` handles it instead.
   ```bash
   npx tsx scripts/update-2026-27-rosters.ts --dry-run   # preview changes
   npx tsx scripts/update-2026-27-rosters.ts              # apply
@@ -203,7 +204,7 @@ survives DB resets and schema migrations.
    - Founder Operations Console ✅ (`app/founder/` — dashboard, league explorer, league detail with sim controls, throwaway season validator; `FOUNDER_EMAILS` env-var auth gate; API routes under `app/api/founder/`; no schema change)
    - Auto-Set Lineup ✅ (`computeOptimalLineup()` in `lib/lineup.ts`; staged save model — "Auto-set" purple button in `LineupManager.tsx`, pending diff shown before persisting; `beforeunload` guard; playoff period fallback for games-remaining badges during playoffs; `GET /api/leagues/[leagueId]/fa-suggestions` returns top 10 unrostered players by projected FP; spec: `docs/02-engineering/auto-set-lineup-spec.md`; commits: 3e6bbd0, f83468f, 1f06c9a)
    - Beta Feedback Infrastructure ✅ (spec: `docs/02-engineering/beta-feedback-spec.md`; schema: `FeedbackSubmission` model + `FeedbackType` enum `BUG|SUGGESTION|OTHER` + `BetaStatus` enum `NONE|INVITED|ACCEPTED|ACTIVE|RENEWED` + `betaStatus BetaStatus @default(NONE)` on `FantasyLeague`; widget: `components/FeedbackWidget.tsx` — fixed bottom-right button opens a Bug/Suggestion/Other modal rendered via `ReactDOM.createPortal` into `document.body`, mounted in league layout, team layout, and founder layout; API routes: `POST /api/feedback` auth-gated writes `FeedbackSubmission` rows, `GET /api/founder/feedback` returns last 100 submissions, `PATCH /api/founder/leagues/[leagueId]/beta-status` updates cohort status; Founder Console: `app/founder/feedback/page.tsx` feed table + "Feedback" nav link in `app/founder/layout.tsx` + "Beta" tab with betaStatus dropdown in `app/founder/leagues/[leagueId]/LeagueDetailTabs.tsx`)
-   - **Trade System** ✅ (`lib/trades/engine.ts` pure 9-state machine + `applyTrade`; `lib/services/trade-service.ts`; schema: `Trade`/`TradeItem` models + `TradeStatus` enum + `tradeReviewHours`/`requireCommissionerTradeApproval` on `FantasyLeague` + 6 new `NotificationType` values; 7 API routes under `/api/leagues/[leagueId]/trades/`; Trade Center at `/league/[leagueId]/trades`; Propose flow at `.../trades/new`; Trade Settings in admin panel; "Trades" in league nav; 22 tests in `tests/trade.test.ts`; spec: `docs/02-engineering/trade-spec.md`)
+   - **Trade System** ✅ (`lib/trades/engine.ts` pure 10-state machine + `applyTrade`; `lib/services/trade-service.ts`; schema: `Trade`/`TradeItem` models + `TradeStatus` enum + `tradeReviewHours`/`requireCommissionerTradeApproval` on `FantasyLeague` + 6 new `NotificationType` values; 7 API routes under `/api/leagues/[leagueId]/trades/`; Trade Center at `/league/[leagueId]/trades`; Propose flow at `.../trades/new`; Trade Settings in admin panel; "Trades" in league nav; 22 tests in `tests/trade.test.ts`; spec: `docs/02-engineering/trade-spec.md`)
    - **PWHL GM Rebrand — Sprint 9** ✅ (REBRAND-001/002/003/004/005 shipped; see `docs/branding/`):
      - REBRAND-001: `components/LogoShield.tsx`; "PWHL GM" global rename; home page hero rewrite ("Think Like a GM."); `app/layout.tsx`, `app/page.tsx`
      - REBRAND-002: "Your Franchises" dashboard; "Front Office" nav; welcome flow + login/register/invite copy
@@ -242,6 +243,79 @@ survives DB resets and schema migrations.
      - AG-007: Pre-login UX — plain-language features grid copy (no acronyms); "Try a Replay" secondary CTA on landing + login/register pages; invite join page shows draft date + fantasy explainer
      - AG-008: VP education reinforcement — compact "How VP works" callout in FieldHero + dashboard matchup action card; links to standings page explainer
      - AG-009: Lineup lock contextual tooltip — hover/tap on lock indicator reveals explanation: player's team played this week, cannot move to bench after contributing
+   - **Beta Operations + Onboarding Repair — Sprint 18** ✅ (24 items across 5 tracks, all shipped Jun 23, 2026):
+     - **Beta League Replay Format** ✅ (BLR-001/002/003: founder-created beta replay leagues, wizard beta welcome screen, expansion team teaser in welcome screen + draft room)
+     - **Sprint 13 carry-forwards** ✅ (BF-009, OB-002/003/004, UX-046/047/048, OB-005/006/007/009: analysis nav confirmed, VP explainer in wizard, team-creation warning, cancel confirm, season series dedup, trade form partner-first, trade form hint, home page cleanup, replay mode desc, "12 teams" copy, scoring chip row)
+     - **Beta bug fixes** ✅ (BF-012/013/014/015/016/017: FA add error copy clarified, pre-season trade gate removed, VTF matchup ranked view, UTIL slot stale-closure fix, activity feed LEAGUE_STORYLINE label, auto-set 0-game null-coalescing fix)
+     - **Ops gates** ✅ (OPS-001 security audit GATE-1 PASS, OPS-002 load test GATE-2 PASS 20 leagues×80 connections, OPS-003 CRON_SECRET GATE-3 PASS, OPS-004 accessibility focus-visible + aria-labels)
+     - **Wizard 401 fix** ✅ (middleware exemption for `/api/leagues/create` + WizardError styled component)
+   - **IA Restructure — Sprint 19** ✅ (5 parts, all shipped Jun 23, 2026):
+     - **Part 1: Emoji policy + colorblind fix** ✅ (`docs/branding/emoji-policy.md`; standings chips now use ✓/✗/◉ glyphs for CLINCHED/ELIM/BUBBLE; `chip-bubble` + `chip-out` CSS classes; commit 0d00092)
+     - **Part 2: Trades → My Franchise** ✅ (new `/team/[teamId]/trades`, `/team/[teamId]/trades/new`, `/team/[teamId]/trades/[tradeId]` routes; `/team/[teamId]/bracket` + `/team/[teamId]/transactions` routes; league trades routes redirect to team-scoped equivalents; Trades removed from league nav; `TeamNav.tsx` restructured — Lineup/FA tabs removed, Rosters→My Roster, Trades/Playoffs/Transactions link to team routes; commit a2cd617)
+     - **Part 3: League overview → commissioner-only** ✅ (`/league/[leagueId]` redirects non-commissioners to `/team/[teamId]/matchup`; My Matchup widget and non-commissioner content removed from commissioner overview; `/league/[leagueId]/roster` requires commissioner access; commit 3ceb056)
+     - **Part 4: DnD lineup management on roster page** ✅ (`@dnd-kit/core`, `@dnd-kit/sortable`, `@dnd-kit/utilities` installed; new `components/LineupDnD.tsx` with drag-to-swap, stats tabs, games-remaining badges, play-lock validation, DragOverlay; `app/team/[teamId]/roster/page.tsx` rewritten to fetch all lineup data server-side and render LineupDnD above RosterManager; `/team/[teamId]/lineup` redirects to `/team/[teamId]/roster`; commit 01075f9)
+     - **Part 5: Commissioner god-mode on roster page** ✅ (commissioner can view + DnD any team's lineup via team selector; uses `/api/leagues/[leagueId]/commissioner/force-move` when `forceMove=true`; amber "Commissioner view" banner in LineupDnD; "⚙ Commissioner View" chip in RosterManager; commit b4986a6)
+   - **VTF Navigation Rename — Sprint 20** ✅ (2 items shipped Jun 23, 2026):
+     - **BF-018: League nav rename** ✅ (league nav "Schedule" tab renamed to "Results"; VTF explainer subtitle added; commit ad4185a)
+     - **UX-049: Team nav rename** ✅ (team nav "Schedule" tab renamed to "My Season"; "Your Players This Week" section heading updated)
+   - **Living League: Weekly Delight — Sprint 21** ✅ (5/5 stories shipped; 6 commits; no schema changes):
+     - **LL-001: Weekly Awards Ceremony** ✅ (`computeWeeklyAwards()` pure function + `emitWeeklyAwards()` IO layer in `lib/services/storyline-service.ts`; 5 awards: `ice_cold_closer`, `heater`, `heartbreaker`, `collapse`, `frozen_stick`; called fire-and-forget from `advanceSeason()` after `emitWeeklyStorylines()`; `WeekHighlights.tsx` renders award cards with icon, color-coded borders, recovery CTA links for negative awards)
+     - **LL-002: Matchup Momentum Strip (data layer)** ✅ (`scoreDeltaSinceYesterday: number | null`, `playersRemainingTonight: number`, `opponentFinished: boolean` added to `ActiveMatchup` in `lib/services/dashboard.ts`; visual `MomentumStrip.tsx` shipped Sprint 22 RD-008 — feature complete)
+     - **LL-003: Animated Stat Chips** ✅ (`StatChip` type + `chips: StatChip[]` on `PlayerMatchupRow`; `computeStatChips()` in `lib/services/dashboard.ts` with `weekly_leader`, `streak` (≥3 consecutive games), `projection_swing_up/down` (±5 FP threshold) chip types; `StatChip.tsx` with `chipPulse` CSS animation; renders inline in matchup page Z6 `RosterTable`)
+     - **LL-017: Plain-Language Award & Storyline Explainers** ✅ (`lib/copy/living-league-glossary.ts` single source of truth for all award and chip copy; `InfoTooltip.tsx` client component — tappable ⓘ button, 44px touch target, aria-accessible; every award card on league overview has a tappable ⓘ showing fan-first explainer)
+     - **LL-018: Negative Award Tone Calibration** ✅ (negative awards include recovery CTA links; `showNegativeAwards` commissioner toggle stored in `scoringSettings` JSON — no schema migration; `NegativeAwardsToggle.tsx` in admin panel; `PATCH /api/leagues/[leagueId]/settings` route)
+   - **Living League: The Race — Sprint 23** ✅ (7/7 stories shipped; schema migration: `FantasyTeam.accentColor String?`):
+     - **LL-004: Magic Number** ✅ (`computeRace()` in `lib/playoffs/seeding.ts` extended with `magicNumber: number | null` on `RaceInfo`; shows `null` before midseason and when already clinched/eliminated; "Magic: N" chip rendered on standings page for teams with `status === "in"` or `"bubble"` where `magicNumber > 0`)
+     - **LL-005: Playoff Clinch Celebration** ✅ (`emitClinchEvents()` in `advanceSeason()` detects teams newly at `status === "clinched"` after each scoring pass; calls `createNotification()` + emits `PLAYOFF_CLINCH` `LeagueEvent`; `ClinchBanner.tsx` dismissible banner on matchup page; localStorage-keyed `leagueId + season`)
+     - **LL-007: Bubble Watch** ✅ (`BubbleWatch.tsx` server component appended below standings table on `/league/[leagueId]/standings`; 3 groupings (clinched/in + bubble + eliminated/out) from `computeRace()`; visible only when `IN_SEASON`; heading switches to "Playoff Push" after week N/2)
+     - **LL-008: Upset Tracker** ✅ (`lib/services/upset-service.ts` — `getLeagueUpsets()` computes upsets retrospectively via `winProbability(homeScore, awayScore)` proxy; `UpsetCard.tsx` on league overview sidebar; no schema change — uses option (a) from spec)
+     - **LL-019: First-Result Explainer** ✅ (`FirstResultContext` added to `DashboardData` in `lib/services/dashboard.ts`; `FirstResultCard.tsx` dismissible card on matchup page after manager's first scored period; VTF explanation + top contributor named + most actionable gap surfaced; localStorage-keyed `userId + leagueId + "first-result-seen"`)
+     - **LL-021: Small-Win Encouragement** ✅ (`MilestoneToast.tsx` inline micro-celebration component; lineup-complete toast fired from `PUT /api/leagues/[leagueId]/lineup` after first fully-set lineup; first-add toast fired from `POST /api/leagues/[leagueId]/waiver` after first successful add; both localStorage-gated, each fires once per manager)
+     - **RD-013: Team Identity Colors** ✅ (`FantasyTeam.accentColor String?` schema field + migration; `TeamColorPicker.tsx` in team settings with 6–8 AA-compliant swatches; `PATCH /api/leagues/[leagueId]/teams/[teamId]/color` route; avatar ring + team-name tint render in DuelHero and standings rows; never overrides semantic win/loss colors)
+   - **Inviting Dark Redesign — Sprint 22** ✅ COMPLETE (23/23 stories shipped; no schema changes). See `docs/01-roadmap/roadmap-sprints.md` for full item list. Includes: RD-001–012, RD-014–017, BF-018, UX-051/052/054/055/056/057 — all shipped across commits 047cd20 and 6c294d0.
+   - **Franchise Zone UX Fixes** ✅ COMPLETE (commit 28c02ae): BF-019 Scoreboard nav no longer bounces to league layout (team-scoped `/team/[teamId]/scoreboard` + `ScoreboardPageContent` shared component); UX-060 new `/team/[teamId]/settings` page with team color picker; RD-006 partial — color picker removed from matchup page, Z5 Recap promoted above Z4 Rival.
+   - **Living League: Season Story — Sprint 24** ✅ (5/7 stories shipped; UX-058/BF-020 deferred to Sprint 25):
+     - **LL-006: Season Timeline** ✅ — `/team/[teamId]/schedule` extended with W-L-T summary header; page title "My Season"
+     - **LL-010: League Record Book** ✅ — new `/league/[leagueId]/records` page (member-visible); records: highest weekly score, best season record, biggest blowout, top-5 individual player weeks; "Records" in league nav; `components/SuperlativesCard.tsx`; `lib/services/superlatives.ts`
+     - **LL-011: Franchise Identity (Team Name Editing)** ✅ — `PATCH /api/leagues/[leagueId]/teams/[teamId]/name` (ownership-gated, 1–50 chars); `components/TeamNameEditor.tsx` inline edit on Settings page; NOTE: franchise archetype system (Boom or Bust etc.) deferred to Sprint 25 as LL-011b
+     - **LL-012: Manager Superlatives** ✅ — `lib/services/superlatives.ts` pure function; 5 awards: Top Scorer, Feast or Famine, Steady Eddie, Hot Start, Strong Finish; `SuperlativesCard.tsx` in league overview sidebar; team's own superlatives as gold callout on Analysis page
+     - **LL-023: Empty States** ✅ — personality copy across Trades (all 3 tabs), Transactions feed, Analysis page
+   - **Living League: Legacy — Sprint 25** ✅ (6/6 stories shipped; commit ab44083):
+     - **LL-009: Trophy Cabinet** ✅ — `Trophy` model + `TrophyType` enum in `prisma/schema.prisma`; `lib/services/trophy-service.ts`; `/team/[teamId]/trophies` page; `TrophyCard.tsx`, `TrophyShelf.tsx`; trophy icons in matchup page Z2
+     - **LL-011b: Franchise Identity Archetypes** ✅ — `computeFranchiseIdentity()` in `lib/services/franchise-identity.ts`; `FranchiseIdentityChip.tsx` in matchup page Z2; requires ≥4 scored weeks; no schema change
+     - **LL-014: Opening Day Card** ✅ — `OpeningDayCard.tsx` in `app/team/[teamId]/matchup/page.tsx`; Week 1 only (`activePeriod.number === 1`); localStorage dismiss keyed on `leagueId + season`
+     - **LL-015: Championship Banner** ✅ — `ChampionshipBanner.tsx` in matchup page; triggered by unread `CHAMPIONSHIP_WON` notification; dismiss calls `markAllRead()`
+     - **UX-058: Trade Proposal 4-Step Guided Experience** ✅ — 4-step state machine in `ProposeTrade.tsx`; Step 0 pick partner, Step 1 give, Step 2 receive, Step 3 review; same `POST /trades` endpoint
+     - **BF-020: Auto-Draft Position Balance** ✅ — Tier 1b (defenders filling open D slots) added in `bestAvailablePlayerIds()` in `lib/draft/server.ts`
+   - **Beta Defect Sweep — Sprint 26** ✅ (BF-024 and BF-027 shipped by parallel agents):
+     - **BF-024** ✅ — `/team/[teamId]/transactions` renders `TransactionFeed` inside team layout; no league-layout redirect
+     - **BF-027** ✅ — LEAGUE_STORYLINE raw enum regression resolved; all `getLeagueActivity()` paths now emit human-readable descriptions
+   - **Polish & The Arena Concourse — Sprint 27** ✅ (11/11 items shipped; Jun 24, 2026):
+     - **BF-022** ✅ — `BottomNav` hidden on desktop; `className="bottom-nav"` added to `<nav>` in `components/BottomNav.tsx`; inline `display: "flex"` override removed
+     - **BF-023** ✅ — `processWaivers()` in `lib/services/waiver-service.ts` emits both `WAIVER_CLAIM_AWARDED` and `PLAYER_ADD` events so waiver-awarded adds appear in transaction history
+     - **BF-025** ✅ — Trade UI position filter investigated; new `ProposeTrade.tsx` 4-step wizard has no position filter; old bug confirmed resolved without code change
+     - **BF-026** ✅ — Standings playoff cutoff contrast improved to WCAG AA (5.5:1) in `app/league/[leagueId]/standings/page.tsx`; `chip-out` color `#94a3b8`; dashed border opacity 0.55; footer uses `var(--dim)`
+     - **BF-028** ✅ — Commissioner dashboard now surfaces `PENDING_REVIEW` trade count as action item; `app/dashboard/page.tsx` queries `prisma.trade.groupBy`
+     - **LL-024** ✅ — New `app/league/[leagueId]/how-it-works/page.tsx` server component; 6 sections: VP explained, FP scoring (live from league settings), roster slots, stat glossary (15 abbreviations), waiver wire, trades; "How it works" nav link in `app/league/[leagueId]/layout.tsx`
+     - **LL-022 Phase 1** ✅ — `components/StatTooltip.tsx` (abbr element pattern); `title` prop on `SortTh` in `app/team/[teamId]/roster/RosterManager.tsx` for PPP/SOG/HIT/BLK/SV%/GA/SO/FP; `tooltip` field on `SKATER_COLS`/`GOALIE_COLS` in `app/draft/[leagueId]/DraftRoom.tsx`
+     - **LL-022 Phase 2** ✅ — "How it works →" anchor link added to standings page legend in `app/league/[leagueId]/standings/page.tsx`
+     - **VTF subtitle update** ✅ — league overview VTF subtitle updated to "Everyone races the same week — your rank is your result"
+     - **LL-016 (partial)** ✅ — Inline weekly top-scorer teaser after race table in commissioner overview; trophy leaderboard sidebar widget via `prisma.trophy.groupBy`; "Full record book →" link
+   - **Beta Sweep & Transactions Fix — Sprint 29** ✅ (6 items shipped; Jun 24, 2026):
+     - **S29-001: Rival improvements** ✅ — commit a90a50c; `getRival()` rewritten to pick closest-contested opponent by avg points-apart (≥2 scored weeks), tie-broken by most balanced W/L record; `RivalBadge` now shows "points apart" narrative copy + "Dead even." callout; rival chip + card moved to `/team/[teamId]/standings`; removed from matchup page Z4
+     - **BF-NEW: Transactions legacy guard cleanup** ✅ — removed `(prisma as any).leagueEvent` guard in `app/api/leagues/[leagueId]/waiver/route.ts` milestone-count query; replaced with direct `prisma.leagueEvent.count()` call; no silent failures in first-add milestone detection
+     - **TR-002: Silent trade expiry notification** ✅ — `processExpiredTrades()` in `lib/services/trade-service.ts` now passes `dedupeKey: \`trade-expired-${tradeId}\`` to `createNotification()`; idempotent delivery for expired trade notifications
+     - **TR-003: Trade PROPOSED→PENDING_REVIEW state machine** ✅ — added `PROPOSED → PENDING_REVIEW` transition for `"proposer"` and `"commissioner"` roles in `lib/trades/engine.ts`; `proposeTrade()` in `lib/services/trade-service.ts` always creates trade as `PROPOSED` first then auto-flips to `PENDING_REVIEW` in the same `$transaction` when `requireCommissionerTradeApproval = true`; 3 new tests in `tests/trade.test.ts`
+     - **OB-001: Start Your Franchise → /register** ✅ — verified `app/page.tsx` hero CTA and CTA Band already link to `/register`; no code change required
+     - **BF-021: DnD lineup mobile tap-to-swap** ✅ — `components/LineupDnD.tsx` adds tap-to-swap mode on mobile (≤640px): tap to select (purple ring), valid targets highlight, tap to swap via existing lineup API; cancel hint shown while selection is active; mobile hint text updated to "Tap a player to select, then tap another to swap positions"; DnD preserved on desktop
+   - **Track A Bug Sweep — Sprint 30** ✅ (2 items shipped; Jun 24, 2026):
+     - **BF-012: FA add stale-state fix** ✅ — `useEffect(() => { setRoster(initialRoster); }, [initialRoster])` added to `app/team/[teamId]/roster/RosterManager.tsx`; `useState(initialRoster)` alone does not re-sync when Next.js App Router delivers new props after `router.refresh()`; without the effect `isFull` is stale after a successful add, causing immediate follow-up adds to fire without a required drop
+     - **BF-013: Pre-season trades verified fixed** ✅ — fix shipped Sprint 18; `lib/services/trade-service.ts` blocks on `playoffStatus !== "NOT_STARTED"` only, allowing all pre-season states; roadmap docs updated to DONE
+   - **Track B: Morning Skate Newcomer Mode + Hub Reorg — Sprint 31** ✅ (5 items shipped; Jun 24, 2026):
+     - **LL-020: Inline acronym expansion** ✅ — `expand()` helper in `generateEdition()` in `lib/services/morning-skate-service.ts` rewrites FP/VP/PPP to "fantasy points (FP)" etc. on first use per edition; `EditionData.newHereUrl` field added; "New here? How it works →" link in edition masthead (`app/league/[leagueId]/morning-skate/[editionId]/page.tsx`)
+     - **LL-020: Team-scoped Morning Skate routes** ✅ — `app/team/[teamId]/morning-skate/page.tsx` and `[editionId]/page.tsx` redirect to league-scoped equivalents via `requireTeamOwner` + `redirect()`; `MorningSkatePreview` accepts `teamId?` prop and links to team-scoped URL when provided
+     - **LL-016: Matchup page Z0 consolidation** ✅ — two conditional `<MorningSkatePreview>` blocks (setup-phase only Z0 + always-on Z2.5) replaced with single unconditional Z0 with `teamId` prop in `app/team/[teamId]/matchup/page.tsx`
+     - **LL-016: Commissioner overview reorder** ✅ — left column in `app/league/[leagueId]/page.tsx` now: Morning Skate preview → commissioner action strip → race table; Morning Skate is always the first thing commissioners see
 7. Public launch ~early Nov, drafts ~1 week before opener
 
 ## Draft room UI (`app/draft/[leagueId]/`)
@@ -356,7 +430,7 @@ The trade system follows the same pure-engine + service-layer pattern as the dra
 **Trade deadline:** `proposeTrade` and `executeTrade` both block when `league.playoffStatus !== "NOT_STARTED"`.
 
 **Schema additions:**
-- `TradeStatus` enum (9 values: PROPOSED, COUNTERED, ACCEPTED, PENDING_REVIEW, EXECUTED, REVERSED, REJECTED, CANCELLED, EXPIRED)
+- `TradeStatus` enum (10 values: PROPOSED, COUNTERED, ACCEPTED, PENDING_REVIEW, EXECUTED, VETOED, REVERSED, REJECTED, CANCELLED, EXPIRED) — VETOED = killed during commissioner review (never executed); REVERSED = post-execution rollback by commissioner
 - `Trade` model (`leagueId`, `proposingTeamId`, `receivingTeamId`, `status`, `message?`, `counterOfId?`, `reviewEndsAt?`, `executedAt?`, `resolvedReason?`)
 - `TradeItem` model (`tradeId`, `fromTeamId`, `toTeamId`, `playerId`)
 - `tradeReviewHours Int @default(24)` on `FantasyLeague`
@@ -730,20 +804,24 @@ The URL space is split into two zones:
 
 - **`/team/[teamId]/`** — personal franchise pages. Only the team owner can access these.
   - `/team/[teamId]/matchup` — fantasy home: lineup alerts, score hero, playing tonight, swing players, roster breakdown
-  - `/team/[teamId]/lineup` — set active/bench slots with lock indicators and games-remaining badges
-  - `/team/[teamId]/roster` — personal roster + free agent listings (add/drop)
+  - `/team/[teamId]/roster` — combined lineup management (DnD, `LineupDnD.tsx`) + personal roster + free agent listings (add/drop). **`/team/[teamId]/lineup` redirects here** (Sprint 19).
   - `/team/[teamId]/schedule` — PWHL game schedule for this period, progress bar, per-game player counts
-- **`/league/[leagueId]/`** — communal league views. Any league member can access these.
-  - `/league/[leagueId]/` — overview (standings snapshot, next matchup, recent results)
-  - `/league/[leagueId]/standings` — full standings table (user's row highlighted)
+  - `/team/[teamId]/trades` — trade center (Incoming / Sent / League History tabs)
+  - `/team/[teamId]/trades/new` — propose a trade
+  - `/team/[teamId]/trades/[tradeId]` — trade detail
+  - `/team/[teamId]/bracket` — playoff bracket (team-layout version)
+  - `/team/[teamId]/transactions` — transaction log (team-layout version)
+- **`/league/[leagueId]/`** — commissioner-only views. Non-commissioners are redirected to `/team/[teamId]/matchup` (Sprint 19).
+  - `/league/[leagueId]/` — commissioner overview (playoff race, lineup status, announcements)
+  - `/league/[leagueId]/standings` — full standings table
   - `/league/[leagueId]/matchups` — full schedule with scored/upcoming matchups
-  - `/league/[leagueId]/bracket` — playoff bracket
-  - `/league/[leagueId]/roster` — all rosters across all teams ("All Rosters")
+  - `/league/[leagueId]/bracket` — playoff bracket (league-layout version)
+  - `/league/[leagueId]/roster` — all rosters across all teams ("All Rosters") — commissioner-only (Sprint 19)
   - `/league/[leagueId]/admin` — commissioner-only management panel
   - `/league/[leagueId]/season` — season period table + dev simulation controls
 
-The old `/league/[leagueId]/matchup` and `/league/[leagueId]/lineup` routes still exist as
-redirect stubs that look up the user's team and redirect to `/team/[teamId]/matchup` etc.
+The old `/league/[leagueId]/matchup`, `/league/[leagueId]/lineup`, `/league/[leagueId]/trades/*`
+routes exist as redirect stubs that look up the user's team and redirect to `/team/[teamId]/...`.
 
 The league layout header includes a "My Franchise →" shortcut that links to `/team/[teamId]/matchup`
 for the current user. The team layout includes a "← League" escape hatch.
@@ -789,7 +867,6 @@ The primary in-season landing page ("Fantasy Home"), team-scoped. No team picker
   the full matchup view model including `lineupAlerts`. Falls back to draft pick history when no
   `LeagueEvent` records exist.
 - `lib/services/activity.ts` — `getLeagueActivity(leagueId, limit, prisma)` and `emitEvent(...)`.
-  Uses `(prisma as any).leagueEvent` guards since the model requires `prisma db push` to activate.
 
 **`LeagueEvent` schema** (in `prisma/schema.prisma`):
 ```prisma
@@ -806,8 +883,7 @@ model LeagueEvent {
   @@index([leagueId, createdAt])
 }
 ```
-Run `npx prisma db push` after schema changes to activate. Until then, activity falls back
-gracefully to draft pick history.
+Run `npx prisma db push` after any schema change to activate new models/fields in the dev DB.
 
 **API:** `GET /api/leagues/[leagueId]/matchup-summary?team=<id>` — wraps `getDashboardData`.
 
@@ -980,25 +1056,28 @@ Commissioner-only page gated by `requireCommissioner`. Contains:
 
 **`/league/<id>` redirect rules** (`app/league/[leagueId]/page.tsx`):
 - Draft `IN_PROGRESS` → `/draft/<leagueId>?team=<teamId>`
-- All other states → renders the league overview (standings snapshot, recent results, next matchup)
+- Playoffs `IN_PROGRESS` → `/league/<leagueId>/bracket`
+- Non-commissioner (all other states) → `/team/<teamId>/matchup` (Sprint 19: league overview is commissioner-only)
+- Commissioner (all other states) → renders the commissioner overview
 
-The league overview is the communal hub — always reachable regardless of season state. The
-login flow handles landing users on their team page after sign-in; don't redirect from the
-overview itself or it becomes unreachable from the league nav. It has an "Admin panel →" link
-that only appears for commissioners.
+The league overview is now a **commissioner-only hub** (Sprint 19). Non-commissioner members are
+redirected to their franchise page. The commissioner overview shows the playoff race, per-team
+lineup status, announcements, and the commissioner action strip.
 
 ### League layout nav
 
 `app/league/[leagueId]/layout.tsx` is async and fetches the current user + league commissioner.
-Nav items shown to all members: Overview, Standings, Schedule, Bracket, Rosters.
+Nav items shown to members: Overview, Standings, Schedule, Bracket.
 "Admin" is appended only when `user.id === league.commissionerId`.
+"Rosters" (All Rosters) is commissioner-only in the league zone (Sprint 19); members use `/team/[teamId]/roster`.
 A "My Franchise →" button links to `/team/[myTeamId]/matchup` when the user has a team.
-Matchup, Lineup, and Roster are NOT in the league nav — they live in the team layout.
+Matchup, Lineup, Roster, Trades, Transactions, and Bracket also live in the team layout.
 
 The team layout (`app/team/[teamId]/layout.tsx`) renders a persistent tab bar via
-`TeamNav.tsx` (client component, uses `usePathname()` for active state). Tabs:
-**Matchup · Lineup · Rosters · Trades · Standings · Performance · Analysis** (conditionally + **Playoffs** when `playoffStatus !== "NOT_STARTED"`), plus a `"{leagueName} ↗"`
-escape hatch on the right. Active tab has white text + 2px indigo underline; inactive tabs are muted
+`TeamNav.tsx` (client component, uses `usePathname()` for active state). Tabs (Sprint 19):
+**Matchup · My Roster · Trades · Record · Analysis** (conditionally + **Playoffs** when `playoffStatus !== "NOT_STARTED"` + **Transactions**), plus a `"{leagueName} ↗"`
+escape hatch on the right. "Lineup" and "Free Agents" tabs were removed in Sprint 19 — lineup management
+is now on the roster page. Active tab has white text + 2px indigo underline; inactive tabs are muted
 gray. Standings links to `/league/[leagueId]/standings` since standings are league-scoped.
 
 ### Logout
@@ -1092,7 +1171,5 @@ the cookie is never read.
   before any DB queries. All pages under `app/team/[teamId]/` must call `requireAuth` +
   `requireTeamOwner`. All API routes under `app/api/leagues/[leagueId]/` must call the
   `apiRequire*` guards. Commissioner-only actions use `requireCommissioner` / `apiRequireCommissioner`.
-- Use `(prisma as any).leagueEvent` with a null-check guard for any code that queries `LeagueEvent`
-  until `prisma db push` + `prisma generate` has been run in the target environment.
 - **When updating CLAUDE.md** (build order, feature status, or sprint notes), keep these sibling files in sync:
   `docs/01-roadmap/roadmap-index.md`, `docs/01-roadmap/roadmap-features.md`, `docs/01-roadmap/roadmap-sprints.md`. The HTML dashboard (`docs/01-roadmap/roadmap-dashboard.html`) is the visual tracker and should be updated on the same cadence as the markdown files.

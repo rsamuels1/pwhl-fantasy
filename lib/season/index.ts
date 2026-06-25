@@ -23,8 +23,70 @@ import { parseScoringSettings } from "@/lib/scoring/settings";
 import { computeSeasonState, pendingWeeks, validateSeasonBoundary, type SeasonState } from "./lifecycle";
 import { startPlayoffs } from "@/lib/services/playoff-service";
 import { initializeWaiverPriority } from "@/lib/services/waiver-service";
-import { emitWeeklyStorylines } from "@/lib/services/storyline-service";
+import { emitWeeklyStorylines, emitWeeklyAwards } from "@/lib/services/storyline-service";
+import { emitMorningSkateEdition } from "@/lib/services/morning-skate-service";
 import { calculatePlayoffRounds, getPlayoffSettings } from "@/lib/playoffs/lifecycle";
+import { computeVpStandings } from "@/lib/scoring/vp";
+import { computeRace } from "@/lib/playoffs/seeding";
+import { emitEvent } from "@/lib/services/activity";
+
+// Detect teams that are newly clinched after a scoring pass and emit PLAYOFF_CLINCH events.
+// Idempotent: skips teams that already have a PLAYOFF_CLINCH event.
+async function emitClinchEvents(leagueId: string, week: number, prisma: PrismaClient): Promise<void> {
+  const league = await prisma.fantasyLeague.findUniqueOrThrow({
+    where: { id: leagueId },
+    select: { playoffSettings: true, playoffStatus: true },
+  });
+  if (league.playoffStatus !== "NOT_STARTED") return;
+
+  const ps = league.playoffSettings as { teamsInPlayoff?: number } | null;
+  const cutoff = ps?.teamsInPlayoff ?? null;
+  if (!cutoff) return;
+
+  const [teams, matchups] = await Promise.all([
+    prisma.fantasyTeam.findMany({ where: { leagueId }, select: { id: true, name: true, ownerId: true } }),
+    prisma.matchup.findMany({ where: { leagueId } }),
+  ]);
+
+  const vpRows = computeVpStandings(teams, matchups.map((m) => ({
+    homeTeamId: m.homeTeamId, awayTeamId: m.awayTeamId,
+    homeScore: m.homeScore, awayScore: m.awayScore,
+    homeVP: m.homeVP, awayVP: m.awayVP,
+    isPlayoff: m.isPlayoff, week: m.week,
+  })));
+  const standings = vpRows.map((s) => ({
+    fantasyTeamId: s.fantasyTeamId,
+    teamName: s.teamName,
+    points: s.totalVP,
+    wins: s.wins,
+    losses: s.losses,
+    ties: s.ties,
+    pointsFor: s.pointsFor,
+    pointsAgainst: 0,
+  }));
+  const raceMap = computeRace(standings, matchups, cutoff);
+
+  // Find teams that are clinched but don't yet have a PLAYOFF_CLINCH event.
+  const existingClinches = await prisma.leagueEvent.findMany({
+    where: { leagueId, type: "PLAYOFF_CLINCH" },
+    select: { teamId: true },
+  });
+  const alreadyClinched = new Set(existingClinches.map((e) => e.teamId).filter(Boolean));
+
+  let seed = 0;
+  for (const s of standings) {
+    seed++;
+    const info = raceMap.get(s.fantasyTeamId);
+    if (info?.status !== "clinched") continue;
+    if (alreadyClinched.has(s.fantasyTeamId)) continue;
+    void emitEvent({
+      leagueId,
+      teamId: s.fantasyTeamId,
+      type: "PLAYOFF_CLINCH",
+      data: { seed, clinchWeek: week, teamName: s.teamName },
+    }, prisma).catch(() => {});
+  }
+}
 
 // Load everything needed for the lifecycle engine from the DB, then run the pure engine.
 export async function getSeasonState(
@@ -175,8 +237,11 @@ export async function advanceSeason(
       await scoreVtfWeek(leagueId, period.week, period, prisma);
     }
     scoredWeeks.push(period.week);
-    // Emit storylines after scoring — fire-and-forget, never blocks the advance.
+    // Emit storylines, awards, and clinch events — fire-and-forget, never blocks the advance.
     void emitWeeklyStorylines(leagueId, period.week, period.startsAt, period.endsAt, prisma).catch(() => {});
+    void emitWeeklyAwards(leagueId, period.week, period.startsAt, period.endsAt, prisma).catch(() => {});
+    void emitClinchEvents(leagueId, period.week, prisma).catch(() => {});
+    void emitMorningSkateEdition(leagueId, `week-${period.week}`, prisma).catch(() => {});
   }
 
   let playoffError: string | undefined;

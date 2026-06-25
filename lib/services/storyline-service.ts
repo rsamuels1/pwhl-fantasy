@@ -7,6 +7,7 @@ import { scoreStatLine } from "@/lib/scoring";
 import { parseScoringSettings } from "@/lib/scoring/settings";
 import type { ScoringSettings } from "@/lib/scoring";
 import { emitEvent } from "@/lib/services/activity";
+import { projectTeamRemainingScore } from "@/lib/projections";
 
 export type StorylineKind = "closest_match" | "high_score" | "player_standout";
 
@@ -208,9 +209,6 @@ export async function emitWeeklyStorylines(
   prisma: PrismaClient
 ): Promise<void> {
   try {
-    const leagueEventModel = (prisma as unknown as Record<string, unknown>).leagueEvent;
-    if (!leagueEventModel) return; // LeagueEvent table not yet available
-
     const league = await prisma.fantasyLeague.findUnique({
       where: { id: leagueId },
       select: { scoringSettings: true, season: true },
@@ -289,9 +287,7 @@ export async function emitWeeklyStorylines(
 
     // Emit each storyline idempotently (skip if already exists for week + kind)
     for (const storyline of storylines) {
-      const existing = await (leagueEventModel as {
-        findFirst: (args: unknown) => Promise<unknown>;
-      }).findFirst({
+      const existing = await prisma.leagueEvent.findFirst({
         where: {
           leagueId,
           type: "LEAGUE_STORYLINE",
@@ -323,5 +319,224 @@ export async function emitWeeklyStorylines(
     }
   } catch (err) {
     console.error("[storyline] emitWeeklyStorylines failed:", err);
+  }
+}
+
+// ── Weekly Awards ─────────────────────────────────────────────────────────────
+
+export type AwardType =
+  | "ice_cold_closer"
+  | "heater"
+  | "heartbreaker"
+  | "collapse"
+  | "frozen_stick";
+
+export interface WeeklyAward {
+  awardType: AwardType;
+  teamId: string;
+  teamName: string;
+  /** Numeric signal: actual score for closer/stick/heartbreaker; delta FP for heater/collapse. */
+  value: number;
+}
+
+/**
+ * Pure computation (no IO) — derive awards from pre-fetched scores and projections.
+ * Returns up to 5 awards (one per type). Skips any where data is insufficient.
+ *
+ * @param matchups    Scored matchup rows for the week (homeScore/awayScore not null)
+ * @param teamNames   Map<teamId, teamName> for all teams
+ * @param projected   Map<teamId, projectedScore> at period start (used for heater/collapse)
+ * @param isVpMode    Whether this league uses 1v1 VP matchups (heartbreaker needs a defined loser)
+ */
+export function computeWeeklyAwards(
+  matchups: MatchupRow[],
+  teamNames: Map<string, string>,
+  projected: Map<string, number>,
+  isVpMode: boolean
+): WeeklyAward[] {
+  const awards: WeeklyAward[] = [];
+
+  const scored = matchups.filter(
+    (m) => m.homeScore !== null && m.awayScore !== null
+  );
+  if (scored.length === 0) return awards;
+
+  // Flatten to per-team actual scores (deduplicate: same team can appear home + away in VTF)
+  const teamScores = new Map<string, number>();
+  for (const m of scored) {
+    teamScores.set(m.homeTeam.id, m.homeScore!);
+    teamScores.set(m.awayTeam.id, m.awayScore!);
+  }
+
+  const teamEntries = [...teamScores.entries()];
+
+  // 🏆 Ice-Cold Closer — highest score
+  let closerEntry: [string, number] | null = null;
+  for (const e of teamEntries) {
+    if (!closerEntry || e[1] > closerEntry[1]) closerEntry = e;
+  }
+  if (closerEntry) {
+    const name = teamNames.get(closerEntry[0]);
+    if (name) awards.push({ awardType: "ice_cold_closer", teamId: closerEntry[0], teamName: name, value: closerEntry[1] });
+  }
+
+  // 🧊 Frozen Stick — lowest score
+  let stickEntry: [string, number] | null = null;
+  for (const e of teamEntries) {
+    if (!stickEntry || e[1] < stickEntry[1]) stickEntry = e;
+  }
+  if (stickEntry) {
+    const name = teamNames.get(stickEntry[0]);
+    if (name) awards.push({ awardType: "frozen_stick", teamId: stickEntry[0], teamName: name, value: stickEntry[1] });
+  }
+
+  // 💀 Heartbreaker — highest score among teams who LOST (VP 1v1 mode only)
+  if (isVpMode) {
+    let heartEntry: { teamId: string; score: number } | null = null;
+    for (const m of scored) {
+      const homeWon = m.homeScore! >= m.awayScore!;
+      const [loserId, loserScore] = homeWon
+        ? [m.awayTeam.id, m.awayScore!]
+        : [m.homeTeam.id, m.homeScore!];
+      if (!heartEntry || loserScore > heartEntry.score) {
+        heartEntry = { teamId: loserId, score: loserScore };
+      }
+    }
+    if (heartEntry) {
+      const name = teamNames.get(heartEntry.teamId);
+      if (name) awards.push({ awardType: "heartbreaker", teamId: heartEntry.teamId, teamName: name, value: heartEntry.score });
+    }
+  }
+
+  // 🔥 Heater — biggest positive delta (actual - projected)
+  if (projected.size > 0) {
+    let heaterEntry: { teamId: string; delta: number } | null = null;
+    for (const [teamId, actual] of teamScores) {
+      const proj = projected.get(teamId);
+      if (proj === undefined) continue;
+      const delta = actual - proj;
+      if (delta > 0 && (!heaterEntry || delta > heaterEntry.delta)) {
+        heaterEntry = { teamId, delta };
+      }
+    }
+    if (heaterEntry) {
+      const name = teamNames.get(heaterEntry.teamId);
+      if (name) awards.push({ awardType: "heater", teamId: heaterEntry.teamId, teamName: name, value: heaterEntry.delta });
+    }
+
+    // 📉 Collapse — biggest negative delta
+    let collapseEntry: { teamId: string; delta: number } | null = null;
+    for (const [teamId, actual] of teamScores) {
+      const proj = projected.get(teamId);
+      if (proj === undefined) continue;
+      const delta = actual - proj;
+      if (delta < 0 && (!collapseEntry || delta < collapseEntry.delta)) {
+        collapseEntry = { teamId, delta };
+      }
+    }
+    if (collapseEntry) {
+      const name = teamNames.get(collapseEntry.teamId);
+      if (name) awards.push({ awardType: "collapse", teamId: collapseEntry.teamId, teamName: name, value: collapseEntry.delta });
+    }
+  }
+
+  return awards;
+}
+
+/**
+ * IO layer: fetches data, calls computeWeeklyAwards, emits events idempotently.
+ * Fire-and-forget safe — catches all errors internally.
+ */
+export async function emitWeeklyAwards(
+  leagueId: string,
+  week: number,
+  periodStart: Date,
+  periodEnd: Date,
+  prisma: PrismaClient
+): Promise<void> {
+  try {
+    const league = await prisma.fantasyLeague.findUnique({
+      where: { id: leagueId },
+      select: { scoringSettings: true, scoringMode: true },
+    });
+    if (!league) return;
+
+    const scoringSettings = parseScoringSettings(league.scoringSettings);
+    const isVpMode = (league.scoringMode ?? "VTF") === "VP";
+
+    const [matchups, allTeams] = await Promise.all([
+      prisma.matchup.findMany({
+        where: { leagueId, week, isPlayoff: false, homeScore: { not: null } },
+        select: {
+          homeScore: true,
+          awayScore: true,
+          homeTeam: { select: { id: true, name: true } },
+          awayTeam: { select: { id: true, name: true } },
+        },
+      }),
+      prisma.fantasyTeam.findMany({
+        where: { leagueId },
+        select: { id: true, name: true },
+      }),
+    ]);
+
+    const teamNames = new Map(allTeams.map((t) => [t.id, t.name]));
+
+    // Compute projections at period START for each team (earnedSoFar=0, nowMs=start+1ms).
+    // This gives "what did we expect before any games played."
+    const period = { week, startsAt: periodStart, endsAt: periodEnd };
+    const projectedEntries = await Promise.all(
+      allTeams.map(async (t) => {
+        const proj = await projectTeamRemainingScore(
+          t.id, 0, period, scoringSettings, prisma,
+          periodStart.getTime() + 1
+        );
+        return [t.id, proj] as [string, number];
+      })
+    );
+    const projected = new Map(projectedEntries);
+
+    const awards = computeWeeklyAwards(
+      matchups as MatchupRow[],
+      teamNames,
+      projected,
+      isVpMode
+    );
+
+    for (const award of awards) {
+      // Idempotency: skip if this award type was already emitted for this week.
+      const existing = await prisma.leagueEvent.findFirst({
+        where: {
+          leagueId,
+          type: "LEAGUE_STORYLINE",
+          AND: [
+            { data: { path: ["week"], equals: week } },
+            { data: { path: ["awardType"], equals: award.awardType } },
+            { data: { path: ["isAward"], equals: true } },
+          ],
+        },
+      });
+      if (existing) continue;
+
+      await emitEvent(
+        {
+          leagueId,
+          teamId: award.teamId,
+          type: "LEAGUE_STORYLINE",
+          data: {
+            week,
+            kind: award.awardType,
+            awardType: award.awardType,
+            isAward: true,
+            teamId: award.teamId,
+            teamName: award.teamName,
+            value: award.value,
+          },
+        },
+        prisma
+      );
+    }
+  } catch (err) {
+    console.error("[storyline] emitWeeklyAwards failed:", err);
   }
 }

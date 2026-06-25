@@ -12,6 +12,10 @@
     {
       "path": "/api/cron/advance-beta-seasons",
       "schedule": "0 9 * * *"
+    },
+    {
+      "path": "/api/cron/sync-rosters",
+      "schedule": "0 10 * * 1"
     }
   ]
 }

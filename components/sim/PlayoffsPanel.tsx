@@ -47,11 +47,11 @@ export default function PlayoffsPanel({ leagueId, currentRound = 1, totalRounds 
         textAlign: "center",
       }}
     >
-      <h2 style={{ fontSize: 28, fontWeight: 700, marginTop: 0, marginBottom: 16, color: "#e2e8f0" }}>
+      <h2 style={{ fontSize: 28, fontWeight: 700, marginTop: 0, marginBottom: 16, color: "var(--text)" }}>
         🏆 Playoffs In Progress
       </h2>
 
-      <p style={{ fontSize: 15, color: "#94a3b8", marginBottom: 24 }}>
+      <p style={{ fontSize: 15, color: "var(--dim)", marginBottom: 24 }}>
         {isAllScored
           ? "The playoff tournament is complete!"
           : `Round ${currentRound} of ${totalRounds} — score the matchups to advance.`}
@@ -71,7 +71,7 @@ export default function PlayoffsPanel({ leagueId, currentRound = 1, totalRounds 
             style={{
               padding: "12px 28px",
               background: isScoring ? "#666666" : "#10b981",
-              color: "#fff",
+              color: "var(--accent-ink)",
               border: "none",
               borderRadius: 8,
               fontSize: 15,
@@ -93,7 +93,7 @@ export default function PlayoffsPanel({ leagueId, currentRound = 1, totalRounds 
             display: "inline-block",
             padding: "12px 28px",
             background: "#d97706",
-            color: "#fff",
+            color: "var(--accent-ink)",
             borderRadius: 8,
             fontSize: 15,
             fontWeight: 700,

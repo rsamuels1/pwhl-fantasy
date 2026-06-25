@@ -17,10 +17,15 @@ export default async function TeamLayout({ children, params }: TeamLayoutProps) 
   const team = await requireTeamOwner(teamId, user.id);
 
   // Fetch betaStatus and league status (for TeamNav "Draft Queue" tab and beta banner).
-  const leagueExtra = await prisma.fantasyLeague.findUnique({
-    where: { id: team.league.id },
-    select: { betaStatus: true, status: true },
-  });
+  // trophyCount has a fallback of 0 in case the Trophy table hasn't been migrated yet
+  // (graceful degradation — the Trophy Cabinet tab simply won't appear).
+  const [leagueExtra, trophyCount] = await Promise.all([
+    prisma.fantasyLeague.findUnique({
+      where: { id: team.league.id },
+      select: { betaStatus: true, status: true },
+    }),
+    prisma.trophy.count({ where: { teamId } }).catch(() => 0),
+  ]);
 
   // Lightweight matchup context: find current week's matchup, falling back to playoff matchup
   const currentMatchup = await prisma.matchup.findFirst({
@@ -46,7 +51,7 @@ export default async function TeamLayout({ children, params }: TeamLayoutProps) 
       });
 
   return (
-    <div style={{ minHeight: "100vh", background: "#0f1117", color: "#e2e8f0" }}>
+    <div style={{ minHeight: "100vh", background: "#0f1117", color: "var(--text)" }}>
       <div style={{ maxWidth: 1200, margin: "0 auto", padding: "20px 16px 0" }}>
         <header style={{ marginBottom: 16, display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
           <h1 style={{ fontSize: 20, fontWeight: 700, margin: 0 }}>{team.name}</h1>
@@ -55,9 +60,9 @@ export default async function TeamLayout({ children, params }: TeamLayoutProps) 
               href={`/team/${teamId}/matchup`}
               style={{
                 fontSize: 12, padding: "3px 10px", borderRadius: 20,
-                background: "rgba(99,102,241,0.1)",
-                border: "1px solid rgba(99,102,241,0.25)",
-                color: "#a5b4fc", textDecoration: "none", fontWeight: 600,
+                background: "rgba(143,193,232,0.1)",
+                border: "1px solid rgba(143,193,232,0.25)",
+                color: "var(--accent-strong)", textDecoration: "none", fontWeight: 600,
                 flexShrink: 0,
               }}
             >
@@ -86,6 +91,7 @@ export default async function TeamLayout({ children, params }: TeamLayoutProps) 
           leagueName={team.league.name}
           playoffStatus={team.league.playoffStatus ?? "NOT_STARTED"}
           leagueStatus={leagueExtra?.status ?? undefined}
+          hasTrophies={trophyCount > 0}
         />
 
 

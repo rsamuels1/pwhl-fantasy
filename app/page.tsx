@@ -22,22 +22,22 @@ export default async function Home() {
           <span style={{
             display: "inline-flex", alignItems: "center", gap: 8,
             fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase" as const,
-            color: "#c9b6ff", background: "rgba(124,58,237,0.14)",
-            border: "1px solid rgba(124,58,237,0.30)", borderRadius: 30, padding: "7px 14px",
+            color: "var(--accent-strong)", background: "rgba(143,193,232,0.14)",
+            border: "1px solid rgba(143,193,232,0.30)", borderRadius: 30, padding: "7px 14px",
           }}>
-            <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#a78bfa", flexShrink: 0 }} />
+            <span style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--accent-strong)", flexShrink: 0 }} />
             Fantasy hockey for the PWHL
           </span>
 
           <h1 style={{
             fontSize: 64, lineHeight: 0.98, fontWeight: 900,
-            letterSpacing: "-0.03em", margin: "22px 0 0", color: "#f6f7fb",
+            letterSpacing: "-0.03em", margin: "22px 0 0", color: "var(--text)",
           }}>
             Think Like<br />a GM.
           </h1>
 
           <p style={{
-            fontSize: 17, lineHeight: 1.6, color: "#aab2c8",
+            fontSize: 17, lineHeight: 1.6, color: "var(--muted)",
             maxWidth: 480, margin: "20px 0 0",
           }}>
             Draft real PWHL players, set your lineup each week, and outscore every other team.
@@ -46,7 +46,7 @@ export default async function Home() {
 
           <div style={{ display: "flex", gap: 13, alignItems: "center", marginTop: 30, flexWrap: "wrap" as const }}>
             <Link href="/register" style={{
-              background: "linear-gradient(135deg,#7c3aed,#6d28d9)", color: "#fff",
+              background: "linear-gradient(135deg,var(--accent),var(--accent-deep))", color: "var(--accent-ink)",
               padding: "14px 24px", borderRadius: 11, fontSize: 15, fontWeight: 700,
               display: "inline-flex", alignItems: "center", gap: 9, textDecoration: "none",
             }}>
@@ -56,30 +56,33 @@ export default async function Home() {
               </svg>
             </Link>
             <Link href="/join-league" style={{
-              background: "rgba(150,160,200,0.06)", border: "1px solid rgba(150,160,200,0.18)",
-              color: "#e7eaf3", padding: "14px 22px", borderRadius: 11, fontSize: 15,
+              background: "var(--bg-raised)", border: "1px solid var(--border)",
+              color: "var(--text)", padding: "14px 22px", borderRadius: 11, fontSize: 15,
               fontWeight: 600, display: "inline-flex", alignItems: "center", gap: 9, textDecoration: "none",
             }}>
               Join a league
             </Link>
           </div>
 
-          <div style={{ display: "flex", alignItems: "center", gap: 18, marginTop: 26, fontSize: 12.5, color: "#6f788e" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 18, marginTop: 26, fontSize: 12.5, color: "var(--faint)" }}>
             <span style={{ display: "inline-flex", alignItems: "center", gap: 7 }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5fa98c" strokeWidth="2.5"><path d="M20 6 9 17l-5-5" /></svg>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--green)" strokeWidth="2.5"><path d="M20 6 9 17l-5-5" /></svg>
               Free to play
             </span>
             <span style={{ display: "inline-flex", alignItems: "center", gap: 7 }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5fa98c" strokeWidth="2.5"><path d="M20 6 9 17l-5-5" /></svg>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--green)" strokeWidth="2.5"><path d="M20 6 9 17l-5-5" /></svg>
               No gambling, pure strategy
             </span>
           </div>
 
-          <p style={{ marginTop: 18, fontSize: 12, color: "#475569" }}>
+          <p style={{ marginTop: 18, fontSize: 12, color: "var(--faint)" }}>
             Want to try it alone first?{" "}
-            <Link href="/create-league?replay=1" style={{ color: "#818cf8", textDecoration: "none" }}>
+            <Link href="/create-league?replay=1" style={{ color: "var(--accent)", textDecoration: "none" }}>
               Replay a past PWHL season →
             </Link>
+            <span style={{ display: "block", marginTop: 3, fontSize: 11, color: "var(--dim)" }}>
+              Real stats, real players — no commitment needed.
+            </span>
           </p>
         </div>
 
@@ -87,42 +90,42 @@ export default async function Home() {
         <div style={{ position: "relative" }}>
           <div style={{
             position: "absolute", inset: "-30px -30px -30px -10px",
-            background: "radial-gradient(420px 360px at 70% 30%,rgba(124,58,237,0.22),transparent 70%)",
+            background: "radial-gradient(420px 360px at 70% 30%,rgba(143,193,232,0.22),transparent 70%)",
             filter: "blur(8px)",
           }} />
           <div style={{
             position: "relative",
-            background: "linear-gradient(160deg,#121829,#0e1322)",
-            border: "1px solid rgba(150,160,200,0.14)", borderRadius: 18,
+            background: "linear-gradient(160deg,var(--card),var(--bg))",
+            border: "1px solid var(--border)", borderRadius: 18,
             padding: 16, boxShadow: "0 40px 90px -40px rgba(0,0,0,0.8)",
           }}>
             {/* Card header */}
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "4px 6px 13px" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase" as const, color: "#a78bfa" }}>Your Matchup</span>
-                <span style={{ fontSize: 10, fontWeight: 600, color: "#c9b6ff", display: "inline-flex", alignItems: "center", gap: 5 }}>
-                  <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#a78bfa" }} />Live
+                <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase" as const, color: "var(--accent-strong)" }}>Your Matchup</span>
+                <span style={{ fontSize: 10, fontWeight: 600, color: "var(--accent-strong)", display: "inline-flex", alignItems: "center", gap: 5 }}>
+                  <span style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--accent-strong)" }} />Live
                 </span>
               </div>
-              <span style={{ fontSize: 10.5, color: "#6f788e" }}>Week 7</span>
+              <span style={{ fontSize: 10.5, color: "var(--faint)" }}>Week 7</span>
             </div>
 
             {/* Scores */}
             <div style={{
-              background: "linear-gradient(135deg,#1b1346 0%,#121829 70%)",
-              border: "1px solid rgba(124,58,237,0.30)", borderRadius: 14, padding: "18px 20px",
+              background: "linear-gradient(150deg,#1d2533,#191d25)",
+              border: "1px solid rgba(143,193,232,0.30)", borderRadius: 14, padding: "18px 20px",
             }}>
               <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", gap: 14, alignItems: "center" }}>
                 <div style={{ textAlign: "center" }}>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: "#f3f5fb", marginBottom: 7 }}>Northwind</div>
-                  <div className="font-stats" style={{ fontSize: 46, fontWeight: 700, lineHeight: 0.8, color: "#f3f5fb" }}>48.2</div>
-                  <div style={{ fontSize: 10.5, color: "#7fc2a6", marginTop: 6, fontWeight: 600 }}>52% win</div>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text)", marginBottom: 7 }}>Northwind</div>
+                  <div className="font-stats" style={{ fontSize: 46, fontWeight: 700, lineHeight: 0.8, color: "var(--text)" }}>48.2</div>
+                  <div style={{ fontSize: 10.5, color: "var(--green)", marginTop: 6, fontWeight: 600 }}>52% win</div>
                 </div>
-                <div style={{ fontSize: 11, color: "#6f788e", fontWeight: 600, letterSpacing: "0.08em" }}>VS</div>
+                <div style={{ fontSize: 11, color: "var(--faint)", fontWeight: 600, letterSpacing: "0.08em" }}>VS</div>
                 <div style={{ textAlign: "center" }}>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: "#e7eaf3", marginBottom: 7 }}>Granite City</div>
-                  <div className="font-stats" style={{ fontSize: 46, fontWeight: 700, lineHeight: 0.8, color: "#c7d2e0" }}>44.8</div>
-                  <div style={{ fontSize: 10.5, color: "#8b93a7", marginTop: 6, fontWeight: 600 }}>48% win</div>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text)", marginBottom: 7 }}>Granite City</div>
+                  <div className="font-stats" style={{ fontSize: 46, fontWeight: 700, lineHeight: 0.8, color: "var(--muted)" }}>44.8</div>
+                  <div style={{ fontSize: 10.5, color: "var(--dim)", marginTop: 6, fontWeight: 600 }}>48% win</div>
                 </div>
               </div>
             </div>
@@ -130,27 +133,27 @@ export default async function Home() {
             {/* Mini standings */}
             <div style={{
               marginTop: 12, background: "rgba(150,160,200,0.04)",
-              border: "1px solid rgba(150,160,200,0.10)", borderRadius: 12, padding: "13px 15px",
+              border: "1px solid var(--border)", borderRadius: 12, padding: "13px 15px",
             }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 9, marginBottom: 11 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
-                  <span style={{ width: 3, height: 13, borderRadius: 2, background: "linear-gradient(#a78bfa,#6d28d9)", flexShrink: 0 }} />
-                  <span style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase" as const, color: "#c7d2e0" }}>Standings</span>
+                  <span style={{ width: 3, height: 13, borderRadius: 2, background: "linear-gradient(var(--accent-strong),var(--accent-deep))", flexShrink: 0 }} />
+                  <span style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase" as const, color: "var(--muted)" }}>Standings</span>
                 </div>
-                <abbr title="Victory Points: 2 for a weekly win, +2 for highest score, +1 for second. How you climb the standings." style={{ fontSize: 10, fontWeight: 700, color: "#6f788e", textDecoration: "underline dotted", cursor: "help", letterSpacing: "0.1em" }}>
-                  VP
+                <abbr title="Victory Points: 2 for a weekly win, +2 for highest score, +1 for second. How you climb the standings." style={{ fontSize: 10, fontWeight: 700, color: "var(--faint)", textDecoration: "underline dotted", cursor: "help", letterSpacing: "0.1em" }}>
+                  Victory Pts
                 </abbr>
               </div>
               {MINI_STANDINGS.map((r) => (
                 <div key={r.name} style={{
                   display: "grid", gridTemplateColumns: "20px 1fr 44px",
                   alignItems: "center", gap: 10, padding: "7px 9px", borderRadius: 8, marginBottom: 3,
-                  background: r.you ? "rgba(124,58,237,0.12)" : "transparent",
-                  border: r.you ? "1px solid rgba(124,58,237,0.28)" : "1px solid transparent",
+                  background: r.you ? "rgba(143,193,232,0.12)" : "transparent",
+                  border: r.you ? "1px solid rgba(143,193,232,0.28)" : "1px solid transparent",
                 }}>
-                  <span className="font-stats" style={{ fontSize: 13, fontWeight: 600, color: r.you ? "#c9b6ff" : "#6f788e" }}>{r.rank}</span>
-                  <span style={{ fontSize: 12, fontWeight: 600, color: r.you ? "#f3f5fb" : "#dfe3ee" }}>{r.name}</span>
-                  <span className="font-stats" style={{ textAlign: "right", fontSize: 15, fontWeight: 700, color: r.you ? "#c9b6ff" : "#c7d2e0" }}>{r.vp}</span>
+                  <span className="font-stats" style={{ fontSize: 13, fontWeight: 600, color: r.you ? "var(--accent-strong)" : "var(--faint)" }}>{r.rank}</span>
+                  <span style={{ fontSize: 12, fontWeight: 600, color: r.you ? "var(--text)" : "var(--muted)" }}>{r.name}</span>
+                  <span className="font-stats" style={{ textAlign: "right", fontSize: 15, fontWeight: 700, color: r.you ? "var(--accent-strong)" : "var(--muted)" }}>{r.vp}</span>
                 </div>
               ))}
             </div>
@@ -163,16 +166,16 @@ export default async function Home() {
         <div style={{
           display: "flex", alignItems: "center", justifyContent: "space-between",
           gap: 24, flexWrap: "wrap" as const, padding: "20px 28px",
-          background: "rgba(150,160,200,0.04)", border: "1px solid rgba(150,160,200,0.10)", borderRadius: 16,
+          background: "rgba(150,160,200,0.04)", border: "1px solid var(--border)", borderRadius: 16,
         }}>
-          <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase" as const, color: "#6f788e" }}>
+          <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase" as const, color: "var(--faint)" }}>
             Strategy beats luck every time
           </span>
           <div style={{ display: "flex", gap: 40, flexWrap: "wrap" as const }}>
             {PILLARS.map((p) => (
               <div key={p.label}>
-                <div className="font-stats" style={{ fontSize: 26, fontWeight: 700, color: "#f3f5fb", lineHeight: 1 }}>{p.stat}</div>
-                <div style={{ fontSize: 11.5, color: "#8b93a7", marginTop: 4 }}>{p.label}</div>
+                <div className="font-stats" style={{ fontSize: 26, fontWeight: 700, color: "var(--text)", lineHeight: 1 }}>{p.stat}</div>
+                <div style={{ fontSize: 11.5, color: "var(--dim)", marginTop: 4 }}>{p.label}</div>
               </div>
             ))}
           </div>
@@ -183,23 +186,23 @@ export default async function Home() {
       <section style={{ maxWidth: 1240, margin: "0 auto", width: "100%", padding: "56px 36px 8px" }}>
         <div style={{ display: "flex", alignItems: "baseline", gap: 13, marginBottom: 8 }}>
           <span className="section-accent" />
-          <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase" as const, color: "#c7d2e0" }}>What you run</span>
+          <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase" as const, color: "var(--muted)" }}>What you run</span>
         </div>
-        <h2 style={{ fontSize: 34, fontWeight: 800, letterSpacing: "-0.02em", maxWidth: 620, lineHeight: 1.1, color: "#f3f5fb", margin: 0 }}>
+        <h2 style={{ fontSize: 34, fontWeight: 800, letterSpacing: "-0.02em", maxWidth: 620, lineHeight: 1.1, color: "var(--text)", margin: 0 }}>
           Every decision a real GM makes — in your hands.
         </h2>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 18, marginTop: 34 }}>
           {FEATURES.map((f) => (
-            <div key={f.title} style={{ background: "#121829", border: "1px solid rgba(150,160,200,0.10)", borderRadius: 16, padding: 24 }}>
+            <div key={f.title} style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 16, padding: 24 }}>
               <span style={{
                 display: "inline-flex", width: 42, height: 42, borderRadius: 11,
-                background: "rgba(124,58,237,0.12)", border: "1px solid rgba(124,58,237,0.24)",
-                alignItems: "center", justifyContent: "center", color: "#a78bfa",
+                background: "rgba(143,193,232,0.12)", border: "1px solid rgba(143,193,232,0.24)",
+                alignItems: "center", justifyContent: "center", color: "var(--accent-strong)",
               }}>
                 <f.Icon />
               </span>
-              <div style={{ fontSize: 16.5, fontWeight: 700, color: "#f3f5fb", marginTop: 16 }}>{f.title}</div>
-              <div style={{ fontSize: 13, color: "#9aa3bd", lineHeight: 1.6, marginTop: 8 }}>{f.body}</div>
+              <div style={{ fontSize: 16.5, fontWeight: 700, color: "var(--text)", marginTop: 16 }}>{f.title}</div>
+              <div style={{ fontSize: 13, color: "var(--dim)", lineHeight: 1.6, marginTop: 8 }}>{f.body}</div>
             </div>
           ))}
         </div>
@@ -209,21 +212,21 @@ export default async function Home() {
       <section style={{ maxWidth: 1240, margin: "0 auto", width: "100%", padding: "56px 36px 8px" }}>
         <div style={{ display: "flex", alignItems: "baseline", gap: 13, marginBottom: 8 }}>
           <span className="section-accent" />
-          <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase" as const, color: "#c7d2e0" }}>How it works</span>
+          <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase" as const, color: "var(--muted)" }}>How it works</span>
         </div>
-        <h2 style={{ fontSize: 34, fontWeight: 800, letterSpacing: "-0.02em", maxWidth: 620, lineHeight: 1.1, color: "#f3f5fb", margin: 0 }}>
+        <h2 style={{ fontSize: 34, fontWeight: 800, letterSpacing: "-0.02em", maxWidth: 620, lineHeight: 1.1, color: "var(--text)", margin: 0 }}>
           From draft night to a championship banner.
         </h2>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 18, marginTop: 34 }}>
           {STEPS.map((s) => (
             <div key={s.num} style={{
               position: "relative",
-              background: "linear-gradient(160deg,rgba(124,58,237,0.08),rgba(150,160,200,0.02))",
-              border: "1px solid rgba(150,160,200,0.12)", borderRadius: 16, padding: "26px 24px",
+              background: "linear-gradient(160deg,rgba(143,193,232,0.08),rgba(150,160,200,0.02))",
+              border: "1px solid var(--border)", borderRadius: 16, padding: "26px 24px",
             }}>
-              <div className="font-stats" style={{ fontSize: 40, fontWeight: 700, color: "rgba(167,139,250,0.45)", lineHeight: 0.8 }}>{s.num}</div>
-              <div style={{ fontSize: 17, fontWeight: 700, color: "#f3f5fb", marginTop: 14 }}>{s.title}</div>
-              <div style={{ fontSize: 13, color: "#9aa3bd", lineHeight: 1.6, marginTop: 8 }}>{s.body}</div>
+              <div className="font-stats" style={{ fontSize: 40, fontWeight: 700, color: "rgba(166,208,240,0.45)", lineHeight: 0.8 }}>{s.num}</div>
+              <div style={{ fontSize: 17, fontWeight: 700, color: "var(--text)", marginTop: 14 }}>{s.title}</div>
+              <div style={{ fontSize: 13, color: "var(--dim)", lineHeight: 1.6, marginTop: 8 }}>{s.body}</div>
             </div>
           ))}
         </div>
@@ -233,24 +236,24 @@ export default async function Home() {
       <section style={{ maxWidth: 1240, margin: "0 auto", width: "100%", padding: "60px 36px 70px" }}>
         <div style={{
           position: "relative", overflow: "hidden",
-          background: "linear-gradient(135deg,#1b1346 0%,#241657 50%,#121829 100%)",
-          border: "1px solid rgba(124,58,237,0.34)", borderRadius: 22,
+          background: "linear-gradient(150deg,#1e2735,#191d25)",
+          border: "1px solid rgba(143,193,232,0.34)", borderRadius: 22,
           padding: "54px 48px", textAlign: "center",
         }}>
           <div style={{
             position: "absolute", inset: 0,
-            background: "radial-gradient(600px 300px at 50% -20%,rgba(124,58,237,0.30),transparent 70%)",
+            background: "radial-gradient(600px 300px at 50% -20%,rgba(143,193,232,0.30),transparent 70%)",
           }} />
           <div style={{ position: "relative" }}>
             <h2 style={{ fontSize: 40, fontWeight: 900, letterSpacing: "-0.02em", lineHeight: 1.05, margin: 0 }}>
               Your franchise is waiting.
             </h2>
-            <p style={{ fontSize: 16, color: "#c5cadb", maxWidth: 460, margin: "14px auto 0", lineHeight: 1.6 }}>
+            <p style={{ fontSize: 16, color: "var(--muted)", maxWidth: 460, margin: "14px auto 0", lineHeight: 1.6 }}>
               Start a league with friends or join a public one. Draft tonight, compete all season.
             </p>
             <Link href="/register" style={{
               display: "inline-flex", alignItems: "center", gap: 9, marginTop: 28,
-              background: "linear-gradient(135deg,#7c3aed,#6d28d9)", color: "#fff",
+              background: "linear-gradient(135deg,var(--accent),var(--accent-deep))", color: "var(--accent-ink)",
               padding: "15px 28px", borderRadius: 12, fontSize: 15.5, fontWeight: 700, textDecoration: "none",
             }}>
               Start your franchise
@@ -258,24 +261,24 @@ export default async function Home() {
                 <path d="M5 12h14" /><path d="m13 6 6 6-6 6" />
               </svg>
             </Link>
-            <div style={{ fontSize: 12, color: "#8b93a7", marginTop: 16 }}>Free to play · Think Like a GM.</div>
+            <div style={{ fontSize: 12, color: "var(--dim)", marginTop: 16 }}>Free to play · Think Like a GM.</div>
           </div>
         </div>
       </section>
 
       {/* ── Footer ───────────────────────────────────────────────────────── */}
-      <footer style={{ borderTop: "1px solid rgba(150,160,200,0.10)" }}>
+      <footer style={{ borderTop: "1px solid var(--border)" }}>
         <div style={{
           maxWidth: 1240, margin: "0 auto", width: "100%",
           padding: "32px 36px",
           display: "flex", alignItems: "center", justifyContent: "space-between",
           gap: 24, flexWrap: "wrap" as const,
         }}>
-          <div style={{ fontSize: 12, color: "#6f788e", lineHeight: 1.5 }}>
+          <div style={{ fontSize: 12, color: "var(--faint)", lineHeight: 1.5 }}>
             PWHL General Manager · Think Like a GM.<br />
             Not affiliated with the PWHL. Fan-built fantasy product.
           </div>
-          <div style={{ display: "flex", gap: 26, fontSize: 12.5, color: "#8b93a7" }}>
+          <div style={{ display: "flex", gap: 26, fontSize: 12.5, color: "var(--dim)" }}>
             <Link href="/leagues" style={{ color: "inherit", textDecoration: "none" }}>Leagues</Link>
             <Link href="/login" style={{ color: "inherit", textDecoration: "none" }}>Sign in</Link>
             <Link href="/create-league" style={{ color: "inherit", textDecoration: "none" }}>Start a league</Link>

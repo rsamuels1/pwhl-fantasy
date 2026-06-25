@@ -1,11 +1,11 @@
 ---
 name: sprint18-plan
-description: Sprint 18 — all P0s complete (BLR-002 confirmed shipped, OPS-001/002/003 passed gates); one manual action pending (CRON_SECRET in Vercel before Jul 7); beta invites Jul 7, 2026
+description: Sprint 18 — ✅ COMPLETE Jun 23, 2026; 24 items across 5 tracks all shipped; BF-015/016/017 + BLR-003 ad-hoc Track E added; next BF-NNN: BF-018; beta invites Jul 7, 2026
 metadata:
   type: project
 ---
 
-Sprint 18 is IN PROGRESS as of Jun 22, 2026. Target: beta invites go out **Jul 7, 2026**.
+Sprint 18 is **COMPLETE** as of Jun 23, 2026. All 24 items shipped across 5 tracks. Beta invites Jul 7, 2026.
 All P0 stories are complete. 0 remaining P0 items.
 
 ## All P0s shipped
@@ -59,37 +59,22 @@ Report: `docs/04-operations/load-test-sprint-18.md`
 - **⚠ One manual action pending before Jul 7: set `CRON_SECRET` in Vercel production dashboard**
 Report: `docs/04-operations/ops-verification-sprint-18.md`
 
-## Remaining (P1 and below)
+## Track E — Ad-hoc beta fixes (Jun 22–23, all SHIPPED)
 
-**Track B — Sprint 13 carry-forwards (P1)**
-- UX-046 (S, P1): Season series block renders twice on matchup page
-- UX-047 (M, P1): Trade proposal has no trading-partner-first step
-- UX-048 (S, P1): Trade form search hint hidden below player list
-- OB-005 (S, P1): QuickDraftJoinForm on public home page
-- OB-006 (S, P1): Replay mode description only appears after clicking option
-- OB-007 (S, P1): Login page says "All 8 teams" (should be 12)
-- OB-009 (S, P1): Wizard rules step shows no FP values
+All discovered and shipped after primary tracks completed.
 
-**Track C — New bugs from live FeedbackSubmission**
-- BF-012 (M, P1): FA add confirms success but shows error modal (phantom error)
-- BF-013 (S, P1): Trades cannot be proposed between draft completion and season start
-- BF-014 (S, P2): VTF matchup schedule page confusing (SPEC NEEDED)
+**BF-015 ✅ SHIPPED** (commit f400b90) — UTIL slot false error on valid forward move; stale-closure bug in LineupManager.tsx multi-move batches
+**BF-016 ✅ SHIPPED** (commit 70cd536) — Activity feed raw LEAGUE_STORYLINE enum string; TYPE_META label added in lib/services/activity.ts
+**BF-017 ✅ SHIPPED** (commit 622ac9a) — Auto-set and bench-upgrade hint suggesting players with 0 games; null-coalescing fix in lib/lineup.ts
+**BLR-003 ✅ SHIPPED** (commit dfef7ef) — Expansion team teaser in beta welcome screen + draft room header; gated on isBetaMode
 
-**Track D**
-- OPS-004 (M, P1): Accessibility audit
-
-## Story ID state
+## Story ID state (as of Jun 23, 2026)
 - Next OB-NNN: OB-012
-- Next UX-NNN: UX-051
+- Next UX-NNN: UX-051 (Sprint 19)
 - Next AG-NNN: AG-010
-- Next BF-NNN: BF-015
+- Next BF-NNN: BF-018 (BF-015/016/017 all used in Sprint 18 Track E)
 - Next OPS-NNN: OPS-005
 
-**Why:** All 4 remaining P0 items (BLR-002, OPS-001, OPS-002, OPS-003) confirmed complete Jun 22, 2026.
-BLR-002 was already in the codebase — `BetaWelcomeStep` on line 220 was confirmed present.
-GATE-3 is CONDITIONAL because error monitoring and Neon PITR are not confirmed, and `CRON_SECRET`
-must be set manually in Vercel. This is non-blocking for beta invites.
+**Why:** Sprint 18 COMPLETE Jun 23, 2026. BF-015/016/017 and BLR-003 shipped as unplanned ad-hoc fixes (Track E). Sprint 19 is now current (Playwright UX walkthrough fixes). BF-018 is the first Sprint 19 bug ticket.
 
-**How to apply:** The one remaining action before beta is the CRON_SECRET manual set in Vercel production.
-The BLR-001 engineering risks (pickRandomWeeks hardcoded 20, computeSeasonState with 4 periods) should
-still be verified by the founder before the first beta draft.
+**How to apply:** Sprint 18 is done. Sprint 19 is the active sprint. All roadmap docs updated Jun 23: roadmap-features.md has new Sprint 18 Ad-hoc section; roadmap-sprints.md has Track E inside Sprint 18; CLAUDE.md build order has Sprint 18 bullet; shipped.html created with 135-item inventory.

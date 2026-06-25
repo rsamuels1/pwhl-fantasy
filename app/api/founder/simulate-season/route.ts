@@ -222,7 +222,7 @@ export async function POST(req: NextRequest) {
     await prisma.rosterEntry.deleteMany({ where: { fantasyTeam: { leagueId: prior.id } } });
     await prisma.draft.deleteMany({ where: { leagueId: prior.id } });
     await prisma.matchup.deleteMany({ where: { leagueId: prior.id } });
-    await (prisma as any).leagueEvent?.deleteMany({ where: { leagueId: prior.id } });
+    await prisma.leagueEvent.deleteMany({ where: { leagueId: prior.id } });
     await prisma.fantasyTeam.deleteMany({ where: { leagueId: prior.id } });
     await prisma.fantasyLeague.delete({ where: { id: prior.id } });
   }

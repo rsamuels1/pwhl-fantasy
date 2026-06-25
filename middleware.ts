@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const SESSION_COOKIE = "pwhl_user_email";
+const SESSION_COOKIE = "pwhl_session";
 const BETA_HOST = process.env.BETA_HOST ?? "fantasy.dykedb.org";
 
 export function middleware(req: NextRequest) {
@@ -20,9 +20,11 @@ export function middleware(req: NextRequest) {
       pathname === "/register" ||
       pathname === "/login" ||
       pathname.startsWith("/create-league") ||
+      pathname.startsWith("/invite") ||
       pathname.startsWith("/api/beta-signup") ||
       pathname.startsWith("/api/auth") ||
       pathname.startsWith("/api/leagues/create") ||
+      pathname.startsWith("/api/leagues/join") ||
       pathname.startsWith("/_next/") ||
       pathname.startsWith("/favicon");
 
@@ -54,8 +56,16 @@ export function middleware(req: NextRequest) {
     }
   }
 
-  // League + founder API routes — return 401 (except join, which allows unauthenticated invites)
-  if ((pathname.startsWith("/api/leagues/") && !pathname.startsWith("/api/leagues/join")) || pathname.startsWith("/api/founder/")) {
+  // League + founder API routes — return 401 (except join and create, which handle their own
+  // auth/identity logic and support both authenticated and unauthenticated callers)
+  if (
+    (
+      pathname.startsWith("/api/leagues/") &&
+      !pathname.startsWith("/api/leagues/join") &&
+      !pathname.startsWith("/api/leagues/create")
+    ) ||
+    pathname.startsWith("/api/founder/")
+  ) {
     if (!cookie) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }

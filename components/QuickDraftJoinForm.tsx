@@ -22,15 +22,15 @@ export default function QuickDraftJoinForm() {
   };
 
   return (
-    <section style={{ display: "grid", gap: 16, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(148,163,184,0.14)", borderRadius: 24, padding: 24 }}>
+    <section style={{ display: "grid", gap: 16, background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 24, padding: 24 }}>
       <div>
-        <p style={{ color: "#94a3b8", marginBottom: 8 }}>Quick draft join</p>
+        <p style={{ color: "var(--dim)", marginBottom: 8 }}>Quick draft join</p>
         <h2 style={{ margin: 0, fontSize: 22 }}>Open a draft room instantly</h2>
       </div>
 
       <form onSubmit={handleSubmit} style={{ display: "grid", gap: 12 }}>
         <div style={{ display: "grid", gap: 8 }}>
-          <label style={{ color: "#cbd5e1", fontSize: 14 }}>
+          <label style={{ color: "var(--muted)", fontSize: 14 }}>
             League ID
             <input
               value={leagueId}
@@ -39,7 +39,7 @@ export default function QuickDraftJoinForm() {
               style={inputStyle}
             />
           </label>
-          <label style={{ color: "#cbd5e1", fontSize: 14 }}>
+          <label style={{ color: "var(--muted)", fontSize: 14 }}>
             Team ID
             <input
               value={teamId}
@@ -63,9 +63,9 @@ export default function QuickDraftJoinForm() {
 const inputStyle: React.CSSProperties = {
   width: "100%",
   borderRadius: 14,
-  border: "1px solid rgba(148,163,184,0.2)",
+  border: "1px solid var(--border)",
   background: "#020617",
-  color: "#e2e8f0",
+  color: "var(--text)",
   padding: "12px 14px",
   outline: "none",
 };
@@ -74,8 +74,8 @@ const buttonStyle: React.CSSProperties = {
   border: "none",
   borderRadius: 16,
   padding: "12px 18px",
-  background: "#6366f1",
-  color: "#fff",
+  background: "var(--accent)",
+  color: "var(--accent-ink)",
   fontWeight: 700,
   cursor: "pointer",
   width: "fit-content",

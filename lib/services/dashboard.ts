@@ -9,17 +9,28 @@ import { getSeasonState } from "../season";
 import {
   projectTeamRemainingScore,
   getRemainingPlayersTonight,
+  projectPlayer,
   type RemainingPlayer,
 } from "../projections";
 import { getLeagueActivity } from "./activity";
 import type { ScoringPeriod } from "../scoring/periods";
 import { parseScoringSettings } from "../scoring/settings";
-import { getReplayNow } from "../replayTime";
+import { getReplayNow, resolveFixturePeriod, type BetaWeekMapping } from "../replayTime";
 import { getRoundLabel } from "../playoffs/brackets";
 import { calculatePlayoffRounds } from "../playoffs/lifecycle";
 import { computeVpStandings } from "../scoring/vp";
 
 // ── types ─────────────────────────────────────────────────────────────────────
+
+export interface StatChip {
+  type:
+    | "weekly_leader"
+    | "league_record"
+    | "streak"
+    | "projection_swing_up"
+    | "projection_swing_down";
+  label: string;
+}
 
 export interface PlayerMatchupRow {
   playerId: string;
@@ -31,6 +42,7 @@ export interface PlayerMatchupRow {
   points: number;
   gameCount: number;
   statBreakdown: ScoringBreakdown[];
+  chips: StatChip[];
 }
 
 export interface PlayerPerfSummary {
@@ -94,6 +106,13 @@ export interface ActiveMatchup {
   opponentProjected: number;
   winProbability: number;
   rivalry: RivalryRecord;
+  // ── Momentum Strip fields (LL-002) ─────────────────────────────────────────
+  // How many FP my team gained in the last 24 hours. null when period < 24h old or setup phase.
+  scoreDeltaSinceYesterday: number | null;
+  // Count of my active starters who still have games left but haven't played yet today.
+  playersRemainingTonight: number;
+  // VP mode only: true when the opponent's active starters have no remaining games this period.
+  opponentFinished: boolean;
 }
 
 export interface LineupAlert {
@@ -128,6 +147,14 @@ export interface ChampionInfo {
   opponentScore: number;
 }
 
+export interface FirstResultContext {
+  weekRank: number;
+  teamCount: number;
+  myScore: number;
+  topContributor: { name: string; fp: number } | null;
+  actionableGap: string | null;
+}
+
 export interface DashboardData {
   activeMatchup: ActiveMatchup | null;
   remainingPlayers: RemainingPlayer[];
@@ -146,6 +173,62 @@ export interface DashboardData {
   // Populated when the active period has no stats yet (SETUP phase) — shows last complete week's stats
   myPlayersLastWeek: PlayerMatchupRow[] | null;
   lastWeekLabel: string | null;
+  // Shown once after the very first scored period — onboarding explainer
+  firstResultContext: FirstResultContext | null;
+}
+
+// ── shared pure helpers (used by regular-season and playoff paths) ────────────
+
+type DetailedPlayerRow = {
+  playerId: string; name: string; position: string; slot: string;
+  teamId: string | null; teamAbbr: string | null;
+  points: number; gameCount: number; statBreakdown: ScoringBreakdown[];
+};
+
+function buildPlayerRows(
+  players: DetailedPlayerRow[],
+  gamesPerTeam: Map<string, number>
+): PlayerMatchupRow[] {
+  return players.map((p) => ({
+    playerId: p.playerId, name: p.name, position: p.position, slot: p.slot,
+    teamAbbr: p.teamAbbr,
+    gamesThisPeriod: p.teamId !== null ? (gamesPerTeam.get(p.teamId) ?? 0) : null,
+    points: p.points, gameCount: p.gameCount, statBreakdown: p.statBreakdown, chips: [],
+  }));
+}
+
+function computeLineupAlerts(
+  players: DetailedPlayerRow[],
+  gamesPerTeam: Map<string, number>,
+  gamesPlayedPerTeam: Map<string, number>
+): LineupAlert[] {
+  return players
+    .filter((p) => {
+      if (p.slot === "BENCH" || p.slot === "IR") return false;
+      const futureGames = p.teamId ? (gamesPerTeam.get(p.teamId) ?? 0) : 0;
+      const playedGames = p.teamId ? (gamesPlayedPerTeam.get(p.teamId) ?? 0) : 0;
+      return futureGames === 0 && p.gameCount === 0 && playedGames === 0;
+    })
+    .map((p) => ({ playerId: p.playerId, name: p.name, reason: "zero_games" as const }));
+}
+
+function computeTopPerformers(
+  players: DetailedPlayerRow[],
+  minPoints?: number
+): PlayerPerfSummary[] {
+  return [...players]
+    .filter((p) => minPoints === undefined || p.points > minPoints)
+    .sort((a, b) => b.points - a.points)
+    .slice(0, 3)
+    .map((p) => ({ playerId: p.playerId, name: p.name, position: p.position, points: p.points, statBreakdown: p.statBreakdown }));
+}
+
+function computeDisappointments(players: DetailedPlayerRow[]): PlayerPerfSummary[] {
+  return [...players]
+    .filter((p) => p.gameCount > 0)
+    .sort((a, b) => a.points - b.points)
+    .slice(0, 3)
+    .map((p) => ({ playerId: p.playerId, name: p.name, position: p.position, points: p.points, statBreakdown: p.statBreakdown }));
 }
 
 // ── main ──────────────────────────────────────────────────────────────────────
@@ -161,6 +244,8 @@ export async function getDashboardData(
   });
 
   const nowMs = getReplayNow(league, nowMsArg);
+  const rawSettings = league.scoringSettings as Record<string, unknown>;
+  const betaWeekMappings = (rawSettings?.betaWeekMappings as BetaWeekMapping[] | undefined) ?? null;
   const scoringSettings = parseScoringSettings(league.scoringSettings);
   const scoringMode = league.scoringMode ?? "VTF";
   const isVpMode = scoringMode === "VP";
@@ -179,6 +264,29 @@ export async function getDashboardData(
 
   const lastResult = await getLastResult(leagueId, myTeamId, scoringSettings, prisma, isVpMode);
 
+  // First-result explainer: detect if this is the manager's first ever scored week.
+  let firstResultContext: FirstResultContext | null = null;
+  if (lastResult && lastResult.myRank !== null) {
+    const scoredCount = await prisma.matchup.count({
+      where: {
+        leagueId,
+        homeScore: { not: null },
+        OR: [{ homeTeamId: myTeamId }, { awayTeamId: myTeamId }],
+      },
+    });
+    if (scoredCount === 1) {
+      firstResultContext = {
+        weekRank: lastResult.myRank,
+        teamCount: lastResult.teamsCount,
+        myScore: lastResult.myScore,
+        topContributor: lastResult.myTopPerformer
+          ? { name: lastResult.myTopPerformer.name, fp: lastResult.myTopPerformer.points }
+          : null,
+        actionableGap: null,
+      };
+    }
+  }
+
   const empty: DashboardData = {
     activeMatchup: null,
     remainingPlayers: [],
@@ -191,6 +299,7 @@ export async function getDashboardData(
     leagueDisappointments: [],
     myPlayersLastWeek: null,
     lastWeekLabel: null,
+    firstResultContext,
   };
 
   if (!displayPeriod) {
@@ -204,6 +313,7 @@ export async function getDashboardData(
         lastResult,
         leagueActivity,
         scoringSettings,
+        betaWeekMappings,
         prisma
       );
     }
@@ -238,19 +348,23 @@ export async function getDashboardData(
   } as const;
 
   if (isUpcoming) {
+    // For beta replay leagues, translate the remapped 2026 calendar period to its 2024-25 fixture window
+    // so game-range queries find actual data instead of returning zero results.
+    const fixtureDisplayPeriod = resolveFixturePeriod(displayPeriod, betaWeekMappings);
+
     const [myRoster, myProjected] = await Promise.all([
       prisma.rosterEntry.findMany({
         where: { fantasyTeamId: myTeamId, slot: { notIn: ["BENCH", "IR"] } },
         include: activeRosterInclude,
       }),
-      projectTeamRemainingScore(myTeamId, 0, displayPeriod, scoringSettings, prisma, nowMs),
+      projectTeamRemainingScore(myTeamId, 0, fixtureDisplayPeriod, scoringSettings, prisma, nowMs),
     ]);
 
     const myTeamIds = [...new Set(
       myRoster.map((e) => e.player.team?.id).filter((id): id is string => !!id)
     )];
     const gamesPerTeam = await gamesPerTeamInWindow(
-      myTeamIds, displayPeriod.startsAt, displayPeriod.endsAt, prisma
+      myTeamIds, fixtureDisplayPeriod.startsAt, fixtureDisplayPeriod.endsAt, prisma
     );
 
     const toRow = (e: (typeof myRoster)[number]): PlayerMatchupRow => ({
@@ -263,6 +377,7 @@ export async function getDashboardData(
       points: 0,
       gameCount: 0,
       statBreakdown: [],
+      chips: [],
     });
 
     const zeroStandings: WeeklyStanding[] = allTeams.map((t) => ({
@@ -286,6 +401,9 @@ export async function getDashboardData(
         opponentProjected: 0,
         winProbability: 0,
         rivalry: { wins: 0, losses: 0, ties: 0 },
+        scoreDeltaSinceYesterday: null,
+        playersRemainingTonight: 0,
+        opponentFinished: false,
       },
     };
   }
@@ -346,8 +464,11 @@ export async function getDashboardData(
     }
   }
 
+  // For beta replay leagues, translate the remapped 2026 calendar period to its 2024-25 fixture window.
+  const fixtureDisplayPeriod = resolveFixturePeriod(displayPeriod, betaWeekMappings);
+
   const myProjected = await projectTeamRemainingScore(
-    myTeamId, myScore, displayPeriod, scoringSettings, prisma, nowMs
+    myTeamId, myScore, fixtureDisplayPeriod, scoringSettings, prisma, nowMs
   );
 
   // Load opponent roster for VP mode
@@ -369,7 +490,7 @@ export async function getDashboardData(
           where: { fantasyTeamId: opponentTeamId, slot: { notIn: ["BENCH", "IR"] } },
           include: activeRosterInclude2,
         }),
-        projectTeamRemainingScore(opponentTeamId, opponentScore, displayPeriod, scoringSettings, prisma, nowMs),
+        projectTeamRemainingScore(opponentTeamId, opponentScore, fixtureDisplayPeriod, scoringSettings, prisma, nowMs),
       ])
     : [[], 0] as const;
 
@@ -379,33 +500,12 @@ export async function getDashboardData(
   ].filter((id): id is string => !!id))];
 
   const [gamesPerTeam, gamesPlayedPerTeam] = await Promise.all([
-    gamesPerTeamInWindow(allTeamIds, new Date(nowMs), displayPeriod.endsAt, prisma, { exclusiveStart: true }),
-    gamesPerTeamInWindow(allTeamIds, displayPeriod.startsAt, new Date(nowMs), prisma),
+    gamesPerTeamInWindow(allTeamIds, new Date(nowMs), fixtureDisplayPeriod.endsAt, prisma, { exclusiveStart: true }),
+    gamesPerTeamInWindow(allTeamIds, fixtureDisplayPeriod.startsAt, new Date(nowMs), prisma),
   ]);
 
-  function withGames(players: typeof myDetailed.players): PlayerMatchupRow[] {
-    return players.map((p) => ({
-      playerId: p.playerId,
-      name: p.name,
-      position: p.position,
-      slot: p.slot,
-      teamAbbr: p.teamAbbr,
-      gamesThisPeriod: p.teamId !== null ? (gamesPerTeam.get(p.teamId) ?? 0) : null,
-      points: p.points,
-      gameCount: p.gameCount,
-      statBreakdown: p.statBreakdown,
-    }));
-  }
-
-  const sorted = [...myDetailed.players].sort((a, b) => b.points - a.points);
-  const topPerformers: PlayerPerfSummary[] = sorted.filter((p) => p.points > 0).slice(0, 3).map((p) => ({
-    playerId: p.playerId, name: p.name, position: p.position, points: p.points, statBreakdown: p.statBreakdown,
-  }));
-  const disappointments: PlayerPerfSummary[] = [...myDetailed.players]
-    .filter((p) => p.gameCount > 0)
-    .sort((a, b) => a.points - b.points)
-    .slice(0, 3)
-    .map((p) => ({ playerId: p.playerId, name: p.name, position: p.position, points: p.points, statBreakdown: p.statBreakdown }));
+  const topPerformers = computeTopPerformers(myDetailed.players, 0);
+  const disappointments = computeDisappointments(myDetailed.players);
 
   const [remainingPlayers, leaguePerformersResult] = await Promise.all([
     getRemainingPlayersTonight(myTeamId, scoringSettings, prisma, nowMs),
@@ -426,7 +526,29 @@ export async function getDashboardData(
     }
   }
 
-  const myPlayers = withGames(myDetailed.players);
+  const isSetupPhase = myDetailed.players.length > 0 && myDetailed.players.every((p) => p.gameCount === 0);
+
+  const myPlayersRaw = buildPlayerRows(myDetailed.players, gamesPerTeam);
+
+  // Compute stat chips for active starters (only when there are actual scores to evaluate).
+  const chipMap = isSetupPhase
+    ? new Map<string, StatChip>()
+    : await computeStatChips(
+        myDetailed.players.map((p) => ({
+          playerId: p.playerId,
+          position: p.position,
+          points: p.points,
+          gameCount: p.gameCount,
+        })),
+        leagueTopPerformers,
+        scoringSettings,
+        prisma
+      );
+
+  const myPlayers: PlayerMatchupRow[] = myPlayersRaw.map((p) => ({
+    ...p,
+    chips: chipMap.get(p.playerId) ? [chipMap.get(p.playerId)!] : [],
+  }));
 
   // When no games have been played yet in the active period (SETUP phase: replayCurrentDate = period.startsAt),
   // the stat query returns an empty range [startsAt, startsAt). Fall back to the last complete period's stats
@@ -450,20 +572,14 @@ export async function getDashboardData(
           points: p.points,
           gameCount: p.gameCount,
           statBreakdown: p.statBreakdown,
+          chips: [],
         }));
         lastWeekLabel = `Week ${lastComplete.period.week}`;
       }
     }
   }
 
-  const lineupAlerts: LineupAlert[] = myDetailed.players
-    .filter((p) => {
-      if (p.slot === "BENCH" || p.slot === "IR") return false;
-      const futureGames = p.teamId ? (gamesPerTeam.get(p.teamId) ?? 0) : 0;
-      const playedGames = p.teamId ? (gamesPlayedPerTeam.get(p.teamId) ?? 0) : 0;
-      return futureGames === 0 && p.gameCount === 0 && playedGames === 0;
-    })
-    .map((p) => ({ playerId: p.playerId, name: p.name, reason: "zero_games" as const }));
+  const lineupAlerts = computeLineupAlerts(myDetailed.players, gamesPerTeam, gamesPlayedPerTeam);
 
   // VP mode: resolve opponent roster rows
   const opponentPlayers: PlayerMatchupRow[] = opponentTeamId
@@ -477,6 +593,7 @@ export async function getDashboardData(
         points: 0,
         gameCount: 0,
         statBreakdown: [],
+        chips: [],
       }))
     : [];
 
@@ -486,7 +603,26 @@ export async function getDashboardData(
   const oppProj = opponentProjected as number;
   const winProb = isVpMode && opponentTeamId ? winProbability(myProj, oppProj) : 0;
 
-  const isSetupPhase = myDetailed.players.length > 0 && myDetailed.players.every((p) => p.gameCount === 0);
+  // ── Momentum Strip fields (LL-002) ────────────────────────────────────────
+  const periodAgeMs = nowMs - displayPeriod.startsAt.getTime();
+  let scoreDeltaSinceYesterday: number | null = null;
+  if (!isSetupPhase && periodAgeMs >= 86_400_000) {
+    const yesterdayDetailed = await computeTeamScoreDetailed(
+      myTeamId, displayPeriod, scoringSettings, prisma, nowMs - 86_400_000
+    );
+    scoreDeltaSinceYesterday = Math.round((myScore - yesterdayDetailed.total) * 10) / 10;
+  }
+  // Players remaining tonight: active starters with games left but none played yet today
+  const playersRemainingTonight = myPlayers.filter(
+    (p) => !isSetupPhase && (p.gamesThisPeriod ?? 0) > 0 && p.gameCount === 0
+  ).length;
+  // Opponent finished: VP mode only — all opponent starters have no remaining games
+  const opponentFinished =
+    isVpMode && opponentPlayers.length > 0
+      ? opponentPlayers
+          .filter((p) => p.slot !== "BENCH" && p.slot !== "IR")
+          .every((p) => (p.gamesThisPeriod ?? 0) === 0)
+      : false;
 
   return {
     activeMatchup: {
@@ -507,6 +643,9 @@ export async function getDashboardData(
       opponentProjected: oppProj,
       winProbability: winProb,
       rivalry: { wins: 0, losses: 0, ties: 0 },
+      scoreDeltaSinceYesterday,
+      playersRemainingTonight,
+      opponentFinished,
     },
     remainingPlayers,
     topPerformers,
@@ -518,6 +657,7 @@ export async function getDashboardData(
     leagueDisappointments,
     myPlayersLastWeek,
     lastWeekLabel,
+    firstResultContext,
   };
 }
 
@@ -531,6 +671,7 @@ async function getPlayoffDashboardData(
   lastResult: WeeklyRecap | null,
   leagueActivity: ActivityEvent[],
   scoringSettings: ScoringSettings,
+  betaWeekMappings: BetaWeekMapping[] | null,
   prisma: PrismaClient
 ): Promise<DashboardData> {
   const empty: DashboardData = {
@@ -545,6 +686,7 @@ async function getPlayoffDashboardData(
     leagueDisappointments: [],
     myPlayersLastWeek: null,
     lastWeekLabel: null,
+    firstResultContext: null,
   };
 
   // P1-A: When playoffs are complete, determine the champion from the final-round matchup.
@@ -695,6 +837,8 @@ async function getPlayoffDashboardData(
     startsAt: myMatchup.startsAt,
     endsAt: myMatchup.endsAt,
   };
+  // For beta replay leagues, translate the remapped period to its 2024-25 fixture window.
+  const fixturePeriod = resolveFixturePeriod(period, betaWeekMappings);
 
   const status = nowMs < myMatchup.startsAt.getTime() ? "upcoming" : "active";
 
@@ -740,60 +884,23 @@ async function getPlayoffDashboardData(
   ];
 
   const [gamesPerTeam, gamesPlayedPerTeam] = await Promise.all([
-    gamesPerTeamInWindow(allTeamIds, new Date(nowMs), period.endsAt, prisma, { exclusiveStart: true }),
-    gamesPerTeamInWindow(allTeamIds, period.startsAt, new Date(nowMs), prisma),
+    gamesPerTeamInWindow(allTeamIds, new Date(nowMs), fixturePeriod.endsAt, prisma, { exclusiveStart: true }),
+    gamesPerTeamInWindow(allTeamIds, fixturePeriod.startsAt, new Date(nowMs), prisma),
   ]);
 
-  function withGames(players: typeof myDetailed.players): PlayerMatchupRow[] {
-    return players.map((p) => ({
-      playerId: p.playerId,
-      name: p.name,
-      position: p.position,
-      slot: p.slot,
-      teamAbbr: p.teamAbbr,
-      gamesThisPeriod: p.teamId !== null ? (gamesPerTeam.get(p.teamId) ?? 0) : null,
-      points: p.points,
-      gameCount: p.gameCount,
-      statBreakdown: p.statBreakdown,
-    }));
-  }
+  const myPlayers = buildPlayerRows(myDetailed.players, gamesPerTeam);
+  const opponentPlayers = buildPlayerRows(opponentDetailed.players, gamesPerTeam);
 
-  const myPlayers = withGames(myDetailed.players);
-  const opponentPlayers = withGames(opponentDetailed.players);
-
-  // Lineup alerts for zero-game players
-  const lineupAlerts: LineupAlert[] = myDetailed.players
-    .filter((p) => {
-      if (p.slot === "BENCH" || p.slot === "IR") return false;
-      const futureGames = p.teamId ? (gamesPerTeam.get(p.teamId) ?? 0) : 0;
-      const playedGames = p.teamId ? (gamesPlayedPerTeam.get(p.teamId) ?? 0) : 0;
-      return futureGames === 0 && p.gameCount === 0 && playedGames === 0;
-    })
-    .map((p) => ({ playerId: p.playerId, name: p.name, reason: "zero_games" as const }));
-
-  // Top performers
-  const sorted = [...myDetailed.players].sort((a, b) => b.points - a.points);
-  const topPerformers: PlayerPerfSummary[] = sorted.slice(0, 3).map((p) => ({
-    playerId: p.playerId,
-    name: p.name,
-    position: p.position,
-    points: p.points,
-    statBreakdown: p.statBreakdown,
-  }));
-
-  // Disappointments
-  const disappointments: PlayerPerfSummary[] = [...myDetailed.players]
-    .filter((p) => p.gameCount > 0)
-    .sort((a, b) => a.points - b.points)
-    .slice(0, 3)
-    .map((p) => ({ playerId: p.playerId, name: p.name, position: p.position, points: p.points, statBreakdown: p.statBreakdown }));
+  const lineupAlerts = computeLineupAlerts(myDetailed.players, gamesPerTeam, gamesPlayedPerTeam);
+  const topPerformers = computeTopPerformers(myDetailed.players);
+  const disappointments = computeDisappointments(myDetailed.players);
 
   // Remaining players tonight
   const remainingPlayers = await getRemainingPlayersTonight(myTeamId, scoringSettings, prisma, nowMs);
 
   // Win probability
-  const myProjected = await projectTeamRemainingScore(myTeamId, myScore, period, scoringSettings, prisma, nowMs);
-  const opponentProjected = await projectTeamRemainingScore(opponentTeamId, opponentScore, period, scoringSettings, prisma, nowMs);
+  const myProjected = await projectTeamRemainingScore(myTeamId, myScore, fixturePeriod, scoringSettings, prisma, nowMs);
+  const opponentProjected = await projectTeamRemainingScore(opponentTeamId, opponentScore, fixturePeriod, scoringSettings, prisma, nowMs);
   const { winProbability } = await import("../projections");
   const winProb = winProbability(myProjected, opponentProjected);
 
@@ -829,6 +936,20 @@ async function getPlayoffDashboardData(
 
   const playoffIsSetupPhase = status === "active" && myDetailed.players.length > 0 && myDetailed.players.every((p) => p.gameCount === 0);
 
+  // Momentum Strip for playoffs
+  const playoffPeriodAgeMs = nowMs - period.startsAt.getTime();
+  let playoffScoreDelta: number | null = null;
+  if (!playoffIsSetupPhase && playoffPeriodAgeMs >= 86_400_000) {
+    const yestDetailed = await computeTeamScoreDetailed(myTeamId, period, scoringSettings, prisma, nowMs - 86_400_000);
+    playoffScoreDelta = Math.round((myScore - yestDetailed.total) * 10) / 10;
+  }
+  const playoffPlayersRemaining = opponentPlayers
+    .filter((p) => p.slot !== "BENCH" && p.slot !== "IR")
+    .filter((p) => !playoffIsSetupPhase && (p.gamesThisPeriod ?? 0) > 0 && p.gameCount === 0).length;
+  const playoffOpponentFinished = opponentPlayers
+    .filter((p) => p.slot !== "BENCH" && p.slot !== "IR")
+    .every((p) => (p.gamesThisPeriod ?? 0) === 0);
+
   return {
     activeMatchup: {
       week: myMatchup.week,
@@ -848,6 +969,9 @@ async function getPlayoffDashboardData(
       opponentProjected,
       winProbability: winProb,
       rivalry: { wins: h2hWins, losses: h2hLosses, ties: h2hTies },
+      scoreDeltaSinceYesterday: playoffScoreDelta,
+      playersRemainingTonight: playoffPlayersRemaining,
+      opponentFinished: playoffOpponentFinished,
     },
     remainingPlayers,
     topPerformers,
@@ -859,6 +983,7 @@ async function getPlayoffDashboardData(
     leagueDisappointments: [],
     myPlayersLastWeek: null,
     lastWeekLabel: null,
+    firstResultContext: null,
   };
 }
 
@@ -1086,4 +1211,115 @@ async function getLeagueActivityFallback(
       description: `${pick.fantasyTeam.name} drafted ${pick.player!.firstName} ${pick.player!.lastName} (Round ${pick.round}, Pick ${pick.overall})`,
       createdAt: pick.pickedAt ?? new Date(0),
     }));
+}
+
+// ── Stat chip computation (LL-003) ────────────────────────────────────────────
+
+interface ChipInput {
+  playerId: string;
+  position: string;
+  points: number;
+  gameCount: number;
+}
+
+/**
+ * Compute at most one StatChip per player (priority: weekly_leader > streak > projection_swing).
+ * League record is detected via a simple threshold (≥30 FP for skaters, ≥20 for goalies) as an
+ * approximation; callers can refine post-beta by comparing to a persisted historical max.
+ */
+export async function computeStatChips(
+  players: ChipInput[],
+  leagueTopPerformers: LeaguePerformerRow[],
+  scoringSettings: ScoringSettings,
+  prisma: PrismaClient
+): Promise<Map<string, StatChip>> {
+  const chipMap = new Map<string, StatChip>();
+  const starters = players.filter((p) => p.gameCount > 0);
+  if (starters.length === 0) return chipMap;
+
+  const starterIds = starters.map((p) => p.playerId);
+
+  // ── Weekly leader (highest FP across the entire league) ──────────────────
+  const leaderPlayerId = leagueTopPerformers[0]?.playerId;
+  if (leaderPlayerId && starterIds.includes(leaderPlayerId)) {
+    chipMap.set(leaderPlayerId, { type: "weekly_leader", label: "League leader" });
+  }
+
+  // ── Streak: 3+ consecutive games with FP > 0 ────────────────────────────
+  // One batch query for recent stat lines for all starters.
+  const { scoreStatLine } = await import("@/lib/scoring");
+  const recentLines = await prisma.statLine.findMany({
+    where: { playerId: { in: starterIds } },
+    orderBy: { game: { startsAt: "desc" } },
+    take: starterIds.length * 10,
+    include: { player: { select: { position: true } } },
+  });
+
+  // Group by player and compute consecutive games with FP > 0 (most recent first)
+  const linesByPlayer = new Map<string, typeof recentLines>();
+  for (const line of recentLines) {
+    const arr = linesByPlayer.get(line.playerId) ?? [];
+    arr.push(line);
+    linesByPlayer.set(line.playerId, arr);
+  }
+
+  for (const p of starters) {
+    if (chipMap.has(p.playerId)) continue;
+    const lines = linesByPlayer.get(p.playerId) ?? [];
+    let streak = 0;
+    for (const line of lines) {
+      const fp = scoreStatLine(
+        {
+          goals: line.goals, assists: line.assists, shots: line.shots,
+          plusMinus: line.plusMinus, penaltyMinutes: line.penaltyMinutes,
+          powerPlayPts: line.powerPlayPts, hits: line.hits, blocks: line.blocks,
+          saves: line.saves, goalsAgainst: line.goalsAgainst,
+          shutout: line.shutout, win: line.win,
+        },
+        line.player.position as import("@prisma/client").Position,
+        scoringSettings
+      );
+      if (fp > 0) streak++;
+      else break;
+    }
+    if (streak >= 3) {
+      chipMap.set(p.playerId, { type: "streak", label: `${streak}-game streak` });
+    }
+  }
+
+  // ── Projection swing: actual vs rolling 5-game projection ────────────────
+  const projections = await Promise.all(
+    starters
+      .filter((p) => !chipMap.has(p.playerId))
+      .map(async (p) => {
+        const proj = await projectPlayer(
+          p.playerId,
+          p.position as import("@prisma/client").Position,
+          scoringSettings,
+          prisma,
+          5
+        );
+        return { playerId: p.playerId, proj };
+      })
+  );
+
+  for (const { playerId, proj } of projections) {
+    if (chipMap.has(playerId)) continue;
+    const player = starters.find((p) => p.playerId === playerId);
+    if (!player) continue;
+    const delta = player.points - proj;
+    if (delta >= 5) {
+      chipMap.set(playerId, {
+        type: "projection_swing_up",
+        label: `+${delta.toFixed(1)} vs projection`,
+      });
+    } else if (delta <= -5) {
+      chipMap.set(playerId, {
+        type: "projection_swing_down",
+        label: `${delta.toFixed(1)} vs projection`,
+      });
+    }
+  }
+
+  return chipMap;
 }

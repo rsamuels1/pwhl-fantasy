@@ -8,14 +8,14 @@
 
 import type { PrismaClient, Trade, TradeItem } from "@prisma/client";
 import {
-  validateTradeProposal,
-  validateTradeExecution,
+  validateTrade,
   applyTrade,
   canTransitionTo,
   type TradeItemInput,
   type TradableRosterEntry,
 } from "@/lib/trades/engine";
 import { createNotification } from "@/lib/services/notification-service";
+import { sendTradeReceived } from "@/lib/services/email-service";
 import { emitEvent } from "@/lib/services/activity";
 import { trackEvent } from "@/lib/analytics";
 import type { RosterSettings } from "@/lib/lineup";
@@ -111,7 +111,7 @@ export async function proposeTrade(
     select: { status: true, playoffStatus: true, rosterSettings: true, tradeReviewHours: true, requireCommissionerTradeApproval: true },
   });
   if (!league) throw new TradeValidationError("League not found.");
-  if (league.playoffStatus === "IN_PROGRESS" || league.playoffStatus === "COMPLETE") {
+  if (league.playoffStatus !== "NOT_STARTED" || league.status === "COMPLETE") {
     throw new TradeValidationError("The trade deadline has passed — no trades after playoffs begin.");
   }
 
@@ -124,31 +124,53 @@ export async function proposeTrade(
     loadTradableRoster(receivingTeamId, nowMs, null, prisma),
   ]);
 
-  const result = validateTradeProposal(items, proposingRoster, receivingRoster, rosterSettings);
+  const result = validateTrade(items, proposingRoster, receivingRoster, rosterSettings);
   if (!result.valid) {
     throw new TradeValidationError(result.reason ?? "Trade proposal is invalid.");
   }
 
-  const trade = await prisma.trade.create({
-    data: {
-      leagueId,
-      proposingTeamId,
-      receivingTeamId,
-      status: "PROPOSED",
-      message: message?.trim() || null,
-      items: {
-        create: items.map((i) => ({
-          fromTeamId: i.fromTeamId,
-          toTeamId: i.toTeamId,
-          playerId: i.playerId,
-        })),
+  const requireApproval = league.requireCommissionerTradeApproval ?? false;
+
+  // Always create as PROPOSED first so the proposer's "Sent" tab shows the trade
+  // in PROPOSED state before it transitions. If commissioner approval is required,
+  // we immediately flip it to PENDING_REVIEW in the same transaction.
+  const trade = await prisma.$transaction(async (tx) => {
+    const created = await tx.trade.create({
+      data: {
+        leagueId,
+        proposingTeamId,
+        receivingTeamId,
+        status: "PROPOSED",
+        message: message?.trim() || null,
+        items: {
+          create: items.map((i) => ({
+            fromTeamId: i.fromTeamId,
+            toTeamId: i.toTeamId,
+            playerId: i.playerId,
+          })),
+        },
       },
-    },
-    include: { items: true },
+      include: { items: true },
+    });
+
+    if (requireApproval) {
+      // Flip to PENDING_REVIEW so commissioner sees it immediately
+      return tx.trade.update({
+        where: { id: created.id },
+        data: { status: "PENDING_REVIEW" },
+        include: { items: true },
+      });
+    }
+
+    return created;
   });
 
-  // Notify the receiving team owner
-  void notifyReceiver(trade.id, leagueId, receivingTeamId, proposingTeamId, "received", prisma).catch(() => {});
+  // Notify the receiving team owner (skip if going straight to commissioner review)
+  if (!requireApproval) {
+    void notifyReceiver(trade.id, leagueId, receivingTeamId, proposingTeamId, "received", prisma).catch(() => {});
+  } else {
+    void notifyCommissionerReview(trade.id, leagueId, prisma).catch(() => {});
+  }
 
   // Analytics fire-and-forget
   try {
@@ -159,12 +181,14 @@ export async function proposeTrade(
     });
   } catch {}
 
-  // Auto-accept if the receiving team is a bot
+  // Auto-accept if the receiving team is a bot.
+  // Skip auto-accept when the trade is already in PENDING_REVIEW (commissioner approval
+  // required) — the commissioner must take action in that case.
   const receivingTeam = await prisma.fantasyTeam.findUnique({
     where: { id: receivingTeamId },
     select: { isBot: true },
   });
-  if (receivingTeam?.isBot) {
+  if (receivingTeam?.isBot && trade.status === "PROPOSED") {
     return acceptTrade(trade.id, receivingTeamId, nowMs, prisma);
   }
 
@@ -203,7 +227,7 @@ export async function acceptTrade(
     loadTradableRoster(trade.proposingTeamId, nowMs, null, prisma),
     loadTradableRoster(trade.receivingTeamId, nowMs, null, prisma),
   ]);
-  const validation = validateTradeExecution(
+  const validation = validateTrade(
     trade.items.map((i) => ({ fromTeamId: i.fromTeamId, toTeamId: i.toTeamId, playerId: i.playerId })),
     proposingRoster,
     receivingRoster,
@@ -216,16 +240,25 @@ export async function acceptTrade(
   const reviewHours = trade.league.tradeReviewHours ?? 24;
   const requireApproval = trade.league.requireCommissionerTradeApproval ?? false;
 
-  const needsReview = reviewHours > 0 || requireApproval;
+  // Execute immediately when no review window and no commissioner approval required.
+  // With requireApproval=false + reviewHours>0, the trade sits in ACCEPTED for the
+  // review window then auto-executes when processExpiredTrades / auto-execute runs.
+  // With requireApproval=true, the trade should already be in PENDING_REVIEW (set at
+  // propose time), so canTransitionTo("PENDING_REVIEW", "ACCEPTED", "receiver") would
+  // block this path — but we guard here too for safety.
+  const executeImmediately = reviewHours === 0 && !requireApproval;
 
   let updated: TradeWithItems;
 
-  if (needsReview) {
+  if (!executeImmediately) {
     const reviewEndsAt = reviewHours > 0
       ? new Date(nowMs + reviewHours * 60 * 60 * 1000)
       : null;
 
-    // First transition to ACCEPTED so receiver can still see and interact with the trade
+    // Transition to ACCEPTED (timed review window).
+    // For pure time-window leagues (requireApproval=false), this auto-executes
+    // when the window passes. Commissioner CAN veto during the window but isn't
+    // required to — so we only notify them when explicit approval is required.
     updated = await prisma.trade.update({
       where: { id: tradeId },
       data: {
@@ -235,8 +268,9 @@ export async function acceptTrade(
       include: { items: true },
     });
 
-    // Notify commissioner of pending review
-    void notifyCommissionerReview(trade.id, trade.leagueId, prisma).catch(() => {});
+    if (requireApproval) {
+      void notifyCommissionerReview(trade.id, trade.leagueId, prisma).catch(() => {});
+    }
   } else {
     // Execute immediately
     updated = await executeTrade(tradeId, nowMs, prisma);
@@ -328,7 +362,7 @@ export async function counterTrade(
     loadTradableRoster(trade.receivingTeamId, nowMs, null, prisma),
   ]);
   // For the counter, the roles flip: the counter proposer is the original receiver.
-  const validation = validateTradeProposal(newItems, receivingRoster, proposingRoster, rosterSettings);
+  const validation = validateTrade(newItems, receivingRoster, proposingRoster, rosterSettings);
   if (!validation.valid) {
     throw new TradeValidationError(validation.reason ?? "Counter-offer is invalid.");
   }
@@ -423,7 +457,7 @@ export async function reviewTrade(
     const updated = await prisma.trade.update({
       where: { id: tradeId },
       data: {
-        status: "REVERSED",
+        status: "VETOED",
         resolvedReason: `Vetoed by commissioner (id: ${commissionerId})`,
       },
       include: { items: true },
@@ -488,7 +522,7 @@ export async function executeTrade(
     loadTradableRoster(trade.proposingTeamId, nowMs, null, prisma),
     loadTradableRoster(trade.receivingTeamId, nowMs, null, prisma),
   ]);
-  const validation = validateTradeExecution(items, proposingRoster, receivingRoster, rosterSettings);
+  const validation = validateTrade(items, proposingRoster, receivingRoster, rosterSettings);
   if (!validation.valid) {
     // Mark trade as failed (stale or illegal)
     await prisma.trade.update({
@@ -584,7 +618,9 @@ export async function executeTrade(
 
 /**
  * Marks all PROPOSED trades in a league as EXPIRED if they are older than
- * `expiryHours` hours. Safe to call on a cron or before listing trades.
+ * `expiryHours` hours. Also auto-executes ACCEPTED trades whose review window
+ * has passed (for leagues with tradeReviewHours > 0, requireCommissionerTradeApproval=false).
+ * Safe to call on a cron or before listing trades.
  * Sends notifications to proposers about expired trades.
  */
 export async function processExpiredTrades(
@@ -594,6 +630,29 @@ export async function processExpiredTrades(
 ): Promise<void> {
   const EXPIRY_HOURS = 72; // 3 days default for proposal expiry
   const cutoff = new Date(nowMs - EXPIRY_HOURS * 60 * 60 * 1000);
+  const nowDate = new Date(nowMs);
+
+  // Auto-execute ACCEPTED trades whose review window has passed, but only when
+  // commissioner approval is NOT required (requireCommissionerTradeApproval=false).
+  // For commissioner-approval leagues, PENDING_REVIEW trades need explicit action.
+  const readyToExecute = await prisma.trade.findMany({
+    where: {
+      leagueId,
+      status: "ACCEPTED",
+      reviewEndsAt: { lte: nowDate },
+      // Only auto-execute when the league does not require explicit commissioner approval
+      league: { requireCommissionerTradeApproval: false },
+    },
+    select: { id: true },
+  });
+
+  for (const t of readyToExecute) {
+    try {
+      await executeTrade(t.id, nowMs, prisma);
+    } catch {
+      // Trade may have become stale/invalid — log and continue
+    }
+  }
 
   const expired = await prisma.trade.findMany({
     where: {
@@ -626,6 +685,7 @@ export async function processExpiredTrades(
           body: "Your trade proposal was not accepted within 72 hours and has expired.",
           teamId: trade.proposingTeamId,
           actionUrl: `/league/${leagueId}/trades`,
+          dedupeKey: `trade-expired-${trade.id}`,
         }).catch(() => {});
       }
     }
@@ -686,7 +746,7 @@ async function notifyReceiver(
   tradeId: string,
   leagueId: string,
   receiverTeamId: string,
-  _senderTeamId: string,
+  senderTeamId: string,
   reason: "received" | "counter",
   prisma: PrismaClient
 ): Promise<void> {
@@ -699,6 +759,28 @@ async function notifyReceiver(
     teamId: receiverTeamId,
     actionUrl: `/league/${leagueId}/trades/${tradeId}`,
   });
+
+  // Fire-and-forget email when real email is enabled
+  if (process.env.EMAIL_RESEND_ENABLED === "true") {
+    void (async () => {
+      try {
+        const [receiver, senderTeam, league] = await Promise.all([
+          prisma.user.findUnique({ where: { id: ownerId }, select: { email: true, displayName: true } }),
+          prisma.fantasyTeam.findUnique({ where: { id: senderTeamId }, select: { name: true } }),
+          prisma.fantasyLeague.findUnique({ where: { id: leagueId }, select: { name: true } }),
+        ]);
+        if (receiver && senderTeam && league) {
+          await sendTradeReceived(
+            receiver.email,
+            receiver.displayName,
+            senderTeam.name,
+            league.name,
+            `/league/${leagueId}/trades/${tradeId}`
+          );
+        }
+      } catch {}
+    })();
+  }
 }
 
 async function notifyProposer(
@@ -772,7 +854,8 @@ async function notifyCommissionerReview(
     {
       title: "A trade needs your review",
       body: "Review the trade and approve or veto.",
-      actionUrl: `/league/${leagueId}/admin`,
+      actionUrl: `/league/${leagueId}/admin#pending-trades`,
+      dedupeKey: `trade-review-${tradeId}`,
     }
   );
 }

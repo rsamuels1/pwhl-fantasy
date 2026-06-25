@@ -17,6 +17,7 @@ import { parseScoringSettings } from "@/lib/scoring/settings";
 import { getPlayoffSettings, calculatePlayoffRounds } from "@/lib/playoffs/lifecycle";
 import { emitEvent, type LeagueEventType } from "@/lib/services/activity";
 import { getRoundLabel } from "@/lib/playoffs/brackets";
+import { createNotification } from "@/lib/services/notification-service";
 
 export async function POST(
   req: NextRequest,
@@ -178,6 +179,22 @@ export async function POST(
             data: { description: `🏆 ${winnerName} are the champions!`, round: currentRound } },
           prisma
         );
+        // Notify the champion's owner via the bell
+        const championTeam = await prisma.fantasyTeam.findUnique({
+          where: { id: r.winnerId },
+          select: { ownerId: true },
+        });
+        if (championTeam) {
+          void createNotification(
+            championTeam.ownerId, "CHAMPIONSHIP_WON", {}, prisma, leagueId,
+            {
+              title: `${winnerName} are champions!`,
+              body: "You won the whole thing. Congratulations!",
+              actionUrl: `/team/${r.winnerId}/matchup`,
+              dedupeKey: `championship-won-${leagueId}-${r.winnerId}`,
+            }
+          ).catch(() => {});
+        }
       } else {
         await emitEvent(
           { leagueId, teamId: r.winnerId, type: "PLAYOFF_CLINCH" as LeagueEventType,

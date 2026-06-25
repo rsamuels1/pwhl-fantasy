@@ -38,7 +38,7 @@ export default function DraftSetupClient({
 
   return (
     <div style={{ display: "grid", gap: 16 }}>
-      <div style={{ color: "#94a3b8" }}>
+      <div style={{ color: "var(--dim)" }}>
         <p>This league has no draft yet. Create the draft board to start the first beta draft.</p>
         <p>Teams in this league:</p>
         <ul style={{ paddingLeft: 18, margin: 0 }}>
@@ -56,8 +56,8 @@ export default function DraftSetupClient({
         style={{
           border: "none",
           borderRadius: 16,
-          background: "#6366f1",
-          color: "#fff",
+          background: "var(--accent)",
+          color: "var(--accent-ink)",
           padding: "14px 18px",
           fontWeight: 700,
           cursor: "pointer",
@@ -67,7 +67,7 @@ export default function DraftSetupClient({
         {loading ? "Creating draft…" : "Create draft"}
       </button>
 
-      {message && <p style={{ color: "#94a3b8" }}>{message}</p>}
+      {message && <p style={{ color: "var(--dim)" }}>{message}</p>}
     </div>
   );
 }

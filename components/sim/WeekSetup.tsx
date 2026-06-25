@@ -46,10 +46,10 @@ export default function WeekSetup({
             marginBottom: 16,
           }}
         >
-          <h3 style={{ fontSize: 14, fontWeight: 600, marginTop: 0, marginBottom: 12, color: "#cbd5e1" }}>
+          <h3 style={{ fontSize: 14, fontWeight: 600, marginTop: 0, marginBottom: 12, color: "var(--muted)" }}>
             Your Lineup
           </h3>
-          <p style={{ margin: "0 0 16px 0", fontSize: 13, color: "#94a3b8" }}>
+          <p style={{ margin: "0 0 16px 0", fontSize: 13, color: "var(--dim)" }}>
             📋 Set your active players and bench for Week {weekNumber} ({startDate} – {endDate})
           </p>
           {commTeamId && (
@@ -60,7 +60,7 @@ export default function WeekSetup({
                 padding: "8px 16px",
                 background: "rgba(99, 102, 241, 0.1)",
                 border: "1px solid rgba(99, 102, 241, 0.3)",
-                color: "#a5b4fc",
+                color: "var(--accent-strong)",
                 borderRadius: 6,
                 fontSize: 13,
                 fontWeight: 600,
@@ -79,8 +79,8 @@ export default function WeekSetup({
           style={{
             width: "100%",
             padding: "16px 20px",
-            background: isSimulating ? "#6366f1" : "#6366f1",
-            color: "#fff",
+            background: isSimulating ? "var(--accent)" : "var(--accent)",
+            color: "var(--accent-ink)",
             border: "none",
             borderRadius: 8,
             fontSize: 15,
@@ -103,26 +103,26 @@ export default function WeekSetup({
           padding: 24,
         }}
       >
-        <h3 style={{ fontSize: 14, fontWeight: 600, marginTop: 0, marginBottom: 16, color: "#cbd5e1" }}>
+        <h3 style={{ fontSize: 14, fontWeight: 600, marginTop: 0, marginBottom: 16, color: "var(--muted)" }}>
           This Week's Matchup
         </h3>
-        <div style={{ fontSize: 13, color: "#94a3b8", marginBottom: 12 }}>
+        <div style={{ fontSize: 13, color: "var(--dim)", marginBottom: 12 }}>
           <p style={{ margin: 0, marginBottom: 8 }}>📊 You vs. Field (Vertical Trade Format)</p>
-          <p style={{ margin: 0, fontSize: 12, color: "#64748b" }}>
+          <p style={{ margin: 0, fontSize: 12, color: "var(--faint)" }}>
             All teams compete for the highest score this week. Projected scores will update as the week progresses.
           </p>
         </div>
 
         {/* Quick actions */}
         <div style={{ marginTop: 20, paddingTop: 16, borderTop: "1px solid rgba(148, 163, 184, 0.1)" }}>
-          <p style={{ fontSize: 12, fontWeight: 600, color: "#cbd5e1", margin: "0 0 12px 0" }}>Quick Links</p>
+          <p style={{ fontSize: 12, fontWeight: 600, color: "var(--muted)", margin: "0 0 12px 0" }}>Quick Links</p>
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {commTeamId && (
               <Link
                 href={`/team/${commTeamId}/roster`}
                 style={{
                   fontSize: 13,
-                  color: "#a5b4fc",
+                  color: "var(--accent-strong)",
                   textDecoration: "none",
                   padding: "6px 0",
                 }}
@@ -134,7 +134,7 @@ export default function WeekSetup({
               href={`/league/${leagueId}/standings`}
               style={{
                 fontSize: 13,
-                color: "#a5b4fc",
+                color: "var(--accent-strong)",
                 textDecoration: "none",
                 padding: "6px 0",
               }}

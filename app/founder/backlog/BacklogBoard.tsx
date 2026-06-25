@@ -28,13 +28,13 @@ const CATEGORY_OPTIONS = [
 const PRIORITY_COLORS: Record<string, string> = {
   P0: "#ef4444",
   P1: "#f97316",
-  P2: "#6366f1",
+  P2: "var(--accent)",
   P3: "#6b7280",
 };
 
 const TYPE_COLORS: Record<string, string> = {
   BUG: "#ef4444",
-  SUGGESTION: "#6366f1",
+  SUGGESTION: "var(--accent)",
   OTHER: "#6b7280",
 };
 
@@ -120,9 +120,9 @@ export default function BacklogBoard({ items: initial }: { items: BacklogItem[] 
       padding: "0.35rem 0.75rem",
       fontSize: "0.78rem",
       fontFamily: "monospace",
-      background: active ? "#1e1e2e" : "transparent",
-      color: active ? "#a5b4fc" : "#666",
-      border: active ? "1px solid #6366f133" : "1px solid transparent",
+      background: active ? "var(--card)" : "transparent",
+      color: active ? "var(--accent-strong)" : "#666",
+      border: active ? "1px solid rgba(143,193,232,0.2)" : "1px solid transparent",
       borderRadius: 4,
       cursor: "pointer",
       fontWeight: active ? 700 : 400,
@@ -242,7 +242,7 @@ export default function BacklogBoard({ items: initial }: { items: BacklogItem[] 
                     <div
                       style={{
                         fontSize: "0.82rem",
-                        color: "#9ca3af",
+                        color: "var(--dim)",
                         lineHeight: 1.6,
                         marginBottom: "0.75rem",
                         whiteSpace: "pre-wrap",
@@ -320,9 +320,9 @@ const cancelBtnStyle: React.CSSProperties = {
 };
 
 const saveBtnStyle = (disabled: boolean): React.CSSProperties => ({
-  background: disabled ? "#1e1e2e" : "#6366f1",
+  background: disabled ? "var(--card)" : "var(--accent)",
   border: "none",
-  color: "#fff",
+  color: "var(--accent-ink)",
   borderRadius: 4,
   padding: "0.3rem 0.75rem",
   fontFamily: "monospace",
@@ -334,7 +334,7 @@ const saveBtnStyle = (disabled: boolean): React.CSSProperties => ({
 const actionBtnStyle: React.CSSProperties = {
   background: "none",
   border: "1px solid #222",
-  color: "#6b7280",
+  color: "var(--faint)",
   borderRadius: 4,
   padding: "0.2rem 0.6rem",
   fontFamily: "monospace",

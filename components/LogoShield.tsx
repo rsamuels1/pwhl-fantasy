@@ -15,14 +15,14 @@ export function LogoShield({ size = 34 }: LogoShieldProps) {
     >
       <defs>
         <linearGradient id="pwhl-shield-grad" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="#7c3aed" />
-          <stop offset="1" stopColor="#4c1d95" />
+          <stop offset="0" stopColor="#8fc1e8" />
+          <stop offset="1" stopColor="#6fa8d4" />
         </linearGradient>
       </defs>
       <path
         d="M24 3 L41 9.5 V25 C41 36 24 45 24 45 C24 45 7 36 7 25 V9.5 Z"
         fill="url(#pwhl-shield-grad)"
-        stroke="rgba(167,139,250,0.55)"
+        stroke="rgba(143,193,232,0.55)"
         strokeWidth="1.2"
       />
       <path
@@ -33,7 +33,7 @@ export function LogoShield({ size = 34 }: LogoShieldProps) {
       />
       <path
         d="M11 22 L24 17"
-        stroke="rgba(167,139,250,0.55)"
+        stroke="rgba(143,193,232,0.55)"
         strokeWidth="1.3"
         strokeLinecap="round"
       />
@@ -55,7 +55,7 @@ export function LogoWordmark() {
         fontWeight: 800,
         fontSize: 15,
         letterSpacing: "0.05em",
-        color: "#f3f5fb",
+        color: "var(--text)",
         lineHeight: 1.2,
       }}>
         PWHL GM

@@ -74,19 +74,19 @@ export default function WeekRecap({
           </h2>
           <div style={{ display: "flex", justifyContent: "center", gap: 24, marginBottom: 24 }}>
             <div>
-              <p style={{ fontSize: 12, color: "#94a3b8", margin: 0, marginBottom: 4 }}>
+              <p style={{ fontSize: 12, color: "var(--dim)", margin: 0, marginBottom: 4 }}>
                 {commTeamName}
               </p>
-              <p style={{ fontSize: 40, fontWeight: 700, color: "#e2e8f0", margin: 0 }}>
+              <p style={{ fontSize: 40, fontWeight: 700, color: "var(--text)", margin: 0 }}>
                 {myScore}
               </p>
             </div>
-            <div style={{ fontSize: 20, color: "#64748b", alignSelf: "center" }}>—</div>
+            <div style={{ fontSize: 20, color: "var(--faint)", alignSelf: "center" }}>—</div>
             <div>
-              <p style={{ fontSize: 12, color: "#94a3b8", margin: 0, marginBottom: 4 }}>
+              <p style={{ fontSize: 12, color: "var(--dim)", margin: 0, marginBottom: 4 }}>
                 vs. Field
               </p>
-              <p style={{ fontSize: 40, fontWeight: 700, color: "#e2e8f0", margin: 0 }}>
+              <p style={{ fontSize: 40, fontWeight: 700, color: "var(--text)", margin: 0 }}>
                 {oppScore}
               </p>
             </div>
@@ -116,7 +116,7 @@ export default function WeekRecap({
             padding: 20,
           }}
         >
-          <h3 style={{ fontSize: 14, fontWeight: 600, marginTop: 0, marginBottom: 12, color: "#cbd5e1" }}>
+          <h3 style={{ fontSize: 14, fontWeight: 600, marginTop: 0, marginBottom: 12, color: "var(--muted)" }}>
             This Week's Highlights
           </h3>
           {activity.length > 0 ? (
@@ -126,7 +126,7 @@ export default function WeekRecap({
                   key={i}
                   style={{
                     fontSize: 13,
-                    color: "#94a3b8",
+                    color: "var(--dim)",
                     padding: "8px 0",
                     borderBottom:
                       i < Math.min(5, activity.length) - 1
@@ -139,7 +139,7 @@ export default function WeekRecap({
               ))}
             </div>
           ) : (
-            <p style={{ fontSize: 13, color: "#64748b", margin: 0 }}>
+            <p style={{ fontSize: 13, color: "var(--faint)", margin: 0 }}>
               No major highlights this week.
             </p>
           )}
@@ -154,8 +154,8 @@ export default function WeekRecap({
           style={{
             width: "100%",
             padding: "16px 20px",
-            background: "#6366f1",
-            color: "#fff",
+            background: "var(--accent)",
+            color: "var(--accent-ink)",
             border: "none",
             borderRadius: 8,
             fontSize: 15,
@@ -176,10 +176,10 @@ export default function WeekRecap({
             padding: 16,
           }}
         >
-          <h3 style={{ fontSize: 12, fontWeight: 600, marginTop: 0, marginBottom: 12, color: "#cbd5e1" }}>
+          <h3 style={{ fontSize: 12, fontWeight: 600, marginTop: 0, marginBottom: 12, color: "var(--muted)" }}>
             Next Steps
           </h3>
-          <div style={{ fontSize: 13, color: "#94a3b8" }}>
+          <div style={{ fontSize: 13, color: "var(--dim)" }}>
             <p style={{ margin: "0 0 8px 0" }}>✅ Week {lastMatchup.week} is complete</p>
             <p style={{ margin: "0 0 8px 0" }}>⏳ Click the button to begin Week {nextWeek}</p>
             <p style={{ margin: 0 }}>📝 You'll be able to adjust your lineup when Week {nextWeek} starts</p>

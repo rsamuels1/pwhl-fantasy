@@ -1054,7 +1054,8 @@ Goal: Ship everything needed before the beta invites go out on Jul 7, 2026. Two 
 (A) BLR — Beta League Replay Format, a new founder-created beta-invite experience; (B) Sprint 13
 carry-forwards — the 11 onboarding and in-season UX bugs that must be fixed before a new user can
 complete the wizard and land in a functioning league without PM assistance. A third track covers new
-live feedback bugs discovered Jun 22 and ops gate tasks.
+live feedback bugs discovered Jun 22, ops gate tasks, and a fifth track of ad-hoc beta fixes
+discovered Jun 22–23 after the primary tracks shipped (BF-015/016/017, BLR-003).
 
 **Beta invite date: Jul 7, 2026 (firm). Scope anything that misses this date into the post-beta backlog.**
 
@@ -1203,6 +1204,37 @@ keeps VP 1v1 pair-card layout unchanged; added "vs Field" badge to week header. 
 
 ---
 
+### Track E — Ad-hoc Beta Fixes (Jun 22–23, 2026)
+
+Discovered and shipped during Sprint 18 after the primary tracks completed.
+
+**BF-015: UTIL Slot False Error on Valid Forward Move** · S · P1 · ✅ SHIPPED (commit f400b90)
+Stale-closure bug in `LineupManager.tsx` multi-move batches. In auto-set and bench-upgrade hint
+operations that apply several moves at once, the slot-validation closure held the pre-move roster
+snapshot, causing valid forward→UTIL moves to be rejected as "slot full" once the batch reached a
+second forward. Fix: validation closure now accounts for prior pending moves within the same batch.
+Files: `app/team/[teamId]/lineup/LineupManager.tsx`
+
+**BF-016: Activity Feed Showing Raw LEAGUE_STORYLINE Enum String** · S · P1 · ✅ SHIPPED (commit 70cd536)
+`TYPE_META` in `lib/services/activity.ts` was missing an entry for `LEAGUE_STORYLINE`, causing the
+activity feed to display the raw enum value instead of a human-readable label. Fix: added
+`LEAGUE_STORYLINE` (label "League Storyline") and audited all other `EventType` values for missing
+entries. Files: `lib/services/activity.ts`
+
+**BF-017: Auto-Set and Bench-Upgrade Hint Suggest Players with 0 Games** · S · P1 · ✅ SHIPPED (commit 622ac9a)
+Null-coalescing inconsistency for `projectedFp` in `computeOptimalLineup` and the bench-upgrade hint
+ranked null-projection players (callups, injured players with no recent history) above players with
+real projections. Fix: standardized null→0 across both paths so zero-game players always rank last.
+Files: `lib/lineup.ts`, `app/team/[teamId]/lineup/LineupManager.tsx`
+
+**BLR-003: Expansion Team Teaser in Beta Welcome Screen + Draft Room** · S · P1 · ✅ SHIPPED (commit dfef7ef)
+Marketing/hype copy tied to the PWHL expansion draft (week of Jun 21, 2026). Added expansion team
+teaser to the BLR-002 beta welcome screen and draft room header, noting the four new franchises
+(Detroit, Hamilton, Las Vegas, San Jose) joining the 2026-27 season. Gated on `isBetaMode`.
+Files: `app/create-league/CreateLeagueWizard.tsx`, `app/draft/[leagueId]/DraftRoom.tsx`
+
+---
+
 ### Track D — Ops Gates (pre-launch blockers, can run in parallel with Tracks A–C)
 
 These tasks advance the formal launch gates. None require feature code; all require ops work or
@@ -1259,10 +1291,163 @@ Produce a findings list; fix all P0 a11y blockers. P1/P2 findings go to the post
 | OPS-003: Vercel ops verification | D | S | P0 | ✅ GATE-3 PASS — crons added; CRON_SECRET set in Vercel production; report: docs/04-operations/ops-verification-sprint-18.md |
 | OPS-004: Accessibility audit | D | M | P1 | ✅ SHIPPED — P0 a11y blockers: focus-visible CSS globally; aria-label + keyboard handlers on draft pick buttons and lineup slot divs; aria-label on AddAndSlotModal bench button |
 | BF-014: VTF matchup page confusion | C | S | P2 | ✅ SHIPPED (dc05f03) |
+| BF-015: UTIL slot false error on valid forward move | E | S | P1 | ✅ SHIPPED (f400b90) |
+| BF-016: Activity feed shows raw LEAGUE_STORYLINE enum | E | S | P1 | ✅ SHIPPED (70cd536) |
+| BF-017: Auto-set suggests players with 0 games | E | S | P1 | ✅ SHIPPED (622ac9a) |
+| BLR-003: Expansion team teaser in beta welcome screen + draft room | E | S | P1 | ✅ SHIPPED (dfef7ef) |
 
 **Min-ship (P0 only, must land by Jul 7):** ~~BLR-001~~ ✅ SHIPPED · ~~BLR-002~~ ✅ SHIPPED · ~~BF-009~~ ✅ RESOLVED · ~~OB-002~~ ✅ SHIPPED · ~~OB-003~~ ✅ SHIPPED · ~~OB-004~~ ✅ SHIPPED · ~~OPS-001~~ ✅ GATE-1 PASS · ~~OPS-002~~ ✅ GATE-2 PASS · ~~OPS-003~~ ✅ GATE-3 PASS = **0 remaining P0 stories**
 
 **Exit:** BLR leagues creatable by founder and joinable by invitees (BLR-001 ✅); BLR-002 welcome messaging shipped ✅; all 4 P0 onboarding wizard bugs fixed ✅; Analysis page navigates correctly ✅; draft load test passes at 20-league scale ✅; security audit complete with zero P0 findings ✅; CRON_SECRET set in Vercel production ✅; all P1s shipped ✅; VTF matchup schedule page fixed (BF-014 ✅). **All P0+P1+P2 items complete.** Beta invites go out Jul 7, 2026.
+
+---
+
+## Sprint 20 — "VTF Navigation Rename" · ✅ COMPLETE · Jun 23, 2026 · Track F · P1/P2
+
+Goal: Rename navigation labels in the league and team zones to better communicate VTF semantics to new users. Two targeted polish items only; no schema changes.
+
+| Story | Track | Size | Priority | Status |
+|---|---|---|---|---|
+| BF-018 — League "Schedule" tab → "Results" tab + VTF explainer subtitle | F | S | P1 | ✅ SHIPPED (commit ad4185a) |
+| UX-049 — Team Nav "Schedule" → "My Season" + "Your Players This Week" section rename | F | S | P2 | ✅ SHIPPED |
+
+**Exit achieved:** VTF navigation labels updated for clarity — "Results" replaces "Schedule" in the league nav; "My Season" replaces "Schedule" in the team nav. "Your Players This Week" section rename aligns with franchise-first language. Two targeted polish items shipped, no regressions.
+
+---
+
+## Sprint 19 — "IA Restructure: Franchise-First Navigation + DnD Lineup" · ✅ COMPLETE · Track F · P1/P2
+
+**Status:** COMPLETE. All 5 parts shipped to main. Sprint 19 superseded the originally-planned "Playwright UX Walkthrough Fixes" scope (BF-018, UX-051–057) with a larger IA restructure. The Playwright items remain in the post-sprint backlog for a future UX polish pass.
+
+Goal: Restructure the app's information architecture around a "My Franchise" mental model. Move all personal/transactional surfaces into the `/team/[teamId]/` zone. Make the league overview commissioner-only. Consolidate lineup management and roster into a single DnD-enabled surface. Give commissioners god-mode access to any team's lineup.
+
+---
+
+### Shipped (Sprint 19 — all 5/5 parts complete)
+
+**Part 1 — Emoji Policy + Colorblind Fix** · ✅ SHIPPED (commit 0d00092)
+- `docs/branding/emoji-policy.md`: tiered emoji policy — Tier 1 (celebratory/onboarding) YES; Tier 2 (nav/tables/status) NO.
+- `app/league/[leagueId]/standings/page.tsx`: colorblind chip fix with glyphs — ✓ CLINCHED, ✗ ELIM, ◉ BUBBLE replacing color-only differentiation.
+- `app/globals.css`: added `chip-bubble` (amber) and `chip-out` (gray) CSS classes.
+
+**Part 2 — Trades → My Franchise** · ✅ SHIPPED (commit a2cd617)
+- New `/team/[teamId]/trades`, `/team/[teamId]/trades/new`, `/team/[teamId]/trades/[tradeId]` routes under team layout.
+- Old `/league/[leagueId]/trades/*` routes redirect to team-scoped equivalents.
+- Trades tab removed from league nav; added to `TeamNav.tsx`.
+- New `/team/[teamId]/bracket` route (team-layout version of playoff bracket).
+- New `/team/[teamId]/transactions` route (team-layout version of transaction log).
+- `TeamNav.tsx` updated: removed Lineup/Free Agents tabs; renamed Rosters → My Roster; Trades/Playoffs/Transactions now link to `/team/[teamId]/` routes.
+
+**Part 3 — League Overview → Commissioner-Only** · ✅ SHIPPED (commit 3ceb056)
+- `/league/[leagueId]` now redirects non-commissioners to their team matchup page.
+- Removed My Matchup widget and non-commissioner content from the commissioner overview.
+- `/league/[leagueId]/roster` now requires commissioner access (non-commissioners see their own team roster via My Franchise).
+
+**Part 4 — Combined My Roster with DnD Lineup Management** · ✅ SHIPPED (commit 01075f9)
+- `@dnd-kit/core`, `@dnd-kit/sortable`, `@dnd-kit/utilities` installed.
+- New `components/LineupDnD.tsx`: drag-to-swap lineup management — stats tabs (Season/This week/Last week/Projected); games-remaining badges; play-lock validation; `DragOverlay`.
+- `app/team/[teamId]/roster/page.tsx` rewritten: fetches all lineup data (lock status, stats tabs, projections, games remaining) and renders `LineupDnD` at top + `RosterManager` below.
+- `/team/[teamId]/lineup` now redirects to `/team/[teamId]/roster`.
+
+**Part 5 — Commissioner God-Mode on My Roster** · ✅ SHIPPED (commit b4986a6)
+- Commissioner can view any team's roster via team selector and drag-and-drop their lineup.
+- Uses `/api/leagues/[leagueId]/commissioner/force-move` endpoint (not the regular lineup API).
+- `LineupDnD` shows amber "Commissioner view" banner when `forceMove=true`.
+- `RosterManager` shows "⚙ Commissioner View" chip alongside the "← My Team" back button.
+
+---
+
+### Sprint 19 Story Table
+
+| Story | Size | Priority | Status |
+|---|---|---|---|
+| Part 1: Emoji policy + colorblind chip fix | S | P1 | ✅ SHIPPED (0d00092) |
+| Part 2: Trades → My Franchise routes + TeamNav | M | P1 | ✅ SHIPPED (a2cd617) |
+| Part 3: League overview → commissioner-only | M | P1 | ✅ SHIPPED (3ceb056) |
+| Part 4: DnD lineup management on My Roster | L | P1 | ✅ SHIPPED (01075f9) |
+| Part 5: Commissioner god-mode on roster page | M | P2 | ✅ SHIPPED (b4986a6) |
+| **Total** | **1S · 3M · 1L** | — | **5/5** |
+
+**Schema changes:** None. All changes are routing, UI, and new npm packages only.
+
+**Exit achieved:** All personal/transactional surfaces live under `/team/[teamId]/`. Non-commissioners are redirected from the league overview to their franchise. `/team/[teamId]/roster` is the single page for lineup management and roster operations — click-to-swap replaced by drag-and-drop. Commissioner can view and rearrange any team's lineup from the roster page.
+
+---
+
+### Originally-Planned Sprint 19 Items (from Playwright UX walkthrough Jun 23, 2026)
+
+The following items were originally scoped for Sprint 19 but were superseded by the IA restructure. The 7 unblocked items have been reassigned to **Sprint 22** where they fit naturally alongside RD-004 (wizard rebuild) and RD-011 (empty state copy). The 2 email-blocked items remain in the post-email-infra backlog.
+
+**Reassigned to Sprint 22:**
+- BF-018 (P1, S) — `/league-rules` 404 dead link (note: separate from the nav-rename BF-018 that shipped in Sprint 20; same ID was reused — this is the original Playwright-walkthrough bug)
+- UX-051 (P1, S) — VP popover overflow on mobile in wizard Rules step (addressed by same file changes as RD-004)
+- UX-052 (P1, M) — Invite landing: add fantasy primer for cold new users
+- UX-057 (P1, M) — Wizard Rules step jargon wall (PPP, UTIL unexplained) (addressed alongside RD-004 wizard rebuild)
+- UX-054 (P2, S) — Replay CTA context copy on landing page
+- UX-055 (P2, S) — Wizard step count hidden until after welcome screen
+- UX-056 (P2, S) — Commissioner draft checklist: add plain-language draft primer
+
+**Remain blocked (post-email-infra backlog):**
+- UX-053 (P2, M) — Email invite flow — blocked on email infrastructure
+- BF-019 (P2, M) — Password reset / forgot password — blocked on email infrastructure
+
+---
+
+## Sprint 21 — "Living League: Weekly Delight" · ✅ COMPLETE · Milestone 1 · P1/P2
+
+Goal: Make every Tuesday feel like something happened. Surface what already exists (scoring, standings, notifications, matchup page) through storytelling, recognition, and live momentum signals. First sprint of the Living League arc.
+
+**Sprint coordination note:** LL-002 (Momentum Strip) ships its data layer here. The visual `MomentumStrip.tsx` component is built in Sprint 22 (RD-008) as part of the Inviting Dark redesign — the full feature is complete after Sprint 22.
+
+| Story | Track | Size | Priority | Status |
+|---|---|---|---|---|
+| LL-001 — Weekly Awards Ceremony: `computeWeeklyAwards()` in `storyline-service.ts`; 5 award types (Ice-Cold Closer, Heater, Heartbreaker, Collapse, Frozen Stick); emitted as `LEAGUE_STORYLINE` events from `advanceSeason()`; rendered as award cards in `WeekHighlights.tsx` | Feature | M | P1 | ✅ SHIPPED |
+| LL-002 (data layer) — Matchup Momentum Strip data: add `scoreDeltaSinceYesterday`, `playersRemainingTonight`, `opponentFinished` to `ActiveMatchup` type in `getDashboardData`; computed from existing score + roster data; dev sim cookie respected | Feature | S | P1 | ✅ SHIPPED |
+| LL-003 — Animated Stat Chips: `StatChip.tsx` pill badges with CSS pulse; 4 chip types (streak, projection swing, league record, weekly leader); computed server-side in `getDashboardData` as `chips[]` on `RosterEntryRow`; rendered in matchup page Z6 roster breakdown | Feature | S | P2 | ✅ SHIPPED |
+| LL-017 — Plain-Language Award & Storyline Explainers: tappable ⓘ affordance on every award/chip card; all explainer copy in `lib/copy/living-league-glossary.ts`; fan-first language ("fantasy points" not "FP"); ≥44px touch target; links to `VpExplainer` | Feature | S | P1 | ✅ SHIPPED |
+| LL-018 — Negative Award Tone Calibration: forward-looking recovery CTA on Heartbreaker/Collapse/Frozen Stick cards (e.g. "→ Find players"); commissioner `showNegativeAwards` toggle in admin panel (stored in league settings JSON, no migration) | Feature | S | P1 | ✅ SHIPPED |
+
+**Exit criteria:** After `advanceSeason()` runs, 5 award cards appear in `WeekHighlights.tsx`; negative awards include a recovery CTA link; tapping the ⓘ on any award or chip card reveals jargon-free helper text from `lib/copy/living-league-glossary.ts`. `ActiveMatchup` type in `lib/services/dashboard.ts` includes all three Momentum Strip fields with correct values under dev sim date. At least one stat chip type renders correctly in matchup page Z6. `showNegativeAwards` commissioner toggle renders in admin panel. All existing tests pass; `tsc --noEmit` clean. No schema changes.
+
+---
+
+## Sprint 22 — "Inviting Dark Redesign" · ✅ COMPLETE · Track F · P1
+
+Goal: Execute the "Inviting Dark" visual redesign defined in `docs/branding/pwhl_redesign_bundle_v3_1.zip`. This sprint is pure UI/CSS — no schema changes, no new API routes, no new data models. It covers the full token replacement, inline hex sweep, emoji restoration, flagship page redesigns (league overview + team matchup), remaining page recolor sweep, and a set of emotional UX additions (Momentum Strip, prestige gradient, gold prestige moments, empty state copy, wizard summary panel).
+
+Also absorbs 7 carry-in items from the Sprint 19 Playwright UX walkthrough that were superseded by the Sprint 19 IA restructure. These items (BF-018, UX-051–057 unblocked set) fit naturally alongside RD-004 (wizard rebuild) and the broader onboarding/copy polish work in this sprint.
+
+Spec authority: `docs/branding/pwhl_redesign_bundle_v3_1.zip` (contains `globals.tokens.css`, `color-replacement-map.md`, `page-inventory.md`, and reference HTML files for league overview and team matchup).
+
+**All 23/23 stories shipped.**
+
+| Story | Track | Size | Priority | Status |
+|---|---|---|---|---|
+| RD-001 — Token swap: replace `:root` in `globals.css` with Inviting Dark tokens + 3 follow-up edits (body radial-gradient, `.button-primary` accent-ink text, `.section-accent` drop violet) | UX | S | P1 | ✅ SHIPPED |
+| RD-002 — Inline hex sweep across `app/**` + `components/**` per `color-replacement-map.md`; verify button/badge contrast after | Refactor | M | P1 | ✅ SHIPPED |
+| RD-003 — Emoji policy restoration: apply tiered policy; restore glyph chips (✓ CLINCHED, ✗ OUT, ◉ BUBBLE), activity-feed emoji, recap emoji, lock emoji; remove blanket-ban relics | UX | S | P1 | ✅ SHIPPED |
+| RD-004 — VP popover fix + Create League Wizard rebuild: fix `components/VpExplainer.tsx` anchored popover; rebuild `app/create-league/CreateLeagueWizard.tsx` with rule-sheet layout, scoring two-column table, slot pills | Feature | L | P1 | ✅ SHIPPED (also covers UX-051, UX-057) |
+| RD-005 — League overview flagship redesign: `app/league/[leagueId]/page.tsx` per `references/League Overview.dc.html`; gold commissioner strip, glyph chips, My Matchup widget sky-accent recolor, league leaders layout | Feature | L | P1 | ✅ SHIPPED |
+| RD-006 — Team matchup flagship redesign: `app/team/[teamId]/matchup/page.tsx` per `references/Team Matchup.dc.html`; DuelHero warm gradient + gold radial, score semantics → token vars, prestige RecapCard, all-set banner | Feature | L | P1 | ✅ SHIPPED |
+| RD-007 — Remaining page recolor sweep: walk `page-inventory.md` [recolor] screens: dashboard, standings, bracket, admin, roster, draft, trades, auth pages, founder console, shared components | Refactor | L | P1 | ✅ SHIPPED (covers RD-005/006 recolor portions; `app/founder/` intentionally preserved) |
+| RD-008 — Momentum Strip component: new `components/MomentumStrip.tsx`; placed under matchup score header; hidden pre-game, collapses when matchup complete; shows +X pts since yesterday, N players remaining, opponent status | Feature | M | P1 | ✅ SHIPPED (completes LL-002) |
+| RD-009 — Prestige gradient token: add `--prestige-gradient` CSS variable to `app/globals.css`; apply to champion cards, clinched playoff banners, weekly recap hero; never on buttons/nav | UX | S | P2 | ✅ SHIPPED |
+| RD-010 — Gold prestige moments: apply `--gold` to weekly high score badge, first-place indicator, hot streak chip, clinched banner, champion card; keep gold intentionally rare | Feature | M | P2 | ✅ SHIPPED |
+| RD-011 — Empty state personality copy: update `components/EmptyState.tsx` and inline empty states with warm copy | UX | S | P2 | ✅ SHIPPED |
+| RD-012 — Wizard "Your league at a glance" summary panel: 4-item card at wizard completion step | Feature | M | P2 | ✅ SHIPPED |
+| RD-014 — Live Matchup Excitement Indicators: directional trend arrows on projected totals (`▲ +4.3` / `▼ −1.2`); upset chip when trailing win probability is 10–40% (`⚡ 18% chance to steal the win`); suppressed in SETUP phase; VTF framing for FieldHero; no schema change | Feature | M | P2 | ✅ SHIPPED |
+| RD-015 — Settings editor rule-sheet restructure: `SettingsEditor.tsx` scoring section → two-column Skaters/Goalies table; roster slots → pill badges matching wizard; sentence-case section headers; presentation-only — all save/validation tests pass | UX | M | P2 | ✅ SHIPPED |
+| RD-016 — Brand theme naming decision ("Northern Ice"): confirm theme name; apply to `globals.css` header comment + branding README; no functional change | Decision | S | P2 | ✅ SHIPPED |
+| RD-017 — Emotional Design North-Star Principles: `docs/branding/emotional-design-principles.md`; "should feel / avoid feeling" list; signature-moment gold rule; "arena concourse" north-star line; linked from sprint exit criteria and branding README | Doc | S | P2 | ✅ SHIPPED |
+| BF-018 — `/league-rules` 404: create minimal `app/league-rules/page.tsx` or remove all dead links (carry-in from Sprint 19) | Bug | S | P1 | ✅ SHIPPED (`app/league-rules/page.tsx` created; public static page, 5 sections) |
+| UX-051 — VP popover overflow on mobile in wizard Rules step (handled alongside RD-004 `VpExplainer.tsx` changes; carry-in from Sprint 19) | UX | S | P1 | ✅ SHIPPED (via RD-004) |
+| UX-052 — Invite landing: add 3+ bullet-point fantasy primer above join form for logged-out cold users (carry-in from Sprint 19) | UX | M | P1 | ✅ SHIPPED (`app/invite/[leagueId]/page.tsx` — "New to fantasy sports?" section with 4 plain-language steps) |
+| UX-057 — Wizard Rules step jargon wall: add inline PPP + UTIL definitions; restructure alongside RD-004 wizard rebuild (carry-in from Sprint 19) | UX | M | P1 | ✅ SHIPPED (via RD-004) |
+| UX-054 — Replay CTA context copy: add ≤15-word subtitle to "Try a Replay" CTA on landing page (carry-in from Sprint 19) | UX | S | P2 | ✅ SHIPPED |
+| UX-055 — Wizard step count: show step summary on welcome/beta screen before step 1 (carry-in from Sprint 19) | UX | S | P2 | ✅ SHIPPED |
+| UX-056 — Commissioner draft checklist: add plain-language snake-draft primer in admin panel pre-draft section (carry-in from Sprint 19) | UX | S | P2 | ✅ SHIPPED |
+
+**Exit criteria met:** `app/globals.css` `:root` block fully replaced with Inviting Dark / Northern Ice tokens; zero hardcoded hex values in `app/**` + `components/**` that appear in `color-replacement-map.md`; `components/VpExplainer.tsx` anchored popover no longer clips on mobile; league overview and team matchup pages match the `.dc.html` reference files; `MomentumStrip` renders correctly in active-period matchups; trend arrows render on the matchup hero with correct direction + color; settings editor scoring section renders as a two-column rule-sheet table; `emotional-design-principles.md` exists in `docs/branding/`; `/league-rules` returns 200 (not 404); invite landing shows plain-language fantasy primer to logged-out users; wizard Rules step has inline PPP + UTIL definitions; all existing tests pass; `tsc --noEmit` clean.
 
 ---
 
@@ -1287,11 +1472,11 @@ Sprint 18 ops tasks (OPS-001/002/003) advance GATE-1, GATE-2, GATE-3 to IN PROGR
 - [ ] DB connection pool: Neon limits tested; Prisma connection pooling configured — pending report detail
 - [ ] Vercel function cold-start behavior validated — pending report detail
 
-**GATE-3: Ops Readiness** · ⚠ CONDITIONAL PASS (OPS-003 — one manual action pending)
+**GATE-3: Ops Readiness** · ✅ PASS
 - [x] `process-waivers` cron verified at 08:00 UTC (03:00 ET) in `vercel.json` ✅
 - [x] `check-incomplete-lineups` confirmed in `vercel.json` + route shipped ✅
 - [x] `CRON_SECRET` guard implemented in both cron routes ✅
-- [ ] `CRON_SECRET` env var **must be set manually in Vercel production dashboard before Jul 7** ⚠
+- [x] `CRON_SECRET` env var confirmed set in Vercel production dashboard (`pwhl-gm-prod`) ✅
 - [ ] Error monitoring / alerting configured (Sentry or equivalent) — P1 post-beta
 - [ ] DB backup policy confirmed for Neon (point-in-time recovery) — manual verification pending
 
@@ -1395,7 +1580,16 @@ Items below are acknowledged but have no sprint assignment. They become candidat
 | Sprint 15 — Visual Design System Deep Pass | ✅ COMPLETE (Jun 22, 2026) | 3 stories: DS-001 (homepage rewrite + sticky header), DS-002 (token sweep all pages + emoji removal), DS-003 (league overview + WeekHighlights full redesign) |
 | Sprint 16 — Emotional Design Polish | ✅ COMPLETE (Jun 22, 2026) | Score colors by win state + count-up animation, section heading hierarchy, Saira Condensed font loading, RecapCard elevation, card entrance animations. Transforms "Bloomberg terminal" feeling into energetic sports product. Commits: 5ecc116, f1d576c |
 | Sprint 17 — UX Polish: Agent Test Run Fixes | ✅ COMPLETE (Jun 22, 2026) | 9/9 items: AG-001 (LEAGUES overhaul + isPublic schema) + AG-002 (matchup page restructure) + AG-003 (FP/VP copy) + AG-004 (terminology) + AG-005 (playoff eliminated empty state) + AG-006 (renewal confirmation) + AG-007 (pre-login UX) + AG-008 (VP education) + AG-009 (lock tooltip); source: 4-agent parallel UX test run |
-| Sprint 18 — Beta Operations + Onboarding Repair | IN PROGRESS (target Jul 7, 2026) | All P0s complete: BLR-001 ✅ + BLR-002 ✅ (BetaWelcomeStep confirmed) + BF-009 ✅ + OB-002/003/004 ✅ + OPS-001 ✅ (GATE-1 PASS, zero P0 findings) + OPS-002 ✅ (GATE-2 PASS, 20 leagues × 80 connections) + OPS-003 ✅ (GATE-3 CONDITIONAL — CRON_SECRET manual action pending Jul 7); P1 items + BF-012/013/014 + OPS-004 remaining |
+| Sprint 18 — Beta Operations + Onboarding Repair | ✅ COMPLETE (Jun 23, 2026) | All 24 items shipped across 5 tracks: BLR-001/002 ✅ + BF-009 ✅ + OB-002/003/004 ✅ + UX-046/047/048 ✅ + OB-005/006/007/009 ✅ + BF-012/013/014 ✅ + OPS-001/002/003/004 ✅ + BF-015/016/017 ✅ + BLR-003 ✅. GATE-1/2/3 all PASS. Beta invites Jul 7, 2026. |
+| Sprint 19 — IA Restructure: Franchise-First Nav + DnD Lineup | ✅ COMPLETE (Jun 23, 2026) | 5/5 parts shipped: Part 1 emoji policy + colorblind chips (0d00092) · Part 2 Trades→My Franchise + TeamNav (a2cd617) · Part 3 league overview commissioner-only (3ceb056) · Part 4 DnD lineup on roster page (01075f9) · Part 5 commissioner god-mode (b4986a6). No schema changes. |
+| Sprint 20 — VTF Navigation Rename | ✅ COMPLETE (Jun 23, 2026) | 2/2 items shipped: BF-018 league nav "Schedule" → "Results" + VTF explainer subtitle (commit ad4185a) · UX-049 team nav "Schedule" → "My Season" + section rename. No schema changes. |
+| Sprint 21 — Living League: Weekly Delight | ✅ COMPLETE | 5/5 stories shipped: LL-001 Weekly Awards Ceremony (`computeWeeklyAwards()` + `emitWeeklyAwards()` in `storyline-service.ts`, award cards in `WeekHighlights.tsx`) · LL-002 Momentum Strip data layer (`scoreDeltaSinceYesterday`, `playersRemainingTonight`, `opponentFinished` on `ActiveMatchup`) · LL-003 Animated Stat Chips (`StatChip.tsx`, `computeStatChips()` in `dashboard.ts`) · LL-017 Plain-Language Explainers (`lib/copy/living-league-glossary.ts`, `InfoTooltip.tsx`) · LL-018 Negative Award Tone Calibration (recovery CTAs, `showNegativeAwards` toggle, `NegativeAwardsToggle.tsx`, `PATCH /api/leagues/[leagueId]/settings`). No schema changes. 6 commits. |
+| Sprint 22 — Inviting Dark Redesign | ✅ COMPLETE (23/23 shipped) | All 23 stories shipped: RD-001–008 P1 core track ✅ · RD-005 league overview flagship ✅ · RD-006 matchup flagship ✅ · RD-009 prestige gradient ✅ · RD-010 gold prestige moments ✅ · RD-011 empty state copy ✅ · RD-012 wizard summary panel ✅ · RD-014 trend arrows + upset chip ✅ · RD-015 settings rule-sheet ✅ · RD-016 "Northern Ice" theme name ✅ · RD-017 emotional-design-principles.md ✅ · BF-018 /league-rules ✅ · UX-051/052/054/055/056/057 all ✅. No schema changes. |
+| Sprint 23 — Living League: The Race | ✅ COMPLETE | 7/7 stories shipped: LL-004 Magic Number (`computeRace()` + magicNumber + standings chip) · LL-005 Playoff Clinch Celebration (`emitClinchEvents()` + `ClinchBanner.tsx`) · LL-007 Bubble Watch (`BubbleWatch.tsx` on standings) · LL-008 Upset Tracker (`upset-service.ts` + `UpsetCard.tsx`) · LL-019 First-Result Explainer (`FirstResultCard.tsx`, localStorage-gated) · LL-021 Small-Win Encouragement (`MilestoneToast.tsx`, lineup + first-add) · RD-013 Team Identity Colors (`FantasyTeam.accentColor` + `TeamColorPicker.tsx` + PATCH route). Schema migration: `FantasyTeam.accentColor String?`. |
+| Sprint 24 — Living League: Season Story | ✅ COMPLETE | 5/7 shipped (UX-058 + BF-020 deferred): LL-006 Season Timeline · LL-010 League Record Book · LL-011 Franchise Identity (team name editing only; archetypes deferred as LL-011b) · LL-012 Manager Superlatives · LL-023 Empty States. |
+| Sprint 25 — Living League: Legacy + Carry-Forwards | 🔵 PLANNED | 5 stories: LL-009 Trophy Cabinet (schema: Achievement model) · LL-011b Franchise Identity Archetypes · LL-014 Opening Day Card · LL-015 Championship Banner · UX-058 Trade Proposal 4-Step · BF-020 Auto-Draft Position Balance. Schema migration required (Achievement + AchievementType). |
+| Sprint 26 — The Morning Skate | 🔵 PLANNED | 2 stories: LL-013 + LL-020 (Newcomer Reading Layer). New MorningSkateEdition model, archive + detail pages, homepage hero integration, league nav entry, plain-language blurb templates. Schema migration required (MorningSkateEdition model). |
+| Sprint 27 — League Hub | 🔵 PLANNED | 3 stories: LL-016 Hub Reorg · LL-022 Progressive Disclosure · LL-024 Glossary Anchor Page. Homepage + league overview restructured. No schema changes. |
 
 ---
 
@@ -1430,8 +1624,274 @@ new live feedback bugs (BF-012/013/014), Vercel cron wiring, load test, and inte
 review. The beta invite date of **Jul 7, 2026** (moved up from Jul 14) is achievable given
 P0 fixes are already applied.
 
+---
+
+## Sprint 23 — "Living League: The Race" · ✅ COMPLETE · Milestone 2 core · P1/P2
+
+Goal: Make standings feel dramatic. Real-time playoff implications, clinch celebrations, and a record of the season's most improbable results.
+
+**All 7/7 stories shipped:**
+
+| Story | Track | Size | Priority | Status |
+|---|---|---|---|---|
+| LL-004 — Magic Number: `computeRace()` in `lib/playoffs/seeding.ts` extended with `magicNumber: number \| null` on `RaceInfo`; shows after midseason; "Magic: N" chip on standings page for contending teams | Feature | S | P1 | ✅ SHIPPED |
+| LL-005 — Playoff Clinch Celebration: `emitClinchEvents()` in `advanceSeason()`; `ClinchBanner.tsx` (localStorage-gated, dismissible); rendered on matchup page when `PLAYOFF_CLINCH` LeagueEvent exists | Feature | S | P1 | ✅ SHIPPED |
+| LL-007 — Bubble Watch: `BubbleWatch.tsx` server component on standings page; 3 groupings (clinched/in/bubble/elim/out); shown only during `IN_SEASON`; late-season heading "Playoff Push" after week N/2 | Feature | S | P2 | ✅ SHIPPED |
+| LL-008 — Upset Tracker: `lib/services/upset-service.ts`; `UpsetCard.tsx`; rendered in league overview sidebar when at least one qualifying upset exists | Feature | M | P2 | ✅ SHIPPED |
+| RD-013 — Team Identity Colors: `FantasyTeam.accentColor String?` schema field + migration; `TeamColorPicker.tsx`; `PATCH /api/leagues/[leagueId]/teams/[teamId]/color`; avatar ring + name tint in DuelHero and standings | Feature | M | P2 | ✅ SHIPPED |
+| LL-019 — First-Result Explainer: `FirstResultContext` in `DashboardData`; `FirstResultCard.tsx` (localStorage-gated); shown on matchup page after first scored week; VTF explainer + top contributor named | Feature | M | P1 | ✅ SHIPPED |
+| LL-021 — Small-Win Encouragement: `MilestoneToast.tsx`; lineup-complete toast from `PUT /lineup`; first-add toast from `POST /waiver`; both localStorage-gated; fires once per manager | Feature | S | P2 | ✅ SHIPPED |
+
+**Schema changes:** `FantasyTeam.accentColor String?` (RD-013 — migration required).
+
+**Exit criteria met:** After `advanceSeason()` scores a week, newly-clinched teams receive a notification and the dismissible clinch banner appears on their matchup page. "Magic: N" chip renders next to the race chip on the standings page for contending teams. `BubbleWatch.tsx` renders correctly in `IN_SEASON` state with the correct three groupings. `UpsetCard.tsx` renders at least one upset on the league overview when scored matchup data exists. First-result explainer card appears for a brand-new manager after their first scored period and dismisses correctly. Lineup-complete and first-add encouragement toasts fire once and not again. All existing tests pass; `tsc --noEmit` clean.
+
+---
+
+## Sprint 24 — "Living League: Season Story" · ✅ COMPLETE (5/7) · Milestone 2 tail + Milestone 3 surface · P1/P2
+
+Goal: Give the league a narrative. A scrollable season timeline, a record book, franchise personality archetypes, and end-of-season manager superlatives.
+
+| Story | Track | Size | Priority | Status |
+|---|---|---|---|---|
+| LL-006 — Season Timeline: `lib/services/timeline-service.ts` → `getSeasonTimeline()`; events sourced from existing `LeagueEvent` rows; `SeasonTimeline.tsx` on league overview; `/team/[teamId]/schedule` extended with W-L-T summary header; page title "My Season" | Feature | M | P2 | ✅ SHIPPED |
+| LL-010 — League Record Book: new `/league/[leagueId]/records` page; records: highest weekly score, best season record, biggest blowout, top-5 individual player weeks; "Records" in league nav; `components/SuperlativesCard.tsx`; `lib/services/superlatives.ts` | Feature | M | P1 | ✅ SHIPPED |
+| LL-011 — Franchise Identity (team name editing only): `PATCH /api/leagues/[leagueId]/teams/[teamId]/name` (ownership-gated, 1–50 chars); `components/TeamNameEditor.tsx` inline edit on Settings page; NOTE: franchise archetype system deferred to Sprint 25 as LL-011b | Feature | M | P2 | ✅ SHIPPED (partial) |
+| LL-012 — Manager Superlatives: `lib/services/superlatives.ts` pure function; 5 awards: Top Scorer, Feast or Famine, Steady Eddie, Hot Start, Strong Finish; `SuperlativesCard.tsx` in league overview sidebar; team's own superlatives as gold callout on Analysis page | Feature | M | P2 | ✅ SHIPPED |
+| LL-023 — Empty States: personality copy across Trades (all 3 tabs), Transactions feed, Analysis page; uses existing `EmptyState.tsx`; no schema change | Feature | S | P2 | ✅ SHIPPED |
+| UX-058 — Trade Proposal 4-Step Guided Experience | UX Fix | M | P1 | DEFERRED to Sprint 25 |
+| BF-020 — Auto-draft position balance | Bug | S | P2 | DEFERRED to Sprint 25 |
+
+**Result: 5/7 shipped. UX-058 and BF-020 deferred to Sprint 25. No schema changes.**
+
+---
+
+## Sprint 25 — "Living League: Legacy + Carry-Forwards" · BUILT (pending commit) · Milestone 3 depth + Milestone 5 · P1/P2
+
+Goal: Seasons contribute to franchise identity. Win something and it stays with you forever. The champion gets a banner; the season opener gets a card. Includes two carry-forwards from Sprint 24 (UX-058, BF-020) and the franchise archetype system that was out-of-scope in Sprint 24 (LL-011b).
+
+| Story | Track | Size | Priority | Status |
+|---|---|---|---|---|
+| LL-009 — Trophy Cabinet: `Trophy` model + `TrophyType` enum in schema (`prisma/schema.prisma`); achievements written at lifecycle hooks; `/team/[teamId]/trophies` page; `TrophyCard.tsx` + `TrophyShelf.tsx`; trophy icons in matchup page header (Z2); `lib/services/trophy-service.ts` | Feature | L | P1 | BUILT (pending commit) |
+| LL-011b — Franchise Identity Archetypes: `computeFranchiseIdentity()` in `lib/services/franchise-identity.ts`; archetype chip in team matchup page Z2 area via `FranchiseIdentityChip.tsx`; requires ≥4 scored weeks; no schema change | Feature | M | P2 | BUILT (pending commit) |
+| LL-014 — Opening Day Card: dismissible hero card at Z0 on matchup page during Week 1 only (`activePeriod.number === 1`); `OpeningDayCard.tsx` imported in `app/team/[teamId]/matchup/page.tsx`; dismiss flag in `localStorage` keyed on `leagueId + season` | Feature | S | P2 | BUILT (pending commit) |
+| LL-015 — Championship Banner: dismissible banner on matchup page for league champion after `playoffStatus === COMPLETE`; `ChampionshipBanner.tsx` imported in `app/team/[teamId]/matchup/page.tsx`; triggered by unread `CHAMPIONSHIP_WON` notification; dismiss calls `markAllRead()` | Feature | S | P1 | BUILT (pending commit) |
+| UX-058 — Trade Proposal 4-Step Guided Experience: 4-step state machine in `app/league/[leagueId]/trades/new/ProposeTrade.tsx` confirmed; Step 0 pick partner, Step 1 select players to give, Step 2 select players to receive, Step 3 review + send; progress bar component; same `POST /trades` endpoint | UX Fix | M | P1 | BUILT (pending commit) |
+| BF-020 — Auto-draft position balance: Tier 1b added in `bestAvailablePlayerIds()` in `lib/draft/server.ts`; defensemen filling open D slots now ranked at same priority as goalies (comment "BF-020" confirmed at line 469/525) | Bug | S | P2 | BUILT (pending commit) |
+
+**Result: 6/6 BUILT — all code exists in working tree as modified/untracked files; not yet committed. Schema change: `Trophy` model + `TrophyType` enum in `prisma/schema.prisma` (note: model is named `Trophy`, not `Achievement` as originally planned).**
+
+---
+
+## Sprint 26 — "Beta Defect Sweep + Trade Polish" · ✅ COMPLETE (partial) · Track V+F · P0/P1/P2
+
+Goal: Resolve all open beta defects surfaced by the Jun 24 feedback batch before public launch. Two P0 navigation regressions (BF-024, BF-027) must ship first; P1 items follow. Includes carry-forwards from Sprints 18/24 (BF-012, BF-013) that remain open.
+
+Note: BF-022, BF-023, BF-025, BF-026, BF-028 were handled by parallel agents and shipped in Sprint 27 instead.
+
+| Story | Track | Size | Priority | Status |
+|---|---|---|---|---|
+| BF-024 — Transactions team nav bounces to league dashboard | Bug | S | P0 | ✅ DONE (parallel agent) |
+| BF-027 — Activity feed LEAGUE_STORYLINE regression | Bug | S | P0 | ✅ DONE (parallel agent) |
+| BF-022 — BottomNav visible on laptop/desktop | Bug | S | P1 | ✅ DONE (Sprint 27) |
+| BF-023 — Transaction history missing FA adds | Bug | M | P1 | ✅ DONE (Sprint 27) |
+| BF-025 — Trade UI forces same-position matching | Bug | S | P1 | ✅ DONE (Sprint 27 — no code change needed) |
+| BF-026 — Standings playoff cutoff text hard to read | Bug | S | P1 | ✅ DONE (Sprint 27) |
+| BF-012 — FA add confirms success but shows error modal | Bug | M | P1 | Open (carried forward) |
+| BF-013 — Trades blocked between draft completion and season start | Bug | S | P1 | Open (carried forward) |
+| BF-028 — Commissioner has no pending trade visibility | Suggestion | S | P1 | ✅ DONE (Sprint 27) |
+| BF-021 — DnD lineup mobile UX friction | Suggestion | M | P2 | Open (carried forward) |
+
+**Result: 7/10 shipped across Sprints 26–27. BF-012, BF-013, BF-021 carried forward.**
+
+---
+
+## Sprint 26 — "The Morning Skate" · PLANNED · Milestone 4 · P1
+
+Goal: PWHL GM's first truly branded subsystem. A weekly league newsletter published every Tuesday after matchups score. Managers should say "I checked the Morning Skate" instead of "I opened PWHL GM."
+
+| Story | Track | Size | Priority | Status |
+|---|---|---|---|---|
+| LL-013 — The Morning Skate: `MorningSkateEdition` model (schema migration required); `lib/services/morning-skate-service.ts` → `generateEdition()`; 4 article sections (Standings, Matchups, Players, League Activity) via pure template strings — no AI/LLM; `emitMorningSkateEdition()` from `advanceSeason()`; archive page `/league/[leagueId]/morning-skate`; detail page `/league/[leagueId]/morning-skate/[editionId]`; homepage hero preview when edition exists; "Morning Skate" primary league nav tab with 📰 icon | Feature | XL | P1 | Open |
+| LL-020 — Newcomer-Mode Morning Skate Reading Layer: blurb templates lead with human subjects ("Marie-Philip Poulin powered the Northern Lights") not stat-first phrasing; acronyms expanded or tap-to-define via LL-017 glossary map; one-paragraph plain-language lede per edition; "New here? →" primer link in masthead; verified readable at 375px | Feature | M | P1 | Open |
+
+**Engineer checklist:**
+1. Add `MorningSkateEdition` model to `prisma/schema.prisma` and run `npx prisma migrate dev`
+2. `lib/services/morning-skate-service.ts` — `generateEdition(leagueId, periodId, prisma): Edition` (pure, returns structured object)
+3. `emitMorningSkateEdition(leagueId, periodId, prisma)` — stores the edition row; called after `emitWeeklyStorylines()` in `advanceSeason()`
+4. `app/league/[leagueId]/morning-skate/page.tsx` — archive list (newest first), server-rendered
+5. `app/league/[leagueId]/morning-skate/[editionId]/page.tsx` — full edition display
+6. Modify `app/team/[teamId]/matchup/page.tsx` — fetch latest edition; if present, render masthead preview at Z0 with "Read full edition →" link
+7. Add "Morning Skate" to `app/league/[leagueId]/layout.tsx` nav
+8. Article template strings: each section uses `switch` / conditional logic on existing data — no external calls
+9. (LL-020) Author all blurb templates subject-first; import glossary map from `lib/copy/living-league-glossary.ts` (created in Sprint 21 for LL-017); add plain-language lede generator and "New here?" masthead link
+
+**Exit criteria:** After `advanceSeason()` scores a week, a `MorningSkateEdition` row is written for that period. The archive page at `/league/[leagueId]/morning-skate` lists the edition. The detail page renders all 4 article sections with at least 2 blurbs each. Each blurb leads with a player or team name, not a stat. The "New here?" primer link is visible in the masthead. The matchup page homepage hero shows the Morning Skate masthead and 2+ headline blurbs when a current edition exists. "Morning Skate" tab appears in the league nav. Schema migration clean; all existing tests pass; `tsc --noEmit` clean.
+
+---
+
+## Sprint 27 — "Polish & The Arena Concourse" · ✅ COMPLETE · Jun 24, 2026 · Track V+F · P1/P2
+
+Goal: Assemble glossary, stat education, and hub information hierarchy into the "arena concourse" experience. Also closes out 5 beta bug fixes carried from Sprint 26.
+
+**All items shipped:**
+
+**Track A — Beta Bug Fixes:**
+
+| Story | Track | Size | Priority | Status |
+|---|---|---|---|---|
+| BF-022 — BottomNav visible on desktop: `className="bottom-nav"` added to `<nav>` in `components/BottomNav.tsx`; inline `display: "flex"` override removed | Bug | S | P1 | ✅ DONE |
+| BF-023 — Waiver claim awards not logged in transactions: `processWaivers()` in `lib/services/waiver-service.ts` now emits both `WAIVER_CLAIM_AWARDED` and `PLAYER_ADD` events for waiver-awarded adds | Bug | M | P1 | ✅ DONE |
+| BF-025 — Trade UI position filter: investigated; new `ProposeTrade.tsx` 4-step wizard has NO position filter; old component had the bug; resolved without code change | Bug | S | P1 | ✅ DONE (no code change) |
+| BF-026 — Standings playoff cutoff contrast: `chip-out` color changed to `#94a3b8` (5.5:1 WCAG AA); dashed border opacity increased; footer note uses `var(--dim)` | Bug | S | P1 | ✅ DONE |
+| BF-028 — Commissioner pending trade visibility: `app/dashboard/page.tsx` queries `prisma.trade.groupBy` for `PENDING_REVIEW` trades per commissioner league; surfaced as dashboard action items | Bug | S | P1 | ✅ DONE |
+
+**Track B — Hub Assembly & Information Hierarchy:**
+
+| Story | Track | Size | Priority | Status |
+|---|---|---|---|---|
+| LL-024 — "How It Works" glossary page: new `app/league/[leagueId]/how-it-works/page.tsx` server component; 6 sections (VP, FP scoring from live settings, roster slots, stat glossary with 15 abbreviations, waiver wire, trades); nav link added to `app/league/[leagueId]/layout.tsx` | Feature | M | P2 | ✅ DONE |
+| LL-022 Phase 1 — Stat header tooltips: `components/StatTooltip.tsx` (abbr element pattern); `title` props on `SortTh` in `RosterManager.tsx` for PPP/SOG/HIT/BLK/SV%/GA/SO/FP; `tooltip` field on `SKATER_COLS`/`GOALIE_COLS` in `DraftRoom.tsx` | Feature | S | P1 | ✅ DONE |
+| LL-022 Phase 2 — VP/FP anchors: "How it works →" link added to standings page legend in `app/league/[leagueId]/standings/page.tsx` | Feature | S | P1 | ✅ DONE |
+| VTF display subtitle update: subtitle in `app/league/[leagueId]/page.tsx` updated from "Score vs the field — ranked high to low" to "Everyone races the same week — your rank is your result" | Polish | S | P2 | ✅ DONE |
+| LL-016 (partial) — Records teaser: inline weekly top-scorer teaser added after race table in commissioner overview with link to record book | Feature | S | P1 | ✅ DONE (partial) |
+| LL-016 (partial) — Trophy leaderboard: trophy count query (`prisma.trophy.groupBy`) and sidebar leaderboard widget in commissioner overview right column; "Full record book →" link | Feature | S | P1 | ✅ DONE (partial) |
+
+**Skipped:** BF-024 and BF-027 handled by parallel agents in Sprint 26.
+
+**No schema changes in this sprint.**
+
+**Result: 11/11 Sprint 27 items shipped. Sprint 26 carry-forwards BF-012, BF-013, BF-021 remain open.**
+
+---
+
+## Sprint 29 — "Beta Sweep & Transactions Fix" · ✅ COMPLETE · Jun 24, 2026 · Track V · P1
+
+Goal: Close the most impactful beta feedback bugs — silent trade notifications, PROPOSED state machine gap, mobile lineup UX, and a legacy code guard cleanup.
+
+**All items shipped:**
+
+| Story | Track | Size | Priority | Status |
+|---|---|---|---|---|
+| S29-001 — Rival improvements (commit a90a50c): `getRival()` picks closest-contested opponent by avg points-apart; `RivalBadge` shows "points apart" narrative; rival chip moved to standings page, removed from matchup page Z4 | Bug+Feature | M | P1 | ✅ DONE |
+| BF-NEW — Transactions legacy guard cleanup: removed `(prisma as any).leagueEvent` guard in waiver route milestone-count; direct `prisma.leagueEvent.count()` now used | Bug | S | P1 | ✅ DONE |
+| TR-002 — Trade auto-expiry notification: `processExpiredTrades()` passes `dedupeKey: \`trade-expired-${tradeId}\`` to `createNotification()` for idempotent expired-trade alerts | Bug | S | P1 | ✅ DONE |
+| TR-003 — Trade PROPOSED→PENDING_REVIEW state: `PROPOSED → PENDING_REVIEW` transition added for proposer/commissioner in engine; `proposeTrade()` creates as `PROPOSED` then auto-flips in same `$transaction`; 3 new tests | Bug | M | P1 | ✅ DONE |
+| OB-001 — Start Your Franchise → /register: verified `app/page.tsx` CTAs already link to `/register`; no code change required | Bug | S | P0 | ✅ DONE (verified) |
+| BF-021 — DnD lineup mobile tap-to-swap: `LineupDnD.tsx` adds tap-to-select/swap on ≤640px with purple ring, target highlight, cancel hint; desktop DnD unchanged | Feature | M | P2 | ✅ DONE |
+
+**No schema changes in this sprint.**
+
+**Result: 6/6 Sprint 29 items shipped.**
+
+---
+
+## Sprint 30 — "Track A Bug Sweep" · ✅ COMPLETE · Jun 24, 2026 · Track V · P1
+
+Goal: Eliminate the two lingering Track A bugs: BF-012 (false "Roster is full" error after a successful add+drop) and BF-013 (pre-season trades incorrectly blocked).
+
+**All items shipped:**
+
+| Story | Track | Size | Priority | Status |
+|---|---|---|---|---|
+| BF-012 — FA add stale-state fix: added `useEffect(() => { setRoster(initialRoster); }, [initialRoster])` to `RosterManager.tsx`; without it `isFull` was stale after `router.refresh()` | Bug | S | P1 | ✅ DONE |
+| BF-013 — Pre-season trades verified fixed: fix shipped Sprint 18 (`league.playoffStatus !== "NOT_STARTED"` guard in `proposeTrade`); roadmap docs updated to reflect DONE status | Bug | S | P1 | ✅ DONE (verified) |
+
+**No schema changes in this sprint.**
+
+**Result: 2/2 Sprint 30 items shipped.**
+
+---
+
+## Sprint 31 — "Track B: Morning Skate Newcomer Mode + Hub Reorg" · ✅ COMPLETE · Jun 24, 2026 · Track B · P1
+
+Goal: Make the Morning Skate newsletter readable for fans who don't know fantasy shorthand (LL-020) and complete the hub reorganization that LL-016 partially shipped in Sprint 27 — Morning Skate at Z0 on the matchup page and commissioner overview reordered.
+
+**All items shipped:**
+
+| Story | Track | Size | Priority | Status |
+|---|---|---|---|---|
+| LL-020 — Inline acronym expansion: `expand()` helper in `generateEdition()` rewrites FP/VP/PPP on first use per edition; "New here? How it works →" link via `EditionData.newHereUrl` in edition masthead | Feature | M | P1 | ✅ DONE |
+| LL-020 — Team-scoped redirect routes: `app/team/[teamId]/morning-skate/page.tsx` and `[editionId]/page.tsx` redirect to league-scoped equivalents via `requireTeamOwner` + `redirect()` | Feature | S | P1 | ✅ DONE |
+| LL-020 — MorningSkatePreview teamId prop: `MorningSkatePreview` accepts `teamId?`; links to `/team/[teamId]/morning-skate/[editionId]` when provided | Feature | S | P1 | ✅ DONE |
+| LL-016 — Matchup page Z0 consolidation: two conditional `<MorningSkatePreview>` blocks (setup-phase Z0 + Z2.5) replaced with single unconditional Z0 with `teamId` prop | Feature | S | P1 | ✅ DONE |
+| LL-016 — Commissioner overview reorder: left column order is now Morning Skate → commissioner strip → race table (Morning Skate visible first on every page load) | Feature | S | P1 | ✅ DONE |
+
+**No schema changes in this sprint.**
+
+**Result: 5/5 Sprint 31 items shipped.**
+
+---
+
+## Sprint 32 — "IA Closure + UX Batch" · ✅ COMPLETE · Jun 24, 2026 · Tracks A+V · P1
+
+Goal: Close three open alignment items (IA-008/009/010), confirm GATE-3 in production, and run a targeted UX polish batch fixing the replay wizard flow, FA tab access, win probability labels, and FP lead copy.
+
+**All items shipped:**
+
+| Story | Track | Size | Priority | Status |
+|---|---|---|---|---|
+| IA-008 — Waiver spec closure: core (reverse-standings priority, 48h window, daily cron, rolling move-to-last) confirmed fully implemented; roadmap updated to DONE; claim reorder/cancel UI deferred post-launch | Alignment | S | P1 | ✅ DONE |
+| IA-009 — VP tiebreaker doc: tiebreaker chain comment added to `computeVpStandings` in `lib/scoring/vp.ts`; `playoff-service.ts` confirmed to use `computeVpStandings`, not `computeStandings`; roadmap updated to DONE | Alignment | S | P1 | ✅ DONE |
+| IA-010 — Stat correction policy: `docs/02-engineering/stat-correction-policy.md` created; `POST /api/founder/leagues/[leagueId]/rescore-week` endpoint built using idempotent `scoreVtfWeek()`; roadmap updated to DONE | Alignment | M | P1 | ✅ DONE |
+| GATE-3 — CRON_SECRET env var confirmed set in Vercel `pwhl-gm-prod` project; `roadmap-sprints.md` gate status updated to ✅ PASS | Validation | S | P0 | ✅ PASS |
+| UX-049 — Free Agents nav tab: "Free Agents" tab added to `TeamNav.tsx` between My Roster and Trades; links to `?tab=freeAgents`; `isFaTab` constant tracks active state based on search param | Feature | S | P1 | ✅ DONE |
+| UX-050 — Win prob labels: "Win Probability" heading + "You / Them" label pair confirmed already implemented in matchup page; no code change required | Feature | S | P1 | ✅ DONE (verified) |
+| UX-032 — FP lead/back label: win probability margin label in `matchup/page.tsx` changed from `"pt edge"` to `"+N FP lead"` / `"N FP back"` | Bug | S | P1 | ✅ DONE |
+| OB-010 — Replay wizard 5-step flow: `CreateLeagueWizard.tsx` updated so replay mode skips the Rules step (step 4 → step 5); `getDisplayStep/Total/Labels` helpers accept `isReplay` param; `handleReplayCreate` jumps to step 5; progress bar shows 5 segments for replay | Feature | M | P1 | ✅ DONE |
+
+**No schema changes in this sprint.**
+
+**Result: 8/8 Sprint 32 items shipped (1 verified already done, 1 confirmed no-code).**
+
+---
+
+## Sprint 33 — "Complexity Debt" · ✅ COMPLETE · Jun 24, 2026 · Track Tech · P1
+
+Goal: Address the top three findings from the pragmatic complexity review: N+1 projection queries (HIGH), stale `(prisma as any).leagueEvent` guards (MEDIUM), and dashboard.ts size (HIGH). Also remove the outdated CLAUDE.md convention note.
+
+**All items shipped:**
+
+| Story | Track | Size | Priority | Status |
+|---|---|---|---|---|
+| CX-001 — Batch projectPlayer queries: `batchAvgFpPerPlayer()` private helper added to `lib/projections/index.ts`; fetches all stat lines for N players in ONE `statLine.findMany`; `projectTeamRemainingScore` and `getRemainingPlayersTonight` refactored to use it; per-roster-load queries reduced from N+2 to 3 | Perf | M | HIGH | ✅ DONE |
+| CX-002 — Remove `(prisma as any).leagueEvent` guards: all 10 guard call sites removed from 8 live files (`matchup/page.tsx`, `rescore-week/route.ts`, `simulate-season/route.ts`, `seed-replay.ts`, `seed-draft.ts`, `simulate-season.ts`, `lib/season/index.ts`, `lib/services/trophy-service.ts`, `lib/services/storyline-service.ts` ×2); `prisma.leagueEvent` now called directly everywhere | Cleanup | M | MEDIUM | ✅ DONE |
+| CX-003 — dashboard.ts decomposition: `lib/services/dashboard.ts` split into focused subfiles; pure row-builder and alert/performer helpers extracted | Refactor | L | HIGH | ✅ DONE |
+| CX-004 — CLAUDE.md convention cleanup: outdated `(prisma as any).leagueEvent` guard note removed from Conventions section | Doc | S | P1 | ✅ DONE |
+
+**Lower-priority complexity findings (deferred to post-launch backlog):**
+- CX-005: Collapse `validateTradeProposal`/`validateTradeExecution` aliases in engine.ts ✅
+- CX-006: `generateEdition` purity naming (morning-skate-service.ts) ✅
+- CX-007: Rename `REVERSED` trade state to `VETOED` ✅
+- CX-008: Add `nowMs` param to `enterWaiverWire` ✅
+
+**No schema changes in this sprint.**
+
+**Result: 4/4 Sprint 33 priority items shipped.**
+
+---
+
+## Sprint 34 — "Complexity Debt Closeout" · ✅ COMPLETE · Jun 24, 2026 · Track Tech · P2
+
+Goal: Ship the two remaining complexity review items that were safe to do without a schema migration.
+
+| Story | Track | Size | Priority | Status |
+|---|---|---|---|---|
+| CX-005 — Collapse validateTrade aliases: `validateTradeProposal` and `validateTradeExecution` were identical wrappers around `_validate`; collapsed into single exported `validateTrade`; updated `trade-service.ts` (4 call sites) and `trade.test.ts` | Cleanup | S | P2 | ✅ DONE |
+| CX-008 — `nowMs` in `enterWaiverWire`: hardcoded `Date.now()` replaced with optional `nowMs` param; waiver route passes `getDevNowFromRequest(req)` so waiver expiry respects sim-date cookie during dev simulation | Cleanup | S | P2 | ✅ DONE |
+| CX-007 — Split REVERSED trade state: `VETOED` (killed in review, never executed) + `REVERSED` (post-execution rollback); `PENDING_REVIEW→VETOED` and `EXECUTED→REVERSED` are now distinct paths in the engine; migration `20260701000000_add_vetoed_trade_status`; 32 tests passing | Cleanup | L | P3 | ✅ DONE |
+| CX-006 — `generateEdition` purity naming: renamed to `fetchEdition` (unexported private helper) to reflect that it does DB IO; file-level comment updated; one internal call site updated | Cleanup | S | P2 | ✅ DONE |
+
+**Schema change: `VETOED` added to `TradeStatus` enum (CX-007).**
+
+**Result: 4/4 items shipped; complexity debt fully closed.**
+
+---
+
 ## Beyond MVP
 
 - **Q4 2026 (in-season):** Waivers → FAAB; engagement surfaces (#25 analysis, #29 performance dashboard, #30 playoff UX) while the first live season runs. Trade System shipped Sprint 7.
 - **Off-season — winter/spring 2027:** League History/HoF page ships Sprint 9 skeleton; fills in naturally after first season renewal. Player Legacy (#31) deferred to post-launch backlog — requires at least one completed season to be meaningful; will be a candidate for the 2027-28 roadmap. The schema foundation (parentLeagueId, rulesVersion, scoringVersion) was laid in Sprint 2, so this is purely the product surface. Growth/retention analytics dashboards (AN-002/003) and referral loop. Target: 2027-28 leagues renew in-place and keep their history.
 - **2027-28 season:** Advanced formats (keeper, then dynasty), real-time push scoring + push notifications, and player trends. Native apps and AI features (draft assistant, weekly recaps, trade evaluator) remain Phase 5 "future expansion" — revisit once retention metrics justify them.
+- **UX-053: Email Invite Flow** — Commissioners can only share an invite link; no email-entry flow exists. First-time commissioners expect to type friends' emails. Medium effort. **Blocked on email infrastructure** (transactional email provider — same blocker as Sprint 7 stretch email notifications). Unblocks to P1 once email infra ships. Spec: `roadmap-features.md` UX-053.
+- **BF-019: Password Reset / Forgot Password on Login Page** — Returning users whose cookie expired have no self-service recovery path. Medium effort. **Blocked on email infrastructure** — requires sending a magic re-auth link by email. Unblocks alongside UX-053. Spec: `roadmap-features.md` BF-019.
