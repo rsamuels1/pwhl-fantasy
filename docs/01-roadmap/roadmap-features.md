@@ -1647,6 +1647,165 @@ Depends On: LL-017, LL-020, existing `VpExplainer.tsx`
 
 ---
 
+# Sprint 39 — UX Clarity Sweep
+
+---
+
+## UX-070. One-Time VP "How You Win" Primer on Matchup Page
+
+Sprint: 39 | Priority: P1 | Effort: M | Status: ✅ DONE (Sprint 39, Jun 25, 2026)
+
+Goal: Render a single, unprompted "How you win" card on the matchup page for first-time managers. Uses the existing localStorage-gated one-time-card pattern (`FirstResultCard`, `OpeningDayCard`). Reuses copy from `VpExplainer.tsx` / `lib/copy/living-league-glossary.ts`. Dismissed with "Got it" and never shown again.
+
+Source: UX critique — VP (the core differentiator) is never explained unprompted on any page a new user lands on first. `VpExplainer` is a tap-to-reveal popover; it only fires if the user already knows to look for it.
+
+Acceptance Criteria:
+- AC-001: A "How you win" card renders once per manager on the matchup page (localStorage key: `vp-primer-seen-<userId>`); dismissed with "Got it"; never reappears.
+- AC-002: Card states in ≤50 words: weekly FP decides matchup results, winning + top-field finishes earn VP, VP drives your league standing.
+- AC-003: Dismiss CTA is "Got it" — not an X icon alone.
+- AC-004: Card reuses copy from `VpExplainer.tsx` or `lib/copy/living-league-glossary.ts`; no new inconsistent copy.
+- AC-005: No schema change; `tsc --noEmit` clean; no regressions on matchup page.
+
+Depends On: existing `components/VpExplainer.tsx`, `components/FirstResultCard.tsx` (pattern reference)
+
+Files: `app/team/[teamId]/matchup/page.tsx`
+
+---
+
+## UX-071. Consistent Always-Visible FP→VP Bridge Copy on First-Run Surfaces
+
+Sprint: 39 | Priority: P1 | Effort: S | Status: ✅ DONE (Sprint 39, Jun 25, 2026)
+
+Goal: Standardize the FP→VP bridge sentence across dashboard hero, FieldHero, and standings page to the same wording, and ensure it renders as visible text (not inside a tooltip) on all three surfaces.
+
+Source: UX critique — the bridge sentence exists in multiple places with different wording and is sometimes tooltip-gated, so a first-timer may never see it clearly.
+
+Acceptance Criteria:
+- AC-001: Bridge sentence reads identically on dashboard hero, FieldHero, and standings explainer.
+- AC-002: Sentence is visible text on all three surfaces (not behind a `?` toggle).
+- AC-003: `VpExplainer.tsx` popover copy updated to match the standardized wording.
+- AC-004: Copy-only; no structural changes; `tsc --noEmit` clean.
+
+Files: `app/dashboard/page.tsx`, `components/FieldHero.tsx`, `app/league/[leagueId]/standings/page.tsx`, `components/VpExplainer.tsx`
+
+---
+
+## UX-072. Wizard: Choose Mode at Step 1, Before Naming
+
+Sprint: 39 | Priority: P1 | Effort: M | Status: ✅ DONE (Sprint 39, Jun 25, 2026)
+
+Goal: Move the Live / Replay mode choice to the first wizard screen so the step count is known before the user invests effort in naming their league. Collapses the `getDisplayStep()` / `getDisplayTotal()` / `getStepLabels()` three-way remap.
+
+Source: UX critique — mode is currently chosen on Step 3 (after naming on Step 1 and size on Step 2). The step count the progress bar shows on Step 1 may not match the path the user ends up on.
+
+Acceptance Criteria:
+- AC-001: First wizard screen presents the mode choice (Live vs Replay) before the league name input.
+- AC-002: Step count shown in the progress bar from screen 1 onward matches the actual remaining steps for the selected mode.
+- AC-003: `getDisplayStep()` / `getDisplayTotal()` collapse or simplify — no more three-way remap.
+- AC-004: Wizard completes end-to-end for all three modes (live, replay, beta); `tsc --noEmit` clean.
+
+Files: `app/create-league/CreateLeagueWizard.tsx`
+
+---
+
+## UX-073. Honest Wizard Progress Bar + Auto-Skip Signposting
+
+Sprint: 39 | Priority: P2 | Effort: S | Status: ✅ DONE (Sprint 39, Jun 25, 2026)
+
+Goal: Any auto-skipped wizard steps are acknowledged with a one-line note so the user never feels a decision was made silently.
+
+Source: UX critique — beta mode force-routes Step 1→4; the progress bar silently relabels with no indication a step was skipped.
+
+Acceptance Criteria:
+- AC-001: When a step is auto-skipped, a note appears on the next visible step (e.g. "Replay/Beta leagues skip size & date setup — they're pre-configured").
+- AC-002: Progress bar never shows a step count that doesn't match the user's actual remaining decisions.
+- AC-003: Inline copy; no new component; `tsc --noEmit` clean.
+
+Depends On: UX-072 (ships together or immediately after)
+
+Files: `app/create-league/CreateLeagueWizard.tsx`
+
+---
+
+## UX-074. Every Terminal Matchup State Gets "Why" + Specific CTA
+
+Sprint: 39 | Priority: P1 | Effort: M | Status: ✅ DONE (Sprint 39, Jun 25, 2026)
+
+Goal: Each dead-end matchup state (eliminated, missed playoffs, playoff pending, season not started) gets a plain-language "what this means" sentence and a specific next-action CTA — not a generic "View bracket →".
+
+Source: UX critique — users who got eliminated, didn't qualify, or are waiting between rounds land on a card with no clear next action. The right data is in `DashboardData`; only copy + CTA targets are missing.
+
+Acceptance Criteria:
+- AC-001: Eliminated: "You were eliminated in Round N. The bracket is still playing." + "See who's still alive →" to `/league/[leagueId]/bracket`.
+- AC-002: Missed playoffs: "You didn't qualify this season. Final standing: Nth." + "See the bracket →" + secondary "View full season →" to Analysis.
+- AC-003: Playoff pending (between rounds): "Round N complete. Round N+1 matchups are being set." + "View updated bracket →".
+- AC-004: Season not started (PRE_DRAFT): "Build your draft queue →" to `/draft/[leagueId]`; PRE_SEASON: "Set your opening lineup →" to `/team/[teamId]/roster`.
+- AC-005: No new data fetching; all state is in `DashboardData`; copy + CTA only; `tsc --noEmit` clean.
+
+Depends On: `lib/services/dashboard.ts` (`eliminationInfo`, `playoffEliminated`, `DashboardData`)
+
+Files: `app/team/[teamId]/matchup/page.tsx`
+
+---
+
+## UX-075. Explain the "—" Setup-Phase Placeholder
+
+Sprint: 39 | Priority: P2 | Effort: S | Status: ✅ DONE (Sprint 39, Jun 25, 2026)
+
+Goal: In setup phase, replace the bare "Games starting soon" badge with a sentence explaining when the dash becomes a real score.
+
+Source: UX critique — a manager seeing "—" with no explanation may think the app is broken. The period start time and games-tonight count are already in the component.
+
+Acceptance Criteria:
+- AC-001: In setup phase, copy reads: "Scores appear once tonight's PWHL games go final" (with "· N games tonight" when applicable).
+- AC-002: When the current day has no PWHL games, copy reads: "Scores appear as PWHL games are played this week."
+- AC-003: Copy is visible on both `FieldHero` (VTF) and `DuelHero` (playoff) when `isSetupPhase` is true.
+- AC-004: No new data fetch; derives from existing `isSetupPhase` and `gamesThisPeriod`; `tsc --noEmit` clean.
+
+Files: `app/team/[teamId]/matchup/page.tsx`, `components/FieldHero.tsx`, `components/DuelHero.tsx`
+
+---
+
+## UX-076. Dashboard Action Items Deep-Link with ?focus= + Scroll/Highlight
+
+Sprint: 39 | Priority: P1 | Effort: M | Status: ✅ DONE (Sprint 39, Jun 25, 2026)
+
+Goal: Dashboard action item hrefs carry a `?focus=<section>` param; the destination page reads it and scrolls to + briefly highlights the relevant section on arrival.
+
+Source: UX critique — "Tight match — you're up 3pts" clicks through to the top of the matchup page with nothing emphasizing why the user was sent. The alert creates a promise the page doesn't keep.
+
+Acceptance Criteria:
+- AC-001: Dashboard action hrefs append `?focus=<section>`: `matchup` (tight week, new week), `lineup` (lineup alerts), `draft` (draft starting/upcoming).
+- AC-002: Matchup page reads `searchParams.focus` and scrolls to + briefly highlights (2s amber border or pulse) the relevant section.
+- AC-003: Roster/lineup page reads `?focus=lineup` and scrolls to the active-slot panel.
+- AC-004: No schema change; client-side via `useEffect` + `scrollIntoView`; no new API calls.
+- AC-005: Base href behavior (no `?focus`) is unchanged; `tsc --noEmit` clean.
+
+Files: `app/dashboard/page.tsx`, `app/team/[teamId]/matchup/page.tsx`, `app/team/[teamId]/roster/page.tsx`
+
+---
+
+## UX-077. Action Item Copy Names the Destination
+
+Sprint: 39 | Priority: P2 | Effort: S | Status: ✅ DONE (Sprint 39, Jun 25, 2026)
+
+Goal: Each dashboard alert label explicitly states what the user will see/do on arrival so the alert's promise is explicit before they tap.
+
+Source: UX critique — alert labels are context-only ("Tight match — you're up 3pts") with no signal about where tapping leads.
+
+Acceptance Criteria:
+- AC-001: "Tight week — you're up 3pts" → "Tight week — you're up 3pts · Open your live matchup"
+- AC-002: "Week N just started — set your lineup" → "Week N started · Set your lineup →"
+- AC-003: "Draft is live right now!" → "Draft is live · Enter the draft room →"
+- AC-004: All alert copy fits on one line at 375px; truncation with ellipsis allowed if unavoidable.
+- AC-005: Copy-only; `tsc --noEmit` clean.
+
+Depends On: UX-076 (ships together or immediately after)
+
+Files: `app/dashboard/page.tsx`
+
+---
+
 # Architectural Rules
 
 Design for the live season first. Replay is a testing tool, so:

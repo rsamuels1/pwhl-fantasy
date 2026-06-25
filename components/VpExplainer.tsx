@@ -104,7 +104,7 @@ export function VpExplainer() {
           </div>
 
           <p style={{ margin: 0, fontSize: 11, color: "var(--faint)", lineHeight: 1.5, borderTop: "1px solid var(--border-soft)", paddingTop: 8 }}>
-            Your weekly <strong style={{ color: "var(--dim)" }}>fantasy points (FP)</strong> total decides who wins each matchup — winning earns VP toward the season standings. Max 4 VP per week.
+            FP decides your matchup result — win and rank well to earn VP, the currency of your league standing.
           </p>
 
           <style>{`

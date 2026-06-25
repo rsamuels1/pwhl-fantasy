@@ -102,9 +102,9 @@ function MatchupHero({ summary, teamName }: { summary: MatchupQuickSummary; team
 
           {/* FP/VP bridge — only when actual scores are shown */}
           {summary.wins !== -1 && (
-            <div style={{ fontSize: 10, color: "var(--faint)", marginTop: 10, textAlign: "center" }}>
-              FP decides the matchup winner · VP is how you climb the standings
-            </div>
+            <p style={{ fontSize: 10, color: "var(--faint)", marginTop: 10, textAlign: "center", margin: "10px 0 0" }}>
+              FP decides your matchup result — win and rank well to earn VP, the currency of your league standing.
+            </p>
           )}
         </>
       ) : (
@@ -199,7 +199,7 @@ export default async function DashboardPage() {
     // Draft live right now
     if (league.draft?.status === "IN_PROGRESS") {
       actions.push({
-        label: "Draft is live right now",
+        label: "Draft is live · Enter draft room →",
         href: `/draft/${team.leagueId}?team=${team.id}`,
         teamName: team.name,
       });
@@ -212,7 +212,7 @@ export default async function DashboardPage() {
       );
       if (daysUntil >= 0 && daysUntil <= 7) {
         actions.push({
-          label: daysUntil === 0 ? "Draft is today!" : `Draft in ${daysUntil} day${daysUntil === 1 ? "" : "s"}`,
+          label: daysUntil === 0 ? "Draft is today · View admin →" : `Draft in ${daysUntil} day${daysUntil === 1 ? "" : "s"} · View admin →`,
           href: `/league/${team.leagueId}/admin`,
           teamName: league.name,
         });
@@ -226,8 +226,8 @@ export default async function DashboardPage() {
       league.status !== "COMPLETE"
     ) {
       actions.push({
-        label: "Draft complete — set your lineup before the season starts",
-        href: `/team/${team.id}/lineup`,
+        label: "Draft complete — set your lineup before the season starts · Set lineup →",
+        href: `/team/${team.id}/roster?focus=lineup`,
         teamName: team.name,
       });
     }
@@ -238,8 +238,8 @@ export default async function DashboardPage() {
       tNowMs - summary.startsAt.getTime() < 48 * 3_600_000
     ) {
       actions.push({
-        label: `Week ${summary.week} just started — set your lineup`,
-        href: `/team/${team.id}/lineup`,
+        label: `Week ${summary.week} started · Set lineup →`,
+        href: `/team/${team.id}/roster?focus=lineup`,
         teamName: team.name,
       });
     }
@@ -247,8 +247,8 @@ export default async function DashboardPage() {
     // Tight week — your weekly field record is close (within one game)
     if (summary?.status === "active" && summary.myScore > 0 && Math.abs(summary.wins - summary.losses) <= 1) {
       actions.push({
-        label: `Tight week — you're ${summary.wins}–${summary.losses}${summary.ties > 0 ? `–${summary.ties}` : ""} vs the field`,
-        href: `/team/${team.id}/matchup`,
+        label: `Tight week — you're ${summary.wins}–${summary.losses}${summary.ties > 0 ? `–${summary.ties}` : ""} · Open matchup →`,
+        href: `/team/${team.id}/matchup?focus=matchup`,
         teamName: team.name,
       });
     }
@@ -258,8 +258,8 @@ export default async function DashboardPage() {
       const hoursUntil = (summary.startsAt.getTime() - tNowMs) / 3_600_000;
       if (hoursUntil >= 0 && hoursUntil <= 24) {
         actions.push({
-          label: `Week ${summary.week} starts soon — prep your lineup`,
-          href: `/team/${team.id}/lineup`,
+          label: `Week ${summary.week} starts soon · Prep lineup →`,
+          href: `/team/${team.id}/roster?focus=lineup`,
           teamName: team.name,
         });
       }

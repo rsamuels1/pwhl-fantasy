@@ -656,6 +656,17 @@ a:focus:not(:focus-visible) {
   animation: chipPulse 0.5s ease-out both;
 }
 
+/* ── Focus highlight (deep-link scroll+pulse from ?focus= params) ── */
+@keyframes focusHighlightPulse {
+  0%   { box-shadow: 0 0 0 0 rgba(245,158,11,0.55); }
+  50%  { box-shadow: 0 0 0 6px rgba(245,158,11,0.22); }
+  100% { box-shadow: 0 0 0 0 rgba(245,158,11,0); }
+}
+.focus-highlight-pulse {
+  animation: focusHighlightPulse 2s ease-out forwards;
+  border-radius: 16px;
+}
+
 /* ── Accessibility utilities ──────────────────────────────────── */
 
 /* Screen-reader-only text — visible to AT, invisible visually */

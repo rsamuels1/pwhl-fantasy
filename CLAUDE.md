@@ -324,6 +324,16 @@ survives DB resets and schema migrations.
      - **Navigation** ✅ — `TeamNav` + `BottomNav` + league layout nav all get `aria-label` + `aria-current="page"`; all decorative SVGs `aria-hidden="true" focusable="false"`
      - **Interactive** ✅ — `InlineLineupEditor` `<div onClick>` → `<button aria-pressed>`; `DraftRoom` `role="timer"` + single assertive 10s warning + `role="log"` + on-clock `role="alert"`; `StatChip` emoji `aria-hidden`
      - **Page titles** ✅ — dashboard + standings get `export const metadata` with descriptive titles
+   - **Technical Debt Reduction — Sprint 38** ◻ PLANNED: TD-001…011 — structured error logging, cron observability, god-object decomposition (dashboard.ts / matchup/page.tsx / DraftRoom.tsx), service-layer tests, hardcoded season constants, raw SQL comments, inline style audit. No schema changes. Full spec: `docs/01-roadmap/roadmap-sprints.md`.
+   - **UX Clarity Sweep — Sprint 39** ✅ (8/8 stories shipped; Jun 25, 2026; no schema changes):
+     - **UX-070: VP primer card** ✅ — `components/VpPrimerCard.tsx` localStorage-gated per userId; shown once when `activeMatchup !== null`; "How you win in PWHL GM" + FP→VP explanation + "Got it — let's play" dismiss; rendered at matchup page Z0
+     - **UX-071: FP→VP bridge copy standardized** ✅ — identical sentence "FP decides your matchup result — win and rank well to earn VP, the currency of your league standing." as visible text across FieldHero, DuelHero, dashboard MatchupHero, standings page, and VpExplainer
+     - **UX-072: Wizard mode-first flow** ✅ — mode choice (Live vs Replay) moved to Step 1; `visibleSteps(isReplay)` replaces three-way `getDisplayStep`/`getDisplayTotal`/`getStepLabels` remap; mode card shows step count per option before user commits
+     - **UX-073: Honest progress bar** ✅ — bar reflects correct total from screen 1; replay Rules screen includes amber note "Replay leagues skip size & draft date setup — they're pre-configured for the 2025-26 season"
+     - **UX-074: Terminal matchup state CTAs** ✅ — elimination → "You were eliminated in Round N" + "See who's still alive →"; playoffPending → "Your round is complete" + "View updated bracket →"; missedPlayoffs → "You didn't qualify…Final standing: Nth" + bracket + season links; PRE_DRAFT → "Build my draft queue →"; PRE_SEASON → "Set my lineup →"
+     - **UX-075: Setup phase timing copy** ✅ — both FieldHero and DuelHero: "Scores appear once tonight's PWHL games go final · N games tonight" or "Scores update as PWHL games are played this week"; `gamesThisNight` prop threaded from matchup page
+     - **UX-076: Deep-link focus params** ✅ — `?focus=matchup` on tight-week hrefs; `?focus=lineup` on new-week/upcoming-soon hrefs; `components/FocusHighlight.tsx` scrolls + amber-pulses target element; matchup page wraps hero in `<div id="matchup-hero">`; roster page wraps LineupDnD in `<div id="lineup-section">`; `.focus-highlight-pulse` keyframe in globals.css
+     - **UX-077: Action item copy** ✅ — all labels explicitly name destination: "Draft is live · Enter draft room →"; "Week N started · Set lineup →"; "Tight week — you're W–L · Open matchup →"; "Week N starts soon · Prep lineup →"
 7. Public launch ~early Nov, drafts ~1 week before opener
 
 ## Draft room UI (`app/draft/[leagueId]/`)
