@@ -1142,16 +1142,26 @@ function DraftRoomContent({
         </div>
       )}
 
-      {!draft && connStatus === "connecting" && (
+      {!draft && connStatus === "connecting" && !timedOut && (
         <DraftSkeleton isMobile={isMobile} />
       )}
 
-      {!draft && connStatus === "error" && (
+      {!draft && (connStatus === "error" || timedOut) && (
         <div style={{ padding: "2rem", textAlign: "center" }}>
-          <p style={{ fontSize: 16, fontWeight: 600, color: "var(--red)" }}>Could not connect to draft</p>
-          <p style={{ fontSize: 14, color: "var(--muted)", marginTop: 8 }}>
-            Check your internet connection and refresh. If the problem continues, contact your commissioner.
+          <p style={{ fontSize: 16, fontWeight: 600, color: "var(--red)" }}>
+            {timedOut ? "Draft server is taking too long to respond" : "Could not connect to draft"}
           </p>
+          <p style={{ fontSize: 14, color: "var(--muted)", marginTop: 8 }}>
+            {timedOut
+              ? "The draft server may be starting up. Refresh in a moment, or ask your commissioner to check the server status."
+              : "Check your internet connection and refresh. If the problem continues, contact your commissioner."}
+          </p>
+          <button
+            onClick={() => window.location.reload()}
+            style={{ marginTop: 16, padding: "8px 20px", borderRadius: 8, border: "1px solid var(--border)", background: "var(--surface)", color: "var(--text)", fontSize: 13, cursor: "pointer" }}
+          >
+            Refresh
+          </button>
         </div>
       )}
 
