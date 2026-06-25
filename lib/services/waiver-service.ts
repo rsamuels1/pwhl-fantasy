@@ -84,9 +84,10 @@ export async function enterWaiverWire(
   leagueId: string,
   playerId: string,
   windowHours: number,
-  prisma: PrismaClient
+  prisma: PrismaClient,
+  nowMs = Date.now()
 ): Promise<void> {
-  const expiresAt = new Date(Date.now() + windowHours * 60 * 60 * 1000);
+  const expiresAt = new Date(nowMs + windowHours * 60 * 60 * 1000);
   await prisma.waiverEntry.upsert({
     where: { leagueId_playerId: { leagueId, playerId } },
     update: { expiresAt },

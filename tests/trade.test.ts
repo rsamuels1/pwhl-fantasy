@@ -1,7 +1,6 @@
 import { describe, it, expect } from "vitest";
 import {
-  validateTradeProposal,
-  validateTradeExecution,
+  validateTrade,
   applyTrade,
   canTransitionTo,
   type TradeItemInput,
@@ -105,9 +104,9 @@ describe("canTransitionTo", () => {
   });
 });
 
-// ── validateTradeProposal ────────────────────────────────────────────────────
+// ── validateTrade ────────────────────────────────────────────────────
 
-describe("validateTradeProposal", () => {
+describe("validateTrade", () => {
   it("accepts a valid 1-for-1 forward trade", () => {
     const propRoster = makeRoster("A");
     const recRoster = makeRoster("B");
@@ -117,12 +116,12 @@ describe("validateTradeProposal", () => {
       { fromTeamId: "B", toTeamId: "A", playerId: "B-b1" },
     ];
 
-    const result = validateTradeProposal(items, propRoster, recRoster, settings);
+    const result = validateTrade(items, propRoster, recRoster, settings);
     expect(result.valid).toBe(true);
   });
 
   it("rejects empty items", () => {
-    const result = validateTradeProposal([], makeRoster("A"), makeRoster("B"), settings);
+    const result = validateTrade([], makeRoster("A"), makeRoster("B"), settings);
     expect(result.valid).toBe(false);
     expect(result.reason).toMatch(/at least one/i);
   });
@@ -131,7 +130,7 @@ describe("validateTradeProposal", () => {
     const items: TradeItemInput[] = [
       { fromTeamId: "B", toTeamId: "A", playerId: "B-b1" },
     ];
-    const result = validateTradeProposal(items, makeRoster("A"), makeRoster("B"), settings);
+    const result = validateTrade(items, makeRoster("A"), makeRoster("B"), settings);
     expect(result.valid).toBe(false);
     expect(result.reason).toMatch(/proposing team must include/i);
   });
@@ -140,7 +139,7 @@ describe("validateTradeProposal", () => {
     const items: TradeItemInput[] = [
       { fromTeamId: "A", toTeamId: "B", playerId: "A-b1" },
     ];
-    const result = validateTradeProposal(items, makeRoster("A"), makeRoster("B"), settings);
+    const result = validateTrade(items, makeRoster("A"), makeRoster("B"), settings);
     expect(result.valid).toBe(false);
     expect(result.reason).toMatch(/receiving team must include/i);
   });
@@ -150,7 +149,7 @@ describe("validateTradeProposal", () => {
       { fromTeamId: "A", toTeamId: "B", playerId: "GHOST-PLAYER" },
       { fromTeamId: "B", toTeamId: "A", playerId: "B-b1" },
     ];
-    const result = validateTradeProposal(items, makeRoster("A"), makeRoster("B"), settings);
+    const result = validateTrade(items, makeRoster("A"), makeRoster("B"), settings);
     expect(result.valid).toBe(false);
     expect(result.reason).toBe("STALE");
   });
@@ -166,7 +165,7 @@ describe("validateTradeProposal", () => {
       { fromTeamId: "B", toTeamId: "A", playerId: "B-b1" },
     ];
 
-    const result = validateTradeProposal(items, propRoster, recRoster, settings);
+    const result = validateTrade(items, propRoster, recRoster, settings);
     expect(result.valid).toBe(false);
     expect(result.reason).toMatch(/active scoring period/i);
   });
@@ -192,7 +191,7 @@ describe("validateTradeProposal", () => {
       { fromTeamId: "B", toTeamId: "A", playerId: "B-b7" },
     ];
 
-    const result = validateTradeProposal(items, propRoster, recRoster, settings);
+    const result = validateTrade(items, propRoster, recRoster, settings);
     expect(result.valid).toBe(false);
     expect(result.reason).toMatch(/maximum/i);
   });
@@ -209,14 +208,14 @@ describe("validateTradeProposal", () => {
       { fromTeamId: "B", toTeamId: "A", playerId: "B-b2" },
     ];
 
-    const result = validateTradeProposal(items, propRoster, recRoster, settings);
+    const result = validateTrade(items, propRoster, recRoster, settings);
     expect(result.valid).toBe(true);
   });
 });
 
-// ── validateTradeExecution ───────────────────────────────────────────────────
+// ── validateTrade ───────────────────────────────────────────────────
 
-describe("validateTradeExecution", () => {
+describe("validateTrade", () => {
   it("re-validates and catches a stale deal", () => {
     const propRoster = makeRoster("A");
     // Player A-b1 was dropped — no longer on either roster
@@ -228,7 +227,7 @@ describe("validateTradeExecution", () => {
       { fromTeamId: "B", toTeamId: "A", playerId: "B-b1" },
     ];
 
-    const result = validateTradeExecution(items, modifiedPropRoster, recRoster, settings);
+    const result = validateTrade(items, modifiedPropRoster, recRoster, settings);
     expect(result.valid).toBe(false);
     expect(result.reason).toBe("STALE");
   });
@@ -240,7 +239,7 @@ describe("validateTradeExecution", () => {
       { fromTeamId: "A", toTeamId: "B", playerId: "A-b1" },
       { fromTeamId: "B", toTeamId: "A", playerId: "B-b1" },
     ];
-    const result = validateTradeExecution(items, propRoster, recRoster, settings);
+    const result = validateTrade(items, propRoster, recRoster, settings);
     expect(result.valid).toBe(true);
   });
 });

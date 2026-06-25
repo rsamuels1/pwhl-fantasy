@@ -137,7 +137,7 @@ function checkRosterLegal(
 /**
  * Pure function: applies trade items to two rosters and returns the updated state.
  * Incoming players land on BENCH. Does NOT validate legality — call
- * validateTradeExecution first.
+ * validateTrade first.
  *
  * The rosters are keyed by proposingTeamId / receivingTeamId so that items'
  * fromTeamId/toTeamId fields drive the movement correctly.
@@ -183,36 +183,15 @@ export function applyTrade(
 // ── Validation ───────────────────────────────────────────────────────────────
 
 /**
- * Validates a proposed trade at proposal time.
+ * Validates a trade. Run at proposal time and again at execution time
+ * (re-validating against current roster state catches stale deals).
  * Checks:
  * - items is non-empty and each side has at least one player
  * - no play-locked players (hasPlayedThisPeriod)
  * - stale check: each player must exist in the expected roster
  * - both rosters remain legal after the swap (slot eligibility + capacity)
  */
-export function validateTradeProposal(
-  items: TradeItemInput[],
-  proposingRoster: TradableRosterEntry[],
-  receivingRoster: TradableRosterEntry[],
-  rosterSettings: RosterSettings
-): ValidationResult {
-  return _validate(items, proposingRoster, receivingRoster, rosterSettings);
-}
-
-/**
- * Validates a trade at execution time (same rules as proposal, but re-run
- * against current roster state to catch stale deals).
- */
-export function validateTradeExecution(
-  items: TradeItemInput[],
-  proposingRoster: TradableRosterEntry[],
-  receivingRoster: TradableRosterEntry[],
-  rosterSettings: RosterSettings
-): ValidationResult {
-  return _validate(items, proposingRoster, receivingRoster, rosterSettings);
-}
-
-function _validate(
+export function validateTrade(
   items: TradeItemInput[],
   proposingRoster: TradableRosterEntry[],
   receivingRoster: TradableRosterEntry[],

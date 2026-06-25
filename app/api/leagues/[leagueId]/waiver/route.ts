@@ -193,7 +193,7 @@ export async function DELETE(
     where: { id: leagueId },
     select: { waiverWindowHours: true },
   });
-  void enterWaiverWire(leagueId, dropPlayerId, league?.waiverWindowHours ?? 48, prisma).catch(() => {});
+  void enterWaiverWire(leagueId, dropPlayerId, league?.waiverWindowHours ?? 48, prisma, getDevNowFromRequest(req)).catch(() => {});
 
   if (dropTeam && dropPlayer) {
     emitEvent({ leagueId, teamId, playerId: dropPlayerId, type: "PLAYER_DROP",

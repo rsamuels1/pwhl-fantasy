@@ -8,8 +8,7 @@
 
 import type { PrismaClient, Trade, TradeItem } from "@prisma/client";
 import {
-  validateTradeProposal,
-  validateTradeExecution,
+  validateTrade,
   applyTrade,
   canTransitionTo,
   type TradeItemInput,
@@ -125,7 +124,7 @@ export async function proposeTrade(
     loadTradableRoster(receivingTeamId, nowMs, null, prisma),
   ]);
 
-  const result = validateTradeProposal(items, proposingRoster, receivingRoster, rosterSettings);
+  const result = validateTrade(items, proposingRoster, receivingRoster, rosterSettings);
   if (!result.valid) {
     throw new TradeValidationError(result.reason ?? "Trade proposal is invalid.");
   }
@@ -228,7 +227,7 @@ export async function acceptTrade(
     loadTradableRoster(trade.proposingTeamId, nowMs, null, prisma),
     loadTradableRoster(trade.receivingTeamId, nowMs, null, prisma),
   ]);
-  const validation = validateTradeExecution(
+  const validation = validateTrade(
     trade.items.map((i) => ({ fromTeamId: i.fromTeamId, toTeamId: i.toTeamId, playerId: i.playerId })),
     proposingRoster,
     receivingRoster,
@@ -363,7 +362,7 @@ export async function counterTrade(
     loadTradableRoster(trade.receivingTeamId, nowMs, null, prisma),
   ]);
   // For the counter, the roles flip: the counter proposer is the original receiver.
-  const validation = validateTradeProposal(newItems, receivingRoster, proposingRoster, rosterSettings);
+  const validation = validateTrade(newItems, receivingRoster, proposingRoster, rosterSettings);
   if (!validation.valid) {
     throw new TradeValidationError(validation.reason ?? "Counter-offer is invalid.");
   }
@@ -523,7 +522,7 @@ export async function executeTrade(
     loadTradableRoster(trade.proposingTeamId, nowMs, null, prisma),
     loadTradableRoster(trade.receivingTeamId, nowMs, null, prisma),
   ]);
-  const validation = validateTradeExecution(items, proposingRoster, receivingRoster, rosterSettings);
+  const validation = validateTrade(items, proposingRoster, receivingRoster, rosterSettings);
   if (!validation.valid) {
     // Mark trade as failed (stale or illegal)
     await prisma.trade.update({
