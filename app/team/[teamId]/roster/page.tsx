@@ -7,7 +7,7 @@ import type { ScoringSettings } from "@/lib/scoring";
 import { eligibleSlots, lockTime } from "@/lib/lineup";
 import type { RosterSettings } from "@/lib/lineup";
 import { getDevNow } from "@/lib/devTime";
-import { getReplayNow, resolveFixturePeriod, type BetaWeekMapping } from "@/lib/replayTime";
+import { getReplayNow, resolveFixturePeriod, toFixtureNow, type BetaWeekMapping } from "@/lib/replayTime";
 import { getSeasonState } from "@/lib/season";
 import { Position } from "@prisma/client";
 import RosterManager from "./RosterManager";
@@ -228,11 +228,16 @@ export default async function TeamRosterPage({ params, searchParams }: Props) {
     thisWeekStatsMap[e.playerId] = buildLineupStats(thisWeekLines as RawLine[], e.playerId, e.player.position, scoring);
   }
 
-  // Games remaining per PWHL team — use fixture dates for beta replay leagues
+  // Games remaining per PWHL team — use fixture dates for beta replay leagues.
+  // fixtureNow translates the display-calendar "now" to its fixture-equivalent so
+  // the gt lower bound matches the fixture game startsAt values.
+  const fixtureNowForGames = fixturePeriodForGames && periodForGames
+    ? new Date(toFixtureNow(nowMs, periodForGames, fixturePeriodForGames))
+    : now;
   const remainingGameRows = fixturePeriodForGames && pwhlTeamIds.length > 0
     ? await prisma.game.findMany({
         where: {
-          startsAt: { gt: now, lt: fixturePeriodForGames.endsAt },
+          startsAt: { gt: fixtureNowForGames, lt: fixturePeriodForGames.endsAt },
           OR: [{ homeTeamId: { in: pwhlTeamIds } }, { awayTeamId: { in: pwhlTeamIds } }],
         },
         select: { homeTeamId: true, awayTeamId: true },
@@ -467,7 +472,7 @@ export default async function TeamRosterPage({ params, searchParams }: Props) {
   const faGamesRemaining = new Map<string, number>();
   const lockedTeamIds = new Set<string>();
   for (const g of faPeriodGames) {
-    if (g.startsAt > now) {
+    if (g.startsAt > fixtureNowForGames) {
       faGamesRemaining.set(g.homeTeamId, (faGamesRemaining.get(g.homeTeamId) ?? 0) + 1);
       faGamesRemaining.set(g.awayTeamId, (faGamesRemaining.get(g.awayTeamId) ?? 0) + 1);
     } else {

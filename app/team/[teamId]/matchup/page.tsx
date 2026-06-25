@@ -10,7 +10,7 @@ import { getSwingPlayers } from "@/lib/matchups/swingPlayers";
 import { parseScoringSettings } from "@/lib/scoring/settings";
 import { scoreStatLine, type StatLineInput } from "@/lib/scoring";
 import { getDevNow } from "@/lib/devTime";
-import { getReplayNow } from "@/lib/replayTime";
+import { getReplayNow, resolveFixturePeriod, toFixtureNow, type BetaWeekMapping } from "@/lib/replayTime";
 import { ScoreDisplay } from "@/components/ScoreDisplay";
 import StatChip from "@/components/StatChip";
 import ClinchBanner from "@/components/ClinchBanner";
@@ -103,13 +103,19 @@ export default async function TeamMatchupPage({
       include: { player: { select: { id: true, firstName: true, lastName: true, position: true, team: { select: { id: true, abbreviation: true } } } } },
     });
     const benchTeamIds = [...new Set(benchEntries.map((e) => e.player.team?.id).filter((id): id is string => !!id))];
-    // No status filter — historical fixture has all games as FINAL.
-    // For upcoming periods, startsAt >= period.startsAt proves games haven't been played.
-    const nowForBench = new Date(nowMs);
+    // For beta replay leagues, remap the display-calendar period to fixture dates so game queries
+    // hit the actual Nov 2025–May 2026 game data rather than the remapped Jun 2026 display window.
+    const rawSettings = league.scoringSettings as Record<string, unknown> | null;
+    const betaWeekMappings = (rawSettings?.betaWeekMappings as BetaWeekMapping[] | undefined) ?? null;
+    const fixturePeriod = resolveFixturePeriod(
+      { week: period.week, startsAt: period.startsAt, endsAt: period.endsAt },
+      betaWeekMappings
+    );
+    const fixtureNowForBench = new Date(toFixtureNow(nowMs, period, fixturePeriod));
     const benchGames = benchTeamIds.length > 0
       ? await prisma.game.findMany({
           where: {
-            startsAt: { gte: nowForBench, lt: period.endsAt },
+            startsAt: { gte: fixtureNowForBench, lt: fixturePeriod.endsAt },
             OR: [{ homeTeamId: { in: benchTeamIds } }, { awayTeamId: { in: benchTeamIds } }],
           },
           select: { homeTeamId: true, awayTeamId: true },
@@ -767,6 +773,7 @@ export default async function TeamMatchupPage({
                 teamId={teamId}
                 active={activeMatchup.myPlayers.map((p) => ({ ...p, slot: p.slot }))}
                 bench={benchPlayers}
+                rosterSettings={rs as { forward?: number; defense?: number; goalie?: number; util?: number }}
               />
             ) : (
               <RosterTable players={activeMatchup.myPlayers} isMyTeam />

@@ -109,12 +109,15 @@ export function computeOptimalLineup(
 
   const ACTIVE_SLOTS: LineupSlot[] = ["FORWARD", "DEFENSE", "GOALIE", "UTIL"];
 
-  // Separate roster into categories
-  const locked = new Set(roster.filter((p) => p.lockedAt).map((p) => p.playerId));
-  const pinnedActive = new Set(
-    roster.filter((p) => p.hasPlayedThisPeriod && ACTIVE_SLOTS.includes(p.slot)).map((p) => p.playerId)
+  // Only pin players who are already in active slots and cannot leave (team played or they played).
+  // The API's lock rule is bench→active always allowed; lock only blocks active→bench.
+  // So bench-locked players (team played but player on bench) remain moveable — we can activate them.
+  const nonMoveable = new Set(
+    roster
+      .filter((p) => ACTIVE_SLOTS.includes(p.slot) && (p.lockedAt || p.hasPlayedThisPeriod))
+      .map((p) => p.playerId)
   );
-  const moveable = roster.filter((p) => !locked.has(p.playerId) && !pinnedActive.has(p.playerId));
+  const moveable = roster.filter((p) => !nonMoveable.has(p.playerId));
 
   // Sort moveable players descending by projected FP, with games-remaining tiebreaker.
   // Treats null projectedFp differently from 0: null means "no projection data available".
@@ -154,7 +157,7 @@ export function computeOptimalLineup(
     occupiedSlots.set(slot, 0);
   }
   for (const p of roster) {
-    if (locked.has(p.playerId) || pinnedActive.has(p.playerId)) {
+    if (nonMoveable.has(p.playerId)) {
       if (ACTIVE_SLOTS.includes(p.slot)) {
         occupiedSlots.set(p.slot, (occupiedSlots.get(p.slot) ?? 0) + 1);
         result.set(p.playerId, p.slot);
