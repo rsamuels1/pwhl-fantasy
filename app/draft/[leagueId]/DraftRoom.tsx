@@ -15,6 +15,7 @@ function useIsMobile(breakpoint = 900) {
   return isMobile;
 }
 import { useDraftSocket } from "@/hooks/useDraftSocket";
+import { DraftSkeleton } from "./DraftSkeleton";
 import type { DraftState, PlayerSummary } from "@/lib/draft/messages";
 import type { PickSlot } from "@/lib/draft/snake";
 import type { PlayerStats } from "@/app/api/leagues/[leagueId]/draft/players/route";
@@ -1142,7 +1143,7 @@ function DraftRoomContent({
       )}
 
       {!draft && connStatus === "connecting" && (
-        <div style={{ padding: "2rem", color: "var(--muted)" }}>Connecting…</div>
+        <DraftSkeleton isMobile={isMobile} />
       )}
 
       {!draft && connStatus === "error" && (

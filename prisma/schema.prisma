@@ -95,6 +95,7 @@ model User {
   email                   String                   @unique
   displayName             String
   passwordHash            String?
+  sessionToken            String?   @unique
   magicLinkToken          String?   @unique
   magicLinkExpiresAt      DateTime?
   onboardingCompletedAt   DateTime?

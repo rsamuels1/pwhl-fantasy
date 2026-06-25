@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { generateShortId } from "@/lib/id";
-import { setAuthCookie } from "@/lib/auth";
+import { setAuthCookie, createSession, USER_SESSION_COOKIE } from "@/lib/auth";
 
 export async function POST(req: NextRequest) {
   try {
@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
     const ownerName = String(body.ownerName || "").trim();
 
     // Check if user is already authenticated (via session cookie)
-    const sessionEmail = req.cookies.get("pwhl_user_email")?.value;
+    const sessionEmail = req.cookies.get(USER_SESSION_COOKIE)?.value;
 
     // If ownerEmail is not provided, use the session email (for authenticated team creation in wizard)
     if (!ownerEmail) {
@@ -82,7 +82,7 @@ export async function POST(req: NextRequest) {
     // Only set cookie for unauthenticated joiners (invite link flow).
     // Authenticated users (wizard team-creation, admin panel test teams) keep their existing session.
     if (!sessionEmail) {
-      setAuthCookie(response, owner.email);
+      setAuthCookie(response, await createSession(owner.id));
     }
     return response;
   } catch (error) {

@@ -6,7 +6,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "node:crypto";
 import { prisma } from "@/lib/db";
-import { setAuthCookie } from "@/lib/auth";
+import { setAuthCookie, createSession } from "@/lib/auth";
 
 export async function GET(req: NextRequest) {
   const rawToken = req.nextUrl.searchParams.get("token");
@@ -46,6 +46,6 @@ export async function GET(req: NextRequest) {
   // Reject open redirects — only allow same-origin paths
   const safePath = returnTo.startsWith("/") ? returnTo : "/dashboard";
   const response = NextResponse.redirect(new URL(safePath, req.url));
-  setAuthCookie(response, user.email);
+  setAuthCookie(response, await createSession(user.id));
   return response;
 }

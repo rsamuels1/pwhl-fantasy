@@ -5,17 +5,17 @@ import crypto from "node:crypto";
 import { prisma } from "@/lib/db";
 import type { User, FantasyTeam, FantasyLeague } from "@prisma/client";
 
-const USER_SESSION_COOKIE = "pwhl_user_email";
+export const USER_SESSION_COOKIE = "pwhl_session";
 
 export async function getAuthCookie() {
   const store = await cookies();
   return store.get(USER_SESSION_COOKIE)?.value ?? null;
 }
 
-export function setAuthCookie(response: NextResponse, email: string) {
+export function setAuthCookie(response: NextResponse, token: string) {
   response.cookies.set({
     name: USER_SESSION_COOKIE,
-    value: email,
+    value: token,
     path: "/",
     httpOnly: true,
     secure: process.env.NODE_ENV !== "development",
@@ -40,10 +40,22 @@ export function clearAuthCookie(response: NextResponse) {
   });
 }
 
+/** Creates an opaque session token, stores it on the user, and returns it for the cookie. */
+export async function createSession(userId: string): Promise<string> {
+  const token = crypto.randomUUID();
+  await prisma.user.update({ where: { id: userId }, data: { sessionToken: token } });
+  return token;
+}
+
+/** Clears the session token for the given opaque token value (idempotent). */
+export async function clearSession(token: string): Promise<void> {
+  await prisma.user.updateMany({ where: { sessionToken: token }, data: { sessionToken: null } });
+}
+
 export async function getCurrentUser(): Promise<User | null> {
-  const email = await getAuthCookie();
-  if (!email) return null;
-  return prisma.user.findUnique({ where: { email } });
+  const token = await getAuthCookie();
+  if (!token) return null;
+  return prisma.user.findUnique({ where: { sessionToken: token } });
 }
 
 // ── Page-level guards (throw/redirect) ───────────────────────────────────────
@@ -123,9 +135,9 @@ export async function requireLeagueAccess(
 export async function apiRequireAuth(
   req: NextRequest
 ): Promise<User | NextResponse> {
-  const email = req.cookies.get(USER_SESSION_COOKIE)?.value;
-  if (!email) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  const user = await prisma.user.findUnique({ where: { email } });
+  const token = req.cookies.get(USER_SESSION_COOKIE)?.value;
+  if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const user = await prisma.user.findUnique({ where: { sessionToken: token } });
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   return user;
 }

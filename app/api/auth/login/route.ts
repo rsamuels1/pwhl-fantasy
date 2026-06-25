@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/db";
-import { setAuthCookie, generateMagicLinkToken } from "@/lib/auth";
+import { setAuthCookie, createSession, generateMagicLinkToken } from "@/lib/auth";
 import { sendMagicLink } from "@/lib/services/email-service";
 
 export async function POST(req: NextRequest) {
@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
       });
       const redirectTo = returnTo && returnTo.startsWith("/") ? returnTo : "/dashboard";
       const response = NextResponse.json({ redirectTo });
-      setAuthCookie(response, user.email);
+      setAuthCookie(response, await createSession(user.id));
       return response;
     }
 
@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
         user: { id: user.id, email: user.email, displayName: user.displayName },
         redirectTo,
       });
-      setAuthCookie(response, user.email);
+      setAuthCookie(response, await createSession(user.id));
       return response;
     }
 

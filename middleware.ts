@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const SESSION_COOKIE = "pwhl_user_email";
+const SESSION_COOKIE = "pwhl_session";
 const BETA_HOST = process.env.BETA_HOST ?? "fantasy.dykedb.org";
 
 export function middleware(req: NextRequest) {
@@ -20,9 +20,11 @@ export function middleware(req: NextRequest) {
       pathname === "/register" ||
       pathname === "/login" ||
       pathname.startsWith("/create-league") ||
+      pathname.startsWith("/invite") ||
       pathname.startsWith("/api/beta-signup") ||
       pathname.startsWith("/api/auth") ||
       pathname.startsWith("/api/leagues/create") ||
+      pathname.startsWith("/api/leagues/join") ||
       pathname.startsWith("/_next/") ||
       pathname.startsWith("/favicon");
 
