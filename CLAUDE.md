@@ -351,6 +351,31 @@ survives DB resets and schema migrations.
      - **SEC-P1-003** ✅ — `app/api/auth/register/route.ts`: max-length guard on `displayName` (≤80 chars)
      - **SEC-P1-004** ✅ — `app/api/leagues/create/route.ts`: max-length guard on `leagueName` (≤50 chars, consistent with wizard)
      - **SEC-P1-006** ✅ — `app/api/leagues/[leagueId]/commissioner/undo-transaction/route.ts`: audit log writes are fire-and-forget (`.catch + logger.error`) to prevent state inconsistency if the log write fails
+   - **PostHog Analytics — Sprint 41** ✅ (7/7 items; Jun 25, 2026; no schema changes):
+     - **ANA-001a** ✅ — `lib/analytics/index.ts`: replaced console.log shim with `posthog-node` singleton; graceful no-op when `POSTHOG_KEY` absent
+     - **ANA-001b** ✅ — `components/PostHogProvider.tsx`: client-side `posthog-js` provider mounted in `app/layout.tsx`; exports `useAnalytics()` hook
+     - **ANA-001c** ✅ — wizard funnel events: `wizard_step_viewed` (steps 1–7) and `wizard_completed` fire in `CreateLeagueWizard.tsx` via `useAnalytics()`
+     - **ANA-001d** ✅ — `lineup_auto_set` event fires when auto-set source is used; `lineup_saved` fires on both swap and single-move paths
+     - **ANA-001e** ✅ — `posthog.register({ environment })` stamps every client event with `beta` or `production`; `NEXT_PUBLIC_APP_ENV=beta` set in beta Vercel project
+     - **ANA-001f** ✅ — `.env.local.example` documents all four required env vars (`POSTHOG_KEY`, `POSTHOG_HOST`, `NEXT_PUBLIC_POSTHOG_KEY`, `NEXT_PUBLIC_POSTHOG_HOST`)
+     - **ANA-001g** ✅ — `scripts/test-posthog.ts` smoke test script; confirmed working against live PostHog project
+   - **H2H Scoring Mode — Sprint 42** ✅ (8/8 items; Jun 25, 2026; schema: `ScoringMode` enum + `FantasyLeague.scoringMode @default(H2H)`):
+     - **SCORING-001a** ✅ — `prisma/schema.prisma`: `ScoringMode { VP H2H VTF }` enum; `FantasyLeague.scoringMode` default changed to `H2H`
+     - **SCORING-001b** ✅ — `lib/season/h2h.ts`: `scoreH2hWeek()` (IO, mirrors `scoreVpWeek`) and `computeH2hStandings()` (pure, returns `VpStanding[]`)
+     - **SCORING-001c** ✅ — `lib/scoring/vp.ts`: new file; extracted `scoreVpWeek()`, `computeVpStandings()`, `computeVpForWeek()` from `seeding.ts`
+     - **SCORING-001d** ✅ — `lib/season/index.ts`: `startSeason()` and `advanceSeason()` branch `VP → scoreVpWeek`, `H2H → scoreH2hWeek`, else `scoreVtfWeek`
+     - **SCORING-001e** ✅ — `lib/services/standings-service.ts`: dispatches to `computeH2hStandings` for H2H leagues, `computeVpStandings` for VP
+     - **SCORING-001f** ✅ — `app/api/leagues/create/route.ts`: accepts `scoringMode` in POST body, defaults to `"H2H"`
+     - **SCORING-001g** ✅ — `app/create-league/CreateLeagueWizard.tsx`: Step 1 scoring mode selector — H2H (default), VP (labeled "Advanced")
+     - **SCORING-001h** ✅ — standings, matchup, league overview, how-it-works pages: VP education surfaces hidden when `scoringMode === "H2H"`; `VpPrimerCard` hidden for H2H leagues
+   - **Pre-Launch Ops — Sprint 43** ✅ (7/7 items; Jun 25, 2026; no schema changes):
+     - **OPS-005** ✅ — `app/api/cron/ingest-live-stats/route.ts`: polls HockeyTech every 30 min during game hours (22:00–04:00 UTC); upserts stat lines for newly-final games; registered in `vercel.json`
+     - **OPS-006** ✅ — `app/api/cron/advance-live-seasons/route.ts`: nightly at 05:00 UTC; scores all live `IN_SEASON` leagues after stat lines are in; registered in `vercel.json`
+     - **OPS-007** ✅ — `vercel.json`: both new crons (`ingest-live-stats` every 30 min during game window, `advance-live-seasons` nightly 05:00 UTC) registered in Vercel scheduler
+     - **OPS-008** ✅ — `.github/workflows/ci.yml`: GitHub Actions CI — `tsc --noEmit` typecheck + ESLint + vitest on push to `main`, `dev`, and `release/*` branches
+     - **OPS-009** ✅ — draft server `/health` endpoint returns `{ ok: true, rooms: N }` JSON for Render uptime monitoring; health check path confirmed in `render.yaml`
+     - **OPS-010** ✅ — `render.yaml`: Render service plan upgraded to `standard` (2 GB RAM) for draft week load; prior `starter` plan was marginal under concurrent-league load test
+     - **OPS-011** ✅ — `vitest.config.ts`: explicit `include`/`exclude` patterns prevent test discovery from sweeping node_modules; `.eslintrc.json` added with project-standard rules
 7. Public launch ~early Nov, drafts ~1 week before opener
 
 ## Draft room UI (`app/draft/[leagueId]/`)
