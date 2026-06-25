@@ -1,6 +1,6 @@
 // lib/services/morning-skate-service.ts
 // Generates a weekly "Morning Skate" newsletter edition after each period scores.
-// Pure generation in generateEdition(); IO (idempotency + persistence) in emitMorningSkateEdition().
+// fetchEdition() fetches and assembles the EditionData; emitMorningSkateEdition() owns idempotency + persistence.
 
 import type { PrismaClient } from "@prisma/client";
 import { computeVpStandings } from "@/lib/scoring/vp";
@@ -19,11 +19,7 @@ export interface EditionData {
   sections: EditionSection[];
 }
 
-/**
- * Assembles an EditionData object from pre-fetched league data.
- * Pure — no IO side effects.
- */
-export async function generateEdition(
+async function fetchEdition(
   leagueId: string,
   periodId: string,
   prisma: PrismaClient
@@ -209,7 +205,7 @@ export async function emitMorningSkateEdition(
   });
   if (existing) return;
 
-  const editionData = await generateEdition(leagueId, periodId, prisma);
+  const editionData = await fetchEdition(leagueId, periodId, prisma);
 
   await prisma.morningSkateEdition.create({
     data: {

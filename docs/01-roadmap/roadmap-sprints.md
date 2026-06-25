@@ -1860,10 +1860,10 @@ Goal: Address the top three findings from the pragmatic complexity review: N+1 p
 | CX-004 — CLAUDE.md convention cleanup: outdated `(prisma as any).leagueEvent` guard note removed from Conventions section | Doc | S | P1 | ✅ DONE |
 
 **Lower-priority complexity findings (deferred to post-launch backlog):**
-- CX-005: Collapse `validateTradeProposal`/`validateTradeExecution` aliases in engine.ts
-- CX-006: `generateEdition` purity naming (morning-skate-service.ts)
-- CX-007: Rename `REVERSED` trade state to `VETOED`
-- CX-008: Add `nowMs` param to `enterWaiverWire`
+- CX-005: Collapse `validateTradeProposal`/`validateTradeExecution` aliases in engine.ts ✅
+- CX-006: `generateEdition` purity naming (morning-skate-service.ts) ✅
+- CX-007: Rename `REVERSED` trade state to `VETOED` ✅
+- CX-008: Add `nowMs` param to `enterWaiverWire` ✅
 
 **No schema changes in this sprint.**
 
@@ -1879,11 +1879,12 @@ Goal: Ship the two remaining complexity review items that were safe to do withou
 |---|---|---|---|---|
 | CX-005 — Collapse validateTrade aliases: `validateTradeProposal` and `validateTradeExecution` were identical wrappers around `_validate`; collapsed into single exported `validateTrade`; updated `trade-service.ts` (4 call sites) and `trade.test.ts` | Cleanup | S | P2 | ✅ DONE |
 | CX-008 — `nowMs` in `enterWaiverWire`: hardcoded `Date.now()` replaced with optional `nowMs` param; waiver route passes `getDevNowFromRequest(req)` so waiver expiry respects sim-date cookie during dev simulation | Cleanup | S | P2 | ✅ DONE |
-| CX-007 — Rename REVERSED → VETOED: **deferred indefinitely** — `REVERSED` covers two semantically different transitions (`PENDING_REVIEW→REVERSED` = veto, `EXECUTED→REVERSED` = rollback); splitting them requires a new enum value, Prisma migration, and prod data migration; low value for the risk | Cleanup | L | P3 | ⏸ DEFERRED |
+| CX-007 — Split REVERSED trade state: `VETOED` (killed in review, never executed) + `REVERSED` (post-execution rollback); `PENDING_REVIEW→VETOED` and `EXECUTED→REVERSED` are now distinct paths in the engine; migration `20260701000000_add_vetoed_trade_status`; 32 tests passing | Cleanup | L | P3 | ✅ DONE |
+| CX-006 — `generateEdition` purity naming: renamed to `fetchEdition` (unexported private helper) to reflect that it does DB IO; file-level comment updated; one internal call site updated | Cleanup | S | P2 | ✅ DONE |
 
-**No schema changes in this sprint.**
+**Schema change: `VETOED` added to `TradeStatus` enum (CX-007).**
 
-**Result: 2/2 actionable items shipped; CX-007 properly deferred.**
+**Result: 4/4 items shipped; complexity debt fully closed.**
 
 ---
 
