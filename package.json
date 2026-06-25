@@ -20,6 +20,8 @@
     "auto-draft": "tsx scripts/auto-draft.ts",
     "advance-replay": "tsx scripts/advance-replay.ts",
     "build-roadmap": "tsx scripts/build-roadmap-dashboard.ts",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest"
   },
@@ -42,6 +44,8 @@
     "@types/react": "19.2.16",
     "@types/react-dom": "^19.2.3",
     "@types/ws": "^8.5.10",
+    "eslint": "^8.57.1",
+    "eslint-config-next": "^14.2.35",
     "playwright": "^1.60.0",
     "prisma": "^5.0.0",
     "tsx": "^4.0.0",
