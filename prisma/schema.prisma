@@ -95,6 +95,8 @@ model User {
   email                   String                   @unique
   displayName             String
   passwordHash            String?
+  magicLinkToken          String?   @unique
+  magicLinkExpiresAt      DateTime?
   onboardingCompletedAt   DateTime?
   createdAt               DateTime                 @default(now())
   updatedAt               DateTime                 @updatedAt

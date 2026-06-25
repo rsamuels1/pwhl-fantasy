@@ -17,6 +17,8 @@ import { emitEvent, type LeagueEventType } from "../services/activity";
 import { trackEvent } from "../analytics";
 import { logCommissionerAction, type CommissionerEventType } from "../services/audit-service";
 import { createNotification } from "../services/notification-service";
+import { sendOnClock } from "../services/email-service";
+import { generateMagicLinkToken } from "../auth";
 import { startSeason, getSeasonState } from "../season/index";
 
 const prisma = new PrismaClient();
@@ -304,6 +306,38 @@ class DraftRoom {
           actionUrl: `/draft/${this.leagueId}?team=${slot.fantasyTeamId}`,
         }
       );
+
+      // Only email if the team has no active WebSocket connection (not already in the room)
+      const isConnected = [...this.sockets.values()].some(
+        (teamId) => teamId === slot.fantasyTeamId
+      );
+      if (!isConnected && process.env.EMAIL_RESEND_ENABLED === "true") {
+        void (async () => {
+          try {
+            const owner = await prisma.user.findUnique({
+              where: { id: team.ownerId },
+              select: { email: true, displayName: true },
+            });
+            if (owner && !owner.email.endsWith("@dev.local")) {
+              // Generate a magic link so clicking the email logs them into the draft room
+              const { rawToken, tokenHash, expiresAt } = generateMagicLinkToken();
+              await prisma.user.update({
+                where: { id: team.ownerId },
+                data: { magicLinkToken: tokenHash, magicLinkExpiresAt: expiresAt },
+              });
+              await sendOnClock(
+                owner.email,
+                owner.displayName,
+                rawToken,
+                this.leagueId,
+                slot.fantasyTeamId,
+                this.state.currentOverall,
+                this.state.order.length
+              );
+            }
+          } catch {}
+        })();
+      }
     } catch {
       // fire-and-forget — never block the draft
     }

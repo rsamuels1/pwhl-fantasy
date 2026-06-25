@@ -11,6 +11,7 @@ export default function RegisterPage() {
   const [displayName, setDisplayName] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [sent, setSent] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -23,21 +24,27 @@ export default function RegisterPage() {
     event.preventDefault();
     setStatus(null);
 
-    if (password.length < 8) {
+    if (showPassword && password && password.length < 8) {
       setStatus("Password must be at least 8 characters.");
       return;
     }
 
     setLoading(true);
     try {
+      const body: Record<string, string> = { email, displayName, returnTo };
+      if (showPassword && password) {
+        body.password = password;
+      }
       const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, displayName, password, returnTo }),
+        body: JSON.stringify(body),
       });
       const data = await res.json();
       if (!res.ok) {
         setStatus(data?.error || "Unable to create account.");
+      } else if (data.sent) {
+        setSent(true);
       } else {
         router.push(data.redirectTo ?? "/dashboard");
       }
@@ -48,7 +55,9 @@ export default function RegisterPage() {
     }
   };
 
-  const loginHref = returnTo ? `/login?returnTo=${encodeURIComponent(returnTo)}` : "/login";
+  const loginHref = returnTo
+    ? `/login?returnTo=${encodeURIComponent(returnTo)}`
+    : "/login";
 
   return (
     <main style={pageStyle}>
@@ -73,101 +82,124 @@ export default function RegisterPage() {
               Create your account, join a league before the draft, and pick real PWHL players to build your roster.
             </p>
             <div style={{ marginTop: 14, padding: "8px 12px", borderRadius: 8, background: "var(--bg-raised)", border: "1px solid var(--border)", fontSize: 12, color: "var(--faint)" }}>
-              Season starts November 2026 · Draft week TBD · or <Link href="/create-league" style={{ color: "var(--accent-strong)", textDecoration: "none" }}>play a replay season right now →</Link>
+              Season starts November 2026 · Draft week TBD · or{" "}
+              <Link href="/create-league" style={{ color: "var(--accent-strong)", textDecoration: "none" }}>
+                play a replay season right now →
+              </Link>
             </div>
           </div>
         </div>
 
         {/* Right — form */}
         <div style={formPanelStyle}>
-          <h2 style={{ margin: "0 0 6px", fontSize: 20, fontWeight: 700 }}>Create account</h2>
-          <p style={{ color: "var(--faint)", marginTop: 0, marginBottom: 20, fontSize: 13 }}>
-            Already have one?{" "}
-            <Link href={loginHref} style={{ color: "var(--accent-strong)", textDecoration: "none", fontWeight: 600 }}>
-              Sign in →
-            </Link>
-          </p>
+          {sent ? (
+            /* Success panel — shown after magic link is sent */
+            <div>
+              <h2 style={{ margin: "0 0 16px", fontSize: 20, fontWeight: 700 }}>
+                Check your email
+              </h2>
+              <p style={{ fontSize: 14, color: "var(--text)", lineHeight: 1.6, marginBottom: 8 }}>
+                We sent a sign-in link to <strong>{email}</strong>. It expires in 15 minutes.
+              </p>
+              <p style={{ fontSize: 12, color: "var(--faint)", marginBottom: 24 }}>
+                Check your spam folder if you don&apos;t see it.
+              </p>
+              <button
+                type="button"
+                onClick={() => setSent(false)}
+                style={{ background: "none", border: "1px solid var(--border)", color: "var(--dim)", fontSize: 13, cursor: "pointer", padding: "8px 14px", borderRadius: 8 }}
+              >
+                Use a different email
+              </button>
+            </div>
+          ) : (
+            <>
+              <h2 style={{ margin: "0 0 6px", fontSize: 20, fontWeight: 700 }}>Create account</h2>
+              <p style={{ color: "var(--faint)", marginTop: 0, marginBottom: 4, fontSize: 13 }}>
+                We&apos;ll email you a sign-in link — no password needed.
+              </p>
+              <p style={{ color: "var(--faint)", marginTop: 0, marginBottom: 20, fontSize: 13 }}>
+                Already have one?{" "}
+                <Link href={loginHref} style={{ color: "var(--accent-strong)", textDecoration: "none", fontWeight: 600 }}>
+                  Sign in →
+                </Link>
+              </p>
 
-          <form onSubmit={handleSubmit} style={{ display: "grid", gap: 14 }}>
-            <label style={labelStyle}>
-              Email
-              <input
-                style={inputStyle}
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                autoFocus
-                placeholder="you@example.com"
-                autoComplete="email"
-              />
-            </label>
+              {status && (
+                <p style={{ color: "#f87171", marginBottom: 14, fontSize: 13, padding: "10px 14px", borderRadius: 8, background: "rgba(248,113,113,0.07)", border: "1px solid rgba(248,113,113,0.2)" }}>
+                  {status}
+                </p>
+              )}
 
-            <label style={labelStyle}>
-              Display name
-              <input
-                style={inputStyle}
-                value={displayName}
-                onChange={(e) => setDisplayName(e.target.value)}
-                placeholder="Your public name in the league (optional)"
-                autoComplete="nickname"
-              />
-            </label>
+              <form onSubmit={handleSubmit} style={{ display: "grid", gap: 14 }}>
+                <label style={labelStyle}>
+                  Email
+                  <input
+                    style={inputStyle}
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    autoFocus
+                    placeholder="you@example.com"
+                    autoComplete="email"
+                  />
+                </label>
 
-            <label style={labelStyle}>
-              Password
-              <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
-                <input
-                  style={inputStyle}
-                  type={showPassword ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  placeholder="At least 8 characters"
-                  autoComplete="new-password"
-                />
+                <label style={labelStyle}>
+                  Display name{" "}
+                  <span style={{ fontWeight: 400, color: "var(--faint)" }}>(optional)</span>
+                  <input
+                    style={inputStyle}
+                    value={displayName}
+                    onChange={(e) => setDisplayName(e.target.value)}
+                    placeholder="Your public name in the league"
+                    autoComplete="nickname"
+                  />
+                </label>
+
+                {/* Optional password disclosure */}
+                {showPassword && (
+                  <label style={labelStyle}>
+                    Password{" "}
+                    <span style={{ fontWeight: 400, color: "var(--faint)" }}>(optional)</span>
+                    <input
+                      style={inputStyle}
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="At least 8 characters"
+                      autoComplete="new-password"
+                    />
+                  </label>
+                )}
+
+                <button
+                  type="submit"
+                  style={buttonStyle}
+                  disabled={loading || !email}
+                >
+                  {loading ? "Creating account…" : "Create account →"}
+                </button>
+
                 <button
                   type="button"
-                  onClick={() => setShowPassword(!showPassword)}
+                  onClick={() => setShowPassword((v) => !v)}
                   style={{
-                    position: "absolute",
-                    right: 14,
                     background: "none",
                     border: "none",
                     color: "var(--faint)",
+                    fontSize: 12,
                     cursor: "pointer",
-                    padding: "4px 8px",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
+                    padding: "2px 0",
+                    textAlign: "left",
                   }}
-                  aria-label={showPassword ? "Hide password" : "Show password"}
                 >
-                  {showPassword ? (
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                      <circle cx="12" cy="12" r="3" />
-                    </svg>
-                  ) : (
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
-                      <line x1="1" y1="1" x2="23" y2="23" />
-                    </svg>
-                  )}
+                  {showPassword ? "Remove password" : "Add a password (optional)"}
                 </button>
-              </div>
-            </label>
-
-            <button
-              type="submit"
-              style={buttonStyle}
-              disabled={loading || !email || !password}
-            >
-              {loading ? "Creating account…" : "Create account →"}
-            </button>
-          </form>
-
-          {status && <p style={{ color: "#f87171", marginTop: 14, fontSize: 13 }}>{status}</p>}
+              </form>
+            </>
+          )}
         </div>
 
       </div>

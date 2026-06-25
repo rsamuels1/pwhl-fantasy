@@ -16,6 +16,7 @@ import { LeagueSettingsEditor } from "@/components/LeagueSettingsEditor";
 import TradeSettingsForm from "@/components/TradeSettingsForm";
 import NegativeAwardsToggle from "@/components/NegativeAwardsToggle";
 import PendingTradeReviewList from "@/components/PendingTradeReviewList";
+import CommissionerInviteForm from "@/components/CommissionerInviteForm";
 
 const COMMISSIONER_EVENT_TYPES = [
   "COMMISSIONER_FORCE_MOVE",
@@ -304,6 +305,12 @@ export default async function AdminPage({ params, searchParams }: Props) {
               ? ` · ${league.maxTeams - league.teams.length} remaining`
               : " · league full"}
           </p>
+          <div style={{ marginTop: 20, paddingTop: 16, borderTop: "1px solid var(--border)" }}>
+            <p style={{ fontSize: 13, fontWeight: 600, color: "var(--text)", marginBottom: 8 }}>
+              Or invite by email
+            </p>
+            <CommissionerInviteForm leagueId={leagueId} />
+          </div>
         </section>
       )}
 

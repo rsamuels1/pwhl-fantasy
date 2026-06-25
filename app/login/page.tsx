@@ -9,12 +9,22 @@ export default function LoginPage() {
   const [returnTo, setReturnTo] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [sent, setSent] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     setReturnTo(params.get("returnTo") ?? "");
+    const err = params.get("error");
+    if (err === "invalid_token") {
+      setStatus(
+        "This sign-in link has expired or has already been used. Request a new one below."
+      );
+    } else if (err === "missing_token") {
+      setStatus("Invalid sign-in link. Please request a new one.");
+    }
   }, []);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -22,14 +32,20 @@ export default function LoginPage() {
     setStatus(null);
     setLoading(true);
     try {
+      const body: Record<string, string> = { email, returnTo };
+      if (showPassword && password) {
+        body.password = password;
+      }
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password, returnTo }),
+        body: JSON.stringify(body),
       });
       const data = await res.json();
       if (!res.ok) {
         setStatus(data?.error || "Unable to log in.");
+      } else if (data.sent) {
+        setSent(true);
       } else {
         router.push(data.redirectTo ?? "/dashboard");
       }
@@ -40,7 +56,9 @@ export default function LoginPage() {
     }
   };
 
-  const registerHref = returnTo ? `/register?returnTo=${encodeURIComponent(returnTo)}` : "/register";
+  const registerHref = returnTo
+    ? `/register?returnTo=${encodeURIComponent(returnTo)}`
+    : "/register";
 
   return (
     <main style={pageStyle}>
@@ -65,7 +83,10 @@ export default function LoginPage() {
               Scout players. Build a championship roster. Lead your franchise through a full PWHL season.
             </p>
             <div style={{ marginTop: 14, padding: "8px 12px", borderRadius: 8, background: "var(--bg-raised)", border: "1px solid var(--border)", fontSize: 12, color: "var(--faint)" }}>
-              Season starts November 2026 · Draft week TBD · or <Link href="/create-league" style={{ color: "var(--accent-strong)", textDecoration: "none" }}>play a replay season right now →</Link>
+              Season starts November 2026 · Draft week TBD · or{" "}
+              <Link href="/create-league" style={{ color: "var(--accent-strong)", textDecoration: "none" }}>
+                play a replay season right now →
+              </Link>
             </div>
           </div>
 
@@ -85,53 +106,120 @@ export default function LoginPage() {
               </div>
             ))}
           </div>
-
         </div>
 
         {/* Right — form */}
         <div style={formPanelStyle}>
-          <h2 style={{ margin: "0 0 6px", fontSize: 20, fontWeight: 700 }}>Sign in</h2>
-          <p style={{ color: "var(--faint)", marginTop: 0, marginBottom: 20, fontSize: 13, lineHeight: 1.6 }}>
-            Don&apos;t have an account?{" "}
-            <Link href={registerHref} style={{ color: "var(--accent-strong)", textDecoration: "none", fontWeight: 600 }}>
-              Create one →
-            </Link>
-          </p>
+          {sent ? (
+            /* Success panel — shown after magic link is sent */
+            <div>
+              <h2 style={{ margin: "0 0 16px", fontSize: 20, fontWeight: 700 }}>
+                Check your email
+              </h2>
+              <p style={{ fontSize: 14, color: "var(--text)", lineHeight: 1.6, marginBottom: 8 }}>
+                We sent a sign-in link to <strong>{email}</strong>. It expires in 15 minutes.
+              </p>
+              <p style={{ fontSize: 12, color: "var(--faint)", marginBottom: 24 }}>
+                Check your spam folder if you don&apos;t see it.
+              </p>
+              <button
+                type="button"
+                onClick={() => setSent(false)}
+                style={{ background: "none", border: "1px solid var(--border)", color: "var(--dim)", fontSize: 13, cursor: "pointer", padding: "8px 14px", borderRadius: 8 }}
+              >
+                Use a different email
+              </button>
+            </div>
+          ) : (
+            <>
+              <h2 style={{ margin: "0 0 6px", fontSize: 20, fontWeight: 700 }}>Sign in</h2>
+              <p style={{ color: "var(--faint)", marginTop: 0, marginBottom: 20, fontSize: 13, lineHeight: 1.6 }}>
+                Don&apos;t have an account?{" "}
+                <Link href={registerHref} style={{ color: "var(--accent-strong)", textDecoration: "none", fontWeight: 600 }}>
+                  Create one →
+                </Link>
+              </p>
 
-          <form onSubmit={handleSubmit} style={{ display: "grid", gap: 14 }}>
-            <label style={labelStyle}>
-              Email
-              <input
-                style={inputStyle}
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                autoFocus
-                placeholder="you@example.com"
-                autoComplete="email"
-              />
-            </label>
+              {status && (
+                <p style={{ color: "#f87171", marginBottom: 14, fontSize: 13, padding: "10px 14px", borderRadius: 8, background: "rgba(248,113,113,0.07)", border: "1px solid rgba(248,113,113,0.2)" }}>
+                  {status}
+                </p>
+              )}
 
-            <label style={labelStyle}>
-              Password
-              <input
-                style={inputStyle}
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                placeholder="Your password"
-                autoComplete="current-password"
-              />
-            </label>
+              <form onSubmit={handleSubmit} style={{ display: "grid", gap: 14 }}>
+                <label style={labelStyle}>
+                  Email
+                  <input
+                    style={inputStyle}
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    autoFocus
+                    placeholder="you@example.com"
+                    autoComplete="email"
+                  />
+                </label>
 
-            <button type="submit" style={buttonStyle} disabled={loading || !email || !password}>
-              {loading ? "Signing in…" : "Sign in →"}
-            </button>
-          </form>
+                {/* Primary action — magic link */}
+                {!showPassword && (
+                  <button
+                    type="submit"
+                    style={buttonStyle}
+                    disabled={loading || !email}
+                  >
+                    {loading ? "Sending…" : "Email me a sign-in link →"}
+                  </button>
+                )}
 
-          {status && <p style={{ color: "#f87171", marginTop: 14, fontSize: 13 }}>{status}</p>}
+                {/* Password fallback — hidden by default */}
+                {showPassword && (
+                  <>
+                    <label style={labelStyle}>
+                      Password
+                      <input
+                        style={inputStyle}
+                        type="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="Your password"
+                        autoComplete="current-password"
+                      />
+                    </label>
+                    <button
+                      type="submit"
+                      style={buttonStyle}
+                      disabled={loading || !email || !password}
+                    >
+                      {loading ? "Signing in…" : "Sign in →"}
+                    </button>
+                  </>
+                )}
+
+                {/* Toggle between magic link and password */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowPassword((v) => !v);
+                    setStatus(null);
+                  }}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    color: "var(--faint)",
+                    fontSize: 12,
+                    cursor: "pointer",
+                    padding: "2px 0",
+                    textAlign: "left",
+                  }}
+                >
+                  {showPassword
+                    ? "Send me a link instead"
+                    : "Sign in with a password instead"}
+                </button>
+              </form>
+            </>
+          )}
         </div>
 
       </div>

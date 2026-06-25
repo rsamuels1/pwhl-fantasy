@@ -107,6 +107,12 @@ Set in Vercel → Project → Settings → Environment Variables. Scope each car
 | `ALLOW_SIM_DATE` | **do not set** | optional `true` | Enables the dev-sim cookie to rewind the clock. Never in production — a user could time-warp all live leagues. |
 | `NODE_ENV` | `production` | `production` | Vercel sets this automatically. Sim controls (`/season/advance`) are gated by `ALLOW_SEASON_ADVANCE=true` env var, not `NODE_ENV`, in practice. |
 | `STATS_SOURCE_API_KEY` | set if ingest runs | optional | HockeyTech creds. Ingestion is script-only, not app code. |
+| `RESEND_API_KEY` | set | optional | Resend API key from resend.com dashboard. Required for magic-link auth and transactional emails in production. |
+| `EMAIL_FROM` | `PWHL GM <noreply@dykedb.org>` | same | "From" address for all outgoing emails. Requires DNS domain verification in Resend (DKIM TXT + SPF records for `dykedb.org`). One-time setup. |
+| `EMAIL_RESEND_ENABLED` | `true` | **unset** | Master switch — prevents staging from sending real emails to beta users. Always leave unset on staging. |
+| `NEXT_PUBLIC_APP_URL` | `https://beta.fantasy.dykedb.org` | `https://fantasydev.dykedb.org` | Base URL used when constructing magic link and notification URLs in emails. |
+
+**Email domain setup:** `noreply@dykedb.org` requires DNS verification in the Resend dashboard (DKIM TXT + SPF records). One-time setup. The draft WebSocket server on Render also needs `RESEND_API_KEY`, `EMAIL_FROM`, and `EMAIL_RESEND_ENABLED` set in its Render environment (so on-the-clock emails work from the draft server process).
 
 ---
 
