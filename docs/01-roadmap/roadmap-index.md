@@ -1,6 +1,6 @@
 # PWHL GM Product Roadmap — Index
 
-Last Updated: June 24, 2026 (Sprint 29 COMPLETE — Beta Sweep & Transactions Fix 6/6; Sprint 27 COMPLETE — Polish & The Arena Concourse 11/11; Sprint 25 COMPLETE — Living League: Legacy 6/6)
+Last Updated: June 24, 2026 (Sprint 33 COMPLETE — Complexity Debt 4/4; Sprint 32 COMPLETE — IA Closure + UX Batch 8/8; Sprint 31 COMPLETE — Morning Skate + Hub Reorg 5/5)
 
 ---
 
@@ -185,8 +185,14 @@ All sprints from 7–27 are complete and shipped. Sprint 13 is formally absorbed
 - **Sprint 25** ✅ — Living League: Legacy (6/6 stories: LL-009/011b/014/015 + UX-058 + BF-020; commit ab44083)
 - **Sprint 26** ✅ — Beta Defect Sweep (BF-024/027 shipped by parallel agents; Jun 24, 2026)
 - **Sprint 27** ✅ — Polish & The Arena Concourse (11/11 items: BF-022/023/025/026/028 + LL-024 + LL-022 Phase 1+2 + VTF subtitle + LL-016 partial; Jun 24, 2026)
+- **Sprint 28** ✅ — Morning Skate + Hub Reorg (see Sprint 31 for LL-016/020 final pieces)
+- **Sprint 29** ✅ — Beta Sweep & Transactions Fix (6/6: S29-001 rival improvements, BF-NEW guard cleanup, TR-002/003 trade notifications, OB-001 verified, BF-021 mobile tap-to-swap; Jun 24, 2026)
+- **Sprint 30** ✅ — Track A Bug Sweep (2/2: BF-012 FA stale-state, BF-013 pre-season trades verified; Jun 24, 2026)
+- **Sprint 31** ✅ — Track B: Morning Skate Newcomer Mode + Hub Reorg (5/5: LL-020 acronym expansion + team routes + MorningSkatePreview teamId, LL-016 Z0 consolidation + commissioner reorder; Jun 24, 2026)
+- **Sprint 32** ✅ — IA Closure + UX Batch (8/8: IA-008/009/010, GATE-3 ✅, UX-049/050/032, OB-010; Jun 24, 2026)
+- **Sprint 33** ✅ — Complexity Debt (4/4: CX-001 batch projections, CX-002 prisma guard removal, CX-003 dashboard helpers, CX-004 CLAUDE.md cleanup; Jun 24, 2026)
 
-**Current Status:** Sprint 27 COMPLETE — "Polish & The Arena Concourse" (11/11 shipped: BF-022/023/025/026/028 + LL-024 + LL-022 Phase 1+2 + VTF subtitle + LL-016 partial) · Sprint 25 COMPLETE — Living League: Legacy (6/6; LL-009/011b/014/015 + UX-058 + BF-020) · Sprint 26 COMPLETE — Beta Defect Sweep (BF-024/027 shipped by parallel agents) · MVP readiness ~99%
+**Current Status:** Sprint 33 COMPLETE — All MVP complexity debt addressed. Beta-ready. GATE-1/2/3 all ✅. MVP readiness: 100%
 
 **Sprint 14 (Post-Launch Polish + Emotional Engagement) is COMPLETE (Jun 22, 2026).** 11/12 items shipped: all 5 agent integration test findings (DRC-002, BF-010, BF-011, TR-002, TR-003) ✅; OB-010 wizard Replay progress bar ✅; UX-049 "Free Agents" direct TeamNav link ✅; UX-050 "Win Probability" label in DuelHero ✅; UX-033 setup-phase copy "Games starting soon" ✅; UX-032 edge label ✅; OB-011 draft date picker text ✅. UX-045 (rival win celebration) deferred post-launch — requires schema migration (`RIVALRY_WIN` enum) which carries pre-launch risk. First item in Sprint 17 backlog.
 
