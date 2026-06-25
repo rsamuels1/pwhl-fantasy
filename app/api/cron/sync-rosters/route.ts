@@ -108,13 +108,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ skipped: true, reason: "SYNC_ROSTERS_DISABLED" });
   }
 
-  // Warn loudly if a schedule has appeared — operator should switch to full ingest.
+  // Stop running once the 2026-27 schedule exists in HockeyTech.
+  // At that point the main ingest script handles everything; roster-only sync would interfere.
   const scheduleUp = await hasScheduleAppeared();
   if (scheduleUp) {
     console.warn(
-      "[cron/sync-rosters] ⚠ season_id=10 now has a schedule! Switch to " +
-      "`npm run ingest -- --season 2026-27 --no-stats` and set SYNC_ROSTERS_DISABLED=true."
+      "[cron/sync-rosters] 2026-27 schedule is live — this cron is now dormant. " +
+      "Run `npm run ingest -- --season 2026-27 --no-stats` and remove the sync-rosters " +
+      "entry from vercel.json."
     );
+    return NextResponse.json({ dormant: true, reason: "schedule_appeared" });
   }
 
   const dbTeams = await prisma.team.findMany({ select: { id: true, externalId: true, abbreviation: true } });
