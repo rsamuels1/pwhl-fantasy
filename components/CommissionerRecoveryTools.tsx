@@ -69,13 +69,16 @@ function ReplaceOwnerSection({ leagueId, teams }: { leagueId: string; teams: Tea
         Transfer a team to a new owner. Their roster, standings, and matchups are preserved.
       </p>
       <div style={{ display: "grid", gap: 8 }}>
-        <select value={selectedTeam} onChange={(e) => setSelectedTeam(e.target.value)} style={inputStyle}>
+        <label htmlFor="replace-team-select" className="visually-hidden">Team to transfer</label>
+        <select id="replace-team-select" value={selectedTeam} onChange={(e) => setSelectedTeam(e.target.value)} style={inputStyle}>
           <option value="">Select team…</option>
           {teams.map((t) => (
             <option key={t.id} value={t.id}>{t.name} ({t.ownerEmail})</option>
           ))}
         </select>
+        <label htmlFor="replace-owner-email" className="visually-hidden">New owner&apos;s email</label>
         <input
+          id="replace-owner-email"
           type="email"
           placeholder="New owner's email"
           value={email}
@@ -90,7 +93,7 @@ function ReplaceOwnerSection({ leagueId, teams }: { leagueId: string; teams: Tea
           {busy ? "Replacing…" : "Replace owner"}
         </button>
       </div>
-      {result && <p style={{ margin: "8px 0 0", fontSize: 13, color: result.startsWith("Error") ? "#f87171" : "#34d399" }}>{result}</p>}
+      {result && <p role="alert" style={{ margin: "8px 0 0", fontSize: 13, color: result.startsWith("Error") ? "#f87171" : "#34d399" }}>{result}</p>}
     </div>
   );
 }
@@ -135,7 +138,8 @@ function UndoTransactionSection({ leagueId, teams, isDraftPaused }: { leagueId: 
         <div>
           <p style={{ fontSize: 13, color: "var(--faint)", margin: "0 0 8px" }}>Waiver move — reverses the most recent add or drop for a team:</p>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            <select value={selectedTeam} onChange={(e) => setSelectedTeam(e.target.value)} style={{ ...inputStyle, flex: 1, minWidth: 160 }}>
+            <label htmlFor="undo-waiver-team" className="visually-hidden">Team for waiver undo</label>
+            <select id="undo-waiver-team" value={selectedTeam} onChange={(e) => setSelectedTeam(e.target.value)} style={{ ...inputStyle, flex: 1, minWidth: 160 }}>
               <option value="">Select team…</option>
               {teams.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
             </select>
@@ -153,7 +157,7 @@ function UndoTransactionSection({ leagueId, teams, isDraftPaused }: { leagueId: 
           </div>
         )}
       </div>
-      {result && <p style={{ margin: "8px 0 0", fontSize: 13, color: result.startsWith("Error") ? "#f87171" : "#34d399" }}>{result}</p>}
+      {result && <p role="alert" style={{ margin: "8px 0 0", fontSize: 13, color: result.startsWith("Error") ? "#f87171" : "#34d399" }}>{result}</p>}
     </div>
   );
 }
@@ -206,27 +210,33 @@ function ForceRosterMoveSection({ leagueId, teams }: { leagueId: string; teams: 
         Move a player on behalf of any team. Respects eligibility rules. Cannot move locked players.
       </p>
       <div style={{ display: "grid", gap: 8 }}>
-        <select value={selectedTeam} onChange={(e) => { setSelectedTeam(e.target.value); setSelectedPlayer(""); }} style={inputStyle}>
+        <label htmlFor="force-move-team" className="visually-hidden">Team</label>
+        <select id="force-move-team" value={selectedTeam} onChange={(e) => { setSelectedTeam(e.target.value); setSelectedPlayer(""); }} style={inputStyle}>
           <option value="">Select team…</option>
           {teams.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
         </select>
         {currentTeam && (
-          <select value={selectedPlayer} onChange={(e) => setSelectedPlayer(e.target.value)} style={inputStyle}>
-            <option value="">Select player…</option>
-            {currentTeam.roster.map((p) => (
-              <option key={p.playerId} value={p.playerId}>{p.playerName} ({p.slot})</option>
-            ))}
-          </select>
+          <>
+            <label htmlFor="force-move-player" className="visually-hidden">Player to move</label>
+            <select id="force-move-player" value={selectedPlayer} onChange={(e) => setSelectedPlayer(e.target.value)} style={inputStyle}>
+              <option value="">Select player…</option>
+              {currentTeam.roster.map((p) => (
+                <option key={p.playerId} value={p.playerId}>{p.playerName} ({p.slot})</option>
+              ))}
+            </select>
+          </>
         )}
-        <select value={targetSlot} onChange={(e) => setTargetSlot(e.target.value as Slot)} style={inputStyle}>
+        <label htmlFor="force-move-slot" className="visually-hidden">Target slot</label>
+        <select id="force-move-slot" value={targetSlot} onChange={(e) => setTargetSlot(e.target.value as Slot)} style={inputStyle}>
           {SLOTS.map((s) => <option key={s} value={s}>{s}</option>)}
         </select>
-        <input placeholder="Reason (optional, logged in audit trail)" value={reason} onChange={(e) => setReason(e.target.value)} style={inputStyle} />
+        <label htmlFor="force-move-reason" className="visually-hidden">Reason (optional)</label>
+        <input id="force-move-reason" placeholder="Reason (optional, logged in audit trail)" value={reason} onChange={(e) => setReason(e.target.value)} style={inputStyle} />
         <button onClick={handleMove} disabled={busy || !selectedTeam || !selectedPlayer} style={btnStyle(busy || !selectedTeam || !selectedPlayer)}>
           {busy ? "Moving…" : "Move player"}
         </button>
       </div>
-      {result && <p style={{ margin: "8px 0 0", fontSize: 13, color: result.startsWith("Error") ? "#f87171" : "#34d399" }}>{result}</p>}
+      {result && <p role="alert" style={{ margin: "8px 0 0", fontSize: 13, color: result.startsWith("Error") ? "#f87171" : "#34d399" }}>{result}</p>}
     </div>
   );
 }
@@ -276,27 +286,33 @@ function UnlockPlayerSection({ leagueId, teams }: { leagueId: string; teams: Tea
         Clear period-lock on a player (e.g., due to cancelled game). Does not bypass play-lock.
       </p>
       <div style={{ display: "grid", gap: 8 }}>
-        <select value={selectedTeam} onChange={(e) => { setSelectedTeam(e.target.value); setSelectedPlayer(""); }} style={inputStyle}>
+        <label htmlFor="unlock-team" className="visually-hidden">Team</label>
+        <select id="unlock-team" value={selectedTeam} onChange={(e) => { setSelectedTeam(e.target.value); setSelectedPlayer(""); }} style={inputStyle}>
           <option value="">Select team…</option>
           {teams.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
         </select>
         {currentTeam && (
-          <select value={selectedPlayer} onChange={(e) => setSelectedPlayer(e.target.value)} style={inputStyle}>
-            <option value="">Select player…</option>
-            {currentTeam.roster.map((p) => (
-              <option key={p.playerId} value={p.playerId}>{p.playerName} ({p.slot})</option>
-            ))}
-          </select>
+          <>
+            <label htmlFor="unlock-player" className="visually-hidden">Player to unlock</label>
+            <select id="unlock-player" value={selectedPlayer} onChange={(e) => setSelectedPlayer(e.target.value)} style={inputStyle}>
+              <option value="">Select player…</option>
+              {currentTeam.roster.map((p) => (
+                <option key={p.playerId} value={p.playerId}>{p.playerName} ({p.slot})</option>
+              ))}
+            </select>
+          </>
         )}
-        <select value={targetSlot} onChange={(e) => setTargetSlot(e.target.value as Slot)} style={inputStyle}>
+        <label htmlFor="unlock-slot" className="visually-hidden">Target slot</label>
+        <select id="unlock-slot" value={targetSlot} onChange={(e) => setTargetSlot(e.target.value as Slot)} style={inputStyle}>
           {SLOTS.map((s) => <option key={s} value={s}>{s}</option>)}
         </select>
-        <input placeholder="Reason (optional, logged in audit trail)" value={reason} onChange={(e) => setReason(e.target.value)} style={inputStyle} />
+        <label htmlFor="unlock-reason" className="visually-hidden">Reason (optional)</label>
+        <input id="unlock-reason" placeholder="Reason (optional, logged in audit trail)" value={reason} onChange={(e) => setReason(e.target.value)} style={inputStyle} />
         <button onClick={handleUnlock} disabled={busy || !selectedTeam || !selectedPlayer} style={btnStyle(busy || !selectedTeam || !selectedPlayer)}>
           {busy ? "Unlocking…" : "Unlock player"}
         </button>
       </div>
-      {result && <p style={{ margin: "8px 0 0", fontSize: 13, color: result.startsWith("Error") ? "#f87171" : "#34d399" }}>{result}</p>}
+      {result && <p role="alert" style={{ margin: "8px 0 0", fontSize: 13, color: result.startsWith("Error") ? "#f87171" : "#34d399" }}>{result}</p>}
     </div>
   );
 }

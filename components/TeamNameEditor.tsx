@@ -72,8 +72,12 @@ export default function TeamNameEditor({ leagueId, teamId, currentName }: Props)
   return (
     <div>
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <label htmlFor="team-name-input" className="visually-hidden">Team name</label>
         <input
+          id="team-name-input"
           type="text"
+          aria-describedby="team-name-count"
+          aria-invalid={!!error}
           value={value}
           onChange={(e) => setValue(e.target.value)}
           maxLength={50}
@@ -129,9 +133,9 @@ export default function TeamNameEditor({ leagueId, teamId, currentName }: Props)
         </button>
       </div>
       {error && (
-        <p style={{ margin: "6px 0 0", fontSize: 12, color: "var(--red)" }}>{error}</p>
+        <p role="alert" style={{ margin: "6px 0 0", fontSize: 12, color: "var(--red)" }}>{error}</p>
       )}
-      <p style={{ margin: "6px 0 0", fontSize: 12, color: "var(--faint)" }}>
+      <p id="team-name-count" style={{ margin: "6px 0 0", fontSize: 12, color: "var(--faint)" }}>
         {value.length}/50 characters
       </p>
     </div>

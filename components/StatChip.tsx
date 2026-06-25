@@ -35,7 +35,9 @@ export default function StatChip({ chip }: { chip: StatChipType }) {
         flexShrink: 0,
       }}
     >
-      {copy.icon} {chip.label}
+      <span aria-hidden="true">{copy.icon}</span>
+      <span className="visually-hidden">{copy.explainer} </span>
+      {chip.label}
     </span>
   );
 }

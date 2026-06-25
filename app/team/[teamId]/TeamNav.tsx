@@ -49,6 +49,7 @@ function TeamNavInner({ teamId, leagueId, leagueName, playoffStatus, leagueStatu
   return (
     <nav
       className="team-nav"
+      aria-label="Franchise navigation"
       style={{
         display: "flex",
         alignItems: "center",
@@ -61,6 +62,7 @@ function TeamNavInner({ teamId, leagueId, leagueName, playoffStatus, leagueStatu
         <Link
           key={tab.href}
           href={tab.href}
+          aria-current={tab.active ? "page" : undefined}
           style={{
             padding: "12px 18px",
             fontSize: 14,
@@ -88,7 +90,7 @@ function TeamNavInner({ teamId, leagueId, leagueName, playoffStatus, leagueStatu
           whiteSpace: "nowrap",
         }}
       >
-        {leagueName} ↗
+        {leagueName} <span aria-hidden="true">↗</span>
       </Link>
     </nav>
   );

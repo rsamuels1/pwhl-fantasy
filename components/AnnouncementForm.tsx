@@ -36,7 +36,10 @@ export default function AnnouncementForm({
 
   return (
     <div style={{ display: "grid", gap: 10 }}>
+      <label htmlFor="announcement-text" className="visually-hidden">League announcement</label>
       <textarea
+        id="announcement-text"
+        aria-describedby="announcement-count"
         value={value}
         onChange={(e) => setValue(e.target.value)}
         maxLength={500}
@@ -74,8 +77,8 @@ export default function AnnouncementForm({
             Clear
           </button>
         )}
-        {savedMsg && <span style={{ fontSize: 12, color: "var(--faint)" }}>{savedMsg}</span>}
-        <span style={{ fontSize: 11, color: "var(--faint)", marginLeft: "auto" }}>{value.length}/500</span>
+        {savedMsg && <span role="status" style={{ fontSize: 12, color: "var(--faint)" }}>{savedMsg}</span>}
+        <span id="announcement-count" style={{ fontSize: 11, color: "var(--faint)", marginLeft: "auto" }}>{value.length}/500</span>
       </div>
     </div>
   );
