@@ -84,7 +84,7 @@ export default function TradeSettingsForm({
       </div>
 
       {error && (
-        <div style={{ color: "#f87171", fontSize: 13 }}>{error}</div>
+        <div style={{ color: "var(--loss-color)", fontSize: 13 }}>{error}</div>
       )}
 
       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -101,7 +101,7 @@ export default function TradeSettingsForm({
         >
           {isPending ? "Saving..." : "Save trade settings"}
         </button>
-        {saved && <span style={{ color: "#34d399", fontSize: 13 }}>Saved!</span>}
+        {saved && <span style={{ color: "var(--win-color)", fontSize: 13 }}>Saved!</span>}
       </div>
     </div>
   );

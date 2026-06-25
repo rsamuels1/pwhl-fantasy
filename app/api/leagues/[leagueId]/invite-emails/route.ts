@@ -6,6 +6,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { apiRequireAuth, apiRequireCommissioner } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { sendInvite } from "@/lib/services/email-service";
+import { logger } from "@/lib/logger";
 
 export async function POST(
   req: NextRequest,
@@ -43,7 +44,7 @@ export async function POST(
   }
 
   for (const email of emails) {
-    void sendInvite(email, leagueId, league.name, auth.displayName).catch(() => {});
+    void sendInvite(email, leagueId, league.name, auth.displayName).catch((err) => logger.error("sendInvite failed", err));
   }
 
   return NextResponse.json({ sent: emails.length });

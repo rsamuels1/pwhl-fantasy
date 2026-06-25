@@ -5,6 +5,7 @@ import type { RosterSettings } from "@/lib/lineup";
 import { emitEvent } from "@/lib/services/activity";
 import { getDevNowFromRequest } from "@/lib/devTime";
 import { getPlayerWaiverStatus, enterWaiverWire } from "@/lib/services/waiver-service";
+import { logger } from "@/lib/logger";
 
 function maxRosterSize(settings: RosterSettings): number {
   return (
@@ -108,7 +109,7 @@ export async function POST(
   }).catch(() => null);
   const addedName = addedPlayer ? `${addedPlayer.firstName} ${addedPlayer.lastName}` : "a player";
   emitEvent({ leagueId, teamId, playerId: addPlayerId, type: "PLAYER_ADD",
-    data: { description: `${team.name} added ${addedName}` } }, prisma).catch(() => {});
+    data: { description: `${team.name} added ${addedName}` } }, prisma).catch((err) => logger.error("emitEvent PLAYER_ADD failed", err));
 
   if (dropPlayerId) {
     const droppedPlayer = await prisma.player.findUnique({
@@ -116,7 +117,7 @@ export async function POST(
     }).catch(() => null);
     const droppedName = droppedPlayer ? `${droppedPlayer.firstName} ${droppedPlayer.lastName}` : "a player";
     emitEvent({ leagueId, teamId, playerId: dropPlayerId, type: "PLAYER_DROP",
-      data: { description: `${team.name} dropped ${droppedName}` } }, prisma).catch(() => {});
+      data: { description: `${team.name} dropped ${droppedName}` } }, prisma).catch((err) => logger.error("emitEvent PLAYER_DROP failed", err));
   }
 
   // Detect first-add milestone (best-effort — never block the 200)
@@ -126,8 +127,9 @@ export async function POST(
       where: { leagueId, teamId, type: "PLAYER_ADD" },
     });
     if (addCount === 1) milestoneTriggered = "first_add";
-  } catch {
+  } catch (err) {
     // non-fatal — milestone toast won't fire but the add succeeded
+    logger.error("first_add milestone count failed", err);
   }
 
   // Return updated roster (client calls router.refresh() anyway, so this is supplementary).
@@ -199,11 +201,11 @@ export async function DELETE(
     where: { id: leagueId },
     select: { waiverWindowHours: true },
   });
-  void enterWaiverWire(leagueId, dropPlayerId, league?.waiverWindowHours ?? 48, prisma, getDevNowFromRequest(req)).catch(() => {});
+  void enterWaiverWire(leagueId, dropPlayerId, league?.waiverWindowHours ?? 48, prisma, getDevNowFromRequest(req)).catch((err) => logger.error("enterWaiverWire failed", err));
 
   if (dropTeam && dropPlayer) {
     emitEvent({ leagueId, teamId, playerId: dropPlayerId, type: "PLAYER_DROP",
-      data: { description: `${dropTeam.name} dropped ${dropPlayer.firstName} ${dropPlayer.lastName}` } }, prisma).catch(() => {});
+      data: { description: `${dropTeam.name} dropped ${dropPlayer.firstName} ${dropPlayer.lastName}` } }, prisma).catch((err) => logger.error("emitEvent PLAYER_DROP (delete) failed", err));
   }
 
   return NextResponse.json({ dropped: dropPlayerId });

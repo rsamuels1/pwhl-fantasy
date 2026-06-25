@@ -159,7 +159,7 @@ export function LeagueSettingsEditor({ leagueId, maxTeams: initialMaxTeams, draf
       </button>
 
       {result && (
-        <p style={{ margin: "8px 0 0", fontSize: 13, color: result.startsWith("Error") ? "#f87171" : "#34d399" }}>
+        <p style={{ margin: "8px 0 0", fontSize: 13, color: result.startsWith("Error") ? "var(--loss-color)" : "var(--win-color)" }}>
           {result}
         </p>
       )}

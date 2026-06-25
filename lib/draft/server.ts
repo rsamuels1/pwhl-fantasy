@@ -20,6 +20,7 @@ import { createNotification } from "../services/notification-service";
 import { sendOnClock } from "../services/email-service";
 import { generateMagicLinkToken } from "../auth";
 import { startSeason, getSeasonState } from "../season/index";
+import { logger } from "../logger";
 
 const prisma = new PrismaClient();
 
@@ -335,11 +336,12 @@ class DraftRoom {
                 this.state.order.length
               );
             }
-          } catch {}
+          } catch (err) { logger.error("sendOnClock failed", err); }
         })();
       }
-    } catch {
+    } catch (err) {
       // fire-and-forget — never block the draft
+      logger.error("notifyOnClock failed", err);
     }
   }
 
@@ -724,7 +726,7 @@ export function startDraftServer(port = 8080) {
   });
 
   httpServer.listen(port, () => {
-    console.log(`Draft websocket server listening on :${port}`);
+    logger.info(`Draft websocket server listening on :${port}`);
   });
   return wss;
 }

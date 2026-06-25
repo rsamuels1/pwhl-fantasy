@@ -5,6 +5,7 @@ import { generateShortId } from "@/lib/id";
 import { setAuthCookie } from "@/lib/auth";
 import { trackEvent } from "@/lib/analytics";
 import { derivePeriods } from "@/lib/scoring/periods";
+import { REPLAY_SEASON, LIVE_SEASON } from "@/lib/constants";
 
 const SESSION_COOKIE = "pwhl_user_email";
 
@@ -12,6 +13,16 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const leagueName = String(body.leagueName || "").trim();
+
+    // On the beta site, only Beta Replay Leagues are permitted.
+    const host = req.headers.get("host") ?? "";
+    const betaSiteHost = process.env.BETA_SITE_HOST ?? "beta.fantasy.dykedb.org";
+    if (host === betaSiteHost && !body.useBetaReplay) {
+      return NextResponse.json(
+        { error: "Only Beta Replay Leagues can be created on this domain." },
+        { status: 403 }
+      );
+    }
 
     if (!leagueName) {
       return NextResponse.json({ error: "League name is required." }, { status: 400 });
@@ -36,7 +47,7 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    let leagueSeason = "2026-27";
+    let leagueSeason = LIVE_SEASON;
     let draftStartsAt: Date | null = null;
     let isReplay = false;
     let replayCurrentDate: Date | null = null;
@@ -48,7 +59,7 @@ export async function POST(req: NextRequest) {
     if (body.useBetaReplay) {
       // --- Beta Replay League ---
       // 4 randomly chosen weeks from 2025-26: first 2 for regular season, last 2 for playoff scoring.
-      const betaSeason = "2025-26";
+      const betaSeason = REPLAY_SEASON;
       const gameDates = await prisma.game.findMany({
         where: { season: betaSeason },
         select: { startsAt: true },

@@ -104,7 +104,7 @@ export function RenewLeagueForm({ leagueId, currentSeason }: Props) {
         <input name="draftStartsAt" type="datetime-local" style={inputStyle} />
       </div>
       {error && (
-        <p style={{ margin: 0, color: "#f87171", fontSize: 13 }}>{error}</p>
+        <p style={{ margin: 0, color: "var(--loss-color)", fontSize: 13 }}>{error}</p>
       )}
       <button
         type="submit"

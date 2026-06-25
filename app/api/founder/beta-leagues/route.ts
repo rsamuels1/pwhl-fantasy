@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { apiRequireFounder } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { DEFAULT_SCORING } from "@/lib/scoring/index";
+import { REPLAY_SEASON } from "@/lib/constants";
 
 function pickRandomWeeks(total: number, count: number): number[] {
   const indices = Array.from({ length: total }, (_, i) => i);
@@ -80,7 +81,7 @@ export async function POST(req: NextRequest) {
   const league = await prisma.fantasyLeague.create({
     data: {
       name: body.name.trim(),
-      season: "2025-26",
+      season: REPLAY_SEASON,
       maxTeams: 8,
       isReplay: true,
       betaStatus: "ACTIVE",

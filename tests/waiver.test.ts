@@ -342,6 +342,69 @@ describe("processWaivers", () => {
   });
 });
 
+  it("emits WAIVER_CLAIM_AWARDED event after awarding", async () => {
+    const expiredEntry = {
+      id: "entry-1",
+      leagueId: "league-1",
+      playerId: "player-1",
+      expiresAt: new Date(NOW_MS - 1000),
+    };
+    const claim = {
+      id: "claim-1",
+      leagueId: "league-1",
+      fantasyTeamId: "team-1",
+      addPlayerId: "player-1",
+      dropPlayerId: null,
+      prioritySnapshot: 1,
+    };
+
+    const emitCalls: string[] = [];
+    const prisma = makePrisma({
+      leagueEvent: {
+        create: vi.fn().mockImplementation(({ data }: { data: { type: string } }) => {
+          emitCalls.push(data.type);
+          return Promise.resolve({});
+        }),
+      },
+    });
+    (prisma.waiverEntry.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([expiredEntry]);
+    (prisma.waiverClaim.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(null);
+    (prisma.waiverClaim.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([claim]);
+
+    await processWaivers("league-1", NOW_MS, prisma as never);
+
+    // Both WAIVER_CLAIM_AWARDED and PLAYER_ADD must be emitted (BF-023 fix)
+    expect(emitCalls).toContain("WAIVER_CLAIM_AWARDED");
+    expect(emitCalls).toContain("PLAYER_ADD");
+  });
+
+  it("does not emit WAIVER_CLAIM_AWARDED when no claims exist (expires without award)", async () => {
+    const expiredEntry = {
+      id: "entry-1",
+      leagueId: "league-1",
+      playerId: "player-1",
+      expiresAt: new Date(NOW_MS - 1000),
+    };
+
+    const emitCalls: string[] = [];
+    const prisma = makePrisma({
+      leagueEvent: {
+        create: vi.fn().mockImplementation(({ data }: { data: { type: string } }) => {
+          emitCalls.push(data.type);
+          return Promise.resolve({});
+        }),
+      },
+    });
+    (prisma.waiverEntry.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([expiredEntry]);
+    (prisma.waiverClaim.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(null);
+    (prisma.waiverClaim.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([]);
+
+    const result = await processWaivers("league-1", NOW_MS, prisma as never);
+    expect(result.expired).toBe(1);
+    expect(emitCalls).not.toContain("WAIVER_CLAIM_AWARDED");
+    expect(emitCalls).not.toContain("PLAYER_ADD");
+  });
+
 // ── initializeWaiverPriority ───────────────────────────────────────────────────
 
 describe("initializeWaiverPriority", () => {

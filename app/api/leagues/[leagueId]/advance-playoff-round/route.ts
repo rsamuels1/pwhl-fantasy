@@ -18,6 +18,7 @@ import { getPlayoffSettings, calculatePlayoffRounds } from "@/lib/playoffs/lifec
 import { emitEvent, type LeagueEventType } from "@/lib/services/activity";
 import { getRoundLabel } from "@/lib/playoffs/brackets";
 import { createNotification } from "@/lib/services/notification-service";
+import { logger } from "@/lib/logger";
 
 export async function POST(
   req: NextRequest,
@@ -193,7 +194,7 @@ export async function POST(
               actionUrl: `/team/${r.winnerId}/matchup`,
               dedupeKey: `championship-won-${leagueId}-${r.winnerId}`,
             }
-          ).catch(() => {});
+          ).catch((err) => logger.error("createNotification CHAMPIONSHIP_WON failed", err));
         }
       } else {
         await emitEvent(

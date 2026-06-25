@@ -76,6 +76,12 @@ export default async function DraftPage({ params, searchParams }: Props) {
     ? getPriorSeason(league.season)
     : rawSeason;
 
+  /*
+   * Raw SQL: Prisma's aggregate API (groupBy + _sum) returns BigInt for SUM() columns,
+   * but typed as `number` in the generated client. Using $queryRaw lets us declare AggRow
+   * with explicit `bigint` fields and convert them correctly in the JS layer.
+   * A findMany + manual reduce would require N+1 queries across ~220 players.
+   */
   const rows = season
     ? await prisma.$queryRaw<AggRow[]>`
         SELECT
