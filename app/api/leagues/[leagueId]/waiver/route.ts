@@ -30,7 +30,10 @@ export async function POST(
   if (auth instanceof NextResponse) return auth;
 
   const member = await apiRequireLeagueMember(leagueId, auth.id);
-  if (member instanceof NextResponse) return member;
+  const isCommissioner = (member instanceof NextResponse)
+    ? !!(await prisma.fantasyLeague.findFirst({ where: { id: leagueId, commissionerId: auth.id }, select: { id: true } }))
+    : false;
+  if (member instanceof NextResponse && !isCommissioner) return member;
 
   const body = await req.json() as { teamId?: string; addPlayerId?: string; dropPlayerId?: string };
   const { teamId, addPlayerId, dropPlayerId } = body;
@@ -160,7 +163,10 @@ export async function DELETE(
   if (auth instanceof NextResponse) return auth;
 
   const member = await apiRequireLeagueMember(leagueId, auth.id);
-  if (member instanceof NextResponse) return member;
+  const isCommissioner = (member instanceof NextResponse)
+    ? !!(await prisma.fantasyLeague.findFirst({ where: { id: leagueId, commissionerId: auth.id }, select: { id: true } }))
+    : false;
+  if (member instanceof NextResponse && !isCommissioner) return member;
 
   const body = await req.json() as { teamId?: string; dropPlayerId?: string };
   const { teamId, dropPlayerId } = body;
