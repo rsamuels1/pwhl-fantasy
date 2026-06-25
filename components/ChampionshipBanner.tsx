@@ -4,7 +4,7 @@
 // Rendered via ReactDOM.createPortal into document.body.
 // Dismissed via localStorage key.
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 
@@ -26,6 +26,7 @@ export default function ChampionshipBanner({
   const [visible, setVisible] = useState(false);
   const [mounted, setMounted] = useState(false);
   const storageKey = `${leagueId}-champion-seen`;
+  const cardRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -33,6 +34,20 @@ export default function ChampionshipBanner({
       setVisible(true);
     }
   }, [storageKey]);
+
+  useEffect(() => {
+    if (visible) cardRef.current?.focus();
+  }, [visible]);
+
+  useEffect(() => {
+    if (!visible) return;
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") dismiss();
+    }
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visible]);
 
   if (!mounted || !visible) return null;
 
@@ -46,9 +61,6 @@ export default function ChampionshipBanner({
 
   return createPortal(
     <div
-      role="dialog"
-      aria-modal="true"
-      aria-label="Championship celebration"
       style={{
         position: "fixed",
         inset: 0,
@@ -90,6 +102,11 @@ export default function ChampionshipBanner({
 
       {/* Champion card */}
       <div
+        ref={cardRef}
+        tabIndex={-1}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="champion-dialog-title"
         className="rebrand-card"
         style={{
           position: "relative",
@@ -102,9 +119,10 @@ export default function ChampionshipBanner({
           textAlign: "center",
           boxShadow: "0 40px 120px -30px rgba(212,175,55,0.30)",
           zIndex: 1,
+          outline: "none",
         }}
       >
-        <div style={{ fontSize: 56, marginBottom: 12, lineHeight: 1 }}>🏆</div>
+        <div aria-hidden="true" style={{ fontSize: 56, marginBottom: 12, lineHeight: 1 }}>🏆</div>
         <div
           className="font-stats"
           style={{
@@ -119,6 +137,7 @@ export default function ChampionshipBanner({
           League Champion
         </div>
         <div
+          id="champion-dialog-title"
           style={{
             fontSize: "clamp(22px, 5vw, 28px)",
             fontWeight: 800,

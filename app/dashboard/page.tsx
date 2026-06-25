@@ -1,6 +1,9 @@
+import type { Metadata } from "next";
 import { prisma } from "@/lib/db";
 import { requireAuth } from "@/lib/auth";
 import { getDevNow } from "@/lib/devTime";
+
+export const metadata: Metadata = { title: "My Franchises — PWHL GM" };
 import { getReplayNow } from "@/lib/replayTime";
 import { getMatchupQuickSummary, getTeamTopPerformers, type MatchupQuickSummary } from "@/lib/services/matchup-summary";
 import Link from "next/link";

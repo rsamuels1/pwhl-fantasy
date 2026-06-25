@@ -102,15 +102,41 @@ export default async function SchedulePage({ params }: Props) {
       })
     : [];
 
+  // For beta replay leagues, nowMs is a 2026 date but fixture games have 2024-25 startsAt values.
+  // Remap nowMs into fixture-calendar time by interpolating its position within the display period.
+  let fixtureNowMs = nowMs;
+  if (displayPeriod && fixtureDisplayPeriod) {
+    const displayStart = displayPeriod.startsAt.getTime();
+    const displayEnd = displayPeriod.endsAt.getTime();
+    const fixtureStart = fixtureDisplayPeriod.startsAt.getTime();
+    const fixtureEnd = fixtureDisplayPeriod.endsAt.getTime();
+    if (displayStart !== fixtureStart || displayEnd !== fixtureEnd) {
+      const fraction = Math.max(0, Math.min(1, (nowMs - displayStart) / (displayEnd - displayStart)));
+      fixtureNowMs = fixtureStart + fraction * (fixtureEnd - fixtureStart);
+    }
+  }
+
   const totalGames = allPeriodGames.length;
+  // Strict < so that games exactly at fixtureNowMs (i.e. when period is upcoming and
+  // fixtureNowMs === fixtureStart) are not counted as finished.
   const finishedGames = allPeriodGames.filter(
-    (g) => new Date(g.startsAt).getTime() <= nowMs
+    (g) => new Date(g.startsAt).getTime() < fixtureNowMs
   ).length;
   const progressPct = totalGames > 0 ? Math.round((finishedGames / totalGames) * 100) : 0;
 
+  // For beta replay leagues remap fixture startsAt → display-calendar date so the day
+  // headers show the remapped week dates (e.g. Jun 26) not the original fixture dates (Nov 21).
+  const remapToDisplay = (fixtureDate: Date): Date => {
+    if (!fixtureDisplayPeriod || !displayPeriod) return fixtureDate;
+    const fixtureStartMs = fixtureDisplayPeriod.startsAt.getTime();
+    const displayStartMs = displayPeriod.startsAt.getTime();
+    if (fixtureStartMs === displayStartMs) return fixtureDate;
+    return new Date(displayStartMs + (fixtureDate.getTime() - fixtureStartMs));
+  };
+
   const byDay = new Map<string, typeof games>();
   for (const g of games) {
-    const key = new Date(g.startsAt).toDateString();
+    const key = remapToDisplay(new Date(g.startsAt)).toDateString();
     const arr = byDay.get(key) ?? [];
     arr.push(g);
     byDay.set(key, arr);
@@ -367,7 +393,7 @@ export default async function SchedulePage({ params }: Props) {
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                   {dayGames.map((game) => {
-                    const played = new Date(game.startsAt).getTime() <= nowMs;
+                    const played = new Date(game.startsAt).getTime() < fixtureNowMs;
                     const myHome = myPlayersByTeam.get(game.homeTeamId) ?? [];
                     const myAway = myPlayersByTeam.get(game.awayTeamId) ?? [];
                     const myTotal = myHome.length + myAway.length;

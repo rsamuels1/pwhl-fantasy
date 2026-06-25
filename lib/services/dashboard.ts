@@ -15,7 +15,7 @@ import {
 import { getLeagueActivity } from "./activity";
 import type { ScoringPeriod } from "../scoring/periods";
 import { parseScoringSettings } from "../scoring/settings";
-import { getReplayNow, resolveFixturePeriod, type BetaWeekMapping } from "../replayTime";
+import { getReplayNow, resolveFixturePeriod, toFixtureNow, type BetaWeekMapping } from "../replayTime";
 import { getRoundLabel } from "../playoffs/brackets";
 import { calculatePlayoffRounds } from "../playoffs/lifecycle";
 import { computeVpStandings } from "../scoring/vp";
@@ -499,9 +499,12 @@ export async function getDashboardData(
     ...(opponentRosterRaw as Array<{ player: { team: { id: string } | null } }>).map((e) => e.player.team?.id ?? null),
   ].filter((id): id is string => !!id))];
 
+  // For beta replay leagues, translate nowMs to fixture-equivalent so game window queries
+  // use the same timeframe as the fixture game dates (Nov 2025–May 2026 vs Jun 2026).
+  const fixtureNowMs = toFixtureNow(nowMs, displayPeriod, fixtureDisplayPeriod);
   const [gamesPerTeam, gamesPlayedPerTeam] = await Promise.all([
-    gamesPerTeamInWindow(allTeamIds, new Date(nowMs), fixtureDisplayPeriod.endsAt, prisma, { exclusiveStart: true }),
-    gamesPerTeamInWindow(allTeamIds, fixtureDisplayPeriod.startsAt, new Date(nowMs), prisma),
+    gamesPerTeamInWindow(allTeamIds, new Date(fixtureNowMs), fixtureDisplayPeriod.endsAt, prisma, { exclusiveStart: true }),
+    gamesPerTeamInWindow(allTeamIds, fixtureDisplayPeriod.startsAt, new Date(fixtureNowMs), prisma),
   ]);
 
   const topPerformers = computeTopPerformers(myDetailed.players, 0);
@@ -883,9 +886,11 @@ async function getPlayoffDashboardData(
     ].filter((id): id is string => !!id)),
   ];
 
+  // For beta replay leagues, translate nowMs to fixture-equivalent for game window queries.
+  const fixtureNowMsPlayoff = toFixtureNow(nowMs, period, fixturePeriod);
   const [gamesPerTeam, gamesPlayedPerTeam] = await Promise.all([
-    gamesPerTeamInWindow(allTeamIds, new Date(nowMs), fixturePeriod.endsAt, prisma, { exclusiveStart: true }),
-    gamesPerTeamInWindow(allTeamIds, fixturePeriod.startsAt, new Date(nowMs), prisma),
+    gamesPerTeamInWindow(allTeamIds, new Date(fixtureNowMsPlayoff), fixturePeriod.endsAt, prisma, { exclusiveStart: true }),
+    gamesPerTeamInWindow(allTeamIds, fixturePeriod.startsAt, new Date(fixtureNowMsPlayoff), prisma),
   ]);
 
   const myPlayers = buildPlayerRows(myDetailed.players, gamesPerTeam);

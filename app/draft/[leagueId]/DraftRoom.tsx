@@ -147,14 +147,23 @@ function TopBar({
 function Clock({ expiresAt, isMyTurn }: { expiresAt: number | null; isMyTurn: boolean }) {
   const [secs, setSecs] = useState<number | null>(null);
   const maxSecsRef = useRef<number | null>(null);
+  const warnAnnouncedRef = useRef(false);
+  const [warnAnnounce, setWarnAnnounce] = useState("");
 
   useEffect(() => {
     if (expiresAt == null) { setSecs(null); maxSecsRef.current = null; return; }
     maxSecsRef.current = null; // reset for new pick
+    warnAnnouncedRef.current = false;
     const tick = () => {
       const remaining = Math.max(0, Math.round((expiresAt - Date.now()) / 1000));
       if (maxSecsRef.current === null || remaining > maxSecsRef.current) {
         maxSecsRef.current = remaining;
+      }
+      // Announce the 10-second warning once, not on every tick
+      if (remaining <= 10 && !warnAnnouncedRef.current) {
+        warnAnnouncedRef.current = true;
+        setWarnAnnounce("");
+        requestAnimationFrame(() => setWarnAnnounce("10 seconds remaining to make your pick"));
       }
       setSecs(remaining);
     };
@@ -171,11 +180,18 @@ function Clock({ expiresAt, isMyTurn }: { expiresAt: number | null; isMyTurn: bo
 
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
-      <div className="font-stats" style={{
-        fontSize: 54, fontWeight: 700, lineHeight: 0.9,
-        color: numColor, fontVariantNumeric: "tabular-nums",
-        transition: "color 0.3s",
-      }}>
+      {/* Single assertive announcement at the 10s threshold only */}
+      <div role="status" aria-live="assertive" aria-atomic="true" className="visually-hidden">{warnAnnounce}</div>
+      <div
+        role="timer"
+        aria-label={`${secs} seconds remaining`}
+        className="font-stats"
+        style={{
+          fontSize: 54, fontWeight: 700, lineHeight: 0.9,
+          color: numColor, fontVariantNumeric: "tabular-nums",
+          transition: "color 0.3s",
+        }}
+      >
         {secs}
       </div>
       <div style={{ width: 128, height: 4, borderRadius: 2, background: "rgba(150,160,200,0.15)", overflow: "hidden" }}>
@@ -316,7 +332,7 @@ function RecentPicks({
   return (
     <div style={styles.card}>
       <div style={styles.cardTitle}><span className="section-accent" />Recent Picks</div>
-      <div>
+      <div role="log" aria-live="polite" aria-label="Draft picks" aria-relevant="additions">
         {recent.map((p) => (
           <div key={p.overall} style={styles.recentRow}>
             <span style={{ color: "var(--muted)", minWidth: 28, fontSize: 11 }}>#{p.overall}</span>
@@ -701,7 +717,7 @@ function PlayerPanel({
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 8, height: "100%" }}>
       {isMyTurn && (
-        <div style={styles.yourPickBanner}>
+        <div role="alert" style={styles.yourPickBanner}>
           You&apos;re on the clock! Pick a player below. If the timer runs out, we&apos;ll auto-pick the best player still available.
         </div>
       )}

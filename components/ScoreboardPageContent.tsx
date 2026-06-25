@@ -6,7 +6,7 @@ import { getRoundLabel } from "@/lib/playoffs/brackets";
 import { getBracket, PlayoffNotStartedError } from "@/lib/services/playoff-service";
 
 function fmtDate(d: Date) {
-  return new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" }).format(d);
+  return new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", timeZone: "UTC" }).format(d);
 }
 
 async function getTeamSeeds(leagueId: string): Promise<Map<string, number>> {
@@ -103,20 +103,25 @@ export default async function ScoreboardPageContent({ leagueId, myTeamId }: Prop
           const period = weekMatchups[0];
           const dateRange = `${fmtDate(new Date(period.startsAt))} – ${fmtDate(new Date(period.endsAt))}`;
 
+          const weekIsOver = weekMatchups.length > 0 && new Date(weekMatchups[0].endsAt).getTime() <= nowMs;
           let vtfRanked: Array<{ teamId: string; team: typeof period.homeTeam; score: number | null; wins: number; losses: number; ties: number }> | null = null;
           if (isVtfMode) {
             const teamMap = new Map<string, { teamId: string; team: typeof period.homeTeam; score: number | null; wins: number; losses: number; ties: number }>();
 
             for (const m of weekMatchups) {
+              // Only show scores for weeks that have actually ended
+              const homeScore = weekIsOver ? m.homeScore : null;
+              const awayScore = weekIsOver ? m.awayScore : null;
               if (!teamMap.has(m.homeTeamId)) {
-                teamMap.set(m.homeTeamId, { teamId: m.homeTeamId, team: m.homeTeam, score: m.homeScore, wins: 0, losses: 0, ties: 0 });
+                teamMap.set(m.homeTeamId, { teamId: m.homeTeamId, team: m.homeTeam, score: homeScore, wins: 0, losses: 0, ties: 0 });
               }
               if (!teamMap.has(m.awayTeamId)) {
-                teamMap.set(m.awayTeamId, { teamId: m.awayTeamId, team: m.awayTeam, score: m.awayScore, wins: 0, losses: 0, ties: 0 });
+                teamMap.set(m.awayTeamId, { teamId: m.awayTeamId, team: m.awayTeam, score: awayScore, wins: 0, losses: 0, ties: 0 });
               }
             }
 
-            const scored = weekMatchups.some(m => m.homeScore != null && m.awayScore != null);
+            const weekEnded = new Date(weekMatchups[0].endsAt).getTime() <= nowMs;
+            const scored = weekEnded && weekMatchups.some(m => m.homeScore != null && m.awayScore != null);
             if (scored) {
               for (const m of weekMatchups) {
                 if (m.homeScore == null || m.awayScore == null) continue;
@@ -215,7 +220,9 @@ export default async function ScoreboardPageContent({ leagueId, myTeamId }: Prop
                   })
                 ) : (
                   weekMatchups.map((m) => {
-                    const scored = m.homeScore !== null && m.awayScore !== null;
+                    const weekEnded2 = new Date(m.endsAt).getTime() <= nowMs;
+                    const isLive = !weekEnded2 && new Date(m.startsAt).getTime() <= nowMs && m.homeScore !== null;
+                    const scored = weekEnded2 && m.homeScore !== null && m.awayScore !== null;
                     const homeIsMe = m.homeTeamId === myTeamId;
                     const awayIsMe = m.awayTeamId === myTeamId;
                     const isMyMatchup = homeIsMe || awayIsMe;
@@ -255,8 +262,9 @@ export default async function ScoreboardPageContent({ leagueId, myTeamId }: Prop
                           )}
                         </div>
 
-                        <div style={{ fontSize: 10, fontWeight: 700, color: "var(--muted)", textAlign: "center", letterSpacing: "0.5px", minWidth: 36 }}>
-                          {scored ? "FINAL" : "VS"}
+                        <div style={{ fontSize: 10, fontWeight: 700, textAlign: "center", letterSpacing: "0.5px", minWidth: 36,
+                          color: isLive ? "#34d399" : "var(--muted)" }}>
+                          {scored ? "FINAL" : isLive ? "LIVE" : "VS"}
                         </div>
 
                         <div style={{ textAlign: "left", minWidth: 0 }}>
@@ -358,7 +366,8 @@ export default async function ScoreboardPageContent({ leagueId, myTeamId }: Prop
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                     {roundMatchups.map((m) => {
-                      const scored = m.homeScore !== null && m.awayScore !== null;
+                      const roundEnded = new Date(m.endsAt).getTime() <= nowMs;
+                      const scored = roundEnded && m.homeScore !== null && m.awayScore !== null;
                       const homeWon = scored && m.homeScore! > m.awayScore!;
                       const awayWon = scored && m.awayScore! > m.homeScore!;
                       const isMyMatchup = m.homeTeamId === myTeamId || m.awayTeamId === myTeamId;

@@ -15,6 +15,20 @@ export interface BetaWeekMapping {
 }
 
 /**
+ * For beta replay leagues, converts a display-calendar "now" timestamp to its fixture-equivalent.
+ * When displayPeriod and fixturePeriod have the same start (non-beta leagues), returns nowMs unchanged.
+ * Usage: use the returned value as the lower bound in game queries instead of nowMs.
+ */
+export function toFixtureNow(
+  nowMs: number,
+  displayPeriod: { startsAt: Date },
+  fixturePeriod: { startsAt: Date }
+): number {
+  const offset = displayPeriod.startsAt.getTime() - fixturePeriod.startsAt.getTime();
+  return nowMs - offset;
+}
+
+/**
  * For beta leagues, translates a remapped real-calendar period to its fixture (2025-26) equivalent.
  * Beta leagues use `generateBetaMatchups()` which remaps scoring periods to 2026 calendar dates,
  * but the actual game data lives in 2024-25 date ranges. `betaWeekMappings` in scoringSettings

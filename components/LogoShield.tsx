@@ -12,6 +12,8 @@ export function LogoShield({ size = 34 }: LogoShieldProps) {
       viewBox="0 0 48 48"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+      focusable="false"
     >
       <defs>
         <linearGradient id="pwhl-shield-grad" x1="0" y1="0" x2="1" y2="1">

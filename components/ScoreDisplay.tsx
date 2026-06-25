@@ -11,6 +11,12 @@ export function ScoreDisplay({ value, color }: { value: number; color: string })
       return;
     }
 
+    // Skip animation for users who prefer reduced motion
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setDisplayValue(value);
+      return;
+    }
+
     const startTime = Date.now();
     const duration = 1200; // 1.2 seconds
     let animationId: NodeJS.Timeout;
@@ -31,7 +37,10 @@ export function ScoreDisplay({ value, color }: { value: number; color: string })
 
   return (
     <span style={{ color }}>
-      {displayValue.toFixed(1)}
+      {/* Intermediate animated values hidden from AT */}
+      <span aria-hidden="true">{displayValue.toFixed(1)}</span>
+      {/* Final value always readable by screen readers */}
+      <span className="visually-hidden">{value.toFixed(1)}</span>
     </span>
   );
 }

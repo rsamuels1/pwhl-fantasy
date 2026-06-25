@@ -1,0 +1,20 @@
+{
+  "name": "accessibility-agents",
+  "interface": {
+    "displayName": "Accessibility Agents"
+  },
+  "plugins": [
+    {
+      "name": "a11y-agents-codex",
+      "source": {
+        "source": "local",
+        "path": "./.agents/plugins/a11y-agents-codex"
+      },
+      "policy": {
+        "installation": "INSTALLED_BY_DEFAULT",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Developer Tools"
+    }
+  ]
+}

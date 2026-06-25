@@ -7,3 +7,5 @@ node_modules/
 .aider*
 .vercel
 .claude/worktrees/
+tsconfig.tsbuildinfo
+.a11y-agent-team-install-backup.json
