@@ -5,6 +5,8 @@ import Script from "next/script";
 import "./globals.css";
 import { LogoWordmark } from "@/components/LogoShield";
 import RouteAnnouncer from "@/components/RouteAnnouncer";
+// Client-side PostHog initialized by PostHogProvider (NEXT_PUBLIC_POSTHOG_KEY required)
+import { PostHogProvider } from "@/components/PostHogProvider";
 
 export const metadata: Metadata = {
   title: "PWHL GM",
@@ -42,6 +44,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         </Script>
       </head>
       <body className="app-shell">
+        <PostHogProvider>
         <RouteAnnouncer />
         <a href="#main-content" className="skip-link">Skip to main content</a>
         {!hideNav && (
@@ -72,6 +75,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <div id="main-content" className="page-width" tabIndex={-1}>
           {children}
         </div>
+        </PostHogProvider>
       </body>
     </html>
   );

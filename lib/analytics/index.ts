@@ -1,3 +1,5 @@
+import { PostHog } from "posthog-node";
+
 export interface AnalyticsEvent {
   event: string;
   properties?: Record<string, unknown>;
@@ -5,12 +7,32 @@ export interface AnalyticsEvent {
   leagueId?: string;
 }
 
-// Thin abstraction layer for analytics events. V1 writes to console only.
-// Swap the body to call PostHog, Plausible, or another provider without
-// changing any call site.
-export function trackEvent(e: AnalyticsEvent): void {
-  if (process.env.NODE_ENV === "production") {
-    // TODO: forward to analytics provider
+let _client: PostHog | null = null;
+
+function getClient(): PostHog | null {
+  const key = process.env.POSTHOG_KEY;
+  if (!key) return null;
+  if (!_client) {
+    _client = new PostHog(key, {
+      host: process.env.POSTHOG_HOST ?? "https://us.i.posthog.com",
+      flushAt: 1,
+      flushInterval: 0,
+    });
+    process.on("exit", () => void _client?.shutdown());
   }
-  console.log("[ANALYTICS]", JSON.stringify({ event: e.event, ...e.properties, userId: e.userId, leagueId: e.leagueId }));
+  return _client;
+}
+
+export function trackEvent(e: AnalyticsEvent): void {
+  const client = getClient();
+  if (!client) return;
+  const { event, userId, leagueId, properties } = e;
+  client.capture({
+    distinctId: userId ?? "anonymous",
+    event,
+    properties: {
+      ...(leagueId ? { leagueId } : {}),
+      ...properties,
+    },
+  });
 }

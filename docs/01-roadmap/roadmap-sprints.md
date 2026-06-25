@@ -1587,10 +1587,12 @@ Items below are acknowledged but have no sprint assignment. They become candidat
 | Sprint 22 — Inviting Dark Redesign | ✅ COMPLETE (23/23 shipped) | All 23 stories shipped: RD-001–008 P1 core track ✅ · RD-005 league overview flagship ✅ · RD-006 matchup flagship ✅ · RD-009 prestige gradient ✅ · RD-010 gold prestige moments ✅ · RD-011 empty state copy ✅ · RD-012 wizard summary panel ✅ · RD-014 trend arrows + upset chip ✅ · RD-015 settings rule-sheet ✅ · RD-016 "Northern Ice" theme name ✅ · RD-017 emotional-design-principles.md ✅ · BF-018 /league-rules ✅ · UX-051/052/054/055/056/057 all ✅. No schema changes. |
 | Sprint 23 — Living League: The Race | ✅ COMPLETE | 7/7 stories shipped: LL-004 Magic Number (`computeRace()` + magicNumber + standings chip) · LL-005 Playoff Clinch Celebration (`emitClinchEvents()` + `ClinchBanner.tsx`) · LL-007 Bubble Watch (`BubbleWatch.tsx` on standings) · LL-008 Upset Tracker (`upset-service.ts` + `UpsetCard.tsx`) · LL-019 First-Result Explainer (`FirstResultCard.tsx`, localStorage-gated) · LL-021 Small-Win Encouragement (`MilestoneToast.tsx`, lineup + first-add) · RD-013 Team Identity Colors (`FantasyTeam.accentColor` + `TeamColorPicker.tsx` + PATCH route). Schema migration: `FantasyTeam.accentColor String?`. |
 | Sprint 24 — Living League: Season Story | ✅ COMPLETE | 5/7 shipped (UX-058 + BF-020 deferred): LL-006 Season Timeline · LL-010 League Record Book · LL-011 Franchise Identity (team name editing only; archetypes deferred as LL-011b) · LL-012 Manager Superlatives · LL-023 Empty States. |
-| Sprint 25 — Living League: Legacy + Carry-Forwards | 🔵 PLANNED | 5 stories: LL-009 Trophy Cabinet (schema: Achievement model) · LL-011b Franchise Identity Archetypes · LL-014 Opening Day Card · LL-015 Championship Banner · UX-058 Trade Proposal 4-Step · BF-020 Auto-Draft Position Balance. Schema migration required (Achievement + AchievementType). |
-| Sprint 26 — The Morning Skate | 🔵 PLANNED | 2 stories: LL-013 + LL-020 (Newcomer Reading Layer). New MorningSkateEdition model, archive + detail pages, homepage hero integration, league nav entry, plain-language blurb templates. Schema migration required (MorningSkateEdition model). |
-| Sprint 27 — League Hub | 🔵 PLANNED | 3 stories: LL-016 Hub Reorg · LL-022 Progressive Disclosure · LL-024 Glossary Anchor Page. Homepage + league overview restructured. No schema changes. |
-| Sprint 38 — Technical Debt Reduction | ✅ COMPLETE | 8/11 stories shipped (TD-001/002/006/007/008/009/010/011 ✅; TD-003/004/005 P1 god-object decomposition deferred): P0 error observability done (lib/logger.ts, cron monitoring) · P2 test coverage done (waiver events, API auth guards, scoring edge cases) · P3 hygiene done (season constants, $queryRaw comments, CSS utility classes + --win-color/--loss-color vars). |
+| Sprint 25 — Living League: Legacy + Carry-Forwards | ✅ COMPLETE (Jun 24, 2026) | 6/6 stories shipped: LL-009 Trophy Cabinet · LL-011b Franchise Identity Archetypes · LL-014 Opening Day Card · LL-015 Championship Banner · UX-058 Trade Proposal 4-Step · BF-020 Auto-Draft Position Balance. Schema: `Trophy` model + `TrophyType` enum (commit ab44083). |
+| Sprint 26 — The Morning Skate (LL-013) | ✅ COMPLETE (Jun 24, 2026) | LL-013 Morning Skate shipped as part of Sprint 31 (lib/services/morning-skate-service.ts, archive + detail pages, league nav entry, plain-language blurb templates). LL-020 (Newcomer Reading Layer) also shipped Sprint 31. |
+| Sprint 27 — League Hub | ✅ COMPLETE (Jun 24, 2026) | 11/11 stories shipped: BF-022/023/025/026/028 + LL-024 + LL-022 Phase 1+2 + VTF subtitle + LL-016 partial. |
+| Sprint 38 — Technical Debt Reduction | ✅ COMPLETE (Jun 25, 2026) | 8/11 stories shipped (TD-001/002/006/007/008/009/010/011 ✅; TD-003/004/005 P1 god-object decomposition deferred): P0 error observability done (lib/logger.ts, cron monitoring) · P2 test coverage done (waiver events, API auth guards, scoring edge cases) · P3 hygiene done (season constants, $queryRaw comments, CSS utility classes + --win-color/--loss-color vars). |
+| Sprint 39 — UX Clarity Sweep | ✅ COMPLETE (Jun 25, 2026) | 8/8 stories shipped (UX-070–077): VP primer card · FP→VP bridge copy · wizard mode-first flow · honest progress bar · terminal matchup CTAs · setup-phase timing copy · ?focus deep-links · action item copy. Commit: 6e97ddc. |
+| Sprint 40 — Pre-Launch Security Fix | ✅ COMPLETE (Jun 25, 2026) | 5/5 P1 findings from OPS-001 audit closed: slot enum validation (SEC-P1-001) · force-move non-null assertion (SEC-P1-002) · displayName max-length (SEC-P1-003) · leagueName max-length (SEC-P1-004) · audit log fire-and-forget (SEC-P1-006). Commit: fa4de8f. |
 
 ---
 
@@ -1698,23 +1700,25 @@ Note: BF-022, BF-023, BF-025, BF-026, BF-028 were handled by parallel agents and
 | BF-023 — Transaction history missing FA adds | Bug | M | P1 | ✅ DONE (Sprint 27) |
 | BF-025 — Trade UI forces same-position matching | Bug | S | P1 | ✅ DONE (Sprint 27 — no code change needed) |
 | BF-026 — Standings playoff cutoff text hard to read | Bug | S | P1 | ✅ DONE (Sprint 27) |
-| BF-012 — FA add confirms success but shows error modal | Bug | M | P1 | Open (carried forward) |
-| BF-013 — Trades blocked between draft completion and season start | Bug | S | P1 | Open (carried forward) |
+| BF-012 — FA add confirms success but shows error modal | Bug | M | P1 | ✅ DONE (Sprint 30) |
+| BF-013 — Trades blocked between draft completion and season start | Bug | S | P1 | ✅ DONE (Sprint 18, verified Sprint 30) |
 | BF-028 — Commissioner has no pending trade visibility | Suggestion | S | P1 | ✅ DONE (Sprint 27) |
-| BF-021 — DnD lineup mobile UX friction | Suggestion | M | P2 | Open (carried forward) |
+| BF-021 — DnD lineup mobile UX friction | Suggestion | M | P2 | ✅ DONE (Sprint 29) |
 
-**Result: 7/10 shipped across Sprints 26–27. BF-012, BF-013, BF-021 carried forward.**
+**Result: 10/10 shipped across Sprints 26–30. BF-012 shipped Sprint 30; BF-013 confirmed fixed Sprint 18 (verified Sprint 30); BF-021 shipped Sprint 29.**
 
 ---
 
-## Sprint 26 — "The Morning Skate" · PLANNED · Milestone 4 · P1
+## Sprint 26 — "The Morning Skate" · ✅ COMPLETE (shipped Sprint 31) · Milestone 4 · P1
 
 Goal: PWHL GM's first truly branded subsystem. A weekly league newsletter published every Tuesday after matchups score. Managers should say "I checked the Morning Skate" instead of "I opened PWHL GM."
 
+**Note:** Both stories shipped as part of Sprint 31 (Jun 24, 2026) rather than as a standalone sprint.
+
 | Story | Track | Size | Priority | Status |
 |---|---|---|---|---|
-| LL-013 — The Morning Skate: `MorningSkateEdition` model (schema migration required); `lib/services/morning-skate-service.ts` → `generateEdition()`; 4 article sections (Standings, Matchups, Players, League Activity) via pure template strings — no AI/LLM; `emitMorningSkateEdition()` from `advanceSeason()`; archive page `/league/[leagueId]/morning-skate`; detail page `/league/[leagueId]/morning-skate/[editionId]`; homepage hero preview when edition exists; "Morning Skate" primary league nav tab with 📰 icon | Feature | XL | P1 | Open |
-| LL-020 — Newcomer-Mode Morning Skate Reading Layer: blurb templates lead with human subjects ("Marie-Philip Poulin powered the Northern Lights") not stat-first phrasing; acronyms expanded or tap-to-define via LL-017 glossary map; one-paragraph plain-language lede per edition; "New here? →" primer link in masthead; verified readable at 375px | Feature | M | P1 | Open |
+| LL-013 — The Morning Skate: `MorningSkateEdition` model (schema migration required); `lib/services/morning-skate-service.ts` → `fetchEdition()`/`emitMorningSkateEdition()`; 4 article sections via pure template strings; archive + detail pages; league nav entry; matchup page Z0 preview | Feature | XL | P1 | ✅ DONE (Sprint 31) |
+| LL-020 — Newcomer-Mode Morning Skate Reading Layer: `expand()` helper in `generateEdition()` expands FP/VP/PPP on first use; "New here? How it works →" link in edition masthead; team-scoped routes redirect to league-scoped equivalents | Feature | M | P1 | ✅ DONE (Sprint 31) |
 
 **Engineer checklist:**
 1. Add `MorningSkateEdition` model to `prisma/schema.prisma` and run `npx prisma migrate dev`
@@ -1762,7 +1766,7 @@ Goal: Assemble glossary, stat education, and hub information hierarchy into the 
 
 **No schema changes in this sprint.**
 
-**Result: 11/11 Sprint 27 items shipped. Sprint 26 carry-forwards BF-012, BF-013, BF-021 remain open.**
+**Result: 11/11 Sprint 27 items shipped. Sprint 26 carry-forwards resolved: BF-021 Sprint 29, BF-012 Sprint 30, BF-013 confirmed Sprint 30.**
 
 ---
 
@@ -1937,7 +1941,7 @@ Goal: Bring the app to WCAG 2.2 Level AA conformance across all primary user flo
 
 ---
 
-## Sprint 38 — "Technical Debt Reduction" · PLANNED · Track Tech · P0/P1/P2/P3
+## Sprint 38 — "Technical Debt Reduction" · ✅ COMPLETE · Jun 25, 2026 · Track Tech · P0/P1/P2/P3
 
 Goal: Address a cross-cutting set of structural and hygiene issues flagged by technical review. These are not cosmetic — the god-object files make future features risky to develop, the silent failures mean production failures are invisible, and the hardcoded seasons will cause incorrect behavior the week the 2027-28 season opens. This sprint does not ship user-facing features; it makes the codebase safer and more maintainable for everything that comes after.
 
@@ -2150,6 +2154,24 @@ Goal: Close four product-level clarity gaps that block first-time PWHL fans from
 **Validated:** spec-compliance-auditor (7/8 first pass; UX-075 gamesThisNight gap fixed before commit) + karen (APPROVED). `tsc --noEmit` clean. Commit: `6e97ddc`. PR: #18 (dev → main).
 
 **Result: 8/8 Sprint 39 stories shipped.**
+
+---
+
+## Sprint 40 — "Pre-Launch Security Fix" · ✅ COMPLETE · Jun 25, 2026 · Track Sec · P1
+
+Goal: Close the 6 P1 security findings from the OPS-001 audit (Sprint 18) that were deferred post-beta. All findings are input-validation or error-handling gaps in existing API routes. No schema changes. Single commit (fa4de8f) across all three environments (staging, beta, production).
+
+| ID | File | Fix | Status |
+|---|---|---|---|
+| SEC-P1-001 | `app/api/leagues/[leagueId]/lineup/route.ts` | Validate slot enum before casting to prevent invalid slot injection | ✅ DONE |
+| SEC-P1-002 | `app/api/leagues/[leagueId]/commissioner/force-move/route.ts` | Remove non-null assertion; use `entryB.playerId` safely | ✅ DONE |
+| SEC-P1-003 | `app/api/auth/register/route.ts` | Max-length guard on `displayName` (≤80 chars) | ✅ DONE |
+| SEC-P1-004 | `app/api/leagues/create/route.ts` | Max-length guard on `leagueName` (≤50 chars, matches wizard) | ✅ DONE |
+| SEC-P1-006 | `app/api/leagues/[leagueId]/commissioner/undo-transaction/route.ts` | Audit log writes are fire-and-forget (`.catch + logger.error`) to prevent state inconsistency on log failure | ✅ DONE |
+
+**No schema changes. Commit: `fa4de8f`. Deployed to all three environments.**
+
+**Result: 5/5 security findings closed. Pre-launch security posture confirmed clean.**
 
 ---
 

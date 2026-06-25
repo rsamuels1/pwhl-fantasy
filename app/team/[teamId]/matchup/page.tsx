@@ -44,7 +44,7 @@ export default async function TeamMatchupPage({
 
   const league = await prisma.fantasyLeague.findUnique({
     where: { id: leagueId },
-    select: { scoringSettings: true, rosterSettings: true, isReplay: true, replayCurrentDate: true, season: true, status: true, maxTeams: true, playoffStatus: true, playoffSettings: true },
+    select: { scoringSettings: true, rosterSettings: true, isReplay: true, replayCurrentDate: true, season: true, status: true, maxTeams: true, playoffStatus: true, playoffSettings: true, scoringMode: true },
   });
   if (!league) notFound();
 
@@ -281,8 +281,8 @@ export default async function TeamMatchupPage({
         <MorningSkatePreview edition={latestEdition} />
       )}
 
-      {/* ── UX-070: VP Primer Card — shown once to orient new managers ── */}
-      {activeMatchup !== null && (
+      {/* ── UX-070: VP Primer Card — only relevant for VP leagues ── */}
+      {activeMatchup !== null && league.scoringMode !== "H2H" && (
         <VpPrimerCard userId={user.id} />
       )}
 

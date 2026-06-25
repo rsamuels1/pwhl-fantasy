@@ -128,6 +128,13 @@ export async function POST(req: NextRequest) {
 
     const isPublic = body.isPublic === true || body.isPublic === "true";
 
+    // scoringMode: "H2H" (default for new leagues) or "VP".
+    // Beta replay leagues always use VP for backward compat.
+    // useLastSeasonSimulation replay leagues inherit caller's choice (default H2H).
+    const rawScoringMode = String(body.scoringMode ?? "H2H").toUpperCase();
+    const scoringMode: "H2H" | "VP" =
+      rawScoringMode === "VP" || body.useBetaReplay ? "VP" : "H2H";
+
     const league = await prisma.fantasyLeague.create({
       data: {
         id: generateShortId(leagueName),
@@ -137,7 +144,7 @@ export async function POST(req: NextRequest) {
         status: "PRE_DRAFT",
         commissionerId: commissioner.id,
         scoringSettings: (scoringSettingsOverride ?? DEFAULT_SCORING) as object,
-        scoringMode: "VP",
+        scoringMode,
         rosterSettings: {
           forward: 3,
           defense: 2,

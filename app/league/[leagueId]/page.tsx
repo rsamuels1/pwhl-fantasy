@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { computeRace } from "@/lib/playoffs/seeding";
 import { computeVpStandings } from "@/lib/scoring/vp";
+import { computeH2hStandings } from "@/lib/season/h2h";
 import { requireAuth, requireLeagueAccess, isFounder } from "@/lib/auth";
 import { getLeagueActivity } from "@/lib/services/activity";
 import { getLeaguePerformers, type LeaguePerformerRow } from "@/lib/services/dashboard";
@@ -81,19 +82,22 @@ export default async function LeagueOverviewPage({
     }
   }
 
-  const isVpMode = (league as { scoringMode?: string }).scoringMode === "VP";
+  const scoringMode = league.scoringMode ?? "H2H";
+  const isVpMode = scoringMode === "VP" || scoringMode === "H2H";
   const isVtfMode = isVpMode;
+  const isH2h = scoringMode === "H2H";
 
-  const vpStandings = computeVpStandings(
-    league.teams,
-    matchups.map((m) => ({
-      homeTeamId: m.homeTeamId, awayTeamId: m.awayTeamId,
-      homeScore: m.homeScore, awayScore: m.awayScore,
-      homeVP: m.homeVP, awayVP: m.awayVP,
-      isPlayoff: m.isPlayoff,
-      week: m.week,
-    }))
-  );
+  const matchupInput = matchups.map((m) => ({
+    homeTeamId: m.homeTeamId, awayTeamId: m.awayTeamId,
+    homeScore: m.homeScore, awayScore: m.awayScore,
+    homeVP: m.homeVP, awayVP: m.awayVP,
+    isPlayoff: m.isPlayoff,
+    week: m.week,
+  }));
+
+  const vpStandings = isH2h
+    ? computeH2hStandings(league.teams, matchupInput)
+    : computeVpStandings(league.teams, matchupInput);
   // Map to Standing shape (points = totalVP) so computeRace works.
   const standings = vpStandings.map((s) => ({
     ...s,

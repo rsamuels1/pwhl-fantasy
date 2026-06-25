@@ -6,6 +6,7 @@ import { prisma } from "@/lib/db";
 export const metadata: Metadata = { title: "Standings — PWHL GM" };
 import { computeRace } from "@/lib/playoffs/seeding";
 import { computeVpStandings } from "@/lib/scoring/vp";
+import { computeH2hStandings } from "@/lib/season/h2h";
 import { requireAuth, requireLeagueMember } from "@/lib/auth";
 import type { Matchup } from "@prisma/client";
 import { VpExplainer } from "@/components/VpExplainer";
@@ -56,7 +57,7 @@ export default async function StandingsPage({ params }: { params: { leagueId: st
   const league = await prisma.fantasyLeague.findUnique({
     where: { id: leagueId },
     include: { teams: true },
-    // also fetch status for BubbleWatch gating
+    // scoringMode determines whether to use VP or H2H standings computation
   });
 
   if (!league) notFound();
@@ -68,18 +69,22 @@ export default async function StandingsPage({ params }: { params: { leagueId: st
     include: { homeTeam: true, awayTeam: true },
   });
 
-  // VP standings are always authoritative — sort by totalVP, then pointsFor.
-  const vpStandings = computeVpStandings(
-    league.teams,
-    matchups.map((m) => ({
-      homeTeamId: m.homeTeamId, awayTeamId: m.awayTeamId,
-      homeScore: m.homeScore, awayScore: m.awayScore,
-      homeVP: m.homeVP, awayVP: m.awayVP,
-      isPlayoff: m.isPlayoff,
-      week: m.week,
-    }))
-  );
-  // Map VP standings to the Standing shape so race computation works.
+  const scoringMode = league.scoringMode ?? "H2H";
+  const isH2h = scoringMode === "H2H";
+  const matchupInput = matchups.map((m) => ({
+    homeTeamId: m.homeTeamId, awayTeamId: m.awayTeamId,
+    homeScore: m.homeScore, awayScore: m.awayScore,
+    homeVP: m.homeVP, awayVP: m.awayVP,
+    isPlayoff: m.isPlayoff,
+    week: m.week,
+  }));
+
+  // For H2H leagues use W-L-T standings; for VP leagues use VP-based standings.
+  const vpStandings = isH2h
+    ? computeH2hStandings(league.teams, matchupInput)
+    : computeVpStandings(league.teams, matchupInput);
+
+  // Map to the Standing shape for race computation.
   const standings = vpStandings.map((s) => ({
     fantasyTeamId: s.fantasyTeamId,
     teamName: s.teamName,
@@ -116,6 +121,8 @@ export default async function StandingsPage({ params }: { params: { leagueId: st
   let myBanner: { text: string; color: string; bg: string } | null = null;
   if (myRace && myRaceIdx >= 0) {
     const rank = myRaceIdx + 1;
+    const unitLabel = isH2h ? "win" : "game";
+    const unitsLabel = isH2h ? "wins" : "games";
     if (myRace.status === "clinched") {
       myBanner = { text: `You've clinched a playoff spot (currently #${rank}).`, color: "#5fa98c", bg: "rgba(95,169,140,0.08)" };
     } else if (myRace.status === "eliminated") {
@@ -123,11 +130,11 @@ export default async function StandingsPage({ params }: { params: { leagueId: st
     } else if (myRace.status === "in" || myRace.status === "bubble") {
       const cushion = myRace.cushion ?? 0;
       myBanner = cushion > 0
-        ? { text: `In the playoff picture at #${rank} — ${cushion.toFixed(1)} ${cushion === 1 ? "game" : "games"} clear of the bubble.`, color: "var(--accent-strong)", bg: "rgba(143,193,232,0.08)" }
+        ? { text: `In the playoff picture at #${rank} — ${cushion.toFixed(1)} ${cushion === 1 ? unitLabel : unitsLabel} clear of the bubble.`, color: "var(--accent-strong)", bg: "rgba(143,193,232,0.08)" }
         : { text: `On the playoff bubble at #${rank} — hold your spot.`, color: "#f59e0b", bg: "rgba(245,158,11,0.08)" };
     } else {
       const gb = myRace.gamesBack ?? 0;
-      myBanner = { text: `On the outside at #${rank} — ${gb.toFixed(1)} ${gb === 1 ? "game" : "games"} back of the playoff line.`, color: "#f59e0b", bg: "rgba(245,158,11,0.08)" };
+      myBanner = { text: `On the outside at #${rank} — ${gb.toFixed(1)} ${gb === 1 ? unitLabel : unitsLabel} back of the playoff line.`, color: "#f59e0b", bg: "rgba(245,158,11,0.08)" };
     }
   }
 
@@ -143,12 +150,14 @@ export default async function StandingsPage({ params }: { params: { leagueId: st
         </div>
       )}
 
-      {/* ── Victory Points standings (always authoritative) ── */}
+      {/* ── Standings ── */}
       <section style={card}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4, flexWrap: "wrap", gap: 8 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <span className="section-accent" />
-            <h1 style={{ fontSize: 12, margin: 0, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--dim)", display: "flex", alignItems: "center" }}>Standings<VpExplainer /></h1>
+            <h1 style={{ fontSize: 12, margin: 0, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--dim)", display: "flex", alignItems: "center" }}>
+              Standings{!isH2h && <VpExplainer />}
+            </h1>
           </div>
           {playoffCutoff !== null && !playoffsStarted && (
             <span style={{ fontSize: 12, color: "var(--faint)" }}>
@@ -156,16 +165,25 @@ export default async function StandingsPage({ params }: { params: { leagueId: st
             </span>
           )}
         </div>
-        <p style={{ margin: "0 0 6px", fontSize: 12, color: "var(--faint)" }}>
-          FP decides your matchup result — win and rank well to earn VP, the currency of your league standing.
-        </p>
-        <p style={{ margin: "0 0 6px", fontSize: 12, color: "var(--faint)" }}>
-          Win matchup +2 VP · 1st place weekly score +2 VP · 2nd place score +1 VP
-        </p>
-        <p style={{ margin: "0 0 16px", fontSize: "0.7rem", color: "var(--faint)", display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-          <span>VP = Victory Points · W-VP = VP for outscoring the field each week · Rank VP = bonus VP for top-3 FP finish · PF = total fantasy points scored</span>
-          <Link href={`/league/${leagueId}/how-it-works`} style={{ color: "var(--accent)", textDecoration: "none", whiteSpace: "nowrap" }}>How it works →</Link>
-        </p>
+        {isH2h ? (
+          <p style={{ margin: "0 0 16px", fontSize: 12, color: "var(--faint)" }}>
+            Each week you play one opponent. Win = beat their score. Your record at the end of the regular season determines your playoff seed.{" "}
+            <Link href={`/league/${leagueId}/how-it-works`} style={{ color: "var(--accent)", textDecoration: "none" }}>How it works →</Link>
+          </p>
+        ) : (
+          <>
+            <p style={{ margin: "0 0 6px", fontSize: 12, color: "var(--faint)" }}>
+              FP decides your matchup result — win and rank well to earn VP, the currency of your league standing.
+            </p>
+            <p style={{ margin: "0 0 6px", fontSize: 12, color: "var(--faint)" }}>
+              Win matchup +2 VP · 1st place weekly score +2 VP · 2nd place score +1 VP
+            </p>
+            <p style={{ margin: "0 0 16px", fontSize: "0.7rem", color: "var(--faint)", display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+              <span>VP = Victory Points · W-VP = VP for outscoring the field each week · Rank VP = bonus VP for top-3 FP finish · PF = total fantasy points scored</span>
+              <Link href={`/league/${leagueId}/how-it-works`} style={{ color: "var(--accent)", textDecoration: "none", whiteSpace: "nowrap" }}>How it works →</Link>
+            </p>
+          </>
+        )}
 
         {!hasResults ? (
           <EmptyState
@@ -179,14 +197,14 @@ export default async function StandingsPage({ params }: { params: { leagueId: st
               <tr style={{ color: "var(--faint)", textAlign: "left", borderBottom: "1px solid var(--border)" }}>
                 <th style={thStyle}>#</th>
                 <th style={thStyle}>Team</th>
-                <th style={thStyle} title="Total Victory Points this season. VP determines playoff seeding.">VP</th>
-                <th style={thStyle} title="Your weekly result vs. the field — wins, losses, and ties.">W-L-T</th>
-                <th style={thStyle} title="VP earned by outscoring the most opponents each week (+2 VP for a win).">W-VP</th>
-                <th style={thStyle} title="Victory Points from score rank: 1st place in league score gets +2 VP, 2nd gets +1 VP.">Rank VP</th>
+                {!isH2h && <th style={thStyle} title="Total Victory Points this season. VP determines playoff seeding.">VP</th>}
+                <th style={thStyle} title="Your weekly result — wins, losses, and ties.">{isH2h ? "W-L-T" : "W-L-T"}</th>
+                {!isH2h && <th style={thStyle} title="VP earned by outscoring the most opponents each week (+2 VP for a win).">W-VP</th>}
+                {!isH2h && <th style={thStyle} title="Victory Points from score rank: 1st place in league score gets +2 VP, 2nd gets +1 VP.">Rank VP</th>}
                 <th style={thStyle} title="Points For — total fantasy points scored this season.">PF</th>
                 <th style={thStyle} title="Current win/loss/tie streak (e.g., W2 = two wins in a row).">Streak</th>
                 {!playoffsStarted && playoffCutoff !== null && (
-                  <th style={thStyle} className="standings-hide-mobile" title="VP difference to the team directly above you (playoff seeding tiebreaker).">Gap</th>
+                  <th style={thStyle} className="standings-hide-mobile" title={isH2h ? "Wins behind the team directly above you." : "VP difference to the team directly above you (playoff seeding tiebreaker)."}>Gap</th>
                 )}
               </tr>
             </thead>
@@ -198,7 +216,13 @@ export default async function StandingsPage({ params }: { params: { leagueId: st
                 const inPlayoffs = playoffCutoff !== null && index < playoffCutoff;
                 const onBubble = playoffCutoff !== null && index === playoffCutoff;
                 const nextAbove = index > 0 ? vpStandings[index - 1] : null;
-                const gapToNext = nextAbove ? (nextAbove.totalVP - s.totalVP) : null;
+                // For H2H, gap is difference in wins (totalVP = wins*2+ties, so divide by 2 is cleaner;
+                // but since we want "wins behind" we use the wins field directly).
+                const gapToNext = nextAbove
+                  ? isH2h
+                    ? (nextAbove.wins - s.wins)
+                    : (nextAbove.totalVP - s.totalVP)
+                  : null;
 
                 let playoffChip: { label: string; cls: string } | null = null;
                 const raceInfo = race?.get(s.fantasyTeamId) ?? null;
@@ -244,19 +268,19 @@ export default async function StandingsPage({ params }: { params: { leagueId: st
                         )}
                       </span>
                     </td>
-                    <td style={{ ...tdStyle, fontWeight: 800, color: "var(--text)", fontVariantNumeric: "tabular-nums", fontFamily: "var(--font-stats)" }}>{s.totalVP}</td>
+                    {!isH2h && <td style={{ ...tdStyle, fontWeight: 800, color: "var(--text)", fontVariantNumeric: "tabular-nums", fontFamily: "var(--font-stats)" }}>{s.totalVP}</td>}
                     <td style={{ ...tdStyle, color: "var(--dim)", fontVariantNumeric: "tabular-nums" }}>
                       {s.wins}–{s.losses}{s.ties > 0 ? `–${s.ties}` : ""}
                     </td>
-                    <td style={{ ...tdStyle, color: "var(--accent-strong)", fontVariantNumeric: "tabular-nums" }}>{s.matchupVP}</td>
-                    <td style={{ ...tdStyle, color: "#5fa98c", fontVariantNumeric: "tabular-nums" }}>{s.rankVP}</td>
+                    {!isH2h && <td style={{ ...tdStyle, color: "var(--accent-strong)", fontVariantNumeric: "tabular-nums" }}>{s.matchupVP}</td>}
+                    {!isH2h && <td style={{ ...tdStyle, color: "#5fa98c", fontVariantNumeric: "tabular-nums" }}>{s.rankVP}</td>}
                     <td style={{ ...tdStyle, color: "var(--faint)", fontVariantNumeric: "tabular-nums" }}>{s.pointsFor.toFixed(1)}</td>
                     <td style={{ ...tdStyle, color: streakColor, fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>
                       {streak ? `${streak.type}${streak.count}` : "—"}
                     </td>
                     {!playoffsStarted && playoffCutoff !== null && (
                       <td style={{ ...tdStyle, color: "var(--faint)", fontSize: 12 }} className="standings-hide-mobile">
-                        {index === 0 ? "—" : gapToNext === 0 ? "tied" : `-${gapToNext} VP`}
+                        {index === 0 ? "—" : gapToNext === 0 ? "tied" : isH2h ? `-${gapToNext} W` : `-${gapToNext} VP`}
                       </td>
                     )}
                   </tr>

@@ -1,6 +1,6 @@
 # PWHL GM Product Roadmap — Index
 
-Last Updated: June 25, 2026 (Sprint 39 COMPLETE — UX Clarity Sweep 8/8 shipped (Jun 25, 2026); Sprint 38 PLANNED — Technical Debt Reduction 11 stories scoped; Sprint 37 COMPLETE — WCAG 2.2 AA Accessibility Audit 22/22)
+Last Updated: June 25, 2026 (Sprint 40 COMPLETE — Pre-Launch Security Fix 5/5 findings closed (Jun 25, 2026); Sprint 39 COMPLETE — UX Clarity Sweep 8/8 shipped (Jun 25, 2026); Sprint 38 COMPLETE — Technical Debt Reduction 8/11 shipped (Jun 25, 2026))
 
 ---
 
@@ -193,9 +193,11 @@ All sprints from 7–27 are complete and shipped. Sprint 13 is formally absorbed
 - **Sprint 33** ✅ — Complexity Debt (4/4: CX-001 batch projections, CX-002 prisma guard removal, CX-003 dashboard helpers, CX-004 CLAUDE.md cleanup; Jun 24, 2026)
 - **Sprint 34** ✅ — Complexity Debt Closeout (4/4: CX-005 validateTrade collapse, CX-008 nowMs in enterWaiverWire, CX-007 REVERSED→VETOED+REVERSED split, CX-006 generateEdition→fetchEdition rename; Jun 24–Jul 1, 2026)
 - **Sprint 37** ✅ — WCAG 2.2 AA Accessibility Audit (22/22: skip links, live regions, dialogs, focus management, nav aria-labels, form labels, DraftRoom role=timer, RouteAnnouncer, page titles; Jun 25, 2026)
-- **Sprint 38** 🔵 PLANNED — Technical Debt Reduction (11 stories TD-001–011: P0 logger shim + cron error monitoring; P1 god-object decomposition of dashboard.ts/matchup page/DraftRoom; P2 waiver service + API auth + scoring engine tests; P3 season constants + $queryRaw comments + inline style sweep)
+- **Sprint 38** ✅ COMPLETE (Jun 25, 2026) — Technical Debt Reduction (8/11 stories shipped: TD-001/002/006/007/008/009/010/011 ✅; TD-003/004/005 P1 god-object decomposition deferred)
+- **Sprint 39** ✅ COMPLETE (Jun 25, 2026) — UX Clarity Sweep (8/8: UX-070–077; VP primer, FP→VP bridge, wizard mode-first, terminal CTAs, setup-phase copy, focus deep-links)
+- **Sprint 40** ✅ COMPLETE (Jun 25, 2026) — Pre-Launch Security Fix (5/5 P1 findings from OPS-001 audit: SEC-P1-001–004/006; slot validation, max-length guards, audit log fire-and-forget; commit fa4de8f)
 
-**Current Status:** Sprint 37 COMPLETE — WCAG 2.2 AA conformance achieved. Sprint 38 PLANNED — technical debt reduction scoped and ready to execute. GATE-1/2/3 all ✅. MVP readiness: 100%
+**Current Status:** Sprint 40 COMPLETE — pre-launch security findings closed. Sprint 38 COMPLETE — technical debt reduction (8/11 shipped; TD-003/004/005 deferred). Sprint 39 COMPLETE — UX Clarity Sweep 8/8 shipped. GATE-1/2/3 all ✅. MVP readiness: 100%
 
 **Sprint 14 (Post-Launch Polish + Emotional Engagement) is COMPLETE (Jun 22, 2026).** 11/12 items shipped: all 5 agent integration test findings (DRC-002, BF-010, BF-011, TR-002, TR-003) ✅; OB-010 wizard Replay progress bar ✅; UX-049 "Free Agents" direct TeamNav link ✅; UX-050 "Win Probability" label in DuelHero ✅; UX-033 setup-phase copy "Games starting soon" ✅; UX-032 edge label ✅; OB-011 draft date picker text ✅. UX-045 (rival win celebration) deferred post-launch — requires schema migration (`RIVALRY_WIN` enum) which carries pre-launch risk. First item in Sprint 17 backlog.
 

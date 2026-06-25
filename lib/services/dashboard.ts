@@ -248,8 +248,10 @@ export async function getDashboardData(
   const rawSettings = league.scoringSettings as Record<string, unknown>;
   const betaWeekMappings = (rawSettings?.betaWeekMappings as BetaWeekMapping[] | undefined) ?? null;
   const scoringSettings = parseScoringSettings(league.scoringSettings);
-  const scoringMode = league.scoringMode ?? "VTF";
-  const isVpMode = scoringMode === "VP";
+  const scoringMode = league.scoringMode ?? "H2H";
+  // isVpMode: true for VP and H2H leagues (both use 1v1 matchups per week).
+  // false for VTF (all-vs-all) and beta leagues.
+  const isVpMode = scoringMode === "VP" || scoringMode === "H2H";
 
   const seasonState = await getSeasonState(leagueId, nowMs, prisma);
   const activePeriod = seasonState.activePeriod;
