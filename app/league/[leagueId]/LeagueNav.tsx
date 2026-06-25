@@ -39,6 +39,7 @@ export default function LeagueNav({ leagueId, isCommissioner, playoffStatus, sho
 
   const moreTabs = [
     { label: "How it works", href: `${basePath}/how-it-works`, active: pathname.startsWith(`${basePath}/how-it-works`) },
+    { label: "Rules",        href: `${basePath}/settings`,     active: pathname.startsWith(`${basePath}/settings`) },
     { label: "Records",      href: `${basePath}/records`,      active: pathname.startsWith(`${basePath}/records`) },
     { label: "Leaders",      href: `${basePath}/roster`,       active: pathname.startsWith(`${basePath}/roster`) },
     { label: "Transactions", href: `${basePath}/transactions`,  active: pathname.startsWith(`${basePath}/transactions`) },
@@ -121,7 +122,7 @@ export default function LeagueNav({ leagueId, isCommissioner, playoffStatus, sho
               position: "absolute",
               top: "calc(100% + 4px)",
               left: 0,
-              background: "var(--surface, #1e2330)",
+              background: "var(--card)",
               border: "1px solid rgba(148,163,184,0.15)",
               borderRadius: 10,
               padding: "6px 0",

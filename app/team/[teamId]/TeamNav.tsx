@@ -157,7 +157,7 @@ function TeamNavInner({ teamId, leagueId, playoffStatus, leagueStatus, hasTrophi
               position: "absolute",
               top: "calc(100% + 4px)",
               left: 0,
-              background: "var(--surface, #1e2330)",
+              background: "var(--card)",
               border: "1px solid rgba(148,163,184,0.15)",
               borderRadius: 10,
               padding: "6px 0",
