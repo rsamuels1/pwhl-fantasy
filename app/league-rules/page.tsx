@@ -80,7 +80,7 @@ export default function LeagueRulesPage() {
         <h2 style={h2}>Season Format</h2>
         <div style={ruleGrid}>
           <RuleRow label="Draft type" value="Snake draft" />
-          <RuleRow label="Matchup format" value="Weekly head-to-head" />
+          <RuleRow label="Matchup format" value="Vs. the field (VTF)" />
           <RuleRow label="Scoring period" value="Monday – Sunday" />
           <RuleRow label="Playoffs" value="Top 4 teams, single elimination" />
           <RuleRow label="Playoff format" value="1 vs 4 · 2 vs 3 in round 1" />

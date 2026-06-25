@@ -747,6 +747,19 @@ function PlayerPanel({
                 Stats: {statSeason} season{loadingStats ? " · loading…" : ""}
               </div>
             )}
+            {statSeason && statSeason !== "2026-27" && (
+              <div style={{
+                fontSize: 12,
+                color: "var(--accent-strong)",
+                background: "rgba(143,193,232,0.07)",
+                border: "1px solid rgba(143,193,232,0.18)",
+                borderRadius: 6,
+                padding: "6px 10px",
+                marginBottom: 6,
+              }}>
+                Stats shown are from the <strong>{statSeason} season</strong> — your scouting baseline.
+              </div>
+            )}
 
             <div style={{ fontSize: 11, color: "var(--accent-strong)", marginBottom: 8 }}>
               🏒 4 expansion teams join 2026-27 — DET · HAM · LV · SJ

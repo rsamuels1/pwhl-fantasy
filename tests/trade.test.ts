@@ -245,6 +245,35 @@ describe("validateTradeExecution", () => {
   });
 });
 
+// ── trade flow scenarios ─────────────────────────────────────────────────────
+
+describe("trade flow scenarios", () => {
+  it("receiver can accept a PROPOSED trade (default league: reviewHours=24, requireApproval=false)", () => {
+    // PROPOSED → ACCEPTED is allowed for receiver
+    expect(canTransitionTo("PROPOSED", "ACCEPTED", "receiver")).toBe(true);
+  });
+
+  it("PENDING_REVIEW trade cannot be accepted by receiver (requireCommissionerTradeApproval=true flow)", () => {
+    // When proposeTrade auto-flips to PENDING_REVIEW, the receiver cannot accept —
+    // only the commissioner can move it forward.
+    expect(canTransitionTo("PENDING_REVIEW", "ACCEPTED", "receiver")).toBe(false);
+  });
+
+  it("commissioner can approve PENDING_REVIEW (requireCommissionerTradeApproval=true flow)", () => {
+    expect(canTransitionTo("PENDING_REVIEW", "EXECUTED", "commissioner")).toBe(true);
+  });
+
+  it("commissioner can approve ACCEPTED (reviewHours>0, requireApproval=false: time-window flow)", () => {
+    // For timed-window leagues, ACCEPTED → EXECUTED by commissioner is allowed
+    expect(canTransitionTo("ACCEPTED", "EXECUTED", "commissioner")).toBe(true);
+  });
+
+  it("proposer can auto-flip PROPOSED to PENDING_REVIEW (system transition for requireCommissionerTradeApproval)", () => {
+    // This is the auto-transition in proposeTrade() when requireCommissionerTradeApproval=true
+    expect(canTransitionTo("PROPOSED", "PENDING_REVIEW", "proposer")).toBe(true);
+  });
+});
+
 // ── applyTrade ───────────────────────────────────────────────────────────────
 
 describe("applyTrade", () => {

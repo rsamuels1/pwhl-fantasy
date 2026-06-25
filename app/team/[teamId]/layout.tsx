@@ -20,12 +20,14 @@ export default async function TeamLayout({ children, params }: TeamLayoutProps) 
   const cookieStore = await cookies();
 
   // Fetch betaStatus and league status (for TeamNav "Draft Queue" tab and beta banner).
+  // trophyCount has a fallback of 0 in case the Trophy table hasn't been migrated yet
+  // (graceful degradation — the Trophy Cabinet tab simply won't appear).
   const [leagueExtra, trophyCount] = await Promise.all([
     prisma.fantasyLeague.findUnique({
       where: { id: team.league.id },
       select: { betaStatus: true, status: true },
     }),
-    prisma.trophy.count({ where: { teamId } }),
+    prisma.trophy.count({ where: { teamId } }).catch(() => 0),
   ]);
 
   // Lightweight matchup context: find current week's matchup, falling back to playoff matchup

@@ -34,7 +34,7 @@ export default function BetaWelcomeStep({ onContinue }: Props) {
         fontSize: 15, lineHeight: 1.6, color: "var(--dim)", margin: 0, textAlign: "center",
         maxWidth: 500, marginInline: "auto",
       }}>
-        You're shaping PWHL GM before launch. Your feedback goes straight into the product. This league uses four real weeks from 2025-26 with actual player stats—compressed so you experience a full season in weeks, not months.
+        You're shaping PWHL GM before launch. Your feedback goes straight into the product. This league uses real 2025-26 player stats — two game weeks of regular season, then a two-week playoff. A full season arc in about a month.
       </p>
 
       {/* Three info cards */}
@@ -46,7 +46,7 @@ export default function BetaWelcomeStep({ onContinue }: Props) {
           <div style={{ fontSize: 20, marginBottom: 8 }}>⏪</div>
           <div style={betaCardTitle}>Real PWHL stats. Condensed timeline.</div>
           <div style={betaCardBody}>
-            Four weeks of 2025-26 data, full snake draft, weekly head-to-head VP scoring.
+            Four weeks of 2025-26 data, full snake draft, vs-the-field (VTF) VP scoring.
           </div>
         </div>
 

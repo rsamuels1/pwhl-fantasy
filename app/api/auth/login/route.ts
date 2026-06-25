@@ -16,7 +16,9 @@ export async function POST(req: NextRequest) {
     }
 
     // ── Dev bypass: @dev.local accounts get an immediate cookie, no email sent ──
-    if (process.env.NODE_ENV !== "production" && email.endsWith("@dev.local")) {
+    // ALLOW_DEV_LOGIN=true enables this on production Vercel deployments (e.g. pwhl-gm-beta)
+    const devLoginAllowed = process.env.NODE_ENV !== "production" || process.env.ALLOW_DEV_LOGIN === "true";
+    if (devLoginAllowed && email.endsWith("@dev.local")) {
       const user = await prisma.user.upsert({
         where: { email },
         update: {},

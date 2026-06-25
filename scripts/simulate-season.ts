@@ -380,24 +380,32 @@ async function main() {
   }
 
   // 3. Auto-draft
-  const draftCheck = await prisma.draft.findFirst({ where: { leagueId } });
-  if (draftCheck?.status !== "COMPLETE") {
-    console.log("\n--- Step: Auto-draft ---");
-    await autoDraft(leagueId);
+  console.log("\n--- Step: Auto-draft ---");
+  if (DRY_RUN) {
+    console.log(`  (dry-run) Would auto-draft ${rostersToRounds(ROSTER_SETTINGS)} rounds for ${NUM_TEAMS} teams.`);
   } else {
-    console.log("Draft already complete.");
+    const draftCheck = await prisma.draft.findFirst({ where: { leagueId } });
+    if (draftCheck?.status !== "COMPLETE") {
+      await autoDraft(leagueId);
+    } else {
+      console.log("  Draft already complete — skipping.");
+    }
   }
 
   // 4. Start season
-  const leagueState = await prisma.fantasyLeague.findUniqueOrThrow({
-    where: { id: leagueId }, select: { status: true },
-  });
-  if (leagueState.status === "PRE_DRAFT" || leagueState.status === "DRAFTING") {
-    console.log("\n--- Step: Start season ---");
-    if (!DRY_RUN) await startSeason(leagueId, prisma);
-    console.log("  Season started — matchup rows generated.");
+  console.log("\n--- Step: Start season ---");
+  if (DRY_RUN) {
+    console.log("  (dry-run) Would generate matchup rows and set status to IN_SEASON.");
   } else {
-    console.log(`League status: ${leagueState.status}`);
+    const leagueState = await prisma.fantasyLeague.findUniqueOrThrow({
+      where: { id: leagueId }, select: { status: true },
+    });
+    if (leagueState.status === "PRE_DRAFT" || leagueState.status === "DRAFTING") {
+      await startSeason(leagueId, prisma);
+      console.log("  Season started — matchup rows generated.");
+    } else {
+      console.log(`  League status: ${leagueState.status}`);
+    }
   }
 
   // 5. Advance through all regular-season scoring periods
@@ -439,57 +447,51 @@ async function main() {
 
   // 7. Start playoffs
   console.log("\n--- Step: Start playoffs ---");
-  const leaguePlayoff = await prisma.fantasyLeague.findUniqueOrThrow({
-    where: { id: leagueId }, select: { playoffStatus: true },
-  });
-  let playoffResult;
-  if (leaguePlayoff.playoffStatus === "NOT_STARTED") {
-    if (!DRY_RUN) {
-      playoffResult = await startPlayoffs(leagueId, prisma);
+  let championId: string | null = null;
+
+  if (DRY_RUN) {
+    console.log("  (dry-run) Would start playoffs with top 4 teams by VP.");
+    console.log("\n--- Step: Score playoffs ---");
+    console.log("  (dry-run) Would score playoff rounds.");
+  } else {
+    const leaguePlayoff = await prisma.fantasyLeague.findUniqueOrThrow({
+      where: { id: leagueId }, select: { playoffStatus: true },
+    });
+    if (leaguePlayoff.playoffStatus === "NOT_STARTED") {
+      const playoffResult = await startPlayoffs(leagueId, prisma);
       console.log(`  Playoffs started. ${playoffResult.totalRounds} round(s).`);
       console.log("  Seedings:");
       for (const t of playoffResult.seededTeams) {
         console.log(`    Seed ${t.seed}: ${t.teamName} (${t.points} VP)`);
       }
     } else {
-      console.log("  (dry-run) Would start playoffs with top 4 teams by VP.");
-    }
-  } else {
-    console.log(`  Playoffs already ${leaguePlayoff.playoffStatus.toLowerCase()}.`);
-  }
-
-  // 8. Score playoff rounds
-  const playoffSettings = await prisma.fantasyLeague.findUniqueOrThrow({
-    where: { id: leagueId }, select: { playoffSettings: true },
-  });
-  const settings = playoffSettings.playoffSettings as { teamsInPlayoff?: number; topSeedsWithBye?: number; roundDurationPeriods?: number; higherSeedWinsTies?: boolean } | null ?? {};
-  const teamsInPlayoff = settings.teamsInPlayoff ?? 4;
-  const totalRounds = Math.ceil(Math.log2(teamsInPlayoff));
-  const higherSeedWinsTies = settings.higherSeedWinsTies ?? true;
-
-  console.log("\n--- Step: Score playoffs ---");
-  let championId: string | null = null;
-
-  for (let round = 1; round <= totalRounds; round++) {
-    const roundLabel = round === totalRounds ? "Finals" : `Round ${round}`;
-    console.log(`\n  ${roundLabel}:`);
-
-    if (DRY_RUN) {
-      console.log("  (dry-run) Would score this round.");
-      continue;
+      console.log(`  Playoffs already ${leaguePlayoff.playoffStatus.toLowerCase()}.`);
     }
 
-    const roundResults = await scorePlayoffRound(leagueId, round, higherSeedWinsTies);
-    const winnerIds = roundResults.map(r => r.winnerId);
+    // 8. Score playoff rounds
+    const playoffSettings = await prisma.fantasyLeague.findUniqueOrThrow({
+      where: { id: leagueId }, select: { playoffSettings: true },
+    });
+    const settings = playoffSettings.playoffSettings as { teamsInPlayoff?: number; topSeedsWithBye?: number; roundDurationPeriods?: number; higherSeedWinsTies?: boolean } | null ?? {};
+    const teamsInPlayoff = settings.teamsInPlayoff ?? 4;
+    const totalRounds = Math.ceil(Math.log2(teamsInPlayoff));
+    const higherSeedWinsTies = settings.higherSeedWinsTies ?? true;
 
-    if (round < totalRounds) {
-      await populateNextRound(leagueId, round + 1, winnerIds);
-    } else {
-      championId = winnerIds[0] ?? null;
+    console.log("\n--- Step: Score playoffs ---");
+
+    for (let round = 1; round <= totalRounds; round++) {
+      const roundLabel = round === totalRounds ? "Finals" : `Round ${round}`;
+      console.log(`\n  ${roundLabel}:`);
+      const roundResults = await scorePlayoffRound(leagueId, round, higherSeedWinsTies);
+      const winnerIds = roundResults.map(r => r.winnerId);
+
+      if (round < totalRounds) {
+        await populateNextRound(leagueId, round + 1, winnerIds);
+      } else {
+        championId = winnerIds[0] ?? null;
+      }
     }
-  }
 
-  if (!DRY_RUN) {
     await prisma.fantasyLeague.update({
       where: { id: leagueId },
       data: { playoffStatus: "COMPLETE", status: "COMPLETE" },

@@ -7,6 +7,18 @@ import { Position } from "@prisma/client";
 import { scoreStatLine, type ScoringSettings, DEFAULT_SCORING } from "../scoring";
 import type { ScoringPeriod } from "../scoring/periods";
 
+// ── Sanity caps ───────────────────────────────────────────────────────────────
+//
+// Real PWHL per-game scoring rates (approximate maximums):
+//   Top skater: ~0.8 FP/game on a great night
+//   Top goalie:  ~8 FP/game on a shutout win
+//
+// Multiplying an average by several games can produce unrealistic totals when
+// the rolling window includes a hot-streak outlier. These caps prevent
+// projected team totals from reaching absurd values (e.g. 824+ FP/week).
+const MAX_FP_PER_GAME_SKATER = 4.0;  // safe upper bound for F/D average
+const MAX_FP_PER_GAME_GOALIE  = 8.0; // goalies can legitimately average higher
+
 // ── per-player rolling average ────────────────────────────────────────────────
 
 // Returns the player's average fantasy points per game over their last nGames.
@@ -105,14 +117,18 @@ export async function projectTeamRemainingScore(
     }
   }
 
-  // Project each active player's contribution from their remaining games
+  // Project each active player's contribution from their remaining games.
+  // avgPpg is capped before multiplying to prevent unrealistic totals when a
+  // rolling window includes a hot-streak outlier (prevents 800+ FP projections).
   let projectedAdditional = 0;
   for (const entry of entries) {
     const { teamId, position } = entry.player;
     if (!teamId) continue;
     const gamesLeft = gamesPerTeam.get(teamId) ?? 0;
     if (gamesLeft === 0) continue;
-    const avgPpg = await projectPlayer(entry.playerId, position, scoringSettings, prisma);
+    const rawAvgPpg = await projectPlayer(entry.playerId, position, scoringSettings, prisma);
+    const cap = position === Position.GOALIE ? MAX_FP_PER_GAME_GOALIE : MAX_FP_PER_GAME_SKATER;
+    const avgPpg = Math.min(rawAvgPpg, cap);
     projectedAdditional += avgPpg * gamesLeft;
   }
 

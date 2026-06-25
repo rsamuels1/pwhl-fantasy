@@ -88,6 +88,23 @@ export default function RegisterPage() {
               </Link>
             </div>
           </div>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {[
+              { icon: "🏒", label: "Real PWHL players", detail: "Every skater and goalie from all 12 teams" },
+              { icon: "📅", label: "Weekly matchups", detail: "Your team races the whole league's scores each week" },
+              { icon: "⚡", label: "Live scoring", detail: "Points update from real game stats as they happen" },
+              { icon: "🏆", label: "Playoffs", detail: "Top teams compete in a single-elimination bracket" },
+            ].map(({ icon, label, detail }) => (
+              <div key={label} style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
+                <span style={{ fontSize: 18, flexShrink: 0, marginTop: 1 }}>{icon}</span>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text)" }}>{label}</div>
+                  <div style={{ fontSize: 12, color: "var(--faint)" }}>{detail}</div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Right — form */}
