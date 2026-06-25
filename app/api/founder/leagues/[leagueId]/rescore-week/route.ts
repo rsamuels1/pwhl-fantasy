@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { apiRequireFounder } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { scoreVtfWeek } from "@/lib/scoring/matchups";
+import { logger } from "@/lib/logger";
 
 export async function POST(
   req: NextRequest,
@@ -36,7 +37,7 @@ export async function POST(
       type: "COMMISSIONER_SETTINGS_CHANGED",
       data: { action: "rescore-week", week, triggeredBy: auth.email ?? "founder", timestamp: new Date().toISOString() },
     },
-  }).catch(() => {});
+  }).catch((err) => logger.error("leagueEvent.create (rescore-week audit) failed", err));
 
   const summary = Array.from(results.entries()).map(([teamId, r]) => ({
     teamId,

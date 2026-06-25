@@ -93,7 +93,7 @@ function ReplaceOwnerSection({ leagueId, teams }: { leagueId: string; teams: Tea
           {busy ? "Replacing…" : "Replace owner"}
         </button>
       </div>
-      {result && <p role="alert" style={{ margin: "8px 0 0", fontSize: 13, color: result.startsWith("Error") ? "#f87171" : "#34d399" }}>{result}</p>}
+      {result && <p role="alert" style={{ margin: "8px 0 0", fontSize: 13, color: result.startsWith("Error") ? "var(--loss-color)" : "var(--win-color)" }}>{result}</p>}
     </div>
   );
 }
@@ -157,7 +157,7 @@ function UndoTransactionSection({ leagueId, teams, isDraftPaused }: { leagueId: 
           </div>
         )}
       </div>
-      {result && <p role="alert" style={{ margin: "8px 0 0", fontSize: 13, color: result.startsWith("Error") ? "#f87171" : "#34d399" }}>{result}</p>}
+      {result && <p role="alert" style={{ margin: "8px 0 0", fontSize: 13, color: result.startsWith("Error") ? "var(--loss-color)" : "var(--win-color)" }}>{result}</p>}
     </div>
   );
 }
@@ -236,7 +236,7 @@ function ForceRosterMoveSection({ leagueId, teams }: { leagueId: string; teams: 
           {busy ? "Moving…" : "Move player"}
         </button>
       </div>
-      {result && <p role="alert" style={{ margin: "8px 0 0", fontSize: 13, color: result.startsWith("Error") ? "#f87171" : "#34d399" }}>{result}</p>}
+      {result && <p role="alert" style={{ margin: "8px 0 0", fontSize: 13, color: result.startsWith("Error") ? "var(--loss-color)" : "var(--win-color)" }}>{result}</p>}
     </div>
   );
 }
@@ -312,7 +312,7 @@ function UnlockPlayerSection({ leagueId, teams }: { leagueId: string; teams: Tea
           {busy ? "Unlocking…" : "Unlock player"}
         </button>
       </div>
-      {result && <p role="alert" style={{ margin: "8px 0 0", fontSize: 13, color: result.startsWith("Error") ? "#f87171" : "#34d399" }}>{result}</p>}
+      {result && <p role="alert" style={{ margin: "8px 0 0", fontSize: 13, color: result.startsWith("Error") ? "var(--loss-color)" : "var(--win-color)" }}>{result}</p>}
     </div>
   );
 }

@@ -11,6 +11,7 @@ import { apiRequireAuth, apiRequireLeagueMember } from "@/lib/auth";
 import { getDevNowFromRequest } from "@/lib/devTime";
 import { submitClaim, getPlayerWaiverStatus } from "@/lib/services/waiver-service";
 import { emitEvent } from "@/lib/services/activity";
+import { logger } from "@/lib/logger";
 
 // ── GET ───────────────────────────────────────────────────────────────────────
 
@@ -227,7 +228,7 @@ export async function DELETE(
       data: { description: "Waiver claim cancelled" },
     },
     prisma
-  ).catch(() => {});
+  ).catch((err) => logger.error("emitEvent WAIVER_CLAIM_CANCELLED failed", err));
 
   return NextResponse.json({ cancelled: claimId });
 }

@@ -50,6 +50,10 @@ export default async function DraftPrepPage({ params }: Props) {
     : league.season;
 
   const [rows, draft] = await Promise.all([
+    /*
+     * Raw SQL: same reason as the draft room — SUM() returns BigInt and Prisma's groupBy
+     * types them as number, so $queryRaw with explicit bigint fields avoids silent truncation.
+     */
     statSeason
       ? prisma.$queryRaw<AggRow[]>`
           SELECT

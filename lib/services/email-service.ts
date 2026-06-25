@@ -7,6 +7,8 @@
 //   Set RESEND_API_KEY + EMAIL_RESEND_ENABLED=true in production env
 //   Verify noreply@dykedb.org in Resend dashboard (DKIM + SPF)
 
+import { logger } from "@/lib/logger";
+
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://beta.fantasy.dykedb.org";
 
 export async function sendMagicLink(
@@ -18,7 +20,7 @@ export async function sendMagicLink(
   const verifyUrl = `${APP_URL}/api/auth/verify?token=${rawToken}${
     returnTo ? `&returnTo=${encodeURIComponent(returnTo)}` : ""
   }`;
-  console.log(`[EMAIL] sendMagicLink to ${email}: ${verifyUrl}`);
+  logger.info(`[EMAIL] sendMagicLink to ${email}: ${verifyUrl}`);
 }
 
 export async function sendOnClock(
@@ -32,7 +34,7 @@ export async function sendOnClock(
 ): Promise<void> {
   const returnTo = `/draft/${leagueId}?team=${teamId}`;
   const verifyUrl = `${APP_URL}/api/auth/verify?token=${rawToken}&returnTo=${encodeURIComponent(returnTo)}`;
-  console.log(`[EMAIL] sendOnClock to ${email}: ${verifyUrl}`);
+  logger.info(`[EMAIL] sendOnClock to ${email}: ${verifyUrl}`);
 }
 
 export async function sendTradeReceived(
@@ -42,7 +44,7 @@ export async function sendTradeReceived(
   _leagueName: string,
   actionUrl: string
 ): Promise<void> {
-  console.log(`[EMAIL] sendTradeReceived to ${email}: ${APP_URL}${actionUrl}`);
+  logger.info(`[EMAIL] sendTradeReceived to ${email}: ${APP_URL}${actionUrl}`);
 }
 
 export async function sendInvite(
@@ -52,5 +54,5 @@ export async function sendInvite(
   _inviterName: string
 ): Promise<void> {
   const joinUrl = `${APP_URL}/invite/${leagueId}?email=${encodeURIComponent(email)}`;
-  console.log(`[EMAIL] sendInvite to ${email}: ${joinUrl}`);
+  logger.info(`[EMAIL] sendInvite to ${email}: ${joinUrl}`);
 }

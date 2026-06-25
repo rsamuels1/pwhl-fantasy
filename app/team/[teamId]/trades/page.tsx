@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { requireAuth, requireTeamOwner } from "@/lib/auth";
 import { getTradesForTeam, processExpiredTrades } from "@/lib/services/trade-service";
 import { getDevNow } from "@/lib/devTime";
+import { logger } from "@/lib/logger";
 import TradeCenter from "@/app/league/[leagueId]/trades/TradeCenter";
 
 interface Props {
@@ -21,7 +22,7 @@ export default async function TeamTradesPage({ params, searchParams }: Props) {
 
   const nowMs = await getDevNow();
 
-  processExpiredTrades(leagueId, nowMs, prisma).catch(() => {});
+  processExpiredTrades(leagueId, nowMs, prisma).catch((err) => logger.error("processExpiredTrades failed", err));
 
   const [league, teams, myTrades] = await Promise.all([
     prisma.fantasyLeague.findUnique({
@@ -54,10 +55,14 @@ export default async function TeamTradesPage({ params, searchParams }: Props) {
     league.status !== "COMPLETE";
 
   const incomingTrades = myTrades.filter(
-    (t) => t.receivingTeamId === teamId && (t.status === "PROPOSED" || t.status === "ACCEPTED")
+    (t) =>
+      t.receivingTeamId === teamId &&
+      (t.status === "PROPOSED" || t.status === "ACCEPTED" || t.status === "PENDING_REVIEW")
   );
   const sentTrades = myTrades.filter(
-    (t) => t.proposingTeamId === teamId && (t.status === "PROPOSED" || t.status === "COUNTERED")
+    (t) =>
+      t.proposingTeamId === teamId &&
+      (t.status === "PROPOSED" || t.status === "COUNTERED" || t.status === "PENDING_REVIEW")
   );
 
   // Commissioner sees pending review from their team perspective too

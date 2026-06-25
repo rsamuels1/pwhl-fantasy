@@ -13,6 +13,7 @@ import {
   processExpiredTrades,
   TradeValidationError,
 } from "@/lib/services/trade-service";
+import { logger } from "@/lib/logger";
 import type { TradeItemInput } from "@/lib/trades/engine";
 
 // GET /api/leagues/[leagueId]/trades?team=<teamId>&history=1
@@ -30,7 +31,7 @@ export async function GET(
   const nowMs = getDevNowFromRequest(req);
 
   // Expire stale PROPOSED trades before listing (best-effort)
-  processExpiredTrades(leagueId, nowMs, prisma).catch(() => {});
+  processExpiredTrades(leagueId, nowMs, prisma).catch((err) => logger.error("processExpiredTrades failed", err));
 
   const history = req.nextUrl.searchParams.get("history") === "1";
 

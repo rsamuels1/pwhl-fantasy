@@ -66,6 +66,11 @@ export async function GET(
   const posFilter = position ? Prisma.sql`AND p.position = ${position}::"Position"` : Prisma.empty;
   const seasonFilter = season ? Prisma.sql`AND g.season = ${season}` : Prisma.sql`AND FALSE`;
 
+  /*
+   * Raw SQL: dynamic search/position filters require composable Prisma.sql fragments
+   * (searchFilter, posFilter, seasonFilter) that cannot be expressed in Prisma's
+   * findMany API. Also avoids the BigInt SUM() truncation described in draft/page.tsx.
+   */
   const rows = await prisma.$queryRaw<AggRow[]>`
     SELECT
       p.id,

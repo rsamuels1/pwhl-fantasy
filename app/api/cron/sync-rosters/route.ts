@@ -15,6 +15,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { logger } from "@/lib/logger";
 
 // Vercel Pro allows up to 60s; 12 teams × ~620ms avg = ~7.5s, but pad for slow days.
 export const maxDuration = 30;
@@ -104,7 +105,7 @@ export async function POST(req: NextRequest) {
   }
 
   if (process.env.SYNC_ROSTERS_DISABLED === "true") {
-    console.log("[cron/sync-rosters] SYNC_ROSTERS_DISABLED=true — skipping. Remove this cron entry from vercel.json.");
+    logger.info("[cron/sync-rosters] SYNC_ROSTERS_DISABLED=true — skipping. Remove this cron entry from vercel.json.");
     return NextResponse.json({ skipped: true, reason: "SYNC_ROSTERS_DISABLED" });
   }
 
@@ -112,7 +113,7 @@ export async function POST(req: NextRequest) {
   // At that point the main ingest script handles everything; roster-only sync would interfere.
   const scheduleUp = await hasScheduleAppeared();
   if (scheduleUp) {
-    console.warn(
+    logger.warn(
       "[cron/sync-rosters] 2026-27 schedule is live — this cron is now dormant. " +
       "Run `npm run ingest -- --season 2026-27 --no-stats` and remove the sync-rosters " +
       "entry from vercel.json."
@@ -120,6 +121,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ dormant: true, reason: "schedule_appeared" });
   }
 
+  try {
   const dbTeams = await prisma.team.findMany({ select: { id: true, externalId: true, abbreviation: true } });
   const teamByExternalId = new Map(dbTeams.map((t) => [t.externalId, t]));
 
@@ -134,7 +136,7 @@ export async function POST(req: NextRequest) {
     try {
       players = await fetchTeamRoster(Number(htTeamId));
     } catch (e) {
-      console.error(`[cron/sync-rosters] ${dbTeam.abbreviation} fetch failed:`, (e as Error).message);
+      logger.error(`[cron/sync-rosters] ${dbTeam.abbreviation} fetch failed`, e);
       totalFailed++;
       continue;
     }
@@ -163,6 +165,10 @@ export async function POST(req: NextRequest) {
   }
 
   const summary = { new: totalNew, moved: totalMoved, unchanged: totalUnchanged, failed: totalFailed, scheduleAppeared: scheduleUp };
-  console.log("[cron/sync-rosters]", summary, teamResults);
+  logger.info("[cron/sync-rosters]", { ...summary, teams: teamResults });
   return NextResponse.json({ ok: true, ...summary, teams: teamResults });
+  } catch (err) {
+    logger.error("[cron/sync-rosters] fatal error", err);
+    return NextResponse.json({ ok: false, error: String(err) }, { status: 500 });
+  }
 }

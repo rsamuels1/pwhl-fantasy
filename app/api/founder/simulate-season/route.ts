@@ -8,9 +8,10 @@ import { generateSnakeOrder, rostersToRounds } from "@/lib/draft/snake";
 import { startSeason, advanceSeason } from "@/lib/season";
 import { startPlayoffs } from "@/lib/services/playoff-service";
 import { computeAllTeamScores } from "@/lib/scoring/matchups";
+import { REPLAY_SEASON } from "@/lib/constants";
 
 const FAR_FUTURE = new Date("2027-06-01").getTime();
-const SEASON = "2025-26";
+const SEASON = REPLAY_SEASON;
 const ROSTER_SETTINGS = { forward: 3, defense: 2, goalie: 1, util: 1, bench: 6 };
 const SLOT_CAPS: Record<LineupSlot, number> = {
   FORWARD: 3, DEFENSE: 2, GOALIE: 1, UTIL: 1, BENCH: 6, IR: 0,

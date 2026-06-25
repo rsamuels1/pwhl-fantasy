@@ -75,7 +75,8 @@ Three environments. Full runbook: `docs/04-operations/environments.md`.
 
 **Key rules:**
 - `DATABASE_URL` is the isolation boundary — staging must point at the Neon `preview` branch, never `main`.
-- `BETA_HOST` env var controls which host is locked to just the `/beta` signup page (defaults to `"fantasy.dykedb.org"`). The beta subdomain (`beta.fantasy.dykedb.org`) never matches this check, so the full app runs there. Set `BETA_HOST` to `""` in the production Vercel project when ready to open `fantasy.dykedb.org` to the full app.
+- `BETA_HOST` env var controls which host is locked to just the `/beta` waitlist page (defaults to `"fantasy.dykedb.org"`). Unauthenticated users on the BETA_HOST domain can only reach `/` and `/beta` — `/register`, `/login`, `/create-league`, `/invite`, and all league API routes are blocked. Approved testers use `beta.fantasy.dykedb.org` for the full app. Set `BETA_HOST` to `""` when ready to open `fantasy.dykedb.org` to the public.
+- `BETA_SITE_HOST` env var identifies the beta-test subdomain (defaults to `"beta.fantasy.dykedb.org"`). Set in the `pwhl-gm-beta` Vercel project. When a league creation request arrives from this host, `POST /api/leagues/create` rejects any non-replay league with a 403 — only Beta Replay Leagues (`useBetaReplay: true`) can be created there. Staging (`fantasydev.dykedb.org`) never matches and remains unrestricted.
 - `ALLOW_SIM_DATE` must NOT be set in Production — it would let any user rewind the clock for all live leagues.
 - `prisma db push` is safe on the staging Neon branch; never run it on the prod branch while beta users are active. Use `prisma migrate dev` to generate a migration, commit it, and let `prisma migrate deploy` (in the build command) apply it to prod.
 - Vercel crons (`vercel.json`) run on Production only — waivers won't double-process on staging.
@@ -324,7 +325,16 @@ survives DB resets and schema migrations.
      - **Navigation** ✅ — `TeamNav` + `BottomNav` + league layout nav all get `aria-label` + `aria-current="page"`; all decorative SVGs `aria-hidden="true" focusable="false"`
      - **Interactive** ✅ — `InlineLineupEditor` `<div onClick>` → `<button aria-pressed>`; `DraftRoom` `role="timer"` + single assertive 10s warning + `role="log"` + on-clock `role="alert"`; `StatChip` emoji `aria-hidden`
      - **Page titles** ✅ — dashboard + standings get `export const metadata` with descriptive titles
-   - **Technical Debt Reduction — Sprint 38** ◻ PLANNED: TD-001…011 — structured error logging, cron observability, god-object decomposition (dashboard.ts / matchup/page.tsx / DraftRoom.tsx), service-layer tests, hardcoded season constants, raw SQL comments, inline style audit. No schema changes. Full spec: `docs/01-roadmap/roadmap-sprints.md`.
+   - **Technical Debt Reduction — Sprint 38** ✅ (8/11 stories shipped; Jun 25, 2026; no schema changes):
+     - **TD-001** ✅ — `lib/logger.ts` structured error shim; all 52 swallowed `.catch(() => {})` blocks in waiver service, trade service, season emissions, draft server, and API routes upgraded to `logger.error(msg, err)`; analytics `try/catch {}` intentionally preserved (fire-and-forget per spec)
+     - **TD-002** ✅ — All 4 cron routes wrapped in outer try/catch; return `{ ok: true, ... }` on success and `{ ok: false, error: String(err) }` with HTTP 500 on failure; `logger.error()` on failure path
+     - **TD-006** ✅ — `tests/waiver.test.ts` extended: two new tests verify `WAIVER_CLAIM_AWARDED` + `PLAYER_ADD` events emitted after a successful claim (regression surface for BF-023)
+     - **TD-007** ✅ — `tests/api-auth.test.ts` created: 9 auth guard smoke tests across standings, lineup PUT, season POST, trades POST, and commissioner/force-move routes; covers 401 (unauthenticated) and 403 (unauthorized) paths
+     - **TD-008** ✅ — `tests/scoring.test.ts` extended with 10 edge case tests: shutout true/false (two-goalie case), PPP on power-play goal/assist, no PPP on even-strength goal, goalie win/loss, OT win (`win=false` per ingest convention), zero skater stat line, zero goalie stat line
+     - **TD-009** ✅ — `lib/constants.ts` created: exports `REPLAY_SEASON = "2025-26"` and `LIVE_SEASON = "2026-27"`; all hardcoded season strings in `app/` and `lib/` replaced with imports from this file
+     - **TD-010** ✅ — Block comments added above all 4 `$queryRaw` call sites explaining why ORM was insufficient (BigInt SUM() truncation, dynamic filter composition, NOT IN subquery) and listing dependent column names
+     - **TD-011** ✅ — `--win-color: #34d399` and `--loss-color: #f87171` added to `globals.css`; utility classes `.text-win`, `.text-loss`, `.text-dim`, `.flex-center`, `.card-section` added; 13 hardcoded hex instances replaced with CSS vars; ~41 instances remain as future work
+     - **TD-003/004/005 deferred** — P1 god-object decomposition (`dashboard.ts` / `matchup/page.tsx` / `DraftRoom.tsx`) deferred to a future sprint
    - **UX Clarity Sweep — Sprint 39** ✅ (8/8 stories shipped; Jun 25, 2026; no schema changes):
      - **UX-070: VP primer card** ✅ — `components/VpPrimerCard.tsx` localStorage-gated per userId; shown once when `activeMatchup !== null`; "How you win in PWHL GM" + FP→VP explanation + "Got it — let's play" dismiss; rendered at matchup page Z0
      - **UX-071: FP→VP bridge copy standardized** ✅ — identical sentence "FP decides your matchup result — win and rank well to earn VP, the currency of your league standing." as visible text across FieldHero, DuelHero, dashboard MatchupHero, standings page, and VpExplainer
@@ -439,7 +449,7 @@ The trade system follows the same pure-engine + service-layer pattern as the dra
 - `applyTrade(items, proposingRoster, receivingRoster, proposingTeamId?, receivingTeamId?)` — moves players between rosters (incoming players land on BENCH). Auto-derives team IDs from roster membership when not explicitly provided. Called both for post-trade legality simulation in `_validate()` and for actual roster mutation in the service.
 - `validateTradeProposal` / `validateTradeExecution` — both call the same `_validate()` which runs: stale check first (returns `"STALE"` immediately), then both-sides check, then play-lock check, then roster-legality simulation via `applyTrade` + `checkRosterLegal`.
 
-**Service (`lib/services/trade-service.ts`):** error classes `TradeValidationError`, `TradeNotFoundError`, `TradeTransitionError`. Functions: `proposeTrade`, `acceptTrade`, `rejectTrade`, `counterTrade`, `cancelTrade`, `reviewTrade`, `executeTrade`, `processExpiredTrades`, `getTradesForTeam`, `getTrade`, `getLeagueTrades`. All notifications fire-and-forget (`void … .catch(() => {})`).
+**Service (`lib/services/trade-service.ts`):** error classes `TradeValidationError`, `TradeNotFoundError`, `TradeTransitionError`. Functions: `proposeTrade`, `acceptTrade`, `rejectTrade`, `counterTrade`, `cancelTrade`, `reviewTrade`, `executeTrade`, `processExpiredTrades`, `getTradesForTeam`, `getTrade`, `getLeagueTrades`. All notifications fire-and-forget (`void … .catch((err) => logger.error(...))`).
 
 **Counter-offer flow:** modeled as a new `Trade` row with `counterOfId` linking back to the original. Original flips to `COUNTERED` status atomically in the same `$transaction`.
 
@@ -484,6 +494,26 @@ The trade system follows the same pure-engine + service-layer pattern as the dra
 | `draft_started` | `lib/draft/server.ts` — after `PERSIST_STATUS` lands `IN_PROGRESS` |
 | `draft_completed` | `lib/draft/server.ts` — after `COMPLETE` effect |
 | `lineup_saved` | `app/api/leagues/[leagueId]/lineup/route.ts` PUT handler |
+
+## Logger (`lib/logger.ts`)
+
+`logger.info(msg, data?)` / `logger.warn(msg, data?)` / `logger.error(msg, err?)` — thin shim over `console.*`. In production, `info` is suppressed; `warn` and `error` always fire. Designed to swap to a structured logging service (Sentry, Datadog) by replacing the function body only.
+
+**Usage pattern:**
+```ts
+import { logger } from "@/lib/logger";
+
+// In catch blocks — never swallow silently:
+.catch((err) => logger.error("createNotification failed", err))
+
+// In cron route failure paths:
+catch (err) {
+  logger.error("[cron/process-waivers] fatal", err);
+  return NextResponse.json({ ok: false, error: String(err) }, { status: 500 });
+}
+```
+
+**Exception — analytics fire-and-forget:** `lib/analytics/index.ts` callers intentionally use bare `try { } catch {}` per the analytics spec (analytics must never block a response). Do not add `logger.error` to analytics catch sites.
 
 ## Notification framework (`lib/services/notification-service.ts`)
 
@@ -1062,7 +1092,7 @@ All pages under `app/team/[teamId]/` call `requireAuth` + `requireTeamOwner` at 
 - Commissioner: `commish@dev.local`
 - Team owners: `owner2@dev.local`, `owner3@dev.local`, etc.
 
-No passwords — the app uses email-only cookie auth (`pwhl_user_email`, 30-day session).
+No passwords — the app uses email-only cookie auth (`pwhl_session`, 30-day session).
 
 ### Admin panel (`app/league/[leagueId]/admin/`)
 
@@ -1100,7 +1130,7 @@ gray. Standings links to `/league/[leagueId]/standings` since standings are leag
 
 ### Logout
 
-`GET /api/auth/logout` — clears the `pwhl_user_email` cookie and redirects to `/`. Implemented
+`GET /api/auth/logout` — clears the `pwhl_session` cookie and redirects to `/`. Implemented
 as a GET handler so the nav "Logout" link (`<a href="/api/auth/logout">`) works without JS.
 Earlier versions only had a POST handler, which caused the link to bounce to a blank page while
 leaving the user still logged in.
@@ -1191,3 +1221,5 @@ the cookie is never read.
   `apiRequire*` guards. Commissioner-only actions use `requireCommissioner` / `apiRequireCommissioner`.
 - **When updating CLAUDE.md** (build order, feature status, or sprint notes), keep these sibling files in sync:
   `docs/01-roadmap/roadmap-index.md`, `docs/01-roadmap/roadmap-features.md`, `docs/01-roadmap/roadmap-sprints.md`. The HTML dashboard (`docs/01-roadmap/roadmap-dashboard.html`) is the visual tracker and should be updated on the same cadence as the markdown files.
+- Use `lib/constants.ts` (`REPLAY_SEASON`, `LIVE_SEASON`) for season string references in `app/` and `lib/` code. Never hardcode `"2025-26"` or `"2026-27"` directly; scripts in `scripts/` are exempt.
+- Use `logger.error(msg, err)` from `lib/logger.ts` in all catch blocks. Never use empty catches (`.catch(() => {})`, `catch {}`). The only exception is analytics callers in `lib/analytics/index.ts`.

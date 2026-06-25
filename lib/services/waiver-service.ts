@@ -11,6 +11,7 @@
 import type { PrismaClient } from "@prisma/client";
 import { computeVpStandings } from "@/lib/scoring/vp";
 import { emitEvent } from "@/lib/services/activity";
+import { logger } from "@/lib/logger";
 
 // ── Priority initialization ─────────────────────────────────────────────────
 
@@ -174,7 +175,7 @@ export async function submitClaim(
       data: { description: "Waiver claim submitted" },
     },
     prisma
-  ).catch(() => {});
+  ).catch((err) => logger.error("emitEvent WAIVER_CLAIM_SUBMITTED failed", err));
 
   return { claim };
 }
@@ -210,10 +211,10 @@ export async function processWaivers(
       where: { leagueId, addPlayerId: entry.playerId, status: "AWARDED" },
     });
     if (alreadyAwarded) {
-      // Clean up the WaiverEntry if it still exists
+      // Clean up the WaiverEntry if it still exists (may already be gone — ignore not-found)
       await prisma.waiverEntry
         .delete({ where: { leagueId_playerId: { leagueId: entry.leagueId, playerId: entry.playerId } } })
-        .catch(() => {});
+        .catch((err) => logger.error("waiverEntry.delete (idempotency cleanup) failed", err));
       continue;
     }
 
@@ -227,7 +228,7 @@ export async function processWaivers(
       // No claims — just delete the entry
       await prisma.waiverEntry
         .delete({ where: { leagueId_playerId: { leagueId: entry.leagueId, playerId: entry.playerId } } })
-        .catch(() => {});
+        .catch((err) => logger.error("waiverEntry.delete (no-claims expire) failed", err));
       expired++;
       continue;
     }
@@ -270,10 +271,10 @@ export async function processWaivers(
         });
       }
 
-      // Delete the WaiverEntry
+      // Delete the WaiverEntry (may already be gone in a retry — ignore not-found)
       await tx.waiverEntry
         .delete({ where: { leagueId_playerId: { leagueId: entry.leagueId, playerId: entry.playerId } } })
-        .catch(() => {});
+        .catch((err) => logger.error("waiverEntry.delete (post-award) failed", err));
 
       // Move winner to last priority position (rolling waiver)
       const allPriorities = await tx.waiverPriority.findMany({
@@ -309,7 +310,7 @@ export async function processWaivers(
         data: { description: "Waiver claim awarded" },
       },
       prisma
-    ).catch(() => {});
+    ).catch((err) => logger.error("emitEvent WAIVER_CLAIM_AWARDED failed", err));
     // Also emit PLAYER_ADD so the "Adds/Drops" transaction filter includes waiver-claim additions
     emitEvent(
       {
@@ -320,7 +321,7 @@ export async function processWaivers(
         data: { description: "Added via waiver claim" },
       },
       prisma
-    ).catch(() => {});
+    ).catch((err) => logger.error("emitEvent PLAYER_ADD (waiver) failed", err));
 
     for (const loser of losers) {
       emitEvent(
@@ -332,7 +333,7 @@ export async function processWaivers(
           data: { description: "Waiver claim denied" },
         },
         prisma
-      ).catch(() => {});
+      ).catch((err) => logger.error("emitEvent WAIVER_CLAIM_DENIED failed", err));
     }
 
     awarded++;

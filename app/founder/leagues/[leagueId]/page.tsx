@@ -4,6 +4,7 @@ import { getStandings } from "@/lib/services/standings-service";
 import { getSeasonState } from "@/lib/season";
 import { getDevNow } from "@/lib/devTime";
 import { parseScoringSettings } from "@/lib/scoring/settings";
+import { logger } from "@/lib/logger";
 import { LeagueDetailTabs } from "./LeagueDetailTabs";
 import Link from "next/link";
 
@@ -49,7 +50,7 @@ export default async function FounderLeagueDetail({ params }: Props) {
   let parsedScoring = null;
   try {
     parsedScoring = parseScoringSettings(league.scoringSettings);
-  } catch {}
+  } catch (err) { logger.error("parseScoringSettings failed", err); }
 
   const draftInfo = league.draft
     ? {

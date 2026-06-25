@@ -29,6 +29,7 @@ import { calculatePlayoffRounds, getPlayoffSettings } from "@/lib/playoffs/lifec
 import { computeVpStandings } from "@/lib/scoring/vp";
 import { computeRace } from "@/lib/playoffs/seeding";
 import { emitEvent } from "@/lib/services/activity";
+import { logger } from "@/lib/logger";
 
 // Detect teams that are newly clinched after a scoring pass and emit PLAYOFF_CLINCH events.
 // Idempotent: skips teams that already have a PLAYOFF_CLINCH event.
@@ -84,7 +85,7 @@ async function emitClinchEvents(leagueId: string, week: number, prisma: PrismaCl
       teamId: s.fantasyTeamId,
       type: "PLAYOFF_CLINCH",
       data: { seed, clinchWeek: week, teamName: s.teamName },
-    }, prisma).catch(() => {});
+    }, prisma).catch((err) => logger.error("emitClinchEvent failed", err));
   }
 }
 
@@ -238,10 +239,10 @@ export async function advanceSeason(
     }
     scoredWeeks.push(period.week);
     // Emit storylines, awards, and clinch events — fire-and-forget, never blocks the advance.
-    void emitWeeklyStorylines(leagueId, period.week, period.startsAt, period.endsAt, prisma).catch(() => {});
-    void emitWeeklyAwards(leagueId, period.week, period.startsAt, period.endsAt, prisma).catch(() => {});
-    void emitClinchEvents(leagueId, period.week, prisma).catch(() => {});
-    void emitMorningSkateEdition(leagueId, `week-${period.week}`, prisma).catch(() => {});
+    void emitWeeklyStorylines(leagueId, period.week, period.startsAt, period.endsAt, prisma).catch((err) => logger.error("emitWeeklyStorylines failed", err));
+    void emitWeeklyAwards(leagueId, period.week, period.startsAt, period.endsAt, prisma).catch((err) => logger.error("emitWeeklyAwards failed", err));
+    void emitClinchEvents(leagueId, period.week, prisma).catch((err) => logger.error("emitClinchEvents failed", err));
+    void emitMorningSkateEdition(leagueId, `week-${period.week}`, prisma).catch((err) => logger.error("emitMorningSkateEdition failed", err));
   }
 
   let playoffError: string | undefined;

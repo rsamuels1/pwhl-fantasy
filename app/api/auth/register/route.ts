@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/db";
 import { setAuthCookie, createSession, generateMagicLinkToken } from "@/lib/auth";
 import { sendMagicLink } from "@/lib/services/email-service";
+import { logger } from "@/lib/logger";
 
 export async function POST(req: NextRequest) {
   try {
@@ -83,7 +84,7 @@ export async function POST(req: NextRequest) {
       where: { id: user.id },
       data: { magicLinkToken: tokenHash, magicLinkExpiresAt: expiresAt },
     });
-    void sendMagicLink(email, user.displayName, rawToken, returnTo || undefined).catch(() => {});
+    void sendMagicLink(email, user.displayName, rawToken, returnTo || undefined).catch((err) => logger.error("sendMagicLink (register) failed", err));
 
     return NextResponse.json({ sent: true });
   } catch (error) {

@@ -17,6 +17,7 @@ import {
 import { createNotification } from "@/lib/services/notification-service";
 import { sendTradeReceived } from "@/lib/services/email-service";
 import { emitEvent } from "@/lib/services/activity";
+import { logger } from "@/lib/logger";
 import { trackEvent } from "@/lib/analytics";
 import type { RosterSettings } from "@/lib/lineup";
 
@@ -778,7 +779,7 @@ async function notifyReceiver(
             `/league/${leagueId}/trades/${tradeId}`
           );
         }
-      } catch {}
+      } catch (err) { logger.error("sendTradeReceived failed", err); }
     })();
   }
 }
