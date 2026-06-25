@@ -854,7 +854,8 @@ async function notifyCommissionerReview(
     {
       title: "A trade needs your review",
       body: "Review the trade and approve or veto.",
-      actionUrl: `/league/${leagueId}/admin`,
+      actionUrl: `/league/${leagueId}/admin#pending-trades`,
+      dedupeKey: `trade-review-${tradeId}`,
     }
   );
 }

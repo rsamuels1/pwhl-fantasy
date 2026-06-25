@@ -583,7 +583,7 @@ export default async function AdminPage({ params, searchParams }: Props) {
 
       {/* ── Pending trade review ── */}
       {pendingTrades.length > 0 && (
-        <section style={{ ...panelStyle, border: "1px solid rgba(251,191,36,0.25)" }}>
+        <section id="pending-trades" style={{ ...panelStyle, border: "1px solid rgba(251,191,36,0.25)" }}>
           <h2 style={{ fontSize: 18, marginBottom: 8, color: "#fbbf24" }}>
             Trades pending review ({pendingTrades.length})
           </h2>
