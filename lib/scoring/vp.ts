@@ -226,6 +226,8 @@ export function computeVpStandings(
     }
   }
 
+  // Tiebreaker chain (IA-009): VP → Wins → H2H record → Points For → deterministic (no random draw)
+  // Playoff seeding also uses this function (playoff-service.ts calls computeVpStandings, not computeStandings).
   return [...byTeam.values()].sort((a, b) => {
     if (b.totalVP !== a.totalVP) return b.totalVP - a.totalVP;
     if (b.wins !== a.wins) return b.wins - a.wins;

@@ -149,35 +149,25 @@
 
 ## IA-008. Finalize Waiver Spec (duration, priority, reset, processing schedule)
 
-Sprint: Backlog (was Sprint 6; captured in waiver-spec.md but final policy not enforced in product)
+Sprint: Backlog (was Sprint 6) | Priority: P2 | Status: ✅ DONE
 
-Priority: P2
-
-Status: Open
+Core fully implemented: reverse-standings priority, 48h window (`FantasyLeague.waiverWindowHours`), daily cron at `0 8 * * *`, rolling move-to-last reset. Policy documented in `docs/02-engineering/waiver-spec.md`. Post-launch backlog: claim reorder/cancel APIs, per-claim `failureReason` tracking.
 
 ---
 
 ## IA-009. Finalize VP Tiebreakers
 
-Sprint: Post-Sprint-7 backlog
+Sprint: Post-Sprint-7 backlog | Priority: P2 | Status: ✅ DONE
 
-Priority: P2
-
-Status: Open
-
-VP → matchup wins → H2H → total FP → random draw. Currently only primary VP is used; tie cases fall through to undocumented behavior.
+Full chain implemented in `computeVpStandings` (`lib/scoring/vp.ts`): VP → Wins → H2H → Points For → deterministic (no random draw needed). Playoff seeding in `lib/services/playoff-service.ts` correctly uses `computeVpStandings`, not a separate sort. Chain documented in an inline comment on the sort comparator (IA-009).
 
 ---
 
 ## IA-010. Stat-Correction Policy
 
-Sprint: Post-Sprint-7 backlog
+Sprint: Post-Sprint-7 backlog | Priority: P2 | Status: ✅ DONE
 
-Priority: P2
-
-Status: Open
-
-Cutoff window, playoff/championship handling. No policy or enforcement exists.
+Policy doc: `docs/02-engineering/stat-correction-policy.md`. Windows: regular season ≤7 days after period end; playoffs before `advance-playoff-round` is called; championship locked immediately. Founder re-score endpoint: `POST /api/founder/leagues/[leagueId]/rescore-week` (body `{ week }`), calls `scoreVtfWeek()` idempotently, writes audit `LeagueEvent`. Commissioner self-serve UI deferred post-launch.
 
 ---
 
