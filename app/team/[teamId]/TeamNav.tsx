@@ -22,9 +22,12 @@ function TeamNavInner({ teamId, leagueId, leagueName, playoffStatus, leagueStatu
   const tradesPath = `/team/${teamId}/trades`;
   const isTradesActive = pathname.startsWith(tradesPath);
 
+  const isFaTab = isRosterActive && searchParams.get("tab") === "freeAgents";
+
   const tabs = [
     { label: "Matchup",      href: `/team/${teamId}/matchup`,            active: pathname.startsWith(`/team/${teamId}/matchup`) },
-    { label: "My Roster",    href: rosterPath,                           active: isRosterActive || pathname.startsWith(`/team/${teamId}/lineup`) },
+    { label: "My Roster",    href: rosterPath,                           active: (isRosterActive && !isFaTab) || pathname.startsWith(`/team/${teamId}/lineup`) },
+    { label: "Free Agents",  href: `${rosterPath}?tab=freeAgents`,       active: isFaTab },
     { label: "Trades",       href: tradesPath,                           active: isTradesActive },
     { label: "Standings",    href: `/team/${teamId}/standings`,          active: pathname.startsWith(`/team/${teamId}/standings`) },
     { label: "Scoreboard",   href: `/team/${teamId}/scoreboard`,         active: pathname.startsWith(`/team/${teamId}/scoreboard`) },

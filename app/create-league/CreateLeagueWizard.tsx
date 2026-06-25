@@ -15,7 +15,9 @@ const TOTAL_STEPS = 8;
 const isBetaMode = typeof process !== "undefined" && process.env.NEXT_PUBLIC_BETA_MODE === "true";
 
 // Beta mode: internal steps 1→4→5→6 map to display steps 1→2→3→4.
-function getDisplayStep(step: number): number {
+// Replay (non-beta): skips the Rules step — 5 displayed steps instead of 6.
+//   Internal: 1,2,3,5,6 → Display: 1,2,3,4,5
+function getDisplayStep(step: number, isReplay: boolean): number {
   if (step === 0) return 0;
   if (isBetaMode) {
     if (step <= 1) return 1;
@@ -23,16 +25,23 @@ function getDisplayStep(step: number): number {
     if (step === 5) return 3;
     return 4;
   }
+  if (isReplay) {
+    if (step <= 3) return step;
+    if (step === 5) return 4;
+    return 5;
+  }
   return step;
 }
 
-function getDisplayTotal(): number {
-  return isBetaMode ? 4 : 6;
+function getDisplayTotal(isReplay: boolean): number {
+  if (isBetaMode) return 4;
+  return isReplay ? 5 : 6;
 }
 
-function getStepLabels(): string[] {
-  return isBetaMode
-    ? ["Name", "Rules", "Team", "Invite"]
+function getStepLabels(isReplay: boolean): string[] {
+  if (isBetaMode) return ["Name", "Rules", "Team", "Invite"];
+  return isReplay
+    ? ["Name", "Size", "Season", "Team", "Invite"]
     : ["Name", "Size", "Season", "Rules", "Team", "Invite"];
 }
 
@@ -101,7 +110,7 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
       const data = await res.json();
       if (!res.ok) { setError(data?.error || "Failed to create league"); setLoading(false); return; }
       setCreatedLeagueId(data.leagueId);
-      setStep(4);
+      setStep(5); // skip step 4 (Rules) — replay settings are pre-configured
     } catch {
       setError("Unable to create league. Please try again.");
     } finally {
@@ -199,9 +208,9 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
 
         {/* Progress indicator — filled bar (hidden when step === 0) */}
         {step > 0 && (() => {
-          const displayTotal = getDisplayTotal();
-          const displayStep = getDisplayStep(Math.min(step, TOTAL_STEPS - 1));
-          const stepLabels = getStepLabels();
+          const displayTotal = getDisplayTotal(isReplay);
+          const displayStep = getDisplayStep(Math.min(step, TOTAL_STEPS - 1), isReplay);
+          const stepLabels = getStepLabels(isReplay);
           return (
             <div>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>

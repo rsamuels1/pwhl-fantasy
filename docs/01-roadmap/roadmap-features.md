@@ -514,13 +514,9 @@ Acceptance Criteria:
 
 ## OB-010. Wizard Progress Bar Is Misleading for Replay Users
 
-Sprint: 14
+Sprint: 32 | Priority: P1 | Effort: M | Status: ✅ DONE
 
-Priority: P1
-
-Effort: M
-
-As a commissioner creating a Replay league, I want the wizard's step counter and progress bar to reflect my actual path so that the numbers make sense as I step through the flow.
+Replay flow now shows 5 segments ("Step N of 5") with labels ["Name","Size","Season","Team","Invite"]; `handleReplayCreate` jumps to step 5 (skips Rules); `getDisplayStep/Total/Labels` accept `isReplay` param. Live league flow unchanged at 6 segments.
 
 Issue: Replay users skip step 4 (rules) and the wizard jumps from step 3 to step 5. The 6-segment progress bar fills a segment for the skipped step.
 
@@ -749,11 +745,9 @@ Files: `app/team/[teamId]/trades/new/page.tsx`, `ProposeTrade.tsx` (or equivalen
 
 ## UX-049. "Free Agents" Not Accessible from Top-Level Team Nav
 
-Sprint: 14
+Sprint: 32 | Priority: P2 | Status: ✅ DONE
 
-Priority: P2
-
-Status: OPEN
+"Free Agents" tab added to `TeamNav.tsx` between "My Roster" and "Trades"; links to `/team/[teamId]/roster?tab=freeAgents`; active state highlights when on that tab; "My Roster" active state excludes the FA tab.
 
 Source: Pass 2 end-user walkthrough (June 2026). Adding players is the most frequent in-season action in fantasy sports but requires two clicks (Rosters → Free Agents tab). Should be one click from anywhere.
 
@@ -777,11 +771,9 @@ Files: `app/team/[teamId]/TeamNav.tsx`, `app/team/[teamId]/roster/RosterManager.
 
 ## UX-050. Win Probability Bar Percentages Are Unlabeled in DuelHero
 
-Sprint: 14
+Sprint: 32 | Priority: P2 | Status: ✅ DONE (already implemented — no code change needed)
 
-Priority: P2
-
-Status: OPEN
+DuelHero already shows "Win Probability" heading + "{N}% — You" and "Them — {N}%" labels flanking the bar. Marking closed on audit; labels confirmed at `matchup/page.tsx` lines 1432–1443.
 
 Source: Pass 1 design critique (June 2026). The DuelHero shows two percentage numbers (e.g. "66%" and "34%") flanking the win probability bar with no label identifying these as win probabilities.
 

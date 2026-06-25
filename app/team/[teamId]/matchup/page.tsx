@@ -1271,7 +1271,7 @@ function DuelHero({
   const myProj = matchup.myTeam.score + matchup.myProjected;
   const oppProj = opponent.score + matchup.opponentProjected;
   const diff = Math.abs(myProj - oppProj).toFixed(1);
-  const marginLabel = myProj >= oppProj ? `+${diff} pt edge` : `${diff} pt underdog`;
+  const marginLabel = myProj >= oppProj ? `+${diff} FP lead` : `${diff} FP back`;
 
   // RD-014: trend arrow from yesterday's delta
   const delta = matchup.scoreDeltaSinceYesterday;
