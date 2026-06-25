@@ -32,13 +32,14 @@ export default async function HowItWorksPage({ params }: Props) {
 
   const league = await prisma.fantasyLeague.findUnique({
     where: { id: leagueId },
-    select: { scoringSettings: true, rosterSettings: true },
+    select: { scoringSettings: true, rosterSettings: true, scoringMode: true },
   });
   if (!league) notFound();
 
   const scoring = parseScoringSettings(league.scoringSettings);
   const s = scoring.skater;
   const g = scoring.goalie;
+  const isH2h = (league.scoringMode ?? "H2H") === "H2H";
 
   return (
     <div style={{ maxWidth: 680 }}>
@@ -49,22 +50,38 @@ export default async function HowItWorksPage({ params }: Props) {
         </p>
       </header>
 
-      {/* ── Victory Points ── */}
-      <Section title="Victory Points (VP) — How Standings Work">
-        <p style={{ margin: "0 0 14px", fontSize: 14, color: "var(--dim)", lineHeight: 1.6 }}>
-          At the end of each week, your fantasy points (FP) total is compared to every other team in the league.
-          You earn Victory Points (VP) based on how your score ranks against the field — not just one opponent.
-          This keeps the standings competitive even if you have a great week against a bad week.
-        </p>
-        <Row label="Beat more than half the league (win your matchup)" value="+2 VP" />
-        <Row label="Tie your matchup" value="+1 VP" />
-        <Row label="Highest score in the entire league" value="+2 VP" />
-        <Row label="Second-highest score in the league" value="+1 VP" />
-        <Row label="Maximum VP you can earn in one week" value="4 VP" />
-        <p style={{ margin: "12px 0 0", fontSize: 12, color: "var(--faint)", lineHeight: 1.5 }}>
-          Top 4 teams by VP at the end of the regular season qualify for the playoffs.
-        </p>
-      </Section>
+      {/* ── Standings section — H2H or VP depending on league mode ── */}
+      {isH2h ? (
+        <Section title="Head-to-Head — How Standings Work">
+          <p style={{ margin: "0 0 14px", fontSize: 14, color: "var(--dim)", lineHeight: 1.6 }}>
+            Each week you&apos;re matched against one opponent. The team with more fantasy points (FP) wins
+            the matchup. Your win-loss-tie record at the end of the regular season determines your playoff seed.
+            Tiebreaker: total FP scored across the season.
+          </p>
+          <Row label="Beat your opponent's FP total" value="Win" />
+          <Row label="Tie your opponent's FP total" value="Tie" />
+          <Row label="Score less than your opponent" value="Loss" />
+          <p style={{ margin: "12px 0 0", fontSize: 12, color: "var(--faint)", lineHeight: 1.5 }}>
+            Top 4 teams by record at the end of the regular season qualify for the playoffs.
+          </p>
+        </Section>
+      ) : (
+        <Section title="Victory Points (VP) — How Standings Work">
+          <p style={{ margin: "0 0 14px", fontSize: 14, color: "var(--dim)", lineHeight: 1.6 }}>
+            At the end of each week, your fantasy points (FP) total is compared to every other team in the league.
+            You earn Victory Points (VP) based on how your score ranks against the field — not just one opponent.
+            This keeps the standings competitive even if you have a great week against a bad week.
+          </p>
+          <Row label="Beat more than half the league (win your matchup)" value="+2 VP" />
+          <Row label="Tie your matchup" value="+1 VP" />
+          <Row label="Highest score in the entire league" value="+2 VP" />
+          <Row label="Second-highest score in the league" value="+1 VP" />
+          <Row label="Maximum VP you can earn in one week" value="4 VP" />
+          <p style={{ margin: "12px 0 0", fontSize: 12, color: "var(--faint)", lineHeight: 1.5 }}>
+            Top 4 teams by VP at the end of the regular season qualify for the playoffs.
+          </p>
+        </Section>
+      )}
 
       {/* ── Fantasy Points ── */}
       <Section title="Fantasy Points (FP) — How Your Score Is Calculated">
@@ -126,7 +143,7 @@ export default async function HowItWorksPage({ params }: Props) {
         </p>
         {[
           { abbr: "FP", full: "Fantasy points — your team's score for the week, based on this league's scoring settings above." },
-          { abbr: "VP", full: "Victory points — your weekly standing result. Earned based on how your FP total ranks against the field." },
+          ...(!isH2h ? [{ abbr: "VP", full: "Victory points — your weekly standing result. Earned based on how your FP total ranks against the field." }] : []),
           { abbr: "G", full: "Goals scored." },
           { abbr: "A", full: "Assists — credited to players who helped set up a goal." },
           { abbr: "PTS", full: "Points = Goals + Assists." },

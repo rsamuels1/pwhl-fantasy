@@ -26,8 +26,10 @@ import { initializeWaiverPriority } from "@/lib/services/waiver-service";
 import { emitWeeklyStorylines, emitWeeklyAwards } from "@/lib/services/storyline-service";
 import { emitMorningSkateEdition } from "@/lib/services/morning-skate-service";
 import { calculatePlayoffRounds, getPlayoffSettings } from "@/lib/playoffs/lifecycle";
+import { scoreH2hWeek } from "@/lib/season/h2h";
 import { computeVpStandings } from "@/lib/scoring/vp";
 import { computeRace } from "@/lib/playoffs/seeding";
+import { computeH2hStandings } from "@/lib/season/h2h";
 import { emitEvent } from "@/lib/services/activity";
 import { logger } from "@/lib/logger";
 
@@ -36,7 +38,7 @@ import { logger } from "@/lib/logger";
 async function emitClinchEvents(leagueId: string, week: number, prisma: PrismaClient): Promise<void> {
   const league = await prisma.fantasyLeague.findUniqueOrThrow({
     where: { id: leagueId },
-    select: { playoffSettings: true, playoffStatus: true },
+    select: { playoffSettings: true, playoffStatus: true, scoringMode: true },
   });
   if (league.playoffStatus !== "NOT_STARTED") return;
 
@@ -49,12 +51,18 @@ async function emitClinchEvents(leagueId: string, week: number, prisma: PrismaCl
     prisma.matchup.findMany({ where: { leagueId } }),
   ]);
 
-  const vpRows = computeVpStandings(teams, matchups.map((m) => ({
+  const matchupInput = matchups.map((m) => ({
     homeTeamId: m.homeTeamId, awayTeamId: m.awayTeamId,
     homeScore: m.homeScore, awayScore: m.awayScore,
     homeVP: m.homeVP, awayVP: m.awayVP,
     isPlayoff: m.isPlayoff, week: m.week,
-  })));
+  }));
+
+  const scoringMode = league.scoringMode ?? "H2H";
+  const vpRows = scoringMode === "H2H"
+    ? computeH2hStandings(teams, matchupInput)
+    : computeVpStandings(teams, matchupInput);
+
   const standings = vpRows.map((s) => ({
     fantasyTeamId: s.fantasyTeamId,
     teamName: s.teamName,
@@ -185,17 +193,19 @@ export async function startSeason(leagueId: string, prisma: PrismaClient): Promi
     }
   }
 
-  // VP mode uses 1v1 round-robin matchups; VTF uses all-vs-all.
+  // H2H and VP modes use 1v1 round-robin matchups; VTF uses all-vs-all.
   // Beta leagues (betaStatus === "ACTIVE") use a subset of weeks from the fixture,
   // remapped to real July 2026 dates for period lifecycle detection.
-  const scoringMode = league.scoringMode ?? "VTF";
+  const scoringMode = league.scoringMode ?? "H2H";
   if (league.betaStatus === "ACTIVE") {
     await generateBetaMatchups(leagueId, {
       draftStartsAt: league.draftStartsAt,
       scoringSettings: league.scoringSettings,
       season: league.season,
     }, prisma);
-  } else if (scoringMode === "VP") {
+  } else if (scoringMode === "VP" || scoringMode === "H2H") {
+    // Both VP and H2H use a balanced round-robin schedule.
+    // VP also awards rank-based Victory Points per week; H2H scores W/L only.
     const ps = getPlayoffSettings(league.playoffSettings as Parameters<typeof getPlayoffSettings>[0]);
     const playoffRounds = calculatePlayoffRounds(ps.teamsInPlayoff);
     await generateMatchups(leagueId, league.season, prisma, { reservePlayoffWeeks: playoffRounds });
@@ -224,7 +234,7 @@ export async function advanceSeason(
   const league = await prisma.fantasyLeague.findUniqueOrThrow({
     where: { id: leagueId },
   });
-  const scoringMode = league.scoringMode ?? "VTF";
+  const scoringMode = league.scoringMode ?? "H2H";
   const scoringSettings = parseScoringSettings(league.scoringSettings);
 
   const state = await getSeasonState(leagueId, nowMs, prisma);
@@ -234,6 +244,8 @@ export async function advanceSeason(
   for (const period of due) {
     if (scoringMode === "VP") {
       await scoreVpWeek(leagueId, period.week, period, scoringSettings, prisma);
+    } else if (scoringMode === "H2H") {
+      await scoreH2hWeek(leagueId, period.week, period, prisma);
     } else {
       await scoreVtfWeek(leagueId, period.week, period, prisma);
     }

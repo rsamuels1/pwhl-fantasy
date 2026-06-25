@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import InviteLinkButton from "@/components/InviteLinkButton";
 import BetaWelcomeStep from "@/components/BetaWelcomeStep";
 import Link from "next/link";
 import { VpExplainer } from "@/components/VpExplainer";
+import { useAnalytics } from "@/components/PostHogProvider";
 
 // UX-072/073: Mode is chosen on step 1 so the step count is honest from the first screen.
 //
@@ -68,6 +69,17 @@ function prevStep(current: number, isReplay: boolean): number {
   return current - 1;
 }
 
+const STEP_NAMES: Record<number, string> = {
+  1: "season_mode",
+  2: "league_name",
+  3: "league_size",
+  4: "draft_date",
+  5: "rules_review",
+  6: "team_name",
+  7: "invite",
+  8: "done",
+};
+
 const SIZE_OPTIONS: { value: number; label: string; note: string }[] = [
   { value: 6,  label: "6 teams",  note: "Smaller, more intimate" },
   { value: 8,  label: "8 teams",  note: "Classic size — easy to fill, competitive matchups" },
@@ -82,12 +94,17 @@ interface Props {
 
 export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: Props) {
   const router = useRouter();
+  const { capture } = useAnalytics();
+  const prevStepRef = useRef<number | null>(null);
+
   // Beta mode starts at the welcome screen (step 0); otherwise start at mode choice (step 1).
   const [step, setStep] = useState(isBetaMode ? 0 : 1);
   const [name, setName] = useState("My PWHL League");
   const [maxTeams, setMaxTeams] = useState(8);
   // Mode is set at step 1; pre-select replay if the URL requested it or beta mode is active.
   const [isReplay, setIsReplay] = useState(startAsReplay || isBetaMode);
+  // Scoring mode: H2H (default) or VP. H2H is what ESPN/Yahoo do and needs no explanation.
+  const [scoringMode, setScoringMode] = useState<"H2H" | "VP">("H2H");
   const [draftDate, setDraftDate] = useState("");
   const [draftTime, setDraftTime] = useState("19:00");
   const [teamName, setTeamName] = useState(`${userDisplayName}'s Team`);
@@ -101,6 +118,26 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
   useEffect(() => {
     fetch("/api/user/onboarding", { method: "POST" }).catch(() => {});
   }, []);
+
+  // Fire wizard_step_viewed on each step transition (skip step 0 beta welcome)
+  useEffect(() => {
+    if (step === 0 || step === prevStepRef.current) return;
+    prevStepRef.current = step;
+    const stepName = STEP_NAMES[step];
+    if (!stepName) return;
+    capture("wizard_step_viewed", {
+      step,
+      stepName,
+      mode: step >= 2 ? (isReplay ? "replay" : "live") : undefined,
+    });
+    if (step === 8 && createdLeagueId) {
+      capture("wizard_completed", {
+        mode: isReplay ? "replay" : "live",
+        maxTeams: isReplay ? 6 : maxTeams,
+        leagueId: createdLeagueId,
+      });
+    }
+  }, [step, isReplay, capture, createdLeagueId, maxTeams]);
 
   const goNext = () => setStep((s) => nextStep(s, isReplay));
   const goBack = () => {
@@ -157,7 +194,7 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ leagueName: name, maxTeams, draftStartsAt, isPublic }),
+        body: JSON.stringify({ leagueName: name, maxTeams, draftStartsAt, isPublic, scoringMode }),
       });
       const data = await res.json();
       if (!res.ok) { setError(data?.error || "Failed to create league"); setLoading(false); return false; }
@@ -331,6 +368,71 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
                   fontSize: 12, color: "var(--dim)",
                 }}>
                   Beta leagues use Replay mode (2025-26 season data) — pre-configured for a fast, fun test run.
+                </div>
+              )}
+
+              {/* Scoring mode — only shown for live leagues (replay uses VP for beta compat) */}
+              {!isBetaMode && !isReplay && (
+                <div>
+                  <p style={{ margin: "0 0 8px", fontSize: 13, fontWeight: 700, color: "var(--dim)" }}>
+                    How should weekly standings work?
+                  </p>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                    {[
+                      {
+                        value: "H2H" as const,
+                        label: "Head-to-Head",
+                        desc: "Play one opponent per week. Most wins = best record. Like ESPN Fantasy.",
+                        recommended: true,
+                      },
+                      {
+                        value: "VP" as const,
+                        label: "Vs. the Field (VP)",
+                        desc: "Rank against the full league each week. Earn VP based on your standing.",
+                        recommended: false,
+                        advanced: true,
+                      },
+                    ].map(({ value, label, desc, recommended, advanced }) => {
+                      const sel = scoringMode === value;
+                      return (
+                        <button
+                          key={value}
+                          onClick={() => setScoringMode(value)}
+                          style={{
+                            padding: "14px 12px",
+                            borderRadius: 12,
+                            border: `1.5px solid ${sel ? "var(--accent)" : "var(--border)"}`,
+                            background: sel ? "rgba(143,193,232,0.1)" : "var(--bg-raised)",
+                            cursor: "pointer",
+                            textAlign: "left",
+                            transition: "all 0.15s",
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: 5,
+                          }}
+                        >
+                          <span style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                            <span style={{ fontSize: 12, fontWeight: 700, color: sel ? "var(--accent-strong)" : "var(--text)" }}>{label}</span>
+                            {recommended && (
+                              <span style={{
+                                fontSize: 9, fontWeight: 700, padding: "1px 6px", borderRadius: 8,
+                                background: "rgba(81,216,138,0.12)", color: "var(--green)",
+                                border: "1px solid rgba(81,216,138,0.25)",
+                              }}>Default</span>
+                            )}
+                            {advanced && (
+                              <span style={{
+                                fontSize: 9, fontWeight: 700, padding: "1px 6px", borderRadius: 8,
+                                background: "var(--bg-raised)", color: "var(--faint)",
+                                border: "1px solid var(--border)",
+                              }}>Advanced</span>
+                            )}
+                          </span>
+                          <span style={{ fontSize: 11, color: "var(--faint)", lineHeight: 1.4 }}>{desc}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
               )}
 
@@ -664,7 +766,11 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
                     <div style={{ padding: "14px 16px", borderBottom: "1px solid var(--border-soft)", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                       <span style={{ fontSize: 12, color: "var(--dim)" }}>Standings</span>
                       <span style={{ fontSize: 13, color: "var(--text)", display: "flex", alignItems: "center" }}>
-                        Ranked by <strong style={{ marginLeft: 4 }}>Victory Points (VP)</strong><VpExplainer />
+                        {isReplay || scoringMode === "VP" ? (
+                          <>Ranked by <strong style={{ marginLeft: 4 }}>Victory Points (VP)</strong><VpExplainer /></>
+                        ) : (
+                          <>Weekly <strong style={{ marginLeft: 4 }}>Head-to-Head</strong> record (W-L-T)</>
+                        )}
                       </span>
                     </div>
 
@@ -806,7 +912,7 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
                     { label: "League", value: name },
                     { label: "Size", value: isReplay ? "Up to 6 teams" : `${maxTeams} teams` },
                     { label: "Mode", value: isReplay ? "⏪ Replay" : "Live season" },
-                    { label: "Scoring", value: "VP standings" },
+                    { label: "Scoring", value: isReplay || scoringMode === "VP" ? "VP standings" : "Head-to-Head" },
                   ].map(({ label, value }) => (
                     <div key={label} style={{ display: "flex", flexDirection: "column", gap: 2 }}>
                       <span style={{ fontSize: 10, fontWeight: 700, color: "var(--faint)", textTransform: "uppercase", letterSpacing: "0.07em" }}>{label}</span>

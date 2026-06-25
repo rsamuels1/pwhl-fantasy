@@ -367,7 +367,7 @@ export default function LineupDnD({
         const res = await fetch(`/api/leagues/${leagueId}/lineup`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ teamId, ...move }),
+          body: JSON.stringify({ teamId, ...move, source: "auto" }),
         });
         if (!res.ok) {
           const data = await res.json() as { error?: string };

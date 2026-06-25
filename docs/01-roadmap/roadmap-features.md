@@ -140,6 +140,15 @@
 - **LL-022 Phase 1. Stat Header Tooltips** — ✅ DONE (Sprint 27; `components/StatTooltip.tsx` with `abbr` element pattern; `title` props added to `SortTh` in `RosterManager.tsx` for PPP/SOG/HIT/BLK/SV%/GA/SO/FP columns; `tooltip` field in `SKATER_COLS`/`GOALIE_COLS` in `DraftRoom.tsx`)
 - **LL-022 Phase 2. VP/FP Anchors** — ✅ DONE (Sprint 27; "How it works →" link added to standings page legend in `app/league/[leagueId]/standings/page.tsx`)
 - **LL-016 (partial) — Records Teaser + Trophy Leaderboard** — ✅ DONE (Sprint 27; inline weekly top-scorer teaser after race table in commissioner overview; trophy count leaderboard widget via `prisma.trophy.groupBy` in right column; "Full record book →" link)
+- **LL-013. The Morning Skate** — ✅ DONE (Sprint 31; `lib/services/morning-skate-service.ts` `fetchEdition()`/`emitMorningSkateEdition()`; `MorningSkateEdition` model; 4 article sections via pure template strings; archive + detail pages; matchup page Z0 preview; "Morning Skate" league nav entry)
+- **LL-020. Newcomer-Mode Morning Skate** — ✅ DONE (Sprint 31; `expand()` helper in `generateEdition()` rewrites FP/VP/PPP to long form on first use; `EditionData.newHereUrl` field; "New here? How it works →" link in edition masthead; team-scoped routes redirect to league-scoped equivalents)
+- **TD-001/002/006/007/008/009/010/011 — Technical Debt Reduction** — ✅ DONE (Sprint 38; logger shim + cron monitoring; waiver/API auth/scoring tests; season constants; $queryRaw comments; CSS var sweep)
+- **UX-070 through UX-077 — UX Clarity Sweep** — ✅ DONE (Sprint 39; VP primer, FP→VP bridge copy, wizard mode-first, terminal matchup CTAs, setup-phase timing copy, ?focus deep-links, action item copy)
+- **SEC-P1-001. Lineup Route Slot Enum Validation** — ✅ DONE (Sprint 40; `app/api/leagues/[leagueId]/lineup/route.ts`)
+- **SEC-P1-002. Force-Move Non-Null Assertion Removed** — ✅ DONE (Sprint 40; `app/api/leagues/[leagueId]/commissioner/force-move/route.ts`)
+- **SEC-P1-003. Display Name Max-Length Guard** — ✅ DONE (Sprint 40; `app/api/auth/register/route.ts`, ≤80 chars)
+- **SEC-P1-004. League Name Max-Length Guard** — ✅ DONE (Sprint 40; `app/api/leagues/create/route.ts`, ≤50 chars)
+- **SEC-P1-006. Audit Log Fire-and-Forget** — ✅ DONE (Sprint 40; `app/api/leagues/[leagueId]/commissioner/undo-transaction/route.ts`; `.catch + logger.error` prevents state inconsistency)
 
 ---
 
