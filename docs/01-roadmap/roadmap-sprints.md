@@ -2175,6 +2175,67 @@ Goal: Close the 6 P1 security findings from the OPS-001 audit (Sprint 18) that w
 
 ---
 
+## Sprint 41 — "PostHog Analytics" · ✅ COMPLETE · Jun 25, 2026 · Track Tech · P1
+
+Goal: Replace the console.log analytics shim with real PostHog instrumentation, add client-side event capture, and expand the instrumented event set from 6 to 9.
+
+| Story | Track | Size | Priority | Status |
+|---|---|---|---|---|
+| ANA-001a — `lib/analytics/index.ts`: replaced console.log shim with `posthog-node` singleton; graceful no-op when `POSTHOG_KEY` absent | Analytics | M | P1 | ✅ DONE |
+| ANA-001b — `components/PostHogProvider.tsx`: client-side `posthog-js` provider mounted in `app/layout.tsx`; exports `useAnalytics()` hook | Analytics | M | P1 | ✅ DONE |
+| ANA-001c — Wizard funnel events: `wizard_step_viewed` (steps 1–7) and `wizard_completed` fire in `CreateLeagueWizard.tsx` via `useAnalytics()` | Analytics | S | P1 | ✅ DONE |
+| ANA-001d — `lineup_auto_set` event fires when auto-set source is used; `lineup_saved` fires on both swap and single-move paths | Analytics | S | P1 | ✅ DONE |
+| ANA-001e — `posthog.register({ environment })` stamps every client event with `beta` or `production`; `NEXT_PUBLIC_APP_ENV=beta` set in beta Vercel project | Analytics | S | P1 | ✅ DONE |
+| ANA-001f — `.env.local.example` documents all four required env vars (`POSTHOG_KEY`, `POSTHOG_HOST`, `NEXT_PUBLIC_POSTHOG_KEY`, `NEXT_PUBLIC_POSTHOG_HOST`) | Analytics | XS | P2 | ✅ DONE |
+| ANA-001g — `scripts/test-posthog.ts` smoke test script; confirmed working against live PostHog project | Analytics | S | P2 | ✅ DONE |
+
+**No schema changes in this sprint.**
+
+**Result: 7/7 Sprint 41 items shipped. Total instrumented events: 9 (user_registered, league_created, league_joined, draft_started, draft_completed, lineup_saved, lineup_auto_set, wizard_step_viewed, wizard_completed).**
+
+---
+
+## Sprint 42 — "H2H Scoring Mode" · ✅ COMPLETE · Jun 25, 2026 · Track F · P1
+
+Goal: Add head-to-head scoring as the new default scoring mode, making VP "Advanced" and VTF legacy. New leagues default to H2H; existing VP/VTF leagues are unaffected.
+
+| Story | Track | Size | Priority | Status |
+|---|---|---|---|---|
+| SCORING-001a — `prisma/schema.prisma`: `ScoringMode` enum (`VP \| H2H \| VTF`); `FantasyLeague.scoringMode` default changed to `H2H` | Feature | M | P1 | ✅ DONE |
+| SCORING-001b — `lib/season/h2h.ts`: `scoreH2hWeek()` (IO, mirrors scoreVpWeek) and `computeH2hStandings()` (pure, returns VpStanding[]) | Feature | L | P1 | ✅ DONE |
+| SCORING-001c — `lib/scoring/vp.ts`: new file; extracted `scoreVpWeek()`, `computeVpStandings()`, `computeVpForWeek()` from seeding.ts; pure VP engine in dedicated file | Refactor | M | P1 | ✅ DONE |
+| SCORING-001d — `lib/season/index.ts`: `startSeason()` and `advanceSeason()` branch on `scoringMode`: VP → `scoreVpWeek`, H2H → `scoreH2hWeek`, else → `scoreVtfWeek` (VTF legacy) | Feature | M | P1 | ✅ DONE |
+| SCORING-001e — `lib/services/standings-service.ts`: dispatches to `computeH2hStandings` for H2H leagues, `computeVpStandings` for VP | Feature | S | P1 | ✅ DONE |
+| SCORING-001f — `app/api/leagues/create/route.ts`: accepts `scoringMode` in POST body, defaults to `"H2H"` | Feature | S | P1 | ✅ DONE |
+| SCORING-001g — `app/create-league/CreateLeagueWizard.tsx`: Step 1 scoring mode selector: H2H (default), VP (labeled "Advanced") | Feature | M | P1 | ✅ DONE |
+| SCORING-001h — Standings, matchup, league overview, how-it-works pages: VP education surfaces hidden when `scoringMode === "H2H"`; `VpPrimerCard` hidden for H2H | Feature | M | P2 | ✅ DONE |
+
+**Schema change: `ScoringMode` enum added (`VP | H2H | VTF`); `FantasyLeague.scoringMode` field added defaulting to `H2H`.**
+
+**Result: 8/8 Sprint 42 items shipped. Existing VP/VTF leagues are unaffected.**
+
+---
+
+## Sprint 43 — "Pre-Launch Ops" · ✅ COMPLETE · Jun 25, 2026 · Track Ops · P0/P1
+
+Goal: Wire up live stat ingestion and nightly season advancement crons for the live 2026-27 season, add CI, harden the Render draft server for draft week load, and lock down test/lint configuration.
+
+| Story | Track | Size | Priority | Status |
+|---|---|---|---|---|
+| OPS-005 — `app/api/cron/ingest-live-stats/route.ts`: polls HockeyTech every 30 min during game hours (22:00–04:00 UTC) for newly-final games; upserts stat lines | Ops | M | P0 | ✅ DONE |
+| OPS-006 — `app/api/cron/advance-live-seasons/route.ts`: nightly at 05:00 UTC; scores all live IN_SEASON leagues after stat lines are in | Ops | M | P0 | ✅ DONE |
+| OPS-007 — `vercel.json`: both new crons registered in Vercel scheduler | Ops | S | P0 | ✅ DONE |
+| OPS-008 — `.github/workflows/ci.yml`: GitHub Actions CI — typecheck + lint + test on push to main/dev/release branches | Ops | M | P1 | ✅ DONE |
+| OPS-009 — Draft server `/health` endpoint returns JSON `{ ok, rooms }` for Render monitoring | Ops | S | P1 | ✅ DONE |
+| OPS-010 — `render.yaml`: Render plan upgrade to `standard` for draft week (2 GB RAM); health check path confirmed | Ops | S | P1 | ✅ DONE |
+| OPS-011 — `vitest.config.ts`: explicit include/exclude test patterns; `.eslintrc.json` added | Ops | S | P2 | ✅ DONE |
+
+**No schema changes in this sprint.**
+
+**Result: 7/7 Sprint 43 items shipped. Live crons, CI, and draft server hardening complete.**
+
+---
+
 ### UX-070 — One-time VP "How you win" primer on matchup page (M · P1 · Sprint 39)
 
 **User story:** As a first-time manager navigating to my matchup page, I want to see a clear, unprompted explanation of how Victory Points work so that I understand what I'm competing for without having to hunt for a tooltip.

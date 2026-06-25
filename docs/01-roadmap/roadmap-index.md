@@ -1,6 +1,6 @@
 # PWHL GM Product Roadmap — Index
 
-Last Updated: June 25, 2026 (Sprint 40 COMPLETE — Pre-Launch Security Fix 5/5 findings closed (Jun 25, 2026); Sprint 39 COMPLETE — UX Clarity Sweep 8/8 shipped (Jun 25, 2026); Sprint 38 COMPLETE — Technical Debt Reduction 8/11 shipped (Jun 25, 2026))
+Last Updated: June 25, 2026 (Sprint 43 COMPLETE — Pre-Launch Ops 7/7 shipped; Sprint 42 COMPLETE — H2H Scoring Mode 8/8 shipped; Sprint 41 COMPLETE — PostHog Analytics 7/7 shipped; Sprint 40 COMPLETE — Pre-Launch Security Fix 5/5 findings closed)
 
 ---
 
@@ -196,8 +196,11 @@ All sprints from 7–27 are complete and shipped. Sprint 13 is formally absorbed
 - **Sprint 38** ✅ COMPLETE (Jun 25, 2026) — Technical Debt Reduction (8/11 stories shipped: TD-001/002/006/007/008/009/010/011 ✅; TD-003/004/005 P1 god-object decomposition deferred)
 - **Sprint 39** ✅ COMPLETE (Jun 25, 2026) — UX Clarity Sweep (8/8: UX-070–077; VP primer, FP→VP bridge, wizard mode-first, terminal CTAs, setup-phase copy, focus deep-links)
 - **Sprint 40** ✅ COMPLETE (Jun 25, 2026) — Pre-Launch Security Fix (5/5 P1 findings from OPS-001 audit: SEC-P1-001–004/006; slot validation, max-length guards, audit log fire-and-forget; commit fa4de8f)
+- **Sprint 41** ✅ COMPLETE (Jun 25, 2026) — PostHog Analytics (7/7: console.log shim replaced with posthog-node + posthog-js client via PostHogProvider.tsx; useAnalytics() hook; 9 total instrumented events; wizard funnel events; lineup_auto_set; environment stamping; .env.local.example; smoke test script)
+- **Sprint 42** ✅ COMPLETE (Jun 25, 2026) — H2H Scoring Mode (8/8: ScoringMode enum VP|H2H|VTF; H2H new default for new leagues; lib/season/h2h.ts scoreH2hWeek + computeH2hStandings; lib/scoring/vp.ts extracted; wizard Step 1 mode selector; VP education surfaces gated on scoringMode; existing VP/VTF leagues unaffected)
+- **Sprint 43** ✅ COMPLETE (Jun 25, 2026) — Pre-Launch Ops (7/7: live stat ingest cron OPS-005, nightly advance cron OPS-006, vercel.json cron registration OPS-007, GitHub Actions CI OPS-008, draft server /health endpoint OPS-009, render.yaml standard plan upgrade OPS-010, vitest.config.ts + .eslintrc.json OPS-011)
 
-**Current Status:** Sprint 40 COMPLETE — pre-launch security findings closed. Sprint 38 COMPLETE — technical debt reduction (8/11 shipped; TD-003/004/005 deferred). Sprint 39 COMPLETE — UX Clarity Sweep 8/8 shipped. GATE-1/2/3 all ✅. MVP readiness: 100%
+**Current Status:** Sprint 43 COMPLETE — live crons, CI, H2H scoring, and PostHog analytics all shipped. GATE-1/2/3 all ✅. MVP readiness: 100%. Ready for public launch ~early Nov 2026.
 
 **Sprint 14 (Post-Launch Polish + Emotional Engagement) is COMPLETE (Jun 22, 2026).** 11/12 items shipped: all 5 agent integration test findings (DRC-002, BF-010, BF-011, TR-002, TR-003) ✅; OB-010 wizard Replay progress bar ✅; UX-049 "Free Agents" direct TeamNav link ✅; UX-050 "Win Probability" label in DuelHero ✅; UX-033 setup-phase copy "Games starting soon" ✅; UX-032 edge label ✅; OB-011 draft date picker text ✅. UX-045 (rival win celebration) deferred post-launch — requires schema migration (`RIVALRY_WIN` enum) which carries pre-launch risk. First item in Sprint 17 backlog.
 
