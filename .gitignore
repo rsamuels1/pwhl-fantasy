@@ -8,3 +8,4 @@ node_modules/
 .vercel
 .claude/worktrees/
 tsconfig.tsbuildinfo
+.a11y-agent-team-install-backup.json
