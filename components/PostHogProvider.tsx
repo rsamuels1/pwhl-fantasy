@@ -15,6 +15,7 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
       capture_pageleave: false,
       autocapture: false,
     });
+    posthog.register({ environment: process.env.NEXT_PUBLIC_APP_ENV ?? "production" });
     initialized = true;
   }, []);
 
