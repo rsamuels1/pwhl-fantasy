@@ -137,7 +137,9 @@ export default function RosterManager({
         });
         const data = await res.json() as { roster?: RosterPlayerRow[]; error?: string; onWaivers?: boolean; milestoneTriggered?: "first_add" | null };
         if (!res.ok || data.error) {
-          if (data.onWaivers) {
+          if (res.status === 401) {
+            setError("__SESSION_EXPIRED__");
+          } else if (data.onWaivers) {
             setError("This player is on waivers — use the Waiver Wire tab to submit a claim.");
             setTab("waiverWire");
           } else {
@@ -176,7 +178,7 @@ export default function RosterManager({
       });
       const data = await res.json() as { dropped?: string; error?: string };
       if (!res.ok || data.error) {
-        setError(data.error ?? "Failed to drop player.");
+        setError(res.status === 401 ? "__SESSION_EXPIRED__" : (data.error ?? "Failed to drop player."));
         return;
       }
       setRoster((prev) => prev.filter((p) => p.playerId !== dropPlayerId));
@@ -247,7 +249,12 @@ export default function RosterManager({
           border: `1px solid ${error ? "rgba(209,139,127,0.25)" : "rgba(95,169,140,0.25)"}`,
           color: error ? "#d18b7f" : "#5fa98c",
         }}>
-          {error ?? successMsg}
+          {error === "__SESSION_EXPIRED__" ? (
+            <>Your session expired.{" "}
+              <a href={`/login?returnTo=${encodeURIComponent(typeof window !== "undefined" ? window.location.pathname : "/")}`}
+                style={{ color: "#d18b7f", fontWeight: 700 }}>Log in again →</a>
+            </>
+          ) : (error ?? successMsg)}
         </div>
       )}
 
