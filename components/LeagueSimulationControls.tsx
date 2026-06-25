@@ -30,8 +30,8 @@ export default function LeagueSimulationControls({ leagueId }: { leagueId: strin
   };
 
   return (
-    <div style={{ display: "grid", gap: 12, marginTop: 16, padding: 18, background: "rgba(255,255,255,0.03)", borderRadius: 18 }}>
-      <p style={{ margin: 0, color: "#94a3b8" }}>
+    <div style={{ display: "grid", gap: 12, marginTop: 16, padding: 18, background: "var(--bg-raised)", borderRadius: 18 }}>
+      <p style={{ margin: 0, color: "var(--dim)" }}>
         Run last season simulation weeks from the current league state.
       </p>
       <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
@@ -52,7 +52,7 @@ export default function LeagueSimulationControls({ leagueId }: { leagueId: strin
           {loading ? "Simulating…" : "Simulate all remaining weeks"}
         </button>
       </div>
-      {message && <p style={{ margin: 0, color: "#e2e8f0" }}>{message}</p>}
+      {message && <p style={{ margin: 0, color: "var(--text)" }}>{message}</p>}
     </div>
   );
 }
@@ -60,8 +60,8 @@ export default function LeagueSimulationControls({ leagueId }: { leagueId: strin
 const buttonStyle: React.CSSProperties = {
   border: "none",
   borderRadius: 14,
-  background: "#6366f1",
-  color: "#fff",
+  background: "var(--accent)",
+  color: "var(--accent-ink)",
   padding: "12px 16px",
   cursor: "pointer",
   fontWeight: 700,

@@ -20,6 +20,8 @@ interface Props {
   pendingReview: TradeWithItems[];
   playerMap: Record<string, PlayerInfo>;
   teamMap: Record<string, string>;
+  /** When provided, navigation uses /team/[teamId]/trades routes and hides the League History tab */
+  teamId?: string;
 }
 
 const STATUS_LABELS: Record<string, string> = {
@@ -28,22 +30,24 @@ const STATUS_LABELS: Record<string, string> = {
   ACCEPTED: "Accepted — pending review",
   PENDING_REVIEW: "Under commissioner review",
   EXECUTED: "Completed",
-  REVERSED: "Reversed by commissioner",
+  VETOED: "Vetoed by commissioner",
+  REVERSED: "Rolled back by commissioner",
   REJECTED: "Declined",
   CANCELLED: "Cancelled",
   EXPIRED: "Expired (no response in time)",
 };
 
 const STATUS_COLORS: Record<string, string> = {
-  PROPOSED: "#a5b4fc",
-  COUNTERED: "#fcd34d",
-  ACCEPTED: "#6ee7b7",
-  PENDING_REVIEW: "#fbbf24",
-  EXECUTED: "#34d399",
-  REVERSED: "#f87171",
-  REJECTED: "#94a3b8",
-  CANCELLED: "#94a3b8",
-  EXPIRED: "#64748b",
+  PROPOSED: "var(--accent-strong)",
+  COUNTERED: "var(--gold)",
+  ACCEPTED: "var(--green)",
+  PENDING_REVIEW: "var(--amber)",
+  EXECUTED: "var(--green)",
+  VETOED: "var(--red)",
+  REVERSED: "var(--red)",
+  REJECTED: "var(--faint)",
+  CANCELLED: "var(--faint)",
+  EXPIRED: "var(--faint)",
 };
 
 function formatDate(d: Date | string) {
@@ -66,18 +70,18 @@ function TradePlayersColumn({
   const outgoing = items.filter((i) => i.fromTeamId === fromTeamId);
   return (
     <div>
-      <div style={{ fontSize: 11, color: "#94a3b8", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+      <div style={{ fontSize: 11, color: "var(--dim)", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.05em" }}>
         {label}
       </div>
       {outgoing.length === 0 ? (
-        <span style={{ color: "#64748b", fontSize: 13 }}>—</span>
+        <span style={{ color: "var(--faint)", fontSize: 13 }}>—</span>
       ) : (
         outgoing.map((item) => {
           const p = playerMap[item.playerId];
           return (
-            <div key={item.id} style={{ fontSize: 13, color: "#e2e8f0", marginBottom: 2 }}>
+            <div key={item.id} style={{ fontSize: 13, color: "var(--text)", marginBottom: 2 }}>
               {p?.name ?? item.playerId}
-              <span style={{ color: "#94a3b8", fontSize: 11, marginLeft: 6 }}>
+              <span style={{ color: "var(--dim)", fontSize: 11, marginLeft: 6 }}>
                 {p?.position?.slice(0, 1)}
               </span>
             </div>
@@ -96,6 +100,7 @@ function TradeCard({
   isCommissioner,
   onAction,
   actionPending,
+  tradeBase,
 }: {
   trade: TradeWithItems;
   myTeamId: string;
@@ -104,6 +109,7 @@ function TradeCard({
   isCommissioner: boolean;
   onAction: (tradeId: string, action: string) => void;
   actionPending: boolean;
+  tradeBase: string;
 }) {
   const isReceiver = trade.receivingTeamId === myTeamId;
   const isProposer = trade.proposingTeamId === myTeamId;
@@ -113,8 +119,8 @@ function TradeCard({
 
   return (
     <div style={{
-      background: "rgba(255,255,255,0.04)",
-      border: "1px solid rgba(255,255,255,0.08)",
+      background: "var(--surface)",
+      border: "1px solid var(--border)",
       borderRadius: 12,
       padding: "16px 20px",
       marginBottom: 12,
@@ -124,18 +130,18 @@ function TradeCard({
           <span style={{
             fontSize: 11,
             fontWeight: 600,
-            color: STATUS_COLORS[trade.status] ?? "#94a3b8",
+            color: STATUS_COLORS[trade.status] ?? "var(--dim)",
             background: `${STATUS_COLORS[trade.status] ?? "#94a3b8"}22`,
             borderRadius: 999,
             padding: "2px 10px",
           }}>
             {STATUS_LABELS[trade.status] ?? trade.status}
           </span>
-          <span style={{ fontSize: 12, color: "#64748b" }}>{formatDate(trade.createdAt)}</span>
+          <span style={{ fontSize: 12, color: "var(--faint)" }}>{formatDate(trade.createdAt)}</span>
         </div>
         <Link
-          href={`/league/${trade.leagueId}/trades/${trade.id}`}
-          style={{ fontSize: 12, color: "#a5b4fc", textDecoration: "none" }}
+          href={`${tradeBase}/${trade.id}`}
+          style={{ fontSize: 12, color: "var(--accent-strong)", textDecoration: "none" }}
         >
           View →
         </Link>
@@ -149,7 +155,7 @@ function TradeCard({
           teamMap={teamMap}
           label={`${teamMap[trade.proposingTeamId] ?? "Team"} gives`}
         />
-        <div style={{ paddingTop: 20, color: "#64748b", fontSize: 20 }}>⇄</div>
+        <div style={{ paddingTop: 20, color: "var(--faint)", fontSize: 20 }}>⇄</div>
         <TradePlayersColumn
           items={trade.items}
           fromTeamId={trade.receivingTeamId}
@@ -160,7 +166,7 @@ function TradeCard({
       </div>
 
       {trade.message && (
-        <div style={{ marginTop: 10, fontSize: 13, color: "#94a3b8", fontStyle: "italic" }}>
+        <div style={{ marginTop: 10, fontSize: 13, color: "var(--dim)", fontStyle: "italic" }}>
           "{trade.message}"
         </div>
       )}
@@ -174,7 +180,7 @@ function TradeCard({
               disabled={actionPending}
               style={{
                 padding: "8px 16px", borderRadius: 8, border: "none",
-                background: "#22c55e", color: "#fff", fontSize: 13, fontWeight: 600,
+                background: "#22c55e", color: "var(--accent-ink)", fontSize: 13, fontWeight: 600,
                 cursor: actionPending ? "not-allowed" : "pointer", opacity: actionPending ? 0.6 : 1,
               }}
             >
@@ -192,10 +198,10 @@ function TradeCard({
               Reject
             </button>
             <Link
-              href={`/league/${trade.leagueId}/trades/${trade.id}/counter`}
+              href={`${tradeBase}/${trade.id}/counter`}
               style={{
                 padding: "8px 16px", borderRadius: 8, border: "1px solid rgba(165,180,252,0.4)",
-                background: "transparent", color: "#a5b4fc", fontSize: 13, textDecoration: "none",
+                background: "transparent", color: "var(--accent-strong)", fontSize: 13, textDecoration: "none",
               }}
             >
               Counter
@@ -207,8 +213,8 @@ function TradeCard({
             onClick={() => onAction(trade.id, "cancel")}
             disabled={actionPending}
             style={{
-              padding: "8px 16px", borderRadius: 8, border: "1px solid rgba(148,163,184,0.3)",
-              background: "transparent", color: "#94a3b8", fontSize: 13, cursor: actionPending ? "not-allowed" : "pointer",
+              padding: "8px 16px", borderRadius: 8, border: "1px solid var(--border)",
+              background: "transparent", color: "var(--dim)", fontSize: 13, cursor: actionPending ? "not-allowed" : "pointer",
               opacity: actionPending ? 0.6 : 1,
             }}
           >
@@ -222,7 +228,7 @@ function TradeCard({
               disabled={actionPending}
               style={{
                 padding: "8px 16px", borderRadius: 8, border: "none",
-                background: "#22c55e", color: "#fff", fontSize: 13, fontWeight: 600,
+                background: "#22c55e", color: "var(--accent-ink)", fontSize: 13, fontWeight: 600,
                 cursor: actionPending ? "not-allowed" : "pointer", opacity: actionPending ? 0.6 : 1,
               }}
             >
@@ -258,7 +264,10 @@ export default function TradeCenter({
   pendingReview,
   playerMap,
   teamMap,
+  teamId,
 }: Props) {
+  const tradeBase = teamId ? `/team/${teamId}/trades` : `/league/${leagueId}/trades`;
+
   const [tab, setTab] = useState<"incoming" | "sent" | "history" | "review">(
     isCommissioner && pendingReview.length > 0 ? "review" : initialTab
   );
@@ -302,7 +311,8 @@ export default function TradeCenter({
     ...(isCommissioner && pendingReview.length > 0
       ? [{ key: "review" as const, label: "Needs Review", count: pendingReview.length }]
       : []),
-    { key: "history", label: "League History" },
+    // League History hidden in team context — Transactions covers full trade history
+    ...(teamId ? [] : [{ key: "history" as const, label: "League History" }]),
   ];
 
   const currentTrades =
@@ -317,10 +327,10 @@ export default function TradeCenter({
         <h1 style={{ margin: 0, fontSize: 22, fontWeight: 700 }}>Trade Center</h1>
         {canPropose && (
           <Link
-            href={`/league/${leagueId}/trades/new`}
+            href={`${tradeBase}/new`}
             style={{
               padding: "10px 18px", borderRadius: 8,
-              background: "var(--accent)", color: "#fff",
+              background: "var(--accent)", color: "var(--accent-ink)",
               fontSize: 14, fontWeight: 600, textDecoration: "none",
             }}
           >
@@ -334,23 +344,23 @@ export default function TradeCenter({
         <button
           type="button"
           onClick={() => setTradePrimerOpen((v) => !v)}
-          style={{ fontSize: 13, color: "var(--accent-strong, #a5b4fc)", background: "none", border: "none", cursor: "pointer", padding: 0 }}
+          style={{ fontSize: 13, color: "var(--accent-strong)", background: "none", border: "none", cursor: "pointer", padding: 0 }}
         >
           {tradePrimerOpen ? "▴ How do trades work?" : "How do trades work? ▾"}
         </button>
         {tradePrimerOpen && (
           <div style={{
             marginTop: 8, padding: "12px 16px", borderRadius: 12,
-            background: "rgba(99,102,241,0.06)", border: "1px solid rgba(99,102,241,0.18)",
-            fontSize: 13, color: "#94a3b8", lineHeight: 1.7,
+            background: "var(--accent-dim)", border: "1px solid var(--accent-border)",
+            fontSize: 13, color: "var(--dim)", lineHeight: 1.7,
           }}>
-            <strong style={{ color: "#e2e8f0" }}>New to trading?</strong> You can offer players from your roster in exchange for players on another team&apos;s roster. Both sides must agree. The commissioner may review trades before they take effect.
+            <strong style={{ color: "var(--text)" }}>New to trading?</strong> You can offer players from your roster in exchange for players on another team&apos;s roster. Both sides must agree. The commissioner may review trades before they take effect.
           </div>
         )}
       </div>
 
       {/* Tab bar */}
-      <div style={{ display: "flex", gap: 8, marginBottom: 20, borderBottom: "1px solid rgba(255,255,255,0.08)", paddingBottom: 0 }}>
+      <div style={{ display: "flex", gap: 8, marginBottom: 20, borderBottom: "1px solid var(--border)", paddingBottom: 0 }}>
         {tabs.map((t) => (
           <button
             key={t.key}
@@ -359,8 +369,8 @@ export default function TradeCenter({
               padding: "10px 16px",
               background: "none",
               border: "none",
-              borderBottom: tab === t.key ? "2px solid #6366f1" : "2px solid transparent",
-              color: tab === t.key ? "#a5b4fc" : "#94a3b8",
+              borderBottom: tab === t.key ? "2px solid var(--accent)" : "2px solid transparent",
+              color: tab === t.key ? "var(--accent-strong)" : "var(--dim)",
               fontSize: 14,
               cursor: "pointer",
               fontWeight: tab === t.key ? 600 : 400,
@@ -372,8 +382,8 @@ export default function TradeCenter({
             {t.count !== undefined && t.count > 0 && (
               <span style={{
                 marginLeft: 6, fontSize: 11,
-                background: tab === t.key ? "#6366f1" : "rgba(255,255,255,0.1)",
-                color: tab === t.key ? "#fff" : "#94a3b8",
+                background: tab === t.key ? "var(--accent)" : "var(--surface)",
+                color: tab === t.key ? "var(--accent-ink)" : "var(--dim)",
                 borderRadius: 999, padding: "1px 6px",
               }}>
                 {t.count}
@@ -395,17 +405,39 @@ export default function TradeCenter({
       {currentTrades.length === 0 ? (
         <div style={{
           textAlign: "center", padding: "48px 24px",
-          color: "#64748b", fontSize: 14,
+          color: "var(--faint)", fontSize: 14,
         }}>
-          {tab === "incoming" && "No incoming trade offers."}
-          {tab === "sent" && "You haven't proposed any trades yet."}
-          {tab === "review" && "No trades pending review."}
-          {tab === "history" && "No completed trades yet this season."}
+          {tab === "incoming" && (
+            <>
+              <div style={{ fontSize: 24, marginBottom: 10, opacity: 0.4 }}>🔄</div>
+              <p style={{ margin: "0 0 4px", fontWeight: 600, color: "var(--muted)" }}>No trade offers yet</p>
+              <p style={{ margin: 0, fontSize: 13 }}>When another manager sends you a deal, it&apos;ll show up here.</p>
+            </>
+          )}
+          {tab === "sent" && (
+            <>
+              <div style={{ fontSize: 24, marginBottom: 10, opacity: 0.4 }}>📤</div>
+              <p style={{ margin: "0 0 4px", fontWeight: 600, color: "var(--muted)" }}>No trades proposed yet</p>
+              <p style={{ margin: 0, fontSize: 13 }}>Browse another team&apos;s roster and make them an offer.</p>
+            </>
+          )}
+          {tab === "review" && (
+            <>
+              <p style={{ margin: 0 }}>No trades pending review.</p>
+            </>
+          )}
+          {tab === "history" && (
+            <>
+              <div style={{ fontSize: 24, marginBottom: 10, opacity: 0.4 }}>📋</div>
+              <p style={{ margin: "0 0 4px", fontWeight: 600, color: "var(--muted)" }}>No completed trades yet</p>
+              <p style={{ margin: 0, fontSize: 13 }}>Trades that go through will appear here for the whole league to see.</p>
+            </>
+          )}
           {tab === "incoming" && canPropose && (
             <div style={{ marginTop: 16 }}>
               <Link
-                href={`/league/${leagueId}/trades/new`}
-                style={{ color: "#a5b4fc", textDecoration: "none", fontSize: 14 }}
+                href={`${tradeBase}/new`}
+                style={{ color: "var(--accent-strong)", textDecoration: "none", fontSize: 14 }}
               >
                 Propose a trade to another team →
               </Link>
@@ -423,6 +455,7 @@ export default function TradeCenter({
             isCommissioner={isCommissioner}
             onAction={handleAction}
             actionPending={isPending}
+            tradeBase={tradeBase}
           />
         ))
       )}

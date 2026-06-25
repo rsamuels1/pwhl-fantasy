@@ -1,7 +1,6 @@
 import { describe, it, expect } from "vitest";
 import {
-  validateTradeProposal,
-  validateTradeExecution,
+  validateTrade,
   applyTrade,
   canTransitionTo,
   type TradeItemInput,
@@ -73,29 +72,49 @@ describe("canTransitionTo", () => {
     expect(canTransitionTo("PROPOSED", "ACCEPTED", "proposer")).toBe(false);
   });
 
+  it("proposer can move PROPOSED to PENDING_REVIEW (auto-transition for requireCommissionerTradeApproval)", () => {
+    expect(canTransitionTo("PROPOSED", "PENDING_REVIEW", "proposer")).toBe(true);
+  });
+
+  it("commissioner can move PROPOSED to PENDING_REVIEW", () => {
+    expect(canTransitionTo("PROPOSED", "PENDING_REVIEW", "commissioner")).toBe(true);
+  });
+
+  it("receiver cannot move PROPOSED to PENDING_REVIEW", () => {
+    expect(canTransitionTo("PROPOSED", "PENDING_REVIEW", "receiver")).toBe(false);
+  });
+
   it("commissioner can execute ACCEPTED", () => {
     expect(canTransitionTo("ACCEPTED", "EXECUTED", "commissioner")).toBe(true);
   });
 
-  it("commissioner can veto PENDING_REVIEW", () => {
-    expect(canTransitionTo("PENDING_REVIEW", "REVERSED", "commissioner")).toBe(true);
+  it("commissioner can veto PENDING_REVIEW → VETOED", () => {
+    expect(canTransitionTo("PENDING_REVIEW", "VETOED", "commissioner")).toBe(true);
   });
 
   it("commissioner can approve PENDING_REVIEW", () => {
     expect(canTransitionTo("PENDING_REVIEW", "EXECUTED", "commissioner")).toBe(true);
   });
 
+  it("commissioner can reverse an already-executed trade", () => {
+    expect(canTransitionTo("EXECUTED", "REVERSED", "commissioner")).toBe(true);
+  });
+
+  it("PENDING_REVIEW cannot transition to REVERSED (use VETOED instead)", () => {
+    expect(canTransitionTo("PENDING_REVIEW", "REVERSED", "commissioner")).toBe(false);
+  });
+
   it("no transitions from terminal states", () => {
-    expect(canTransitionTo("EXECUTED", "PROPOSED", "commissioner")).toBe(false);
+    expect(canTransitionTo("VETOED", "PROPOSED", "commissioner")).toBe(false);
     expect(canTransitionTo("REJECTED", "PROPOSED", "receiver")).toBe(false);
     expect(canTransitionTo("CANCELLED", "PROPOSED", "proposer")).toBe(false);
     expect(canTransitionTo("EXPIRED", "PROPOSED", "commissioner")).toBe(false);
   });
 });
 
-// ── validateTradeProposal ────────────────────────────────────────────────────
+// ── validateTrade ────────────────────────────────────────────────────
 
-describe("validateTradeProposal", () => {
+describe("validateTrade", () => {
   it("accepts a valid 1-for-1 forward trade", () => {
     const propRoster = makeRoster("A");
     const recRoster = makeRoster("B");
@@ -105,12 +124,12 @@ describe("validateTradeProposal", () => {
       { fromTeamId: "B", toTeamId: "A", playerId: "B-b1" },
     ];
 
-    const result = validateTradeProposal(items, propRoster, recRoster, settings);
+    const result = validateTrade(items, propRoster, recRoster, settings);
     expect(result.valid).toBe(true);
   });
 
   it("rejects empty items", () => {
-    const result = validateTradeProposal([], makeRoster("A"), makeRoster("B"), settings);
+    const result = validateTrade([], makeRoster("A"), makeRoster("B"), settings);
     expect(result.valid).toBe(false);
     expect(result.reason).toMatch(/at least one/i);
   });
@@ -119,7 +138,7 @@ describe("validateTradeProposal", () => {
     const items: TradeItemInput[] = [
       { fromTeamId: "B", toTeamId: "A", playerId: "B-b1" },
     ];
-    const result = validateTradeProposal(items, makeRoster("A"), makeRoster("B"), settings);
+    const result = validateTrade(items, makeRoster("A"), makeRoster("B"), settings);
     expect(result.valid).toBe(false);
     expect(result.reason).toMatch(/proposing team must include/i);
   });
@@ -128,7 +147,7 @@ describe("validateTradeProposal", () => {
     const items: TradeItemInput[] = [
       { fromTeamId: "A", toTeamId: "B", playerId: "A-b1" },
     ];
-    const result = validateTradeProposal(items, makeRoster("A"), makeRoster("B"), settings);
+    const result = validateTrade(items, makeRoster("A"), makeRoster("B"), settings);
     expect(result.valid).toBe(false);
     expect(result.reason).toMatch(/receiving team must include/i);
   });
@@ -138,7 +157,7 @@ describe("validateTradeProposal", () => {
       { fromTeamId: "A", toTeamId: "B", playerId: "GHOST-PLAYER" },
       { fromTeamId: "B", toTeamId: "A", playerId: "B-b1" },
     ];
-    const result = validateTradeProposal(items, makeRoster("A"), makeRoster("B"), settings);
+    const result = validateTrade(items, makeRoster("A"), makeRoster("B"), settings);
     expect(result.valid).toBe(false);
     expect(result.reason).toBe("STALE");
   });
@@ -154,7 +173,7 @@ describe("validateTradeProposal", () => {
       { fromTeamId: "B", toTeamId: "A", playerId: "B-b1" },
     ];
 
-    const result = validateTradeProposal(items, propRoster, recRoster, settings);
+    const result = validateTrade(items, propRoster, recRoster, settings);
     expect(result.valid).toBe(false);
     expect(result.reason).toMatch(/active scoring period/i);
   });
@@ -180,7 +199,7 @@ describe("validateTradeProposal", () => {
       { fromTeamId: "B", toTeamId: "A", playerId: "B-b7" },
     ];
 
-    const result = validateTradeProposal(items, propRoster, recRoster, settings);
+    const result = validateTrade(items, propRoster, recRoster, settings);
     expect(result.valid).toBe(false);
     expect(result.reason).toMatch(/maximum/i);
   });
@@ -197,14 +216,14 @@ describe("validateTradeProposal", () => {
       { fromTeamId: "B", toTeamId: "A", playerId: "B-b2" },
     ];
 
-    const result = validateTradeProposal(items, propRoster, recRoster, settings);
+    const result = validateTrade(items, propRoster, recRoster, settings);
     expect(result.valid).toBe(true);
   });
 });
 
-// ── validateTradeExecution ───────────────────────────────────────────────────
+// ── validateTrade ───────────────────────────────────────────────────
 
-describe("validateTradeExecution", () => {
+describe("validateTrade", () => {
   it("re-validates and catches a stale deal", () => {
     const propRoster = makeRoster("A");
     // Player A-b1 was dropped — no longer on either roster
@@ -216,7 +235,7 @@ describe("validateTradeExecution", () => {
       { fromTeamId: "B", toTeamId: "A", playerId: "B-b1" },
     ];
 
-    const result = validateTradeExecution(items, modifiedPropRoster, recRoster, settings);
+    const result = validateTrade(items, modifiedPropRoster, recRoster, settings);
     expect(result.valid).toBe(false);
     expect(result.reason).toBe("STALE");
   });
@@ -228,8 +247,37 @@ describe("validateTradeExecution", () => {
       { fromTeamId: "A", toTeamId: "B", playerId: "A-b1" },
       { fromTeamId: "B", toTeamId: "A", playerId: "B-b1" },
     ];
-    const result = validateTradeExecution(items, propRoster, recRoster, settings);
+    const result = validateTrade(items, propRoster, recRoster, settings);
     expect(result.valid).toBe(true);
+  });
+});
+
+// ── trade flow scenarios ─────────────────────────────────────────────────────
+
+describe("trade flow scenarios", () => {
+  it("receiver can accept a PROPOSED trade (default league: reviewHours=24, requireApproval=false)", () => {
+    // PROPOSED → ACCEPTED is allowed for receiver
+    expect(canTransitionTo("PROPOSED", "ACCEPTED", "receiver")).toBe(true);
+  });
+
+  it("PENDING_REVIEW trade cannot be accepted by receiver (requireCommissionerTradeApproval=true flow)", () => {
+    // When proposeTrade auto-flips to PENDING_REVIEW, the receiver cannot accept —
+    // only the commissioner can move it forward.
+    expect(canTransitionTo("PENDING_REVIEW", "ACCEPTED", "receiver")).toBe(false);
+  });
+
+  it("commissioner can approve PENDING_REVIEW (requireCommissionerTradeApproval=true flow)", () => {
+    expect(canTransitionTo("PENDING_REVIEW", "EXECUTED", "commissioner")).toBe(true);
+  });
+
+  it("commissioner can approve ACCEPTED (reviewHours>0, requireApproval=false: time-window flow)", () => {
+    // For timed-window leagues, ACCEPTED → EXECUTED by commissioner is allowed
+    expect(canTransitionTo("ACCEPTED", "EXECUTED", "commissioner")).toBe(true);
+  });
+
+  it("proposer can auto-flip PROPOSED to PENDING_REVIEW (system transition for requireCommissionerTradeApproval)", () => {
+    // This is the auto-transition in proposeTrade() when requireCommissionerTradeApproval=true
+    expect(canTransitionTo("PROPOSED", "PENDING_REVIEW", "proposer")).toBe(true);
   });
 });
 

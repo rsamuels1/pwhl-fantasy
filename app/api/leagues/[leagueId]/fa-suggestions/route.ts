@@ -102,13 +102,14 @@ export async function GET(
       positionMap[p.id] = p.position as Position;
     }
 
-    // Compute games remaining for each PWHL team
+    // Compute games remaining for each PWHL team.
+    // Use startsAt > now — no status filter so the historical fixture works in replay leagues
+    // (all games have status FINAL but startsAt in the future relative to replayCurrentDate).
     const pwhlTeamIds = [...new Set(
       unrosteredPlayers.map((p) => p.team?.id).filter((id): id is string => !!id)
     )];
     const futureGames = await prisma.game.findMany({
       where: {
-        season: league.season,
         startsAt: { gt: new Date(nowMs) },
         OR: [
           { homeTeamId: { in: pwhlTeamIds } },
@@ -150,7 +151,9 @@ export async function GET(
         };
       })
       .filter((s): s is NonNullable<typeof s> => s !== null)
-      .filter((s) => s.gamesThisPeriod > 0 || s.gamesThisPeriod === null)
+      // Include players regardless of games remaining — replay/historical leagues have 0 future
+      // games at week boundaries, but we still want to suggest players by projected FP.
+      // The auto-set lineup and manager can decide whether to start them.
       .sort((a, b) => b.projectedFp - a.projectedFp)
       .slice(0, 10);
 

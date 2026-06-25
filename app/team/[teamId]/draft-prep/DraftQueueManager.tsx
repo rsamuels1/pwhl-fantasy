@@ -112,26 +112,26 @@ export default function DraftQueueManager({
   const thStyle: React.CSSProperties = {
     padding: "8px 10px",
     textAlign: "left",
-    color: "#64748b",
+    color: "var(--faint)",
     fontWeight: 700,
     fontSize: 11,
     textTransform: "uppercase",
     letterSpacing: "0.04em",
-    borderBottom: "1px solid rgba(255,255,255,0.06)",
+    borderBottom: "1px solid var(--border)",
     cursor: "pointer",
     whiteSpace: "nowrap",
     userSelect: "none",
   };
   const tdStyle: React.CSSProperties = {
     padding: "7px 10px",
-    borderBottom: "1px solid rgba(255,255,255,0.04)",
+    borderBottom: "1px solid var(--border)",
     fontSize: 13,
     whiteSpace: "nowrap",
   };
 
   function SortHeader({ label, col }: { label: string; col: SortKey }) {
     return (
-      <th style={{ ...thStyle, color: sortKey === col ? "#a5b4fc" : "#64748b" }} onClick={() => handleSort(col)}>
+      <th style={{ ...thStyle, color: sortKey === col ? "var(--accent-strong)" : "var(--faint)" }} onClick={() => handleSort(col)}>
         {label}{sortKey === col ? (sortAsc ? " ↑" : " ↓") : ""}
       </th>
     );
@@ -149,11 +149,11 @@ export default function DraftQueueManager({
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             style={{
-              background: "#1e2535",
-              border: "1px solid rgba(255,255,255,0.1)",
+              background: "var(--card)",
+              border: "1px solid var(--border)",
               borderRadius: 6,
               padding: "6px 12px",
-              color: "#e2e8f0",
+              color: "var(--text)",
               fontSize: 13,
               outline: "none",
               flex: 1,
@@ -166,10 +166,10 @@ export default function DraftQueueManager({
               onClick={() => setPosFilter(pos)}
               style={{
                 padding: "5px 10px",
-                background: posFilter === pos ? "rgba(99,102,241,0.2)" : "transparent",
-                border: `1px solid ${posFilter === pos ? "rgba(99,102,241,0.5)" : "rgba(255,255,255,0.1)"}`,
+                background: posFilter === pos ? "rgba(143,193,232,0.2)" : "transparent",
+                border: `1px solid ${posFilter === pos ? "rgba(143,193,232,0.5)" : "var(--border)"}`,
                 borderRadius: 5,
-                color: posFilter === pos ? "#a5b4fc" : "#64748b",
+                color: posFilter === pos ? "var(--accent-strong)" : "var(--faint)",
                 fontSize: 12,
                 cursor: "pointer",
               }}
@@ -179,10 +179,10 @@ export default function DraftQueueManager({
           ))}
         </div>
 
-        <div style={{ background: "#13192b", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 8, overflow: "auto" }}>
+        <div style={{ background: "var(--bg)", border: "1px solid var(--border)", borderRadius: 8, overflow: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
-              <tr style={{ background: "#0d1220" }}>
+              <tr style={{ background: "var(--card)" }}>
                 <th style={thStyle}>Player</th>
                 <th style={thStyle}>Pos</th>
                 <th style={thStyle}>Team</th>
@@ -203,7 +203,7 @@ export default function DraftQueueManager({
             <tbody>
               {filtered.length === 0 && (
                 <tr>
-                  <td colSpan={15} style={{ ...tdStyle, color: "#475569", textAlign: "center", padding: "24px" }}>
+                  <td colSpan={15} style={{ ...tdStyle, color: "var(--faint)", textAlign: "center", padding: "24px" }}>
                     No players match your filter.
                   </td>
                 </tr>
@@ -215,39 +215,39 @@ export default function DraftQueueManager({
                   <tr
                     key={p.id}
                     style={{
-                      background: inQueue ? "rgba(99,102,241,0.07)" : "transparent",
+                      background: inQueue ? "rgba(143,193,232,0.07)" : "transparent",
                       transition: "background 0.1s",
                     }}
                   >
-                    <td style={{ ...tdStyle, color: "#e2e8f0", fontWeight: 500 }}>{p.name}</td>
-                    <td style={{ ...tdStyle, color: "#94a3b8" }}>{p.position === "FORWARD" ? "F" : p.position === "DEFENSE" ? "D" : "G"}</td>
-                    <td style={{ ...tdStyle, color: "#64748b" }}>{p.team ?? "—"}</td>
-                    <td style={{ ...tdStyle, color: "#94a3b8" }}>{p.gp}</td>
+                    <td style={{ ...tdStyle, color: "var(--text)", fontWeight: 500 }}>{p.name}</td>
+                    <td style={{ ...tdStyle, color: "var(--dim)" }}>{p.position === "FORWARD" ? "F" : p.position === "DEFENSE" ? "D" : "G"}</td>
+                    <td style={{ ...tdStyle, color: "var(--faint)" }}>{p.team ?? "—"}</td>
+                    <td style={{ ...tdStyle, color: "var(--dim)" }}>{p.gp}</td>
                     {isGoalie ? (
                       <>
-                        <td style={{ ...tdStyle, color: "#475569" }}>—</td>
-                        <td style={{ ...tdStyle, color: "#475569" }}>—</td>
-                        <td style={{ ...tdStyle, color: "#475569" }}>—</td>
-                        <td style={{ ...tdStyle, color: "#475569" }}>—</td>
-                        <td style={{ ...tdStyle, color: "#475569" }}>—</td>
-                        <td style={{ ...tdStyle, color: "#475569" }}>—</td>
-                        <td style={{ ...tdStyle, color: "#475569" }}>—</td>
-                        <td style={{ ...tdStyle, color: "#94a3b8" }}>{p.wins}</td>
-                        <td style={{ ...tdStyle, color: "#94a3b8" }}>{p.savePct != null ? (p.savePct * 100).toFixed(1) + "%" : "—"}</td>
-                        <td style={{ ...tdStyle, color: "#94a3b8" }}>{p.shutouts}</td>
+                        <td style={{ ...tdStyle, color: "var(--faint)" }}>—</td>
+                        <td style={{ ...tdStyle, color: "var(--faint)" }}>—</td>
+                        <td style={{ ...tdStyle, color: "var(--faint)" }}>—</td>
+                        <td style={{ ...tdStyle, color: "var(--faint)" }}>—</td>
+                        <td style={{ ...tdStyle, color: "var(--faint)" }}>—</td>
+                        <td style={{ ...tdStyle, color: "var(--faint)" }}>—</td>
+                        <td style={{ ...tdStyle, color: "var(--faint)" }}>—</td>
+                        <td style={{ ...tdStyle, color: "var(--dim)" }}>{p.wins}</td>
+                        <td style={{ ...tdStyle, color: "var(--dim)" }}>{p.savePct != null ? (p.savePct * 100).toFixed(1) + "%" : "—"}</td>
+                        <td style={{ ...tdStyle, color: "var(--dim)" }}>{p.shutouts}</td>
                       </>
                     ) : (
                       <>
-                        <td style={{ ...tdStyle, color: "#94a3b8" }}>{p.goals}</td>
-                        <td style={{ ...tdStyle, color: "#94a3b8" }}>{p.assists}</td>
-                        <td style={{ ...tdStyle, color: "#e2e8f0", fontWeight: 600 }}>{p.points}</td>
-                        <td style={{ ...tdStyle, color: "#94a3b8" }}>{p.ppp}</td>
-                        <td style={{ ...tdStyle, color: "#94a3b8" }}>{p.shots}</td>
-                        <td style={{ ...tdStyle, color: "#94a3b8" }}>{p.hits}</td>
-                        <td style={{ ...tdStyle, color: "#94a3b8" }}>{p.blocks}</td>
-                        <td style={{ ...tdStyle, color: "#475569" }}>—</td>
-                        <td style={{ ...tdStyle, color: "#475569" }}>—</td>
-                        <td style={{ ...tdStyle, color: "#475569" }}>—</td>
+                        <td style={{ ...tdStyle, color: "var(--dim)" }}>{p.goals}</td>
+                        <td style={{ ...tdStyle, color: "var(--dim)" }}>{p.assists}</td>
+                        <td style={{ ...tdStyle, color: "var(--text)", fontWeight: 600 }}>{p.points}</td>
+                        <td style={{ ...tdStyle, color: "var(--dim)" }}>{p.ppp}</td>
+                        <td style={{ ...tdStyle, color: "var(--dim)" }}>{p.shots}</td>
+                        <td style={{ ...tdStyle, color: "var(--dim)" }}>{p.hits}</td>
+                        <td style={{ ...tdStyle, color: "var(--dim)" }}>{p.blocks}</td>
+                        <td style={{ ...tdStyle, color: "var(--faint)" }}>—</td>
+                        <td style={{ ...tdStyle, color: "var(--faint)" }}>—</td>
+                        <td style={{ ...tdStyle, color: "var(--faint)" }}>—</td>
                       </>
                     )}
                     <td style={tdStyle}>
@@ -255,10 +255,10 @@ export default function DraftQueueManager({
                         onClick={() => toggleQueue(p.id)}
                         title={inQueue ? "Remove from queue" : "Add to queue"}
                         style={{
-                          background: inQueue ? "rgba(99,102,241,0.2)" : "transparent",
-                          border: `1px solid ${inQueue ? "rgba(99,102,241,0.5)" : "rgba(255,255,255,0.12)"}`,
+                          background: inQueue ? "rgba(143,193,232,0.2)" : "transparent",
+                          border: `1px solid ${inQueue ? "rgba(143,193,232,0.5)" : "rgba(255,255,255,0.12)"}`,
                           borderRadius: 4,
-                          color: inQueue ? "#a5b4fc" : "#64748b",
+                          color: inQueue ? "var(--accent-strong)" : "var(--faint)",
                           padding: "3px 8px",
                           fontSize: 14,
                           cursor: "pointer",
@@ -276,7 +276,7 @@ export default function DraftQueueManager({
         </div>
 
         {!statSeason && (
-          <div style={{ marginTop: 12, fontSize: 12, color: "#64748b" }}>
+          <div style={{ marginTop: 12, fontSize: 12, color: "var(--faint)" }}>
             No stat data available — stats will appear after prior-season data is loaded.
           </div>
         )}
@@ -285,24 +285,24 @@ export default function DraftQueueManager({
       {/* Right: queue panel */}
       <div>
         <div style={{
-          background: "#13192b",
-          border: "1px solid rgba(255,255,255,0.06)",
+          background: "var(--bg)",
+          border: "1px solid var(--border)",
           borderRadius: 8,
           padding: 16,
         }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: "#e2e8f0" }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text)" }}>
               My Queue
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              {saving && <span style={{ fontSize: 11, color: "#64748b" }}>Saving…</span>}
+              {saving && <span style={{ fontSize: 11, color: "var(--faint)" }}>Saving…</span>}
               {savedOk && !saving && <span style={{ fontSize: 11, color: "#34d399" }}>Saved</span>}
               {saveError && <span style={{ fontSize: 11, color: "#f87171" }}>{saveError}</span>}
             </div>
           </div>
 
           {queue.length === 0 ? (
-            <div style={{ color: "#475569", fontSize: 13, textAlign: "center", padding: "20px 0" }}>
+            <div style={{ color: "var(--faint)", fontSize: 13, textAlign: "center", padding: "20px 0" }}>
               No players queued yet.
               <br />
               <span style={{ fontSize: 12 }}>Star a player on the left to add them.</span>
@@ -319,23 +319,23 @@ export default function DraftQueueManager({
                       display: "flex",
                       alignItems: "center",
                       gap: 6,
-                      background: "rgba(255,255,255,0.03)",
+                      background: "var(--bg-raised)",
                       borderRadius: 5,
                       padding: "6px 8px",
                     }}
                   >
-                    <span style={{ fontSize: 11, color: "#475569", width: 18, textAlign: "center", flexShrink: 0 }}>{idx + 1}</span>
-                    <span style={{ fontSize: 12, color: "#e2e8f0", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    <span style={{ fontSize: 11, color: "var(--faint)", width: 18, textAlign: "center", flexShrink: 0 }}>{idx + 1}</span>
+                    <span style={{ fontSize: 12, color: "var(--text)", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                       {p.name}
                     </span>
-                    <span style={{ fontSize: 10, color: "#64748b", flexShrink: 0 }}>
+                    <span style={{ fontSize: 10, color: "var(--faint)", flexShrink: 0 }}>
                       {p.position === "FORWARD" ? "F" : p.position === "DEFENSE" ? "D" : "G"}
                     </span>
                     <div style={{ display: "flex", gap: 2, flexShrink: 0 }}>
                       <button
                         onClick={() => moveUp(idx)}
                         disabled={idx === 0}
-                        style={{ background: "transparent", border: "none", color: idx === 0 ? "#1e293b" : "#64748b", cursor: idx === 0 ? "default" : "pointer", padding: "1px 4px", fontSize: 12, lineHeight: 1 }}
+                        style={{ background: "transparent", border: "none", color: idx === 0 ? "var(--surface)" : "var(--faint)", cursor: idx === 0 ? "default" : "pointer", padding: "1px 4px", fontSize: 12, lineHeight: 1 }}
                         title="Move up"
                       >
                         ↑
@@ -343,14 +343,14 @@ export default function DraftQueueManager({
                       <button
                         onClick={() => moveDown(idx)}
                         disabled={idx === queue.length - 1}
-                        style={{ background: "transparent", border: "none", color: idx === queue.length - 1 ? "#1e293b" : "#64748b", cursor: idx === queue.length - 1 ? "default" : "pointer", padding: "1px 4px", fontSize: 12, lineHeight: 1 }}
+                        style={{ background: "transparent", border: "none", color: idx === queue.length - 1 ? "var(--surface)" : "var(--faint)", cursor: idx === queue.length - 1 ? "default" : "pointer", padding: "1px 4px", fontSize: 12, lineHeight: 1 }}
                         title="Move down"
                       >
                         ↓
                       </button>
                       <button
                         onClick={() => removeFromQueue(id)}
-                        style={{ background: "transparent", border: "none", color: "#475569", cursor: "pointer", padding: "1px 4px", fontSize: 12, lineHeight: 1 }}
+                        style={{ background: "transparent", border: "none", color: "var(--faint)", cursor: "pointer", padding: "1px 4px", fontSize: 12, lineHeight: 1 }}
                         title="Remove"
                       >
                         ×
@@ -363,7 +363,7 @@ export default function DraftQueueManager({
           )}
         </div>
 
-        <div style={{ marginTop: 10, fontSize: 11, color: "#475569", lineHeight: 1.4 }}>
+        <div style={{ marginTop: 10, fontSize: 11, color: "var(--faint)", lineHeight: 1.4 }}>
           Your queue is used for auto-picks during the live draft. Players are picked in order when it is your turn and you have not manually picked.
         </div>
       </div>

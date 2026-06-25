@@ -18,13 +18,13 @@ type Submission = {
 
 const TYPE_COLORS: Record<string, string> = {
   BUG: "#ef4444",
-  SUGGESTION: "#6366f1",
+  SUGGESTION: "var(--accent)",
   OTHER: "#6b7280",
 };
 
 const STATUS_STYLES: Record<FeedbackStatus, { color: string; label: string; strikethrough?: boolean }> = {
-  OPEN: { color: "#6b7280", label: "OPEN" },
-  IN_BACKLOG: { color: "#6366f1", label: "IN BACKLOG" },
+  OPEN: { color: "var(--faint)", label: "OPEN" },
+  IN_BACKLOG: { color: "var(--accent)", label: "IN BACKLOG" },
   RESOLVED: { color: "#22c55e", label: "RESOLVED" },
   DISMISSED: { color: "#374151", label: "DISMISSED", strikethrough: true },
 };
@@ -167,9 +167,9 @@ export default function FeedbackTable({ submissions: initial }: { submissions: S
     padding: "0.35rem 0.75rem",
     fontSize: "0.78rem",
     fontFamily: "monospace",
-    background: active ? "#1e1e2e" : "transparent",
-    color: active ? "#a5b4fc" : "#666",
-    border: active ? "1px solid #6366f133" : "1px solid transparent",
+    background: active ? "var(--card)" : "transparent",
+    color: active ? "var(--accent-strong)" : "#666",
+    border: active ? "1px solid rgba(143,193,232,0.2)" : "1px solid transparent",
     borderRadius: 4,
     cursor: "pointer",
     fontWeight: active ? 700 : 400,
@@ -222,14 +222,14 @@ export default function FeedbackTable({ submissions: initial }: { submissions: S
                   <td style={{ padding: "0.5rem 0.75rem" }}>
                     {chip(statusStyle.color, statusStyle.label, statusStyle.strikethrough)}
                   </td>
-                  <td style={{ padding: "0.5rem 0.75rem", color: "#9ca3af", fontFamily: "monospace", fontSize: "0.78rem" }}>
+                  <td style={{ padding: "0.5rem 0.75rem", color: "var(--dim)", fontFamily: "monospace", fontSize: "0.78rem" }}>
                     {s.user.email}
                   </td>
                   <td style={{ padding: "0.5rem 0.75rem", fontFamily: "monospace", fontSize: "0.72rem" }}>
                     {s.leagueId ? (
                       <a
                         href={`/founder/leagues/${s.leagueId}`}
-                        style={{ color: "#6366f1", textDecoration: "none" }}
+                        style={{ color: "var(--accent)", textDecoration: "none" }}
                       >
                         {s.leagueId}
                       </a>
@@ -245,7 +245,7 @@ export default function FeedbackTable({ submissions: initial }: { submissions: S
                       style={{
                         background: "none",
                         border: "none",
-                        color: "#6366f1",
+                        color: "var(--accent)",
                         cursor: "pointer",
                         fontSize: "0.75rem",
                         padding: 0,
@@ -319,13 +319,13 @@ export default function FeedbackTable({ submissions: initial }: { submissions: S
                 {/* Metadata */}
                 <div style={{ fontSize: "0.78rem", color: "#666", display: "grid", gridTemplateColumns: "max-content 1fr", gap: "0.3rem 1rem", marginBottom: "1rem" }}>
                   <span style={{ color: "#444" }}>User</span>
-                  <span style={{ color: "#9ca3af" }}>{openSub.user.email}</span>
+                  <span style={{ color: "var(--dim)" }}>{openSub.user.email}</span>
                   <span style={{ color: "#444" }}>Submitted</span>
                   <span>{formatDate(openSub.createdAt)}</span>
                   {openSub.leagueId && (
                     <>
                       <span style={{ color: "#444" }}>League</span>
-                      <a href={`/founder/leagues/${openSub.leagueId}`} style={{ color: "#6366f1" }}>
+                      <a href={`/founder/leagues/${openSub.leagueId}`} style={{ color: "var(--accent)" }}>
                         {openSub.leagueId}
                       </a>
                     </>
@@ -333,7 +333,7 @@ export default function FeedbackTable({ submissions: initial }: { submissions: S
                   {openSub.url && (
                     <>
                       <span style={{ color: "#444" }}>URL</span>
-                      <span style={{ color: "#9ca3af", wordBreak: "break-all" }}>{openSub.url}</span>
+                      <span style={{ color: "var(--dim)", wordBreak: "break-all" }}>{openSub.url}</span>
                     </>
                   )}
                 </div>
@@ -367,9 +367,9 @@ export default function FeedbackTable({ submissions: initial }: { submissions: S
                   <button
                     onClick={() => setPromoting(true)}
                     style={{
-                      background: "#6366f122",
-                      color: "#a5b4fc",
-                      border: "1px solid #6366f144",
+                      background: "rgba(143,193,232,0.13)",
+                      color: "var(--accent-strong)",
+                      border: "1px solid rgba(143,193,232,0.27)",
                       borderRadius: 4,
                       padding: "0.4rem 0.9rem",
                       fontFamily: "monospace",
@@ -390,7 +390,7 @@ export default function FeedbackTable({ submissions: initial }: { submissions: S
             ) : (
               /* Promote form */
               <form onSubmit={handlePromote}>
-                <div style={{ fontSize: "0.85rem", color: "#a5b4fc", fontWeight: 700, marginBottom: "1rem" }}>
+                <div style={{ fontSize: "0.85rem", color: "var(--accent-strong)", fontWeight: 700, marginBottom: "1rem" }}>
                   → Promote to Backlog
                 </div>
 
@@ -509,9 +509,9 @@ export default function FeedbackTable({ submissions: initial }: { submissions: S
                     type="submit"
                     disabled={promoteLoading}
                     style={{
-                      background: promoteLoading ? "#1e1e2e" : "#6366f1",
+                      background: promoteLoading ? "var(--card)" : "var(--accent)",
                       border: "none",
-                      color: "#fff",
+                      color: "var(--accent-ink)",
                       borderRadius: 4,
                       padding: "0.4rem 0.9rem",
                       fontFamily: "monospace",

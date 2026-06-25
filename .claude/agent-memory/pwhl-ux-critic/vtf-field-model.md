@@ -13,3 +13,9 @@ Why it confuses new fans:
 - The home/login marketing PROMISES head-to-head, the product delivers field-ranking most weeks, then playoffs deliver true head-to-head. Three different mental models in one season with no transition explainer.
 
 How to apply: any VTF surface needs a one-line "you're not playing one team — you're racing everyone's score this week" explainer on first exposure. Flag any copy that says "head-to-head" for the regular season as actively misleading. The playoff transition from field to single-opponent also needs a heads-up moment.
+
+## Recurring DISPLAY bug: VTF rendered as fake 1v1 pair cards
+The DB stores VTF weeks as pair `Matchup` rows (every team paired vs every other to compute VP). These pairs are storage substrate, NOT real games. Several pages have rendered them as literal "Team A vs Team B · score" head-to-head cards (grid `1fr auto 1fr` with a "VS" separator) — which miseducates new commissioners/managers about their own league's scoring model.
+- Correct pattern (already shipped): `ScoreboardPageContent` renders a ranked list `rank · team · FP · W–L–T` desc. The Scoreboard rename (commit 7d08732) fixed an instance of this.
+- Found again on the commissioner league overview (`app/league/[leagueId]/page.tsx`) "Week N matchups" section (~lines 577–623 as of Sprint 22) — recommended replacing pair cards with the ranked-list pattern. KEEP pair cards for the playoff mini-bracket (lines ~380–446) — playoffs ARE genuinely 1v1.
+- On sight: any regular-season weekly section using a two-team grid + "VS"/"vs" label is this bug. Rule of thumb: pair cards are only legitimate when `isPlayoff === true`.

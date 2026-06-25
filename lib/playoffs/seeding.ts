@@ -160,55 +160,92 @@ export function getHeadToHeadRecord(
   return h2h;
 }
 
-// Find a team's most-played opponent (their "rival").
-// Rival = opponent with most completed matchups; tie-break by W/L record.
+export interface RivalInfo {
+  teamId: string;
+  teamName: string;
+  gamesPlayed: number;
+  avgMargin: number;
+  record: { wins: number; losses: number; ties: number };
+  lastMatchup: { myScore: number; oppScore: number; won: boolean } | null;
+}
+
+// Find a team's closest-contested opponent (their "rival") in VTF leagues.
+// Rival = opponent with smallest average points-apart across scored regular-season matchups.
+// Requires ≥2 scored matchups against the opponent before declaring a rival.
+// Tie-break: most balanced W/L record (closest to .500).
 export function getRival(
   teamId: string,
   teams: Array<{ id: string; name: string }>,
   matchups: Matchup[]
-): { teamId: string; teamName: string; matchupCount: number; record: { wins: number; losses: number; ties: number } } | null {
-  const opponentCounts = new Map<string, number>();
+): RivalInfo | null {
   const regularSeasonMatchups = matchups.filter(
     (m) => !m.isPlayoff && m.homeScore !== null && m.awayScore !== null
   );
 
-  regularSeasonMatchups.forEach((matchup) => {
-    if (matchup.homeTeamId === teamId) {
-      const opponent = matchup.awayTeamId;
-      opponentCounts.set(opponent, (opponentCounts.get(opponent) ?? 0) + 1);
-    } else if (matchup.awayTeamId === teamId) {
-      const opponent = matchup.homeTeamId;
-      opponentCounts.set(opponent, (opponentCounts.get(opponent) ?? 0) + 1);
-    }
+  const opponentIds = new Set<string>();
+  regularSeasonMatchups.forEach((m) => {
+    if (m.homeTeamId === teamId) opponentIds.add(m.awayTeamId);
+    else if (m.awayTeamId === teamId) opponentIds.add(m.homeTeamId);
   });
 
-  if (opponentCounts.size === 0) return null;
+  if (opponentIds.size === 0) return null;
 
-  // Find opponent with most matchups; tie-break by best W/L record
   let rival: string | null = null;
-  let maxCount = 0;
+  let bestAvgMargin = Infinity;
+  let bestImbalance = Infinity;
   let bestRecord = { wins: 0, losses: 0, ties: 0 };
 
-  opponentCounts.forEach((count, opponentId) => {
-    const record = getHeadToHeadRecord(teamId, opponentId, regularSeasonMatchups);
-    if (count > maxCount || (count === maxCount && record.wins > bestRecord.wins)) {
+  opponentIds.forEach((opponentId) => {
+    const h2h = getHeadToHeadRecord(teamId, opponentId, regularSeasonMatchups);
+    const gamesPlayed = h2h.wins + h2h.losses + h2h.ties;
+    if (gamesPlayed < 2) return;
+
+    const avgMargin = Math.abs(h2h.pointsFor - h2h.pointsAgainst) / gamesPlayed;
+    const imbalance = Math.abs(h2h.wins - h2h.losses);
+
+    if (
+      avgMargin < bestAvgMargin ||
+      (avgMargin === bestAvgMargin && imbalance < bestImbalance)
+    ) {
       rival = opponentId;
-      maxCount = count;
-      bestRecord = record;
+      bestAvgMargin = avgMargin;
+      bestImbalance = imbalance;
+      bestRecord = { wins: h2h.wins, losses: h2h.losses, ties: h2h.ties };
     }
   });
 
   if (!rival) return null;
 
   const rivalTeam = teams.find((t) => t.id === rival);
-  return rivalTeam
-    ? {
-        teamId: rival,
-        teamName: rivalTeam.name,
-        matchupCount: maxCount,
-        record: bestRecord,
-      }
-    : null;
+  if (!rivalTeam) return null;
+
+  const gamesPlayed = bestRecord.wins + bestRecord.losses + bestRecord.ties;
+
+  // Most recent scored matchup against this rival
+  const rivalMatchups = regularSeasonMatchups
+    .filter(
+      (m) =>
+        (m.homeTeamId === teamId && m.awayTeamId === rival) ||
+        (m.awayTeamId === teamId && m.homeTeamId === rival)
+    )
+    .sort((a, b) => new Date(b.startsAt).getTime() - new Date(a.startsAt).getTime());
+
+  let lastMatchup: RivalInfo["lastMatchup"] = null;
+  if (rivalMatchups.length > 0) {
+    const last = rivalMatchups[0];
+    const myScore = last.homeTeamId === teamId ? last.homeScore! : last.awayScore!;
+    const oppScore = last.homeTeamId === teamId ? last.awayScore! : last.homeScore!;
+    lastMatchup = { myScore, oppScore, won: myScore > oppScore };
+  }
+
+  return {
+    teamId: rival,
+    teamName: rivalTeam.name,
+    gamesPlayed,
+    avgMargin: bestAvgMargin,
+    record: bestRecord,
+    lastMatchup,
+  };
 }
 
 /**
@@ -218,8 +255,9 @@ export function getRival(
  */
 export interface RaceInfo {
   status: "clinched" | "eliminated" | "in" | "bubble" | "out";
-  gamesBack: number | null;  // points behind playoff line (teams out only)
-  cushion: number | null;    // points ahead of bubble (teams in only)
+  gamesBack: number | null;    // points behind playoff line (teams out only)
+  cushion: number | null;      // points ahead of bubble (teams in only)
+  magicNumber: number | null;  // VP still needed to clinch (null when clinched/eliminated/too early)
 }
 
 export function computeRace(
@@ -231,7 +269,7 @@ export function computeRace(
   const map = new Map<string, RaceInfo>();
   if (standings.length === 0 || cutoff <= 0 || cutoff >= standings.length) {
     standings.forEach((s) =>
-      map.set(s.fantasyTeamId, { status: "in", gamesBack: null, cushion: null })
+      map.set(s.fantasyTeamId, { status: "in", gamesBack: null, cushion: null, magicNumber: null })
     );
     return map;
   }
@@ -251,6 +289,9 @@ export function computeRace(
   const lineTeam = standings[cutoff - 1];   // last team in
   const bubbleTeam = standings[cutoff];     // first team out
 
+  const bubbleRemaining = remainingFor(bubbleTeam.fantasyTeamId);
+  const bubbleCeiling = bubbleTeam.points + bubbleRemaining * maxPointsPerWeek;
+
   standings.forEach((s, i) => {
     const rank = i + 1;
     const inSpot = rank <= cutoff;
@@ -259,16 +300,26 @@ export function computeRace(
 
     let status: RaceInfo["status"];
     if (inSpot) {
-      const bubbleCeiling = bubbleTeam.points + remainingFor(bubbleTeam.fantasyTeamId) * maxPointsPerWeek;
       status = bubbleCeiling < s.points ? "clinched" : rank === cutoff ? "bubble" : "in";
     } else {
       status = maxPoints < lineTeam.points ? "eliminated" : "out";
+    }
+
+    // Magic number: VP still needed to put the bubble team's ceiling below our total.
+    // Only meaningful after half the season; null once clinched or eliminated.
+    let magicNumber: number | null = null;
+    if (status === "in" || status === "bubble") {
+      const playedWeeks = totalWeeks - remaining;
+      if (totalWeeks > 0 && playedWeeks >= totalWeeks / 2) {
+        magicNumber = Math.ceil(bubbleCeiling - s.points + 0.5);
+      }
     }
 
     map.set(s.fantasyTeamId, {
       status,
       gamesBack: inSpot ? null : Math.round((lineTeam.points - s.points) * 10) / 10,
       cushion: inSpot ? Math.round((s.points - bubbleTeam.points) * 10) / 10 : null,
+      magicNumber,
     });
   });
 

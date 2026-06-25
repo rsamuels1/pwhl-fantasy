@@ -14,27 +14,27 @@ export default function BetaWelcomeStep({ onContinue }: Props) {
         <span style={{
           display: "inline-flex", alignItems: "center", gap: 8,
           fontSize: 11, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase",
-          color: "#c9b6ff", background: "rgba(124,58,237,0.14)",
-          border: "1px solid rgba(124,58,237,0.30)", borderRadius: 30, padding: "7px 16px",
+          color: "var(--accent-strong)", background: "rgba(143,193,232,0.14)",
+          border: "1px solid rgba(143,193,232,0.30)", borderRadius: 30, padding: "7px 16px",
         }}>
-          <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#a78bfa", animation: "pulse 2s infinite", flexShrink: 0 }} />
+          <span style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--accent)", animation: "pulse 2s infinite", flexShrink: 0 }} />
           Beta · Replay Season
         </span>
       </div>
 
       {/* Heading */}
       <div style={{ textAlign: "center" }}>
-        <h1 style={{ margin: "0 0 12px", fontSize: 28, fontWeight: 800, color: "#f3f5fb" }}>
+        <h1 style={{ margin: "0 0 12px", fontSize: 28, fontWeight: 800, color: "var(--text)" }}>
           You're in. Welcome, Founding GM.
         </h1>
       </div>
 
       {/* Intro paragraph */}
       <p style={{
-        fontSize: 15, lineHeight: 1.6, color: "#9aa3bd", margin: 0, textAlign: "center",
+        fontSize: 15, lineHeight: 1.6, color: "var(--dim)", margin: 0, textAlign: "center",
         maxWidth: 500, marginInline: "auto",
       }}>
-        You're shaping PWHL GM before launch. Your feedback goes straight into the product. This league uses four real weeks from 2025-26 with actual player stats—compressed so you experience a full season in weeks, not months.
+        You're shaping PWHL GM before launch. Your feedback goes straight into the product. This league uses real 2025-26 player stats — two game weeks of regular season, then a two-week playoff. A full season arc in about a month.
       </p>
 
       {/* Three info cards */}
@@ -46,7 +46,7 @@ export default function BetaWelcomeStep({ onContinue }: Props) {
           <div style={{ fontSize: 20, marginBottom: 8 }}>⏪</div>
           <div style={betaCardTitle}>Real PWHL stats. Condensed timeline.</div>
           <div style={betaCardBody}>
-            Four weeks of 2025-26 data, full snake draft, weekly head-to-head VP scoring.
+            Four weeks of 2025-26 data, full snake draft, vs-the-field (VTF) VP scoring.
           </div>
         </div>
 
@@ -67,8 +67,13 @@ export default function BetaWelcomeStep({ onContinue }: Props) {
         </div>
       </div>
 
+      {/* Step count hint */}
+      <p style={{ textAlign: "center", fontSize: 12, color: "var(--faint)", margin: 0 }}>
+        4 quick steps to your league — takes about 2 minutes.
+      </p>
+
       {/* CTA and secondary link */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 12, alignItems: "center", marginTop: 12 }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 12, alignItems: "center", marginTop: 4 }}>
         <button
           onClick={onContinue}
           className="button-primary"
@@ -79,11 +84,11 @@ export default function BetaWelcomeStep({ onContinue }: Props) {
         <Link
           href="/league-rules"
           style={{
-            fontSize: 13, color: "#7c6af7", textDecoration: "none", fontWeight: 600,
+            fontSize: 13, color: "var(--accent)", textDecoration: "none", fontWeight: 600,
             transition: "color 0.15s",
           }}
-          onMouseEnter={(e) => (e.currentTarget.style.color = "#a78bfa")}
-          onMouseLeave={(e) => (e.currentTarget.style.color = "#7c6af7")}
+          onMouseEnter={(e) => (e.currentTarget.style.color = "var(--accent-strong)")}
+          onMouseLeave={(e) => (e.currentTarget.style.color = "var(--accent)")}
         >
           What's a replay league?
         </Link>
@@ -100,8 +105,8 @@ export default function BetaWelcomeStep({ onContinue }: Props) {
 }
 
 const betaCard: React.CSSProperties = {
-  background: "rgba(255,255,255,0.03)",
-  border: "1px solid rgba(148,163,184,0.1)",
+  background: "var(--bg-raised)",
+  border: "1px solid var(--border)",
   borderRadius: 14,
   padding: "16px 14px",
   display: "flex",
@@ -110,9 +115,9 @@ const betaCard: React.CSSProperties = {
 };
 
 const betaCardTitle: React.CSSProperties = {
-  fontSize: 13, fontWeight: 700, color: "#e2e8f0", lineHeight: 1.3,
+  fontSize: 13, fontWeight: 700, color: "var(--text)", lineHeight: 1.3,
 };
 
 const betaCardBody: React.CSSProperties = {
-  fontSize: 12, color: "#94a3b8", lineHeight: 1.5,
+  fontSize: 12, color: "var(--dim)", lineHeight: 1.5,
 };

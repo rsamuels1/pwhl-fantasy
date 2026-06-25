@@ -95,6 +95,9 @@ model User {
   email                   String                   @unique
   displayName             String
   passwordHash            String?
+  sessionToken            String?   @unique
+  magicLinkToken          String?   @unique
+  magicLinkExpiresAt      DateTime?
   onboardingCompletedAt   DateTime?
   createdAt               DateTime                 @default(now())
   updatedAt               DateTime                 @updatedAt
@@ -147,6 +150,8 @@ model FantasyLeague {
   waiverClaims            WaiverClaim[]
   waiverPriority          WaiverPriority[]
   trades                  Trade[]
+  trophies                Trophy[]
+  morningSkateEditions    MorningSkateEdition[]
 
   @@index([status])
 }
@@ -158,6 +163,7 @@ model FantasyTeam {
   ownerId      String
   draftOrder   Int?
   isBot        Boolean       @default(false)
+  accentColor  String?
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
   draftPicks      DraftPick[]
@@ -168,6 +174,7 @@ model FantasyTeam {
   roster          RosterEntry[]
   waiverClaims    WaiverClaim[]
   waiverPriority  WaiverPriority[]
+  trophies        Trophy[]
 
   @@unique([leagueId, ownerId])
   @@index([leagueId])
@@ -346,6 +353,8 @@ enum NotificationType {
   TRADE_EXECUTED
   TRADE_VETOED
   TRADE_REVIEW_PENDING
+  CHAMPIONSHIP_WON
+  SEASON_RENEWED
 }
 
 model FeedbackSubmission {
@@ -469,12 +478,36 @@ model WaiverPriority {
   @@unique([leagueId, priority])
 }
 
+enum TrophyType {
+  CHAMPION
+  BEST_RECORD
+  TOP_SCORER
+  MOST_IMPROVED
+  MOST_TRANSACTIONS
+}
+
+model Trophy {
+  id        String        @id @default(cuid())
+  leagueId  String
+  teamId    String
+  season    String
+  type      TrophyType
+  data      Json          @default("{}")
+  awardedAt DateTime      @default(now())
+  league    FantasyLeague @relation(fields: [leagueId], references: [id])
+  team      FantasyTeam   @relation(fields: [teamId], references: [id])
+
+  @@index([teamId])
+  @@index([leagueId])
+}
+
 enum TradeStatus {
   PROPOSED
   COUNTERED
   ACCEPTED
   PENDING_REVIEW
   EXECUTED
+  VETOED
   REVERSED
   REJECTED
   CANCELLED
@@ -508,6 +541,17 @@ model TradeItem {
   trade      Trade  @relation(fields: [tradeId], references: [id])
 
   @@index([tradeId])
+}
+
+model MorningSkateEdition {
+  id        String        @id @default(cuid())
+  leagueId  String
+  periodId  String
+  data      Json
+  createdAt DateTime      @default(now())
+  league    FantasyLeague @relation(fields: [leagueId], references: [id])
+
+  @@unique([leagueId, periodId])
 }
 
 model BetaSignup {

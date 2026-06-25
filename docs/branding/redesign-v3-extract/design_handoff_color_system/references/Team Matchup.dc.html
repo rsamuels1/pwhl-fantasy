@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=Saira+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+  body { background:#0f1117; }
+  .stat { font-family:'Saira Condensed',sans-serif; font-variant-numeric:tabular-nums; }
+  .tnum { font-variant-numeric:tabular-nums; }
+</style>
+</helmet>
+
+<div style="min-height:100vh; background:radial-gradient(1100px 500px at 50% -8%, #16202b, #0f1117 60%); color:#f4f6fa; font-family:'Archivo',-apple-system,sans-serif; padding:0 0 64px;">
+
+  <!-- Team nav -->
+  <div style="position:sticky; top:0; z-index:20; background:rgba(15,17,23,0.86); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px); border-bottom:1px solid rgba(255,255,255,0.06);">
+    <div style="max-width:800px; margin:0 auto; padding:15px 24px; display:flex; align-items:center; gap:18px;">
+      <span style="font-weight:800; font-size:15px; letter-spacing:-0.01em;">Poulin Power Play</span>
+      <div style="display:flex; gap:3px; margin-left:auto; font-size:13.5px;">
+        <span style="padding:8px 14px; border-radius:10px; font-weight:700; color:#0a0a0c; background:#8fc1e8;">Matchup</span>
+        <span style="padding:8px 14px; color:#9aa1b0;">Roster</span>
+        <span style="padding:8px 14px; color:#9aa1b0;">Lineup</span>
+        <span style="padding:8px 14px; color:#9aa1b0;">Analysis</span>
+        <span style="padding:8px 14px; color:#9aa1b0;">Schedule</span>
+      </div>
+    </div>
+  </div>
+
+  <div style="max-width:800px; margin:0 auto; padding:22px 24px; display:grid; gap:18px;">
+
+    <!-- All-set banner -->
+    <div style="background:rgba(81,216,138,0.10); border:1px solid rgba(81,216,138,0.26); border-radius:16px; padding:15px 20px; display:flex; align-items:center; gap:13px;">
+      <span style="width:26px; height:26px; border-radius:9px; background:rgba(81,216,138,0.18); color:#51d88a; font-size:14px; font-weight:700; display:inline-flex; align-items:center; justify-content:center; flex:none;">✓</span>
+      <span style="font-size:14.5px; color:#bfedd2;">You're all set — <strong style="color:#eafaf1; font-weight:700;">7 starters</strong> active this period. Good luck tonight!</span>
+    </div>
+
+    <!-- ── DuelHero ── -->
+    <div style="position:relative; overflow:hidden; background:linear-gradient(150deg,#1d2533 0%,#191f2a 52%,#151922 100%); border:1px solid rgba(143,193,232,0.26); border-radius:26px; box-shadow:0 30px 80px -40px rgba(0,0,0,0.85);">
+      <div style="position:absolute; inset:0; pointer-events:none; background:radial-gradient(620px 280px at 16% -25%, rgba(143,193,232,0.16), transparent 70%), radial-gradient(520px 260px at 94% 125%, rgba(245,201,123,0.10), transparent 72%);"></div>
+
+      <!-- Top bar -->
+      <div style="position:relative; display:flex; align-items:center; justify-content:space-between; gap:16px; padding:20px 26px; border-bottom:1px solid rgba(255,255,255,0.07);">
+        <div style="display:flex; align-items:center; gap:12px;">
+          <span style="width:24px; height:26px; border-radius:6px 6px 8px 8px / 6px 6px 12px 12px; background:#8fc1e8; display:inline-flex; align-items:center; justify-content:center; color:#0a0a0c; font-size:9px; font-weight:800;">GM</span>
+          <span style="font-size:14px; font-weight:700; color:#dfe4ee;">Semifinals · Feb 14–20</span>
+        </div>
+        <span style="display:inline-flex; align-items:center; gap:8px; font-size:12.5px; font-weight:700; color:#f5c97b; background:rgba(245,201,123,0.12); border:1px solid rgba(245,201,123,0.3); border-radius:30px; padding:7px 14px;">
+          <span style="width:7px; height:7px; border-radius:50%; background:#f5c97b;"></span>Live now
+        </span>
+      </div>
+
+      <!-- 3-col -->
+      <div style="position:relative; display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:18px; padding:32px 30px 24px;">
+        <!-- YOU -->
+        <div style="display:flex; flex-direction:column; align-items:flex-start; gap:16px;">
+          <div style="display:flex; align-items:center; gap:13px;">
+            <span style="width:54px; height:54px; border-radius:16px; background:linear-gradient(135deg,#a6d0f0,#5b87aa); display:flex; align-items:center; justify-content:center; font-size:23px; font-weight:800; color:#0a0a0c; box-shadow:0 10px 24px -10px rgba(143,193,232,0.75); flex:none;">P</span>
+            <div>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <span style="font-size:20px; font-weight:800; color:#f7f9fc; letter-spacing:-0.01em;">Poulin Power Play</span>
+                <span style="font-size:10px; font-weight:700; color:#8fc1e8; background:rgba(143,193,232,0.16); border-radius:6px; padding:2px 8px;">You</span>
+              </div>
+              <div style="font-size:13px; color:#9aa1b0; margin-top:4px;">8–4 record · 2–1 in the series</div>
+            </div>
+          </div>
+          <div>
+            <div class="stat" style="font-size:74px; font-weight:700; line-height:0.82; color:#51d88a;">47.5</div>
+            <div style="font-size:13px; color:#9aa1b0; margin-top:7px;">Points earned · you're ahead</div>
+          </div>
+          <div style="display:flex; align-items:center; gap:10px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:9px 13px;">
+            <span style="width:26px; height:26px; border-radius:8px; background:rgba(143,193,232,0.16); display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:800; color:#8fc1e8; flex:none;">F</span>
+            <span style="font-size:13px; color:#cdd3df;">Leading scorer · <strong style="color:#f7f9fc; font-weight:700;">Poulin</strong></span>
+            <span class="stat" style="font-size:16px; font-weight:700; color:#8fc1e8;">12.5</span>
+          </div>
+        </div>
+
+        <!-- VS -->
+        <div style="display:flex; flex-direction:column; align-items:center; gap:14px; align-self:stretch; justify-content:center;">
+          <div style="flex:1; width:1px; background:linear-gradient(rgba(180,188,202,0),rgba(180,188,202,0.22),rgba(180,188,202,0)); min-height:16px;"></div>
+          <div style="width:48px; height:48px; border-radius:50%; border:1px solid rgba(143,193,232,0.4); background:rgba(143,193,232,0.12); display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:800; color:#8fc1e8; flex:none;">VS</div>
+          <div style="flex:1; width:1px; background:linear-gradient(rgba(180,188,202,0),rgba(180,188,202,0.22),rgba(180,188,202,0)); min-height:16px;"></div>
+        </div>
+
+        <!-- OPP -->
+        <div style="display:flex; flex-direction:column; align-items:flex-end; gap:16px; text-align:right;">
+          <div style="display:flex; align-items:center; gap:13px; flex-direction:row-reverse;">
+            <span style="width:54px; height:54px; border-radius:16px; background:linear-gradient(135deg,#3c424c,#252a32); display:flex; align-items:center; justify-content:center; font-size:23px; font-weight:800; color:#e3e7ef; flex:none;">F</span>
+            <div>
+              <div style="display:flex; align-items:center; gap:8px; flex-direction:row-reverse;">
+                <span style="font-size:20px; font-weight:800; color:#e7eaf3; letter-spacing:-0.01em;">Frost Bytes</span>
+                <span style="font-size:10px; font-weight:700; color:#9aa1b0; border:1px solid rgba(180,188,202,0.22); border-radius:6px; padding:2px 8px;">Opp</span>
+              </div>
+            </div>
+          </div>
+          <div>
+            <div class="stat" style="font-size:74px; font-weight:700; line-height:0.82; color:#f6837f;">41.0</div>
+            <div style="font-size:13px; color:#9aa1b0; margin-top:7px;">Points earned</div>
+          </div>
+          <div style="height:44px;"></div>
+        </div>
+      </div>
+
+      <!-- Win probability -->
+      <div style="position:relative; padding:4px 30px 22px;">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:9px;">
+          <span class="tnum" style="font-size:13px; font-weight:700; color:#8fc1e8;">You 62%</span>
+          <span style="font-size:13px; font-weight:600; color:#9aa1b0;">Win probability · +6.5 projected</span>
+          <span class="tnum" style="font-size:13px; font-weight:700; color:#9aa1b0;">38% Them</span>
+        </div>
+        <div style="height:11px; border-radius:7px; overflow:hidden; background:rgba(255,255,255,0.08);">
+          <div style="height:100%; width:62%; background:linear-gradient(90deg,#a6d0f0,#8fc1e8); border-radius:7px;"></div>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div style="position:relative; display:flex; align-items:center; gap:12px; padding:18px 30px 24px; border-top:1px solid rgba(255,255,255,0.07); flex-wrap:wrap;">
+        <span style="flex:1; font-size:13.5px; color:#9aa1b0; min-width:160px;">4 starters with games left tonight — you're in good shape.</span>
+        <span style="background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); color:#eef1f6; padding:12px 22px; border-radius:13px; font-size:14px; font-weight:600;">View bracket</span>
+      </div>
+    </div>
+
+    <!-- Friendly explainer (onboarding tier) -->
+    <div style="display:flex; align-items:flex-start; gap:12px; background:rgba(143,193,232,0.07); border:1px solid rgba(143,193,232,0.18); border-radius:14px; padding:14px 18px;">
+      <span style="font-size:18px; line-height:1.3; flex:none;">💡</span>
+      <span style="font-size:13.5px; color:#cdd3df; line-height:1.55;">New to fantasy? Your <strong style="color:#f4f6fa;">fantasy points (FP)</strong> tonight decide who wins the matchup — and winning earns <strong style="color:#f4f6fa;">Victory Points (VP)</strong> toward the playoff standings.</span>
+    </div>
+
+    <!-- ── Live situation grid ── -->
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px; align-items:start;">
+      <div style="display:grid; gap:14px;">
+        <!-- Playing tonight -->
+        <div style="background:#191d25; border:1px solid rgba(255,255,255,0.07); border-radius:18px; padding:20px 22px; box-shadow:0 1px 3px rgba(0,0,0,0.35);">
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:15px;">
+            <h2 style="font-size:15.5px; font-weight:700; margin:0;">Playing tonight</h2>
+            <span style="font-size:12.5px; color:#7e8593;">14.5 projected</span>
+          </div>
+          <div style="display:grid; gap:14px;">
+            <div>
+              <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:7px;">
+                <span style="font-size:12.5px; font-weight:700; color:#cdd3df;">MIN @ TOR</span>
+                <span class="tnum" style="font-size:11.5px; color:#aeb4c0; background:rgba(255,255,255,0.05); padding:3px 9px; border-radius:8px;">7:00 PM</span>
+              </div>
+              <div style="display:grid; gap:5px;">
+                <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 14px; border-radius:11px; background:rgba(255,255,255,0.035); border-left:3px solid #6fa8d4;">
+                  <div><span style="font-weight:600; font-size:14.5px;">Marie-Philip Poulin</span><span style="margin-left:8px; font-size:11.5px; color:#9aa1b0;">F</span></div>
+                  <span class="stat" style="font-size:13px; color:#8fc1e8; font-weight:700;">6.5</span>
+                </div>
+                <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 14px; border-radius:11px; background:rgba(255,255,255,0.035); border-left:3px solid #6fa8d4;">
+                  <div><span style="font-weight:600; font-size:14.5px;">Sarah Nurse</span><span style="margin-left:8px; font-size:11.5px; color:#9aa1b0;">UTIL</span></div>
+                  <span class="stat" style="font-size:13px; color:#8fc1e8; font-weight:700;">4.0</span>
+                </div>
+              </div>
+            </div>
+            <div>
+              <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:7px;">
+                <span style="font-size:12.5px; font-weight:700; color:#cdd3df;">BOS @ MTL</span>
+                <span class="tnum" style="font-size:11.5px; color:#aeb4c0; background:rgba(255,255,255,0.05); padding:3px 9px; border-radius:8px;">7:30 PM</span>
+              </div>
+              <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 14px; border-radius:11px; background:rgba(255,255,255,0.035); border-left:3px solid #6fa8d4;">
+                <div><span style="font-weight:600; font-size:14.5px;">Hilary Knight</span><span style="margin-left:8px; font-size:11.5px; color:#9aa1b0;">F</span></div>
+                <span class="stat" style="font-size:13px; color:#8fc1e8; font-weight:700;">4.0</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Swing players -->
+        <div style="background:#191d25; border:1px solid rgba(255,255,255,0.07); border-radius:18px; padding:20px 22px; box-shadow:0 1px 3px rgba(0,0,0,0.35);">
+          <h2 style="font-size:15.5px; font-weight:700; margin:0 0 4px;">Swing players</h2>
+          <p style="font-size:12.5px; color:#7e8593; margin:0 0 13px;">Who could flip tonight's result</p>
+          <div style="display:grid; gap:7px;">
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; padding:13px 15px; border-radius:12px; background:rgba(81,216,138,0.07); border:1px solid rgba(81,216,138,0.18);">
+              <div><span style="font-weight:600; font-size:14.5px; display:block;">Marie-Philip Poulin</span><span style="font-size:11.5px; color:#51d88a;">Your player</span></div>
+              <span class="stat" style="font-size:20px; font-weight:700; color:#51d88a;">+5.2</span>
+            </div>
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; padding:13px 15px; border-radius:12px; background:rgba(246,131,127,0.06); border:1px solid rgba(246,131,127,0.18);">
+              <div><span style="font-weight:600; font-size:14.5px; display:block;">Daryl Watts</span><span style="font-size:11.5px; color:#f6837f;">Opponent</span></div>
+              <span class="stat" style="font-size:20px; font-weight:700; color:#f6837f;">+4.8</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Roster status -->
+      <div style="background:#191d25; border:1px solid rgba(255,255,255,0.07); border-radius:18px; padding:20px 22px; box-shadow:0 1px 3px rgba(0,0,0,0.35);">
+        <h2 style="font-size:15.5px; font-weight:700; margin-bottom:16px;">Roster status</h2>
+        <div style="margin-bottom:18px;">
+          <div style="font-size:12.5px; color:#9aa1b0; margin-bottom:6px;">Projected total</div>
+          <div class="stat" style="font-size:40px; font-weight:700; color:#8fc1e8; line-height:1;">52.3</div>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:9px; margin-bottom:18px;">
+          <div style="display:flex; align-items:center; gap:9px; font-size:13.5px;">
+            <span style="color:#51d88a; font-weight:700;">✓ 7 of 7 starters set</span>
+          </div>
+          <div style="display:flex; align-items:center; gap:9px; font-size:13.5px; color:#aeb4c0;">
+            <span>🔒 3 locked in</span><span style="color:#7e8593;">·</span><span>Opponent 48.1</span>
+          </div>
+        </div>
+        <span style="display:block; text-align:center; font-size:13.5px; font-weight:700; padding:11px 0; border-radius:12px; background:rgba(143,193,232,0.12); color:#8fc1e8; border:1px solid rgba(143,193,232,0.25);">Adjust lineup</span>
+      </div>
+    </div>
+
+    <!-- Recap card (celebratory tier) -->
+    <div style="background:linear-gradient(135deg,rgba(81,216,138,0.10),rgba(245,201,123,0.04)); border:1px solid rgba(81,216,138,0.26); border-radius:18px; padding:20px 22px; display:flex; flex-direction:column; gap:13px;">
+      <div style="display:flex; align-items:center; gap:11px;">
+        <span style="font-size:22px; line-height:1;">🏁</span>
+        <span style="font-size:13px; font-weight:800; letter-spacing:0.02em; color:#51d88a; padding:4px 11px; border-radius:20px; background:rgba(81,216,138,0.14);">Won · Week 11</span>
+      </div>
+      <div>
+        <div class="stat" style="font-size:30px; font-weight:700; color:#51d88a; line-height:1; margin-bottom:5px;">58.9</div>
+        <div style="font-size:13.5px; color:#cdd3df;">Took down Frost Bytes — nicely done.</div>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:5px; font-size:13px;">
+        <span style="color:#aeb4c0;"><strong style="color:#cdd3df;">Poulin</strong> led the way with 18.5 pts</span>
+        <span style="color:#f5c97b; font-weight:700;">🏆 League-high score this week</span>
+      </div>
+    </div>
+
+    <!-- Rosters -->
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
+      <!-- Mine -->
+      <div style="background:#191d25; border:1px solid rgba(255,255,255,0.07); border-radius:18px; padding:20px 22px; box-shadow:0 1px 3px rgba(0,0,0,0.35);">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;">
+          <div style="display:flex; align-items:baseline; gap:9px;">
+            <h2 style="font-size:15px; font-weight:700; margin:0;">Poulin Power Play</h2>
+            <span class="stat" style="font-size:17px; color:#8fc1e8; font-weight:700;">47.5</span>
+          </div>
+          <span style="font-size:12.5px; font-weight:600; color:#8fc1e8;">Edit</span>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:5px;">
+          <div style="display:grid; grid-template-columns:42px 1fr 40px 50px; gap:9px; padding:0 12px 8px; font-size:11px; font-weight:600; color:#7e8593; border-bottom:1px solid rgba(255,255,255,0.06);">
+            <span>Slot</span><span>Player</span><span style="text-align:center;">Left</span><span style="text-align:right;">FP</span>
+          </div>
+          <sc-for list="{{ myRoster }}" as="p" hint-placeholder-count="4">
+            <div style="display:grid; grid-template-columns:42px 1fr 40px 50px; gap:9px; align-items:center; background:{{ p.rowBg }}; border:1px solid {{ p.rowBorder }}; border-radius:12px; padding:11px 12px; opacity:{{ p.opacity }};">
+              <span style="font-size:10px; font-weight:700; text-align:center; padding:3px 0; border-radius:6px; background:rgba(143,193,232,0.16); color:#8fc1e8;">{{ p.slot }}</span>
+              <div style="min-width:0;">
+                <div style="display:flex; align-items:center; gap:5px;">
+                  <span style="font-weight:600; font-size:13.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ p.name }}</span>
+                  <span style="font-size:10.5px; color:#7e8593; flex:none;">{{ p.team }}</span>
+                </div>
+                <sc-if value="{{ p.hasStats }}" hint-placeholder-val="{{ false }}">
+                  <div style="display:flex; flex-wrap:wrap; gap:4px; margin-top:4px;">
+                    <sc-for list="{{ p.stats }}" as="b" hint-placeholder-count="2">
+                      <span style="font-size:10.5px; padding:1px 7px; border-radius:999px; background:rgba(81,216,138,0.12); color:#51d88a;">{{ b }}</span>
+                    </sc-for>
+                  </div>
+                </sc-if>
+              </div>
+              <div style="text-align:center;">
+                <span class="tnum" style="font-size:10.5px; font-weight:700; color:{{ p.leftColor }};">{{ p.left }}</span>
+              </div>
+              <div style="text-align:right;"><span class="stat" style="font-size:18px; font-weight:700; color:{{ p.fpColor }};">{{ p.fp }}</span></div>
+            </div>
+          </sc-for>
+          <div style="display:grid; grid-template-columns:42px 1fr 40px 50px; gap:9px; padding:11px 12px 0; border-top:1px solid rgba(255,255,255,0.06); margin-top:3px;">
+            <span></span><span style="font-size:12.5px; color:#9aa1b0; font-weight:600;">Total</span><span></span>
+            <span class="stat" style="text-align:right; font-size:16px; font-weight:800;">47.5</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Opp -->
+      <div style="background:#191d25; border:1px solid rgba(255,255,255,0.07); border-radius:18px; padding:20px 22px; box-shadow:0 1px 3px rgba(0,0,0,0.35);">
+        <div style="display:flex; align-items:baseline; gap:9px; margin-bottom:14px;">
+          <h2 style="font-size:15px; font-weight:700; margin:0; color:#cdd3df;">Frost Bytes</h2>
+          <span class="stat" style="font-size:17px; color:#aeb4c0; font-weight:700;">41.0</span>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:5px;">
+          <div style="display:grid; grid-template-columns:42px 1fr 40px 50px; gap:9px; padding:0 12px 8px; font-size:11px; font-weight:600; color:#7e8593; border-bottom:1px solid rgba(255,255,255,0.06);">
+            <span>Slot</span><span>Player</span><span style="text-align:center;">Left</span><span style="text-align:right;">FP</span>
+          </div>
+          <sc-for list="{{ oppRoster }}" as="p" hint-placeholder-count="4">
+            <div style="display:grid; grid-template-columns:42px 1fr 40px 50px; gap:9px; align-items:center; background:rgba(255,255,255,0.035); border:1px solid rgba(255,255,255,0.06); border-radius:12px; padding:11px 12px;">
+              <span style="font-size:10px; font-weight:700; text-align:center; padding:3px 0; border-radius:6px; background:rgba(143,193,232,0.16); color:#8fc1e8;">{{ p.slot }}</span>
+              <span style="font-weight:600; font-size:13.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0;">{{ p.name }}</span>
+              <div style="text-align:center;"><span class="tnum" style="font-size:10.5px; font-weight:700; color:#8fc1e8;">{{ p.left }}</span></div>
+              <div style="text-align:right;"><span class="stat" style="font-size:18px; font-weight:700; color:#f4f6fa;">{{ p.fp }}</span></div>
+            </div>
+          </sc-for>
+          <div style="display:grid; grid-template-columns:42px 1fr 40px 50px; gap:9px; padding:11px 12px 0; border-top:1px solid rgba(255,255,255,0.06); margin-top:3px;">
+            <span></span><span style="font-size:12.5px; color:#9aa1b0; font-weight:600;">Total</span><span></span>
+            <span class="stat" style="text-align:right; font-size:16px; font-weight:800;">41.0</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:848,&quot;height&quot;:1480}}">
+class Component extends DCLogic {
+  renderVals() {
+    const myRoster = [
+      { slot:"F", name:"Marie-Philip Poulin", team:"MIN", left:"🔒1", leftColor:"#8fc1e8", fp:"12.5", fpColor:"#cdd3df", hasStats:true, stats:["G ×2","A"], rowBg:"rgba(143,193,232,0.10)", rowBorder:"rgba(143,193,232,0.26)", opacity:"1" },
+      { slot:"F", name:"Sarah Nurse", team:"TOR", left:"🔒1", leftColor:"#8fc1e8", fp:"8.0", fpColor:"#cdd3df", hasStats:true, stats:["G","A"], rowBg:"rgba(143,193,232,0.10)", rowBorder:"rgba(143,193,232,0.26)", opacity:"1" },
+      { slot:"D", name:"Renata Fast", team:"TOR", left:"🔒1", leftColor:"#8fc1e8", fp:"6.0", fpColor:"#cdd3df", hasStats:true, stats:["A ×2"], rowBg:"rgba(143,193,232,0.10)", rowBorder:"rgba(143,193,232,0.26)", opacity:"1" },
+      { slot:"G", name:"Aerin Frankel", team:"BOS", left:"1", leftColor:"#8fc1e8", fp:"8.0", fpColor:"#cdd3df", hasStats:true, stats:["Win","SO"], rowBg:"rgba(143,193,232,0.10)", rowBorder:"rgba(143,193,232,0.26)", opacity:"1" },
+      { slot:"BN", name:"Daryl Watts", team:"OTT", left:"0", leftColor:"#7e8593", fp:"—", fpColor:"#9aa1b0", hasStats:false, stats:[], rowBg:"rgba(255,255,255,0.02)", rowBorder:"rgba(255,255,255,0.05)", opacity:"0.6" }
+    ];
+    const oppRoster = [
+      { slot:"F", name:"Daryl Watts", left:"1", fp:"11.0" },
+      { slot:"F", name:"Brianne Jenner", left:"1", fp:"9.0" },
+      { slot:"D", name:"J. Larocque", left:"1", fp:"5.0" },
+      { slot:"G", name:"E. Maschmeyer", left:"1", fp:"7.0" }
+    ];
+    return { myRoster, oppRoster };
+  }
+}
+</script>
+</body>
+</html>

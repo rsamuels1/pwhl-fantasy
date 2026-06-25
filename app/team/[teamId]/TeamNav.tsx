@@ -10,29 +10,39 @@ interface Props {
   leagueName: string;
   playoffStatus: string;
   leagueStatus?: string;
+  hasTrophies?: boolean;
 }
 
-function TeamNavInner({ teamId, leagueId, leagueName, playoffStatus, leagueStatus }: Props) {
+function TeamNavInner({ teamId, leagueId, leagueName, playoffStatus, leagueStatus, hasTrophies }: Props) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const rosterPath = `/team/${teamId}/roster`;
-  const isFreeAgentsActive = pathname === rosterPath && searchParams.get("tab") === "freeAgents";
-  const isRosterActive = pathname.startsWith(rosterPath) && !isFreeAgentsActive;
+  const isRosterActive = pathname.startsWith(rosterPath);
+
+  const tradesPath = `/team/${teamId}/trades`;
+  const isTradesActive = pathname.startsWith(tradesPath);
+
+  const isFaTab = isRosterActive && searchParams.get("tab") === "freeAgents";
 
   const tabs = [
-    { label: "Matchup",     href: `/team/${teamId}/matchup`,             active: pathname.startsWith(`/team/${teamId}/matchup`) },
-    { label: "Lineup",      href: `/team/${teamId}/lineup`,              active: pathname.startsWith(`/team/${teamId}/lineup`) },
-    { label: "Rosters",     href: rosterPath,                            active: isRosterActive },
-    { label: "Free Agents", href: `${rosterPath}?tab=freeAgents`,        active: isFreeAgentsActive },
-    { label: "Trades",      href: `/league/${leagueId}/trades`,          active: pathname.startsWith(`/league/${leagueId}/trades`) },
-    { label: "Standings",   href: `/team/${teamId}/standings`,           active: pathname.startsWith(`/team/${teamId}/standings`) },
-    { label: "Schedule",    href: `/team/${teamId}/schedule`,            active: pathname.startsWith(`/team/${teamId}/schedule`) },
-    { label: "Analysis",    href: `/team/${teamId}/analysis`,            active: pathname.startsWith(`/team/${teamId}/analysis`) },
+    { label: "Matchup",      href: `/team/${teamId}/matchup`,            active: pathname.startsWith(`/team/${teamId}/matchup`) },
+    { label: "My Roster",    href: rosterPath,                           active: (isRosterActive && !isFaTab) || pathname.startsWith(`/team/${teamId}/lineup`) },
+    { label: "Free Agents",  href: `${rosterPath}?tab=freeAgents`,       active: isFaTab },
+    { label: "Trades",       href: tradesPath,                           active: isTradesActive },
+    { label: "Standings",    href: `/team/${teamId}/standings`,          active: pathname.startsWith(`/team/${teamId}/standings`) },
+    { label: "Scoreboard",   href: `/team/${teamId}/scoreboard`,         active: pathname.startsWith(`/team/${teamId}/scoreboard`) },
+    { label: "My Season",    href: `/team/${teamId}/schedule`,           active: pathname.startsWith(`/team/${teamId}/schedule`) },
+    { label: "Transactions", href: `/team/${teamId}/transactions`,       active: pathname.startsWith(`/team/${teamId}/transactions`) },
+    { label: "Analysis",     href: `/team/${teamId}/analysis`,           active: pathname.startsWith(`/team/${teamId}/analysis`) },
+    { label: "Settings",     href: `/team/${teamId}/settings`,           active: pathname.startsWith(`/team/${teamId}/settings`) },
     ...(leagueStatus === "PRE_DRAFT"
       ? [{ label: "Draft Queue", href: `/team/${teamId}/draft-prep`,     active: pathname.startsWith(`/team/${teamId}/draft-prep`) }]
       : []),
     ...(playoffStatus !== "NOT_STARTED"
-      ? [{ label: "Playoffs", href: `/league/${leagueId}/bracket`,      active: pathname.startsWith(`/league/${leagueId}/bracket`) }]
+      ? [{ label: "Playoffs", href: `/team/${teamId}/bracket`,           active: pathname.startsWith(`/team/${teamId}/bracket`) }]
+      : []),
+    ...(hasTrophies
+      ? [{ label: "Trophies", href: `/team/${teamId}/trophies`,          active: pathname.startsWith(`/team/${teamId}/trophies`) }]
       : []),
   ];
 
@@ -55,9 +65,9 @@ function TeamNavInner({ teamId, leagueId, leagueName, playoffStatus, leagueStatu
             padding: "12px 18px",
             fontSize: 14,
             fontWeight: tab.active ? 600 : 400,
-            color: tab.active ? "#e2e8f0" : "#64748b",
+            color: tab.active ? "var(--text)" : "var(--faint)",
             textDecoration: "none",
-            borderBottom: tab.active ? "2px solid #6366f1" : "2px solid transparent",
+            borderBottom: tab.active ? "2px solid var(--accent)" : "2px solid transparent",
             marginBottom: -1,
             whiteSpace: "nowrap",
             transition: "color 0.15s",
@@ -73,7 +83,7 @@ function TeamNavInner({ teamId, leagueId, leagueName, playoffStatus, leagueStatu
           marginLeft: "auto",
           padding: "12px 4px",
           fontSize: 13,
-          color: "#475569",
+          color: "var(--faint)",
           textDecoration: "none",
           whiteSpace: "nowrap",
         }}

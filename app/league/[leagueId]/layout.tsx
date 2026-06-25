@@ -44,11 +44,13 @@ export default async function LeagueLayout({ children, params }: LeagueLayoutPro
   const navItems = [
     { label: "Overview", href: `${basePath}` },
     { label: "Standings", href: `${basePath}/standings` },
-    { label: "Schedule", href: `${basePath}/matchups` },
+    { label: "Morning Skate", href: `${basePath}/morning-skate` },
+    { label: "Scoreboard", href: `${basePath}/matchups` },
     { label: "Playoffs", href: `${basePath}/bracket` },
-    { label: "Rosters", href: `${basePath}/roster` },
-    { label: "Trades", href: `${basePath}/trades` },
+    { label: "Records", href: `${basePath}/records` },
+    { label: "Leaders", href: `${basePath}/roster` },
     { label: "Transactions", href: `${basePath}/transactions` },
+    { label: "How it works", href: `${basePath}/how-it-works` },
     ...(league?.isReplay && isCommissioner ? [{ label: "Sim →", href: `${basePath}/sim` }] : []),
   ];
   const adminItem = isCommissioner
@@ -56,7 +58,7 @@ export default async function LeagueLayout({ children, params }: LeagueLayoutPro
     : null;
 
   return (
-    <div style={{ minHeight: "100vh", background: "#0f1117", color: "#e2e8f0" }}>
+    <div style={{ minHeight: "100vh", background: "var(--bg)", color: "var(--text)" }}>
       <div style={{ maxWidth: 1200, margin: "0 auto", padding: "24px 16px" }}>
         <header style={{ marginBottom: 20 }}>
           <div style={{ display: "flex", flexWrap: "wrap", alignItems: "baseline", justifyContent: "space-between", gap: 12 }}>
@@ -64,7 +66,7 @@ export default async function LeagueLayout({ children, params }: LeagueLayoutPro
               <Link href="/dashboard" style={{ display: "flex", alignItems: "center", opacity: 0.7, transition: "opacity 0.15s" }}>
                 <LogoShield size={22} />
               </Link>
-              <span style={{ color: "#f3f5fb", fontSize: 17, fontWeight: 700 }}>{league?.name ?? "League"}</span>
+              <span style={{ color: "var(--text)", fontSize: 17, fontWeight: 700 }}>{league?.name ?? "League"}</span>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               {user && (
@@ -75,12 +77,12 @@ export default async function LeagueLayout({ children, params }: LeagueLayoutPro
                   href={`/team/${myTeam.id}/matchup`}
                   style={{
                     fontSize: 13,
-                    color: "#a5b4fc",
+                    color: "var(--accent-strong)",
                     textDecoration: "none",
                     padding: "6px 14px",
                     borderRadius: 999,
-                    background: "rgba(99,102,241,0.12)",
-                    border: "1px solid rgba(99,102,241,0.3)",
+                    background: "rgba(143,193,232,0.12)",
+                    border: "1px solid rgba(143,193,232,0.3)",
                   }}
                 >
                   My Franchise →
@@ -98,7 +100,7 @@ export default async function LeagueLayout({ children, params }: LeagueLayoutPro
             gap: 0,
             marginBottom: 24,
             alignItems: "center",
-            borderBottom: "1px solid rgba(148,163,184,0.1)",
+            borderBottom: "1px solid var(--border)",
           }}
         >
           {navItems.map((item) => {
@@ -115,11 +117,11 @@ export default async function LeagueLayout({ children, params }: LeagueLayoutPro
                   padding: "12px 16px",
                   borderRadius: 0,
                   background: "transparent",
-                  color: isActive ? "#e2e8f0" : "#64748b",
+                  color: isActive ? "var(--text)" : "var(--faint)",
                   textDecoration: "none",
                   fontSize: 13,
                   fontWeight: isActive ? 600 : 400,
-                  borderBottom: isActive ? "2px solid #6366f1" : "2px solid transparent",
+                  borderBottom: isActive ? "2px solid var(--accent)" : "2px solid transparent",
                   transition: "color 0.18s ease, border-color 0.18s ease",
                   marginBottom: "-1px",
                 }}
@@ -139,7 +141,7 @@ export default async function LeagueLayout({ children, params }: LeagueLayoutPro
                 borderRadius: 0,
                 border: "none",
                 borderBottom: "2px solid transparent",
-                color: "#64748b",
+                color: "var(--faint)",
                 textDecoration: "none",
                 fontSize: 13,
                 fontWeight: 400,
@@ -155,20 +157,20 @@ export default async function LeagueLayout({ children, params }: LeagueLayoutPro
 
         {league?.betaStatus === "ACTIVE" && (
           <div style={{
-            background: "rgba(245,158,11,0.08)",
-            border: "1px solid rgba(245,158,11,0.3)",
+            background: "rgba(245,201,123,0.08)",
+            border: "1px solid rgba(245,201,123,0.3)",
             borderRadius: 6,
             padding: "8px 14px",
             marginBottom: 16,
             fontSize: 13,
-            color: "#fbbf24",
+            color: "var(--gold)",
             display: "flex",
             alignItems: "center",
             gap: 8,
           }}>
             <span>Beta League</span>
-            <span style={{ color: "#78716c" }}>·</span>
-            <span style={{ color: "#a8a29e" }}>Using 2025-26 replay data. Your feedback shapes the real thing.</span>
+            <span style={{ color: "var(--faint)" }}>·</span>
+            <span style={{ color: "var(--dim)" }}>Using 2025-26 replay data. Your feedback shapes the real thing.</span>
           </div>
         )}
 

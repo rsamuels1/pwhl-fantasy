@@ -2,13 +2,19 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { requireAuth, requireTeamOwner } from "@/lib/auth";
 import { scoreStatLine, DEFAULT_SCORING } from "@/lib/scoring";
+import { parseScoringSettings } from "@/lib/scoring/settings";
 import type { ScoringSettings } from "@/lib/scoring";
-import { getDevNow } from "@/lib/devTime";
-import { getReplayNow } from "@/lib/replayTime";
-import { getSeasonState } from "@/lib/season";
-import RosterManager from "./RosterManager";
-import type { RosterPlayerRow, FreeAgentRow, SkaterStats, GoalieStats } from "./RosterManager";
+import { eligibleSlots, lockTime } from "@/lib/lineup";
 import type { RosterSettings } from "@/lib/lineup";
+import { getDevNow } from "@/lib/devTime";
+import { getReplayNow, resolveFixturePeriod, type BetaWeekMapping } from "@/lib/replayTime";
+import { getSeasonState } from "@/lib/season";
+import { Position } from "@prisma/client";
+import RosterManager from "./RosterManager";
+import LineupDnD from "@/components/LineupDnD";
+import ViewingSelector from "@/components/ViewingSelector";
+import type { LineupEntry, LineupStats } from "@/components/LineupDnD";
+import type { RosterPlayerRow, FreeAgentRow, SkaterStats, GoalieStats } from "./RosterManager";
 
 interface Props {
   params: Promise<{ teamId: string }>;
@@ -28,15 +34,16 @@ type RawLine = {
   saves: number; goalsAgainst: number; shutout: boolean; win: boolean;
 };
 
-function buildRosterStats(
-  lines: RawLine[],
-  playerId: string,
-  position: string,
-  scoring: ScoringSettings
-): SkaterStats | GoalieStats | null {
+const STAT_LINE_SELECT = {
+  playerId: true, goals: true, assists: true, shots: true, plusMinus: true,
+  penaltyMinutes: true, powerPlayPts: true, hits: true, blocks: true,
+  saves: true, goalsAgainst: true, shutout: true, win: true,
+} as const;
+
+function buildRosterStats(lines: RawLine[], playerId: string, position: string, scoring: ScoringSettings): SkaterStats | GoalieStats | null {
   const playerLines = lines.filter((l) => l.playerId === playerId);
   if (playerLines.length === 0) return null;
-  const fp = playerLines.reduce((s, l) => s + scoreStatLine(l, position as import("@prisma/client").Position, scoring), 0);
+  const fp = playerLines.reduce((s, l) => s + scoreStatLine(l, position as Position, scoring), 0);
   if (position === "GOALIE") {
     let wins = 0, saves = 0, goalsAgainst = 0, shutouts = 0;
     for (const l of playerLines) {
@@ -56,27 +63,47 @@ function buildRosterStats(
   return { gp: playerLines.length, goals, assists, points: goals + assists, plusMinus, ppp, shots, hits, blocks, fantasyPoints: Math.round(fp * 100) / 100 };
 }
 
-const STAT_LINE_SELECT = {
-  playerId: true, goals: true, assists: true, shots: true, plusMinus: true,
-  penaltyMinutes: true, powerPlayPts: true, hits: true, blocks: true,
-  saves: true, goalsAgainst: true, shutout: true, win: true,
-} as const;
+function buildLineupStats(lines: RawLine[], playerId: string, position: string, scoring: ScoringSettings): LineupStats | null {
+  const playerLines = lines.filter((l) => l.playerId === playerId);
+  if (playerLines.length === 0) return null;
+  const fp = playerLines.reduce((s, l) => s + scoreStatLine(l, position as Position, scoring), 0);
+  if (position === "GOALIE") {
+    let wins = 0, saves = 0, goalsAgainst = 0, shutouts = 0;
+    for (const l of playerLines) {
+      if (l.win) wins++;
+      saves += l.saves;
+      goalsAgainst += l.goalsAgainst;
+      if (l.shutout) shutouts++;
+    }
+    const totalFaced = saves + goalsAgainst;
+    return { gp: playerLines.length, wins, goalsAgainst, shutouts, savePct: totalFaced > 0 ? saves / totalFaced : null, fantasyPoints: Math.round(fp * 100) / 100 };
+  }
+  let goals = 0, assists = 0, powerPlayPts = 0, shots = 0, hits = 0, blocks = 0;
+  for (const l of playerLines) {
+    goals += l.goals; assists += l.assists; powerPlayPts += l.powerPlayPts;
+    shots += l.shots; hits += l.hits; blocks += l.blocks;
+  }
+  return { gp: playerLines.length, goals, assists, powerPlayPts, shots, hits, blocks, fantasyPoints: Math.round(fp * 100) / 100 };
+}
 
 export default async function TeamRosterPage({ params, searchParams }: Props) {
   const { teamId } = await params;
   const sp = await searchParams;
   const tabParam = sp?.tab;
-  // Only pass recognized tab values through; ignore unknown query params.
-  const defaultTab = tabParam === "freeAgents" || tabParam === "waiverWire" ? tabParam : undefined;
+  // Top-level tabs: "lineup" (default) | "addDrop"
+  // Backward compat: ?tab=freeAgents or ?tab=waiverWire → addDrop tab with that inner tab
+  const isAddDropParam = tabParam === "addDrop" || tabParam === "freeAgents" || tabParam === "waiverWire";
+  const currentTab = isAddDropParam ? "addDrop" : "lineup";
+  const defaultInnerTab = (tabParam === "freeAgents" || tabParam === "waiverWire") ? tabParam as "freeAgents" | "waiverWire" : "freeAgents";
   const user = await requireAuth(`/team/${teamId}/roster`);
   await requireTeamOwner(teamId, user.id);
 
   const team = await prisma.fantasyTeam.findUnique({
     where: { id: teamId },
     include: {
-      league: { select: { id: true, rosterSettings: true, scoringSettings: true, season: true, isReplay: true, replayCurrentDate: true, playoffStatus: true } },
+      league: { select: { id: true, commissionerId: true, rosterSettings: true, scoringSettings: true, season: true, isReplay: true, replayCurrentDate: true, playoffStatus: true } },
       roster: {
-        include: { player: { include: { team: { select: { abbreviation: true } } } } },
+        include: { player: { include: { team: { select: { id: true, abbreviation: true } } } } },
         orderBy: { slot: "asc" },
       },
     },
@@ -84,61 +111,180 @@ export default async function TeamRosterPage({ params, searchParams }: Props) {
   if (!team) notFound();
 
   const leagueId = team.league.id;
+  const isCommissioner = user.id === team.league.commissionerId;
   const settings = (team.league.rosterSettings ?? {}) as RosterSettings;
-  const devNow = await getDevNow();
-  const nowMs = getReplayNow(
-    { isReplay: team.league.isReplay ?? false, replayCurrentDate: team.league.replayCurrentDate ?? null },
-    devNow
-  );
-  const now = new Date(nowMs);
-  const seasonState = await getSeasonState(leagueId, nowMs, prisma);
-  const activePeriod = seasonState.periods.find((p) => p.status === "ACTIVE")?.period ?? null;
-  const upcomingPeriod = seasonState.periods.find((p) => p.status === "UPCOMING")?.period ?? null;
-  let periodForGames = activePeriod ?? upcomingPeriod;
-
-  // Playoff fallback: if no regular-season period active/upcoming,
-  // use the current playoff matchup window so FA games-remaining is correct.
-  if (periodForGames === null && team.league.playoffStatus !== "NOT_STARTED") {
-    const playoffMatchup = await prisma.matchup.findFirst({
-      where: {
-        leagueId,
-        isPlayoff: true,
-        homeScore: null, // not yet scored
-      },
-      orderBy: { startsAt: "asc" },
-    });
-    if (playoffMatchup) {
-      periodForGames = {
-        week: playoffMatchup.week,
-        startsAt: playoffMatchup.startsAt,
-        endsAt: playoffMatchup.endsAt,
-      };
-    }
-  }
-  const scoring = (
+  const scoring = parseScoringSettings(team.league.scoringSettings);
+  const scoringFallback = (
     team.league.scoringSettings && typeof team.league.scoringSettings === "object" &&
     "skater" in (team.league.scoringSettings as object)
       ? team.league.scoringSettings
       : DEFAULT_SCORING
   ) as ScoringSettings;
   const season = team.league.season;
+  const isReplay = team.league.isReplay ?? false;
 
-  // All teams in the league for the selector dropdown
-  const allTeams = await prisma.fantasyTeam.findMany({
-    where: { leagueId },
-    select: { id: true, name: true },
-    orderBy: { name: "asc" },
-  });
+  const devNow = await getDevNow();
+  const nowMs = getReplayNow(
+    { isReplay, replayCurrentDate: team.league.replayCurrentDate ?? null },
+    devNow
+  );
+  const now = new Date(nowMs);
 
-  // Own roster stats (always fetched — needed for the FA add/drop tab)
-  const ownPlayerIds = team.roster.map((e) => e.playerId);
-  const ownLines = ownPlayerIds.length > 0
-    ? await prisma.statLine.findMany({
-        where: { playerId: { in: ownPlayerIds }, game: { season } },
-        select: STAT_LINE_SELECT,
+  const seasonState = await getSeasonState(leagueId, nowMs, prisma);
+  const lastCompletedEntry = [...seasonState.periods].reverse().find((p) => p.status === "COMPLETE");
+  const activePeriod = seasonState.periods.find((p) => p.status === "ACTIVE")?.period ?? null;
+  const upcomingPeriod = seasonState.periods.find((p) => p.status === "UPCOMING")?.period ?? null;
+  let periodForGames = activePeriod ?? upcomingPeriod;
+
+  if (periodForGames === null && team.league.playoffStatus !== "NOT_STARTED") {
+    const playoffMatchup = await prisma.matchup.findFirst({
+      where: { leagueId, isPlayoff: true, homeScore: null },
+      orderBy: { startsAt: "asc" },
+    });
+    if (playoffMatchup) {
+      periodForGames = { week: playoffMatchup.week, startsAt: playoffMatchup.startsAt, endsAt: playoffMatchup.endsAt };
+    }
+  }
+
+  const nextPeriod = seasonState.periods.find((p) => p.status === "UPCOMING")?.period ?? null;
+  const projectionPeriod = nextPeriod ?? (periodForGames?.week ? periodForGames : null);
+
+  // For beta replay leagues, translate remapped 2026 calendar periods to 2024-25 fixture windows
+  // so all game-range queries hit actual data rather than returning zero results.
+  const rawLeagueSettings = team.league.scoringSettings as Record<string, unknown>;
+  const betaWeekMappings = (rawLeagueSettings?.betaWeekMappings as BetaWeekMapping[] | undefined) ?? null;
+  const fixturePeriodForGames = periodForGames ? resolveFixturePeriod(periodForGames, betaWeekMappings) : null;
+  const fixtureProjectionPeriod = projectionPeriod ? resolveFixturePeriod(projectionPeriod, betaWeekMappings) : null;
+
+  const playerIds = team.roster.map((e) => e.playerId);
+  const pwhlTeamIds = [...new Set(team.roster.map((e) => e.player.team?.id).filter((id): id is string => !!id))];
+
+  // Batch all stat queries in parallel
+  const [ownLines, lastWeekLines, thisWeekLines, projectionLines, nextPeriodGames, activePeriodGames] = await Promise.all([
+    playerIds.length > 0
+      ? prisma.statLine.findMany({
+          where: {
+            playerId: { in: playerIds },
+            game: { season, ...(isReplay ? { startsAt: { lt: now } } : {}) },
+          },
+          select: STAT_LINE_SELECT,
+        })
+      : Promise.resolve([] as RawLine[]),
+    lastCompletedEntry && playerIds.length > 0
+      ? prisma.statLine.findMany({
+          where: {
+            playerId: { in: playerIds },
+            game: { startsAt: { gte: lastCompletedEntry.period.startsAt, lt: lastCompletedEntry.period.endsAt } },
+          },
+          select: STAT_LINE_SELECT,
+        })
+      : Promise.resolve([] as RawLine[]),
+    activePeriod && playerIds.length > 0
+      ? prisma.statLine.findMany({
+          where: {
+            playerId: { in: playerIds },
+            game: { startsAt: { gte: activePeriod.startsAt, lte: now } },
+          },
+          select: STAT_LINE_SELECT,
+        })
+      : Promise.resolve([] as RawLine[]),
+    projectionPeriod && playerIds.length > 0
+      ? prisma.statLine.findMany({
+          where: {
+            playerId: { in: playerIds },
+            game: { startsAt: { gte: new Date(nowMs - 90 * 24 * 60 * 60 * 1000) } },
+          },
+          orderBy: { game: { startsAt: "desc" } },
+          select: STAT_LINE_SELECT,
+        })
+      : Promise.resolve([] as RawLine[]),
+    fixtureProjectionPeriod && pwhlTeamIds.length > 0
+      ? prisma.game.findMany({
+          where: {
+            startsAt: { gte: fixtureProjectionPeriod.startsAt, lt: fixtureProjectionPeriod.endsAt },
+            OR: [{ homeTeamId: { in: pwhlTeamIds } }, { awayTeamId: { in: pwhlTeamIds } }],
+          },
+          select: { homeTeamId: true, awayTeamId: true },
+        })
+      : Promise.resolve([] as { homeTeamId: string; awayTeamId: string }[]),
+    activePeriod && pwhlTeamIds.length > 0
+      ? prisma.game.findMany({
+          where: {
+            startsAt: { gte: activePeriod.startsAt, lte: now },
+            OR: [{ homeTeamId: { in: pwhlTeamIds } }, { awayTeamId: { in: pwhlTeamIds } }],
+          },
+          select: { homeTeamId: true, awayTeamId: true, startsAt: true },
+        })
+      : Promise.resolve([] as { homeTeamId: string; awayTeamId: string; startsAt: Date }[]),
+  ]);
+
+  // Build stats maps
+  const seasonStats: Record<string, LineupStats | null> = {};
+  const lastWeekStatsMap: Record<string, LineupStats | null> = {};
+  const thisWeekStatsMap: Record<string, LineupStats | null> = {};
+  for (const e of team.roster) {
+    seasonStats[e.playerId] = buildLineupStats(ownLines as RawLine[], e.playerId, e.player.position, scoring);
+    lastWeekStatsMap[e.playerId] = buildLineupStats(lastWeekLines as RawLine[], e.playerId, e.player.position, scoring);
+    thisWeekStatsMap[e.playerId] = buildLineupStats(thisWeekLines as RawLine[], e.playerId, e.player.position, scoring);
+  }
+
+  // Games remaining per PWHL team — use fixture dates for beta replay leagues
+  const remainingGameRows = fixturePeriodForGames && pwhlTeamIds.length > 0
+    ? await prisma.game.findMany({
+        where: {
+          startsAt: { gt: now, lt: fixturePeriodForGames.endsAt },
+          OR: [{ homeTeamId: { in: pwhlTeamIds } }, { awayTeamId: { in: pwhlTeamIds } }],
+        },
+        select: { homeTeamId: true, awayTeamId: true },
       })
     : [];
+  const gamesPerTeam = new Map<string, number>();
+  for (const g of remainingGameRows) {
+    gamesPerTeam.set(g.homeTeamId, (gamesPerTeam.get(g.homeTeamId) ?? 0) + 1);
+    gamesPerTeam.set(g.awayTeamId, (gamesPerTeam.get(g.awayTeamId) ?? 0) + 1);
+  }
 
+  // Projected stats
+  let projectedStatsMap: Record<string, { projectedFp: number; games: number } | null> | undefined;
+  if (nextPeriod) {
+    const gamesInNextPeriod = new Map<string, number>();
+    for (const g of nextPeriodGames) {
+      gamesInNextPeriod.set(g.homeTeamId, (gamesInNextPeriod.get(g.homeTeamId) ?? 0) + 1);
+      gamesInNextPeriod.set(g.awayTeamId, (gamesInNextPeriod.get(g.awayTeamId) ?? 0) + 1);
+    }
+    const linesByPlayer: Record<string, RawLine[]> = {};
+    for (const l of projectionLines) {
+      linesByPlayer[l.playerId] = linesByPlayer[l.playerId] ?? [];
+      if (linesByPlayer[l.playerId].length < 5) linesByPlayer[l.playerId].push(l);
+    }
+    projectedStatsMap = {};
+    for (const entry of team.roster) {
+      const pTeamId = entry.player.team?.id ?? null;
+      const games = pTeamId ? (gamesInNextPeriod.get(pTeamId) ?? 0) : 0;
+      const lines = linesByPlayer[entry.playerId] ?? [];
+      if (lines.length === 0) { projectedStatsMap[entry.playerId] = null; continue; }
+      const totalFp = lines.reduce((sum, l) => sum + scoreStatLine(l, entry.player.position as Position, scoring), 0);
+      const avgFpPerGame = totalFp / lines.length;
+      projectedStatsMap[entry.playerId] = {
+        projectedFp: Math.round(avgFpPerGame * games * 100) / 100,
+        games,
+      };
+    }
+  }
+
+  // Date labels
+  const fmt = (d: Date) => d.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
+  const lastWeekLabel = lastCompletedEntry
+    ? `Week ${lastCompletedEntry.period.week} (${fmt(lastCompletedEntry.period.startsAt)} – ${fmt(new Date(lastCompletedEntry.period.endsAt.getTime() - 1))})`
+    : null;
+  const thisWeekLabel = activePeriod
+    ? `Week ${activePeriod.week} (${fmt(activePeriod.startsAt)} – ${fmt(new Date(activePeriod.endsAt.getTime() - 1))})`
+    : null;
+  const nextWeekLabel = nextPeriod
+    ? `Week ${nextPeriod.week} (${fmt(nextPeriod.startsAt)} – ${fmt(new Date(nextPeriod.endsAt.getTime() - 1))})`
+    : null;
+
+  // Build own roster rows + lineup entries (combined)
   const ownRosterRows: RosterPlayerRow[] = team.roster.map((e) => ({
     entryId: e.id,
     playerId: e.playerId,
@@ -148,8 +294,32 @@ export default async function TeamRosterPage({ params, searchParams }: Props) {
     slot: e.slot,
     active: e.player.active,
     acquired: e.acquired.toISOString(),
-    stats: buildRosterStats(ownLines as RawLine[], e.playerId, e.player.position, scoring),
+    stats: buildRosterStats(ownLines as RawLine[], e.playerId, e.player.position, scoringFallback),
   }));
+
+  const lineupEntries: LineupEntry[] = team.roster.map((e) => {
+    const pTeamId = e.player.team?.id ?? null;
+    const locked = lockTime(pTeamId, activePeriodGames, nowMs, activePeriod?.startsAt.getTime());
+    return {
+      entryId: e.id,
+      playerId: e.playerId,
+      name: `${e.player.firstName} ${e.player.lastName}`,
+      position: e.player.position as LineupEntry["position"],
+      teamAbbr: e.player.team?.abbreviation ?? null,
+      slot: e.slot,
+      lockedAt: locked?.toISOString() ?? null,
+      hasPlayedThisPeriod: (thisWeekStatsMap[e.playerId]?.gp ?? 0) > 0,
+      gamesThisPeriod: periodForGames ? (gamesPerTeam.get(pTeamId ?? "") ?? 0) : null,
+      eligibleSlots: eligibleSlots(e.player.position as "FORWARD" | "DEFENSE" | "GOALIE", e.player.active) as string[],
+    };
+  });
+
+  // All teams for the selector dropdown
+  const allTeams = await prisma.fantasyTeam.findMany({
+    where: { leagueId },
+    select: { id: true, name: true },
+    orderBy: { name: "asc" },
+  });
 
   // Determine which team is being viewed
   const viewTeamIdParam = sp?.view;
@@ -159,30 +329,47 @@ export default async function TeamRosterPage({ params, searchParams }: Props) {
   // If viewing another team, fetch their roster + stats
   let viewRoster: RosterPlayerRow[] = ownRosterRows;
   let viewTeamName = team.name;
+  let viewedLineupEntries: LineupEntry[] | null = null;
+  let viewedSeasonStats: Record<string, LineupStats | null> = {};
+  let viewedLastWeekStats: Record<string, LineupStats | null> = {};
+  let viewedThisWeekStats: Record<string, LineupStats | null> = {};
 
   if (!isOwnRoster) {
     const viewedTeam = await prisma.fantasyTeam.findFirst({
-      where: { id: viewTeamId, leagueId }, // security: must be in same league
+      where: { id: viewTeamId, leagueId },
       include: {
         roster: {
-          include: { player: { include: { team: { select: { abbreviation: true } } } } },
+          include: { player: { include: { team: { select: { id: true, abbreviation: true } } } } },
           orderBy: { slot: "asc" },
         },
       },
     });
 
     if (!viewedTeam) {
-      // Invalid team param — fall back to own roster
       viewRoster = ownRosterRows;
     } else {
       viewTeamName = viewedTeam.name;
       const viewedIds = viewedTeam.roster.map((e) => e.playerId);
-      const viewedLines = viewedIds.length > 0
-        ? await prisma.statLine.findMany({
-            where: { playerId: { in: viewedIds }, game: { season } },
-            select: STAT_LINE_SELECT,
-          })
-        : [];
+      const viewedPwhlTeamIds = [...new Set(viewedTeam.roster.map((e) => e.player.team?.id).filter((id): id is string => !!id))];
+
+      const [viewedLines, viewedLastWeekLines, viewedThisWeekLines, viewedActivePeriodGames] = await Promise.all([
+        viewedIds.length > 0
+          ? prisma.statLine.findMany({ where: { playerId: { in: viewedIds }, game: { season } }, select: STAT_LINE_SELECT })
+          : Promise.resolve([]),
+        lastCompletedEntry && viewedIds.length > 0
+          ? prisma.statLine.findMany({ where: { playerId: { in: viewedIds }, game: { startsAt: { gte: lastCompletedEntry.period.startsAt, lt: lastCompletedEntry.period.endsAt } } }, select: STAT_LINE_SELECT })
+          : Promise.resolve([]),
+        activePeriod && viewedIds.length > 0
+          ? prisma.statLine.findMany({ where: { playerId: { in: viewedIds }, game: { startsAt: { gte: activePeriod.startsAt, lte: now } } }, select: STAT_LINE_SELECT })
+          : Promise.resolve([]),
+        activePeriod && viewedPwhlTeamIds.length > 0
+          ? prisma.game.findMany({
+              where: { startsAt: { gte: activePeriod.startsAt, lte: now }, OR: [{ homeTeamId: { in: viewedPwhlTeamIds } }, { awayTeamId: { in: viewedPwhlTeamIds } }] },
+              select: { homeTeamId: true, awayTeamId: true, startsAt: true },
+            })
+          : Promise.resolve([] as { homeTeamId: string; awayTeamId: string; startsAt: Date }[]),
+      ]);
+
       viewRoster = viewedTeam.roster.map((e) => ({
         entryId: e.id,
         playerId: e.playerId,
@@ -192,12 +379,39 @@ export default async function TeamRosterPage({ params, searchParams }: Props) {
         slot: e.slot,
         active: e.player.active,
         acquired: e.acquired.toISOString(),
-        stats: buildRosterStats(viewedLines as RawLine[], e.playerId, e.player.position, scoring),
+        stats: buildRosterStats(viewedLines as RawLine[], e.playerId, e.player.position, scoringFallback),
       }));
+
+      if (isCommissioner) {
+        // Build per-player stats for the viewed team's tabs
+        for (const e of viewedTeam.roster) {
+          viewedSeasonStats[e.playerId] = buildLineupStats(viewedLines as RawLine[], e.playerId, e.player.position, scoring);
+          viewedLastWeekStats[e.playerId] = buildLineupStats(viewedLastWeekLines as RawLine[], e.playerId, e.player.position, scoring);
+          viewedThisWeekStats[e.playerId] = buildLineupStats(viewedThisWeekLines as RawLine[], e.playerId, e.player.position, scoring);
+        }
+
+        viewedLineupEntries = viewedTeam.roster.map((e) => {
+          const pTeamId = e.player.team?.id ?? null;
+          const locked = lockTime(pTeamId, viewedActivePeriodGames, nowMs, activePeriod?.startsAt.getTime());
+          const remaining = periodForGames && pTeamId ? (gamesPerTeam.get(pTeamId) ?? 0) : null;
+          return {
+            entryId: e.id,
+            playerId: e.playerId,
+            name: `${e.player.firstName} ${e.player.lastName}`,
+            position: e.player.position as LineupEntry["position"],
+            teamAbbr: e.player.team?.abbreviation ?? null,
+            slot: e.slot,
+            lockedAt: locked?.toISOString() ?? null,
+            hasPlayedThisPeriod: (viewedThisWeekStats[e.playerId]?.gp ?? 0) > 0,
+            gamesThisPeriod: remaining,
+            eligibleSlots: eligibleSlots(e.player.position as "FORWARD" | "DEFENSE" | "GOALIE", e.player.active) as string[],
+          };
+        });
+      }
     }
   }
 
-  // Free agents (only needed for own-roster add/drop; still fetched so the tab renders instantly)
+  // Free agents
   type AggRow = {
     id: string; firstName: string; lastName: string;
     position: string; abbreviation: string | null; pwhlTeamId: string | null;
@@ -208,25 +422,21 @@ export default async function TeamRosterPage({ params, searchParams }: Props) {
 
   const faRows = await prisma.$queryRaw<AggRow[]>`
     SELECT
-      p.id,
-      p."firstName",
-      p."lastName",
-      p.position::text,
-      t.abbreviation,
-      p."teamId" as "pwhlTeamId",
-      COUNT(sl.id)                                                    AS gp,
-      COALESCE(SUM(sl.goals), 0)                                      AS goals,
-      COALESCE(SUM(sl.assists), 0)                                    AS assists,
-      COALESCE(SUM(sl."plusMinus"), 0)                                AS "plusMinus",
-      COALESCE(SUM(sl."penaltyMinutes"), 0)                           AS "penaltyMinutes",
-      COALESCE(SUM(sl."powerPlayPts"), 0)                             AS ppp,
-      COALESCE(SUM(sl.shots), 0)                                      AS shots,
-      COALESCE(SUM(sl.hits), 0)                                       AS hits,
-      COALESCE(SUM(sl.blocks), 0)                                     AS blocks,
-      COALESCE(SUM(sl.saves), 0)                                      AS saves,
-      COALESCE(SUM(sl."goalsAgainst"), 0)                             AS "goalsAgainst",
-      COALESCE(SUM(CASE WHEN sl.win THEN 1 ELSE 0 END), 0)           AS wins,
-      COALESCE(SUM(CASE WHEN sl.shutout THEN 1 ELSE 0 END), 0)       AS shutouts
+      p.id, p."firstName", p."lastName", p.position::text,
+      t.abbreviation, p."teamId" as "pwhlTeamId",
+      COUNT(sl.id) AS gp,
+      COALESCE(SUM(sl.goals), 0) AS goals,
+      COALESCE(SUM(sl.assists), 0) AS assists,
+      COALESCE(SUM(sl."plusMinus"), 0) AS "plusMinus",
+      COALESCE(SUM(sl."penaltyMinutes"), 0) AS "penaltyMinutes",
+      COALESCE(SUM(sl."powerPlayPts"), 0) AS ppp,
+      COALESCE(SUM(sl.shots), 0) AS shots,
+      COALESCE(SUM(sl.hits), 0) AS hits,
+      COALESCE(SUM(sl.blocks), 0) AS blocks,
+      COALESCE(SUM(sl.saves), 0) AS saves,
+      COALESCE(SUM(sl."goalsAgainst"), 0) AS "goalsAgainst",
+      COALESCE(SUM(CASE WHEN sl.win THEN 1 ELSE 0 END), 0) AS wins,
+      COALESCE(SUM(CASE WHEN sl.shutout THEN 1 ELSE 0 END), 0) AS shutouts
     FROM "Player" p
     LEFT JOIN "Team" t ON t.id = p."teamId"
     LEFT JOIN (
@@ -235,8 +445,7 @@ export default async function TeamRosterPage({ params, searchParams }: Props) {
     ) sl ON sl."playerId" = p.id
     WHERE p.active = true
       AND p.id NOT IN (
-        SELECT DISTINCT re."playerId"
-        FROM "RosterEntry" re
+        SELECT DISTINCT re."playerId" FROM "RosterEntry" re
         JOIN "FantasyTeam" ft ON ft.id = re."fantasyTeamId"
         WHERE ft."leagueId" = ${leagueId}
       )
@@ -244,38 +453,37 @@ export default async function TeamRosterPage({ params, searchParams }: Props) {
     ORDER BY p."lastName"
   `;
 
-  // Batch query: period games for all FA PWHL teams — used for games-remaining badge and lock status
   const faTeamIds = [...new Set(faRows.map((r) => r.pwhlTeamId).filter((id): id is string => !!id))];
-  const periodGames = periodForGames && faTeamIds.length > 0
+  // Use fixture dates for beta replay leagues so FA game counts hit actual data.
+  const faPeriodGames = fixturePeriodForGames && faTeamIds.length > 0
     ? await prisma.game.findMany({
         where: {
-          startsAt: { gte: periodForGames.startsAt, lt: periodForGames.endsAt },
+          startsAt: { gte: fixturePeriodForGames.startsAt, lt: fixturePeriodForGames.endsAt },
           OR: [{ homeTeamId: { in: faTeamIds } }, { awayTeamId: { in: faTeamIds } }],
         },
         select: { homeTeamId: true, awayTeamId: true, startsAt: true },
       })
     : [];
-  const gamesRemaining = new Map<string, number>();
+  const faGamesRemaining = new Map<string, number>();
   const lockedTeamIds = new Set<string>();
-  for (const g of periodGames) {
+  for (const g of faPeriodGames) {
     if (g.startsAt > now) {
-      gamesRemaining.set(g.homeTeamId, (gamesRemaining.get(g.homeTeamId) ?? 0) + 1);
-      gamesRemaining.set(g.awayTeamId, (gamesRemaining.get(g.awayTeamId) ?? 0) + 1);
+      faGamesRemaining.set(g.homeTeamId, (faGamesRemaining.get(g.homeTeamId) ?? 0) + 1);
+      faGamesRemaining.set(g.awayTeamId, (faGamesRemaining.get(g.awayTeamId) ?? 0) + 1);
     } else {
       lockedTeamIds.add(g.homeTeamId);
       lockedTeamIds.add(g.awayTeamId);
     }
   }
 
-  const sk = scoring.skater;
-  const gk = scoring.goalie;
-
-  // Batch query: which free agents are currently on the waiver wire?
   const waiverEntries = await prisma.waiverEntry.findMany({
     where: { leagueId, expiresAt: { gt: now } },
     select: { playerId: true },
   });
   const waiverPlayerIds = new Set(waiverEntries.map((e) => e.playerId));
+
+  const sk = scoringFallback.skater;
+  const gk = scoringFallback.goalie;
 
   const freeAgents: FreeAgentRow[] = faRows.map((r) => {
     const gp = Number(r.gp);
@@ -288,58 +496,131 @@ export default async function TeamRosterPage({ params, searchParams }: Props) {
       const totalFaced = saves + ga;
       const fantasyPoints = Math.round((wins * gk.win + saves * gk.save + ga * gk.goalAgainst + shutouts * gk.shutout) * 100) / 100;
       return {
-        playerId: r.id,
-        name: `${r.firstName} ${r.lastName}`,
-        position,
-        teamAbbr: r.abbreviation ?? null,
-        pwhlTeamId: r.pwhlTeamId,
-        gamesThisPeriod: periodForGames ? (gamesRemaining.get(r.pwhlTeamId ?? "") ?? 0) : null,
+        playerId: r.id, name: `${r.firstName} ${r.lastName}`, position,
+        teamAbbr: r.abbreviation ?? null, pwhlTeamId: r.pwhlTeamId,
+        gamesThisPeriod: periodForGames ? (faGamesRemaining.get(r.pwhlTeamId ?? "") ?? 0) : null,
         isLocked: lockedTeamIds.has(r.pwhlTeamId ?? ""),
         stats: gp === 0 ? null : { gp, wins, saves, goalsAgainst: ga, shutouts, savePct: totalFaced > 0 ? saves / totalFaced : null, fantasyPoints } as GoalieStats,
         isOnWaivers: waiverPlayerIds.has(r.id),
       };
     }
-    const goals = Number(r.goals);
-    const assists = Number(r.assists);
-    const plusMinus = Number(r.plusMinus);
-    const ppp = Number(r.ppp);
-    const penaltyMinutes = Number(r.penaltyMinutes);
-    const shots = Number(r.shots);
-    const hits = Number(r.hits);
-    const blocks = Number(r.blocks);
-    const fantasyPoints = Math.round((
-      goals * sk.goal + assists * sk.assist + shots * sk.shot +
-      plusMinus * sk.plusMinus + penaltyMinutes * sk.penaltyMinute +
-      ppp * sk.powerPlayPoint + hits * sk.hit + blocks * sk.block
-    ) * 100) / 100;
+    const goals = Number(r.goals); const assists = Number(r.assists); const plusMinus = Number(r.plusMinus);
+    const ppp = Number(r.ppp); const shots = Number(r.shots); const hits = Number(r.hits); const blocks = Number(r.blocks);
+    const fantasyPoints = Math.round((goals * sk.goal + assists * sk.assist + shots * sk.shot + plusMinus * sk.plusMinus + (Number(r.penaltyMinutes)) * sk.penaltyMinute + ppp * sk.powerPlayPoint + hits * sk.hit + blocks * sk.block) * 100) / 100;
     return {
-      playerId: r.id,
-      name: `${r.firstName} ${r.lastName}`,
-      position,
-      teamAbbr: r.abbreviation ?? null,
-      pwhlTeamId: r.pwhlTeamId,
-      gamesThisPeriod: periodForGames ? (gamesRemaining.get(r.pwhlTeamId ?? "") ?? 0) : null,
+      playerId: r.id, name: `${r.firstName} ${r.lastName}`, position,
+      teamAbbr: r.abbreviation ?? null, pwhlTeamId: r.pwhlTeamId,
+      gamesThisPeriod: periodForGames ? (faGamesRemaining.get(r.pwhlTeamId ?? "") ?? 0) : null,
       isLocked: lockedTeamIds.has(r.pwhlTeamId ?? ""),
       isOnWaivers: waiverPlayerIds.has(r.id),
       stats: gp === 0 ? null : { gp, goals, assists, points: goals + assists, plusMinus, ppp, shots, hits, blocks, fantasyPoints } as SkaterStats,
     };
   });
 
+  // Which lineup entries and stats to show in the DnD section
+  const dndEntries = isOwnRoster ? lineupEntries : (viewedLineupEntries ?? []);
+  const dndSeasonStats = isOwnRoster ? seasonStats : viewedSeasonStats;
+  const dndLastWeekStats = isOwnRoster ? lastWeekStatsMap : viewedLastWeekStats;
+  const dndThisWeekStats = isOwnRoster ? thisWeekStatsMap : viewedThisWeekStats;
+  const showDnD = isOwnRoster || (isCommissioner && viewedLineupEntries !== null);
+
   return (
-    <RosterManager
-      leagueId={leagueId}
-      teamId={teamId}
-      teamName={team.name}
-      maxRosterSize={maxRosterSize(settings)}
-      rosterSettings={settings}
-      initialRoster={ownRosterRows}
-      freeAgents={freeAgents}
-      allTeams={allTeams}
-      viewTeamId={viewTeamId}
-      viewTeamName={viewTeamName}
-      viewRoster={viewRoster}
-      isOwnRoster={isOwnRoster}
-      defaultTab={defaultTab}
-    />
+    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+
+      {/* Top-level tab bar — own team only */}
+      {isOwnRoster && (
+        <div style={{ display: "flex", gap: 2, background: "var(--surface)", borderRadius: 10, padding: 3, width: "fit-content" }}>
+          {([["lineup", "My Lineup"], ["addDrop", "Add & Drop"]] as const).map(([key, label]) => (
+            <a
+              key={key}
+              href={`?tab=${key}`}
+              style={{
+                padding: "7px 18px", borderRadius: 8, fontSize: 13, fontWeight: 600,
+                textDecoration: "none", display: "inline-block",
+                background: currentTab === key ? "rgba(143,193,232,0.3)" : "transparent",
+                color: currentTab === key ? "var(--accent-strong)" : "var(--faint)",
+                transition: "background 0.12s",
+              }}
+            >
+              {label}
+            </a>
+          ))}
+        </div>
+      )}
+
+      {/* LINEUP TAB — own roster or commissioner viewing another team */}
+      {currentTab === "lineup" && (
+        <>
+          {/* Viewing selector: scout other teams' lineups */}
+          {allTeams.length > 1 && (
+            <ViewingSelector
+              allTeams={allTeams}
+              viewTeamId={viewTeamId}
+              myTeamId={teamId}
+              isCommissioner={isCommissioner}
+            />
+          )}
+
+          {showDnD ? (
+            <LineupDnD
+              leagueId={leagueId}
+              teamId={teamId}
+              initialRoster={dndEntries}
+              seasonStats={dndSeasonStats}
+              lastWeekStats={dndLastWeekStats}
+              lastWeekLabel={lastWeekLabel}
+              thisWeekStats={dndThisWeekStats}
+              thisWeekLabel={thisWeekLabel}
+              projectedStats={isOwnRoster ? projectedStatsMap : undefined}
+              nextWeekLabel={isOwnRoster ? nextWeekLabel : null}
+              projectionsAvailable={isOwnRoster ? !!nextWeekLabel : false}
+              rosterSettings={isOwnRoster ? settings : undefined}
+              forceMove={!isOwnRoster && isCommissioner}
+              forceMoveTeamId={!isOwnRoster ? viewTeamId : undefined}
+            />
+          ) : !isOwnRoster ? (
+            /* Non-commissioner viewing another team: read-only roster */
+            <RosterManager
+              leagueId={leagueId}
+              teamId={teamId}
+              teamName={team.name}
+              maxRosterSize={maxRosterSize(settings)}
+              rosterSettings={settings}
+              initialRoster={ownRosterRows}
+              freeAgents={[]}
+              allTeams={allTeams}
+              viewTeamId={viewTeamId}
+              viewTeamName={viewTeamName}
+              viewRoster={viewRoster}
+              isOwnRoster={false}
+              isCommissioner={isCommissioner}
+              hideViewingSelector
+            />
+          ) : null}
+        </>
+      )}
+
+      {/* ADD & DROP TAB — own team only */}
+      {currentTab === "addDrop" && isOwnRoster && (
+        <RosterManager
+          leagueId={leagueId}
+          teamId={teamId}
+          teamName={team.name}
+          maxRosterSize={maxRosterSize(settings)}
+          rosterSettings={settings}
+          initialRoster={ownRosterRows}
+          freeAgents={freeAgents}
+          allTeams={allTeams}
+          viewTeamId={teamId}
+          viewTeamName={team.name}
+          viewRoster={ownRosterRows}
+          isOwnRoster={true}
+          isCommissioner={isCommissioner}
+          hideRosterTab
+          hideViewingSelector
+          defaultTab={defaultInnerTab}
+        />
+      )}
+    </div>
   );
 }

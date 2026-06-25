@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { computeRace } from "@/lib/playoffs/seeding";
@@ -6,6 +7,7 @@ import { requireAuth, requireLeagueMember } from "@/lib/auth";
 import type { Matchup } from "@prisma/client";
 import { VpExplainer } from "@/components/VpExplainer";
 import EmptyState from "@/components/EmptyState";
+import BubbleWatch from "@/components/BubbleWatch";
 
 function computeStreaks(
   teamIds: string[],
@@ -51,6 +53,7 @@ export default async function StandingsPage({ params }: { params: { leagueId: st
   const league = await prisma.fantasyLeague.findUnique({
     where: { id: leagueId },
     include: { teams: true },
+    // also fetch status for BubbleWatch gating
   });
 
   if (!league) notFound();
@@ -85,6 +88,7 @@ export default async function StandingsPage({ params }: { params: { leagueId: st
     pointsAgainst: 0,
   }));
   const streaks = computeStreaks(league.teams.map((t) => t.id), matchups);
+  const accentColorMap = new Map(league.teams.map((t) => [t.id, t.accentColor ?? null]));
 
   const playoffSettings = (league.playoffSettings ?? null) as { teamsInPlayoff?: number } | null;
   const playoffCutoff = playoffSettings?.teamsInPlayoff ?? null;
@@ -96,6 +100,12 @@ export default async function StandingsPage({ params }: { params: { leagueId: st
     playoffCutoff !== null && hasResults && !playoffsStarted
       ? computeRace(standings, matchups, playoffCutoff)
       : null;
+
+  // BubbleWatch week tracking
+  const regularMatchups = matchups.filter((m) => !m.isPlayoff);
+  const totalWeeks = regularMatchups.reduce((max, m) => Math.max(max, m.week), 0);
+  const scoredWeeksSet = new Set(regularMatchups.filter((m) => m.homeScore !== null).map((m) => m.week));
+  const currentWeek = Math.max(0, ...scoredWeeksSet);
 
   // Banner summarizing the user's own playoff status.
   const myRaceIdx = vpStandings.findIndex((s) => s.fantasyTeamId === myTeam.id);
@@ -110,7 +120,7 @@ export default async function StandingsPage({ params }: { params: { leagueId: st
     } else if (myRace.status === "in" || myRace.status === "bubble") {
       const cushion = myRace.cushion ?? 0;
       myBanner = cushion > 0
-        ? { text: `In the playoff picture at #${rank} — ${cushion.toFixed(1)} ${cushion === 1 ? "game" : "games"} clear of the bubble.`, color: "#818cf8", bg: "rgba(99,102,241,0.08)" }
+        ? { text: `In the playoff picture at #${rank} — ${cushion.toFixed(1)} ${cushion === 1 ? "game" : "games"} clear of the bubble.`, color: "var(--accent-strong)", bg: "rgba(143,193,232,0.08)" }
         : { text: `On the playoff bubble at #${rank} — hold your spot.`, color: "#f59e0b", bg: "rgba(245,158,11,0.08)" };
     } else {
       const gb = myRace.gamesBack ?? 0;
@@ -143,11 +153,12 @@ export default async function StandingsPage({ params }: { params: { leagueId: st
             </span>
           )}
         </div>
-        <p style={{ margin: "0 0 8px", fontSize: 12, color: "#475569" }}>
+        <p style={{ margin: "0 0 8px", fontSize: 12, color: "var(--faint)" }}>
           Win matchup +2 VP · 1st place weekly score +2 VP · 2nd place score +1 VP
         </p>
-        <p style={{ margin: "0 0 16px", fontSize: "0.7rem", color: "var(--text-muted, #6b7280)" }}>
-          VP = Victory Points · MTCH VP = points for winning your weekly matchup · RNK VP = bonus for top-3 FP finish · PF = total fantasy points scored
+        <p style={{ margin: "0 0 16px", fontSize: "0.7rem", color: "var(--faint)", display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+          <span>VP = Victory Points · W-VP = VP for outscoring the field each week · Rank VP = bonus VP for top-3 FP finish · PF = total fantasy points scored</span>
+          <Link href={`/league/${leagueId}/how-it-works`} style={{ color: "var(--accent)", textDecoration: "none", whiteSpace: "nowrap" }}>How it works →</Link>
         </p>
 
         {!hasResults ? (
@@ -159,13 +170,13 @@ export default async function StandingsPage({ params }: { params: { leagueId: st
         <div style={{ overflowX: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 380 }}>
             <thead>
-              <tr style={{ color: "#64748b", textAlign: "left", borderBottom: "1px solid rgba(148,163,184,0.2)" }}>
+              <tr style={{ color: "var(--faint)", textAlign: "left", borderBottom: "1px solid var(--border)" }}>
                 <th style={thStyle}>#</th>
                 <th style={thStyle}>Team</th>
                 <th style={thStyle} title="Total Victory Points this season. VP determines playoff seeding.">VP</th>
-                <th style={thStyle} title="Weekly head-to-head match record (wins–losses–ties).">W-L-T</th>
-                <th style={thStyle} title="Victory Points from winning your head-to-head matchup (+2 VP for a win).">MTCH VP</th>
-                <th style={thStyle} title="Victory Points from score rank: 1st place in league score gets +2 VP, 2nd gets +1 VP.">RNK VP</th>
+                <th style={thStyle} title="Your weekly result vs. the field — wins, losses, and ties.">W-L-T</th>
+                <th style={thStyle} title="VP earned by outscoring the most opponents each week (+2 VP for a win).">W-VP</th>
+                <th style={thStyle} title="Victory Points from score rank: 1st place in league score gets +2 VP, 2nd gets +1 VP.">Rank VP</th>
                 <th style={thStyle} title="Points For — total fantasy points scored this season.">PF</th>
                 <th style={thStyle} title="Current win/loss/tie streak (e.g., W2 = two wins in a row).">Streak</th>
                 {!playoffsStarted && playoffCutoff !== null && (
@@ -176,31 +187,32 @@ export default async function StandingsPage({ params }: { params: { leagueId: st
             <tbody>
               {vpStandings.map((s, index) => {
                 const isMe = s.fantasyTeamId === myTeam.id;
+                const accentColor = accentColorMap.get(s.fantasyTeamId) ?? null;
                 const streak = streaks.get(s.fantasyTeamId) ?? null;
                 const inPlayoffs = playoffCutoff !== null && index < playoffCutoff;
                 const onBubble = playoffCutoff !== null && index === playoffCutoff;
                 const nextAbove = index > 0 ? vpStandings[index - 1] : null;
                 const gapToNext = nextAbove ? (nextAbove.totalVP - s.totalVP) : null;
 
-                let playoffChip: { label: string; color: string; bg: string } | null = null;
+                let playoffChip: { label: string; cls: string } | null = null;
                 const raceInfo = race?.get(s.fantasyTeamId) ?? null;
                 if (playoffCutoff !== null) {
                   if (playoffsStarted) {
                     playoffChip = inPlayoffs
-                      ? { label: "IN", color: "#5fa98c", bg: "rgba(95,169,140,0.1)" }
-                      : { label: "OUT", color: "#64748b", bg: "rgba(100,116,139,0.1)" };
+                      ? { label: "IN", cls: "chip-in" }
+                      : { label: "OUT", cls: "chip-out" };
                   } else if (raceInfo?.status === "clinched") {
-                    playoffChip = { label: "CLINCHED", color: "#5fa98c", bg: "rgba(95,169,140,0.12)" };
+                    playoffChip = { label: "✓ CLINCHED", cls: "chip-clinched" };
                   } else if (raceInfo?.status === "eliminated") {
-                    playoffChip = { label: "ELIM", color: "#d18b7f", bg: "rgba(209,139,127,0.1)" };
+                    playoffChip = { label: "✗ ELIM", cls: "chip-eliminated" };
                   } else if (raceInfo?.status === "bubble" || onBubble) {
-                    playoffChip = { label: "BUBBLE", color: "#f59e0b", bg: "rgba(245,158,11,0.12)" };
+                    playoffChip = { label: "◉ BUBBLE", cls: "chip-bubble" };
                   } else if (inPlayoffs) {
-                    playoffChip = { label: "IN", color: "#5fa98c", bg: "rgba(95,169,140,0.1)" };
+                    playoffChip = { label: "IN", cls: "chip-in" };
                   }
                 }
 
-                const streakColor = streak?.type === "W" ? "#5fa98c" : streak?.type === "L" ? "#d18b7f" : "#94a3b8";
+                const streakColor = streak?.type === "W" ? "#5fa98c" : streak?.type === "L" ? "#d18b7f" : "var(--dim)";
 
                 return (
                   <tr
@@ -208,36 +220,36 @@ export default async function StandingsPage({ params }: { params: { leagueId: st
                     style={{
                       background: isMe ? "var(--accent-dim)" : "transparent",
                       borderBottom: !playoffsStarted && playoffCutoff !== null && index === playoffCutoff - 1
-                        ? "2px dashed var(--accent-border)"
+                        ? "2px dashed rgba(143,193,232,0.55)"
                         : "1px solid var(--border)",
                       borderLeft: isMe ? "3px solid var(--accent)" : undefined,
                     }}
                   >
-                    <td style={{ ...tdStyle, color: "#475569", fontWeight: 700 }}>{index + 1}</td>
-                    <td style={{ ...tdStyle, fontWeight: isMe ? 700 : undefined, color: isMe ? "#a5b4fc" : "#e2e8f0" }}>
+                    <td style={{ ...tdStyle, color: "var(--faint)", fontWeight: 700 }}>{index + 1}</td>
+                    <td style={{ ...tdStyle, fontWeight: isMe ? 700 : undefined, color: isMe ? "var(--accent-strong)" : "var(--text)" }}>
                       <span style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
-                        {s.teamName}
-                        {isMe && <span style={{ fontSize: 10, color: "#6366f1" }}>YOU</span>}
-                        {playoffChip && (() => {
-                          let cls = "chip-in";
-                          if (playoffChip.color === "#5fa98c") cls = "chip-clinched";
-                          else if (playoffChip.color === "#d18b7f") cls = "chip-eliminated";
-                          return <span className={cls}>{playoffChip.label}</span>;
-                        })()}
+                        <span style={accentColor ? { color: accentColor } : undefined}>{s.teamName}</span>
+                        {isMe && <span style={{ fontSize: 10, color: "var(--accent)" }}>YOU</span>}
+                        {playoffChip && <span className={playoffChip.cls}>{playoffChip.label}</span>}
+                        {raceInfo?.magicNumber != null && (
+                          <span className="chip-magic" title={`Need ${raceInfo.magicNumber} more VP to clinch a playoff spot`}>
+                            Magic: {raceInfo.magicNumber}
+                          </span>
+                        )}
                       </span>
                     </td>
                     <td style={{ ...tdStyle, fontWeight: 800, color: "var(--text)", fontVariantNumeric: "tabular-nums", fontFamily: "var(--font-stats)" }}>{s.totalVP}</td>
-                    <td style={{ ...tdStyle, color: "#94a3b8", fontVariantNumeric: "tabular-nums" }}>
+                    <td style={{ ...tdStyle, color: "var(--dim)", fontVariantNumeric: "tabular-nums" }}>
                       {s.wins}–{s.losses}{s.ties > 0 ? `–${s.ties}` : ""}
                     </td>
-                    <td style={{ ...tdStyle, color: "#818cf8", fontVariantNumeric: "tabular-nums" }}>{s.matchupVP}</td>
+                    <td style={{ ...tdStyle, color: "var(--accent-strong)", fontVariantNumeric: "tabular-nums" }}>{s.matchupVP}</td>
                     <td style={{ ...tdStyle, color: "#5fa98c", fontVariantNumeric: "tabular-nums" }}>{s.rankVP}</td>
-                    <td style={{ ...tdStyle, color: "#64748b", fontVariantNumeric: "tabular-nums" }}>{s.pointsFor.toFixed(1)}</td>
+                    <td style={{ ...tdStyle, color: "var(--faint)", fontVariantNumeric: "tabular-nums" }}>{s.pointsFor.toFixed(1)}</td>
                     <td style={{ ...tdStyle, color: streakColor, fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>
                       {streak ? `${streak.type}${streak.count}` : "—"}
                     </td>
                     {!playoffsStarted && playoffCutoff !== null && (
-                      <td style={{ ...tdStyle, color: "#475569", fontSize: 12 }} className="standings-hide-mobile">
+                      <td style={{ ...tdStyle, color: "var(--faint)", fontSize: 12 }} className="standings-hide-mobile">
                         {index === 0 ? "—" : gapToNext === 0 ? "tied" : `-${gapToNext} VP`}
                       </td>
                     )}
@@ -250,11 +262,24 @@ export default async function StandingsPage({ params }: { params: { leagueId: st
         )}
 
         {!hasResults ? null : !playoffsStarted && playoffCutoff !== null && (
-          <p style={{ fontSize: 12, color: "#475569", marginTop: 14, marginBottom: 0 }}>
-            Dashed line separates the top {playoffCutoff} (playoff qualifiers) from the rest
+          <p style={{ fontSize: 12, color: "var(--dim)", marginTop: 14, marginBottom: 0 }}>
+            Dashed line separates the top {playoffCutoff} playoff spots from the rest
           </p>
         )}
       </section>
+
+      {race && !playoffsStarted && (
+        <BubbleWatch
+          raceMap={race}
+          teams={league.teams.map((t) => {
+            const s = vpStandings.find((v) => v.fantasyTeamId === t.id);
+            return { id: t.id, name: t.name, wins: s?.wins ?? 0, losses: s?.losses ?? 0, ties: s?.ties ?? 0 };
+          })}
+          isInSeason={league.status === "IN_SEASON"}
+          currentWeek={currentWeek}
+          totalWeeks={totalWeeks}
+        />
+      )}
     </div>
   );
 }

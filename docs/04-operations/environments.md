@@ -107,6 +107,88 @@ Set in Vercel → Project → Settings → Environment Variables. Scope each car
 | `ALLOW_SIM_DATE` | **do not set** | optional `true` | Enables the dev-sim cookie to rewind the clock. Never in production — a user could time-warp all live leagues. |
 | `NODE_ENV` | `production` | `production` | Vercel sets this automatically. Sim controls (`/season/advance`) are gated by `ALLOW_SEASON_ADVANCE=true` env var, not `NODE_ENV`, in practice. |
 | `STATS_SOURCE_API_KEY` | set if ingest runs | optional | HockeyTech creds. Ingestion is script-only, not app code. |
+| `RESEND_API_KEY` | set | optional | Resend API key from resend.com dashboard. Required for magic-link auth and transactional emails in production. |
+| `EMAIL_FROM` | `PWHL GM <noreply@dykedb.org>` | same | "From" address for all outgoing emails. Requires DNS domain verification in Resend (DKIM TXT + SPF records for `dykedb.org`). One-time setup. |
+| `EMAIL_RESEND_ENABLED` | `true` | **unset** | Master switch — prevents staging from sending real emails to beta users. Always leave unset on staging. |
+| `NEXT_PUBLIC_APP_URL` | `https://beta.fantasy.dykedb.org` | `https://fantasydev.dykedb.org` | Base URL used when constructing magic link and notification URLs in emails. |
+
+**Email domain setup:** `noreply@dykedb.org` requires DNS verification in the Resend dashboard (DKIM TXT + SPF records). One-time setup. The draft WebSocket server on Render also needs `RESEND_API_KEY`, `EMAIL_FROM`, and `EMAIL_RESEND_ENABLED` set in its Render environment (so on-the-clock emails work from the draft server process).
+
+---
+
+## Email setup (Resend)
+
+Transactional email (magic link auth, on-the-clock draft alerts, trade notifications, commissioner invites) is delivered via [Resend](https://resend.com). Email is **disabled by default** in all environments — `EMAIL_RESEND_ENABLED=true` is the master switch.
+
+### Step 1 — Create a Resend account and get an API key
+
+1. Sign up at [resend.com](https://resend.com) (free tier covers beta volume — 3,000 emails/month, 100/day)
+2. Dashboard → **API Keys → Create API Key**
+3. Name it `pwhl-gm-prod`. Keep it; you'll paste it into Vercel next.
+
+### Step 2 — Verify the sender domain (`dykedb.org`)
+
+Resend must verify that you control the domain before emails will send.
+
+1. Resend dashboard → **Domains → Add Domain** → enter `dykedb.org`
+2. Resend will show you DNS records to add. Add all of them at your DNS host (wherever `dykedb.org` is managed):
+
+| Type | Name | Value |
+|---|---|---|
+| `TXT` | `resend._domainkey.dykedb.org` | (DKIM public key — copy from Resend dashboard) |
+| `TXT` | `@` or `dykedb.org` | `v=spf1 include:amazonses.com ~all` *(or Resend's SPF value — copy from dashboard)* |
+
+3. DNS propagation takes 5–30 minutes. Resend will show a green "Verified" badge once it confirms.
+
+> Note: SPF may conflict if you already have an SPF record for `dykedb.org`. If so, append `include:amazonses.com` to the existing `v=spf1 ...` record rather than adding a second TXT record.
+
+### Step 3 — Set Vercel Production environment variables
+
+In Vercel → Project → **Settings → Environment Variables**, scope these to **Production** only:
+
+| Variable | Value |
+|---|---|
+| `RESEND_API_KEY` | `re_...` (from Step 1) |
+| `EMAIL_FROM` | `PWHL GM <noreply@dykedb.org>` |
+| `EMAIL_RESEND_ENABLED` | `true` |
+| `NEXT_PUBLIC_APP_URL` | `https://beta.fantasy.dykedb.org` |
+
+Leave `EMAIL_RESEND_ENABLED` **unset** on staging (Preview) — this prevents the staging environment from ever emailing beta users.
+
+### Step 4 — Set Render draft server environment variables
+
+The draft server runs on Render, not Vercel. On-the-clock emails fire from the Render process, so it needs the same email vars.
+
+1. Render dashboard → **pwhl-draft-server** → **Environment**
+2. Add:
+
+| Variable | Value |
+|---|---|
+| `RESEND_API_KEY` | same key as Prod |
+| `EMAIL_FROM` | `PWHL GM <noreply@dykedb.org>` |
+| `EMAIL_RESEND_ENABLED` | `true` |
+| `NEXT_PUBLIC_APP_URL` | `https://beta.fantasy.dykedb.org` |
+
+3. Save → Render will restart the service automatically.
+
+### Step 5 — Smoke test
+
+After all of the above:
+
+1. Open the app and log out
+2. Go to `/login`, enter your real email, click "Email me a sign-in link →"
+3. Check your inbox — a sign-in link from `noreply@dykedb.org` should arrive within ~10 seconds
+4. Click the link — you should land on `/dashboard` already logged in
+5. Propose a trade to another team — the receiving manager should get a "You have a trade offer" email
+6. Start a draft with a manager logged out — when their turn comes, they should get an on-the-clock email
+
+**If no email arrives:** check the Resend dashboard → **Emails** log. If the email is there but delivered to spam, the domain verification in Step 2 is incomplete or SPF/DKIM didn't propagate yet.
+
+### Dev/staging behavior
+
+- When `EMAIL_RESEND_ENABLED` is not `"true"`, all email functions log to the server console: `[EMAIL] sendMagicLink to user@example.com: https://...`
+- In local dev with `@dev.local` emails, magic links are bypassed entirely — the login/register API sets the cookie immediately without sending any email
+- On staging (`fantasydev.dykedb.org`), leave `EMAIL_RESEND_ENABLED` unset — magic link tokens are still generated and stored, but you can grab the verify URL from the server logs or Vercel function logs
 
 ---
 
@@ -141,6 +223,7 @@ Never `prisma db push` on the prod Neon branch while beta users are active.
 - [ ] Error/loading/empty states verified for all key routes on staging
 - [ ] Neon PITR (Point-in-Time Recovery) enabled on the `main` branch — or a recent Neon branch snapshot exists as a backup
 - [ ] Beta testers notified of the cutover
+- [ ] Email setup complete (see *Email setup* section): Resend domain verified, env vars set in both Vercel Production and Render `pwhl-draft-server`, smoke test passed
 
 **The flip itself:**
 1. In Vercel Production env vars: set `BETA_HOST` to `""` (empty string)
@@ -162,3 +245,4 @@ Never `prisma db push` on the prod Neon branch while beta users are active.
 - [ ] Vercel: set `NEXT_PUBLIC_DRAFT_WS_URL` per environment
 - [ ] Render: deploy staging WebSocket service (optional but recommended for draft testing)
 - [ ] Push code to `dev` branch; confirm preview deploy at `fantasydev.dykedb.org` shows the full app
+- [ ] **Email:** complete the 5-step *Email setup* section above (Resend account → domain DNS verification → Vercel env vars → Render env vars → smoke test)

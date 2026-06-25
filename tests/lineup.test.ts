@@ -169,6 +169,17 @@ describe("lockTime", () => {
     // Game yesterday → should NOT lock (no periodStartMs, today-only mode)
     expect(lockTime("team1", [makeGame("team1", yesterdayGame)], nowMs)).toBeNull();
   });
+
+  // BF-010: lock applies to active→bench/IR moves only; bench→active must always be allowed.
+  // The lineup API enforces this by checking isMovingOutOfActiveSlot before blocking.
+  // These pure lockTime tests confirm the lock itself fires correctly (the API layer decides
+  // whether to block based on direction of move).
+  it("locks when team played even if the player is on bench (team-level lock)", () => {
+    const monday = new Date("2025-12-08T20:00:00Z");
+    const result = lockTime("team1", [makeGame("team1", monday)], NOW, PERIOD_START);
+    // lockTime returns non-null — but the API should only honour this for active→bench moves
+    expect(result).not.toBeNull();
+  });
 });
 
 describe("computeOptimalLineup", () => {

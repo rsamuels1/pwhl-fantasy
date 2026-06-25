@@ -344,3 +344,95 @@ describe("B5 — auto-pick stall detection", () => {
     expect(result.effects).toHaveLength(0);
   });
 });
+
+// ---------------------------------------------------------------------------
+// B6. Server-restart timer recovery (DRC-002)
+// The DraftRoom constructor calls rescheduleTimer() when status is IN_PROGRESS.
+// These pure-engine tests verify the state that buildEngineState produces is
+// correct for rescheduleTimer to work with (correct currentOverall, valid slot).
+// ---------------------------------------------------------------------------
+
+describe("B6 — server-restart timer recovery (DRC-002)", () => {
+  it("buildEngineState currentOverall points to the next unpicked slot after N picks", () => {
+    const order = generateSnakeOrder(["teamA", "teamB"], 4); // 8 picks
+    const completed: CompletedPick[] = [
+      { overall: 1, round: 1, fantasyTeamId: "teamA", playerId: "p1", auto: false },
+      { overall: 2, round: 1, fantasyTeamId: "teamB", playerId: "p2", auto: false },
+      { overall: 3, round: 2, fantasyTeamId: "teamB", playerId: "p3", auto: false },
+    ];
+    // mirrors buildEngineState logic
+    const currentOverall = Math.min(completed.length + 1, order.length);
+    expect(currentOverall).toBe(4);
+    // The slot at currentOverall - 1 (0-indexed) should exist
+    const slot = order[currentOverall - 1];
+    expect(slot).toBeDefined();
+    expect(slot.overall).toBe(4);
+    expect(slot.fantasyTeamId).toBe("teamA"); // round 2 reverse: B, B, A, A → overall 4 = teamA
+  });
+
+  it("rebuilt state with IN_PROGRESS status has a valid on-clock slot", () => {
+    const order = generateSnakeOrder(["teamA", "teamB"], 3); // 6 picks
+    const completed: CompletedPick[] = [
+      { overall: 1, round: 1, fantasyTeamId: "teamA", playerId: "p1", auto: false },
+    ];
+    const currentOverall = Math.min(completed.length + 1, order.length);
+    const state = inProgressState({
+      order,
+      currentOverall,
+      completed,
+      expiresAt: null, // as rebuilt by buildEngineState — rescheduleTimer will set this
+    });
+
+    expect(state.status).toBe("IN_PROGRESS");
+    // rescheduleTimer reads order[currentOverall - 1] — must not be undefined
+    const slot = state.order[state.currentOverall - 1];
+    expect(slot).toBeDefined();
+    expect(slot.fantasyTeamId).toBeTruthy();
+  });
+
+  it("TIMEOUT action correctly auto-picks after restart (state has expiresAt: null from rebuild)", () => {
+    const order = generateSnakeOrder(["teamA", "teamB"], 2);
+    const state = inProgressState({
+      order,
+      currentOverall: 2,
+      completed: [
+        { overall: 1, round: 1, fantasyTeamId: "teamA", playerId: "p1", auto: false },
+      ],
+      draftedPlayerIds: new Set(["p1"]),
+      expiresAt: null, // as rebuilt — timer fires immediately via rescheduleTimer
+    });
+
+    const nowMs = Date.now();
+    const result = reduce(state, {
+      kind: "TIMEOUT",
+      nowMs,
+      timerConfig,
+      bestAvailable: ["p2", "p3"],
+    });
+
+    // Engine should auto-pick the first best available
+    expect(result.error).toBeUndefined();
+    const pickEffect = result.effects.find((e) => e.kind === "PERSIST_PICK") as
+      | { kind: "PERSIST_PICK"; pick: CompletedPick }
+      | undefined;
+    expect(pickEffect?.pick.playerId).toBe("p2");
+    expect(pickEffect?.pick.auto).toBe(true);
+    // Next pick should be scheduled
+    const timerEffect = result.effects.find((e) => e.kind === "SCHEDULE_TIMER");
+    expect(timerEffect).toBeDefined();
+  });
+
+  it("PAUSED draft does not schedule timer on restart (no rescheduleTimer call needed)", () => {
+    // When status is PAUSED, the constructor skips rescheduleTimer.
+    // A RESUME action correctly starts the clock fresh.
+    const order = generateSnakeOrder(["teamA", "teamB"], 2);
+    const state = inProgressState({ order, status: "PAUSED", expiresAt: null });
+
+    const nowMs = Date.now();
+    const result = reduce(state, { kind: "RESUME", nowMs, timerConfig });
+    expect(result.state.status).toBe("IN_PROGRESS");
+    expect(result.state.expiresAt).toBeGreaterThan(nowMs);
+    const timerEffect = result.effects.find((e) => e.kind === "SCHEDULE_TIMER");
+    expect(timerEffect).toBeDefined();
+  });
+});

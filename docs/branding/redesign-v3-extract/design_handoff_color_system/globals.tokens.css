@@ -1,0 +1,94 @@
+/* ============================================================================
+   PWHL GM — "Inviting Dark" color system
+   Drop-in replacement for the :root block in app/globals.css
+
+   This evolves the original High-Contrast Dark scheme to feel warmer and more
+   welcoming (the FEEL brief) while keeping its accessibility wins. The shifts:
+     • page lifts off pure black (#0a0a0c → #0f1117 + a soft radial wash)
+     • cards are lifted with soft SHADOWS instead of hairline borders
+     • semantic colors are slightly softer/friendlier
+     • a warm GOLD is added for celebratory + warning moments
+   Pair this with the Type & Elevation notes at the bottom — the "Bloomberg
+   terminal" feel came mostly from mono type + ALL-CAPS labels, not color.
+   ============================================================================ */
+
+:root {
+  /* ── Surfaces ──────────────────────────────────────────────────────────── */
+  --bg:          #0f1117;   /* page base (was #0a0a0c — less of a black void)  */
+  --bg-raised:   #14171e;   /* inputs, inset wells                             */
+  --card:        #191d25;   /* panels, cards (lifted)                          */
+  --card-hover:  #20242c;   /* hover + popover background                      */
+  --surface:     rgba(255,255,255,0.035);  /* nested rows on a card           */
+  --panel:       #191d25;
+
+  /* Page wash — apply to <body> for warmth (see Elevation notes):
+     background: radial-gradient(1100px 500px at 50% -8%, #16202b, #0f1117 60%); */
+
+  /* ── Text (all tiers meet WCAG AA on --card) ───────────────────────────── */
+  --text:   #f4f6fa;   /* primary                                             */
+  --muted:  #cdd3df;   /* secondary body copy                                 */
+  --dim:    #9aa1b0;   /* supporting labels / sublabels                       */
+  --faint:  #7e8593;   /* counters, timestamps, hints                         */
+
+  /* ── Accent (sky) ──────────────────────────────────────────────────────── */
+  --accent:        #8fc1e8;
+  --accent-strong: #a6d0f0;
+  --accent-deep:   #6fa8d4;
+  --accent-ink:    #0a0a0c;            /* TEXT/ICONS ON TOP OF AN ACCENT FILL */
+  --accent-dim:    rgba(143,193,232,0.12);
+  --accent-border: rgba(143,193,232,0.28);
+  --accent-glow:   rgba(143,193,232,0.22);
+
+  /* ── Borders & elevation ───────────────────────────────────────────────── */
+  --border:      rgba(255,255,255,0.07);   /* soft, on lifted cards           */
+  --border-soft: rgba(255,255,255,0.05);
+  --shadow-card: 0 1px 3px rgba(0,0,0,0.35);          /* default card         */
+  --shadow-pop:  0 14px 40px rgba(0,0,0,0.55);        /* popovers / hero       */
+
+  /* ── Semantic (softer, AA on dark) ─────────────────────────────────────── */
+  --green: #51d88a;   /* win / done / pass / clinched (was #4ade80/#34d399)    */
+  --red:   #f6837f;   /* loss / error / out (was #f87171/#ef4444)              */
+  --amber: #f5c97b;   /* warning / "ready to score" / bubble                   */
+  --gold:  #f5c97b;   /* CELEBRATORY — champion, league-high, hot streak       */
+
+  /* ── Type ──────────────────────────────────────────────────────────────── */
+  --font-body:  'Archivo', -apple-system, sans-serif;
+  --font-stats: 'Saira Condensed', 'Archivo', sans-serif;  /* LARGE scores only */
+  /* JetBrains Mono is REMOVED — see Type notes below. */
+}
+
+/* ============================================================================
+   TYPE NOTES  — this is the biggest de-"terminal" lever
+   1. DROP JetBrains Mono entirely. Small numbers (records, FP, times) use
+      var(--font-body) with `font-variant-numeric: tabular-nums`.
+   2. Reserve Saira Condensed for LARGE hero scores only (40px+). It reads as a
+      sporty scoreboard at size, but as terminal data when small.
+   3. Section headings: sentence case, 15-16px, weight 700, color var(--text).
+      DELETE the old 10-12px ALL-CAPS letter-spaced eyebrow labels — those are
+      the #1 source of the cold, data-terminal feel.
+   ============================================================================ */
+
+/* ============================================================================
+   ELEVATION & WARMTH NOTES
+   • Body background: use the radial wash above, not flat black.
+   • Cards: var(--card) + var(--border) + var(--shadow-card). Lean on the shadow
+     for separation; soften/avoid hard 1px internal dividers — use whitespace.
+   • Radii up: cards 18px, hero 22-26px, inputs/pills 10-14px. More padding
+     (20-24px) — breathing room reads as inviting.
+   • Warmth: use --gold for celebratory moments and a faint warm radial
+     (rgba(245,201,123,0.08)) in hero backgrounds.
+   ============================================================================ */
+
+/* ============================================================================
+   FOLLOW-UP EDITS in app/globals.css
+   • body { background: radial-gradient(1100px 500px at 50% -8%, #16202b,
+            #0f1117 60%); color: var(--text); }
+   • .button-primary { background: var(--accent); color: var(--accent-ink); }
+     accent is LIGHT — text on any solid accent fill must be dark.
+   • .section-accent → background: var(--accent);  (drop the violet gradient)
+   • .pos-badge / slot pills → background: var(--accent-dim); color: var(--accent);
+   • .input/.form-input :focus → border-color: var(--accent);
+                                 box-shadow: 0 0 0 3px var(--accent-dim);
+   • .bracket-champion → border-color: var(--accent-border);
+                         box-shadow: 0 0 32px var(--accent-glow);
+   ============================================================================ */

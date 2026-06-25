@@ -10,8 +10,11 @@ import type {
 
 export type ConnStatus = "connecting" | "open" | "closed" | "error";
 
+const CONNECT_TIMEOUT_MS = 12_000;
+
 export interface DraftSocket {
   connStatus: ConnStatus;
+  timedOut: boolean;
   draft: DraftState | null;
   available: PlayerSummary[];
   lastError: { code: string; message: string } | null;
@@ -34,12 +37,14 @@ export function useDraftSocket(leagueId: string, teamId: string): DraftSocket {
   const [available, setAvailable] = useState<PlayerSummary[]>([]);
   const [lastError, setLastError] = useState<{ code: string; message: string } | null>(null);
   const [evicted, setEvicted] = useState(false);
+  const [timedOut, setTimedOut] = useState(false);
 
   // Reconnection state — all refs so the closures inside connect() always read
   // the current values without needing to be re-created.
   const shouldReconnectRef = useRef(true);
   const reconnectDelayRef = useRef(1000); // ms; doubles each attempt, caps at 30 000
   const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const connectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const reconnectAttemptedAfter4001Ref = useRef(false); // prevents infinite loop on hard-refresh
 
   const send = useCallback((msg: ClientMessage) => {
@@ -52,6 +57,7 @@ export function useDraftSocket(leagueId: string, teamId: string): DraftSocket {
   useEffect(() => {
     // Reset state when leagueId/teamId changes.
     setEvicted(false);
+    setTimedOut(false);
     shouldReconnectRef.current = true;
     reconnectDelayRef.current = 1000;
     reconnectAttemptedAfter4001Ref.current = false;
@@ -68,11 +74,22 @@ export function useDraftSocket(leagueId: string, teamId: string): DraftSocket {
       wsRef.current = ws;
       setConnStatus("connecting");
 
+      // Surface a friendly error if the server doesn't respond within 12 seconds.
+      if (connectTimeoutRef.current) clearTimeout(connectTimeoutRef.current);
+      connectTimeoutRef.current = setTimeout(() => {
+        if (wsRef.current === ws && ws.readyState !== WebSocket.OPEN) {
+          setTimedOut(true);
+          ws.close();
+        }
+      }, CONNECT_TIMEOUT_MS);
+
       ws.onopen = () => {
         // Guard: ignore callbacks from sockets superseded by a newer connect() call.
         // React Strict Mode mounts effects twice, which can create two sockets; only
         // the one that most recently set wsRef.current is the live connection.
         if (wsRef.current !== ws) { ws.close(); return; }
+        if (connectTimeoutRef.current) { clearTimeout(connectTimeoutRef.current); connectTimeoutRef.current = null; }
+        setTimedOut(false);
         setConnStatus("open");
         reconnectDelayRef.current = 1000; // reset backoff on success
         ws.send(JSON.stringify({ type: "JOIN", fantasyTeamId: teamId } satisfies ClientMessage));
@@ -142,6 +159,7 @@ export function useDraftSocket(leagueId: string, teamId: string): DraftSocket {
     return () => {
       shouldReconnectRef.current = false;
       if (reconnectTimerRef.current) clearTimeout(reconnectTimerRef.current);
+      if (connectTimeoutRef.current) clearTimeout(connectTimeoutRef.current);
       wsRef.current?.close();
       wsRef.current = null;
     };
@@ -171,5 +189,5 @@ export function useDraftSocket(leagueId: string, teamId: string): DraftSocket {
   const pause = useCallback(() => send({ type: "PAUSE" }), [send]);
   const resume = useCallback(() => send({ type: "RESUME" }), [send]);
 
-  return { connStatus, draft, available, lastError, evicted, start, makePick, listAvailable, setQueue, pause, resume };
+  return { connStatus, timedOut, draft, available, lastError, evicted, start, makePick, listAvailable, setQueue, pause, resume };
 }

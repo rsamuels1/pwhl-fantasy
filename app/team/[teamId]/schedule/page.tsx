@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { requireAuth, requireTeamOwner } from "@/lib/auth";
 import { getDevNow } from "@/lib/devTime";
-import { getReplayNow } from "@/lib/replayTime";
+import { getReplayNow, resolveFixturePeriod, type BetaWeekMapping } from "@/lib/replayTime";
 import { getSeasonState } from "@/lib/season";
 import { DEFAULT_SCORING } from "@/lib/scoring";
 import { getWeeklyPerformance } from "@/lib/services/performance-service";
@@ -41,6 +41,11 @@ export default async function SchedulePage({ params }: Props) {
   const nowMs = getReplayNow(leagueInfo, await getDevNow());
   const scoringSettings = parseScoringSettings(leagueInfo.scoringSettings);
 
+  // For beta replay leagues, scoringSettings contains betaWeekMappings that translate
+  // remapped 2026 calendar periods to their actual 2024-25 fixture date windows.
+  const rawSettings = leagueInfo.scoringSettings as Record<string, unknown>;
+  const betaWeekMappings = (rawSettings?.betaWeekMappings as BetaWeekMapping[] | undefined) ?? null;
+
   const seasonState = await getSeasonState(leagueId, nowMs, prisma);
   const activePeriod = seasonState.periods.find((p) => p.status === "ACTIVE")?.period ?? null;
   const upcomingPeriod = seasonState.periods.find((p) => p.status === "UPCOMING")?.period ?? null;
@@ -70,8 +75,10 @@ export default async function SchedulePage({ params }: Props) {
     myPlayersByTeam.set(pwhlTeamId, existing);
   }
 
-  const periodStart = displayPeriod?.startsAt ?? new Date(nowMs);
-  const periodEnd = displayPeriod?.endsAt ?? new Date(nowMs + 14 * 24 * 3600_000);
+  // Resolve fixture period: for beta replay leagues translate remapped 2026 dates to 2024-25 game windows.
+  const fixtureDisplayPeriod = displayPeriod ? resolveFixturePeriod(displayPeriod, betaWeekMappings) : null;
+  const periodStart = fixtureDisplayPeriod?.startsAt ?? new Date(nowMs);
+  const periodEnd = fixtureDisplayPeriod?.endsAt ?? new Date(nowMs + 14 * 24 * 3600_000);
 
   const games = await prisma.game.findMany({
     where: {
@@ -113,28 +120,69 @@ export default async function SchedulePage({ params }: Props) {
     (w) => w.status === "COMPLETE" || w.status === "ACTIVE"
   );
 
+  // Overall record summary
+  const completedWeeks = weeklyPerf.filter((w) => w.status === "COMPLETE");
+  const totalWins = completedWeeks.reduce((acc, w) => acc + w.wins, 0);
+  const totalLosses = completedWeeks.reduce((acc, w) => acc + w.losses, 0);
+  const totalTies = completedWeeks.reduce((acc, w) => acc + w.ties, 0);
+  const totalFp = weeklyPerf
+    .filter((w) => w.status === "COMPLETE" || w.status === "ACTIVE")
+    .reduce((acc, w) => acc + w.myFp, 0);
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 28 }}>
 
       {/* ── Performance History ─────────────────────────────────────── */}
       <div>
-        <h1 style={{ fontSize: 22, margin: "0 0 4px" }}>Season Performance</h1>
-        <p style={{ margin: "0 0 16px", fontSize: 13, color: "#64748b" }}>
-          Week-by-week fantasy points, record, and ranking vs the field
+        <h1 style={{ fontSize: 22, margin: "0 0 4px" }}>My Season</h1>
+        <p style={{ margin: "0 0 16px", fontSize: 13, color: "var(--faint)" }}>
+          Week-by-week fantasy points and ranking vs the field. W-L-T = how many teams you outscored, underscored, or tied that week — not a single opponent.
         </p>
+
+        {/* Season summary header */}
+        {hasHistory && (
+          <div style={{
+            display: "flex", gap: 20, flexWrap: "wrap",
+            background: "var(--bg-raised)",
+            border: "1px solid rgba(148,163,184,0.08)",
+            borderRadius: 14, padding: "14px 20px",
+            marginBottom: 12,
+          }}>
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: "var(--faint)", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 3 }}>Record</div>
+              <div style={{ fontSize: 18, fontWeight: 700, color: "var(--text)", fontVariantNumeric: "tabular-nums" }}>
+                {totalWins}&ndash;{totalLosses}{totalTies > 0 ? `–${totalTies}` : ""}
+              </div>
+            </div>
+            <div style={{ width: 1, background: "rgba(148,163,184,0.12)", alignSelf: "stretch" }} />
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: "var(--faint)", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 3 }}>Total FP</div>
+              <div style={{ fontSize: 18, fontWeight: 700, color: "var(--text)", fontVariantNumeric: "tabular-nums" }}>
+                {totalFp.toFixed(1)}
+              </div>
+            </div>
+            <div style={{ width: 1, background: "rgba(148,163,184,0.12)", alignSelf: "stretch" }} />
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: "var(--faint)", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 3 }}>Weeks Played</div>
+              <div style={{ fontSize: 18, fontWeight: 700, color: "var(--text)", fontVariantNumeric: "tabular-nums" }}>
+                {completedWeeks.length}
+              </div>
+            </div>
+          </div>
+        )}
 
         {!hasHistory ? (
           <div style={{
-            background: "rgba(255,255,255,0.03)",
+            background: "var(--bg-raised)",
             border: "1px solid rgba(148,163,184,0.1)",
             borderRadius: 14, padding: 24,
-            textAlign: "center", color: "#64748b", fontSize: 14,
+            textAlign: "center", color: "var(--faint)", fontSize: 14,
           }}>
             Season hasn&apos;t started yet — check back after Week 1.
           </div>
         ) : (
           <div style={{
-            background: "rgba(255,255,255,0.03)",
+            background: "var(--bg-raised)",
             border: "1px solid rgba(148,163,184,0.08)",
             borderRadius: 14,
             overflow: "hidden",
@@ -144,15 +192,15 @@ export default async function SchedulePage({ params }: Props) {
               display: "grid",
               gridTemplateColumns: "80px 1fr 90px 90px 90px",
               padding: "10px 16px",
-              fontSize: 11, fontWeight: 700, color: "#475569",
+              fontSize: 11, fontWeight: 700, color: "var(--faint)",
               textTransform: "uppercase", letterSpacing: "0.07em",
               borderBottom: "1px solid rgba(148,163,184,0.08)",
-              background: "rgba(255,255,255,0.02)",
+              background: "var(--bg-raised)",
             }}>
               <span>Week</span>
               <span>Dates</span>
               <span style={{ textAlign: "right" }}>FP</span>
-              <span style={{ textAlign: "center" }}>W-L-T</span>
+              <span style={{ textAlign: "center" }} title="Wins-Losses-Ties vs the field (all teams)">vs Field</span>
               <span style={{ textAlign: "right" }}>Rank</span>
             </div>
 
@@ -174,22 +222,22 @@ export default async function SchedulePage({ params }: Props) {
                       padding: "12px 16px",
                       alignItems: "center",
                       borderBottom: isLast ? "none" : "1px solid rgba(148,163,184,0.06)",
-                      borderLeft: isActive ? "3px solid #6366f1" : "3px solid transparent",
-                      background: isActive ? "rgba(99,102,241,0.04)" : undefined,
+                      borderLeft: isActive ? "3px solid var(--accent)" : "3px solid transparent",
+                      background: isActive ? "rgba(143,193,232,0.04)" : undefined,
                     }}
                   >
                     {/* Week */}
                     <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                      <span style={{ fontSize: 14, fontWeight: 600, color: "#e2e8f0" }}>
+                      <span style={{ fontSize: 14, fontWeight: 600, color: "var(--text)" }}>
                         Wk {w.period.week}
                       </span>
                       {isActive && (
                         <span style={{
                           fontSize: 9, fontWeight: 800,
                           padding: "1px 5px", borderRadius: 99,
-                          background: "rgba(99,102,241,0.2)",
-                          color: "#a5b4fc",
-                          border: "1px solid rgba(99,102,241,0.35)",
+                          background: "rgba(143,193,232,0.2)",
+                          color: "var(--accent-strong)",
+                          border: "1px solid rgba(143,193,232,0.35)",
                           textTransform: "uppercase",
                         }}>
                           Live
@@ -210,7 +258,7 @@ export default async function SchedulePage({ params }: Props) {
                     </div>
 
                     {/* Dates */}
-                    <span style={{ fontSize: 12, color: "#64748b" }}>
+                    <span style={{ fontSize: 12, color: "var(--faint)" }}>
                       {fmtShort(w.period.startsAt)} – {fmtShort(w.period.endsAt)}
                     </span>
 
@@ -219,7 +267,7 @@ export default async function SchedulePage({ params }: Props) {
                       textAlign: "right",
                       fontSize: 14,
                       fontWeight: 700,
-                      color: w.myFp > 0 ? "#e2e8f0" : "#475569",
+                      color: w.myFp > 0 ? "var(--text)" : "var(--faint)",
                     }}>
                       {w.myFp > 0 ? w.myFp.toFixed(1) : "—"}
                     </span>
@@ -228,7 +276,7 @@ export default async function SchedulePage({ params }: Props) {
                     <span style={{
                       textAlign: "center",
                       fontSize: 13,
-                      color: w.teamCount > 0 ? "#94a3b8" : "#475569",
+                      color: w.teamCount > 0 ? "var(--dim)" : "var(--faint)",
                       fontVariantNumeric: "tabular-nums",
                     }}>
                       {w.teamCount > 0
@@ -241,15 +289,15 @@ export default async function SchedulePage({ params }: Props) {
                       {w.rank > 0 ? (
                         <span style={{
                           fontSize: 13, fontWeight: 700,
-                          color: w.rank === 1 ? "#34d399" : w.rank <= Math.ceil(w.teamCount / 2) ? "#a5b4fc" : "#64748b",
+                          color: w.rank === 1 ? "#34d399" : w.rank <= Math.ceil(w.teamCount / 2) ? "var(--accent-strong)" : "var(--faint)",
                         }}>
                           #{w.rank}
-                          <span style={{ fontWeight: 400, color: "#475569", fontSize: 12 }}>
+                          <span style={{ fontWeight: 400, color: "var(--faint)", fontSize: 12 }}>
                             /{w.teamCount}
                           </span>
                         </span>
                       ) : (
-                        <span style={{ color: "#475569", fontSize: 13 }}>—</span>
+                        <span style={{ color: "var(--faint)", fontSize: 13 }}>—</span>
                       )}
                     </div>
                   </div>
@@ -262,10 +310,10 @@ export default async function SchedulePage({ params }: Props) {
       {/* ── This Week's Schedule ────────────────────────────────────── */}
       <div>
         <h2 style={{ fontSize: 17, margin: "0 0 4px", fontWeight: 600 }}>
-          {displayPeriod ? `PWHL Week ${displayPeriod.week} Schedule` : "Upcoming PWHL Schedule"}
+          {displayPeriod ? `Your Players This Week` : "Upcoming PWHL Schedule"}
         </h2>
         {displayPeriod && (
-          <p style={{ margin: "0 0 12px", fontSize: 13, color: "#64748b" }}>
+          <p style={{ margin: "0 0 12px", fontSize: 13, color: "var(--faint)" }}>
             {fmtDate(displayPeriod.startsAt)} – {fmtDate(displayPeriod.endsAt)}
             {activePeriod ? " · Active" : " · Upcoming"}
           </p>
@@ -274,24 +322,24 @@ export default async function SchedulePage({ params }: Props) {
         {/* Progress bar */}
         {displayPeriod && totalGames > 0 && (
           <div style={{
-            background: "rgba(255,255,255,0.04)",
+            background: "var(--surface)",
             border: "1px solid rgba(148,163,184,0.1)",
             borderRadius: 14, padding: "14px 16px",
             marginBottom: 16,
           }}>
             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8, fontSize: 13 }}>
-              <span style={{ color: "#94a3b8", fontWeight: 600 }}>League-wide progress</span>
-              <span style={{ color: "#64748b" }}>{finishedGames} / {totalGames} games played</span>
+              <span style={{ color: "var(--dim)", fontWeight: 600 }}>League-wide progress</span>
+              <span style={{ color: "var(--faint)" }}>{finishedGames} / {totalGames} games played</span>
             </div>
-            <div style={{ height: 8, borderRadius: 999, background: "rgba(255,255,255,0.08)", overflow: "hidden" }}>
+            <div style={{ height: 8, borderRadius: 999, background: "var(--border)", overflow: "hidden" }}>
               <div style={{
                 height: "100%", borderRadius: 999,
                 width: `${progressPct}%`,
-                background: progressPct === 100 ? "#34d399" : "#6366f1",
+                background: progressPct === 100 ? "#34d399" : "var(--accent)",
                 transition: "width 0.4s ease",
               }} />
             </div>
-            <p style={{ margin: "8px 0 0", fontSize: 12, color: "#475569" }}>
+            <p style={{ margin: "8px 0 0", fontSize: 12, color: "var(--faint)" }}>
               {progressPct}% of the week{progressPct === 100 ? " — all games finished" : " complete"}
             </p>
           </div>
@@ -299,10 +347,10 @@ export default async function SchedulePage({ params }: Props) {
 
         {byDay.size === 0 ? (
           <div style={{
-            background: "rgba(255,255,255,0.03)",
+            background: "var(--bg-raised)",
             border: "1px solid rgba(148,163,184,0.1)",
             borderRadius: 14, padding: 24,
-            textAlign: "center", color: "#64748b", fontSize: 14,
+            textAlign: "center", color: "var(--faint)", fontSize: 14,
           }}>
             No games for your players this period.
           </div>
@@ -311,7 +359,7 @@ export default async function SchedulePage({ params }: Props) {
             {[...byDay.entries()].map(([dayKey, dayGames]) => (
               <div key={dayKey}>
                 <div style={{
-                  fontSize: 11, fontWeight: 700, color: "#475569",
+                  fontSize: 11, fontWeight: 700, color: "var(--faint)",
                   textTransform: "uppercase", letterSpacing: "0.08em",
                   marginBottom: 8,
                 }}>
@@ -326,20 +374,20 @@ export default async function SchedulePage({ params }: Props) {
 
                     return (
                       <div key={game.id} style={{
-                        background: played ? "rgba(255,255,255,0.025)" : "rgba(99,102,241,0.05)",
+                        background: played ? "var(--bg-raised)" : "rgba(143,193,232,0.05)",
                         border: played
                           ? "1px solid rgba(148,163,184,0.08)"
-                          : "1px solid rgba(99,102,241,0.15)",
+                          : "1px solid rgba(143,193,232,0.15)",
                         borderRadius: 12, padding: "12px 16px",
                       }}>
                         <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", alignItems: "center", gap: 12 }}>
                           <TeamSide abbr={game.homeTeam.abbreviation} name={game.homeTeam.name} myPlayers={myHome} align="right" isHome />
                           <div style={{ textAlign: "center", minWidth: 48 }}>
-                            <div style={{ fontSize: 10, fontWeight: 700, color: played ? "#475569" : "#6366f1", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                            <div style={{ fontSize: 10, fontWeight: 700, color: played ? "var(--faint)" : "var(--accent)", textTransform: "uppercase", letterSpacing: "0.5px" }}>
                               {played ? "Final" : "vs"}
                             </div>
                             {!played && (
-                              <div style={{ fontSize: 11, color: "#475569", marginTop: 2 }}>
+                              <div style={{ fontSize: 11, color: "var(--faint)", marginTop: 2 }}>
                                 {fmtTime(new Date(game.startsAt))}
                               </div>
                             )}
@@ -356,12 +404,12 @@ export default async function SchedulePage({ params }: Props) {
                             {[...myHome, ...myAway].map((p) => (
                               <span key={p.name} style={{
                                 fontSize: 11, padding: "2px 8px", borderRadius: 20,
-                                background: "rgba(99,102,241,0.12)",
-                                color: p.slot === "BENCH" || p.slot === "IR" ? "#64748b" : "#a5b4fc",
-                                border: "1px solid rgba(99,102,241,0.2)",
+                                background: "rgba(143,193,232,0.12)",
+                                color: p.slot === "BENCH" || p.slot === "IR" ? "var(--faint)" : "var(--accent-strong)",
+                                border: "1px solid rgba(143,193,232,0.2)",
                               }}>
                                 {p.name}
-                                <span style={{ color: "#475569", marginLeft: 4 }}>
+                                <span style={{ color: "var(--faint)", marginLeft: 4 }}>
                                   {p.position}{p.slot === "BENCH" ? " · BN" : p.slot === "IR" ? " · IR" : ""}
                                 </span>
                               </span>
@@ -397,7 +445,7 @@ function TeamSide({
         {myPlayers.length > 0 && align === "left" && <PlayerBadge count={myPlayers.length} />}
         <span style={{
           fontSize: 15, fontWeight: 700,
-          color: myPlayers.length > 0 ? "#e2e8f0" : "#64748b",
+          color: myPlayers.length > 0 ? "var(--text)" : "var(--faint)",
           overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
         }}>
           {abbr}
@@ -407,11 +455,11 @@ function TeamSide({
       <div style={{ display: "flex", alignItems: "center", gap: 4, justifyContent: align === "right" ? "flex-end" : "flex-start" }}>
         <span style={{
           fontSize: 9, fontWeight: 700, padding: "1px 4px", borderRadius: 3,
-          background: "rgba(148,163,184,0.08)", color: "#334155",
+          background: "var(--border)", color: "#334155",
         }}>
           {isHome ? "HOME" : "AWAY"}
         </span>
-        <span style={{ fontSize: 11, color: "#475569", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+        <span style={{ fontSize: 11, color: "var(--faint)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
           {name}
         </span>
       </div>
@@ -424,9 +472,9 @@ function PlayerBadge({ count }: { count: number }) {
     <span style={{
       fontSize: 10, fontWeight: 800,
       padding: "1px 6px", borderRadius: 999,
-      background: "rgba(99,102,241,0.2)",
-      color: "#a5b4fc",
-      border: "1px solid rgba(99,102,241,0.35)",
+      background: "rgba(143,193,232,0.2)",
+      color: "var(--accent-strong)",
+      border: "1px solid rgba(143,193,232,0.35)",
       flexShrink: 0,
     }}>
       {count}

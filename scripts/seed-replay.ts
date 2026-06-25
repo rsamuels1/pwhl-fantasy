@@ -50,7 +50,7 @@ async function main() {
     await prisma.matchup.deleteMany({ where: { leagueId: prior.id } });
     await (prisma as any).waiverPriority.deleteMany({ where: { fantasyTeam: { leagueId: prior.id } } });
     await prisma.fantasyTeam.deleteMany({ where: { leagueId: prior.id } });
-    await (prisma as any).leagueEvent.deleteMany({ where: { leagueId: prior.id } });
+    await prisma.leagueEvent.deleteMany({ where: { leagueId: prior.id } });
     await prisma.fantasyLeague.delete({ where: { id: prior.id } });
     console.log("Removed previous replay league.");
   }

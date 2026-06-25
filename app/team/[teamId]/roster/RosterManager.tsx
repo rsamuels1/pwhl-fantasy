@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useTransition, useMemo } from "react";
+import { useState, useTransition, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import AddAndSlotModal from "@/components/AddAndSlotModal";
 import WaiverWirePanel from "@/components/WaiverWirePanel";
+import MilestoneToast from "@/components/MilestoneToast";
 
 export type Position = "FORWARD" | "DEFENSE" | "GOALIE";
 
@@ -55,7 +56,12 @@ interface Props {
   viewTeamName: string;
   viewRoster: RosterPlayerRow[];
   isOwnRoster: boolean;
+  isCommissioner?: boolean;
   defaultTab?: Tab;
+  /** Hide the "My Roster" tab — used on Add & Drop tab where LineupDnD already shows the roster */
+  hideRosterTab?: boolean;
+  /** Hide the "Viewing:" team selector — used when ViewingSelector is rendered at page level */
+  hideViewingSelector?: boolean;
 }
 
 // ── constants ─────────────────────────────────────────────────────────────────
@@ -68,7 +74,7 @@ const SLOT_ORDER: Record<string, number> = {
 };
 const SLOT_COLORS: Record<string, string> = {
   FORWARD: "#60a5fa", DEFENSE: "#5fa98c", GOALIE: "#f59e0b",
-  UTIL: "#a78bfa", BENCH: "#64748b", IR: "#ef4444",
+  UTIL: "var(--accent-strong)", BENCH: "var(--faint)", IR: "#ef4444",
 };
 const POS_COLORS: Record<string, string> = {
   FORWARD: "#60a5fa", DEFENSE: "#5fa98c", GOALIE: "#f59e0b",
@@ -83,13 +89,17 @@ type SortKey = "name" | "pts" | "goals" | "assists" | "ppp" | "shots" | "hits" |
 export default function RosterManager({
   leagueId, teamId, teamName, maxRosterSize, rosterSettings,
   initialRoster, freeAgents,
-  allTeams, viewTeamId, viewTeamName, viewRoster, isOwnRoster,
-  defaultTab,
+  allTeams, viewTeamId, viewTeamName, viewRoster, isOwnRoster, isCommissioner,
+  defaultTab, hideRosterTab, hideViewingSelector,
 }: Props) {
   const router = useRouter();
-  const [tab, setTab] = useState<Tab>(defaultTab ?? "roster");
+  const resolvedDefault = hideRosterTab && (defaultTab === "roster" || !defaultTab) ? "freeAgents" : (defaultTab ?? "roster");
+  const [tab, setTab] = useState<Tab>(resolvedDefault);
   const [viewMode, setViewMode] = useState<ViewMode>("table");
   const [roster, setRoster] = useState<RosterPlayerRow[]>(initialRoster);
+  // Sync with server data after router.refresh() delivers new props. Without this,
+  // isFull is stale: after add (12→13) the next add sees isFull=false and fires without a drop.
+  useEffect(() => { setRoster(initialRoster); }, [initialRoster]);
   const [posFilter, setPosFilter] = useState<Position | "ALL">("ALL");
   const [search, setSearch] = useState("");
 
@@ -107,6 +117,10 @@ export default function RosterManager({
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [slottingPlayer, setSlottingPlayer] = useState<FreeAgentRow | null>(null);
+  // Snapshot the correct post-add roster size at the moment of success (before router.refresh
+  // may re-render props, and before dropForAdd state is cleared). add+drop is net-zero change.
+  const [slottingRosterSize, setSlottingRosterSize] = useState<number>(0);
+  const [showFirstAddToast, setShowFirstAddToast] = useState(false);
 
   const isFull = roster.length >= maxRosterSize;
 
@@ -115,30 +129,38 @@ export default function RosterManager({
     setError(null);
     setSuccessMsg(null);
     startTransition(async () => {
-      const res = await fetch(`/api/leagues/${leagueId}/waiver`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ teamId, addPlayerId, dropPlayerId }),
-      });
-      const data = await res.json() as { roster?: RosterPlayerRow[]; error?: string; onWaivers?: boolean };
-      if (!res.ok || data.error) {
-        if (data.onWaivers) {
-          // Player is on waivers — redirect manager to the waiver wire tab
-          setError("This player is on waivers — use the Waiver Wire tab to submit a claim.");
-          setTab("waiverWire");
-        } else {
-          setError(data.error ?? "Failed to add player.");
+      try {
+        const res = await fetch(`/api/leagues/${leagueId}/waiver`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ teamId, addPlayerId, dropPlayerId }),
+        });
+        const data = await res.json() as { roster?: RosterPlayerRow[]; error?: string; onWaivers?: boolean; milestoneTriggered?: "first_add" | null };
+        if (!res.ok || data.error) {
+          if (res.status === 401) {
+            setError("__SESSION_EXPIRED__");
+          } else if (data.onWaivers) {
+            setError("This player is on waivers — use the Waiver Wire tab to submit a claim.");
+            setTab("waiverWire");
+          } else {
+            setError(data.error ?? "Failed to add player.");
+          }
+          return;
         }
-        return;
-      }
-      const addedFa = freeAgents.find((p) => p.playerId === addPlayerId);
-      setPendingAdd(null);
-      setDropForAdd(null);
-      setSuccessMsg(`${addedFa?.name ?? "Player"} added to your roster.`);
-      router.refresh();
-      // Show Add & Slot modal for unlocked players; locked players go straight to bench
-      if (addedFa && !addedFa.isLocked) {
-        setSlottingPlayer(addedFa);
+        const addedFa = freeAgents.find((p) => p.playerId === addPlayerId);
+        // add+drop is net-zero roster change; plain add is +1. Capture before clearing dropForAdd.
+        const expectedSize = dropPlayerId ? roster.length : roster.length + 1;
+        setPendingAdd(null);
+        setDropForAdd(null);
+        setSuccessMsg(`${addedFa?.name ?? "Player"} added to your roster.`);
+        if (data.milestoneTriggered === "first_add") setShowFirstAddToast(true);
+        router.refresh();
+        if (addedFa && !addedFa.isLocked) {
+          setSlottingRosterSize(expectedSize);
+          setSlottingPlayer(addedFa);
+        }
+      } catch {
+        setError("Something went wrong — please try again.");
       }
     });
   }
@@ -156,7 +178,7 @@ export default function RosterManager({
       });
       const data = await res.json() as { dropped?: string; error?: string };
       if (!res.ok || data.error) {
-        setError(data.error ?? "Failed to drop player.");
+        setError(res.status === 401 ? "__SESSION_EXPIRED__" : (data.error ?? "Failed to drop player."));
         return;
       }
       setRoster((prev) => prev.filter((p) => p.playerId !== dropPlayerId));
@@ -227,66 +249,84 @@ export default function RosterManager({
           border: `1px solid ${error ? "rgba(209,139,127,0.25)" : "rgba(95,169,140,0.25)"}`,
           color: error ? "#d18b7f" : "#5fa98c",
         }}>
-          {error ?? successMsg}
+          {error === "__SESSION_EXPIRED__" ? (
+            <>Your session expired.{" "}
+              <a href={`/login?returnTo=${encodeURIComponent(typeof window !== "undefined" ? window.location.pathname : "/")}`}
+                style={{ color: "#d18b7f", fontWeight: 700 }}>Log in again →</a>
+            </>
+          ) : (error ?? successMsg)}
         </div>
       )}
 
       {/* ── Team selector ── */}
-      <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-        <label style={{ fontSize: 12, color: "#64748b", fontWeight: 600, flexShrink: 0 }}>
-          Viewing:
-        </label>
-        <select
-          value={viewTeamId}
-          onChange={(e) => router.push(`?view=${e.target.value}`)}
-          style={{
-            background: "rgba(255,255,255,0.06)", border: "1px solid rgba(148,163,184,0.18)",
-            borderRadius: 8, color: "#e2e8f0", padding: "6px 10px", fontSize: 13,
-            cursor: "pointer", outline: "none",
-          }}
-        >
-          {allTeams.map((t) => (
-            <option key={t.id} value={t.id} style={{ background: "#1e293b" }}>
-              {t.name}{t.id === teamId ? " (My Team)" : ""}
-            </option>
-          ))}
-        </select>
-        {!isOwnRoster && (
-          <button
-            onClick={() => router.push("?")}
+      {!hideViewingSelector && (
+        <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+          <label style={{ fontSize: 12, color: "var(--faint)", fontWeight: 600, flexShrink: 0 }}>
+            Viewing:
+          </label>
+          <select
+            value={viewTeamId}
+            onChange={(e) => router.push(`?view=${e.target.value}`)}
             style={{
-              fontSize: 12, fontWeight: 600, padding: "5px 12px", borderRadius: 8,
-              border: "1px solid rgba(99,102,241,0.3)", cursor: "pointer",
-              background: "rgba(99,102,241,0.1)", color: "#a5b4fc",
+              background: "var(--surface)", border: "1px solid var(--border)",
+              borderRadius: 8, color: "var(--text)", padding: "6px 10px", fontSize: 13,
+              cursor: "pointer", outline: "none",
             }}
           >
-            ← My Team
-          </button>
-        )}
-      </div>
+            {allTeams.map((t) => (
+              <option key={t.id} value={t.id} style={{ background: "var(--card)" }}>
+                {t.name}{t.id === teamId ? " (My Team)" : ""}
+              </option>
+            ))}
+          </select>
+          {!isOwnRoster && (
+            <>
+              <button
+                onClick={() => router.push("?")}
+                style={{
+                  fontSize: 12, fontWeight: 600, padding: "5px 12px", borderRadius: 8,
+                  border: "1px solid rgba(143,193,232,0.3)", cursor: "pointer",
+                  background: "rgba(143,193,232,0.1)", color: "var(--accent-strong)",
+                }}
+              >
+                ← My Team
+              </button>
+              {isCommissioner && (
+                <span style={{
+                  fontSize: 11, fontWeight: 700, padding: "5px 10px", borderRadius: 8,
+                  background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.25)",
+                  color: "var(--amber)", letterSpacing: "0.06em",
+                }}>
+                  ⚙ Commissioner View
+                </span>
+              )}
+            </>
+          )}
+        </div>
+      )}
 
       {/* ── Own-team tabs (hidden when viewing another team) ── */}
       {isOwnRoster && (
-        <div style={{ display: "flex", gap: 4, background: "rgba(255,255,255,0.04)", borderRadius: 10, padding: 3, width: "fit-content", flexWrap: "wrap" }}>
+        <div style={{ display: "flex", gap: 4, background: "var(--surface)", borderRadius: 10, padding: 3, width: "fit-content", flexWrap: "wrap" }}>
           {([
-            ["roster", `${teamName} (${roster.length}/${maxRosterSize})`, undefined],
-            ["freeAgents", `Free Agents (${freeAgents.filter(p => !rosterIds.has(p.playerId)).length})`, "Add players immediately with no claim period"],
-            ["waiverWire", "Waiver Wire", "Claim players subject to priority and review period"],
-          ] as [Tab, string, string | undefined][]).map(([t, label, subtitle]) => (
+            ...(!hideRosterTab ? [["roster", `${teamName} (${roster.length}/${maxRosterSize})`, undefined] as [Tab, string, string | undefined]] : []),
+            ["freeAgents", `Free Agents (${freeAgents.filter(p => !rosterIds.has(p.playerId)).length})`, "Add players immediately with no claim period"] as [Tab, string, string | undefined],
+            ["waiverWire", "Waiver Wire", "Claim players subject to priority and review period"] as [Tab, string, string | undefined],
+          ]).map(([t, label, subtitle]) => (
             <div key={t} style={{ position: "relative" }}>
               <button onClick={() => setTab(t)} style={{
                 padding: "7px 16px", borderRadius: 8, border: "none", cursor: "pointer",
                 fontSize: 13, fontWeight: 600,
-                background: tab === t ? "rgba(99,102,241,0.3)" : "transparent",
-                color: tab === t ? "#a5b4fc" : "#64748b",
+                background: tab === t ? "rgba(143,193,232,0.3)" : "transparent",
+                color: tab === t ? "var(--accent-strong)" : "var(--faint)",
               }}>
                 {label}
               </button>
               {subtitle && (
                 <div style={{
                   position: "absolute", bottom: "100%", left: "50%", transform: "translateX(-50%)",
-                  whiteSpace: "nowrap", fontSize: 11, color: "#94a3b8", marginBottom: 6,
-                  background: "rgba(0,0,0,0.8)", padding: "4px 8px", borderRadius: 4,
+                  whiteSpace: "nowrap", fontSize: 11, color: "var(--dim)", marginBottom: 6,
+                  background: "rgba(0,0,0,0.85)", padding: "4px 8px", borderRadius: 4,
                   opacity: 0, pointerEvents: "none", transition: "opacity 0.2s",
                 }} onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.opacity = "1"; }} onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.opacity = "0"; }}>
                   {subtitle}
@@ -303,20 +343,20 @@ export default function RosterManager({
           {/* Header row: team info + view toggle */}
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
             {!isOwnRoster && (
-              <div style={{ fontSize: 14, fontWeight: 600, color: "#94a3b8" }}>
+              <div style={{ fontSize: 14, fontWeight: 600, color: "var(--dim)" }}>
                 {viewTeamName}
-                <span style={{ marginLeft: 8, fontSize: 12, color: "#475569", fontWeight: 400 }}>
+                <span style={{ marginLeft: 8, fontSize: 12, color: "var(--faint)", fontWeight: 400 }}>
                   {viewRoster.length} players · read-only
                 </span>
               </div>
             )}
-            <div style={{ marginLeft: isOwnRoster ? "auto" : undefined, display: "flex", gap: 2, background: "rgba(255,255,255,0.04)", borderRadius: 8, padding: 2 }}>
+            <div style={{ marginLeft: isOwnRoster ? "auto" : undefined, display: "flex", gap: 2, background: "var(--surface)", borderRadius: 8, padding: 2 }}>
               {(["table", "cards"] as ViewMode[]).map((m) => (
                 <button key={m} onClick={() => setViewMode(m)} style={{
                   padding: "5px 12px", borderRadius: 6, border: "none", cursor: "pointer",
                   fontSize: 12, fontWeight: 600,
-                  background: viewMode === m ? "rgba(99,102,241,0.3)" : "transparent",
-                  color: viewMode === m ? "#a5b4fc" : "#64748b",
+                  background: viewMode === m ? "rgba(143,193,232,0.3)" : "transparent",
+                  color: viewMode === m ? "var(--accent-strong)" : "var(--faint)",
                 }}>
                   {m === "table" ? "≡ Table" : "⊞ Cards"}
                 </button>
@@ -326,7 +366,7 @@ export default function RosterManager({
 
           {sortedRoster.length === 0 ? (
             <div style={panel}>
-              <p style={{ color: "#64748b", margin: 0, fontSize: 13 }}>No players on this roster yet.</p>
+              <p style={{ color: "var(--faint)", margin: 0, fontSize: 13 }}>No players on this roster yet.</p>
             </div>
           ) : viewMode === "cards" ? (
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(170px, 1fr))", gap: 12 }}>
@@ -380,6 +420,14 @@ export default function RosterManager({
         </div>
       )}
 
+      {/* ── First-add milestone toast ── */}
+      {showFirstAddToast && (
+        <MilestoneToast
+          milestoneKey={`milestone-first-add-${leagueId}`}
+          message="First free-agent pickup — keep building your roster."
+        />
+      )}
+
       {/* ── Add & Slot modal ── */}
       {slottingPlayer && (
         <AddAndSlotModal
@@ -389,7 +437,7 @@ export default function RosterManager({
           teamId={teamId}
           leagueId={leagueId}
           onComplete={() => { setSlottingPlayer(null); router.refresh(); }}
-          currentRosterSize={roster.length + 1}
+          currentRosterSize={slottingRosterSize}
           maxRosterSize={maxRosterSize}
         />
       )}
@@ -408,12 +456,12 @@ export default function RosterManager({
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           <div style={{
             padding: "12px 16px", borderRadius: 12,
-            background: "rgba(99,102,241,0.08)", border: "1px solid rgba(99,102,241,0.18)",
-            fontSize: 13, color: "#cbd5e1",
+            background: "rgba(143,193,232,0.08)", border: "1px solid rgba(143,193,232,0.18)",
+            fontSize: 13, color: "var(--muted)",
           }}>
             <span style={{ fontWeight: 600 }}>💡 Free agents add immediately.</span> They skip the waiver review period and go straight to your roster (subject to lock rules).
           </div>
-          <p style={{ fontSize: "0.7rem", color: "var(--text-muted, #6b7280)", margin: 0 }}>
+          <p style={{ fontSize: "0.7rem", color: "var(--faint)", margin: 0 }}>
             GP = Games Played · G = Goals · A = Assists · PTS = Points · PPP = Power Play Points · SOG = Shots on Goal · HIT = Hits · BLK = Blocks · FP = Fantasy Points
           </p>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
@@ -423,8 +471,8 @@ export default function RosterManager({
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               style={{
-                background: "rgba(255,255,255,0.06)", border: "1px solid rgba(148,163,184,0.15)",
-                borderRadius: 8, color: "#e2e8f0", padding: "7px 12px", fontSize: 13,
+                background: "var(--surface)", border: "1px solid var(--border)",
+                borderRadius: 8, color: "var(--text)", padding: "7px 12px", fontSize: 13,
                 minWidth: 180, outline: "none",
               }}
             />
@@ -432,9 +480,9 @@ export default function RosterManager({
               <button key={pos} onClick={() => setPosFilter(pos)} style={{
                 padding: "6px 14px", borderRadius: 20, border: "none", cursor: "pointer",
                 fontSize: 12, fontWeight: 600,
-                background: posFilter === pos ? `${POS_COLORS[pos] ?? "#6366f1"}22` : "rgba(255,255,255,0.05)",
-                color: posFilter === pos ? (POS_COLORS[pos] ?? "#a5b4fc") : "#64748b",
-                outline: posFilter === pos ? `1px solid ${POS_COLORS[pos] ?? "#6366f1"}44` : "none",
+                background: posFilter === pos ? `${POS_COLORS[pos] ?? "var(--accent)"}22` : "var(--surface)",
+                color: posFilter === pos ? (POS_COLORS[pos] ?? "var(--accent-strong)") : "var(--faint)",
+                outline: posFilter === pos ? `1px solid ${POS_COLORS[pos] ?? "var(--accent)"}44` : "none",
               }}>
                 {pos === "ALL" ? "All" : pos === "FORWARD" ? "F" : pos === "DEFENSE" ? "D" : "G"}
               </button>
@@ -453,7 +501,7 @@ export default function RosterManager({
               onSort={toggleFaSort}
             />
             {filteredFa.length === 0 ? (
-              <p style={{ color: "#64748b", fontSize: 13, margin: "12px 0 0 14px" }}>No players match.</p>
+              <p style={{ color: "var(--faint)", fontSize: 13, margin: "12px 0 0 14px" }}>No players match.</p>
             ) : (
               filteredFa.map((fa, i) => (
                 <FaRow
@@ -516,12 +564,12 @@ function PlayerCard({ player, onDrop, disabled }: {
         <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 6px", borderRadius: 5, background: `${POS_COLORS[player.position]}20`, color: POS_COLORS[player.position] }}>
           {player.position[0]}
         </span>
-        {player.teamAbbr && <span style={{ fontSize: 11, color: "#64748b" }}>{player.teamAbbr}</span>}
-        <span style={{ marginLeft: "auto", fontSize: 9, fontWeight: 700, padding: "2px 6px", borderRadius: 5, background: `${SLOT_COLORS[player.slot] ?? "#64748b"}20`, color: SLOT_COLORS[player.slot] ?? "#64748b" }}>
+        {player.teamAbbr && <span style={{ fontSize: 11, color: "var(--faint)" }}>{player.teamAbbr}</span>}
+        <span style={{ marginLeft: "auto", fontSize: 9, fontWeight: 700, padding: "2px 6px", borderRadius: 5, background: `${SLOT_COLORS[player.slot] ?? "var(--faint)"}20`, color: SLOT_COLORS[player.slot] ?? "var(--faint)" }}>
           {SLOT_LABELS[player.slot] ?? player.slot}
         </span>
       </div>
-      <div style={{ fontWeight: 700, fontSize: 14, color: "#e2e8f0", lineHeight: 1.3 }}>
+      <div style={{ fontWeight: 700, fontSize: 14, color: "var(--text)", lineHeight: 1.3 }}>
         {player.name}
         {!player.active && <span style={{ marginLeft: 6, fontSize: 9, color: "#ef4444", background: "rgba(239,68,68,0.12)", padding: "1px 4px", borderRadius: 3 }}>INJ</span>}
       </div>
@@ -531,8 +579,8 @@ function PlayerCard({ player, onDrop, disabled }: {
       </div>
       <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
         {chips.map((c) => (
-          <span key={c.label} style={{ fontSize: 11, padding: "3px 7px", borderRadius: 6, background: "rgba(255,255,255,0.05)", color: "#94a3b8" }}>
-            <span style={{ color: "#64748b", fontSize: 10 }}>{c.label} </span>{c.val}
+          <span key={c.label} style={{ fontSize: 11, padding: "3px 7px", borderRadius: 6, background: "var(--surface)", color: "var(--dim)" }}>
+            <span style={{ color: "var(--faint)", fontSize: 10 }}>{c.label} </span>{c.val}
           </span>
         ))}
       </div>
@@ -560,16 +608,19 @@ function ColHeader({ isGoalie, readonly, sortKey, sortAsc, onSort }: {
     : "44px minmax(80px,1fr) 46px 46px 60px 50px 46px 60px 48px";
   const cols = isGoalie ? goalieCols : skaterCols;
 
-  function SortTh({ label, k }: { label: string; k: SortKey }) {
+  function SortTh({ label, k, title }: { label: string; k: SortKey; title?: string }) {
     const active = sortKey === k;
+    const labelEl = title
+      ? <abbr title={title} style={{ textDecoration: "underline dotted", textDecorationColor: "var(--faint)", textUnderlineOffset: 2, cursor: "help", fontStyle: "normal" }}>{label}</abbr>
+      : <>{label}</>;
     return (
       <button onClick={() => onSort(k)} style={{
         background: "none", border: "none", cursor: "pointer", textAlign: "right",
         fontSize: 10, fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase",
-        color: active ? "#c9b6ff" : "var(--faint)", padding: 0,
+        color: active ? "var(--accent-strong)" : "var(--faint)", padding: 0,
         display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 3,
       }}>
-        {label}{active ? (sortAsc ? " ↑" : " ↓") : ""}
+        {labelEl}{active ? (sortAsc ? " ↑" : " ↓") : ""}
       </button>
     );
   }
@@ -588,10 +639,10 @@ function ColHeader({ isGoalie, readonly, sortKey, sortAsc, onSort }: {
         <>
           <SortTh label="GP" k="gp" />
           <SortTh label="W" k="wins" />
-          <SortTh label="SV%" k="savePct" />
-          <SortTh label="GA" k="goalsAgainst" />
-          <SortTh label="SO" k="shutouts" />
-          <SortTh label="FP" k="fp" />
+          <SortTh label="SV%" k="savePct" title="Save percentage — saves ÷ shots faced" />
+          <SortTh label="GA" k="goalsAgainst" title="Goals against — goals allowed" />
+          <SortTh label="SO" k="shutouts" title="Shutouts — full game, zero goals allowed" />
+          <SortTh label="FP" k="fp" title="Fantasy points this season" />
         </>
       ) : (
         <>
@@ -599,11 +650,11 @@ function ColHeader({ isGoalie, readonly, sortKey, sortAsc, onSort }: {
           <SortTh label="G" k="goals" />
           <SortTh label="A" k="assists" />
           <SortTh label="PTS" k="pts" />
-          <SortTh label="PPP" k="ppp" />
-          <SortTh label="SOG" k="shots" />
-          <SortTh label="HIT" k="hits" />
-          <SortTh label="BLK" k="blocks" />
-          <SortTh label="FP" k="fp" />
+          <SortTh label="PPP" k="ppp" title="Power play points" />
+          <SortTh label="SOG" k="shots" title="Shots on goal" />
+          <SortTh label="HIT" k="hits" title="Hits delivered" />
+          <SortTh label="BLK" k="blocks" title="Shots blocked (not by the goalie)" />
+          <SortTh label="FP" k="fp" title="Fantasy points this season" />
         </>
       )}
       {!readonly && <span />}
@@ -631,21 +682,21 @@ function RosterRow({ player, index, readonly, onDrop, disabled }: {
     <div style={{
       display: "grid", gridTemplateColumns: cols, gap: 8,
       padding: "9px 14px", alignItems: "center",
-      borderTop: index === 0 ? "none" : "1px solid rgba(148,163,184,0.05)",
-      background: index % 2 === 0 ? "transparent" : "rgba(255,255,255,0.01)",
+      borderTop: index === 0 ? "none" : "1px solid var(--border)",
+      background: index % 2 === 0 ? "transparent" : "var(--bg-raised)",
     }}>
-      <span style={{ fontSize: 10, fontWeight: 700, textAlign: "center", padding: "3px 0", borderRadius: 5, width: 36, background: `${SLOT_COLORS[player.slot] ?? "#64748b"}20`, color: SLOT_COLORS[player.slot] ?? "#64748b" }}>
+      <span style={{ fontSize: 10, fontWeight: 700, textAlign: "center", padding: "3px 0", borderRadius: 5, width: 36, background: `${SLOT_COLORS[player.slot] ?? "var(--faint)"}20`, color: SLOT_COLORS[player.slot] ?? "var(--faint)" }}>
         {SLOT_LABELS[player.slot] ?? player.slot}
       </span>
 
       <div style={{ display: "flex", alignItems: "center", gap: 6, minWidth: 0 }}>
-        <span style={{ fontWeight: 600, fontSize: 13, color: "#e2e8f0", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+        <span style={{ fontWeight: 600, fontSize: 13, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
           {player.name}
         </span>
         <span style={{ fontSize: 10, fontWeight: 700, color: POS_COLORS[player.position], flexShrink: 0 }}>
           {player.position[0]}
         </span>
-        {player.teamAbbr && <span style={{ fontSize: 10, color: "#475569", flexShrink: 0 }}>{player.teamAbbr}</span>}
+        {player.teamAbbr && <span style={{ fontSize: 10, color: "var(--faint)", flexShrink: 0 }}>{player.teamAbbr}</span>}
         {!player.active && <span style={{ fontSize: 10, color: "#ef4444", background: "rgba(239,68,68,0.12)", padding: "1px 5px", borderRadius: 4, flexShrink: 0 }}>INJ</span>}
       </div>
 
@@ -653,7 +704,7 @@ function RosterRow({ player, index, readonly, onDrop, disabled }: {
         <>
           <Num v={s ? (s as GoalieStats).gp : null} />
           <Num v={s ? (s as GoalieStats).wins : null} />
-          <span style={{ textAlign: "right", fontSize: 12, color: "#94a3b8" }}>{s ? fmtSvPct((s as GoalieStats).savePct) : "—"}</span>
+          <span style={{ textAlign: "right", fontSize: 12, color: "var(--dim)" }}>{s ? fmtSvPct((s as GoalieStats).savePct) : "—"}</span>
           <Num v={s ? (s as GoalieStats).goalsAgainst : null} />
           <Num v={s ? (s as GoalieStats).shutouts : null} />
           <Num v={s ? s.fantasyPoints : null} highlight />
@@ -696,7 +747,7 @@ function FaColHeader({ isGoalie, sortKey, sortAsc, onSort }: {
       <button onClick={() => onSort(k)} title={title} style={{
         background: "none", border: "none", cursor: "pointer", textAlign: "right",
         fontSize: 10, fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase",
-        color: active ? "#c9b6ff" : "var(--faint)", padding: 0,
+        color: active ? "var(--accent-strong)" : "var(--faint)", padding: 0,
         display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 3,
       }}>
         {label}{active ? (sortAsc ? " ↑" : " ↓") : ""}
@@ -716,10 +767,10 @@ function FaColHeader({ isGoalie, sortKey, sortAsc, onSort }: {
         <>
           <SortTh label="GP" k="gp" />
           <SortTh label="W" k="wins" />
-          <SortTh label="SV%" k="savePct" />
-          <SortTh label="GA" k="goalsAgainst" />
-          <SortTh label="SO" k="shutouts" />
-          <SortTh label="FP" k="fp" />
+          <SortTh label="SV%" k="savePct" title="Save percentage — saves ÷ shots faced" />
+          <SortTh label="GA" k="goalsAgainst" title="Goals against — goals allowed" />
+          <SortTh label="SO" k="shutouts" title="Shutouts — full game, zero goals allowed" />
+          <SortTh label="FP" k="fp" title="Fantasy points this season" />
         </>
       ) : (
         <>
@@ -727,11 +778,11 @@ function FaColHeader({ isGoalie, sortKey, sortAsc, onSort }: {
           <SortTh label="G" k="goals" />
           <SortTh label="A" k="assists" />
           <SortTh label="PTS" k="pts" />
-          <SortTh label="PPP" k="ppp" />
-          <SortTh label="SOG" k="shots" />
-          <SortTh label="HIT" k="hits" />
-          <SortTh label="BLK" k="blocks" />
-          <SortTh label="FP" k="fp" />
+          <SortTh label="PPP" k="ppp" title="Power play points" />
+          <SortTh label="SOG" k="shots" title="Shots on goal" />
+          <SortTh label="HIT" k="hits" title="Hits delivered" />
+          <SortTh label="BLK" k="blocks" title="Shots blocked (not by the goalie)" />
+          <SortTh label="FP" k="fp" title="Fantasy points this season" />
         </>
       )}
       <span />
@@ -758,22 +809,22 @@ function FaRow({ player, index, isFull, rosterPlayers, pendingAdd, dropForAdd,
   const fmtSvPct = (v: number | null) => v != null ? v.toFixed(3).replace(/^0/, "") : "—";
 
   return (
-    <div style={{ borderTop: index === 0 ? "none" : "1px solid rgba(148,163,184,0.05)" }}>
+    <div style={{ borderTop: index === 0 ? "none" : "1px solid var(--border)" }}>
       <div style={{
         display: "grid", gridTemplateColumns: cols, gap: 8,
         padding: "9px 14px", alignItems: "center",
-        background: isThisPending ? "rgba(99,102,241,0.06)" : index % 2 === 0 ? "transparent" : "rgba(255,255,255,0.01)",
+        background: isThisPending ? "rgba(143,193,232,0.06)" : index % 2 === 0 ? "transparent" : "var(--bg-raised)",
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 6, minWidth: 0 }}>
-          <span style={{ fontWeight: 600, fontSize: 13, color: "#e2e8f0", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          <span style={{ fontWeight: 600, fontSize: 13, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
             {player.name}
           </span>
           <span style={{ fontSize: 10, fontWeight: 700, color: POS_COLORS[player.position], flexShrink: 0 }}>
             {player.position[0]}
           </span>
-          {player.teamAbbr && <span style={{ fontSize: 10, color: "#475569", flexShrink: 0 }}>{player.teamAbbr}</span>}
+          {player.teamAbbr && <span style={{ fontSize: 10, color: "var(--faint)", flexShrink: 0 }}>{player.teamAbbr}</span>}
           {player.isOnWaivers && (
-            <span title="This player is on waivers. Use the Claim button to submit a waiver claim." style={{ fontSize: 9, fontWeight: 700, padding: "2px 5px", borderRadius: 4, background: "rgba(100,116,139,0.2)", color: "#64748b", flexShrink: 0 }}>
+            <span title="This player is on waivers. Use the Claim button to submit a waiver claim." style={{ fontSize: 9, fontWeight: 700, padding: "2px 5px", borderRadius: 4, background: "rgba(100,116,139,0.2)", color: "var(--faint)", flexShrink: 0 }}>
               On Waivers
             </span>
           )}
@@ -786,7 +837,7 @@ function FaRow({ player, index, isFull, rosterPlayers, pendingAdd, dropForAdd,
             padding: "2px 6px", borderRadius: 10,
             background: player.gamesThisPeriod > 0 ? "var(--accent-dim)" : "rgba(100,116,139,0.15)",
             border: player.gamesThisPeriod > 0 ? "1px solid var(--accent-border)" : "none",
-            color: player.gamesThisPeriod > 0 ? "#c9b6ff" : "var(--faint)",
+            color: player.gamesThisPeriod > 0 ? "var(--accent-strong)" : "var(--faint)",
           }}>
             {player.gamesThisPeriod}
           </span>
@@ -798,7 +849,7 @@ function FaRow({ player, index, isFull, rosterPlayers, pendingAdd, dropForAdd,
           <>
             <Num v={s ? (s as GoalieStats).gp : null} />
             <Num v={s ? (s as GoalieStats).wins : null} />
-            <span style={{ textAlign: "right", fontSize: 12, color: "#94a3b8" }}>{s ? fmtSvPct((s as GoalieStats).savePct) : "—"}</span>
+            <span style={{ textAlign: "right", fontSize: 12, color: "var(--dim)" }}>{s ? fmtSvPct((s as GoalieStats).savePct) : "—"}</span>
             <Num v={s ? (s as GoalieStats).goalsAgainst : null} />
             <Num v={s ? (s as GoalieStats).shutouts : null} />
             <Num v={s ? s.fantasyPoints : null} highlight />
@@ -821,18 +872,18 @@ function FaRow({ player, index, isFull, rosterPlayers, pendingAdd, dropForAdd,
           <button
             onClick={onSwitchToWaivers}
             title="Submit a waiver claim from the Waiver Wire tab. Claims are processed on a set schedule based on league priority order."
-            style={{ ...smallBtn("#64748b"), fontSize: 10 }}
+            style={{ ...smallBtn("var(--faint)"), fontSize: 10 }}
           >
             Claim
           </button>
         ) : isThisPending && isFull ? (
-          <button onClick={onCancel} style={smallBtn("#64748b")}>Cancel</button>
+          <button onClick={onCancel} style={smallBtn("var(--faint)")}>Cancel</button>
         ) : (
           <button
             onClick={onSelectAdd}
             disabled={disabled || (!!pendingAdd && !isThisPending)}
             title="Add this free agent immediately to your roster."
-            style={smallBtn("#6366f1")}
+            style={smallBtn("var(--accent)")}
           >
             Add
           </button>
@@ -840,25 +891,25 @@ function FaRow({ player, index, isFull, rosterPlayers, pendingAdd, dropForAdd,
       </div>
 
       {isThisPending && isFull && (
-        <div style={{ margin: "0 14px 10px", padding: "12px 14px", borderRadius: 10, background: "rgba(99,102,241,0.08)", border: "1px solid rgba(99,102,241,0.2)" }}>
-          <p style={{ fontSize: 12, color: "#94a3b8", margin: "0 0 8px" }}>
+        <div style={{ margin: "0 14px 10px", padding: "12px 14px", borderRadius: 10, background: "rgba(143,193,232,0.08)", border: "1px solid rgba(143,193,232,0.2)" }}>
+          <p style={{ fontSize: 12, color: "var(--dim)", margin: "0 0 8px" }}>
             Roster is full. Select a player to drop:
           </p>
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             {rosterPlayers.map((rp) => (
               <label key={rp.playerId} style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
-                <input type="radio" name={`drop-for-${player.playerId}`} value={rp.playerId} checked={dropForAdd === rp.playerId} onChange={() => onSelectDrop(rp.playerId)} style={{ accentColor: "#6366f1" }} />
-                <span style={{ fontSize: 13, color: "#e2e8f0" }}>{rp.name}</span>
+                <input type="radio" name={`drop-for-${player.playerId}`} value={rp.playerId} checked={dropForAdd === rp.playerId} onChange={() => onSelectDrop(rp.playerId)} style={{ accentColor: "var(--accent)" }} />
+                <span style={{ fontSize: 13, color: "var(--text)" }}>{rp.name}</span>
                 <span style={{ fontSize: 10, color: POS_COLORS[rp.position] }}>{rp.position[0]}</span>
-                <span style={{ fontSize: 10, color: "#475569" }}>{SLOT_LABELS[rp.slot]}</span>
+                <span style={{ fontSize: 10, color: "var(--faint)" }}>{SLOT_LABELS[rp.slot]}</span>
               </label>
             ))}
           </div>
           <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
-            <button onClick={onConfirmAddDrop} disabled={!dropForAdd || disabled} style={{ ...smallBtn("#6366f1"), opacity: !dropForAdd ? 0.5 : 1 }}>
+            <button onClick={onConfirmAddDrop} disabled={!dropForAdd || disabled} style={{ ...smallBtn("var(--accent)"), opacity: !dropForAdd ? 0.5 : 1 }}>
               Confirm Add / Drop
             </button>
-            <button onClick={onCancel} style={smallBtn("#64748b")}>Cancel</button>
+            <button onClick={onCancel} style={smallBtn("var(--faint)")}>Cancel</button>
           </div>
         </div>
       )}
@@ -917,7 +968,7 @@ function smallBtn(bg: string): React.CSSProperties {
   return {
     fontSize: 11, fontWeight: 600, minHeight: 44, padding: "0 12px", borderRadius: 6,
     border: "none", cursor: "pointer", background: `${bg}30`,
-    color: bg === "#64748b" ? "#94a3b8" : "#a5b4fc",
+    color: bg === "var(--faint)" ? "var(--dim)" : "var(--accent-strong)",
     outline: `1px solid ${bg}50`, whiteSpace: "nowrap",
   };
 }

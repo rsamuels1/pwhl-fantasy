@@ -19,8 +19,8 @@ export default function WelcomeFlow() {
 
   return (
     <section style={{
-      background: "rgba(99,102,241,0.06)",
-      border: "1px solid rgba(99,102,241,0.18)",
+      background: "rgba(143,193,232,0.06)",
+      border: "1px solid rgba(143,193,232,0.18)",
       borderRadius: 20,
       padding: "28px 24px",
       display: "flex",
@@ -28,7 +28,7 @@ export default function WelcomeFlow() {
       gap: 20,
     }}>
       <div>
-        <p style={{ fontSize: 11, fontWeight: 700, color: "#6366f1", textTransform: "uppercase", letterSpacing: "1px", margin: "0 0 8px" }}>
+        <p style={{ fontSize: 11, fontWeight: 700, color: "var(--accent)", textTransform: "uppercase", letterSpacing: "1px", margin: "0 0 8px" }}>
           Welcome to PWHL GM
         </p>
         <h2 style={{ margin: "0 0 6px", fontSize: "clamp(1.2rem, 3vw, 1.6rem)", fontWeight: 800 }}>
@@ -52,7 +52,7 @@ export default function WelcomeFlow() {
           <div style={cardBody}>
             You earn Victory Points for winning your matchup <em>and</em> for
             being one of the top scorers each week.{" "}
-            <Link href="/league-rules" style={{ color: "#a5b4fc" }}>Learn more →</Link>
+            <Link href="/league-rules" style={{ color: "var(--accent-strong)" }}>Learn more →</Link>
           </div>
         </div>
 
@@ -75,7 +75,7 @@ export default function WelcomeFlow() {
         </Link>
         <Link
           href="/create-league?replay=1"
-          style={{ fontSize: 13, color: "#475569", textDecoration: "none", marginLeft: 4 }}
+          style={{ fontSize: 13, color: "var(--faint)", textDecoration: "none", marginLeft: 4 }}
         >
           Just exploring? Try a replay league
         </Link>
@@ -102,11 +102,11 @@ export default function WelcomeFlow() {
 }
 
 const infoCard: React.CSSProperties = {
-  background: "rgba(255,255,255,0.03)",
-  border: "1px solid rgba(148,163,184,0.1)",
+  background: "var(--bg-raised)",
+  border: "1px solid var(--border)",
   borderRadius: 14,
   padding: "16px 18px",
 };
 const cardIcon: React.CSSProperties = { fontSize: 24, marginBottom: 8 };
-const cardTitle: React.CSSProperties = { fontSize: 13, fontWeight: 700, color: "#e2e8f0", marginBottom: 6 };
-const cardBody: React.CSSProperties = { fontSize: 13, color: "#94a3b8", lineHeight: 1.5 };
+const cardTitle: React.CSSProperties = { fontSize: 13, fontWeight: 700, color: "var(--text)", marginBottom: 6 };
+const cardBody: React.CSSProperties = { fontSize: 13, color: "var(--dim)", lineHeight: 1.5 };

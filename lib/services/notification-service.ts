@@ -10,7 +10,9 @@ export type NotificationType =
   | "TRADE_REJECTED"
   | "TRADE_EXECUTED"
   | "TRADE_VETOED"
-  | "TRADE_REVIEW_PENDING";
+  | "TRADE_REVIEW_PENDING"
+  | "CHAMPIONSHIP_WON"
+  | "SEASON_RENEWED";
 
 export async function createNotification(
   userId: string,

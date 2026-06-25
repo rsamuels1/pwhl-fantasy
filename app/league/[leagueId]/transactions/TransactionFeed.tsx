@@ -6,6 +6,9 @@ import type { EnrichedTransactionEvent } from "@/lib/services/activity";
 
 interface Props {
   leagueId: string;
+  /** Base path for filter navigation, e.g. "/league/abc/transactions" or "/team/xyz/transactions".
+   *  When omitted, defaults to the league-scoped path (backward compat). */
+  basePath?: string;
   initialEvents: EnrichedTransactionEvent[];
   initialHasMore: boolean;
   teams: { id: string; name: string }[];
@@ -15,17 +18,20 @@ interface Props {
 }
 
 const TYPE_META: Record<string, { label: string; color: string; bg: string }> = {
-  DRAFT_PICK:               { label: "Draft",   color: "#a78bfa", bg: "rgba(124,58,237,0.14)" },
-  PLAYER_ADD:               { label: "Add",     color: "#5fa98c", bg: "rgba(95,169,140,0.12)" },
-  PLAYER_DROP:              { label: "Drop",    color: "#d18b7f", bg: "rgba(209,139,127,0.12)" },
-  TRADE:                    { label: "Trade",   color: "#c9b6ff", bg: "rgba(124,58,237,0.10)" },
-  PLAYOFF_QUALIFICATION:    { label: "Playoff", color: "#e3c989", bg: "rgba(214,169,78,0.12)" },
-  MAJOR_PERFORMANCE:        { label: "Perf",   color: "#e3c989", bg: "rgba(214,169,78,0.10)" },
-  LEAGUE_STORYLINE:         { label: "Story",  color: "#aab2c8", bg: "rgba(150,160,200,0.08)" },
-  WAIVER_CLAIM_SUBMITTED:   { label: "Waiver", color: "#aab2c8", bg: "rgba(150,160,200,0.10)" },
-  WAIVER_CLAIM_AWARDED:     { label: "Add",    color: "#5fa98c", bg: "rgba(95,169,140,0.12)" },
-  WAIVER_CLAIM_DENIED:      { label: "Denied", color: "#d18b7f", bg: "rgba(209,139,127,0.10)" },
-  WAIVER_CLAIM_CANCELLED:   { label: "Cancel", color: "#64748b", bg: "rgba(100,116,139,0.10)" },
+  DRAFT_PICK:               { label: "Draft",       color: "var(--accent-strong)", bg: "rgba(143,193,232,0.14)" },
+  PLAYER_ADD:               { label: "Add",         color: "var(--green)", bg: "rgba(81,216,138,0.12)" },
+  PLAYER_DROP:              { label: "Drop",        color: "var(--red)",   bg: "rgba(246,131,127,0.12)" },
+  TRADE:                    { label: "Trade",       color: "var(--accent-strong)", bg: "rgba(143,193,232,0.10)" },
+  PLAYOFF_QUALIFICATION:    { label: "Playoff",     color: "var(--gold)",  bg: "rgba(245,201,123,0.12)" },
+  PLAYOFF_CLINCH:           { label: "Clinched",    color: "var(--gold)",  bg: "rgba(245,201,123,0.14)" },
+  PLAYOFF_ELIMINATION:      { label: "Eliminated",  color: "var(--red)",   bg: "rgba(246,131,127,0.08)" },
+  CHAMPIONSHIP_WON:         { label: "Champion",    color: "var(--gold)",  bg: "rgba(245,201,123,0.18)" },
+  MAJOR_PERFORMANCE:        { label: "Perf",        color: "var(--gold)",  bg: "rgba(245,201,123,0.10)" },
+  LEAGUE_STORYLINE:         { label: "Storyline",   color: "var(--muted)", bg: "var(--border)" },
+  WAIVER_CLAIM_SUBMITTED:   { label: "Waiver",      color: "var(--muted)", bg: "var(--border)" },
+  WAIVER_CLAIM_AWARDED:     { label: "Add",         color: "var(--green)", bg: "rgba(81,216,138,0.12)" },
+  WAIVER_CLAIM_DENIED:      { label: "Denied",      color: "var(--red)",   bg: "rgba(246,131,127,0.10)" },
+  WAIVER_CLAIM_CANCELLED:   { label: "Cancelled",   color: "var(--faint)", bg: "rgba(100,116,139,0.10)" },
 };
 
 const TYPE_GROUPS: { label: string; types: string | null }[] = [
@@ -35,7 +41,7 @@ const TYPE_GROUPS: { label: string; types: string | null }[] = [
   { label: "Draft", types: "DRAFT_PICK" },
   { label: "Trades", types: "TRADE" },
   { label: "Commissioner", types: "COMMISSIONER_FORCE_MOVE,COMMISSIONER_UNDO_TRANSACTION,COMMISSIONER_REPLACE_MANAGER,COMMISSIONER_DRAFT_PAUSED,COMMISSIONER_DRAFT_RESUMED,COMMISSIONER_ANNOUNCEMENT,COMMISSIONER_SETTINGS_CHANGED" },
-  { label: "Playoffs", types: "PLAYOFF_QUALIFICATION" },
+  { label: "Playoffs", types: "PLAYOFF_QUALIFICATION,PLAYOFF_CLINCH,PLAYOFF_ELIMINATION,CHAMPIONSHIP_WON" },
 ];
 
 function timeAgo(iso: string, nowMs: number): string {
@@ -52,6 +58,7 @@ function timeAgo(iso: string, nowMs: number): string {
 
 export default function TransactionFeed({
   leagueId,
+  basePath,
   initialEvents,
   initialHasMore,
   teams,
@@ -59,6 +66,7 @@ export default function TransactionFeed({
   selectedType,
   nowMs,
 }: Props) {
+  const filterBase = basePath ?? `/league/${leagueId}/transactions`;
   const router = useRouter();
   const [events, setEvents] = useState<EnrichedTransactionEvent[]>(initialEvents);
   const [hasMore, setHasMore] = useState(initialHasMore);
@@ -129,12 +137,12 @@ export default function TransactionFeed({
       url.searchParams.delete(key);
     }
     const search = url.searchParams.toString();
-    router.push(`/league/${leagueId}/transactions${search ? `?${search}` : ""}`);
+    router.push(`${filterBase}${search ? `?${search}` : ""}`);
   }
 
   const typeMeta = (type: string) => {
-    if (type.startsWith("COMMISSIONER_")) return { label: "Admin", color: "#e3c989", bg: "rgba(214,169,78,0.12)" };
-    return TYPE_META[type] ?? { label: "Event", color: "#6f788e", bg: "rgba(150,160,200,0.08)" };
+    if (type.startsWith("COMMISSIONER_")) return { label: "Admin", color: "var(--gold)", bg: "rgba(245,201,123,0.12)" };
+    return TYPE_META[type] ?? { label: "Event", color: "var(--faint)", bg: "var(--border)" };
   };
 
   return (
@@ -156,8 +164,8 @@ export default function TransactionFeed({
                 fontSize: 12,
                 fontWeight: 600,
                 cursor: "pointer",
-                background: isActive ? "rgba(99,102,241,0.3)" : "rgba(255,255,255,0.06)",
-                color: isActive ? "#a5b4fc" : "#64748b",
+                background: isActive ? "rgba(143,193,232,0.3)" : "var(--surface)",
+                color: isActive ? "var(--accent-strong)" : "var(--faint)",
               }}
             >
               {group.label}
@@ -174,9 +182,9 @@ export default function TransactionFeed({
           style={{
             padding: "8px 12px",
             borderRadius: 8,
-            border: "1px solid rgba(148,163,184,0.2)",
-            background: "rgba(255,255,255,0.06)",
-            color: "#e2e8f0",
+            border: "1px solid var(--border)",
+            background: "var(--surface)",
+            color: "var(--text)",
             fontSize: 13,
             outline: "none",
           }}
@@ -196,10 +204,10 @@ export default function TransactionFeed({
           style={{
             padding: "12px 16px",
             borderRadius: 10,
-            background: "rgba(239,68,68,0.1)",
-            border: "1px solid rgba(239,68,68,0.25)",
+            background: "rgba(246,131,127,0.1)",
+            border: "1px solid rgba(246,131,127,0.25)",
             fontSize: 13,
-            color: "#fca5a5",
+            color: "var(--red)",
             marginBottom: 16,
           }}
         >
@@ -209,8 +217,8 @@ export default function TransactionFeed({
             style={{
               marginLeft: 12,
               background: "none",
-              border: "1px solid rgba(239,68,68,0.3)",
-              color: "#fca5a5",
+              border: "1px solid rgba(246,131,127,0.3)",
+              color: "var(--red)",
               borderRadius: 6,
               padding: "3px 10px",
               fontSize: 12,
@@ -224,9 +232,13 @@ export default function TransactionFeed({
 
       {/* Empty state */}
       {events.length === 0 && !loading && (
-        <p style={{ color: "#64748b", fontSize: 13, fontStyle: "italic" }}>
-          No transactions yet. Actions like draft picks, player adds, and drops will appear here.
-        </p>
+        <div style={{ textAlign: "center", padding: "48px 24px" }}>
+          <div style={{ fontSize: 24, marginBottom: 10, opacity: 0.4 }}>📋</div>
+          <p style={{ margin: "0 0 4px", fontSize: 14, fontWeight: 600, color: "var(--muted)" }}>No moves yet</p>
+          <p style={{ margin: 0, fontSize: 13, color: "var(--faint)" }}>
+            Your first add, drop, or trade will show up here.
+          </p>
+        </div>
       )}
 
       {/* Event list */}
@@ -240,27 +252,27 @@ export default function TransactionFeed({
               gap: 12,
               padding: "10px 14px",
               borderRadius: 10,
-              background: "rgba(255,255,255,0.03)",
-              border: "1px solid rgba(148,163,184,0.08)",
+              background: "var(--bg-raised)",
+              border: "1px solid var(--border)",
             }}
           >
             {(() => { const m = typeMeta(evt.type); return (
               <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.04em", padding: "3px 7px", borderRadius: 5, background: m.bg, color: m.color, flexShrink: 0, whiteSpace: "nowrap" as const }}>{m.label}</span>
             ); })()}
             <div style={{ flex: 1, minWidth: 0 }}>
-              <span style={{ fontSize: 13, color: "#cbd5e1" }}>
+              <span style={{ fontSize: 13, color: "var(--muted)" }}>
                 {evt.description}
               </span>
               {evt.playerName && (
-                <span style={{ fontSize: 12, color: "#e2e8f0", fontWeight: 600, marginLeft: 6 }}>
+                <span style={{ fontSize: 12, color: "var(--text)", fontWeight: 600, marginLeft: 6 }}>
                   {evt.playerName}
                 </span>
               )}
               {evt.teamName && (
-                <span style={{ fontSize: 11, color: "#818cf8", marginLeft: 6 }}>{evt.teamName}</span>
+                <span style={{ fontSize: 11, color: "var(--accent-strong)", marginLeft: 6 }}>{evt.teamName}</span>
               )}
             </div>
-            <span style={{ fontSize: 11, color: "#475569", flexShrink: 0, whiteSpace: "nowrap" }}>
+            <span style={{ fontSize: 11, color: "var(--faint)", flexShrink: 0, whiteSpace: "nowrap" }}>
               {timeAgo(evt.createdAt, nowMs)}
             </span>
           </div>
@@ -270,7 +282,7 @@ export default function TransactionFeed({
 
       {/* Loading state */}
       {loading && (
-        <p style={{ color: "#64748b", fontSize: 13, textAlign: "center", marginTop: 12 }}>
+        <p style={{ color: "var(--faint)", fontSize: 13, textAlign: "center", marginTop: 12 }}>
           Loading more transactions…
         </p>
       )}
@@ -286,9 +298,9 @@ export default function TransactionFeed({
             style={{
               padding: "8px 20px",
               borderRadius: 8,
-              border: "1px solid rgba(148,163,184,0.2)",
-              background: "rgba(255,255,255,0.06)",
-              color: "#94a3b8",
+              border: "1px solid var(--border)",
+              background: "var(--surface)",
+              color: "var(--dim)",
               fontSize: 13,
               cursor: "pointer",
             }}
@@ -300,7 +312,7 @@ export default function TransactionFeed({
 
       {/* End of list */}
       {!hasMore && events.length > 0 && (
-        <p style={{ color: "#475569", fontSize: 12, textAlign: "center", marginTop: 16 }}>
+        <p style={{ color: "var(--faint)", fontSize: 12, textAlign: "center", marginTop: 16 }}>
           All transactions loaded
         </p>
       )}

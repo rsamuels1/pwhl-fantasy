@@ -148,7 +148,7 @@ export default function WaiverWirePanel({ leagueId, teamId, rosterPlayers }: Pro
   }
 
   if (loading) {
-    return <p style={{ color: "#64748b", fontSize: 13, padding: "12px 0" }}>Loading waiver wire…</p>;
+    return <p style={{ color: "var(--faint)", fontSize: 13, padding: "12px 0" }}>Loading waiver wire…</p>;
   }
   if (error) {
     return <p style={{ color: "#f87171", fontSize: 13, padding: "12px 0" }}>{error}</p>;
@@ -174,16 +174,16 @@ export default function WaiverWirePanel({ leagueId, teamId, rosterPlayers }: Pro
 
       {/* ── Section 1: Active Waiver Wire ── */}
       <div>
-        <h3 style={{ fontSize: 14, fontWeight: 700, color: "#94a3b8", margin: "0 0 10px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+        <h3 style={{ fontSize: 14, fontWeight: 700, color: "var(--dim)", margin: "0 0 10px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
           Waiver Wire
         </h3>
 
         {data.wire.length === 0 ? (
-          <p style={{ color: "#64748b", fontSize: 13, fontStyle: "italic" }}>No players on waivers right now.</p>
+          <p style={{ color: "var(--faint)", fontSize: 13, fontStyle: "italic" }}>No players on waivers right now.</p>
         ) : (
-          <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(148,163,184,0.1)", borderRadius: 14, overflow: "hidden" }}>
+          <div style={{ background: "var(--bg-raised)", border: "1px solid var(--border)", borderRadius: 14, overflow: "hidden" }}>
             {/* Column header */}
-            <div style={{ display: "grid", gridTemplateColumns: "minmax(100px,1fr) 50px 80px 80px", gap: 8, padding: "8px 14px", borderBottom: "1px solid rgba(148,163,184,0.08)", fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em", color: "#475569" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "minmax(100px,1fr) 50px 80px 80px", gap: 8, padding: "8px 14px", borderBottom: "1px solid var(--border)", fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em", color: "var(--faint)" }}>
               <span>Player</span>
               <span>Pos</span>
               <span style={{ textAlign: "right" }}>Clears In</span>
@@ -194,29 +194,29 @@ export default function WaiverWirePanel({ leagueId, teamId, rosterPlayers }: Pro
               const isClaiming = claimingPlayerId === entry.playerId;
               const alreadyClaimed = alreadyClaimedIds.has(entry.playerId);
               return (
-                <div key={entry.playerId} style={{ borderTop: i === 0 ? "none" : "1px solid rgba(148,163,184,0.05)" }}>
+                <div key={entry.playerId} style={{ borderTop: i === 0 ? "none" : "1px solid var(--border)" }}>
                   <div style={{
                     display: "grid",
                     gridTemplateColumns: "minmax(100px,1fr) 50px 80px 80px",
                     gap: 8,
                     padding: "10px 14px",
                     alignItems: "center",
-                    background: isClaiming ? "rgba(99,102,241,0.06)" : i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.01)",
+                    background: isClaiming ? "rgba(143,193,232,0.06)" : i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.01)",
                   }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 6, minWidth: 0 }}>
-                      <span style={{ fontWeight: 600, fontSize: 13, color: "#e2e8f0", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      <span style={{ fontWeight: 600, fontSize: 13, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                         {entry.playerName}
                       </span>
-                      {entry.teamAbbr && <span style={{ fontSize: 10, color: "#475569", flexShrink: 0 }}>{entry.teamAbbr}</span>}
+                      {entry.teamAbbr && <span style={{ fontSize: 10, color: "var(--faint)", flexShrink: 0 }}>{entry.teamAbbr}</span>}
                     </div>
-                    <span style={{ fontSize: 10, fontWeight: 700, color: POS_COLORS[entry.position] ?? "#94a3b8" }}>
+                    <span style={{ fontSize: 10, fontWeight: 700, color: POS_COLORS[entry.position] ?? "var(--dim)" }}>
                       {entry.position[0]}
                     </span>
-                    <span style={{ fontSize: 12, color: "#94a3b8", textAlign: "right", fontVariantNumeric: "tabular-nums" }}>
+                    <span style={{ fontSize: 12, color: "var(--dim)", textAlign: "right", fontVariantNumeric: "tabular-nums" }}>
                       {fmtCountdown(entry.expiresAt)}
                     </span>
                     {alreadyClaimed ? (
-                      <span style={{ fontSize: 11, color: "#818cf8", textAlign: "right" }}>Claimed</span>
+                      <span style={{ fontSize: 11, color: "var(--accent-strong)", textAlign: "right" }}>Claimed</span>
                     ) : (
                       <button
                         onClick={() => {
@@ -227,9 +227,9 @@ export default function WaiverWirePanel({ leagueId, teamId, rosterPlayers }: Pro
                         style={{
                           fontSize: 11, fontWeight: 600, minHeight: 36, padding: "0 12px",
                           borderRadius: 6, border: "none", cursor: "pointer",
-                          background: isClaiming ? "rgba(99,102,241,0.2)" : "rgba(99,102,241,0.15)",
-                          color: "#a5b4fc",
-                          outline: isClaiming ? "1px solid rgba(99,102,241,0.4)" : "none",
+                          background: isClaiming ? "rgba(143,193,232,0.2)" : "rgba(143,193,232,0.15)",
+                          color: "var(--accent-strong)",
+                          outline: isClaiming ? "1px solid rgba(143,193,232,0.4)" : "none",
                           opacity: submitting ? 0.5 : 1,
                         }}
                       >
@@ -240,23 +240,23 @@ export default function WaiverWirePanel({ leagueId, teamId, rosterPlayers }: Pro
 
                   {/* Inline claim form */}
                   {isClaiming && claimingEntry && (
-                    <div style={{ margin: "0 14px 12px", padding: "14px", borderRadius: 10, background: "rgba(99,102,241,0.08)", border: "1px solid rgba(99,102,241,0.2)" }}>
-                      <p style={{ fontSize: 13, fontWeight: 600, color: "#e2e8f0", margin: "0 0 10px" }}>
+                    <div style={{ margin: "0 14px 12px", padding: "14px", borderRadius: 10, background: "rgba(143,193,232,0.08)", border: "1px solid rgba(143,193,232,0.2)" }}>
+                      <p style={{ fontSize: 13, fontWeight: 600, color: "var(--text)", margin: "0 0 10px" }}>
                         Claim {claimingEntry.playerName}
                       </p>
                       {rosterPlayers.length > 0 && (
                         <div style={{ marginBottom: 10 }}>
-                          <p style={{ fontSize: 12, color: "#94a3b8", margin: "0 0 6px" }}>
+                          <p style={{ fontSize: 12, color: "var(--dim)", margin: "0 0 6px" }}>
                             Drop to make room (optional if roster has space):
                           </p>
                           <select
                             value={dropForClaim ?? ""}
                             onChange={(e) => setDropForClaim(e.target.value || null)}
                             style={{
-                              background: "rgba(255,255,255,0.06)",
-                              border: "1px solid rgba(148,163,184,0.18)",
+                              background: "var(--surface)",
+                              border: "1px solid var(--border)",
                               borderRadius: 8,
-                              color: "#e2e8f0",
+                              color: "var(--text)",
                               padding: "7px 10px",
                               fontSize: 13,
                               cursor: "pointer",
@@ -280,7 +280,7 @@ export default function WaiverWirePanel({ leagueId, teamId, rosterPlayers }: Pro
                           style={{
                             fontSize: 12, fontWeight: 700, minHeight: 36, padding: "0 16px",
                             borderRadius: 8, border: "none", cursor: "pointer",
-                            background: "rgba(99,102,241,0.3)", color: "#a5b4fc",
+                            background: "rgba(143,193,232,0.3)", color: "var(--accent-strong)",
                             opacity: submitting ? 0.5 : 1,
                           }}
                         >
@@ -288,7 +288,7 @@ export default function WaiverWirePanel({ leagueId, teamId, rosterPlayers }: Pro
                         </button>
                         <button
                           onClick={() => { setClaimingPlayerId(null); setDropForClaim(null); }}
-                          style={{ fontSize: 12, fontWeight: 600, minHeight: 36, padding: "0 14px", borderRadius: 8, border: "none", cursor: "pointer", background: "rgba(255,255,255,0.06)", color: "#64748b" }}
+                          style={{ fontSize: 12, fontWeight: 600, minHeight: 36, padding: "0 14px", borderRadius: 8, border: "none", cursor: "pointer", background: "var(--surface)", color: "var(--faint)" }}
                         >
                           Cancel
                         </button>
@@ -305,7 +305,7 @@ export default function WaiverWirePanel({ leagueId, teamId, rosterPlayers }: Pro
       {/* ── Section 2: My Pending Claims ── */}
       {data.myClaims.length > 0 && (
         <div>
-          <h3 style={{ fontSize: 14, fontWeight: 700, color: "#94a3b8", margin: "0 0 10px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+          <h3 style={{ fontSize: 14, fontWeight: 700, color: "var(--dim)", margin: "0 0 10px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
             My Pending Claims
           </h3>
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
@@ -313,19 +313,19 @@ export default function WaiverWirePanel({ leagueId, teamId, rosterPlayers }: Pro
               <div key={claim.id} style={{
                 display: "flex", alignItems: "center", gap: 10,
                 padding: "10px 14px", borderRadius: 10,
-                background: "rgba(255,255,255,0.03)",
-                border: "1px solid rgba(148,163,184,0.08)",
+                background: "var(--bg-raised)",
+                border: "1px solid var(--border)",
               }}>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <span style={{ fontSize: 13, color: "#e2e8f0", fontWeight: 600 }}>
+                  <span style={{ fontSize: 13, color: "var(--text)", fontWeight: 600 }}>
                     Add {claim.addPlayerName}
                   </span>
                   {claim.dropPlayerName && (
-                    <span style={{ fontSize: 12, color: "#64748b", marginLeft: 6 }}>
+                    <span style={{ fontSize: 12, color: "var(--faint)", marginLeft: 6 }}>
                       / Drop {claim.dropPlayerName}
                     </span>
                   )}
-                  <span style={{ fontSize: 11, color: "#475569", marginLeft: 8 }}>
+                  <span style={{ fontSize: 11, color: "var(--faint)", marginLeft: 8 }}>
                     Priority #{claim.prioritySnapshot}
                   </span>
                 </div>
@@ -345,8 +345,8 @@ export default function WaiverWirePanel({ leagueId, teamId, rosterPlayers }: Pro
                       onClick={() => setCancelConfirming(null)}
                       style={{
                         fontSize: 11, fontWeight: 600, minHeight: 36, padding: "0 10px",
-                        borderRadius: 6, border: "1px solid rgba(148,163,184,0.2)",
-                        cursor: "pointer", background: "rgba(255,255,255,0.04)", color: "#64748b",
+                        borderRadius: 6, border: "1px solid var(--border)",
+                        cursor: "pointer", background: "var(--surface)", color: "var(--faint)",
                       }}
                     >
                       Keep
@@ -374,27 +374,27 @@ export default function WaiverWirePanel({ leagueId, teamId, rosterPlayers }: Pro
       {/* ── Section 3: Priority Order ── */}
       {data.allPriorities.length > 0 && (
         <div>
-          <h3 style={{ fontSize: 14, fontWeight: 700, color: "#94a3b8", margin: "0 0 10px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+          <h3 style={{ fontSize: 14, fontWeight: 700, color: "var(--dim)", margin: "0 0 10px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
             Priority Order
           </h3>
-          <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(148,163,184,0.1)", borderRadius: 14, overflow: "hidden" }}>
+          <div style={{ background: "var(--bg-raised)", border: "1px solid var(--border)", borderRadius: 14, overflow: "hidden" }}>
             {data.allPriorities.map((row, i) => {
               const isMe = row.teamId === teamId;
               return (
                 <div key={row.teamId} style={{
                   display: "flex", alignItems: "center", gap: 10,
                   padding: "9px 14px",
-                  borderTop: i === 0 ? "none" : "1px solid rgba(148,163,184,0.05)",
-                  background: isMe ? "rgba(99,102,241,0.05)" : i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.01)",
+                  borderTop: i === 0 ? "none" : "1px solid var(--border)",
+                  background: isMe ? "rgba(143,193,232,0.05)" : i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.01)",
                 }}>
-                  <span style={{ fontSize: 12, color: "#475569", width: 20, flexShrink: 0, textAlign: "center" }}>
+                  <span style={{ fontSize: 12, color: "var(--faint)", width: 20, flexShrink: 0, textAlign: "center" }}>
                     {row.priority}
                   </span>
-                  <span style={{ fontSize: 13, color: isMe ? "#a5b4fc" : "#cbd5e1", fontWeight: isMe ? 600 : 400, flex: 1 }}>
+                  <span style={{ fontSize: 13, color: isMe ? "var(--accent-strong)" : "var(--muted)", fontWeight: isMe ? 600 : 400, flex: 1 }}>
                     {row.teamName}
                   </span>
                   {isMe && (
-                    <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 999, background: "rgba(99,102,241,0.2)", color: "#818cf8" }}>
+                    <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 999, background: "rgba(143,193,232,0.2)", color: "var(--accent-strong)" }}>
                       You
                     </span>
                   )}
@@ -402,7 +402,7 @@ export default function WaiverWirePanel({ leagueId, teamId, rosterPlayers }: Pro
               );
             })}
           </div>
-          <p style={{ fontSize: 11, color: "#475569", margin: "8px 0 0", lineHeight: 1.5 }}>
+          <p style={{ fontSize: 11, color: "var(--faint)", margin: "8px 0 0", lineHeight: 1.5 }}>
             Waivers process daily at 3 AM ET. Claiming a player moves you to last priority.
           </p>
         </div>

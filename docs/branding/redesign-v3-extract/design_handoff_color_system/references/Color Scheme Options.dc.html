@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=Saira+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<style>
+  @keyframes probGrow { from { width: 0; } }
+</style>
+</helmet>
+<div style="width:max-content; min-width:100%; min-height:100vh; box-sizing:border-box; padding:48px; background:#e7e5df; font-family:'Archivo',-apple-system,sans-serif;">
+
+  <div style="margin-bottom:8px; font-size:24px; font-weight:800; letter-spacing:-0.02em; color:#1a1a1a;">PWHL GM — color scheme options</div>
+  <div style="margin-bottom:36px; font-size:14px; color:#6b6b6b; max-width:680px; line-height:1.6;">Same matchup card under each palette. Frame 1 is your current scheme for reference; the rest move the accent off saturated violet and the surfaces off cool navy toward more neutral, front-office tones.</div>
+
+  <div style="display:flex; gap:40px; align-items:flex-start;">
+    <sc-for list="{{ schemes }}" as="s" hint-placeholder-count="5">
+
+      <div style="flex:none; width:360px;">
+        <div style="display:flex; align-items:baseline; gap:10px; margin-bottom:6px;">
+          <span style="font-size:15px; font-weight:800; color:#1a1a1a; letter-spacing:-0.01em;">{{ s.name }}</span>
+          <sc-if value="{{ s.isCurrent }}" hint-placeholder-val="{{ true }}">
+            <span style="font-size:10px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:#9a9a9a;">current</span>
+          </sc-if>
+        </div>
+        <div style="font-size:12px; color:#777; margin-bottom:14px; line-height:1.5; min-height:34px;">{{ s.note }}</div>
+
+        <!-- swatches -->
+        <div style="display:flex; gap:6px; margin-bottom:14px;">
+          <sc-for list="{{ s.swatches }}" as="sw" hint-placeholder-count="5">
+            <div style="flex:1; height:34px; border-radius:5px; background:{{ sw.hex }}; border:1px solid rgba(0,0,0,0.08);" title="{{ sw.hex }}"></div>
+          </sc-for>
+        </div>
+
+        <!-- applied card -->
+        <div style="background:{{ s.card }}; border:1px solid {{ s.border }}; border-radius:16px; padding:18px 20px; box-shadow:0 1px 3px rgba(0,0,0,0.12);">
+
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:16px;">
+            <div style="width:3px; height:14px; border-radius:2px; background:{{ s.accent }};"></div>
+            <span style="font-size:11px; font-weight:700; letter-spacing:0.14em; text-transform:uppercase; color:{{ s.dim }};">Week 12 Matchup</span>
+          </div>
+
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+            <span style="font-size:16px; font-weight:700; color:{{ s.text }};">Frost Bites</span>
+            <span style="font-family:'Saira Condensed',sans-serif; font-size:22px; font-weight:700; color:{{ s.text }}; font-variant-numeric:tabular-nums;">64.2</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+            <span style="font-size:16px; font-weight:700; color:{{ s.muted }};">Rink Rats</span>
+            <span style="font-family:'Saira Condensed',sans-serif; font-size:22px; font-weight:700; color:{{ s.muted }}; font-variant-numeric:tabular-nums;">58.9</span>
+          </div>
+
+          <!-- win prob bar -->
+          <div style="height:8px; border-radius:5px; background:{{ s.track }}; overflow:hidden; margin-bottom:8px;">
+            <div style="height:100%; width:62%; border-radius:5px; background:{{ s.accent }}; animation:probGrow 0.9s cubic-bezier(0.34,1.56,0.64,1);"></div>
+          </div>
+          <div style="font-size:11px; color:{{ s.dim }}; margin-bottom:18px;">62% win probability</div>
+
+          <!-- position badges -->
+          <div style="display:flex; gap:6px; margin-bottom:18px;">
+            <span style="font-size:9.5px; font-weight:700; border-radius:5px; padding:3px 8px; background:{{ s.badgeBg }}; color:{{ s.badgeText }};">F</span>
+            <span style="font-size:9.5px; font-weight:700; border-radius:5px; padding:3px 8px; background:{{ s.badgeBg }}; color:{{ s.badgeText }};">D</span>
+            <span style="font-size:9.5px; font-weight:700; border-radius:5px; padding:3px 8px; background:{{ s.chipBg }}; color:{{ s.chipText }}; border:1px solid {{ s.chipBorder }};">CLINCHED</span>
+          </div>
+
+          <div style="display:flex; gap:10px;">
+            <button style="flex:1; border:none; border-radius:12px; padding:11px; font-family:'Archivo',sans-serif; font-weight:700; font-size:13px; background:{{ s.accent }}; color:{{ s.btnText }}; cursor:pointer;">Set Lineup</button>
+            <button style="border-radius:12px; padding:11px 16px; font-family:'Archivo',sans-serif; font-weight:700; font-size:13px; background:transparent; color:{{ s.accent }}; border:1px solid {{ s.border }}; cursor:pointer;">View</button>
+          </div>
+        </div>
+      </div>
+
+    </sc-for>
+  </div>
+
+  <div style="height:1px; background:rgba(0,0,0,0.10); margin:48px 0 36px;"></div>
+
+  <div style="margin-bottom:6px; font-size:18px; font-weight:800; letter-spacing:-0.01em; color:#1a1a1a;">Accessibility-focused</div>
+  <div style="margin-bottom:30px; font-size:13px; color:#6b6b6b; max-width:680px; line-height:1.6;">Tuned for legibility: body and secondary text meet WCAG AA (4.5:1+), accents pass AA as button fills, and one light-mode option for high-glare / daylight reading. Contrast ratios noted on each.</div>
+
+  <div style="display:flex; gap:40px; align-items:flex-start;">
+    <sc-for list="{{ a11ySchemes }}" as="s" hint-placeholder-count="2">
+
+      <div style="flex:none; width:360px;">
+        <div style="display:flex; align-items:baseline; gap:10px; margin-bottom:6px;">
+          <span style="font-size:15px; font-weight:800; color:#1a1a1a; letter-spacing:-0.01em;">{{ s.name }}</span>
+        </div>
+        <div style="font-size:12px; color:#777; margin-bottom:14px; line-height:1.5; min-height:34px;">{{ s.note }}</div>
+
+        <div style="display:flex; gap:6px; margin-bottom:14px;">
+          <sc-for list="{{ s.swatches }}" as="sw" hint-placeholder-count="5">
+            <div style="flex:1; height:34px; border-radius:5px; background:{{ sw.hex }}; border:1px solid rgba(0,0,0,0.08);" title="{{ sw.hex }}"></div>
+          </sc-for>
+        </div>
+
+        <div style="background:{{ s.card }}; border:1px solid {{ s.border }}; border-radius:16px; padding:18px 20px; box-shadow:0 1px 3px rgba(0,0,0,0.12);">
+
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:16px;">
+            <div style="width:3px; height:14px; border-radius:2px; background:{{ s.accent }};"></div>
+            <span style="font-size:11px; font-weight:700; letter-spacing:0.14em; text-transform:uppercase; color:{{ s.dim }};">Week 12 Matchup</span>
+          </div>
+
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+            <span style="font-size:16px; font-weight:700; color:{{ s.text }};">Frost Bites</span>
+            <span style="font-family:'Saira Condensed',sans-serif; font-size:22px; font-weight:700; color:{{ s.text }}; font-variant-numeric:tabular-nums;">64.2</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+            <span style="font-size:16px; font-weight:700; color:{{ s.muted }};">Rink Rats</span>
+            <span style="font-family:'Saira Condensed',sans-serif; font-size:22px; font-weight:700; color:{{ s.muted }}; font-variant-numeric:tabular-nums;">58.9</span>
+          </div>
+
+          <div style="height:8px; border-radius:5px; background:{{ s.track }}; overflow:hidden; margin-bottom:8px;">
+            <div style="height:100%; width:62%; border-radius:5px; background:{{ s.accent }}; animation:probGrow 0.9s cubic-bezier(0.34,1.56,0.64,1);"></div>
+          </div>
+          <div style="font-size:11px; color:{{ s.dim }}; margin-bottom:18px;">62% win probability</div>
+
+          <div style="display:flex; gap:6px; margin-bottom:18px;">
+            <span style="font-size:9.5px; font-weight:700; border-radius:5px; padding:3px 8px; background:{{ s.badgeBg }}; color:{{ s.badgeText }};">F</span>
+            <span style="font-size:9.5px; font-weight:700; border-radius:5px; padding:3px 8px; background:{{ s.badgeBg }}; color:{{ s.badgeText }};">D</span>
+            <span style="font-size:9.5px; font-weight:700; border-radius:5px; padding:3px 8px; background:{{ s.chipBg }}; color:{{ s.chipText }}; border:1px solid {{ s.chipBorder }};">CLINCHED</span>
+          </div>
+
+          <div style="display:flex; gap:10px;">
+            <button style="flex:1; border:none; border-radius:12px; padding:11px; font-family:'Archivo',sans-serif; font-weight:700; font-size:13px; background:{{ s.accent }}; color:{{ s.btnText }}; cursor:pointer;">Set Lineup</button>
+            <button style="border-radius:12px; padding:11px 16px; font-family:'Archivo',sans-serif; font-weight:700; font-size:13px; background:transparent; color:{{ s.accent }}; border:1px solid {{ s.border }}; cursor:pointer;">View</button>
+          </div>
+        </div>
+
+        <div style="margin-top:12px; display:grid; gap:5px;">
+          <sc-for list="{{ s.ratios }}" as="r" hint-placeholder-count="3">
+            <div style="display:flex; justify-content:space-between; align-items:center; font-size:11px;">
+              <span style="color:#777;">{{ r.label }}</span>
+              <span style="font-weight:700; color:#1a7a4a;">{{ r.value }}</span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+
+    </sc-for>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    const schemes = [
+      {
+        name: "Minnesota Frost-ish",
+        isCurrent: true,
+        note: "Your current palette — vivid violet on cool blue-navy. The saturation + coolness is what reads as team colors.",
+        card: "#121829", border: "rgba(150,160,200,0.10)",
+        accent: "#7c3aed", text: "#f3f5fb", muted: "#aab2c8", dim: "#8b93a7",
+        track: "rgba(255,255,255,0.06)",
+        badgeBg: "rgba(91,33,182,0.6)", badgeText: "#fff",
+        chipBg: "rgba(124,58,237,0.12)", chipText: "#c9b6ff", chipBorder: "rgba(124,58,237,0.28)",
+        btnText: "#fff",
+        swatches: [{hex:"#090b12"},{hex:"#121829"},{hex:"#7c3aed"},{hex:"#aab2c8"},{hex:"#f3f5fb"}]
+      },
+      {
+        name: "Graphite & Ice",
+        isCurrent: false,
+        note: "True neutral graphite surfaces with a calm, desaturated ice-blue accent. Keeps it cool but drops the team-color punch.",
+        card: "#181a1f", border: "rgba(170,178,196,0.10)",
+        accent: "#7fa8c9", text: "#f4f5f7", muted: "#a8aeb8", dim: "#828893",
+        track: "rgba(255,255,255,0.06)",
+        badgeBg: "rgba(127,168,201,0.18)", badgeText: "#cfe0ee",
+        chipBg: "rgba(127,168,201,0.12)", chipText: "#a9c6dd", chipBorder: "rgba(127,168,201,0.30)",
+        btnText: "#0e0f12",
+        swatches: [{hex:"#0e0f12"},{hex:"#181a1f"},{hex:"#7fa8c9"},{hex:"#a8aeb8"},{hex:"#f4f5f7"}]
+      },
+      {
+        name: "Slate Mono",
+        isCurrent: false,
+        note: "Nearly monochrome — neutral slate with a steel accent barely warmer than the grays. The most corporate / restrained.",
+        card: "#1b1e24", border: "rgba(165,175,190,0.12)",
+        accent: "#9aa6b6", text: "#f4f5f7", muted: "#a3a9b4", dim: "#7d828d",
+        track: "rgba(255,255,255,0.06)",
+        badgeBg: "rgba(154,166,182,0.16)", badgeText: "#dce1e8",
+        chipBg: "rgba(154,166,182,0.12)", chipText: "#c4cbd4", chipBorder: "rgba(154,166,182,0.30)",
+        btnText: "#14161a",
+        swatches: [{hex:"#111317"},{hex:"#1b1e24"},{hex:"#9aa6b6"},{hex:"#a3a9b4"},{hex:"#f4f5f7"}]
+      },
+      {
+        name: "Front Office (Brass)",
+        isCurrent: false,
+        note: "Warm neutral charcoal with a restrained brass/champagne accent. Fully escapes the frost read — feels premium & executive.",
+        card: "#1a1815", border: "rgba(190,180,165,0.12)",
+        accent: "#c2a36b", text: "#f5f3ef", muted: "#b3ada2", dim: "#8a857b",
+        track: "rgba(255,255,255,0.06)",
+        badgeBg: "rgba(194,163,107,0.18)", badgeText: "#ecdcbb",
+        chipBg: "rgba(194,163,107,0.12)", chipText: "#d4bd8c", chipBorder: "rgba(194,163,107,0.30)",
+        btnText: "#1a1510",
+        swatches: [{hex:"#100f0d"},{hex:"#1a1815"},{hex:"#c2a36b"},{hex:"#b3ada2"},{hex:"#f5f3ef"}]
+      },
+      {
+        name: "Muted Plum",
+        isCurrent: false,
+        note: "Keeps a nod to the PWHL purple heritage but grays it way down on neutral surfaces. Brand-adjacent without the sporty edge.",
+        card: "#1a1a1f", border: "rgba(175,170,190,0.11)",
+        accent: "#9d8bb8", text: "#f4f3f7", muted: "#a8a4b2", dim: "#827e8d",
+        track: "rgba(255,255,255,0.06)",
+        badgeBg: "rgba(157,139,184,0.20)", badgeText: "#ddd3ec",
+        chipBg: "rgba(157,139,184,0.12)", chipText: "#c2b4d8", chipBorder: "rgba(157,139,184,0.30)",
+        btnText: "#161219",
+        swatches: [{hex:"#101013"},{hex:"#1a1a1f"},{hex:"#9d8bb8"},{hex:"#a8a4b2"},{hex:"#f4f3f7"}]
+      }
+    ];
+    const a11ySchemes = [
+      {
+        name: "High-Contrast Dark",
+        note: "Near-black surfaces with brightened text and a clear sky accent. Every text tier clears AA; the bright accent carries dark button text for max button legibility.",
+        card: "#16181c", border: "rgba(180,188,202,0.16)",
+        accent: "#8fc1e8", text: "#fafbfc", muted: "#c9cfd9", dim: "#a4abb7",
+        track: "rgba(255,255,255,0.10)",
+        badgeBg: "rgba(143,193,232,0.22)", badgeText: "#e3f0fb",
+        chipBg: "rgba(143,193,232,0.16)", chipText: "#bcd9f1", chipBorder: "rgba(143,193,232,0.40)",
+        btnText: "#0a0a0c",
+        swatches: [{hex:"#0a0a0c"},{hex:"#16181c"},{hex:"#8fc1e8"},{hex:"#c9cfd9"},{hex:"#fafbfc"}],
+        ratios: [
+          {label:"Body text on card", value:"15.1:1 AAA"},
+          {label:"Secondary text on card", value:"9.6:1 AAA"},
+          {label:"Button text on accent", value:"9.2:1 AAA"}
+        ]
+      },
+      {
+        name: "Daylight (Light Mode)",
+        note: "Light surfaces for high-glare / outdoor reading. Ink-dark text and a deep slate-blue accent that passes AA both as text and as a button fill with white type.",
+        card: "#ffffff", border: "rgba(20,30,50,0.12)",
+        accent: "#2b5f99", text: "#161a21", muted: "#444b58", dim: "#5a616e",
+        track: "rgba(20,30,50,0.08)",
+        badgeBg: "rgba(43,95,153,0.12)", badgeText: "#234f80",
+        chipBg: "rgba(43,95,153,0.10)", chipText: "#234f80", chipBorder: "rgba(43,95,153,0.30)",
+        btnText: "#ffffff",
+        swatches: [{hex:"#f6f7f9"},{hex:"#ffffff"},{hex:"#2b5f99"},{hex:"#444b58"},{hex:"#161a21"}],
+        ratios: [
+          {label:"Body text on card", value:"15.8:1 AAA"},
+          {label:"Secondary text on card", value:"8.1:1 AAA"},
+          {label:"Button text on accent", value:"5.3:1 AA"}
+        ]
+      }
+    ];
+    return { schemes, a11ySchemes };
+  }
+}
+</script>
+</body>
+</html>

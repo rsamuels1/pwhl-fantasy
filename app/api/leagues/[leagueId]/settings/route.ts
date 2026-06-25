@@ -4,6 +4,50 @@ import { apiRequireAuth, apiRequireCommissioner } from "@/lib/auth";
 import { logCommissionerAction } from "@/lib/services/audit-service";
 import { parseScoringSettings } from "@/lib/scoring/settings";
 
+// PATCH /api/leagues/[leagueId]/settings
+// Commissioner-only. Merge simple boolean/flag fields into existing league settings JSON.
+// Accepts: { showNegativeAwards?: boolean }
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: { leagueId: string } }
+) {
+  const auth = await apiRequireAuth(req);
+  if (auth instanceof NextResponse) return auth;
+  const commissioner = await apiRequireCommissioner(params.leagueId, auth.id);
+  if (commissioner instanceof NextResponse) return commissioner;
+
+  const body = (await req.json().catch(() => ({}))) as { showNegativeAwards?: unknown };
+
+  if (body.showNegativeAwards === undefined) {
+    return NextResponse.json({ error: "No recognized fields in body" }, { status: 400 });
+  }
+  if (typeof body.showNegativeAwards !== "boolean") {
+    return NextResponse.json({ error: "showNegativeAwards must be a boolean" }, { status: 400 });
+  }
+
+  const league = await prisma.fantasyLeague.findUnique({
+    where: { id: params.leagueId },
+    select: { scoringSettings: true },
+  });
+  if (!league) return NextResponse.json({ error: "League not found" }, { status: 404 });
+
+  const existing = (league.scoringSettings ?? {}) as Record<string, unknown>;
+  const merged = { ...existing, showNegativeAwards: body.showNegativeAwards };
+
+  await prisma.fantasyLeague.update({
+    where: { id: params.leagueId },
+    data: { scoringSettings: merged },
+  });
+
+  await logCommissionerAction(
+    params.leagueId, auth.id, "COMMISSIONER_SETTINGS_CHANGED",
+    { changed: ["showNegativeAwards"], showNegativeAwards: body.showNegativeAwards },
+    prisma
+  );
+
+  return NextResponse.json({ ok: true, showNegativeAwards: body.showNegativeAwards });
+}
+
 // PUT /api/leagues/[leagueId]/settings
 // Commissioner-only. Edit league settings before draft is complete.
 export async function PUT(

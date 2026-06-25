@@ -61,7 +61,7 @@ export function LeagueSettingsEditor({ leagueId, maxTeams: initialMaxTeams, draf
       {!draftDone && (
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
           <div>
-            <label style={{ display: "block", fontSize: 12, color: "#94a3b8", marginBottom: 6, fontWeight: 600, textTransform: "uppercase" as const }}>
+            <label style={{ display: "block", fontSize: 12, color: "var(--dim)", marginBottom: 6, fontWeight: 600, textTransform: "uppercase" as const }}>
               Max teams
             </label>
             <input
@@ -75,16 +75,16 @@ export function LeagueSettingsEditor({ leagueId, maxTeams: initialMaxTeams, draf
                 width: "100%",
                 padding: "9px 12px",
                 borderRadius: 8,
-                border: "1px solid rgba(148,163,184,0.2)",
-                background: "rgba(255,255,255,0.04)",
-                color: "#e2e8f0",
+                border: "1px solid var(--border)",
+                background: "var(--surface)",
+                color: "var(--text)",
                 fontSize: 14,
                 boxSizing: "border-box",
               }}
             />
           </div>
           <div>
-            <label style={{ display: "block", fontSize: 12, color: "#94a3b8", marginBottom: 6, fontWeight: 600, textTransform: "uppercase" as const }}>
+            <label style={{ display: "block", fontSize: 12, color: "var(--dim)", marginBottom: 6, fontWeight: 600, textTransform: "uppercase" as const }}>
               Draft type
             </label>
             <select
@@ -95,9 +95,9 @@ export function LeagueSettingsEditor({ leagueId, maxTeams: initialMaxTeams, draf
                 width: "100%",
                 padding: "9px 12px",
                 borderRadius: 8,
-                border: "1px solid rgba(148,163,184,0.2)",
-                background: "rgba(255,255,255,0.04)",
-                color: "#e2e8f0",
+                border: "1px solid var(--border)",
+                background: "var(--surface)",
+                color: "var(--text)",
                 fontSize: 14,
                 boxSizing: "border-box",
               }}
@@ -121,21 +121,21 @@ export function LeagueSettingsEditor({ leagueId, maxTeams: initialMaxTeams, draf
       >
         <span style={{
           width: 36, height: 20, borderRadius: 99, flexShrink: 0,
-          background: isPublic ? "#6366f1" : "rgba(255,255,255,0.08)",
+          background: isPublic ? "var(--accent)" : "var(--surface)",
           display: "inline-flex", alignItems: "center",
           padding: "0 3px", transition: "background 0.2s",
         }}>
           <span style={{
-            width: 14, height: 14, borderRadius: "50%", background: "#fff",
+            width: 14, height: 14, borderRadius: "50%", background: "var(--accent-ink)",
             transform: isPublic ? "translateX(16px)" : "translateX(0)",
             transition: "transform 0.2s",
           }} />
         </span>
         <div>
-          <div style={{ fontSize: 13, fontWeight: 600, color: "#e2e8f0" }}>
+          <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text)" }}>
             List on public league directory
           </div>
-          <div style={{ fontSize: 11, color: "#64748b" }}>
+          <div style={{ fontSize: 11, color: "var(--faint)" }}>
             Your league will appear on the Leagues page so new players can find and join it.
           </div>
         </div>
@@ -149,8 +149,8 @@ export function LeagueSettingsEditor({ leagueId, maxTeams: initialMaxTeams, draf
           borderRadius: 10,
           border: "none",
           cursor: busy || !isDirty ? "not-allowed" : "pointer",
-          background: busy || !isDirty ? "rgba(99,102,241,0.3)" : "#6366f1",
-          color: "#fff",
+          background: busy || !isDirty ? "rgba(143,193,232,0.3)" : "var(--accent)",
+          color: "var(--accent-ink)",
           fontWeight: 700,
           fontSize: 14,
         }}

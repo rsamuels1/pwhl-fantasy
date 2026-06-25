@@ -1,71 +1,118 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 
 export function VpExplainer() {
   const [open, setOpen] = useState(false);
+  const containerRef = useRef<HTMLSpanElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const handleClick = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("mousedown", handleClick);
+    document.addEventListener("keydown", handleKey);
+    return () => {
+      document.removeEventListener("mousedown", handleClick);
+      document.removeEventListener("keydown", handleKey);
+    };
+  }, [open]);
 
   return (
-    <span style={{ display: "inline-flex", alignItems: "center", gap: "0.25rem", marginLeft: "0.5rem", position: "relative" }}>
+    <span ref={containerRef} style={{ position: "relative", display: "inline-flex", alignItems: "center", marginLeft: "0.4rem" }}>
       <button
         onClick={() => setOpen((v) => !v)}
         aria-label="How does VP work?"
+        aria-expanded={open}
         style={{
           display: "inline-flex",
           alignItems: "center",
           justifyContent: "center",
-          width: "1.25rem",
-          height: "1.25rem",
+          width: 19,
+          height: 19,
           borderRadius: "50%",
-          border: "1px solid var(--muted, #888)",
-          background: "transparent",
-          color: "var(--muted, #888)",
-          fontSize: "0.7rem",
+          border: open ? "none" : "1px solid var(--dim)",
+          background: open ? "var(--accent)" : "transparent",
+          color: open ? "var(--accent-ink)" : "var(--dim)",
+          fontSize: "0.68rem",
           fontWeight: 700,
           cursor: "pointer",
           lineHeight: 1,
+          transition: "background 0.14s, color 0.14s",
+          flexShrink: 0,
         }}
       >
         ?
       </button>
+
       {open && (
         <span
+          role="tooltip"
           style={{
             position: "absolute",
-            top: "calc(100% + 6px)",
-            right: 0,
+            top: "calc(100% + 11px)",
+            left: "50%",
+            transform: "translateX(-50%)",
+            width: 296,
             zIndex: 50,
-            background: "var(--surface, #1e1e2e)",
-            border: "1px solid var(--border, #333)",
-            borderRadius: "0.5rem",
-            padding: "0.75rem 1rem",
-            maxWidth: "280px",
-            fontSize: "0.8rem",
-            lineHeight: 1.5,
-            boxShadow: "0 4px 16px rgba(0,0,0,0.4)",
+            background: "var(--card-hover)",
+            border: "1px solid var(--border)",
+            borderRadius: 12,
+            padding: "14px 16px",
+            boxShadow: "0 14px 40px rgba(0,0,0,0.55)",
+            animation: "vpPopIn 0.14s ease-out",
           }}
         >
-          <strong>Victory Points (VP)</strong>
-          <br />
-          Each week you earn VP two ways:
-          <ul style={{ margin: "0.4rem 0 0 1rem", padding: 0 }}>
-            <li>Win your matchup: <strong>+2 VP</strong></li>
-            <li>Tie your matchup: <strong>+1 VP</strong></li>
-            <li>Highest score in the league: <strong>+2 VP bonus</strong></li>
-            <li>Second-highest score: <strong>+1 VP bonus</strong></li>
-          </ul>
-          <p style={{ margin: "0.4rem 0 0" }}>
-            Maximum 4 VP per week. Standings are ranked by total VP, not wins alone.
+          {/* Arrow caret */}
+          <span style={{
+            position: "absolute",
+            top: -5,
+            left: "50%",
+            transform: "translateX(-50%) rotate(45deg)",
+            width: 9,
+            height: 9,
+            background: "var(--card-hover)",
+            borderTop: "1px solid var(--border)",
+            borderLeft: "1px solid var(--border)",
+            display: "block",
+          }} />
+
+          <p style={{ margin: "0 0 10px", fontSize: 13, fontWeight: 700, color: "var(--text)" }}>
+            How Victory Points work
           </p>
-          <p style={{ margin: "0.4rem 0 0", borderTop: "1px solid rgba(148,163,184,0.12)", paddingTop: "0.4rem", color: "var(--muted, #888)" }}>
-            Your weekly <strong style={{ color: "inherit" }}>fantasy points (FP)</strong> total determines who wins each matchup — winning earns you VP for the season standings.
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 5, marginBottom: 10 }}>
+            {[
+              { label: "Win your matchup", value: "+2 VP" },
+              { label: "Tie your matchup", value: "+1 VP" },
+              { label: "Highest score in the league", value: "+2 VP" },
+              { label: "Second-highest score", value: "+1 VP" },
+            ].map(({ label, value }) => (
+              <div key={label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
+                <span style={{ fontSize: 12, color: "var(--muted)" }}>{label}</span>
+                <span style={{ fontSize: 12, fontWeight: 700, color: "var(--accent)", fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap" }}>
+                  {value}
+                </span>
+              </div>
+            ))}
+          </div>
+
+          <p style={{ margin: 0, fontSize: 11, color: "var(--faint)", lineHeight: 1.5, borderTop: "1px solid var(--border-soft)", paddingTop: 8 }}>
+            Your weekly <strong style={{ color: "var(--dim)" }}>fantasy points (FP)</strong> total decides who wins each matchup — winning earns VP toward the season standings. Max 4 VP per week.
           </p>
-          <button
-            onClick={() => setOpen(false)}
-            style={{ marginTop: "0.4rem", fontSize: "0.75rem", color: "var(--muted, #888)", background: "none", border: "none", cursor: "pointer" }}
-          >
-            Close
-          </button>
+
+          <style>{`
+            @keyframes vpPopIn {
+              from { opacity: 0; transform: translateX(-50%) translateY(-4px); }
+              to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+            }
+          `}</style>
         </span>
       )}
     </span>

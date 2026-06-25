@@ -2,37 +2,59 @@
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+/* ── Northern Ice — Inviting Dark theme ────────────────────────── */
 :root {
-  /* ── Legacy tokens (kept for backwards compat) ────────────────── */
-  --bg: #0b1020;
-  --panel: rgba(255,255,255,0.05);
-  --panel-strong: rgba(99,102,241,0.16);
-  --surface: rgba(255,255,255,0.04);
-  --green: #22c55e;
-  --red: #ef4444;
-  --clock-warn: #f97316;
+  /* ── Surfaces ──────────────────────────────────────────────────── */
+  --bg:          #0f1117;
+  --bg-raised:   #14171e;
+  --card:        #191d25;
+  --card-hover:  #20242c;
+  --surface:     rgba(255,255,255,0.035);
+  --panel:       #191d25;
 
-  /* ── Wave 1 design tokens ─────────────────────────────────────── */
-  --font-body: 'Archivo', -apple-system, sans-serif;
+  /* ── Text ──────────────────────────────────────────────────────── */
+  --text:   #f4f6fa;
+  --muted:  #cdd3df;
+  --dim:    #9aa1b0;
+  --faint:  #7e8593;
+
+  /* ── Accent (sky) ──────────────────────────────────────────────── */
+  --accent:        #8fc1e8;
+  --accent-strong: #a6d0f0;
+  --accent-deep:   #6fa8d4;
+  --accent-ink:    #0a0a0c;
+  --accent-dim:    rgba(143,193,232,0.12);
+  --accent-border: rgba(143,193,232,0.28);
+  --accent-glow:   rgba(143,193,232,0.22);
+
+  /* ── Borders & elevation ───────────────────────────────────────── */
+  --border:      rgba(255,255,255,0.07);
+  --border-soft: rgba(255,255,255,0.05);
+  --shadow-card: 0 1px 3px rgba(0,0,0,0.35);
+  --shadow-pop:  0 14px 40px rgba(0,0,0,0.55);
+
+  /* ── Semantic ──────────────────────────────────────────────────── */
+  --green:  #51d88a;
+  --red:    #f6837f;
+  --amber:  #f5c97b;
+  --gold:   #f5c97b;
+
+  /* ── Type ──────────────────────────────────────────────────────── */
+  --font-body:  'Archivo', -apple-system, sans-serif;
   --font-stats: 'Saira Condensed', 'Archivo', sans-serif;
-  --card: #121829;
-  --accent: #7c3aed;
-  --accent-strong: #8b4bf5;
-  --accent-deep: #6d28d9;
-  --accent-dim: rgba(124,58,237,0.12);
-  --accent-border: rgba(124,58,237,0.28);
-  --accent-glow: rgba(124,58,237,0.22);
-  --text: #f3f5fb;
-  --muted: #aab2c8;
-  --dim: #8b93a7;
-  --faint: #6f788e;
-  --border: rgba(150,160,200,0.10);
+
+  /* ── Prestige ──────────────────────────────────────────────────── */
+  --prestige-gradient: linear-gradient(135deg, rgba(212,175,55,.16), rgba(255,255,255,0));
+
+  /* ── Legacy aliases (backwards compat) ────────────────────────── */
+  --panel-strong: rgba(143,193,232,0.16);
+  --clock-warn:   #f97316;
 }
 
 html { scroll-behavior: smooth; }
 body {
   min-height: 100vh;
-  background: radial-gradient(circle at top, rgba(79,70,229,0.16), transparent 22%), linear-gradient(180deg, #0b111f 0%, #090b12 100%);
+  background: radial-gradient(1100px 500px at 50% -8%, #16202b, #0f1117 60%);
   color: var(--text);
   font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   font-size: 14px;
@@ -174,7 +196,7 @@ img { max-width: 100%; display: block; }
 
 .button-primary {
   background: var(--accent);
-  color: #fff;
+  color: var(--accent-ink);
 }
 
 .button-secondary {
@@ -249,8 +271,8 @@ img { max-width: 100%; display: block; }
 .input:focus,
 .textarea:focus,
 .select:focus {
-  border-color: rgba(99,102,241,0.45);
-  box-shadow: 0 0 0 4px rgba(99,102,241,0.16);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-dim);
 }
 
 .form-panel {
@@ -287,8 +309,8 @@ img { max-width: 100%; display: block; }
 }
 
 .form-input:focus {
-  border-color: rgba(99,102,241,0.45);
-  box-shadow: 0 0 0 4px rgba(99,102,241,0.16);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-dim);
 }
 
 .summary-card {
@@ -304,8 +326,8 @@ img { max-width: 100%; display: block; }
   gap: 8px;
   border-radius: 999px;
   padding: 10px 14px;
-  background: rgba(99,102,241,0.12);
-  color: #fff;
+  background: var(--accent-dim);
+  color: var(--accent-ink);
   font-size: 0.92rem;
 }
 
@@ -331,17 +353,6 @@ img { max-width: 100%; display: block; }
 .panel-text,
 .footer-note {
   color: var(--muted);
-}
-
-.matchup-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  border-radius: 999px;
-  padding: 10px 14px;
-  background: rgba(99,102,241,0.12);
-  color: #fff;
-  font-size: 0.92rem;
 }
 
 @media (max-width: 700px) {
@@ -455,7 +466,7 @@ img { max-width: 100%; display: block; }
   width: 3px;
   height: 15px;
   border-radius: 2px;
-  background: linear-gradient(180deg, #a78bfa, #6d28d9);
+  background: var(--accent);
 }
 
 .font-stats {
@@ -503,7 +514,7 @@ img { max-width: 100%; display: block; }
   padding: 18px 20px;
 }
 
-/* Position badge (violet pill) */
+/* Position badge (sky pill) */
 .pos-badge {
   display: inline-flex;
   align-items: center;
@@ -512,8 +523,8 @@ img { max-width: 100%; display: block; }
   font-weight: 700;
   border-radius: 5px;
   padding: 3px 7px;
-  background: rgba(91,33,182,0.6);
-  color: #fff;
+  background: var(--accent-dim);
+  color: var(--accent);
 }
 
 /* Amber alert banner */
@@ -552,11 +563,39 @@ img { max-width: 100%; display: block; }
 .chip-in {
   background: var(--accent-dim);
   border: 1px solid var(--accent-border);
-  color: #c9b6ff;
+  color: var(--accent);
   font-size: 10px;
   font-weight: 700;
   padding: 2px 7px;
   border-radius: 4px;
+}
+.chip-bubble {
+  background: rgba(245,158,11,0.12);
+  border: 1px solid rgba(245,158,11,0.30);
+  color: #fbbf24;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 4px;
+}
+.chip-out {
+  background: rgba(100,116,139,0.10);
+  border: 1px solid rgba(100,116,139,0.30);
+  color: #94a3b8;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 4px;
+}
+.chip-magic {
+  background: rgba(148,163,184,0.08);
+  border: 1px solid rgba(148,163,184,0.20);
+  color: #94a3b8;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 4px;
+  cursor: default;
 }
 
 /* Draft room player row hover */
@@ -564,18 +603,32 @@ img { max-width: 100%; display: block; }
   background: var(--accent-dim);
 }
 
-/* Bracket champion card glow */
+/* Bracket champion card — prestige gradient + gold glow */
 .bracket-champion {
-  background: linear-gradient(135deg, #1b1346, var(--card)) !important;
-  border: 1px solid var(--accent-border) !important;
-  box-shadow: 0 0 32px var(--accent-glow) !important;
+  background: var(--prestige-gradient), var(--card) !important;
+  border: 1px solid rgba(212,175,55,0.40) !important;
+  box-shadow: 0 0 32px rgba(212,175,55,0.18) !important;
+}
+
+/* Clinched banner — prestige gradient background */
+.clinch-banner {
+  background: var(--prestige-gradient);
+  border: 1px solid rgba(212,175,55,0.30);
+  border-radius: 10px;
+  padding: 12px 16px;
+}
+
+/* Weekly recap card hero — prestige tint when positive result */
+.recap-card-win {
+  background: var(--prestige-gradient), var(--card);
+  border-color: rgba(212,175,55,0.22);
 }
 
 /* Draft room custom scrollbar */
 .draft-scroll::-webkit-scrollbar { width: 8px; height: 8px; }
 .draft-scroll::-webkit-scrollbar-track { background: transparent; }
-.draft-scroll::-webkit-scrollbar-thumb { background: rgba(124,58,237,0.35); border-radius: 4px; }
-.draft-scroll::-webkit-scrollbar-thumb:hover { background: rgba(124,58,237,0.55); }
+.draft-scroll::-webkit-scrollbar-thumb { background: rgba(143,193,232,0.35); border-radius: 4px; }
+.draft-scroll::-webkit-scrollbar-thumb:hover { background: rgba(143,193,232,0.55); }
 
 /* ── Accessibility: keyboard focus indicators ─────────────────── */
 button:focus-visible,
@@ -589,4 +642,14 @@ a:focus-visible,
 button:focus:not(:focus-visible),
 a:focus:not(:focus-visible) {
   outline: none;
+}
+
+/* ── Stat chip pulse animation (one-shot, LL-003) ──────────────── */
+@keyframes chipPulse {
+  0%   { opacity: 0; transform: scale(0.85); }
+  60%  { opacity: 1; transform: scale(1.06); }
+  100% { transform: scale(1); }
+}
+.stat-chip-pulse {
+  animation: chipPulse 0.5s ease-out both;
 }

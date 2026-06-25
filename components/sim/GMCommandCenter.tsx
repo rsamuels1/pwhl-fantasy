@@ -162,7 +162,7 @@ export default function GMCommandCenter({
         <div
           style={{
             fontSize: 13,
-            color: "#94a3b8",
+            color: "var(--dim)",
             padding: "4px 12px",
             background: "rgba(148, 163, 184, 0.1)",
             borderRadius: 4,
@@ -190,7 +190,7 @@ export default function GMCommandCenter({
         >
           <div
             style={{
-              background: "#1e1e2e",
+              background: "var(--card)",
               padding: "32px 40px",
               borderRadius: 12,
               textAlign: "center",
@@ -205,7 +205,7 @@ export default function GMCommandCenter({
                 width: 40,
                 height: 40,
                 border: "3px solid rgba(148, 163, 184, 0.2)",
-                borderTopColor: "#a5b4fc",
+                borderTopColor: "var(--accent-strong)",
                 borderRadius: "50%",
                 animation: "spin 1s linear infinite",
                 margin: "0 auto",
@@ -234,7 +234,7 @@ export default function GMCommandCenter({
           <h2 style={{ fontSize: 20, fontWeight: 700, marginTop: 0, marginBottom: 12 }}>
             Ready to Start the Season?
           </h2>
-          <p style={{ color: "#94a3b8", marginBottom: 24 }}>
+          <p style={{ color: "var(--dim)", marginBottom: 24 }}>
             Click below to begin Week 1 of the {state.totalWeeks}-week regular season.
           </p>
           <button
@@ -242,8 +242,8 @@ export default function GMCommandCenter({
             disabled={isSimulating}
             style={{
               padding: "12px 24px",
-              background: "#6366f1",
-              color: "#fff",
+              background: "var(--accent)",
+              color: "var(--accent-ink)",
               border: "none",
               borderRadius: 6,
               fontSize: 14,
@@ -312,7 +312,7 @@ export default function GMCommandCenter({
           <h2 style={{ fontSize: 24, fontWeight: 700, marginTop: 0, marginBottom: 12 }}>
             🏆 Season Champions Crowned!
           </h2>
-          <p style={{ color: "#94a3b8", marginBottom: 24 }}>
+          <p style={{ color: "var(--dim)", marginBottom: 24 }}>
             The playoff tournament is complete. View the final bracket and standings.
           </p>
           <a
@@ -321,7 +321,7 @@ export default function GMCommandCenter({
               display: "inline-block",
               padding: "12px 24px",
               background: "#22c55e",
-              color: "#fff",
+              color: "var(--accent-ink)",
               border: "none",
               borderRadius: 6,
               fontSize: 14,

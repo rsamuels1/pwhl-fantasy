@@ -17,8 +17,8 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 const STATUS_COLOR: Record<string, string> = {
-  UPCOMING: "#94a3b8",
-  ACTIVE: "#6366f1",
+  UPCOMING: "var(--dim)",
+  ACTIVE: "var(--accent)",
   SCORING_PENDING: "#f59e0b",
   COMPLETE: "#22c55e",
 };
@@ -42,21 +42,21 @@ export default async function SeasonPage({ params }: Props) {
 
   return (
     <div style={{ maxWidth: 900, margin: "0 auto", padding: "24px 16px" }}>
-      <h1 style={{ fontSize: 24, fontWeight: 700, marginBottom: 8, color: "#e2e8f0" }}>
+      <h1 style={{ fontSize: 24, fontWeight: 700, marginBottom: 8, color: "var(--text)" }}>
         Season Schedule
       </h1>
-      <p style={{ color: "#94a3b8", fontSize: 14, marginBottom: 24 }}>
+      <p style={{ color: "var(--dim)", fontSize: 14, marginBottom: 24 }}>
         {state.completedWeeks} of {state.totalWeeks} weeks complete
       </p>
 
       <div style={{ overflowX: "auto" }}>
-        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13, color: "#e2e8f0" }}>
+        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13, color: "var(--text)" }}>
           <thead>
-            <tr style={{ borderBottom: "1px solid rgba(148,163,184,0.2)" }}>
-              <th style={{ padding: "10px 12px", textAlign: "left", color: "#94a3b8", fontWeight: 600 }}>Week</th>
-              <th style={{ padding: "10px 12px", textAlign: "left", color: "#94a3b8", fontWeight: 600 }}>Dates</th>
-              <th style={{ padding: "10px 12px", textAlign: "center", color: "#94a3b8", fontWeight: 600 }}>Games</th>
-              <th style={{ padding: "10px 12px", textAlign: "left", color: "#94a3b8", fontWeight: 600 }}>Status</th>
+            <tr style={{ borderBottom: "1px solid var(--border)" }}>
+              <th style={{ padding: "10px 12px", textAlign: "left", color: "var(--dim)", fontWeight: 600 }}>Week</th>
+              <th style={{ padding: "10px 12px", textAlign: "left", color: "var(--dim)", fontWeight: 600 }}>Dates</th>
+              <th style={{ padding: "10px 12px", textAlign: "center", color: "var(--dim)", fontWeight: 600 }}>Games</th>
+              <th style={{ padding: "10px 12px", textAlign: "left", color: "var(--dim)", fontWeight: 600 }}>Status</th>
             </tr>
           </thead>
           <tbody>
@@ -66,24 +66,24 @@ export default async function SeasonPage({ params }: Props) {
                 <tr
                   key={ps.period.startsAt.getTime()}
                   style={{
-                    borderBottom: "1px solid rgba(148,163,184,0.1)",
-                    background: isActive ? "rgba(99,102,241,0.08)" : undefined,
+                    borderBottom: "1px solid var(--border)",
+                    background: isActive ? "rgba(143,193,232,0.08)" : undefined,
                   }}
                 >
                   <td style={{ padding: "10px 12px", fontWeight: isActive ? 700 : 400 }}>
                     Week {i + 1}
                   </td>
-                  <td style={{ padding: "10px 12px", color: "#cbd5e1" }}>
+                  <td style={{ padding: "10px 12px", color: "var(--muted)" }}>
                     {fmt(ps.period.startsAt)} – {fmt(ps.period.endsAt)}
                   </td>
-                  <td style={{ padding: "10px 12px", textAlign: "center", color: "#94a3b8" }}>
+                  <td style={{ padding: "10px 12px", textAlign: "center", color: "var(--dim)" }}>
                     {ps.gamesFinal}/{ps.gamesTotal}
                   </td>
                   <td style={{ padding: "10px 12px" }}>
                     <span style={{
                       fontSize: 11,
                       fontWeight: 600,
-                      color: STATUS_COLOR[ps.status] ?? "#94a3b8",
+                      color: STATUS_COLOR[ps.status] ?? "var(--dim)",
                       textTransform: "uppercase",
                       letterSpacing: "0.05em",
                     }}>
@@ -95,7 +95,7 @@ export default async function SeasonPage({ params }: Props) {
             })}
             {state.periods.length === 0 && (
               <tr>
-                <td colSpan={4} style={{ padding: "32px 12px", textAlign: "center", color: "#64748b" }}>
+                <td colSpan={4} style={{ padding: "32px 12px", textAlign: "center", color: "var(--faint)" }}>
                   No scoring periods yet — season hasn&apos;t started.
                 </td>
               </tr>

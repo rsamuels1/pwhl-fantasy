@@ -17,7 +17,7 @@ export default function MatchupTabs({
     <div>
       <div style={{
         display: "flex", gap: 0,
-        borderBottom: "1px solid var(--border, rgba(148,163,184,0.14))",
+        borderBottom: "1px solid var(--border, var(--border))",
         marginBottom: "1.5rem",
       }}>
         {(["matchup", "analysis"] as const).map((t) => (
@@ -27,10 +27,10 @@ export default function MatchupTabs({
             style={{
               padding: "0.6rem 1.25rem",
               fontWeight: tab === t ? 600 : 400,
-              color: tab === t ? "var(--indigo, #818cf8)" : "var(--muted, #64748b)",
+              color: tab === t ? "var(--accent)" : "var(--faint)",
               background: "none",
               border: "none",
-              borderBottom: tab === t ? "2px solid var(--indigo, #818cf8)" : "2px solid transparent",
+              borderBottom: tab === t ? "2px solid var(--accent)" : "2px solid transparent",
               cursor: "pointer",
               fontSize: "0.9rem",
               textTransform: "capitalize",

@@ -1,4 +1,5 @@
 import type { PrismaClient } from "@prisma/client";
+import { awardTrophies } from "./trophy-service";
 
 export class RenewalBlockedError extends Error {
   constructor(message: string) {
@@ -39,6 +40,14 @@ export async function renewLeague(
 
     if (league.childLeagues.length > 0) {
       return { newLeagueId: league.childLeagues[0].id };
+    }
+
+    // Award trophies for the completed season before creating the new one.
+    // Wrap in try/catch so a trophy-awarding failure doesn't block renewal.
+    try {
+      await awardTrophies(leagueId, league.season, prisma);
+    } catch (err) {
+      console.error("[renewal] awardTrophies failed (non-fatal):", err);
     }
 
     const newLeague = await tx.fantasyLeague.create({

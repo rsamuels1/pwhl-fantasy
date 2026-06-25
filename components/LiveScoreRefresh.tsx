@@ -34,7 +34,7 @@ export default function LiveScoreRefresh({
   const agoLabel = secsAgo < 10 ? "just now" : secsAgo < 60 ? `${secsAgo}s ago` : `${Math.floor(secsAgo / 60)}m ago`;
 
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, color: "#64748b" }}>
+    <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, color: "var(--faint)" }}>
       <span style={{
         width: 7, height: 7, borderRadius: "50%", background: "#34d399",
         boxShadow: "0 0 0 0 rgba(52,211,153,0.6)", animation: "livePulse 2s infinite",

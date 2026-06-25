@@ -66,7 +66,7 @@ export default function JoinLeaguePage() {
         <div style={{ marginBottom: 24 }}>
           {leagueName ? (
             <>
-              <p style={{ fontSize: 12, fontWeight: 700, color: "#6366f1", textTransform: "uppercase", letterSpacing: "1px", margin: "0 0 8px" }}>
+              <p style={{ fontSize: 12, fontWeight: 700, color: "var(--accent)", textTransform: "uppercase", letterSpacing: "1px", margin: "0 0 8px" }}>
                 You're invited
               </p>
               <h1 style={{ margin: "0 0 8px", fontSize: 24 }}>Join {leagueName}</h1>
@@ -118,7 +118,7 @@ export default function JoinLeaguePage() {
           </label>
 
           <label className="form-label">
-            Display name <span style={{ color: "#475569", fontWeight: 400 }}>(optional)</span>
+            Display name <span style={{ color: "var(--faint)", fontWeight: 400 }}>(optional)</span>
             <input
               className="form-input"
               value={displayName}
@@ -128,7 +128,7 @@ export default function JoinLeaguePage() {
           </label>
 
           {error && (
-            <p style={{ color: "#d18b7f", fontSize: 13, margin: 0 }}>{error}</p>
+            <p style={{ color: "var(--red)", fontSize: 13, margin: 0 }}>{error}</p>
           )}
 
           <button
@@ -140,9 +140,9 @@ export default function JoinLeaguePage() {
           </button>
         </form>
 
-        <p style={{ marginTop: 20, fontSize: 13, color: "#475569", textAlign: "center" }}>
+        <p style={{ marginTop: 20, fontSize: 13, color: "var(--faint)", textAlign: "center" }}>
           Starting a new league?{" "}
-          <a href="/create-league" style={{ color: "#a5b4fc" }}>Create one instead</a>
+          <a href="/create-league" style={{ color: "var(--accent-strong)" }}>Create one instead</a>
         </p>
       </div>
     </div>

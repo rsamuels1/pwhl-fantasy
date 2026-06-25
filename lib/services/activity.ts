@@ -90,13 +90,18 @@ export async function getTransactions(
   if (teamId) where.teamId = teamId;
   if (type) where.type = { in: type.split(",") };
 
+  // Only apply a createdAt upper bound for non-replay leagues using dev sim date.
+  // Replay leagues have replayCurrentDate in 2024-25 fixture time but LeagueEvent.createdAt
+  // is real-world June 2026 time — applying the replay date as a bound would hide all events.
   let ltBound: Date | null = null;
   if (before) ltBound = new Date(before);
-  if (isReplay && nowMs) {
-    const replayBound = new Date(nowMs);
-    ltBound = ltBound
-      ? new Date(Math.min(ltBound.getTime(), replayBound.getTime()))
-      : replayBound;
+  if (!isReplay && nowMs) {
+    const devBound = new Date(nowMs);
+    if (devBound.getTime() < Date.now() - 60_000) {
+      ltBound = ltBound
+        ? new Date(Math.min(ltBound.getTime(), devBound.getTime()))
+        : devBound;
+    }
   }
   if (ltBound) where.createdAt = { lt: ltBound };
 
@@ -129,6 +134,24 @@ export async function getTransactions(
   const teamMap = new Map(teams.map((t) => [t.id, t.name]));
   const playerMap = new Map(players.map((p) => [p.id, `${p.firstName} ${p.lastName}`]));
 
+  // Human-readable fallback labels for event types that may not carry a description field.
+  const TYPE_FALLBACK: Record<string, string> = {
+    DRAFT_PICK:                 "Draft pick",
+    PLAYER_ADD:                 "Free agent added",
+    PLAYER_DROP:                "Player dropped",
+    TRADE:                      "Trade executed",
+    PLAYOFF_QUALIFICATION:      "Playoff qualification",
+    PLAYOFF_CLINCH:             "Playoff spot clinched",
+    PLAYOFF_ELIMINATION:        "Eliminated from playoffs",
+    CHAMPIONSHIP_WON:           "League championship won",
+    MAJOR_PERFORMANCE:          "Standout performance",
+    LEAGUE_STORYLINE:           "League storyline",
+    WAIVER_CLAIM_SUBMITTED:     "Waiver claim submitted",
+    WAIVER_CLAIM_AWARDED:       "Waiver claim awarded",
+    WAIVER_CLAIM_DENIED:        "Waiver claim denied",
+    WAIVER_CLAIM_CANCELLED:     "Waiver claim cancelled",
+  };
+
   return {
     events: events.map((e) => ({
       id: e.id,
@@ -137,7 +160,9 @@ export async function getTransactions(
       teamName: e.teamId ? (teamMap.get(e.teamId) ?? null) : null,
       playerId: e.playerId,
       playerName: e.playerId ? (playerMap.get(e.playerId) ?? null) : null,
-      description: ((e.data as Record<string, string>)?.description as string) ?? e.type,
+      description: ((e.data as Record<string, string>)?.description as string)
+        ?? TYPE_FALLBACK[e.type]
+        ?? e.type,
       createdAt: e.createdAt.toISOString(),
     })),
     hasMore,
