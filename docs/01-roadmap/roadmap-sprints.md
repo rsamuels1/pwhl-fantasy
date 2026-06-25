@@ -931,7 +931,7 @@ Files: `app/team/[teamId]/matchup/page.tsx`
 - UX-040 (P2, S) — Standings "games back of the bubble" uses basketball idiom
 - UX-041 (P2, S) — Analysis "vs Median" numbers have no unit label
 - UX-044 (P3, S) — "0-0 season series" shows before any matchup played
-- UX-012 (L) — Combine Standings and Bracket into a single "Season" page (Design Backlog)
+- UX-012 ✅ RESOLVED — TeamNav swaps "Standings" ↔ "Playoffs" based on `playoffStatus`; contradiction eliminated without a merged page
 - UX-022 ✅ DONE — TeamNav label corrected to "Schedule" (commit 972362d; naming ambiguity resolved)
 
 **Shipped early from Sprint 14 (commit 972362d — P2 clarity backlog):**

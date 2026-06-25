@@ -529,22 +529,15 @@ Acceptance Criteria:
 
 ---
 
-## UX-012. "Regular Season" Badge on Playoffs Page Is Contradictory
+## UX-012. "Regular Season" Badge on Playoffs Page Is Contradictory ✅ RESOLVED
 
-Sprint: Design Backlog (requires design pass before implementation)
+Sprint: Design Backlog → resolved via TeamNav swap pattern
 Priority: P2
 Effort: L
 
-As a user on the Playoffs / Bracket page, I want the page header to accurately reflect what phase I'm in so that I'm not confused by competing labels.
+Resolved: The team nav now swaps "Standings" for "Playoffs" when `playoffStatus !== "NOT_STARTED"` — the two tabs are never shown simultaneously (`app/team/[teamId]/TeamNav.tsx`). This eliminates the "Regular Season badge on Playoffs page" contradiction without requiring a merged page. The league layout redirects to `/bracket` during playoffs. No further action needed.
 
-Immediate fix (S, can land alongside other polish):
-- Move the "Regular Season" badge out of the H1 line into a subtitle row.
-- Reword to "Season phase: Regular Season" or replace with "X weeks until playoffs."
-
-Longer-term (L, Design Backlog):
-- Evaluate merging the Standings page and Bracket page into a single "Season" page. Pre-playoffs state: standings-primary. During playoffs: bracket-primary (matches the existing redirect from `/league/[leagueId]/` to `/bracket` when `playoffStatus === IN_PROGRESS`).
-
-Files: `app/league/[leagueId]/bracket/page.tsx`, `app/league/[leagueId]/standings/page.tsx`, `app/league/[leagueId]/layout.tsx`
+Files: `app/league/[leagueId]/bracket/page.tsx`, `app/league/[leagueId]/standings/page.tsx`, `app/league/[leagueId]/layout.tsx`, `app/team/[teamId]/TeamNav.tsx`
 
 ---
 
