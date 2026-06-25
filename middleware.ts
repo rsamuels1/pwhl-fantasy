@@ -13,18 +13,14 @@ export function middleware(req: NextRequest) {
   if (host === BETA_HOST) {
     const isAuthenticated = !!cookie;
 
-    // Unauthenticated users: allow home, auth, create-league, and static assets
+    // Unauthenticated users: allow home, beta waitlist, auth, and static assets only.
+    // Registration, login, and league creation are intentionally excluded — approved
+    // testers use beta.fantasy.dykedb.org for the full app.
     const unauthedAllowed =
       pathname === "/" ||
       pathname === "/beta" ||
-      pathname === "/register" ||
-      pathname === "/login" ||
-      pathname.startsWith("/create-league") ||
-      pathname.startsWith("/invite") ||
       pathname.startsWith("/api/beta-signup") ||
       pathname.startsWith("/api/auth") ||
-      pathname.startsWith("/api/leagues/create") ||
-      pathname.startsWith("/api/leagues/join") ||
       pathname.startsWith("/_next/") ||
       pathname.startsWith("/favicon");
 

@@ -75,7 +75,8 @@ Three environments. Full runbook: `docs/04-operations/environments.md`.
 
 **Key rules:**
 - `DATABASE_URL` is the isolation boundary — staging must point at the Neon `preview` branch, never `main`.
-- `BETA_HOST` env var controls which host is locked to just the `/beta` signup page (defaults to `"fantasy.dykedb.org"`). The beta subdomain (`beta.fantasy.dykedb.org`) never matches this check, so the full app runs there. Set `BETA_HOST` to `""` in the production Vercel project when ready to open `fantasy.dykedb.org` to the full app.
+- `BETA_HOST` env var controls which host is locked to just the `/beta` waitlist page (defaults to `"fantasy.dykedb.org"`). Unauthenticated users on the BETA_HOST domain can only reach `/` and `/beta` — `/register`, `/login`, `/create-league`, `/invite`, and all league API routes are blocked. Approved testers use `beta.fantasy.dykedb.org` for the full app. Set `BETA_HOST` to `""` when ready to open `fantasy.dykedb.org` to the public.
+- `BETA_SITE_HOST` env var identifies the beta-test subdomain (defaults to `"beta.fantasy.dykedb.org"`). Set in the `pwhl-gm-beta` Vercel project. When a league creation request arrives from this host, `POST /api/leagues/create` rejects any non-replay league with a 403 — only Beta Replay Leagues (`useBetaReplay: true`) can be created there. Staging (`fantasydev.dykedb.org`) never matches and remains unrestricted.
 - `ALLOW_SIM_DATE` must NOT be set in Production — it would let any user rewind the clock for all live leagues.
 - `prisma db push` is safe on the staging Neon branch; never run it on the prod branch while beta users are active. Use `prisma migrate dev` to generate a migration, commit it, and let `prisma migrate deploy` (in the build command) apply it to prod.
 - Vercel crons (`vercel.json`) run on Production only — waivers won't double-process on staging.
@@ -1091,7 +1092,7 @@ All pages under `app/team/[teamId]/` call `requireAuth` + `requireTeamOwner` at 
 - Commissioner: `commish@dev.local`
 - Team owners: `owner2@dev.local`, `owner3@dev.local`, etc.
 
-No passwords — the app uses email-only cookie auth (`pwhl_user_email`, 30-day session).
+No passwords — the app uses email-only cookie auth (`pwhl_session`, 30-day session).
 
 ### Admin panel (`app/league/[leagueId]/admin/`)
 
@@ -1129,7 +1130,7 @@ gray. Standings links to `/league/[leagueId]/standings` since standings are leag
 
 ### Logout
 
-`GET /api/auth/logout` — clears the `pwhl_user_email` cookie and redirects to `/`. Implemented
+`GET /api/auth/logout` — clears the `pwhl_session` cookie and redirects to `/`. Implemented
 as a GET handler so the nav "Logout" link (`<a href="/api/auth/logout">`) works without JS.
 Earlier versions only had a POST handler, which caused the link to bounce to a blank page while
 leaving the user still logged in.

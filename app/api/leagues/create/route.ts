@@ -2,12 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { DEFAULT_SCORING } from "@/lib/scoring";
 import { generateShortId } from "@/lib/id";
-import { setAuthCookie } from "@/lib/auth";
+import { setAuthCookie, USER_SESSION_COOKIE } from "@/lib/auth";
 import { trackEvent } from "@/lib/analytics";
 import { derivePeriods } from "@/lib/scoring/periods";
 import { REPLAY_SEASON, LIVE_SEASON } from "@/lib/constants";
-
-const SESSION_COOKIE = "pwhl_user_email";
 
 export async function POST(req: NextRequest) {
   try {
@@ -16,7 +14,7 @@ export async function POST(req: NextRequest) {
 
     // On the beta site, only Beta Replay Leagues are permitted.
     const host = req.headers.get("host") ?? "";
-    const betaSiteHost = process.env.BETA_SITE_HOST ?? "beta.fantasy.dykedb.org";
+    const betaSiteHost = process.env.BETA_SITE_HOST || "beta.fantasy.dykedb.org";
     if (host === betaSiteHost && !body.useBetaReplay) {
       return NextResponse.json(
         { error: "Only Beta Replay Leagues can be created on this domain." },
@@ -29,7 +27,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Prefer authenticated session; fall back to email-based creation for backward compat.
-    const sessionEmail = req.cookies.get(SESSION_COOKIE)?.value;
+    const sessionEmail = req.cookies.get(USER_SESSION_COOKIE)?.value;
     let commissioner = sessionEmail
       ? await prisma.user.findUnique({ where: { email: sessionEmail } })
       : null;
