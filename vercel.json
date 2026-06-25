@@ -16,6 +16,14 @@
     {
       "path": "/api/cron/sync-rosters",
       "schedule": "0 10 * * 1"
+    },
+    {
+      "path": "/api/cron/ingest-live-stats",
+      "schedule": "0/30 22-4 * * *"
+    },
+    {
+      "path": "/api/cron/advance-live-seasons",
+      "schedule": "0 5 * * *"
     }
   ]
 }

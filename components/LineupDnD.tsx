@@ -305,12 +305,10 @@ export default function LineupDnD({
       playerId: p.playerId,
       position: p.position,
       active: p.eligibleSlots.some((s) => s !== "BENCH" && s !== "IR"),
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      slot: p.slot as any,
+      slot: p.slot as unknown as import("@prisma/client").LineupSlot,
       lockedAt: p.lockedAt,
       hasPlayedThisPeriod: p.hasPlayedThisPeriod,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      eligibleSlots: p.eligibleSlots as any[],
+      eligibleSlots: p.eligibleSlots as unknown as import("@prisma/client").LineupSlot[],
       projectedFp: projectedStats?.[p.playerId]?.projectedFp ?? null,
       gamesThisPeriod: p.gamesThisPeriod ?? 0,
     }));

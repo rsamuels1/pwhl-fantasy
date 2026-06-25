@@ -693,9 +693,14 @@ export function startDraftServer(port = 8080) {
   // Wrap in an HTTP server so Render/Railway health checks work on GET /health.
   // WebSocket upgrades are routed through the same server.
   const http = require("http") as typeof import("http");
-  const httpServer = http.createServer((_req: import("http").IncomingMessage, res: import("http").ServerResponse) => {
-    res.writeHead(200, { "Content-Type": "text/plain" });
-    res.end("ok");
+  const httpServer = http.createServer((req: import("http").IncomingMessage, res: import("http").ServerResponse) => {
+    if (req.url === "/health") {
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ ok: true, rooms: roomPromises.size }));
+    } else {
+      res.writeHead(404);
+      res.end();
+    }
   });
 
   const wss = new WebSocketServer({ server: httpServer });

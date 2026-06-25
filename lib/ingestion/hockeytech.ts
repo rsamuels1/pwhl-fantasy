@@ -455,3 +455,20 @@ export async function fetchGameStartTime(gameExternalId: string): Promise<string
     return null;
   }
 }
+
+// Used by the live-stats cron to check whether a game is now final without
+// fetching full stat lines first. Calls fetchGameSummary once and returns both
+// the finality flag and the precise start time for backfilling startsAt.
+export async function checkGameFinal(
+  gameExternalId: string
+): Promise<{ isFinal: boolean; startsAt: string | null }> {
+  try {
+    const summary = await fetchGameSummary(gameExternalId);
+    return {
+      isFinal: mapGameStatus(summary.details.status) === "FINAL",
+      startsAt: summary.details.GameDateISO8601 ?? null,
+    };
+  } catch {
+    return { isFinal: false, startsAt: null };
+  }
+}
