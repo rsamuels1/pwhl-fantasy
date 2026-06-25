@@ -1871,6 +1871,22 @@ Goal: Address the top three findings from the pragmatic complexity review: N+1 p
 
 ---
 
+## Sprint 34 — "Complexity Debt Closeout" · ✅ COMPLETE · Jun 24, 2026 · Track Tech · P2
+
+Goal: Ship the two remaining complexity review items that were safe to do without a schema migration.
+
+| Story | Track | Size | Priority | Status |
+|---|---|---|---|---|
+| CX-005 — Collapse validateTrade aliases: `validateTradeProposal` and `validateTradeExecution` were identical wrappers around `_validate`; collapsed into single exported `validateTrade`; updated `trade-service.ts` (4 call sites) and `trade.test.ts` | Cleanup | S | P2 | ✅ DONE |
+| CX-008 — `nowMs` in `enterWaiverWire`: hardcoded `Date.now()` replaced with optional `nowMs` param; waiver route passes `getDevNowFromRequest(req)` so waiver expiry respects sim-date cookie during dev simulation | Cleanup | S | P2 | ✅ DONE |
+| CX-007 — Rename REVERSED → VETOED: **deferred indefinitely** — `REVERSED` covers two semantically different transitions (`PENDING_REVIEW→REVERSED` = veto, `EXECUTED→REVERSED` = rollback); splitting them requires a new enum value, Prisma migration, and prod data migration; low value for the risk | Cleanup | L | P3 | ⏸ DEFERRED |
+
+**No schema changes in this sprint.**
+
+**Result: 2/2 actionable items shipped; CX-007 properly deferred.**
+
+---
+
 ## Beyond MVP
 
 - **Q4 2026 (in-season):** Waivers → FAAB; engagement surfaces (#25 analysis, #29 performance dashboard, #30 playoff UX) while the first live season runs. Trade System shipped Sprint 7.
