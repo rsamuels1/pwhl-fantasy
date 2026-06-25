@@ -102,9 +102,23 @@ export default async function SchedulePage({ params }: Props) {
       })
     : [];
 
+  // For beta replay leagues, nowMs is a 2026 date but fixture games have 2024-25 startsAt values.
+  // Remap nowMs into fixture-calendar time by interpolating its position within the display period.
+  let fixtureNowMs = nowMs;
+  if (displayPeriod && fixtureDisplayPeriod) {
+    const displayStart = displayPeriod.startsAt.getTime();
+    const displayEnd = displayPeriod.endsAt.getTime();
+    const fixtureStart = fixtureDisplayPeriod.startsAt.getTime();
+    const fixtureEnd = fixtureDisplayPeriod.endsAt.getTime();
+    if (displayStart !== fixtureStart || displayEnd !== fixtureEnd) {
+      const fraction = Math.max(0, Math.min(1, (nowMs - displayStart) / (displayEnd - displayStart)));
+      fixtureNowMs = fixtureStart + fraction * (fixtureEnd - fixtureStart);
+    }
+  }
+
   const totalGames = allPeriodGames.length;
   const finishedGames = allPeriodGames.filter(
-    (g) => new Date(g.startsAt).getTime() <= nowMs
+    (g) => new Date(g.startsAt).getTime() <= fixtureNowMs
   ).length;
   const progressPct = totalGames > 0 ? Math.round((finishedGames / totalGames) * 100) : 0;
 
@@ -367,7 +381,7 @@ export default async function SchedulePage({ params }: Props) {
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                   {dayGames.map((game) => {
-                    const played = new Date(game.startsAt).getTime() <= nowMs;
+                    const played = new Date(game.startsAt).getTime() <= fixtureNowMs;
                     const myHome = myPlayersByTeam.get(game.homeTeamId) ?? [];
                     const myAway = myPlayersByTeam.get(game.awayTeamId) ?? [];
                     const myTotal = myHome.length + myAway.length;
