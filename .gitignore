@@ -7,3 +7,4 @@ node_modules/
 .aider*
 .vercel
 .claude/worktrees/
+tsconfig.tsbuildinfo

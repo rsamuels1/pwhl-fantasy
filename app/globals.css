@@ -380,7 +380,9 @@ img { max-width: 100%; display: block; }
 .team-nav {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
 }
+.team-nav::-webkit-scrollbar { display: none; }
 @media (max-width: 480px) {
   .team-nav a {
     padding: 8px 10px !important;
