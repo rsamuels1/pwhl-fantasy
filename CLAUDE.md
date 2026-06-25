@@ -172,7 +172,8 @@ survives DB resets and schema migrations.
 2. Roster ingestion pipeline (against mock source) + scoring engine ✅ (scoring done)
 3. **Draft room** — server logic ✅, React UI ✅
 4. Live scoring loop: matchups, standings, waivers, trades
-   - VP standings authority ✅ (`computeVpStandings` is the single source everywhere; `scoringMode @default("VP")`)
+   - VP standings authority ✅ (`computeVpStandings` is the single source everywhere; `scoringMode` is now a `ScoringMode` enum — `@default(H2H)` for new leagues; VP remains fully supported)
+   - **H2H scoring mode** ✅ (SCORING-001: `ScoringMode { VP H2H VTF }` enum; `lib/season/h2h.ts` `scoreH2hWeek` + `computeH2hStandings`; wizard Step 1 scoring mode selector; H2H is default for new leagues; VP education surfaces hidden for H2H; standings + how-it-works pages gated on `scoringMode`)
    - Period-based lineup lock ✅ (`lockTime` locks for the full week once team played any period game)
    - Lineup management ✅ (set active/bench slots, per-player game-time locking, play-lock rule)
    - Lineup management v2 ✅ ("Matchup Proj" tab, between-weeks lineup nudge banner, mobile compact stats)
@@ -191,7 +192,7 @@ survives DB resets and schema migrations.
    - Season renewal ✅ (`lib/services/renewal-service.ts` `renewLeague`; `POST /api/leagues/[leagueId]/renew`; `components/RenewLeagueForm.tsx`; admin "Start Next Season" gated on `playoffStatus === COMPLETE`)
    - Multi-season schema ✅ (`parentLeagueId`, `rulesVersion`, `scoringVersion`, `pwhlPlayoffStartsAt` on `FantasyLeague`; self-referencing `"LeagueLineage"` relation)
    - Season boundary enforcement ✅ (`validateSeasonBoundary()` in `lib/season/lifecycle.ts`; `startSeason()` blocks overlap when `pwhlPlayoffStartsAt` is set on the league)
-   - Analytics instrumentation ✅ (`trackEvent` in `lib/analytics/index.ts`; 6 events: `user_registered`, `league_created`, `league_joined`, `draft_started`, `draft_completed`, `lineup_saved`)
+   - Analytics instrumentation ✅ (PostHog via `posthog-node` server-side + `posthog-js` client-side; `trackEvent` in `lib/analytics/index.ts`; 9 events: `user_registered`, `league_created`, `league_joined`, `draft_started`, `draft_completed`, `lineup_saved`, `lineup_auto_set`, `wizard_step_viewed`, `wizard_completed`)
    - VP education ✅ (`components/VpExplainer.tsx` on standings page; 8-team "Recommended" label on league creation form; IA-005/006)
    - Notification framework ✅ (`lib/services/notification-service.ts`; `Notification`/`NotificationPreference` models; in-app bell in league layout; draft server call sites; schema delta shipped: `title`, `body`, `actionUrl`, `teamId`, `dedupeKey` + `@@unique([userId,type,dedupeKey])`; email deferred)
    - Onboarding ✅ (welcome flow, 6-step league setup wizard, manager draft prep guide, replay explanation; `User.onboardingCompletedAt`; `components/WelcomeFlow.tsx`; `app/create-league/CreateLeagueWizard.tsx`; `app/api/user/onboarding/route.ts`)
@@ -344,6 +345,12 @@ survives DB resets and schema migrations.
      - **UX-075: Setup phase timing copy** ✅ — both FieldHero and DuelHero: "Scores appear once tonight's PWHL games go final · N games tonight" or "Scores update as PWHL games are played this week"; `gamesThisNight` prop threaded from matchup page
      - **UX-076: Deep-link focus params** ✅ — `?focus=matchup` on tight-week hrefs; `?focus=lineup` on new-week/upcoming-soon hrefs; `components/FocusHighlight.tsx` scrolls + amber-pulses target element; matchup page wraps hero in `<div id="matchup-hero">`; roster page wraps LineupDnD in `<div id="lineup-section">`; `.focus-highlight-pulse` keyframe in globals.css
      - **UX-077: Action item copy** ✅ — all labels explicitly name destination: "Draft is live · Enter draft room →"; "Week N started · Set lineup →"; "Tight week — you're W–L · Open matchup →"; "Week N starts soon · Prep lineup →"
+   - **Pre-Launch Security Fix — Sprint 40** ✅ (5 P1 findings from OPS-001 audit closed; Jun 25, 2026; commit fa4de8f; no schema changes):
+     - **SEC-P1-001** ✅ — `app/api/leagues/[leagueId]/lineup/route.ts`: validate slot enum before casting to prevent invalid slot injection
+     - **SEC-P1-002** ✅ — `app/api/leagues/[leagueId]/commissioner/force-move/route.ts`: removed non-null assertion; uses `entryB.playerId` safely
+     - **SEC-P1-003** ✅ — `app/api/auth/register/route.ts`: max-length guard on `displayName` (≤80 chars)
+     - **SEC-P1-004** ✅ — `app/api/leagues/create/route.ts`: max-length guard on `leagueName` (≤50 chars, consistent with wizard)
+     - **SEC-P1-006** ✅ — `app/api/leagues/[leagueId]/commissioner/undo-transaction/route.ts`: audit log writes are fire-and-forget (`.catch + logger.error`) to prevent state inconsistency if the log write fails
 7. Public launch ~early Nov, drafts ~1 week before opener
 
 ## Draft room UI (`app/draft/[leagueId]/`)
@@ -482,9 +489,15 @@ The trade system follows the same pure-engine + service-layer pattern as the dra
 
 ## Analytics (`lib/analytics/index.ts`)
 
-`trackEvent(e: AnalyticsEvent): void` — V1 writes `console.log("[ANALYTICS]", ...)`. Designed to swap to PostHog/Plausible by replacing the function body only; call sites are unchanged. All callers wrap in `try { } catch {}` — fire-and-forget, never blocks responses.
+**Provider: PostHog** (`posthog-node` server-side, `posthog-js` client-side via `components/PostHogProvider.tsx`).
 
-**6 instrumented events:**
+**Required env vars:** `POSTHOG_KEY` (server-only), `NEXT_PUBLIC_POSTHOG_KEY` (client), `POSTHOG_HOST` / `NEXT_PUBLIC_POSTHOG_HOST` (default `https://us.i.posthog.com`). If `POSTHOG_KEY` is unset, `trackEvent` is a no-op. If `NEXT_PUBLIC_POSTHOG_KEY` is unset, the client provider does not initialize.
+
+`trackEvent(e: AnalyticsEvent): void` — server-side PostHog capture via module-level singleton. Call sites stay unchanged. All callers wrap in `try { } catch {}` — fire-and-forget, never blocks responses.
+
+**Client-side hook:** `useAnalytics()` from `components/PostHogProvider.tsx` returns `{ capture }` — wraps `posthog-js` capture, no-ops if not initialized. Used by `CreateLeagueWizard`.
+
+**8 instrumented events:**
 
 | Event | File |
 |---|---|
@@ -493,7 +506,10 @@ The trade system follows the same pure-engine + service-layer pattern as the dra
 | `league_joined` | `app/api/leagues/join/route.ts` |
 | `draft_started` | `lib/draft/server.ts` — after `PERSIST_STATUS` lands `IN_PROGRESS` |
 | `draft_completed` | `lib/draft/server.ts` — after `COMPLETE` effect |
-| `lineup_saved` | `app/api/leagues/[leagueId]/lineup/route.ts` PUT handler |
+| `lineup_saved` | `app/api/leagues/[leagueId]/lineup/route.ts` PUT handler; property `source: "auto" | "manual"` |
+| `lineup_auto_set` | Same PUT handler, only when `source === "auto"` (fired by `components/LineupDnD.tsx` auto-set button) |
+| `wizard_step_viewed` | `app/create-league/CreateLeagueWizard.tsx` — fires on each step with `{ step, stepName, mode }` |
+| `wizard_completed` | Same file — fires when step 8 (done) is reached with `{ mode, maxTeams, leagueId }` |
 
 ## Logger (`lib/logger.ts`)
 
@@ -765,6 +781,42 @@ should follow this pattern. Recommended next steps post-launch:
 - Event table for async scoring/cache-invalidation
 - Redis-backed draft coordinator for multi-node scaling
 (Both explicitly post-launch per the architecture review.)
+
+## Scoring modes (`lib/season/h2h.ts`, `lib/scoring/vp.ts`)
+
+`FantasyLeague.scoringMode` is a `ScoringMode` enum with three values:
+
+| Value | Description | Default |
+|---|---|---|
+| `H2H` | Head-to-head — 1v1 matchup each week, W/L/T from FP comparison. **New league default.** | Yes |
+| `VP` | Victory Points — rank-based bonus points per week, round-robin schedule. Legacy and power-user mode. | No |
+| `VTF` | vs-the-Field — all-vs-all scored weekly; used internally by beta replay leagues. Not exposed to new league creators. | No |
+
+**H2H and VP both use `generateMatchups()` (round-robin 1v1 schedule).** The only difference is the scoring pass:
+- H2H: `scoreH2hWeek()` in `lib/season/h2h.ts` — writes `homeScore`/`awayScore` only; `homeVP`/`awayVP` left null.
+- VP: `scoreVpWeek()` in `lib/season/index.ts` — writes both scores and VP bonuses.
+
+**Standings functions:**
+- H2H: `computeH2hStandings(teams, matchups)` in `lib/season/h2h.ts` — returns `VpStanding[]` with `totalVP = wins×2 + ties×1` (points-table sort). Pure, no IO.
+- VP: `computeVpStandings(teams, matchups)` in `lib/scoring/vp.ts` — unchanged authority. Pure, no IO.
+- Both return the same `VpStanding[]` shape so downstream consumers (`standings-service.ts`, standings page, `computeRace()`) work without interface changes.
+
+**Key dispatch points:**
+- `startSeason()` in `lib/season/index.ts` — branches on `scoringMode === "VP" || scoringMode === "H2H"` to use `generateMatchups()` (both 1v1 modes); else falls back to `generateVtfMatchups()` (beta/VTF).
+- `advanceSeason()` in `lib/season/index.ts` — branches `VP → scoreVpWeek`, `H2H → scoreH2hWeek`, else `scoreVtfWeek`.
+- `emitClinchEvents()` — dispatches to the correct standings function for playoff race computation.
+- `standings-service.ts` — dispatches to correct standings function.
+- `app/league/[leagueId]/standings/page.tsx` — dispatches, hides VP-specific columns (VP, W-VP, Rank VP) for H2H leagues, shows H2H-specific copy.
+- `app/league/[leagueId]/page.tsx` — dispatches for the commissioner overview race table.
+- `lib/services/dashboard.ts` — `isVpMode = scoringMode === "VP" || scoringMode === "H2H"` (both use 1v1 opponent lookup vs VTF all-vs-all).
+
+**UI gating:**
+- `VpPrimerCard` hidden for H2H leagues (`league.scoringMode !== "H2H"` guard in matchup page).
+- `VpExplainer` hidden for H2H leagues in standings page.
+- `app/league/[leagueId]/how-it-works/page.tsx` shows H2H vs VP section based on `league.scoringMode`.
+- Wizard Step 1 shows scoring mode selector (H2H default, VP advanced) only for live non-beta leagues.
+
+**Beta replay leagues** are always created with `scoringMode: "VTF"` by the founder API route — they bypass the H2H/VP branch entirely via `betaStatus === "ACTIVE"` gating in `startSeason()`.
 
 ## Season lifecycle (`lib/season/`)
 

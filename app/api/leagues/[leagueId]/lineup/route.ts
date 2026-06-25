@@ -7,6 +7,7 @@ import { apiRequireAuth, apiRequireLeagueMember } from "@/lib/auth";
 import { getDevNowFromRequest } from "@/lib/devTime";
 import { getReplayNow } from "@/lib/replayTime";
 import { getSeasonState } from "@/lib/season";
+import { trackEvent } from "@/lib/analytics";
 
 const ACTIVE_SLOTS: LineupSlot[] = ["FORWARD", "DEFENSE", "GOALIE", "UTIL"];
 
@@ -105,7 +106,7 @@ export async function PUT(
   const myTeam = await apiRequireLeagueMember(leagueId, auth.id);
   if (myTeam instanceof NextResponse) return myTeam;
 
-  const body = await req.json() as { teamId?: string; playerId?: string; slot?: string; swapWithPlayerId?: string };
+  const body = await req.json() as { teamId?: string; playerId?: string; slot?: string; swapWithPlayerId?: string; source?: "auto" | "manual" };
 
   if (!body.teamId || !body.playerId || !body.slot) {
     return NextResponse.json({ error: "Missing teamId, playerId, or slot" }, { status: 400 });
@@ -241,6 +242,13 @@ export async function PUT(
       }),
     ]);
 
+    try {
+      trackEvent({ event: "lineup_saved", userId: auth.id, leagueId, properties: { teamId: body.teamId, source: body.source ?? "manual" } });
+      if (body.source === "auto") {
+        trackEvent({ event: "lineup_auto_set", userId: auth.id, leagueId, properties: { teamId: body.teamId } });
+      }
+    } catch {}
+
     return NextResponse.json({ success: true });
   }
 
@@ -278,6 +286,13 @@ export async function PUT(
   const activeFilled = finalRoster.filter((e) => ACTIVE_SLOTS.includes(e.slot as (typeof ACTIVE_SLOTS)[number])).length;
   const totalActiveSlots = (settings.forward ?? 3) + (settings.defense ?? 2) + (settings.goalie ?? 1) + (settings.util ?? 1);
   const milestoneTriggered = activeFilled >= totalActiveSlots ? "lineup_complete" : null;
+
+  try {
+    trackEvent({ event: "lineup_saved", userId: auth.id, leagueId, properties: { teamId: body.teamId, source: body.source ?? "manual" } });
+    if (body.source === "auto") {
+      trackEvent({ event: "lineup_auto_set", userId: auth.id, leagueId, properties: { teamId: body.teamId } });
+    }
+  } catch {}
 
   return NextResponse.json({ success: true, milestoneTriggered });
 }

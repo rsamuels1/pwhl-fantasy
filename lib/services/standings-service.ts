@@ -8,6 +8,7 @@
 import type { PrismaClient } from "@prisma/client";
 import { getPlayoffSettings } from "@/lib/playoffs/lifecycle";
 import { computeVpStandings } from "@/lib/scoring/vp";
+import { computeH2hStandings } from "@/lib/season/h2h";
 
 export interface StandingRow {
   fantasyTeamId: string;
@@ -47,19 +48,21 @@ export async function getStandings(
 
   const matchups = await prisma.matchup.findMany({ where: { leagueId } });
 
-  const raw = computeVpStandings(
-    league.teams,
-    matchups.map((m) => ({
-      homeTeamId: m.homeTeamId,
-      awayTeamId: m.awayTeamId,
-      homeScore: m.homeScore,
-      awayScore: m.awayScore,
-      homeVP: m.homeVP,
-      awayVP: m.awayVP,
-      isPlayoff: m.isPlayoff,
-      week: m.week,
-    }))
-  );
+  const matchupInput = matchups.map((m) => ({
+    homeTeamId: m.homeTeamId,
+    awayTeamId: m.awayTeamId,
+    homeScore: m.homeScore,
+    awayScore: m.awayScore,
+    homeVP: m.homeVP,
+    awayVP: m.awayVP,
+    isPlayoff: m.isPlayoff,
+    week: m.week,
+  }));
+
+  const scoringMode = league.scoringMode ?? "H2H";
+  const raw = scoringMode === "H2H"
+    ? computeH2hStandings(league.teams, matchupInput)
+    : computeVpStandings(league.teams, matchupInput);
   const playoffSettings = getPlayoffSettings(league.playoffSettings as Parameters<typeof getPlayoffSettings>[0]);
 
   const standings: StandingRow[] = raw.map((s, index) => ({

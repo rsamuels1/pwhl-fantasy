@@ -125,7 +125,7 @@ model FantasyLeague {
   draftStartsAt           DateTime?
   isReplay                Boolean                  @default(false)
   replayCurrentDate       DateTime?
-  scoringMode             String                   @default("VP")
+  scoringMode             ScoringMode              @default(H2H)
   parentLeagueId          String?
   rulesVersion            Int                      @default(1)
   scoringVersion          Int                      @default(1)
@@ -403,6 +403,12 @@ enum BetaStatus {
   ACCEPTED
   ACTIVE
   RENEWED
+}
+
+enum ScoringMode {
+  VP
+  H2H
+  VTF
 }
 
 enum EventType {
