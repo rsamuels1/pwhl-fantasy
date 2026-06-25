@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 
 type Notification = {
   id: string;
@@ -29,6 +29,18 @@ export default function NotificationBell({
   const [open, setOpen] = useState(false);
   const [count, setCount] = useState(initialCount);
   const [notifications, setNotifications] = useState<Notification[] | null>(null);
+  const wrapperRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    function handleClickOutside(e: MouseEvent) {
+      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [open]);
 
   const openDropdown = useCallback(async () => {
     setOpen((prev) => !prev);
@@ -50,7 +62,7 @@ export default function NotificationBell({
   }, [leagueId, notifications, count]);
 
   return (
-    <div style={{ position: "relative", display: "inline-block" }}>
+    <div ref={wrapperRef} style={{ position: "relative", display: "inline-block" }}>
       <button
         onClick={openDropdown}
         aria-label="Notifications"
@@ -88,15 +100,15 @@ export default function NotificationBell({
       {open && (
         <div
           style={{
-            position: "absolute",
-            right: 0,
-            top: "calc(100% + 4px)",
+            position: "fixed",
+            right: "16px",
+            top: "52px",
             background: "var(--surface)",
             border: "1px solid var(--border, #333)",
             borderRadius: "8px",
-            width: "280px",
-            zIndex: 100,
-            boxShadow: "0 4px 16px rgba(0,0,0,0.4)",
+            width: "300px",
+            zIndex: 9999,
+            boxShadow: "0 8px 32px rgba(0,0,0,0.6)",
             overflow: "hidden",
           }}
         >
