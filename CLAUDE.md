@@ -119,10 +119,11 @@ from each end before `JSON.parse`. No auth headers, no cookies, no rate-limit ob
 
 **2026-27 roster notes:**
 - The expansion draft + PWHL draft occurred the week of June 21, 2026.
-- Pre-season rosters (season_id=10) reflect initial expansion draft allocations: ~10 players per expansion team, ~8–10 per original team. Full rosters will fill in as contracts are signed.
+- Pre-season rosters (season_id=10) reflect initial expansion draft allocations: 10–17 players per team (Jun 24 snapshot). Full rosters will fill in as contracts are signed through summer 2026.
 - Expansion team names in DB: Detroit Hockey Team, Hamilton Hockey Team, Las Vegas Hockey Team, San Jose Hockey Team.
 - HockeyTech numeric team IDs → DB externalIds: 1=bos, 2=min, 3=mtl, 4=nyc, 5=ott, 6=tor, 8=sea, 9=van, 10=det, 11=ham, 12=lv, 13=sj.
-- The `ingest` script requires a schedule to be present (season_id=10 has no games yet). Use the dedicated roster update script instead:
+- **Why a separate script:** The main `ingest` script discovers team IDs from the schedule. season_id=10 has no games yet, so it gets 0 team IDs and fetches nothing. The update script fetches rosters directly by hardcoded HockeyTech numeric team IDs.
+- **Run weekly** until the 2026-27 schedule is published. Once a schedule exists, `npm run ingest -- --season 2026-27 --no-stats` handles it instead.
   ```bash
   npx tsx scripts/update-2026-27-rosters.ts --dry-run   # preview changes
   npx tsx scripts/update-2026-27-rosters.ts              # apply
