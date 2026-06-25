@@ -683,7 +683,7 @@ Sprint: 12
 
 Priority: P1
 
-Status: OPEN
+Status: ✅ DONE (Sprint 18 — season series dedup shipped as part of Sprint 18 carry-forwards; UX-046/047/048 batch)
 
 Source: Pass 2 end-user walkthrough (June 2026). Text content of the matchup page contains "SEASON SERIES\n1-0" immediately followed by "SEASON SERIES VS TEST TEAM ASZC\n1-0\nW\nDec 5\n24.7 – 16.75." The heading and the detail block appear to be two separate renders of the same data.
 
@@ -729,7 +729,7 @@ Priority: P1
 
 Effort: M (~60–90 min dev time)
 
-Status: OPEN (deferred from Sprint 24)
+Status: ✅ DONE (Sprint 25 — 4-step state machine in `ProposeTrade.tsx`; Step 0 pick partner, Step 1 give, Step 2 receive, Step 3 review)
 
 Source: UX critique session (June 2026). The current Propose Trade page dumps ~80 players in one unsorted list and renders all decisions simultaneously. This is the single highest-friction moment in the trade flow, especially for new PWHL fans.
 
@@ -888,9 +888,7 @@ Priority: P2
 
 Effort: M
 
-Status: Blocked — requires email infrastructure
-
-Blocker: Email infrastructure is deferred post-beta. No transactional email provider (Resend or equivalent) is wired up. This item unblocks when email infra ships.
+Status: ✅ DONE (shipped alongside magic link auth — `CommissionerInviteForm` + `POST /invite-emails` route sends Resend emails; join form prefills email from invite link)
 
 Source: Playwright UX walkthrough, Jun 23, 2026. Commissioners can only share a league invite link; there is no email-entry invite flow.
 
@@ -911,7 +909,7 @@ Acceptance Criteria (for when unblocked):
 
 Priority: P1
 
-Status: OPEN
+Status: ✅ DONE (commit 4a4922a — lineup API now only blocks active→bench/IR moves; bench→active is always allowed)
 
 Issue: A goalie was locked into the BENCH slot from period day 1 because her PWHL team played a game at exactly `period.startsAt`. The period lock fires when `team played any game >= period.startsAt`, which is true the instant the period opens if a game is scheduled that morning. No warning was shown.
 
@@ -933,7 +931,7 @@ Files: `app/team/[teamId]/lineup/page.tsx`, `LineupManager.tsx`
 
 Priority: P1
 
-Status: OPEN
+Status: ✅ DONE (commit 4a4922a — `fa-suggestions` route uses `getDevNowFromRequest`; `gamesThisPeriod > 0` gate removed; players ranked by projected FP regardless of fixture game status)
 
 Issue: `GET /api/leagues/[leagueId]/fa-suggestions` filters suggestions by `gamesThisPeriod > 0`, where "games remaining" is computed as `startsAt > nowMs`. In replay leagues, `nowMs` defaults to real `Date.now()` (June 2026), so all 2025-26 fixture games appear to be in the past and every player has `gamesThisPeriod = 0`. The endpoint always returns an empty array.
 
@@ -953,11 +951,11 @@ Files: `app/api/leagues/[leagueId]/fa-suggestions/route.ts`
 
 ## BF-012. FA Add Confirms Success But Shows Error Modal
 
-Sprint: Backlog (carried from Sprint 18)
+Sprint: 30
 
 Priority: P1
 
-Status: OPEN
+Status: ✅ DONE (Sprint 30 — `useEffect(() => { setRoster(initialRoster); }, [initialRoster])` in `RosterManager.tsx` syncs state after `router.refresh()`)
 
 Source: FeedbackSubmission `cmqnc5umh000eu5tmsanmob6z` (Jun 21, 2026). User reports: "When you try to add a free agent and select which player to drop for her, you get an error message that your team is full and she can't be added but upon refresh and returning to your roster, the original player was dropped successfully and the new player was added."
 
@@ -982,11 +980,11 @@ Files: `app/team/[teamId]/roster/RosterManager.tsx`, `components/AddAndSlotModal
 
 ## BF-013. Trades Cannot Be Proposed Between Draft Completion and Season Start
 
-Sprint: Backlog (carried from Sprint 18)
+Sprint: 18 (verified Sprint 30)
 
 Priority: P1
 
-Status: OPEN
+Status: ✅ DONE (Sprint 18 — `proposeTrade()` blocks only on `playoffStatus !== "NOT_STARTED"`; all pre-season states allowed)
 
 Source: FeedbackSubmission `cmqniggbz000kb5xpiks9tfim` (Jun 21, 2026). After the draft completes but before the season starts, there's no 'propose trade' button.
 
@@ -1037,9 +1035,7 @@ Priority: P2
 
 Effort: M
 
-Status: Blocked — requires email infrastructure
-
-Blocker: Same as UX-053. Email infrastructure is deferred post-beta. Password reset requires sending a reset link or magic link by email.
+Status: ✅ DONE (shipped alongside magic link auth — primary auth is now passwordless; magic link IS the recovery path; "Forgot your password? Email me a sign-in link instead." on login page)
 
 Source: Playwright UX walkthrough, Jun 23, 2026. Returning beta users who forget their password (or whose `pwhl_user_email` cookie has expired) have no self-service recovery path.
 
@@ -1305,7 +1301,7 @@ Files: `lib/services/trade-service.ts`, `lib/trades/engine.ts`, `app/league/[lea
 
 Priority: P1
 
-Status: OPEN
+Status: ✅ DONE (commit 4a4922a — `rescheduleTimer()` now broadcasts updated `expiresAt` after rebuild; 4 new draft-server tests cover restart path)
 
 Issue: When the WebSocket draft server crashes and restarts mid-draft, `buildEngineState` reconstructs the draft state from DB but sets `expiresAt: null`. The server-side `setTimeout` never fires and the draft halts indefinitely. The only recovery path is a commissioner sending PAUSE followed by RESUME.
 
@@ -1542,7 +1538,7 @@ Depends On: `LeagueEvent` (TRADE, PLAYOFF_CLINCH, CHAMPIONSHIP_WON)
 
 ## LL-009. Trophy Cabinet
 
-Sprint: 25 | Priority: P1 | Effort: L | Status: PLANNED
+Sprint: 25 | Priority: P1 | Effort: L | Status: ✅ DONE (Sprint 25)
 
 Goal: Championships, records, and achievements persist across seasons on a team's trophy page.
 
@@ -1605,7 +1601,7 @@ Depends On: LL-001, LL-004/005, `advanceSeason()`, schema migration
 
 ## LL-014. Opening Day Card
 
-Sprint: 25 | Priority: P2 | Effort: S | Status: PLANNED
+Sprint: 25 | Priority: P2 | Effort: S | Status: ✅ DONE (Sprint 25 — `OpeningDayCard.tsx` on matchup page, Week 1 only, localStorage dismiss)
 
 Goal: Dismissible hero card at Z0 on `/team/[teamId]/matchup` during Week 1 only (`activePeriod?.number === 1`). Content: "2027 SEASON BEGINS · 20 Weeks · 8 Managers · 1 Champion." Dismiss keyed to `localStorage[leagueId + season]`. No schema change.
 
@@ -1615,7 +1611,7 @@ Depends On: `activePeriod.number` from `getSeasonState`
 
 ## LL-015. Championship Banner
 
-Sprint: 25 | Priority: P1 | Effort: S | Status: PLANNED
+Sprint: 25 | Priority: P1 | Effort: S | Status: ✅ DONE (Sprint 25 — `ChampionshipBanner.tsx`, triggered by unread `CHAMPIONSHIP_WON` notification, dismiss calls `markAllRead()`)
 
 Goal: Dismissible full-screen overlay on `/team/[teamId]/matchup` for the champion immediately after `playoffStatus === COMPLETE`. Triggered by unread `CHAMPIONSHIP_WON` notification (already in schema). Dismiss calls `markAllRead()`. Also writes a `CHAMPION` Achievement row (LL-009). No new schema beyond LL-009.
 
