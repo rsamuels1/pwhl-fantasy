@@ -29,7 +29,6 @@
     "@dnd-kit/utilities": "^3.2.2",
     "@prisma/client": "^5.0.0",
     "bcryptjs": "^3.0.3",
-    "code": "^5.2.4",
     "next": "^14.0.0",
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
