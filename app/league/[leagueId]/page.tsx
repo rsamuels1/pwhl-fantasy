@@ -9,7 +9,7 @@ import { getLeaguePerformers, type LeaguePerformerRow } from "@/lib/services/das
 import { parseScoringSettings } from "@/lib/scoring/settings";
 import { getSeasonState } from "@/lib/season";
 import { getDevNow } from "@/lib/devTime";
-import { getReplayNow } from "@/lib/replayTime";
+import { getReplayNow, resolveFixturePeriod, toFixtureNow, type BetaWeekMapping } from "@/lib/replayTime";
 import Link from "next/link";
 import AnnouncementForm from "@/components/AnnouncementForm";
 import WeekHighlights from "@/components/WeekHighlights";
@@ -212,10 +212,16 @@ export default async function LeagueOverviewPage({
     const pwhlTeamIds = [...new Set(
       activeEntries.map((e) => e.player.team?.id).filter((id): id is string => !!id)
     )];
+    // For beta replay leagues, translate display period → fixture period so game queries
+    // hit actual Nov 2025–May 2026 data rather than the remapped Jun 2026 display window.
+    const rawLeagueSettings = league.scoringSettings as Record<string, unknown> | null;
+    const betaWeekMappings = (rawLeagueSettings?.betaWeekMappings as BetaWeekMapping[] | undefined) ?? null;
+    const fixturePeriodForWidget = resolveFixturePeriod(periodForGames, betaWeekMappings);
+    const fixtureNowForWidget = new Date(toFixtureNow(nowMs, periodForGames, fixturePeriodForWidget));
     const remainingGames = pwhlTeamIds.length > 0
       ? await prisma.game.findMany({
           where: {
-            startsAt: { gt: now, lt: periodForGames.endsAt },
+            startsAt: { gt: fixtureNowForWidget, lt: fixturePeriodForWidget.endsAt },
             OR: [{ homeTeamId: { in: pwhlTeamIds } }, { awayTeamId: { in: pwhlTeamIds } }],
           },
           select: { homeTeamId: true, awayTeamId: true },

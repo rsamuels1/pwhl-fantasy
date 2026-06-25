@@ -4,7 +4,8 @@ import { scoreStatLine } from "@/lib/scoring";
 import type { ScoringSettings } from "@/lib/scoring";
 import { parseScoringSettings } from "@/lib/scoring/settings";
 import { getDevNowFromRequest } from "@/lib/devTime";
-import { getReplayNow } from "@/lib/replayTime";
+import { getReplayNow, resolveFixturePeriod, toFixtureNow, type BetaWeekMapping } from "@/lib/replayTime";
+import { getSeasonState } from "@/lib/season";
 import type { Position } from "@prisma/client";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
@@ -103,14 +104,27 @@ export async function GET(
     }
 
     // Compute games remaining for each PWHL team.
-    // Use startsAt > now — no status filter so the historical fixture works in replay leagues
-    // (all games have status FINAL but startsAt in the future relative to replayCurrentDate).
+    // For beta replay leagues, translate nowMs to fixture-equivalent so the query hits
+    // actual Nov 2025–May 2026 game data rather than the remapped Jun 2026 display window.
+    const seasonState = await getSeasonState(leagueId, nowMs, prisma);
+    const displayPeriod = (
+      seasonState.periods.find((p) => p.status === "ACTIVE") ??
+      seasonState.periods.find((p) => p.status === "UPCOMING")
+    )?.period ?? null;
+    const rawLeagueSettings = league.scoringSettings as Record<string, unknown> | null;
+    const betaWeekMappings = (rawLeagueSettings?.betaWeekMappings as BetaWeekMapping[] | undefined) ?? null;
+    const fixturePeriodForFA = displayPeriod
+      ? resolveFixturePeriod(displayPeriod, betaWeekMappings)
+      : null;
+    const fixtureNowForFA = fixturePeriodForFA && displayPeriod
+      ? new Date(toFixtureNow(nowMs, displayPeriod, fixturePeriodForFA))
+      : new Date(nowMs);
     const pwhlTeamIds = [...new Set(
       unrosteredPlayers.map((p) => p.team?.id).filter((id): id is string => !!id)
     )];
     const futureGames = await prisma.game.findMany({
       where: {
-        startsAt: { gt: new Date(nowMs) },
+        startsAt: { gt: fixtureNowForFA },
         OR: [
           { homeTeamId: { in: pwhlTeamIds } },
           { awayTeamId: { in: pwhlTeamIds } },
