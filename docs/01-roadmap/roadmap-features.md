@@ -439,7 +439,7 @@ Acceptance Criteria:
 
 ## OB-005. QuickDraftJoinForm Is on the Public Home Page
 
-Sprint: Backlog (carried from Sprint 13, Sprint 18 Track B)
+Sprint: Backlog (carried from Sprint 13, Sprint 18 Track B) | Status: ✅ DONE (resolved by Inviting Dark Redesign — Sprint 22)
 
 Priority: P1
 
@@ -447,7 +447,7 @@ Effort: S
 
 As a first-time visitor on the landing page, I want the homepage to explain the product and invite me to start — not ask me for League IDs and Team IDs I don't have.
 
-Issue: `app/page.tsx` renders a `QuickDraftJoinForm` (or equivalent) in the "Running a league?" section that asks for League ID and Team ID directly. First-time visitors have no idea what these are. This is a power-user tool sitting in the main marketing flow.
+Issue (resolved): `app/page.tsx` previously rendered a `QuickDraftJoinForm` with League ID / Team ID inputs. The home page was fully redesigned in Sprint 22: now has clean dual-CTA ("Start your franchise →" / "Join a league"), product preview card, feature grid, and a replay tertiary link. No ID inputs anywhere.
 
 Files: `app/page.tsx`
 
@@ -460,7 +460,7 @@ Acceptance Criteria:
 
 ## OB-006. Replay Mode Description Only Appears After Clicking the Option
 
-Sprint: Backlog (carried from Sprint 13, Sprint 18 Track B)
+Sprint: Backlog (carried from Sprint 13, Sprint 18 Track B) | Status: ✅ DONE (resolved by wizard rebuild in Sprint 22)
 
 Priority: P1
 
@@ -468,7 +468,7 @@ Effort: S
 
 As a first-time user on step 3 of the league wizard, I want to see the Replay mode description before clicking on it so that I can make an informed choice between "Live" and "Replay."
 
-Issue: Step 3 shows two options: "Live (2026-27 season)" and "Replay (2025-26 season)." The amber explanation box describing what Replay mode does only appears after the user clicks the Replay option.
+Issue (resolved): Both mode cards in `CreateLeagueWizard.tsx` step 3 now render a `desc` line below the label unconditionally — "Play the real 2026-27 PWHL season as it happens." and "Draft and compete using a completed season — start right now without filling a full league." The fuller amber callout still appears after selecting Replay.
 
 Files: `app/create-league/CreateLeagueWizard.tsx`
 
@@ -481,7 +481,7 @@ Acceptance Criteria:
 
 ## OB-007. Login Page Pitch Says "All 8 Teams" When There Are 12
 
-Sprint: Backlog (carried from Sprint 13, Sprint 18 Track B)
+Sprint: Backlog (carried from Sprint 13, Sprint 18 Track B) | Status: ✅ DONE (updated during Sprint 18 UX pass)
 
 Priority: P1
 
@@ -489,7 +489,7 @@ Effort: S
 
 As a PWHL fan visiting the login page, I want the player count and team count in the pitch copy to be accurate so that I trust the app's data.
 
-Issue: The login page left-column pitch reads "Real PWHL players — Every skater and goalie from all 8 teams." The 2026-27 season has 12 teams.
+Issue (resolved): Login page features grid reads "Every skater and goalie from all 12 teams" — confirmed in `app/login/page.tsx`.
 
 Files: `app/login/page.tsx`
 
@@ -502,13 +502,15 @@ Acceptance Criteria:
 
 ## OB-008. Registration Form Has Redundant "Confirm Password" Field
 
-Sprint: Backlog (Sprint 13 carry-forward; not in Sprint 18 shipped list)
+Sprint: Backlog (Sprint 13 carry-forward) | Status: ✅ DONE (superseded by magic link auth)
 
 Priority: P1
 
 Effort: S
 
 As a new user registering for PWHL GM, I want a single password field with a show/hide toggle so that I'm not slowed down by a redundant confirmation step that provides no real security benefit.
+
+Issue (resolved): Magic link auth shipped (daa1d43). Registration now defaults to passwordless — "We'll email you a sign-in link — no password needed." Password is optional (show/hide toggle, "Add a password (optional)"). No confirm field exists.
 
 Files: `app/register/page.tsx`
 
