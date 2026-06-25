@@ -156,7 +156,10 @@ export default async function StandingsPage({ params }: { params: { leagueId: st
             </span>
           )}
         </div>
-        <p style={{ margin: "0 0 8px", fontSize: 12, color: "var(--faint)" }}>
+        <p style={{ margin: "0 0 6px", fontSize: 12, color: "var(--faint)" }}>
+          FP decides your matchup result — win and rank well to earn VP, the currency of your league standing.
+        </p>
+        <p style={{ margin: "0 0 6px", fontSize: 12, color: "var(--faint)" }}>
           Win matchup +2 VP · 1st place weekly score +2 VP · 2nd place score +1 VP
         </p>
         <p style={{ margin: "0 0 16px", fontSize: "0.7rem", color: "var(--faint)", display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>

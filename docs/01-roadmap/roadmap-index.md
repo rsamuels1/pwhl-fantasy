@@ -1,6 +1,6 @@
 # PWHL GM Product Roadmap — Index
 
-Last Updated: June 24, 2026 (Sprint 34 COMPLETE — Complexity Debt Closeout 2/2; Sprint 33 COMPLETE — Complexity Debt 4/4; Sprint 32 COMPLETE — IA Closure + UX Batch 8/8)
+Last Updated: June 25, 2026 (Sprint 39 PLANNED — UX Clarity Sweep 8 stories scoped; Sprint 38 PLANNED — Technical Debt Reduction 11 stories scoped; Sprint 37 COMPLETE — WCAG 2.2 AA Accessibility Audit 22/22)
 
 ---
 
@@ -192,8 +192,10 @@ All sprints from 7–27 are complete and shipped. Sprint 13 is formally absorbed
 - **Sprint 32** ✅ — IA Closure + UX Batch (8/8: IA-008/009/010, GATE-3 ✅, UX-049/050/032, OB-010; Jun 24, 2026)
 - **Sprint 33** ✅ — Complexity Debt (4/4: CX-001 batch projections, CX-002 prisma guard removal, CX-003 dashboard helpers, CX-004 CLAUDE.md cleanup; Jun 24, 2026)
 - **Sprint 34** ✅ — Complexity Debt Closeout (4/4: CX-005 validateTrade collapse, CX-008 nowMs in enterWaiverWire, CX-007 REVERSED→VETOED+REVERSED split, CX-006 generateEdition→fetchEdition rename; Jun 24–Jul 1, 2026)
+- **Sprint 37** ✅ — WCAG 2.2 AA Accessibility Audit (22/22: skip links, live regions, dialogs, focus management, nav aria-labels, form labels, DraftRoom role=timer, RouteAnnouncer, page titles; Jun 25, 2026)
+- **Sprint 38** 🔵 PLANNED — Technical Debt Reduction (11 stories TD-001–011: P0 logger shim + cron error monitoring; P1 god-object decomposition of dashboard.ts/matchup page/DraftRoom; P2 waiver service + API auth + scoring engine tests; P3 season constants + $queryRaw comments + inline style sweep)
 
-**Current Status:** Sprint 34 COMPLETE — All complexity debt closed. Beta-ready. GATE-1/2/3 all ✅. MVP readiness: 100%
+**Current Status:** Sprint 37 COMPLETE — WCAG 2.2 AA conformance achieved. Sprint 38 PLANNED — technical debt reduction scoped and ready to execute. GATE-1/2/3 all ✅. MVP readiness: 100%
 
 **Sprint 14 (Post-Launch Polish + Emotional Engagement) is COMPLETE (Jun 22, 2026).** 11/12 items shipped: all 5 agent integration test findings (DRC-002, BF-010, BF-011, TR-002, TR-003) ✅; OB-010 wizard Replay progress bar ✅; UX-049 "Free Agents" direct TeamNav link ✅; UX-050 "Win Probability" label in DuelHero ✅; UX-033 setup-phase copy "Games starting soon" ✅; UX-032 edge label ✅; OB-011 draft date picker text ✅. UX-045 (rival win celebration) deferred post-launch — requires schema migration (`RIVALRY_WIN` enum) which carries pre-launch risk. First item in Sprint 17 backlog.
 

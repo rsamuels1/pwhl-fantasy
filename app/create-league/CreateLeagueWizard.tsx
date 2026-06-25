@@ -7,42 +7,65 @@ import BetaWelcomeStep from "@/components/BetaWelcomeStep";
 import Link from "next/link";
 import { VpExplainer } from "@/components/VpExplainer";
 
-// Beta mode adds step 0 (beta welcome), which is hidden from the progress bar.
-// Beta mode collapses the wizard to 4 displayed steps: Name → Rules → Team → Invite.
-// Internal steps are still 0-7; beta mode skips steps 2 (size) and 3 (season mode).
-// TOTAL_STEPS is the internal step count (8 states including step 0 and the final done screen).
-const TOTAL_STEPS = 8;
+// UX-072/073: Mode is chosen on step 1 so the step count is honest from the first screen.
+//
+// Internal step numbers match the live-mode path:
+//   0  Beta welcome (beta only, hidden from progress bar)
+//   1  Mode choice  (Live vs Replay)
+//   2  League name
+//   3  League size  (live only)
+//   4  Draft date   (live only)
+//   5  Rules confirmation + league creation
+//   6  Team creation
+//   7  Invite link
+//   8  Done
+//
+// Replay / beta mode skips steps 3 and 4; after step 2 we jump directly to step 5.
+// The progress bar therefore shows 5 steps for replay/beta and 7 steps for live.
+// No remap functions needed — the displayed step is just the position in the visible list.
+
+const TOTAL_STEPS = 9; // 0..8
 const isBetaMode = typeof process !== "undefined" && process.env.NEXT_PUBLIC_BETA_MODE === "true";
 
-// Beta mode: internal steps 1→4→5→6 map to display steps 1→2→3→4.
-// Replay (non-beta): skips the Rules step — 5 displayed steps instead of 6.
-//   Internal: 1,2,3,5,6 → Display: 1,2,3,4,5
+// Returns the array of internal step numbers that are visible (i.e. shown in the progress bar)
+// for the current mode. Step 0 (beta welcome) is never in the visible list.
+function visibleSteps(isReplay: boolean): number[] {
+  if (isReplay) {
+    // Mode, Name, Rules, Team, Invite, Done → but Done (8) is terminal, not a progress step
+    return [1, 2, 5, 6, 7];
+  }
+  // Mode, Name, Size, Date, Rules, Team, Invite → Done (8) is terminal
+  return [1, 2, 3, 4, 5, 6, 7];
+}
+
+// Maps an internal step to its 1-based display position within the visible list.
 function getDisplayStep(step: number, isReplay: boolean): number {
   if (step === 0) return 0;
-  if (isBetaMode) {
-    if (step <= 1) return 1;
-    if (step <= 4) return 2;
-    if (step === 5) return 3;
-    return 4;
-  }
-  if (isReplay) {
-    if (step <= 3) return step;
-    if (step === 5) return 4;
-    return 5;
-  }
-  return step;
+  const visible = visibleSteps(isReplay);
+  const idx = visible.indexOf(step);
+  // If not in the visible list (shouldn't happen in practice), use last visible position
+  return idx >= 0 ? idx + 1 : visible.length;
 }
 
 function getDisplayTotal(isReplay: boolean): number {
-  if (isBetaMode) return 4;
-  return isReplay ? 5 : 6;
+  return visibleSteps(isReplay).length;
 }
 
 function getStepLabels(isReplay: boolean): string[] {
-  if (isBetaMode) return ["Name", "Rules", "Team", "Invite"];
-  return isReplay
-    ? ["Name", "Size", "Season", "Team", "Invite"]
-    : ["Name", "Size", "Season", "Rules", "Team", "Invite"];
+  if (isReplay) return ["Mode", "Name", "Rules", "Team", "Invite"];
+  return ["Mode", "Name", "Size", "Date", "Rules", "Team", "Invite"];
+}
+
+// The next internal step to go to after step N (respects replay skip logic).
+function nextStep(current: number, isReplay: boolean): number {
+  if (current === 2 && isReplay) return 5; // skip Size (3) and Date (4)
+  return current + 1;
+}
+
+// The previous internal step to go back to after step N (respects replay skip logic).
+function prevStep(current: number, isReplay: boolean): number {
+  if (current === 5 && isReplay) return 2; // skip back over Size (3) and Date (4)
+  return current - 1;
 }
 
 const SIZE_OPTIONS: { value: number; label: string; note: string }[] = [
@@ -59,10 +82,12 @@ interface Props {
 
 export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: Props) {
   const router = useRouter();
+  // Beta mode starts at the welcome screen (step 0); otherwise start at mode choice (step 1).
   const [step, setStep] = useState(isBetaMode ? 0 : 1);
   const [name, setName] = useState("My PWHL League");
   const [maxTeams, setMaxTeams] = useState(8);
-  const [isReplay, setIsReplay] = useState(startAsReplay);
+  // Mode is set at step 1; pre-select replay if the URL requested it or beta mode is active.
+  const [isReplay, setIsReplay] = useState(startAsReplay || isBetaMode);
   const [draftDate, setDraftDate] = useState("");
   const [draftTime, setDraftTime] = useState("19:00");
   const [teamName, setTeamName] = useState(`${userDisplayName}'s Team`);
@@ -77,16 +102,13 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
     fetch("/api/user/onboarding", { method: "POST" }).catch(() => {});
   }, []);
 
-  const goNext = () => {
-    setStep((s) => Math.min(s + 1, TOTAL_STEPS));
-  };
+  const goNext = () => setStep((s) => nextStep(s, isReplay));
   const goBack = () => {
     const minStep = isBetaMode ? 0 : 1;
-    setStep((s) => Math.max(s - 1, minStep));
+    setStep((s) => Math.max(prevStep(s, isReplay), minStep));
   };
 
   const handleCancel = () => {
-    // If league was created but team wasn't, warn before leaving
     if (createdLeagueId && !createdTeamId) {
       const confirmed = window.confirm(
         "Your league was created. Canceling will leave it in your account without a team or members. You can finish setup later from your dashboard.\n\nContinue anyway?"
@@ -96,34 +118,12 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
     router.push("/dashboard");
   };
 
-  // Replay mode creates league at step 3 (Season), then shows step 4 (Rules) before team creation
-  const handleReplayCreate = async () => {
+  // Create the league (called at step 5 — Rules). Idempotent: no-ops if already created.
+  const handleCreate = async (): Promise<boolean> => {
+    if (createdLeagueId) return true; // Already created (e.g. back/forward navigation)
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/leagues/create", {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ leagueName: name || "My Replay League", maxTeams, useLastSeasonSimulation: true }),
-      });
-      const data = await res.json();
-      if (!res.ok) { setError(data?.error || "Failed to create league"); setLoading(false); return; }
-      setCreatedLeagueId(data.leagueId);
-      setStep(5); // skip step 4 (Rules) — replay settings are pre-configured
-    } catch {
-      setError("Unable to create league. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Create the live (or beta) league (called at step 4)
-  const handleCreate = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      // Beta mode always creates a beta replay league.
       if (isBetaMode) {
         const res = await fetch("/api/leagues/create", {
           method: "POST",
@@ -132,11 +132,23 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
           body: JSON.stringify({ leagueName: name || "My Beta League", useBetaReplay: true }),
         });
         const data = await res.json();
-        if (!res.ok) { setError(data?.error || "Failed to create league"); setLoading(false); return; }
+        if (!res.ok) { setError(data?.error || "Failed to create league"); setLoading(false); return false; }
         setCreatedLeagueId(data.leagueId);
-        setStep(5);
-        return;
+        return true;
       }
+      if (isReplay) {
+        const res = await fetch("/api/leagues/create", {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ leagueName: name || "My Replay League", maxTeams, useLastSeasonSimulation: true }),
+        });
+        const data = await res.json();
+        if (!res.ok) { setError(data?.error || "Failed to create league"); setLoading(false); return false; }
+        setCreatedLeagueId(data.leagueId);
+        return true;
+      }
+      // Live league
       let draftStartsAt: string | undefined;
       if (draftDate) {
         draftStartsAt = new Date(`${draftDate}T${draftTime}:00`).toISOString();
@@ -148,30 +160,25 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
         body: JSON.stringify({ leagueName: name, maxTeams, draftStartsAt, isPublic }),
       });
       const data = await res.json();
-      if (!res.ok) { setError(data?.error || "Failed to create league"); setLoading(false); return; }
+      if (!res.ok) { setError(data?.error || "Failed to create league"); setLoading(false); return false; }
       setCreatedLeagueId(data.leagueId);
-      setStep(5);
+      return true;
     } catch {
       setError("Unable to create league. Please try again.");
+      setLoading(false);
+      return false;
     } finally {
       setLoading(false);
     }
   };
 
-  // Step 4 button handler: idempotent for both modes
-  // Live: creates league, advances to step 5
-  // Replay: if league already created, just advances to step 5; else creates league first
-  const handleCreateOrAdvance = async () => {
-    if (createdLeagueId) {
-      // Already created (replay flow), just advance
-      setStep(5);
-      return;
-    }
-    // Not yet created, call handleCreate
-    await handleCreate();
+  // Step 5 → 6: create league (if needed) then advance.
+  const handleCreateAndAdvance = async () => {
+    const ok = await handleCreate();
+    if (ok) setStep(6);
   };
 
-  // Create the commissioner's team (called at step 5)
+  // Create the commissioner's team (step 6 → 7)
   const handleCreateTeam = async () => {
     if (!createdLeagueId || !teamName.trim()) return;
     setLoading(true);
@@ -184,14 +191,14 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
         body: JSON.stringify({
           leagueId: createdLeagueId,
           teamName: teamName.trim(),
-          ownerEmail: "", // Will be filled by backend from auth
+          ownerEmail: "",
           ownerName: userDisplayName,
         }),
       });
       const data = await res.json();
       if (!res.ok) { setError(data?.error || "Failed to create team"); setLoading(false); return; }
       setCreatedTeamId(data.teamId);
-      setStep(6);
+      setStep(7);
     } catch {
       setError("Unable to create team. Please try again.");
     } finally {
@@ -206,10 +213,10 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
     <div className="page-width" style={{ padding: "32px 16px" }}>
       <div style={{ maxWidth: 560, margin: "0 auto", display: "flex", flexDirection: "column", gap: 24 }}>
 
-        {/* Progress indicator — filled bar (hidden when step === 0) */}
-        {step > 0 && (() => {
+        {/* Progress indicator — hidden on step 0 (beta welcome) and step 8 (done) */}
+        {step > 0 && step < 8 && (() => {
           const displayTotal = getDisplayTotal(isReplay);
-          const displayStep = getDisplayStep(Math.min(step, TOTAL_STEPS - 1), isReplay);
+          const displayStep = getDisplayStep(step, isReplay);
           const stepLabels = getStepLabels(isReplay);
           return (
             <div>
@@ -217,14 +224,12 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
                 <p style={{ fontSize: 11, fontWeight: 700, color: "var(--accent)", textTransform: "uppercase", letterSpacing: "1px", margin: 0 }}>
                   Step {displayStep} of {displayTotal}
                 </p>
-                {step < TOTAL_STEPS && (
-                  <button
-                    onClick={handleCancel}
-                    style={{ fontSize: 12, color: "var(--faint)", textDecoration: "none", background: "none", border: "none", cursor: "pointer" }}
-                  >
-                    Cancel
-                  </button>
-                )}
+                <button
+                  onClick={handleCancel}
+                  style={{ fontSize: 12, color: "var(--faint)", textDecoration: "none", background: "none", border: "none", cursor: "pointer" }}
+                >
+                  Cancel
+                </button>
               </div>
               <div style={{ display: "flex", gap: 6, marginBottom: 10 }}>
                 {Array.from({ length: displayTotal }).map((_, i) => (
@@ -234,7 +239,7 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
                       flex: 1,
                       height: 6,
                       borderRadius: 3,
-                      background: i < Math.min(displayStep - 1, displayTotal) ? "var(--accent)" : "var(--border)",
+                      background: i < displayStep - 1 ? "var(--accent)" : "var(--border)",
                       transition: "background 0.3s ease",
                     }}
                   />
@@ -256,13 +261,96 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
             <BetaWelcomeStep onContinue={() => setStep(1)} />
           )}
 
-          {/* ── Step 1: League name ── */}
+          {/* ── Step 1: Mode choice (Live vs Replay) ── */}
           {step === 1 && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+              <div>
+                <h1 style={{ margin: "0 0 6px", fontSize: 22 }}>How do you want to play?</h1>
+                <p style={{ margin: 0, color: "var(--faint)", fontSize: 14 }}>
+                  Hi {userDisplayName}! Choose a mode to get started. This sets up how many steps you&apos;ll need.
+                </p>
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                {[
+                  {
+                    value: false,
+                    icon: "🏒",
+                    label: "Live season",
+                    desc: "Play the real 2026-27 PWHL season as it happens. Draft this fall, compete all year.",
+                    steps: "7 steps",
+                  },
+                  {
+                    value: true,
+                    icon: "⏪",
+                    label: "Replay (2025-26)",
+                    desc: "Draft and compete using a completed season — start right now without filling a full league.",
+                    steps: "5 steps",
+                  },
+                ].map(({ value, icon, label, desc, steps }) => {
+                  const sel = isReplay === value;
+                  return (
+                    <button
+                      key={String(value)}
+                      onClick={() => setIsReplay(value)}
+                      style={{
+                        padding: "16px 14px",
+                        borderRadius: 14,
+                        border: `1.5px solid ${sel ? "var(--accent)" : "var(--border)"}`,
+                        background: sel ? "rgba(143,193,232,0.1)" : "var(--bg-raised)",
+                        cursor: "pointer",
+                        textAlign: "left",
+                        transition: "all 0.15s",
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 6,
+                      }}
+                    >
+                      <span style={{ fontSize: 20 }}>{icon}</span>
+                      <span style={{ fontSize: 13, fontWeight: 700, color: sel ? "var(--accent-strong)" : "var(--text)" }}>{label}</span>
+                      <span style={{ fontSize: 12, color: "var(--faint)", lineHeight: 1.4 }}>{desc}</span>
+                      <span style={{
+                        fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 10, alignSelf: "flex-start",
+                        background: sel ? "rgba(143,193,232,0.15)" : "var(--bg-raised)",
+                        color: sel ? "var(--accent-strong)" : "var(--faint)",
+                        border: `1px solid ${sel ? "rgba(143,193,232,0.3)" : "var(--border)"}`,
+                      }}>
+                        {steps}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Beta mode: mode is locked to replay */}
+              {isBetaMode && (
+                <div style={{
+                  padding: "10px 14px", borderRadius: 10,
+                  background: "rgba(245,201,123,0.06)",
+                  border: "1px solid rgba(245,201,123,0.2)",
+                  fontSize: 12, color: "var(--dim)",
+                }}>
+                  Beta leagues use Replay mode (2025-26 season data) — pre-configured for a fast, fun test run.
+                </div>
+              )}
+
+              <button
+                className="button-primary"
+                onClick={goNext}
+                style={{ width: "100%", marginTop: 8 }}
+              >
+                Next →
+              </button>
+            </div>
+          )}
+
+          {/* ── Step 2: League name ── */}
+          {step === 2 && (
             <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
               <div>
                 <h1 style={{ margin: "0 0 6px", fontSize: 22 }}>Name your league</h1>
                 <p style={{ margin: 0, color: "var(--faint)", fontSize: 14 }}>
-                  Hi {userDisplayName}! Let&apos;s set up your league. You can change this anytime.
+                  You can change this anytime from the admin panel.
                 </p>
               </div>
               <label className="form-label">
@@ -313,19 +401,22 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
                 </button>
               )}
 
-              <button
-                className="button-primary"
-                onClick={() => isBetaMode ? setStep(4) : goNext()}
-                disabled={!nameValid}
-                style={{ width: "100%", marginTop: 8 }}
-              >
-                Next →
-              </button>
+              <div style={{ display: "flex", gap: 10, justifyContent: "space-between" }}>
+                <button className="button-secondary" onClick={goBack} style={{ flex: 1 }}>← Back</button>
+                <button
+                  className="button-primary"
+                  onClick={goNext}
+                  disabled={!nameValid}
+                  style={{ flex: 1 }}
+                >
+                  Next →
+                </button>
+              </div>
             </div>
           )}
 
-          {/* ── Step 2: League size ── */}
-          {step === 2 && (
+          {/* ── Step 3: League size (live only) ── */}
+          {step === 3 && (
             <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
               <div>
                 <h1 style={{ margin: "0 0 6px", fontSize: 22 }}>How many teams?</h1>
@@ -390,118 +481,51 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
             </div>
           )}
 
-          {/* ── Step 3: Season / draft date ── */}
-          {step === 3 && (
+          {/* ── Step 4: Draft date (live only) ── */}
+          {step === 4 && (
             <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
               <div>
-                <h1 style={{ margin: "0 0 6px", fontSize: 22 }}>Season & draft date</h1>
+                <h1 style={{ margin: "0 0 6px", fontSize: 22 }}>Draft date</h1>
                 <p style={{ margin: 0, color: "var(--faint)", fontSize: 14 }}>
-                  Choose whether to play the live 2026-27 season or try a completed replay season.
+                  Set when your league will draft. You can always change this from the admin panel.
                 </p>
               </div>
 
-              {/* Mode toggle */}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-                {[
-                  { value: false, icon: "🏒", label: "Live season", desc: "Play the real 2026-27 PWHL season as it happens." },
-                  { value: true,  icon: "⏪", label: "Replay (2025-26)", desc: "Draft and compete using a completed season — start right now without filling a full league." },
-                ].map(({ value, icon, label, desc }) => {
-                  const sel = isReplay === value;
-                  return (
-                    <button
-                      key={String(value)}
-                      onClick={() => setIsReplay(value)}
-                      style={{
-                        padding: "16px 14px",
-                        borderRadius: 14,
-                        border: `1.5px solid ${sel ? "var(--accent)" : "var(--border)"}`,
-                        background: sel ? "rgba(143,193,232,0.1)" : "var(--bg-raised)",
-                        cursor: "pointer",
-                        textAlign: "left",
-                        transition: "all 0.15s",
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: 6,
-                      }}
-                    >
-                      <span style={{ fontSize: 20 }}>{icon}</span>
-                      <span style={{ fontSize: 13, fontWeight: 700, color: sel ? "var(--accent-strong)" : "var(--text)" }}>{label}</span>
-                      <span style={{ fontSize: 12, color: "var(--faint)", lineHeight: 1.4 }}>{desc}</span>
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* Mode explanations */}
-              <div style={{ display: "grid", gap: 10 }}>
-                {!isReplay && (
-                  <div style={{
-                    padding: "12px 14px", borderRadius: 10,
-                    background: "rgba(143,193,232,0.06)",
-                    border: "1px solid rgba(143,193,232,0.15)",
-                    fontSize: 12, color: "var(--dim)", lineHeight: 1.5,
-                  }}>
-                    <strong style={{ color: "var(--accent-strong)" }}>🏒 Live season</strong> — draft this fall, compete all season long with real-time games and standings.
-                  </div>
-                )}
-                {isReplay && (
-                  <div style={{
-                    padding: "12px 14px", borderRadius: 10,
-                    background: "rgba(245,201,123,0.06)",
-                    border: "1px solid rgba(245,201,123,0.2)",
-                    fontSize: 12, color: "var(--dim)", lineHeight: 1.5,
-                  }}>
-                    <strong style={{ color: "var(--gold)" }}>⏪ Replay mode</strong> — your league is a sandbox using a completed 2025-26 season.
-                    You control the pace (advance by day or week). Great for trying the app or playing with a friend.
-                  </div>
-                )}
-              </div>
-
-              {/* Draft date — only for live leagues */}
-              {!isReplay && (
-                <div style={{ display: "grid", gap: 12 }}>
+              <div style={{ display: "grid", gap: 12 }}>
+                <label className="form-label">
+                  Draft date (optional)
+                  <input
+                    className="form-input"
+                    type="date"
+                    value={draftDate}
+                    onChange={(e) => setDraftDate(e.target.value)}
+                  />
+                  <span style={{ fontSize: 12, color: "var(--faint)", marginTop: 4, display: "block" }}>
+                    Try late November 2026 (when the PWHL season opens).
+                  </span>
+                </label>
+                {draftDate && (
                   <label className="form-label">
-                    Draft date (optional)
+                    Draft time
                     <input
                       className="form-input"
-                      type="date"
-                      value={draftDate}
-                      onChange={(e) => setDraftDate(e.target.value)}
+                      type="time"
+                      value={draftTime}
+                      onChange={(e) => setDraftTime(e.target.value)}
                     />
-                    <span style={{ fontSize: 12, color: "var(--faint)", marginTop: 4, display: "block" }}>
-                      Try late November 2026 (when the PWHL season opens). You can always change this from the admin panel.
-                    </span>
                   </label>
-                  {draftDate && (
-                    <label className="form-label">
-                      Draft time
-                      <input
-                        className="form-input"
-                        type="time"
-                        value={draftTime}
-                        onChange={(e) => setDraftTime(e.target.value)}
-                      />
-                    </label>
-                  )}
-                </div>
-              )}
+                )}
+              </div>
 
               <div style={{ display: "flex", gap: 10, justifyContent: "space-between" }}>
                 <button className="button-secondary" onClick={goBack} style={{ flex: 1 }}>← Back</button>
-                {isReplay ? (
-                  <button className="button-primary" onClick={handleReplayCreate} disabled={loading} style={{ flex: 1 }}>
-                    {loading ? "Creating…" : "Create replay league →"}
-                  </button>
-                ) : (
-                  <button className="button-primary" onClick={goNext} style={{ flex: 1 }}>Next →</button>
-                )}
+                <button className="button-primary" onClick={goNext} style={{ flex: 1 }}>Next →</button>
               </div>
-              {error && <WizardError message={error} />}
             </div>
           )}
 
-          {/* ── Step 4: Rules confirmation ── */}
-          {step === 4 && (
+          {/* ── Step 5: Rules confirmation + league creation ── */}
+          {step === 5 && (
             <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
               {isBetaMode ? (
                 <>
@@ -519,7 +543,7 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
                     border: "1px solid rgba(245,201,123,0.2)",
                     fontSize: 13, color: "var(--dim)", lineHeight: 1.6,
                   }}>
-                    <div style={{ fontWeight: 700, color: "var(--gold)", marginBottom: 6 }}>⏱ How it works</div>
+                    <div style={{ fontWeight: 700, color: "var(--gold)", marginBottom: 6 }}>How it works</div>
                     <div>
                       <strong style={{ color: "var(--text)" }}>Draft</strong> — starts right away. You pick players from the 2025-26 roster.
                     </div>
@@ -559,12 +583,12 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
                     border: "1px solid rgba(143,193,232,0.15)",
                     fontSize: 13, color: "var(--dim)",
                   }}>
-                    💡 Next, you&apos;ll name your own team before inviting others.
+                    Next, you&apos;ll name your own team before inviting others.
                   </div>
 
                   <div style={{ display: "flex", gap: 10, justifyContent: "space-between" }}>
-                    <button className="button-secondary" onClick={() => setStep(1)} style={{ flex: 1 }}>← Back</button>
-                    <button className="button-primary" onClick={handleCreateOrAdvance} disabled={loading} style={{ flex: 1 }}>
+                    <button className="button-secondary" onClick={goBack} style={{ flex: 1 }}>← Back</button>
+                    <button className="button-primary" onClick={handleCreateAndAdvance} disabled={loading} style={{ flex: 1 }}>
                       {loading ? "Creating league…" : "Create my beta league →"}
                     </button>
                   </div>
@@ -577,6 +601,18 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
                       Your league uses these defaults — the most competitive settings for the PWHL.
                     </p>
                   </div>
+
+                  {/* UX-073: auto-skip signpost for replay mode */}
+                  {isReplay && (
+                    <div style={{
+                      padding: "10px 14px", borderRadius: 10,
+                      background: "rgba(245,201,123,0.06)",
+                      border: "1px solid rgba(245,201,123,0.2)",
+                      fontSize: 12, color: "var(--dim)", lineHeight: 1.5,
+                    }}>
+                      Replay leagues skip size &amp; draft date setup — they&apos;re pre-configured for the 2025-26 season.
+                    </div>
+                  )}
 
                   {/* Rule sheet card */}
                   <div style={{ background: "var(--bg-raised)", border: "1px solid var(--border)", borderRadius: 14, overflow: "hidden" }}>
@@ -642,7 +678,7 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
                     <div style={{ padding: "14px 16px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                       <span style={{ fontSize: 12, color: "var(--dim)" }}>Season</span>
                       <span style={{ fontSize: 13, color: "var(--text)", textAlign: "right" }}>
-                        {isReplay ? `2025-26 replay · ${maxTeams} teams` : `2026-27 live PWHL · ${maxTeams} teams`}
+                        {isReplay ? `2025-26 replay · up to 6 teams` : `2026-27 live PWHL · ${maxTeams} teams`}
                       </span>
                     </div>
                   </div>
@@ -653,12 +689,12 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
                     border: "1px solid rgba(143,193,232,0.15)",
                     fontSize: 13, color: "var(--dim)",
                   }}>
-                    💡 Scoring, roster slots, and playoff format can all be changed from the admin panel before the draft.
+                    Scoring, roster slots, and playoff format can all be changed from the admin panel before the draft.
                   </div>
 
                   <div style={{ display: "flex", gap: 10, justifyContent: "space-between" }}>
                     <button className="button-secondary" onClick={goBack} style={{ flex: 1 }}>← Back</button>
-                    <button className="button-primary" onClick={handleCreateOrAdvance} disabled={loading} style={{ flex: 1 }}>
+                    <button className="button-primary" onClick={handleCreateAndAdvance} disabled={loading} style={{ flex: 1 }}>
                       {loading ? (createdLeagueId ? "Continuing…" : "Creating league…") : (createdLeagueId ? "Continue →" : "Create league →")}
                     </button>
                   </div>
@@ -668,8 +704,8 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
             </div>
           )}
 
-          {/* ── Step 5: Commissioner creates their team ── */}
-          {step === 5 && createdLeagueId && !createdTeamId && (
+          {/* ── Step 6: Commissioner creates their team ── */}
+          {step === 6 && createdLeagueId && !createdTeamId && (
             <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
               <div>
                 <h1 style={{ margin: "0 0 6px", fontSize: 22 }}>Create your team</h1>
@@ -708,8 +744,8 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
             </div>
           )}
 
-          {/* ── Step 6: Invite managers ── */}
-          {step === 6 && createdLeagueId && (
+          {/* ── Step 7: Invite managers ── */}
+          {step === 7 && createdLeagueId && (
             <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
               <div style={{
                 padding: "14px 16px", borderRadius: 12,
@@ -733,7 +769,7 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
               </div>
 
               <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                <button className="button-primary" onClick={goNext}>
+                <button className="button-primary" onClick={() => setStep(8)}>
                   Continue to draft prep →
                 </button>
                 <button
@@ -746,8 +782,8 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
             </div>
           )}
 
-          {/* ── Step 7: Done → draft prep ── */}
-          {step === 7 && createdLeagueId && (
+          {/* ── Step 8: Done → draft prep ── */}
+          {step === 8 && createdLeagueId && (
             <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
               <div>
                 <p style={{ fontSize: 28, margin: "0 0 8px" }}>🎉</p>
@@ -757,7 +793,7 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
                 </p>
               </div>
 
-              {/* Your league at a glance (RD-012) */}
+              {/* Your league at a glance */}
               <div style={{
                 background: "var(--bg-raised)", border: "1px solid var(--border)",
                 borderRadius: 14, padding: "16px",
@@ -768,7 +804,7 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
                   {[
                     { label: "League", value: name },
-                    { label: "Size", value: `${maxTeams} teams` },
+                    { label: "Size", value: isReplay ? "Up to 6 teams" : `${maxTeams} teams` },
                     { label: "Mode", value: isReplay ? "⏪ Replay" : "Live season" },
                     { label: "Scoring", value: "VP standings" },
                   ].map(({ label, value }) => (

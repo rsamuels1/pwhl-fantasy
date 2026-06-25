@@ -12,13 +12,14 @@ import { getSeasonState } from "@/lib/season";
 import { Position } from "@prisma/client";
 import RosterManager from "./RosterManager";
 import LineupDnD from "@/components/LineupDnD";
+import FocusHighlight from "@/components/FocusHighlight";
 import ViewingSelector from "@/components/ViewingSelector";
 import type { LineupEntry, LineupStats } from "@/components/LineupDnD";
 import type { RosterPlayerRow, FreeAgentRow, SkaterStats, GoalieStats } from "./RosterManager";
 
 interface Props {
   params: Promise<{ teamId: string }>;
-  searchParams?: Promise<{ view?: string; tab?: string }>;
+  searchParams?: Promise<{ view?: string; tab?: string; focus?: string }>;
 }
 
 function maxRosterSize(settings: RosterSettings): number {
@@ -90,6 +91,7 @@ export default async function TeamRosterPage({ params, searchParams }: Props) {
   const { teamId } = await params;
   const sp = await searchParams;
   const tabParam = sp?.tab;
+  const focus = sp?.focus;
   // Top-level tabs: "lineup" (default) | "addDrop"
   // Backward compat: ?tab=freeAgents or ?tab=waiverWire → addDrop tab with that inner tab
   const isAddDropParam = tabParam === "addDrop" || tabParam === "freeAgents" || tabParam === "waiverWire";
@@ -556,6 +558,7 @@ export default async function TeamRosterPage({ params, searchParams }: Props) {
       {/* LINEUP TAB — own roster or commissioner viewing another team */}
       {currentTab === "lineup" && (
         <>
+          <FocusHighlight targetId="lineup-section" focus={focus} />
           {/* Viewing selector: scout other teams' lineups */}
           {allTeams.length > 1 && (
             <ViewingSelector
@@ -567,6 +570,7 @@ export default async function TeamRosterPage({ params, searchParams }: Props) {
           )}
 
           {showDnD ? (
+            <div id="lineup-section">
             <LineupDnD
               leagueId={leagueId}
               teamId={teamId}
@@ -583,6 +587,7 @@ export default async function TeamRosterPage({ params, searchParams }: Props) {
               forceMove={!isOwnRoster && isCommissioner}
               forceMoveTeamId={!isOwnRoster ? viewTeamId : undefined}
             />
+            </div>
           ) : !isOwnRoster ? (
             /* Non-commissioner viewing another team: read-only roster */
             <RosterManager

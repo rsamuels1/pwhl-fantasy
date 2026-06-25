@@ -1590,6 +1590,7 @@ Items below are acknowledged but have no sprint assignment. They become candidat
 | Sprint 25 — Living League: Legacy + Carry-Forwards | 🔵 PLANNED | 5 stories: LL-009 Trophy Cabinet (schema: Achievement model) · LL-011b Franchise Identity Archetypes · LL-014 Opening Day Card · LL-015 Championship Banner · UX-058 Trade Proposal 4-Step · BF-020 Auto-Draft Position Balance. Schema migration required (Achievement + AchievementType). |
 | Sprint 26 — The Morning Skate | 🔵 PLANNED | 2 stories: LL-013 + LL-020 (Newcomer Reading Layer). New MorningSkateEdition model, archive + detail pages, homepage hero integration, league nav entry, plain-language blurb templates. Schema migration required (MorningSkateEdition model). |
 | Sprint 27 — League Hub | 🔵 PLANNED | 3 stories: LL-016 Hub Reorg · LL-022 Progressive Disclosure · LL-024 Glossary Anchor Page. Homepage + league overview restructured. No schema changes. |
+| Sprint 38 — Technical Debt Reduction | ✅ COMPLETE | 8/11 stories shipped (TD-001/002/006/007/008/009/010/011 ✅; TD-003/004/005 P1 god-object decomposition deferred): P0 error observability done (lib/logger.ts, cron monitoring) · P2 test coverage done (waiver events, API auth guards, scoring edge cases) · P3 hygiene done (season constants, $queryRaw comments, CSS utility classes + --win-color/--loss-color vars). |
 
 ---
 
@@ -1933,3 +1934,355 @@ Goal: Bring the app to WCAG 2.2 Level AA conformance across all primary user flo
 - **2027-28 season:** Advanced formats (keeper, then dynasty), real-time push scoring + push notifications, and player trends. Native apps and AI features (draft assistant, weekly recaps, trade evaluator) remain Phase 5 "future expansion" — revisit once retention metrics justify them.
 - **UX-053: Email Invite Flow** — Commissioners can only share an invite link; no email-entry flow exists. First-time commissioners expect to type friends' emails. Medium effort. **Blocked on email infrastructure** (transactional email provider — same blocker as Sprint 7 stretch email notifications). Unblocks to P1 once email infra ships. Spec: `roadmap-features.md` UX-053.
 - **BF-019: Password Reset / Forgot Password on Login Page** — Returning users whose cookie expired have no self-service recovery path. Medium effort. **Blocked on email infrastructure** — requires sending a magic re-auth link by email. Unblocks alongside UX-053. Spec: `roadmap-features.md` BF-019.
+
+---
+
+## Sprint 38 — "Technical Debt Reduction" · PLANNED · Track Tech · P0/P1/P2/P3
+
+Goal: Address a cross-cutting set of structural and hygiene issues flagged by technical review. These are not cosmetic — the god-object files make future features risky to develop, the silent failures mean production failures are invisible, and the hardcoded seasons will cause incorrect behavior the week the 2027-28 season opens. This sprint does not ship user-facing features; it makes the codebase safer and more maintainable for everything that comes after.
+
+**Context and verified counts (as of Jun 25, 2026):**
+- `lib/services/dashboard.ts`: 1,330 lines (partially decomposed in Sprint 33 — further extraction needed)
+- `app/team/[teamId]/matchup/page.tsx`: 1,605 lines
+- `app/draft/[leagueId]/DraftRoom.tsx`: 1,594 lines
+- Empty/swallowed catch blocks: 52 instances across app/ and lib/ (many legitimate fire-and-forget, but no structured error logging for any of them)
+- Structured logging (`console.log`): 9 instances, all in intentional places (cron routes, email-service stubs, analytics, draft server) — these are acceptable but unstructured
+- Hardcoded season strings (`"2025-26"`, `"2026-27"`): 31 instances in app/ and lib/ excluding seeds/fixtures/ingest scripts
+- Raw SQL (`$queryRaw`): 4 instances — `app/draft/[leagueId]/page.tsx`, `app/team/[teamId]/roster/page.tsx`, `app/team/[teamId]/draft-prep/page.tsx`, `app/api/leagues/[leagueId]/draft/players/route.ts`
+- Test files: 13 test files against ~38,000 lines of app/lib code
+- Inline `style={{}}` usages: 2,939 across app/ and components/
+- Hardcoded hex values duplicating CSS vars (e.g. `#f87171`): 102 instances
+
+**Prioritization rationale:**
+- **P0:** Silent failures — if waiver processing or scoring fails silently, users see stale data and we have no signal. This is an ops blind spot, not just a code smell.
+- **P1:** The three god-object files actively block future development. Every sprint that touches matchup logic risks a merge conflict or regression in 1,600 lines of mixed concerns.
+- **P2:** Test coverage gaps on the service layer and API routes — the scoring engine is well-tested but the orchestration layer (where most real bugs live) has almost none.
+- **P3:** Hygiene — hardcoded seasons (time bombs), design system bypass (discipline failure), and raw SQL comments (knowledge gap for future engineers).
+
+---
+
+### Track A — P0: Silent Failures + Error Observability ✅
+
+**TD-001: Structured error logging for all fire-and-forget side effects** (P0 · Est: M · ✅ DONE)
+As an operator, I want failed side-effect calls (waiver events, storyline emission, notification delivery) to log structured error details so that I can detect and diagnose production failures that currently produce no signal.
+
+Acceptance criteria:
+- [ ] All `.catch(() => {})` call sites that wrap non-trivial async work (waiver service, trade service, season/index.ts storyline/award/clinch emissions) are updated to `.catch((err) => logger.warn("context", err))` using a minimal `logger` shim (wraps `console.error` with a JSON-structured prefix: `{ level, context, message, stack }`)
+- [ ] New `lib/logger.ts` module exports `logger.info`, `logger.warn`, `logger.error` — all write to `console` in structured JSON; the interface is designed to swap to Sentry/Datadog by replacing the module body only, with no call-site changes
+- [ ] Fire-and-forget calls that are intentionally silent (analytics `trackEvent`, onboarding ping, email sends) are explicitly annotated with `// intentionally fire-and-forget` so future engineers can distinguish from oversights
+- [ ] `lib/services/waiver-service.ts`: all 8 `.catch(() => {})` call sites updated
+- [ ] `lib/services/trade-service.ts`: all `.catch(() => {})` and bare `catch {}` blocks in notification paths updated
+- [ ] `lib/season/index.ts`: storyline/awards/clinch/morning-skate emission `.catch()` handlers updated
+- [ ] `tsc --noEmit` clean; all existing tests pass
+
+**TD-002: Cron job error monitoring** (P0 · Est: S · ✅ DONE)
+As an operator, I want cron job failures to emit a structured error log with the league ID and error context so that a future error monitoring integration (Sentry, Datadog) can alert on failed waiver processing or roster sync.
+
+Acceptance criteria:
+- [ ] `app/api/cron/process-waivers/route.ts`: wraps `processWaivers` in try/catch; on error logs `{ cron: "process-waivers", leagueId, error: err.message, stack }` via `logger.error` and returns a 500 with error body (currently returns nothing on failure — error is silently swallowed by the Vercel cron runner)
+- [ ] `app/api/cron/sync-rosters/route.ts`: same pattern; errors include `{ cron: "sync-rosters", teamId }` context
+- [ ] `app/api/cron/check-incomplete-lineups/route.ts`: same pattern
+- [ ] All three crons return a JSON body `{ ok: true, summary: {...} }` on success and `{ ok: false, error: "..." }` on failure — so cron monitoring services can detect non-2xx responses
+- [ ] `tsc --noEmit` clean
+
+---
+
+### Track B — P1: God Object Decomposition
+
+**TD-003: Extract matchup hero data from dashboard.ts into lib/services/matchup-hero.ts** (P1 · Est: L)
+As a developer, I want `getDashboardData` broken into focused sub-services so that adding a new matchup page section does not require reading 1,300+ lines to understand what data is already fetched.
+
+Context: Sprint 33 (CX-003) already began dashboard decomposition. This story completes the extraction of the matchup hero's data — the largest remaining block. `getDashboardData` currently assembles: the active matchup (hero score + win probability), the upcoming period lineup state, opponent roster, games-remaining batch, swing players, stat chips, momentum strip fields, storyline chip, top performers, and last result. These belong in focused functions.
+
+Acceptance criteria:
+- [ ] `lib/services/matchup-hero.ts` created; exports `getMatchupHeroData(leagueId, teamId, nowMs, prisma)` returning `{ activeMatchup, opponentRoster, swingPlayers }` — the three most interconnected concerns currently tangled in `getDashboardData`
+- [ ] `lib/services/matchup-hero.ts` is a pure IO orchestrator with no rendering concerns; it calls existing pure functions (`winProbability`, `computeTeamScoreDetailed`, `getSwingPlayers`) unchanged
+- [ ] `getDashboardData` in `lib/services/dashboard.ts` delegates to `getMatchupHeroData` and assembles the final `DashboardData` shape; its line count falls below 900 lines
+- [ ] `app/team/[teamId]/matchup/page.tsx` is unchanged — it still calls `getDashboardData`; the refactor is purely internal to the service layer
+- [ ] All existing tests pass; `tsc --noEmit` clean
+
+**TD-004: Extract RosterTable and RosterStatusWidget from matchup/page.tsx into standalone components** (P1 · Est: M)
+As a developer, I want `app/team/[teamId]/matchup/page.tsx` to be a data-fetching + composition layer, not a 1,600-line file that also defines inline sub-components and rendering logic.
+
+Acceptance criteria:
+- [ ] `app/team/[teamId]/matchup/page.tsx` line count falls below 600 lines after extraction
+- [ ] Inline component definitions (any component defined with `function` or `const X = ` inside the page file) are moved to dedicated files in `app/team/[teamId]/matchup/` or `components/`
+- [ ] Extracted components are typed with explicit prop interfaces — no `any`; no implicit `DashboardData` prop spreading
+- [ ] The page's data fetching (`getDashboardData`, `getTeamAnalysis`, `getSeasonState`, and the games-remaining batch query) is kept in the server component; no new client-side fetches introduced
+- [ ] All existing tests pass; `tsc --noEmit` clean
+
+**TD-005: Extract PlayerPanel and PickBoard from DraftRoom.tsx into standalone components** (P1 · Est: L)
+As a developer, I want `app/draft/[leagueId]/DraftRoom.tsx` broken into focused sub-components so that changes to the pick clock or the player search panel do not risk regressions in the pick grid.
+
+Context: `DraftRoom.tsx` is 1,594 lines and is the highest-risk file in the codebase — live WebSocket state, pick clock, commissioner controls, player panel, and pick board are all co-located. Any change touches everything.
+
+Acceptance criteria:
+- [ ] `app/draft/[leagueId]/PlayerPanel.tsx` extracted: contains the Available/Queue tab switcher, search input, position filter buttons, sortable stat columns, and star/queue button logic; receives `draftState`, `playerNames`, `playerPositions`, `makePick`, `setQueue`, `myTeamId`, `onClock` as props
+- [ ] `app/draft/[leagueId]/PickBoard.tsx` extracted: contains the snake-grid pick board; receives `draftState`, `playerNames`, `teams`, `totalPicks` as props
+- [ ] `DraftRoom.tsx` line count falls below 600 lines after both extractions
+- [ ] WebSocket state (`useDraftSocket`) and timer state remain in `DraftRoom.tsx` — these are the coordination layer; panels are display-only
+- [ ] All draft functionality works end-to-end: start, pick, auto-pick, clock, commissioner controls, reconnect
+- [ ] `tsc --noEmit` clean
+
+---
+
+### Track C — P2: Test Coverage Gaps
+
+**TD-006: Service layer integration tests for waiver processing** (P2 · Est: M · ✅ DONE)
+As a developer, I want `lib/services/waiver-service.ts` to have test coverage on its core processing path so that regressions in priority ordering and claim awarding are caught before production.
+
+Context: `waiver-service.ts` has 13 tests (in `tests/waiver.test.ts`) but they cover the pure priority engine, not the DB-touching service functions like `processWaivers`, `submitClaim`, and `enterWaiverWire`. The cron that calls `processWaivers` every morning is completely untested against realistic state.
+
+Acceptance criteria:
+- [ ] `tests/waiver-service.test.ts` added (separate from `tests/waiver.test.ts` which tests the pure engine)
+- [ ] Tests cover: `processWaivers` awards the highest-priority claim when two teams claim the same player; `processWaivers` does not award a claim when the claimant's roster is full; `enterWaiverWire` is idempotent (calling twice for the same player produces one `WaiverEntry`); `submitClaim` rejects a duplicate claim from the same team on the same player
+- [ ] Tests use Prisma mock (consistent with existing test patterns in `tests/trade.test.ts`) — no real DB required
+- [ ] All new tests pass; `npm test` clean
+
+**TD-007: API route auth guard smoke tests** (P2 · Est: M · ✅ DONE)
+As a developer, I want the most critical API routes to have tests verifying that unauthenticated and unauthorized requests are rejected, so that auth regressions are caught without manual testing.
+
+Context: 0 test files cover API route behavior. The auth guards are correct (per Sprint 18 security audit) but are entirely untested. A refactor to `lib/auth.ts` or a middleware change could silently break them.
+
+Acceptance criteria:
+- [ ] `tests/api-auth.test.ts` added; tests the following routes using `fetch` against a test server or by importing route handlers directly with mocked `NextRequest`:
+  - `PUT /api/leagues/[leagueId]/lineup` — returns 401 with no auth cookie; returns 403 when authenticated but not a league member; returns 403 when authenticated member tries to set a different team's lineup
+  - `POST /api/leagues/[leagueId]/commissioner/force-move` — returns 403 when authenticated but not the commissioner
+  - `POST /api/leagues/[leagueId]/season` — returns 403 when not the commissioner
+- [ ] Tests do not require a running Next.js server — route handlers are imported and called directly with mocked `NextRequest` objects
+- [ ] All new tests pass; `npm test` clean
+
+**TD-008: Scoring engine edge case coverage** (P2 · Est: S · ✅ DONE)
+As a developer, I want the scoring engine's edge cases (shutout derivation, power-play point attribution, goalie win logic) covered by tests so that scoring rule changes don't silently break existing cases.
+
+Context: `tests/scoring.test.ts` has 56 lines. The scoring engine has non-trivial derivation logic for shutouts, goalie wins, and PPP (power-play points come from play-by-play, not the stat row directly). These paths have zero explicit test coverage.
+
+Acceptance criteria:
+- [ ] `tests/scoring.test.ts` extended with: goalie win = `true` when team won and goalie played (at least one save); shutout = `true` when `goalsAgainst === 0 AND saves > 0 AND single goalie played`; shutout = `false` when two goalies split the game; PPP attribution for a player who scored a power-play goal; PPP attribution for a player who assisted on a power-play goal; zero-stat-line player scores exactly 0.0 FP
+- [ ] All new tests pass; `npm test` clean
+
+---
+
+### Track D — P3: Technical Hygiene
+
+**TD-009: Replace hardcoded replay season string with a league-derived constant** (P3 · Est: S · ✅ DONE)
+As a developer, I want the `"2025-26"` replay season string to be defined once and referenced everywhere, so that upgrading the replay fixture to use `"2026-27"` data in the future requires one change, not a grep-and-replace across 10+ files.
+
+Context: `"2025-26"` appears as a hardcoded string in 15+ places in app/ and lib/ (not counting seeds, fixtures, or ingest scripts). The most load-bearing instance is `const betaSeason = "2025-26"` in `app/api/leagues/create/route.ts` line 51 — if the replay fixture is ever updated, this must match or leagues are created with a season string that has no games.
+
+Acceptance criteria:
+- [ ] `lib/constants.ts` (or `lib/season/constants.ts` if that file already exists) exports `REPLAY_SEASON = "2025-26"` and `LIVE_SEASON = "2026-27"`
+- [ ] All 15+ instances of `"2025-26"` and `"2026-27"` in app/ and lib/ (excluding UI display strings and code comments) are replaced with the appropriate constant import
+- [ ] UI display strings that show the season year to users (wizard copy, layout banners) are allowed to remain as string literals but are annotated with `// display text — update when replay season changes`
+- [ ] `tsc --noEmit` clean; all existing tests pass
+
+**TD-010: Add explanatory comments to all $queryRaw call sites** (P3 · Est: S · ✅ DONE)
+As a developer, I want each raw SQL call site to explain why Prisma ORM was insufficient, what the query returns, and how `BigInt` coercion is handled, so that future engineers don't blindly refactor them to Prisma and lose the performance reason.
+
+Context: There are 4 `$queryRaw` sites: `app/draft/[leagueId]/page.tsx` (initial draft stats), `app/team/[teamId]/roster/page.tsx` (FA aggregate stats), `app/team/[teamId]/draft-prep/page.tsx` (pre-draft player stats), `app/api/leagues/[leagueId]/draft/players/route.ts` (filtered draft search). All use `GROUP BY` aggregations across `StatLine` that Prisma cannot express in a single ORM call without N+1 queries — a legitimate performance reason that is currently undocumented.
+
+Acceptance criteria:
+- [ ] Each of the 4 `$queryRaw` call sites has a block comment immediately above it with: (1) why ORM was insufficient (e.g. "Prisma cannot GROUP BY across a relation without N+1 queries at ~200 players"), (2) what `BigInt` coercion the caller must apply (e.g. "BigInt fields: goals, assists, gamesPlayed — coerce with Number()"), (3) what schema columns are referenced (so a column rename breaks the comment, not silently the query)
+- [ ] No functional changes to any query
+- [ ] `tsc --noEmit` clean
+
+**TD-011: Inline style audit — establish CSS class coverage for the top 20 repeated patterns** (P3 · Est: M · ✅ DONE)
+As a developer, I want the most frequently repeated inline style patterns to have corresponding CSS utility classes in `globals.css` so that the design system is actually used and hex values stop being scattered across component files.
+
+Context: There are 2,939 `style={{}}` usages and 102 hardcoded hex values in app/ and components/. Many are one-offs that belong inline. But analysis will find a small set of patterns that repeat across 10+ files (e.g. `color: "var(--dim)"`, `fontSize: "12px"`, `marginTop: "8px"`). The Sprint 22 token sweep (RD-002) replaced the most obvious hex values — what remains is structural.
+
+Acceptance criteria:
+- [ ] Run `grep -r "style={{" app/ components/ --include="*.tsx" | grep -oP '\"(color|fontSize|fontWeight|margin|padding|gap|display)[^\"]+\"' | sort | uniq -c | sort -rn | head -30` (or equivalent) to identify the 20 most-repeated inline style properties
+- [ ] For any pattern appearing ≥10 times across different files: create a corresponding CSS utility class in `app/globals.css`; replace all instances with `className`
+- [ ] One-off inline styles (unique to a single component) are left as-is — do not convert everything, only patterns
+- [ ] After the sweep, the number of hardcoded hex values (colors not using `var(--*)`) in app/ and components/ is reduced to ≤20
+- [ ] `tsc --noEmit` clean; all existing tests pass; visual regression check on matchup page, standings page, and draft room
+
+---
+
+### Sprint 38 Story Table
+
+| Story | Track | Size | Priority |
+|---|---|---|---|
+| TD-001 — Structured error logging (fire-and-forget side effects) | A | M | P0 | ✅ |
+| TD-002 — Cron job error monitoring (structured responses + error logging) | A | S | P0 | ✅ |
+| TD-003 — Extract matchup hero data into lib/services/matchup-hero.ts | B | L | P1 | deferred |
+| TD-004 — Extract inline components from matchup/page.tsx | B | M | P1 | deferred |
+| TD-005 — Extract PlayerPanel + PickBoard from DraftRoom.tsx | B | L | P1 | deferred |
+| TD-006 — Waiver service integration tests | C | M | P2 | ✅ |
+| TD-007 — API route auth guard smoke tests | C | M | P2 | ✅ |
+| TD-008 — Scoring engine edge case coverage | C | S | P2 | ✅ |
+| TD-009 — Replace hardcoded season strings with constants | D | S | P3 | ✅ |
+| TD-010 — Add explanatory comments to $queryRaw call sites | D | S | P3 | ✅ |
+| TD-011 — Inline style audit + CSS class coverage for top 20 patterns | D | M | P3 | ✅ |
+
+**Min-ship (P0 items that must land before public launch):** TD-001 (silent failures) · TD-002 (cron observability). P1 god-object items are recommended before any significant new feature work on the three files. P2/P3 items can be batched across multiple sprints.
+
+**Sequencing note:** TD-003 through TD-005 are decompositions only — no behavior changes. They should be done in separate PRs so regressions are easy to bisect. TD-003 (dashboard service) first, then TD-004 (matchup page), then TD-005 (DraftRoom) since DraftRoom has the most risk. The scoring and auth tests (TD-006/007/008) can run in parallel with the decomposition work.
+
+**Exit:** TD-001 and TD-002 shipped ✅. TD-003/004/005 (P1 god-object) intentionally deferred. TD-006/007/008/009/010/011 shipped ✅. `lib/logger.ts` exists and is used at all previously-swallowed catch sites. `lib/constants.ts` exports `REPLAY_SEASON`/`LIVE_SEASON`. All 4 `$queryRaw` sites have block comments. `--win-color`/`--loss-color` CSS vars added; `.text-win`, `.text-loss`, `.text-dim`, `.flex-center`, `.card-section` utility classes added. All 3431 tests pass; `tsc --noEmit` clean.
+
+---
+
+## Sprint 39 — "UX Clarity Sweep" · PLANNED · Track F/UX · P1
+
+Goal: Close four product-level clarity gaps that block first-time PWHL fans from understanding how they win, completing league setup without confusion, knowing what to do after a matchup ends, and acting on dashboard alerts. All stories prefer surfacing existing components in the right place over building new ones. No schema changes. Each story is a single focused PR.
+
+**Four problems addressed:**
+1. Victory Points — the product's core differentiator — is never explained unprompted on any page a new user lands on first.
+2. The league creation wizard remaps step counts silently across three modes; users don't know what mode they're in until Step 3.
+3. The matchup page's terminal and empty states (eliminated, setup phase, season not started) leave users with no clear next action.
+4. Dashboard action items deep-link to the matchup page with no scroll anchor or highlight — the alert's promise is never kept.
+
+| Story | Track | Size | Priority | Status |
+|---|---|---|---|---|
+| UX-070 — One-time VP "How you win" primer on matchup page | F/UX | M | P1 | ◻ PLANNED |
+| UX-071 — Consistent always-visible FP→VP bridge copy on first-run surfaces | F/UX | S | P1 | ◻ PLANNED |
+| UX-072 — Wizard: choose mode at Step 1 (before naming) | F/UX | M | P1 | ◻ PLANNED |
+| UX-073 — Honest wizard progress bar + auto-skip signposting | F/UX | S | P2 | ◻ PLANNED |
+| UX-074 — Every terminal matchup state gets "why" + specific CTA | F/UX | M | P1 | ◻ PLANNED |
+| UX-075 — Explain the "—" setup-phase placeholder | F/UX | S | P2 | ◻ PLANNED |
+| UX-076 — Dashboard action items deep-link with ?focus= + scroll/highlight | F/UX | M | P1 | ◻ PLANNED |
+| UX-077 — Action item copy names the destination | F/UX | S | P2 | ◻ PLANNED |
+
+**No schema changes in this sprint.**
+
+**Exit:** UX-070, UX-072, UX-074, and UX-076 (the four M stories) shipped. P2 stories (UX-071/073/075/077) can land in the same sprint or be batched into the following polish pass. `tsc --noEmit` clean; all existing tests pass.
+
+---
+
+### UX-070 — One-time VP "How you win" primer on matchup page (M · P1 · Sprint 39)
+
+**User story:** As a first-time manager navigating to my matchup page, I want to see a clear, unprompted explanation of how Victory Points work so that I understand what I'm competing for without having to hunt for a tooltip.
+
+**Context:** `VpExplainer.tsx` exists and is good copy, but it's a tap-to-reveal popover. A first-timer walking landing → dashboard → matchup never gets an unprompted explanation. `FirstResultCard` and `OpeningDayCard` establish the localStorage-gated one-time-card pattern that this story reuses.
+
+**Acceptance criteria:**
+- [ ] A "How you win" card renders once on the matchup page for any manager who hasn't dismissed it (localStorage key: `vp-primer-seen-<userId>` or `vp-primer-seen-<leagueId>`); after dismissal it never reappears
+- [ ] Card states plainly in ≤50 words: weekly FP decides matchup results, winning + top-field finishes earn VP, VP is your league standing
+- [ ] Dismiss CTA is "Got it" (not an X icon alone); card is visually distinct from content sections but does not obscure the matchup hero
+- [ ] Reuses copy source from `VpExplainer.tsx` or `lib/copy/living-league-glossary.ts` — no new copy introduced inconsistently
+- [ ] No schema change; `tsc --noEmit` clean; no regressions on existing matchup page tests
+
+**Key files:** `app/team/[teamId]/matchup/page.tsx`, `components/VpExplainer.tsx`, `lib/copy/living-league-glossary.ts`; reference pattern: `components/FirstResultCard.tsx`, `components/OpeningDayCard.tsx`
+
+---
+
+### UX-071 — Consistent always-visible FP→VP bridge copy on first-run surfaces (S · P1 · Sprint 39)
+
+**User story:** As a first-time manager seeing my score for the first time, I want to see a brief "FP earns you VP" sentence as visible text — not hidden behind a tooltip — on each core first-run page so I don't have to discover the connection myself.
+
+**Context:** The bridge sentence already exists in three places (dashboard MatchupHero, FieldHero, standings explainer) but the wording varies and some instances are tooltip-gated. This story standardizes the copy and makes it visible text everywhere.
+
+**Acceptance criteria:**
+- [ ] The bridge sentence reads the same across dashboard hero, FieldHero, and the standings page explainer: "Your FP decides the matchup — winning earns VP, which drives your league standing." (or equivalent approved by copy review)
+- [ ] The sentence renders as visible text (not inside a `?` toggle) on all three surfaces
+- [ ] `VpExplainer.tsx` popover copy is updated to match the standardized wording
+- [ ] No structural or layout changes; copy-only; `tsc --noEmit` clean
+
+**Key files:** `app/dashboard/page.tsx`, `components/FieldHero.tsx`, `app/league/[leagueId]/standings/page.tsx`, `components/VpExplainer.tsx`
+
+---
+
+### UX-072 — Wizard: choose mode at Step 1 (before naming) (M · P1 · Sprint 39)
+
+**User story:** As a league creator, I want to choose Live vs Replay mode at the very first step so I know how many steps I'm committing to before I've invested any effort.
+
+**Context:** `CreateLeagueWizard.tsx` uses `getDisplayStep()` / `getDisplayTotal()` / `getStepLabels()` which remap steps three ways (live=6, replay=5, beta=4). Mode is chosen on Step 3 — after the user has already named the league and picked size. This means the step count the user sees on Step 1 may not match the path they end up on.
+
+**Acceptance criteria:**
+- [ ] The first screen of the wizard presents the mode choice (Live vs Replay, with the beta fork handled transparently if applicable) before the league name input
+- [ ] Once mode is selected, the step count shown in the progress bar matches the actual remaining steps for that mode from screen 1 onward
+- [ ] `getDisplayStep()` / `getDisplayTotal()` collapse or simplify — no more three-way remap needed once mode is known upfront
+- [ ] League naming and size selection follow the mode choice on subsequent screens; the overall step count does not change from what was shown on screen 1
+- [ ] `tsc --noEmit` clean; existing wizard tests (if any) pass; wizard completes end-to-end for all three modes
+
+**Key files:** `app/create-league/CreateLeagueWizard.tsx`
+
+---
+
+### UX-073 — Honest wizard progress bar + auto-skip signposting (S · P2 · Sprint 39)
+
+**User story:** As a league creator, I want any auto-skipped wizard steps to be clearly acknowledged so I never feel like I missed something or the app made a decision for me silently.
+
+**Context:** Complements UX-072. Even after UX-072 lands, the beta mode jumps Step 1→4 and the progress bar silently relabels. Any skip should be communicated.
+
+**Acceptance criteria:**
+- [ ] If a step is auto-skipped (e.g. beta force-route), a one-line note appears on the next visible step: "Replay/Beta leagues skip size & date setup — they're pre-configured" (or equivalent)
+- [ ] The progress bar never shows a step count that doesn't match the user's actual remaining decisions
+- [ ] No new component required; the note is inline copy rendered conditionally in the existing step layout
+- [ ] `tsc --noEmit` clean
+
+**Key files:** `app/create-league/CreateLeagueWizard.tsx`
+
+---
+
+### UX-074 — Every terminal matchup state gets "why" + specific CTA (M · P1 · Sprint 39)
+
+**User story:** As a manager in a non-active matchup state (eliminated, season not started, between rounds, champion-but-not-me), I want a plain-language sentence explaining my situation and a specific next action so I don't get stuck on a dead-end page.
+
+**Context:** The matchup page has 6+ terminal/empty states. Current cards have at most one generic "View bracket →" link. This story adds per-state copy + specific CTAs.
+
+**Acceptance criteria:**
+- [ ] **Eliminated state** (`eliminationInfo` non-null): card adds "You were eliminated in Round N. The bracket is still playing." + CTA "See who's still alive →" to `/league/[leagueId]/bracket`
+- [ ] **Missed playoffs** (season complete, no playoff matchup): card adds "You didn't qualify this season. Final standing: Nth." + CTA "See the bracket →" and secondary "View full season stats →" to Analysis
+- [ ] **Playoff pending** (between rounds): card adds "Round N complete. Round N+1 matchups are being set." + CTA "View updated bracket →"
+- [ ] **Season not started** (PRE_DRAFT or PRE_SEASON): card adds context-appropriate copy: PRE_DRAFT → "Build your draft queue →" to `/draft/[leagueId]`; PRE_SEASON → "Set your opening lineup →" to `/team/[teamId]/roster`
+- [ ] **Setup phase** — handled by UX-075 (separate story); not in scope here
+- [ ] No new data fetching required; all state is already in `DashboardData`; copy + CTA only
+- [ ] `tsc --noEmit` clean; existing matchup page renders correctly for all non-terminal states
+
+**Key files:** `app/team/[teamId]/matchup/page.tsx`; `lib/services/dashboard.ts` (source of `eliminationInfo`, `playoffEliminated`, `DashboardData`)
+
+---
+
+### UX-075 — Explain the "—" setup-phase placeholder (S · P2 · Sprint 39)
+
+**User story:** As a manager seeing dashes instead of scores at the start of a new week, I want a brief explanation of when those dashes become numbers so I don't think something is broken.
+
+**Context:** In setup phase (`isSetupPhase === true`), the hero shows "—" with a small "Games starting soon" badge. There's no indication of *when* the dash becomes a real score. The data is already available (period start time, games-tonight count).
+
+**Acceptance criteria:**
+- [ ] In setup phase, replace the bare "Games starting soon" badge with a sentence: "Scores appear once tonight's PWHL games go final" (with optional "· N games tonight" count when `gamesThisPeriod > 0` for at least one roster player)
+- [ ] If the current day has no PWHL games scheduled, the copy adjusts: "Scores appear as PWHL games are played this week"
+- [ ] Copy is visible on both `FieldHero` (VTF) and `DuelHero` (playoff) paths when `isSetupPhase` is true
+- [ ] No new data fetch; derives from existing `isSetupPhase`, `gamesThisPeriod`, and period start already passed to the component
+- [ ] `tsc --noEmit` clean
+
+**Key files:** `app/team/[teamId]/matchup/page.tsx`, `components/FieldHero.tsx`, `components/DuelHero.tsx`
+
+---
+
+### UX-076 — Dashboard action items deep-link with ?focus= + scroll/highlight (M · P1 · Sprint 39)
+
+**User story:** As a manager clicking a dashboard alert, I want to land on the specific section the alert is about — scrolled into view and briefly highlighted — so the promise the alert made is actually kept.
+
+**Context:** `app/dashboard/page.tsx` action items are plain `<Link href={a.href}>` with no anchor, no query param, no highlight. "Tight week — you're up 3pts" links to `/team/{id}/matchup` (top of page) and the user lands on the hero with nothing emphasizing why they were sent.
+
+**Acceptance criteria:**
+- [ ] Dashboard action item hrefs append `?focus=<section>` where `<section>` maps to a semantic area: `matchup` (tight week, new week), `lineup` (lineup incomplete, set lineup alerts), `draft` (draft starting/upcoming)
+- [ ] The matchup page reads `searchParams.focus` on load and scrolls to + briefly highlights (2s amber border or pulse animation) the relevant section
+- [ ] The lineup page reads `searchParams.focus=lineup` on load and scrolls to the active-slot panel
+- [ ] No schema change; client-side scroll via `useEffect` + `document.getElementById` or `ref.current.scrollIntoView`; no new API calls
+- [ ] The base href behavior (no `?focus`) is unchanged — landing without a focus param renders exactly as before
+- [ ] `tsc --noEmit` clean; all existing dashboard and matchup tests pass
+
+**Key files:** `app/dashboard/page.tsx` (action item href construction), `app/team/[teamId]/matchup/page.tsx` (focus handler), `app/team/[teamId]/roster/page.tsx` (focus handler for lineup alerts)
+
+---
+
+### UX-077 — Action item copy names the destination (S · P2 · Sprint 39)
+
+**User story:** As a manager reading a dashboard alert, I want the alert text to tell me exactly what I'll see when I click it so the promise is explicit before I even tap.
+
+**Context:** Complements UX-076. Copy-only change to `app/dashboard/page.tsx` action item labels.
+
+**Acceptance criteria:**
+- [ ] "Tight match — you're up 3pts" → "Tight week — you're up 3pts · Open your live matchup"
+- [ ] "⚡ Tight match — you're down Xpts" → "⚡ You're down Xpts · Check your live matchup"
+- [ ] "Week N just started — set your lineup" → "Week N started · Set your lineup →" (destination is clear)
+- [ ] "Draft is live right now!" → "Draft is live · Enter the draft room →"
+- [ ] All alert copy fits on one line at 375px (mobile); truncation allowed with ellipsis if unavoidable
+- [ ] Copy-only; `tsc --noEmit` clean
+
+**Key files:** `app/dashboard/page.tsx`
