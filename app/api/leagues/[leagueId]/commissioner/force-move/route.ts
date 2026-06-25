@@ -134,7 +134,7 @@ export async function POST(
       }
     }
     if (ACTIVE_SLOTS.includes(slotB) && BENCH_SLOTS.includes(slotA)) {
-      if (await playerHasPlayedThisPeriod(body.swapWithPlayerId!, activePeriod, now)) {
+      if (await playerHasPlayedThisPeriod(entryB.playerId, activePeriod, now)) {
         return NextResponse.json({
           error: `${entryB.player.firstName} ${entryB.player.lastName} has already played this period and cannot be benched.`,
         }, { status: 422 });

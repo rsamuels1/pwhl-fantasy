@@ -116,11 +116,11 @@ export async function PUT(
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const targetSlot = body.slot as LineupSlot;
   const validSlots: LineupSlot[] = ["FORWARD","DEFENSE","GOALIE","UTIL","BENCH","IR"];
-  if (!validSlots.includes(targetSlot)) {
+  if (!validSlots.includes(body.slot as LineupSlot)) {
     return NextResponse.json({ error: "Invalid slot" }, { status: 400 });
   }
+  const targetSlot = body.slot as LineupSlot;
 
   const leagueInfoPut = await prisma.fantasyLeague.findUnique({
     where: { id: leagueId }, select: { isReplay: true, replayCurrentDate: true },
