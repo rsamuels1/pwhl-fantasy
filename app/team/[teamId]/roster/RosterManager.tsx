@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useMemo, useEffect } from "react";
+import { useState, useTransition, useMemo, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import AddAndSlotModal from "@/components/AddAndSlotModal";
 import WaiverWirePanel from "@/components/WaiverWirePanel";
@@ -442,6 +442,23 @@ export default function RosterManager({
         />
       )}
 
+      {/* ── Drop-to-add modal (full roster) ── */}
+      {isFull && pendingAdd && !slottingPlayer && (() => {
+        const addingPlayer = freeAgents.find((p) => p.playerId === pendingAdd);
+        if (!addingPlayer) return null;
+        return (
+          <DropToAddModal
+            addingPlayer={addingPlayer}
+            rosterPlayers={roster}
+            dropForAdd={dropForAdd}
+            onSelectDrop={setDropForAdd}
+            onConfirm={() => { if (dropForAdd) handleAdd(pendingAdd, dropForAdd); }}
+            onCancel={() => { setPendingAdd(null); setDropForAdd(null); }}
+            disabled={isPending}
+          />
+        );
+      })()}
+
       {/* ── WAIVER WIRE TAB (own team only) ── */}
       {isOwnRoster && tab === "waiverWire" && (
         <WaiverWirePanel
@@ -489,7 +506,7 @@ export default function RosterManager({
             ))}
             {isFull && (
               <span style={{ fontSize: 12, color: "#f59e0b", marginLeft: "auto" }}>
-                Roster full — select a player to drop when adding
+                Roster full — you&apos;ll choose a player to drop when adding
               </span>
             )}
           </div>
@@ -509,17 +526,13 @@ export default function RosterManager({
                   player={fa}
                   index={i}
                   isFull={isFull}
-                  rosterPlayers={roster}
                   pendingAdd={pendingAdd}
-                  dropForAdd={dropForAdd}
                   onSelectAdd={() => {
                     setError(null);
                     setPendingAdd(fa.playerId);
                     setDropForAdd(null);
                     if (!isFull) handleAdd(fa.playerId);
                   }}
-                  onSelectDrop={(dropId) => setDropForAdd(dropId)}
-                  onConfirmAddDrop={() => { if (dropForAdd) handleAdd(fa.playerId, dropForAdd); }}
                   onCancel={() => { setPendingAdd(null); setDropForAdd(null); }}
                   disabled={isPending}
                   onSwitchToWaivers={() => setTab("waiverWire")}
@@ -792,12 +805,12 @@ function FaColHeader({ isGoalie, sortKey, sortAsc, onSort }: {
 
 // ── Free agent row ─────────────────────────────────────────────────────────────
 
-function FaRow({ player, index, isFull, rosterPlayers, pendingAdd, dropForAdd,
-  onSelectAdd, onSelectDrop, onConfirmAddDrop, onCancel, disabled, onSwitchToWaivers }: {
+function FaRow({ player, index, isFull, pendingAdd,
+  onSelectAdd, onCancel, disabled, onSwitchToWaivers }: {
   player: FreeAgentRow; index: number; isFull: boolean;
-  rosterPlayers: RosterPlayerRow[]; pendingAdd: string | null; dropForAdd: string | null;
-  onSelectAdd: () => void; onSelectDrop: (id: string) => void;
-  onConfirmAddDrop: () => void; onCancel: () => void; disabled: boolean;
+  pendingAdd: string | null;
+  onSelectAdd: () => void;
+  onCancel: () => void; disabled: boolean;
   onSwitchToWaivers?: () => void;
 }) {
   const isGoalie = player.position === "GOALIE";
@@ -883,36 +896,12 @@ function FaRow({ player, index, isFull, rosterPlayers, pendingAdd, dropForAdd,
             onClick={onSelectAdd}
             disabled={disabled || (!!pendingAdd && !isThisPending)}
             title="Add this free agent immediately to your roster."
-            style={smallBtn("var(--accent)")}
+            style={primaryBtn("var(--accent)")}
           >
             Add
           </button>
         )}
       </div>
-
-      {isThisPending && isFull && (
-        <div style={{ margin: "0 14px 10px", padding: "12px 14px", borderRadius: 10, background: "rgba(143,193,232,0.08)", border: "1px solid rgba(143,193,232,0.2)" }}>
-          <p style={{ fontSize: 12, color: "var(--dim)", margin: "0 0 8px" }}>
-            Roster is full. Select a player to drop:
-          </p>
-          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            {rosterPlayers.map((rp) => (
-              <label key={rp.playerId} style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
-                <input type="radio" name={`drop-for-${player.playerId}`} value={rp.playerId} checked={dropForAdd === rp.playerId} onChange={() => onSelectDrop(rp.playerId)} style={{ accentColor: "var(--accent)" }} />
-                <span style={{ fontSize: 13, color: "var(--text)" }}>{rp.name}</span>
-                <span style={{ fontSize: 10, color: POS_COLORS[rp.position] }}>{rp.position[0]}</span>
-                <span style={{ fontSize: 10, color: "var(--faint)" }}>{SLOT_LABELS[rp.slot]}</span>
-              </label>
-            ))}
-          </div>
-          <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
-            <button onClick={onConfirmAddDrop} disabled={!dropForAdd || disabled} style={{ ...smallBtn("var(--accent)"), opacity: !dropForAdd ? 0.5 : 1 }}>
-              Confirm Add / Drop
-            </button>
-            <button onClick={onCancel} style={smallBtn("var(--faint)")}>Cancel</button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
@@ -973,8 +962,167 @@ function smallBtn(bg: string): React.CSSProperties {
   };
 }
 
+function primaryBtn(color: string): React.CSSProperties {
+  return {
+    fontSize: 13, fontWeight: 700, minHeight: 44, padding: "0 18px", borderRadius: 8,
+    border: `1.5px solid ${color}`, cursor: "pointer",
+    background: `${color}22`, color: color,
+    whiteSpace: "nowrap",
+  };
+}
+
 const panel: React.CSSProperties = {
   background: "var(--card)",
   border: "1px solid var(--border)",
   borderRadius: 16, overflow: "hidden",
 };
+
+// ── Drop-to-add modal ──────────────────────────────────────────────────────────
+// Shown when the roster is full and the user wants to add a free agent.
+// Replaces the old inline drop-selection panel inside the FA table row.
+
+function DropToAddModal({ addingPlayer, rosterPlayers, dropForAdd, onSelectDrop, onConfirm, onCancel, disabled }: {
+  addingPlayer: FreeAgentRow;
+  rosterPlayers: RosterPlayerRow[];
+  dropForAdd: string | null;
+  onSelectDrop: (id: string) => void;
+  onConfirm: () => void;
+  onCancel: () => void;
+  disabled: boolean;
+}) {
+  const dialogRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    dialogRef.current?.focus();
+  }, []);
+
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") onCancel();
+    }
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [onCancel]);
+
+  const droppingPlayer = rosterPlayers.find((p) => p.playerId === dropForAdd);
+  const confirmLabel = droppingPlayer
+    ? `Add ${addingPlayer.name} · Drop ${droppingPlayer.name}`
+    : "Select a player to drop";
+
+  return (
+    <div
+      onClick={(e) => { if (e.target === e.currentTarget) onCancel(); }}
+      style={{
+        position: "fixed", inset: 0, zIndex: 999,
+        background: "rgba(0,0,0,0.65)", backdropFilter: "blur(4px)",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        padding: 16,
+      }}
+    >
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="drop-add-dialog-title"
+        tabIndex={-1}
+        style={{
+          background: "var(--card)", border: "1px solid var(--border)",
+          borderRadius: 16, padding: 24, maxWidth: 420, width: "100%",
+          display: "flex", flexDirection: "column", gap: 16,
+          boxShadow: "0 20px 60px rgba(0,0,0,0.5)",
+          outline: "none", maxHeight: "85vh", overflowY: "auto",
+        }}
+      >
+        {/* Header */}
+        <div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{
+              fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 5,
+              background: `${POS_COLORS[addingPlayer.position] ?? "var(--faint)"}22`,
+              color: POS_COLORS[addingPlayer.position] ?? "var(--dim)",
+            }}>
+              {addingPlayer.position[0]}
+            </span>
+            <span id="drop-add-dialog-title" style={{ fontWeight: 700, fontSize: 16, color: "var(--text)" }}>
+              Add {addingPlayer.name}
+            </span>
+          </div>
+          <div style={{ marginTop: 6, fontSize: 13, color: "var(--faint)" }}>
+            Your roster is full. Choose a player to drop to make room.
+          </div>
+        </div>
+
+        {/* Drop candidates */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          <div style={{
+            fontSize: 11, fontWeight: 700, textTransform: "uppercase",
+            letterSpacing: "0.07em", color: "var(--faint)",
+          }}>
+            Drop a player
+          </div>
+          {rosterPlayers.map((rp) => {
+            const isSelected = dropForAdd === rp.playerId;
+            return (
+              <button
+                key={rp.playerId}
+                onClick={() => onSelectDrop(rp.playerId)}
+                disabled={disabled}
+                style={{
+                  display: "flex", alignItems: "center", justifyContent: "space-between",
+                  padding: "10px 14px", borderRadius: 10, textAlign: "left", width: "100%",
+                  border: isSelected ? "1.5px solid rgba(248,113,113,0.6)" : "1px solid var(--border)",
+                  background: isSelected ? "rgba(248,113,113,0.10)" : "var(--surface)",
+                  cursor: disabled ? "not-allowed" : "pointer",
+                  transition: "border-color 0.1s, background 0.1s",
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text)" }}>{rp.name}</span>
+                  <span style={{ fontSize: 10, fontWeight: 700, color: POS_COLORS[rp.position] ?? "var(--faint)" }}>
+                    {rp.position[0]}
+                  </span>
+                  <span style={{ fontSize: 10, color: "var(--faint)" }}>{SLOT_LABELS[rp.slot] ?? rp.slot}</span>
+                </div>
+                {isSelected && (
+                  <span style={{ fontSize: 12, color: "#f87171", flexShrink: 0 }}>Drop ✕</span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Confirm + Cancel */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          <button
+            onClick={onConfirm}
+            disabled={!dropForAdd || disabled}
+            style={{
+              padding: "13px 20px", borderRadius: 10, width: "100%",
+              fontSize: 14, fontWeight: 700, textAlign: "center",
+              border: `1.5px solid var(--accent)`,
+              background: dropForAdd ? "rgba(143,193,232,0.18)" : "rgba(143,193,232,0.06)",
+              color: dropForAdd ? "var(--accent-strong)" : "var(--faint)",
+              cursor: !dropForAdd || disabled ? "not-allowed" : "pointer",
+              opacity: disabled ? 0.6 : 1,
+              transition: "background 0.1s, color 0.1s",
+            }}
+          >
+            {confirmLabel}
+          </button>
+          <button
+            onClick={onCancel}
+            disabled={disabled}
+            style={{
+              padding: "10px", borderRadius: 10, width: "100%",
+              fontSize: 13, color: "var(--faint)",
+              border: "1px solid var(--border)", background: "transparent",
+              cursor: disabled ? "not-allowed" : "pointer",
+            }}
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}

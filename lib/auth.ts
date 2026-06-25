@@ -22,8 +22,9 @@ export function setAuthCookie(response: NextResponse, token: string) {
     sameSite: "lax",
     maxAge: 60 * 60 * 24 * 30,
     // Set COOKIE_DOMAIN=.dykedb.org in Vercel Production to share sessions
-    // across fantasy.dykedb.org and beta.fantasy.dykedb.org
-    domain: process.env.COOKIE_DOMAIN,
+    // across fantasy.dykedb.org and beta.fantasy.dykedb.org.
+    // Use || undefined so an empty-string env var doesn't emit domain="" (breaks cookies).
+    domain: process.env.COOKIE_DOMAIN || undefined,
   });
 }
 
@@ -36,7 +37,7 @@ export function clearAuthCookie(response: NextResponse) {
     secure: process.env.NODE_ENV !== "development",
     sameSite: "lax",
     maxAge: 0,
-    domain: process.env.COOKIE_DOMAIN,
+    domain: process.env.COOKIE_DOMAIN || undefined,
   });
 }
 
