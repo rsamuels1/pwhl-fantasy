@@ -132,7 +132,7 @@ export default async function BracketPageContent({ leagueId, myTeamId, userId }:
             <div style={{ fontSize: 13, fontWeight: 700, color: "var(--gold)" }}>{currentRoundLabel} is complete</div>
             <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 2 }}>All matchups are scored. Advance the bracket to set up the next round.</div>
           </div>
-          <a href={`/league/${leagueId}/season`} style={{
+          <a href={`/league/${leagueId}/sim`} style={{
             fontSize: 12, fontWeight: 700, padding: "7px 16px", borderRadius: 8, flexShrink: 0,
             background: "rgba(212,175,55,0.18)", color: "var(--gold)",
             border: "1px solid rgba(212,175,55,0.35)", textDecoration: "none",
