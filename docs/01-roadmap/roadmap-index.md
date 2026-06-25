@@ -1,6 +1,6 @@
 # PWHL GM Product Roadmap — Index
 
-Last Updated: June 25, 2026 (Sprint 39 PLANNED — UX Clarity Sweep 8 stories scoped; Sprint 38 PLANNED — Technical Debt Reduction 11 stories scoped; Sprint 37 COMPLETE — WCAG 2.2 AA Accessibility Audit 22/22)
+Last Updated: June 25, 2026 (Sprint 39 COMPLETE — UX Clarity Sweep 8/8 shipped (Jun 25, 2026); Sprint 38 PLANNED — Technical Debt Reduction 11 stories scoped; Sprint 37 COMPLETE — WCAG 2.2 AA Accessibility Audit 22/22)
 
 ---
 

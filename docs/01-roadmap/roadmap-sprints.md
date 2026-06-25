@@ -2124,7 +2124,7 @@ Acceptance criteria:
 
 ---
 
-## Sprint 39 — "UX Clarity Sweep" · PLANNED · Track F/UX · P1
+## Sprint 39 — "UX Clarity Sweep" · COMPLETE · Track F/UX · P1
 
 Goal: Close four product-level clarity gaps that block first-time PWHL fans from understanding how they win, completing league setup without confusion, knowing what to do after a matchup ends, and acting on dashboard alerts. All stories prefer surfacing existing components in the right place over building new ones. No schema changes. Each story is a single focused PR.
 
@@ -2136,18 +2136,20 @@ Goal: Close four product-level clarity gaps that block first-time PWHL fans from
 
 | Story | Track | Size | Priority | Status |
 |---|---|---|---|---|
-| UX-070 — One-time VP "How you win" primer on matchup page | F/UX | M | P1 | ◻ PLANNED |
-| UX-071 — Consistent always-visible FP→VP bridge copy on first-run surfaces | F/UX | S | P1 | ◻ PLANNED |
-| UX-072 — Wizard: choose mode at Step 1 (before naming) | F/UX | M | P1 | ◻ PLANNED |
-| UX-073 — Honest wizard progress bar + auto-skip signposting | F/UX | S | P2 | ◻ PLANNED |
-| UX-074 — Every terminal matchup state gets "why" + specific CTA | F/UX | M | P1 | ◻ PLANNED |
-| UX-075 — Explain the "—" setup-phase placeholder | F/UX | S | P2 | ◻ PLANNED |
-| UX-076 — Dashboard action items deep-link with ?focus= + scroll/highlight | F/UX | M | P1 | ◻ PLANNED |
-| UX-077 — Action item copy names the destination | F/UX | S | P2 | ◻ PLANNED |
+| UX-070 — One-time VP "How you win" primer on matchup page | F/UX | M | P1 | ✅ DONE |
+| UX-071 — Consistent always-visible FP→VP bridge copy on first-run surfaces | F/UX | S | P1 | ✅ DONE |
+| UX-072 — Wizard: choose mode at Step 1 (before naming) | F/UX | M | P1 | ✅ DONE |
+| UX-073 — Honest wizard progress bar + auto-skip signposting | F/UX | S | P2 | ✅ DONE |
+| UX-074 — Every terminal matchup state gets "why" + specific CTA | F/UX | M | P1 | ✅ DONE |
+| UX-075 — Explain the "—" setup-phase placeholder | F/UX | S | P2 | ✅ DONE |
+| UX-076 — Dashboard action items deep-link with ?focus= + scroll/highlight | F/UX | M | P1 | ✅ DONE |
+| UX-077 — Action item copy names the destination | F/UX | S | P2 | ✅ DONE |
 
 **No schema changes in this sprint.**
 
-**Exit:** UX-070, UX-072, UX-074, and UX-076 (the four M stories) shipped. P2 stories (UX-071/073/075/077) can land in the same sprint or be batched into the following polish pass. `tsc --noEmit` clean; all existing tests pass.
+**Validated:** spec-compliance-auditor (7/8 first pass; UX-075 gamesThisNight gap fixed before commit) + karen (APPROVED). `tsc --noEmit` clean. Commit: `6e97ddc`. PR: #18 (dev → main).
+
+**Result: 8/8 Sprint 39 stories shipped.**
 
 ---
 

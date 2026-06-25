@@ -1653,7 +1653,7 @@ Depends On: LL-017, LL-020, existing `VpExplainer.tsx`
 
 ## UX-070. One-Time VP "How You Win" Primer on Matchup Page
 
-Sprint: 39 | Priority: P1 | Effort: M | Status: ◻ PLANNED
+Sprint: 39 | Priority: P1 | Effort: M | Status: ✅ DONE (Sprint 39, Jun 25, 2026)
 
 Goal: Render a single, unprompted "How you win" card on the matchup page for first-time managers. Uses the existing localStorage-gated one-time-card pattern (`FirstResultCard`, `OpeningDayCard`). Reuses copy from `VpExplainer.tsx` / `lib/copy/living-league-glossary.ts`. Dismissed with "Got it" and never shown again.
 
@@ -1674,7 +1674,7 @@ Files: `app/team/[teamId]/matchup/page.tsx`
 
 ## UX-071. Consistent Always-Visible FP→VP Bridge Copy on First-Run Surfaces
 
-Sprint: 39 | Priority: P1 | Effort: S | Status: ◻ PLANNED
+Sprint: 39 | Priority: P1 | Effort: S | Status: ✅ DONE (Sprint 39, Jun 25, 2026)
 
 Goal: Standardize the FP→VP bridge sentence across dashboard hero, FieldHero, and standings page to the same wording, and ensure it renders as visible text (not inside a tooltip) on all three surfaces.
 
@@ -1692,7 +1692,7 @@ Files: `app/dashboard/page.tsx`, `components/FieldHero.tsx`, `app/league/[league
 
 ## UX-072. Wizard: Choose Mode at Step 1, Before Naming
 
-Sprint: 39 | Priority: P1 | Effort: M | Status: ◻ PLANNED
+Sprint: 39 | Priority: P1 | Effort: M | Status: ✅ DONE (Sprint 39, Jun 25, 2026)
 
 Goal: Move the Live / Replay mode choice to the first wizard screen so the step count is known before the user invests effort in naming their league. Collapses the `getDisplayStep()` / `getDisplayTotal()` / `getStepLabels()` three-way remap.
 
@@ -1710,7 +1710,7 @@ Files: `app/create-league/CreateLeagueWizard.tsx`
 
 ## UX-073. Honest Wizard Progress Bar + Auto-Skip Signposting
 
-Sprint: 39 | Priority: P2 | Effort: S | Status: ◻ PLANNED
+Sprint: 39 | Priority: P2 | Effort: S | Status: ✅ DONE (Sprint 39, Jun 25, 2026)
 
 Goal: Any auto-skipped wizard steps are acknowledged with a one-line note so the user never feels a decision was made silently.
 
@@ -1729,7 +1729,7 @@ Files: `app/create-league/CreateLeagueWizard.tsx`
 
 ## UX-074. Every Terminal Matchup State Gets "Why" + Specific CTA
 
-Sprint: 39 | Priority: P1 | Effort: M | Status: ◻ PLANNED
+Sprint: 39 | Priority: P1 | Effort: M | Status: ✅ DONE (Sprint 39, Jun 25, 2026)
 
 Goal: Each dead-end matchup state (eliminated, missed playoffs, playoff pending, season not started) gets a plain-language "what this means" sentence and a specific next-action CTA — not a generic "View bracket →".
 
@@ -1750,7 +1750,7 @@ Files: `app/team/[teamId]/matchup/page.tsx`
 
 ## UX-075. Explain the "—" Setup-Phase Placeholder
 
-Sprint: 39 | Priority: P2 | Effort: S | Status: ◻ PLANNED
+Sprint: 39 | Priority: P2 | Effort: S | Status: ✅ DONE (Sprint 39, Jun 25, 2026)
 
 Goal: In setup phase, replace the bare "Games starting soon" badge with a sentence explaining when the dash becomes a real score.
 
@@ -1768,7 +1768,7 @@ Files: `app/team/[teamId]/matchup/page.tsx`, `components/FieldHero.tsx`, `compon
 
 ## UX-076. Dashboard Action Items Deep-Link with ?focus= + Scroll/Highlight
 
-Sprint: 39 | Priority: P1 | Effort: M | Status: ◻ PLANNED
+Sprint: 39 | Priority: P1 | Effort: M | Status: ✅ DONE (Sprint 39, Jun 25, 2026)
 
 Goal: Dashboard action item hrefs carry a `?focus=<section>` param; the destination page reads it and scrolls to + briefly highlights the relevant section on arrival.
 
@@ -1787,7 +1787,7 @@ Files: `app/dashboard/page.tsx`, `app/team/[teamId]/matchup/page.tsx`, `app/team
 
 ## UX-077. Action Item Copy Names the Destination
 
-Sprint: 39 | Priority: P2 | Effort: S | Status: ◻ PLANNED
+Sprint: 39 | Priority: P2 | Effort: S | Status: ✅ DONE (Sprint 39, Jun 25, 2026)
 
 Goal: Each dashboard alert label explicitly states what the user will see/do on arrival so the alert's promise is explicit before they tap.
 
