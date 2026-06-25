@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { apiRequireAuth, apiRequireCommissioner } from "@/lib/auth";
 import { logCommissionerAction } from "@/lib/services/audit-service";
+import { logger } from "@/lib/logger";
 
 // POST /api/leagues/[leagueId]/commissioner/undo-transaction
 // Two variants: type="waiver" undoes last add/drop; type="draft-pick" undoes last pick (draft must be PAUSED).
@@ -126,7 +127,7 @@ async function undoWaiverTransaction(
   await logCommissionerAction(leagueId, commissionerId, "COMMISSIONER_UNDO_TRANSACTION", {
     target: teamId,
     details: { undoneType: lastEvent.type, playerId, originalEventId: lastEvent.id },
-  }, db);
+  }, db).catch((err) => logger.error("logCommissionerAction failed (undo-waiver)", err));
 
   return NextResponse.json({ success: true, undone: lastEvent.type });
 }
@@ -180,7 +181,7 @@ async function undoDraftPick(
   await logCommissionerAction(leagueId, commissionerId, "COMMISSIONER_UNDO_TRANSACTION", {
     target: fantasyTeamId,
     details: { undoneType: "DRAFT_PICK", playerId, overall },
-  }, db);
+  }, db).catch((err) => logger.error("logCommissionerAction failed (undo-draft-pick)", err));
 
   return NextResponse.json({ success: true, undone: "DRAFT_PICK", overall });
 }
