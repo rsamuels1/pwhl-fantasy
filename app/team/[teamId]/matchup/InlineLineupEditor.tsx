@@ -157,7 +157,7 @@ export default function InlineLineupEditor({ leagueId, teamId, active, bench }: 
                 background: p.gamesThisPeriod === 0 ? "rgba(100,116,139,0.15)" : "rgba(143,193,232,0.15)",
                 color: p.gamesThisPeriod === 0 ? "var(--faint)" : "var(--accent-strong)",
               }}>
-                {p.gamesThisPeriod === 0 ? "0 left" : `${p.gamesThisPeriod}G`}
+                {p.gamesThisPeriod === 0 ? "0 gm" : `${p.gamesThisPeriod} gm`}
               </span>
             )}
           </div>
@@ -204,7 +204,7 @@ export default function InlineLineupEditor({ leagueId, teamId, active, bench }: 
                 background: p.gamesThisPeriod === 0 ? "rgba(100,116,139,0.15)" : "rgba(143,193,232,0.15)",
                 color: p.gamesThisPeriod === 0 ? "var(--faint)" : "var(--accent-strong)",
               }}>
-                {p.gamesThisPeriod === 0 ? "0 left" : `${p.gamesThisPeriod}G`}
+                {p.gamesThisPeriod === 0 ? "0 gm" : `${p.gamesThisPeriod} gm`}
               </span>
             )}
             {isEligible && (

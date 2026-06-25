@@ -821,7 +821,7 @@ function PlayerInfo({
               color: player.gamesThisPeriod === 0 ? "var(--faint)" : "var(--accent-strong)",
             }}
           >
-            {player.gamesThisPeriod === 0 ? "0 left" : `${player.gamesThisPeriod}G left`}
+            {player.gamesThisPeriod === 0 ? "0 gm" : `${player.gamesThisPeriod} gm`}
           </span>
         )}
       </div>

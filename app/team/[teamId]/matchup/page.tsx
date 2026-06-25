@@ -1492,7 +1492,7 @@ function DuelHero({
 // ── RosterTable ────────────────────────────────────────────────────────────────
 
 const SLOT_LABELS: Record<string, string> = {
-  FORWARD: "F", DEFENSE: "D", GOALIE: "G", UTIL: "Flex", BENCH: "BN", IR: "IR",
+  FORWARD: "F", DEFENSE: "D", GOALIE: "G", UTIL: "UTIL", BENCH: "BN", IR: "IR",
 };
 const POS_COLORS: Record<string, string> = {
   FORWARD: "#60a5fa", DEFENSE: "var(--green)", GOALIE: "var(--amber)",

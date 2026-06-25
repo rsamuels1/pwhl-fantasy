@@ -157,7 +157,7 @@ export default async function StandingsPage({ params }: { params: { leagueId: st
           Win matchup +2 VP · 1st place weekly score +2 VP · 2nd place score +1 VP
         </p>
         <p style={{ margin: "0 0 16px", fontSize: "0.7rem", color: "var(--faint)", display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-          <span>VP = Victory Points · MTCH VP = points for winning your weekly matchup · RNK VP = bonus for top-3 FP finish · PF = total fantasy points scored</span>
+          <span>VP = Victory Points · W-VP = VP for outscoring the field each week · Rank VP = bonus VP for top-3 FP finish · PF = total fantasy points scored</span>
           <Link href={`/league/${leagueId}/how-it-works`} style={{ color: "var(--accent)", textDecoration: "none", whiteSpace: "nowrap" }}>How it works →</Link>
         </p>
 
@@ -175,8 +175,8 @@ export default async function StandingsPage({ params }: { params: { leagueId: st
                 <th style={thStyle}>Team</th>
                 <th style={thStyle} title="Total Victory Points this season. VP determines playoff seeding.">VP</th>
                 <th style={thStyle} title="Your weekly result vs. the field — wins, losses, and ties.">W-L-T</th>
-                <th style={thStyle} title="VP earned by outscoring the most opponents each week (+2 VP for a win).">MTCH VP</th>
-                <th style={thStyle} title="Victory Points from score rank: 1st place in league score gets +2 VP, 2nd gets +1 VP.">RNK VP</th>
+                <th style={thStyle} title="VP earned by outscoring the most opponents each week (+2 VP for a win).">W-VP</th>
+                <th style={thStyle} title="Victory Points from score rank: 1st place in league score gets +2 VP, 2nd gets +1 VP.">Rank VP</th>
                 <th style={thStyle} title="Points For — total fantasy points scored this season.">PF</th>
                 <th style={thStyle} title="Current win/loss/tie streak (e.g., W2 = two wins in a row).">Streak</th>
                 {!playoffsStarted && playoffCutoff !== null && (
