@@ -30,7 +30,7 @@ export async function POST(
   const results = await scoreVtfWeek(leagueId, week, period, prisma);
 
   // Audit log — fire-and-forget, never blocks the response
-  void (prisma as any).leagueEvent?.create?.({
+  void prisma.leagueEvent.create({
     data: {
       leagueId,
       type: "COMMISSIONER_SETTINGS_CHANGED",

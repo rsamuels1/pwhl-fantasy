@@ -209,9 +209,6 @@ export async function emitWeeklyStorylines(
   prisma: PrismaClient
 ): Promise<void> {
   try {
-    const leagueEventModel = (prisma as unknown as Record<string, unknown>).leagueEvent;
-    if (!leagueEventModel) return; // LeagueEvent table not yet available
-
     const league = await prisma.fantasyLeague.findUnique({
       where: { id: leagueId },
       select: { scoringSettings: true, season: true },
@@ -290,9 +287,7 @@ export async function emitWeeklyStorylines(
 
     // Emit each storyline idempotently (skip if already exists for week + kind)
     for (const storyline of storylines) {
-      const existing = await (leagueEventModel as {
-        findFirst: (args: unknown) => Promise<unknown>;
-      }).findFirst({
+      const existing = await prisma.leagueEvent.findFirst({
         where: {
           leagueId,
           type: "LEAGUE_STORYLINE",
@@ -460,9 +455,6 @@ export async function emitWeeklyAwards(
   prisma: PrismaClient
 ): Promise<void> {
   try {
-    const leagueEventModel = (prisma as unknown as Record<string, unknown>).leagueEvent;
-    if (!leagueEventModel) return;
-
     const league = await prisma.fantasyLeague.findUnique({
       where: { id: leagueId },
       select: { scoringSettings: true, scoringMode: true },
@@ -513,9 +505,7 @@ export async function emitWeeklyAwards(
 
     for (const award of awards) {
       // Idempotency: skip if this award type was already emitted for this week.
-      const existing = await (leagueEventModel as {
-        findFirst: (args: unknown) => Promise<unknown>;
-      }).findFirst({
+      const existing = await prisma.leagueEvent.findFirst({
         where: {
           leagueId,
           type: "LEAGUE_STORYLINE",

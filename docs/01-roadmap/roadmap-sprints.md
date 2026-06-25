@@ -1823,6 +1823,54 @@ Goal: Make the Morning Skate newsletter readable for fans who don't know fantasy
 
 ---
 
+## Sprint 32 — "IA Closure + UX Batch" · ✅ COMPLETE · Jun 24, 2026 · Tracks A+V · P1
+
+Goal: Close three open alignment items (IA-008/009/010), confirm GATE-3 in production, and run a targeted UX polish batch fixing the replay wizard flow, FA tab access, win probability labels, and FP lead copy.
+
+**All items shipped:**
+
+| Story | Track | Size | Priority | Status |
+|---|---|---|---|---|
+| IA-008 — Waiver spec closure: core (reverse-standings priority, 48h window, daily cron, rolling move-to-last) confirmed fully implemented; roadmap updated to DONE; claim reorder/cancel UI deferred post-launch | Alignment | S | P1 | ✅ DONE |
+| IA-009 — VP tiebreaker doc: tiebreaker chain comment added to `computeVpStandings` in `lib/scoring/vp.ts`; `playoff-service.ts` confirmed to use `computeVpStandings`, not `computeStandings`; roadmap updated to DONE | Alignment | S | P1 | ✅ DONE |
+| IA-010 — Stat correction policy: `docs/02-engineering/stat-correction-policy.md` created; `POST /api/founder/leagues/[leagueId]/rescore-week` endpoint built using idempotent `scoreVtfWeek()`; roadmap updated to DONE | Alignment | M | P1 | ✅ DONE |
+| GATE-3 — CRON_SECRET env var confirmed set in Vercel `pwhl-gm-prod` project; `roadmap-sprints.md` gate status updated to ✅ PASS | Validation | S | P0 | ✅ PASS |
+| UX-049 — Free Agents nav tab: "Free Agents" tab added to `TeamNav.tsx` between My Roster and Trades; links to `?tab=freeAgents`; `isFaTab` constant tracks active state based on search param | Feature | S | P1 | ✅ DONE |
+| UX-050 — Win prob labels: "Win Probability" heading + "You / Them" label pair confirmed already implemented in matchup page; no code change required | Feature | S | P1 | ✅ DONE (verified) |
+| UX-032 — FP lead/back label: win probability margin label in `matchup/page.tsx` changed from `"pt edge"` to `"+N FP lead"` / `"N FP back"` | Bug | S | P1 | ✅ DONE |
+| OB-010 — Replay wizard 5-step flow: `CreateLeagueWizard.tsx` updated so replay mode skips the Rules step (step 4 → step 5); `getDisplayStep/Total/Labels` helpers accept `isReplay` param; `handleReplayCreate` jumps to step 5; progress bar shows 5 segments for replay | Feature | M | P1 | ✅ DONE |
+
+**No schema changes in this sprint.**
+
+**Result: 8/8 Sprint 32 items shipped (1 verified already done, 1 confirmed no-code).**
+
+---
+
+## Sprint 33 — "Complexity Debt" · ✅ COMPLETE · Jun 24, 2026 · Track Tech · P1
+
+Goal: Address the top three findings from the pragmatic complexity review: N+1 projection queries (HIGH), stale `(prisma as any).leagueEvent` guards (MEDIUM), and dashboard.ts size (HIGH). Also remove the outdated CLAUDE.md convention note.
+
+**All items shipped:**
+
+| Story | Track | Size | Priority | Status |
+|---|---|---|---|---|
+| CX-001 — Batch projectPlayer queries: `batchAvgFpPerPlayer()` private helper added to `lib/projections/index.ts`; fetches all stat lines for N players in ONE `statLine.findMany`; `projectTeamRemainingScore` and `getRemainingPlayersTonight` refactored to use it; per-roster-load queries reduced from N+2 to 3 | Perf | M | HIGH | ✅ DONE |
+| CX-002 — Remove `(prisma as any).leagueEvent` guards: all 10 guard call sites removed from 8 live files (`matchup/page.tsx`, `rescore-week/route.ts`, `simulate-season/route.ts`, `seed-replay.ts`, `seed-draft.ts`, `simulate-season.ts`, `lib/season/index.ts`, `lib/services/trophy-service.ts`, `lib/services/storyline-service.ts` ×2); `prisma.leagueEvent` now called directly everywhere | Cleanup | M | MEDIUM | ✅ DONE |
+| CX-003 — dashboard.ts decomposition: `lib/services/dashboard.ts` split into focused subfiles; pure row-builder and alert/performer helpers extracted | Refactor | L | HIGH | ✅ DONE |
+| CX-004 — CLAUDE.md convention cleanup: outdated `(prisma as any).leagueEvent` guard note removed from Conventions section | Doc | S | P1 | ✅ DONE |
+
+**Lower-priority complexity findings (deferred to post-launch backlog):**
+- CX-005: Collapse `validateTradeProposal`/`validateTradeExecution` aliases in engine.ts
+- CX-006: `generateEdition` purity naming (morning-skate-service.ts)
+- CX-007: Rename `REVERSED` trade state to `VETOED`
+- CX-008: Add `nowMs` param to `enterWaiverWire`
+
+**No schema changes in this sprint.**
+
+**Result: 4/4 Sprint 33 priority items shipped.**
+
+---
+
 ## Beyond MVP
 
 - **Q4 2026 (in-season):** Waivers → FAAB; engagement surfaces (#25 analysis, #29 performance dashboard, #30 playoff UX) while the first live season runs. Trade System shipped Sprint 7.

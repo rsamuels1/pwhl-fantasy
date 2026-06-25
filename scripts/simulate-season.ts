@@ -316,7 +316,7 @@ async function main() {
       await prisma.draft.deleteMany({ where: { leagueId: prior.id } });
       await prisma.matchup.deleteMany({ where: { leagueId: prior.id } });
       await prisma.fantasyTeam.deleteMany({ where: { leagueId: prior.id } });
-      await (prisma as any).leagueEvent?.deleteMany({ where: { leagueId: prior.id } });
+      await prisma.leagueEvent.deleteMany({ where: { leagueId: prior.id } });
       await prisma.fantasyLeague.delete({ where: { id: prior.id } });
       console.log("  Removed previous simulation league.");
     }

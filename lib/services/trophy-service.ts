@@ -200,38 +200,34 @@ export async function awardTrophies(
 
   // ── MOST_TRANSACTIONS ─────────────────────────────────────────────────────────
   {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const leagueEventModel = (prisma as any).leagueEvent;
-    if (leagueEventModel) {
-      try {
-        const txnCounts = await leagueEventModel.groupBy({
-          by: ["teamId"],
-          where: {
-            leagueId,
-            type: { in: ["PLAYER_ADD", "PLAYER_DROP"] },
-            teamId: { not: null },
-          },
-          _count: { id: true },
-        });
-        let mostActiveTeamId: string | null = null;
-        let mostCount = 0;
-        for (const row of txnCounts as Array<{ teamId: string | null; _count: { id: number } }>) {
-          if (!row.teamId) continue;
-          if (row._count.id > mostCount) {
-            mostCount = row._count.id;
-            mostActiveTeamId = row.teamId;
-          }
+    try {
+      const txnCounts = await prisma.leagueEvent.groupBy({
+        by: ["teamId"],
+        where: {
+          leagueId,
+          type: { in: ["PLAYER_ADD", "PLAYER_DROP"] },
+          teamId: { not: null },
+        },
+        _count: { id: true },
+      });
+      let mostActiveTeamId: string | null = null;
+      let mostCount = 0;
+      for (const row of txnCounts) {
+        if (!row.teamId) continue;
+        if (row._count.id > mostCount) {
+          mostCount = row._count.id;
+          mostActiveTeamId = row.teamId;
         }
-        if (mostActiveTeamId && mostCount > 0) {
-          awards.push({
-            teamId: mostActiveTeamId,
-            type: "MOST_TRANSACTIONS",
-            data: { count: mostCount },
-          });
-        }
-      } catch {
-        // leagueEvent table may not exist yet — skip this trophy
       }
+      if (mostActiveTeamId && mostCount > 0) {
+        awards.push({
+          teamId: mostActiveTeamId,
+          type: "MOST_TRANSACTIONS",
+          data: { count: mostCount },
+        });
+      }
+    } catch {
+      // trophy skipped on DB error
     }
   }
 

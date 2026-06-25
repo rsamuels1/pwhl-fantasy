@@ -177,6 +177,60 @@ export interface DashboardData {
   firstResultContext: FirstResultContext | null;
 }
 
+// ── shared pure helpers (used by regular-season and playoff paths) ────────────
+
+type DetailedPlayerRow = {
+  playerId: string; name: string; position: string; slot: string;
+  teamId: string | null; teamAbbr: string | null;
+  points: number; gameCount: number; statBreakdown: ScoringBreakdown[];
+};
+
+function buildPlayerRows(
+  players: DetailedPlayerRow[],
+  gamesPerTeam: Map<string, number>
+): PlayerMatchupRow[] {
+  return players.map((p) => ({
+    playerId: p.playerId, name: p.name, position: p.position, slot: p.slot,
+    teamAbbr: p.teamAbbr,
+    gamesThisPeriod: p.teamId !== null ? (gamesPerTeam.get(p.teamId) ?? 0) : null,
+    points: p.points, gameCount: p.gameCount, statBreakdown: p.statBreakdown, chips: [],
+  }));
+}
+
+function computeLineupAlerts(
+  players: DetailedPlayerRow[],
+  gamesPerTeam: Map<string, number>,
+  gamesPlayedPerTeam: Map<string, number>
+): LineupAlert[] {
+  return players
+    .filter((p) => {
+      if (p.slot === "BENCH" || p.slot === "IR") return false;
+      const futureGames = p.teamId ? (gamesPerTeam.get(p.teamId) ?? 0) : 0;
+      const playedGames = p.teamId ? (gamesPlayedPerTeam.get(p.teamId) ?? 0) : 0;
+      return futureGames === 0 && p.gameCount === 0 && playedGames === 0;
+    })
+    .map((p) => ({ playerId: p.playerId, name: p.name, reason: "zero_games" as const }));
+}
+
+function computeTopPerformers(
+  players: DetailedPlayerRow[],
+  minPoints?: number
+): PlayerPerfSummary[] {
+  return [...players]
+    .filter((p) => minPoints === undefined || p.points > minPoints)
+    .sort((a, b) => b.points - a.points)
+    .slice(0, 3)
+    .map((p) => ({ playerId: p.playerId, name: p.name, position: p.position, points: p.points, statBreakdown: p.statBreakdown }));
+}
+
+function computeDisappointments(players: DetailedPlayerRow[]): PlayerPerfSummary[] {
+  return [...players]
+    .filter((p) => p.gameCount > 0)
+    .sort((a, b) => a.points - b.points)
+    .slice(0, 3)
+    .map((p) => ({ playerId: p.playerId, name: p.name, position: p.position, points: p.points, statBreakdown: p.statBreakdown }));
+}
+
 // ── main ──────────────────────────────────────────────────────────────────────
 
 export async function getDashboardData(
@@ -440,30 +494,8 @@ export async function getDashboardData(
     gamesPerTeamInWindow(allTeamIds, displayPeriod.startsAt, new Date(nowMs), prisma),
   ]);
 
-  function withGames(players: typeof myDetailed.players): PlayerMatchupRow[] {
-    return players.map((p) => ({
-      playerId: p.playerId,
-      name: p.name,
-      position: p.position,
-      slot: p.slot,
-      teamAbbr: p.teamAbbr,
-      gamesThisPeriod: p.teamId !== null ? (gamesPerTeam.get(p.teamId) ?? 0) : null,
-      points: p.points,
-      gameCount: p.gameCount,
-      statBreakdown: p.statBreakdown,
-      chips: [],
-    }));
-  }
-
-  const sorted = [...myDetailed.players].sort((a, b) => b.points - a.points);
-  const topPerformers: PlayerPerfSummary[] = sorted.filter((p) => p.points > 0).slice(0, 3).map((p) => ({
-    playerId: p.playerId, name: p.name, position: p.position, points: p.points, statBreakdown: p.statBreakdown,
-  }));
-  const disappointments: PlayerPerfSummary[] = [...myDetailed.players]
-    .filter((p) => p.gameCount > 0)
-    .sort((a, b) => a.points - b.points)
-    .slice(0, 3)
-    .map((p) => ({ playerId: p.playerId, name: p.name, position: p.position, points: p.points, statBreakdown: p.statBreakdown }));
+  const topPerformers = computeTopPerformers(myDetailed.players, 0);
+  const disappointments = computeDisappointments(myDetailed.players);
 
   const [remainingPlayers, leaguePerformersResult] = await Promise.all([
     getRemainingPlayersTonight(myTeamId, scoringSettings, prisma, nowMs),
@@ -486,7 +518,7 @@ export async function getDashboardData(
 
   const isSetupPhase = myDetailed.players.length > 0 && myDetailed.players.every((p) => p.gameCount === 0);
 
-  const myPlayersRaw = withGames(myDetailed.players);
+  const myPlayersRaw = buildPlayerRows(myDetailed.players, gamesPerTeam);
 
   // Compute stat chips for active starters (only when there are actual scores to evaluate).
   const chipMap = isSetupPhase
@@ -537,14 +569,7 @@ export async function getDashboardData(
     }
   }
 
-  const lineupAlerts: LineupAlert[] = myDetailed.players
-    .filter((p) => {
-      if (p.slot === "BENCH" || p.slot === "IR") return false;
-      const futureGames = p.teamId ? (gamesPerTeam.get(p.teamId) ?? 0) : 0;
-      const playedGames = p.teamId ? (gamesPlayedPerTeam.get(p.teamId) ?? 0) : 0;
-      return futureGames === 0 && p.gameCount === 0 && playedGames === 0;
-    })
-    .map((p) => ({ playerId: p.playerId, name: p.name, reason: "zero_games" as const }));
+  const lineupAlerts = computeLineupAlerts(myDetailed.players, gamesPerTeam, gamesPlayedPerTeam);
 
   // VP mode: resolve opponent roster rows
   const opponentPlayers: PlayerMatchupRow[] = opponentTeamId
@@ -850,50 +875,12 @@ async function getPlayoffDashboardData(
     gamesPerTeamInWindow(allTeamIds, period.startsAt, new Date(nowMs), prisma),
   ]);
 
-  function withGames(players: typeof myDetailed.players): PlayerMatchupRow[] {
-    return players.map((p) => ({
-      playerId: p.playerId,
-      name: p.name,
-      position: p.position,
-      slot: p.slot,
-      teamAbbr: p.teamAbbr,
-      gamesThisPeriod: p.teamId !== null ? (gamesPerTeam.get(p.teamId) ?? 0) : null,
-      points: p.points,
-      gameCount: p.gameCount,
-      statBreakdown: p.statBreakdown,
-      chips: [],
-    }));
-  }
+  const myPlayers = buildPlayerRows(myDetailed.players, gamesPerTeam);
+  const opponentPlayers = buildPlayerRows(opponentDetailed.players, gamesPerTeam);
 
-  const myPlayers = withGames(myDetailed.players);
-  const opponentPlayers = withGames(opponentDetailed.players);
-
-  // Lineup alerts for zero-game players
-  const lineupAlerts: LineupAlert[] = myDetailed.players
-    .filter((p) => {
-      if (p.slot === "BENCH" || p.slot === "IR") return false;
-      const futureGames = p.teamId ? (gamesPerTeam.get(p.teamId) ?? 0) : 0;
-      const playedGames = p.teamId ? (gamesPlayedPerTeam.get(p.teamId) ?? 0) : 0;
-      return futureGames === 0 && p.gameCount === 0 && playedGames === 0;
-    })
-    .map((p) => ({ playerId: p.playerId, name: p.name, reason: "zero_games" as const }));
-
-  // Top performers
-  const sorted = [...myDetailed.players].sort((a, b) => b.points - a.points);
-  const topPerformers: PlayerPerfSummary[] = sorted.slice(0, 3).map((p) => ({
-    playerId: p.playerId,
-    name: p.name,
-    position: p.position,
-    points: p.points,
-    statBreakdown: p.statBreakdown,
-  }));
-
-  // Disappointments
-  const disappointments: PlayerPerfSummary[] = [...myDetailed.players]
-    .filter((p) => p.gameCount > 0)
-    .sort((a, b) => a.points - b.points)
-    .slice(0, 3)
-    .map((p) => ({ playerId: p.playerId, name: p.name, position: p.position, points: p.points, statBreakdown: p.statBreakdown }));
+  const lineupAlerts = computeLineupAlerts(myDetailed.players, gamesPerTeam, gamesPlayedPerTeam);
+  const topPerformers = computeTopPerformers(myDetailed.players);
+  const disappointments = computeDisappointments(myDetailed.players);
 
   // Remaining players tonight
   const remainingPlayers = await getRemainingPlayersTonight(myTeamId, scoringSettings, prisma, nowMs);

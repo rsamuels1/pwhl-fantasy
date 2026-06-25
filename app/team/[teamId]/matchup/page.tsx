@@ -44,13 +44,10 @@ export default async function TeamMatchupPage({
   if (!league) notFound();
 
   // Playoff clinch event for this team (used to render dismissible ClinchBanner)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const clinchEvent = (prisma as any).leagueEvent
-    ? await (prisma as any).leagueEvent.findFirst({
-        where: { leagueId, teamId, type: "PLAYOFF_CLINCH" },
-        select: { data: true },
-      })
-    : null;
+  const clinchEvent = await prisma.leagueEvent.findFirst({
+    where: { leagueId, teamId, type: "PLAYOFF_CLINCH" },
+    select: { data: true },
+  });
 
   const scoringSettings = parseScoringSettings(league.scoringSettings);
   const rs = (league.rosterSettings as Record<string, number>) ?? {};

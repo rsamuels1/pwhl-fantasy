@@ -866,7 +866,6 @@ The primary in-season landing page ("Fantasy Home"), team-scoped. No team picker
   the full matchup view model including `lineupAlerts`. Falls back to draft pick history when no
   `LeagueEvent` records exist.
 - `lib/services/activity.ts` — `getLeagueActivity(leagueId, limit, prisma)` and `emitEvent(...)`.
-  Uses `(prisma as any).leagueEvent` guards since the model requires `prisma db push` to activate.
 
 **`LeagueEvent` schema** (in `prisma/schema.prisma`):
 ```prisma
@@ -883,8 +882,7 @@ model LeagueEvent {
   @@index([leagueId, createdAt])
 }
 ```
-Run `npx prisma db push` after schema changes to activate. Until then, activity falls back
-gracefully to draft pick history.
+Run `npx prisma db push` after any schema change to activate new models/fields in the dev DB.
 
 **API:** `GET /api/leagues/[leagueId]/matchup-summary?team=<id>` — wraps `getDashboardData`.
 
@@ -1172,7 +1170,5 @@ the cookie is never read.
   before any DB queries. All pages under `app/team/[teamId]/` must call `requireAuth` +
   `requireTeamOwner`. All API routes under `app/api/leagues/[leagueId]/` must call the
   `apiRequire*` guards. Commissioner-only actions use `requireCommissioner` / `apiRequireCommissioner`.
-- Use `(prisma as any).leagueEvent` with a null-check guard for any code that queries `LeagueEvent`
-  until `prisma db push` + `prisma generate` has been run in the target environment.
 - **When updating CLAUDE.md** (build order, feature status, or sprint notes), keep these sibling files in sync:
   `docs/01-roadmap/roadmap-index.md`, `docs/01-roadmap/roadmap-features.md`, `docs/01-roadmap/roadmap-sprints.md`. The HTML dashboard (`docs/01-roadmap/roadmap-dashboard.html`) is the visual tracker and should be updated on the same cadence as the markdown files.

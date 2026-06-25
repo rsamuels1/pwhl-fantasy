@@ -67,13 +67,10 @@ async function emitClinchEvents(leagueId: string, week: number, prisma: PrismaCl
   const raceMap = computeRace(standings, matchups, cutoff);
 
   // Find teams that are clinched but don't yet have a PLAYOFF_CLINCH event.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const existingClinches: { teamId: string | null }[] = (prisma as any).leagueEvent
-    ? await (prisma as any).leagueEvent.findMany({
-        where: { leagueId, type: "PLAYOFF_CLINCH" },
-        select: { teamId: true },
-      })
-    : [];
+  const existingClinches = await prisma.leagueEvent.findMany({
+    where: { leagueId, type: "PLAYOFF_CLINCH" },
+    select: { teamId: true },
+  });
   const alreadyClinched = new Set(existingClinches.map((e) => e.teamId).filter(Boolean));
 
   let seed = 0;
