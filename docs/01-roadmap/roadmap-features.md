@@ -149,6 +149,15 @@
 - **SEC-P1-003. Display Name Max-Length Guard** — ✅ DONE (Sprint 40; `app/api/auth/register/route.ts`, ≤80 chars)
 - **SEC-P1-004. League Name Max-Length Guard** — ✅ DONE (Sprint 40; `app/api/leagues/create/route.ts`, ≤50 chars)
 - **SEC-P1-006. Audit Log Fire-and-Forget** — ✅ DONE (Sprint 40; `app/api/leagues/[leagueId]/commissioner/undo-transaction/route.ts`; `.catch + logger.error` prevents state inconsistency)
+- **ANA-001. PostHog Analytics** — ✅ DONE (Sprint 41; `posthog-node` server-side + `posthog-js` client via `components/PostHogProvider.tsx`; `useAnalytics()` hook; 9 instrumented events; wizard funnel; lineup_auto_set; environment stamping; `.env.local.example`; smoke test script)
+- **SCORING-001. H2H Scoring Mode** — ✅ DONE (Sprint 42; `ScoringMode { VP H2H VTF }` enum; `FantasyLeague.scoringMode @default(H2H)`; `lib/season/h2h.ts` `scoreH2hWeek` + `computeH2hStandings`; `lib/scoring/vp.ts` extracted; wizard Step 1 mode selector; VP education surfaces gated; existing VP/VTF leagues unaffected)
+- **OPS-005. Live Stat Ingest Cron** — ✅ DONE (Sprint 43; `app/api/cron/ingest-live-stats/route.ts`; polls HockeyTech every 30 min 22:00–04:00 UTC; upserts stat lines for newly-final games)
+- **OPS-006. Nightly Advance Cron** — ✅ DONE (Sprint 43; `app/api/cron/advance-live-seasons/route.ts`; nightly 05:00 UTC; scores all live IN_SEASON leagues)
+- **OPS-007. Vercel Cron Registration** — ✅ DONE (Sprint 43; `vercel.json` updated with both new cron schedules)
+- **OPS-008. GitHub Actions CI** — ✅ DONE (Sprint 43; `.github/workflows/ci.yml`; typecheck + lint + test on push to main/dev/release branches)
+- **OPS-009. Draft Server Health Endpoint** — ✅ DONE (Sprint 43; `/health` returns `{ ok, rooms }` JSON for Render monitoring)
+- **OPS-010. Render Plan Upgrade** — ✅ DONE (Sprint 43; `render.yaml` updated to `standard` plan for draft week; 2 GB RAM; health check path confirmed)
+- **OPS-011. Test/Lint Config** — ✅ DONE (Sprint 43; `vitest.config.ts` explicit include/exclude patterns; `.eslintrc.json` added)
 
 ---
 
