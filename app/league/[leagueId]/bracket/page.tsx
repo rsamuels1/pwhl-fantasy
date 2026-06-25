@@ -9,5 +9,5 @@ export default async function PlayoffsPage({
   const { leagueId } = await params;
   const user = await requireAuth(`/league/${leagueId}/bracket`);
   const { myTeam } = await requireLeagueAccess(leagueId, user.id);
-  return <BracketPageContent leagueId={leagueId} myTeamId={myTeam?.id} />;
+  return <BracketPageContent leagueId={leagueId} myTeamId={myTeam?.id} userId={user.id} />;
 }

@@ -141,7 +141,7 @@ export default async function Home() {
                   <span style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase" as const, color: "var(--muted)" }}>Standings</span>
                 </div>
                 <abbr title="Victory Points: 2 for a weekly win, +2 for highest score, +1 for second. How you climb the standings." style={{ fontSize: 10, fontWeight: 700, color: "var(--faint)", textDecoration: "underline dotted", cursor: "help", letterSpacing: "0.1em" }}>
-                  VP
+                  Victory Pts
                 </abbr>
               </div>
               {MINI_STANDINGS.map((r) => (

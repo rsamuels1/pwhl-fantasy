@@ -92,7 +92,23 @@ export async function scoreVpWeek(
   scoringSettings: ScoringSettings,
   prisma: PrismaClient
 ): Promise<Map<string, VpWeekResult>> {
-  const teamScores = await computeAllTeamScores(leagueId, period, scoringSettings, prisma);
+  // Beta/replay leagues store period dates at remapped real-calendar times for lifecycle
+  // detection, but actual stat lines live at the original fixture dates. Translate back
+  // before querying scores so the stat line query finds real data.
+  const league = await prisma.fantasyLeague.findUniqueOrThrow({
+    where: { id: leagueId },
+    select: { scoringSettings: true },
+  });
+  const rawSettings = league.scoringSettings as Record<string, unknown>;
+  const betaWeekMappings = rawSettings?.betaWeekMappings as
+    | { week: number; fixtureStart: string; fixtureEnd: string }[]
+    | undefined;
+  const fixtureMapping = betaWeekMappings?.find((m) => m.week === week);
+  const scoringPeriod: ScoringPeriod = fixtureMapping
+    ? { week, startsAt: new Date(fixtureMapping.fixtureStart), endsAt: new Date(fixtureMapping.fixtureEnd) }
+    : period;
+
+  const teamScores = await computeAllTeamScores(leagueId, scoringPeriod, scoringSettings, prisma);
 
   const matchups = await prisma.matchup.findMany({
     where: { leagueId, week, isPlayoff: false },

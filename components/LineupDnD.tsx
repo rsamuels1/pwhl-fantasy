@@ -128,12 +128,16 @@ function PlayerRow({ entry, statsLabel: label, isOver, isDragging, isActive = fa
       minHeight: 44,
     }}>
       {/* Slot badge */}
-      <span style={{
-        fontSize: 10, fontWeight: 700, padding: "2px 6px", borderRadius: 5,
-        background: `${SLOT_COLORS[entry.slot] ?? "var(--faint)"}18`,
-        color: SLOT_COLORS[entry.slot] ?? "var(--faint)",
-        minWidth: 32, textAlign: "center", flexShrink: 0,
-      }}>
+      <span
+        title={entry.slot === "UTIL" ? "Utility — any forward or defenseman" : undefined}
+        style={{
+          fontSize: 10, fontWeight: 700, padding: "2px 6px", borderRadius: 5,
+          background: `${SLOT_COLORS[entry.slot] ?? "var(--faint)"}18`,
+          color: SLOT_COLORS[entry.slot] ?? "var(--faint)",
+          minWidth: 32, textAlign: "center", flexShrink: 0,
+          cursor: entry.slot === "UTIL" ? "help" : undefined,
+        }}
+      >
         {SLOT_LABEL[entry.slot] ?? entry.slot}
       </span>
 

@@ -353,6 +353,8 @@ enum NotificationType {
   TRADE_EXECUTED
   TRADE_VETOED
   TRADE_REVIEW_PENDING
+  CHAMPIONSHIP_WON
+  SEASON_RENEWED
 }
 
 model FeedbackSubmission {

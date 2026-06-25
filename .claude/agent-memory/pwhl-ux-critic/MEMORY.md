@@ -10,3 +10,4 @@
 - [Redesign bundle provenance](redesign-bundle-provenance.md) — v3_1.zip is canonical (Parts 1–8); "request 3" zip is a truncated color-only subset; real Sprint 22 gaps live in v3_1 Parts 5–8
 - [Trade proposal findings](trade-proposal-findings.md) — flat all-at-once trade-new layout overwhelms new fans; recommended stepped Pick-GM→Want→Give→Review redesign
 - [Rival feature findings](rival-feature-findings.md) — most-played rival broken in VTF (picks weakest opp); two standings pages (team-scoped is the one managers see); redesign critique
+- [Beta replay findings (run 2)](beta-replay-findings.md) — ALL /team/* pages 500 (likely beta-DB migration drift on Trophy); trade 422 confirmed; head-to-head vs VTF copy bug; "4 weeks"=2 reg+2 playoff; projection 824.4 bug

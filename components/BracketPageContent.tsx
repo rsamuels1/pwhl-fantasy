@@ -29,12 +29,13 @@ function RaceChip({ info }: { info: RaceInfo }) {
 interface Props {
   leagueId: string;
   myTeamId: string | undefined;
+  userId?: string;
 }
 
-export default async function BracketPageContent({ leagueId, myTeamId }: Props) {
+export default async function BracketPageContent({ leagueId, myTeamId, userId }: Props) {
   const league = await prisma.fantasyLeague.findUnique({
     where: { id: leagueId },
-    select: { id: true, name: true, playoffStatus: true, playoffSettings: true },
+    select: { id: true, name: true, playoffStatus: true, playoffSettings: true, commissionerId: true },
   });
   if (!league) notFound();
 
@@ -72,6 +73,30 @@ export default async function BracketPageContent({ leagueId, myTeamId }: Props) 
       ? computeRace(standings.map(s => ({ ...s, points: s.totalVP })), matchups, playoffCutoff, 4)
       : null;
 
+  const isCommissioner = !!(userId && league.commissionerId === userId);
+
+  // Round context for IN_PROGRESS playoffs
+  const currentRound = bracketResult?.bracket?.currentRound ?? null;
+  const totalRounds = bracketResult?.bracket?.rounds?.length ?? null;
+
+  function playoffRoundLabel(round: number, total: number): string {
+    if (round === total) return "Final";
+    if (total - round === 1) return "Semifinals";
+    if (total - round === 2) return "Quarterfinals";
+    return `Round ${round}`;
+  }
+
+  const currentRoundLabel = currentRound !== null && totalRounds !== null
+    ? playoffRoundLabel(currentRound, totalRounds)
+    : null;
+
+  // Is the current round fully scored? (all populated matchups in this round have scores)
+  const currentRoundMatchups = currentRound !== null && bracketResult?.bracket
+    ? bracketResult.bracket.rounds[currentRound - 1] ?? []
+    : [];
+  const currentRoundComplete = currentRoundMatchups.length > 0 &&
+    currentRoundMatchups.every((m) => m.homeScore != null && m.awayScore != null);
+
   const statusLabel =
     league.playoffStatus === "COMPLETE" ? "Complete" :
     hasPlayoffs ? "In Progress" : "Regular Season";
@@ -87,12 +112,42 @@ export default async function BracketPageContent({ leagueId, myTeamId }: Props) 
         <span style={{ fontSize: 12, fontWeight: 700, padding: "3px 10px", borderRadius: 20, background: "var(--border)", color: statusColor }}>
           {statusLabel}
         </span>
+        {league.playoffStatus === "IN_PROGRESS" && currentRoundLabel && (
+          <span style={{ fontSize: 12, fontWeight: 700, padding: "3px 10px", borderRadius: 20, background: "rgba(143,193,232,0.12)", color: "var(--accent-strong)", border: "1px solid rgba(143,193,232,0.25)" }}>
+            {currentRoundComplete ? `${currentRoundLabel} — complete` : currentRoundLabel}
+          </span>
+        )}
       </div>
 
+      {/* Commissioner: advance-round prompt when current round is fully scored */}
+      {isCommissioner && league.playoffStatus === "IN_PROGRESS" && currentRoundComplete && (
+        <div style={{
+          background: "linear-gradient(135deg, rgba(212,175,55,0.10), rgba(212,175,55,0.04))",
+          border: "1px solid rgba(212,175,55,0.30)",
+          borderLeft: "3px solid var(--gold)",
+          borderRadius: 14, padding: "14px 18px",
+          display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap",
+        }}>
+          <div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: "var(--gold)" }}>{currentRoundLabel} is complete</div>
+            <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 2 }}>All matchups are scored. Advance the bracket to set up the next round.</div>
+          </div>
+          <a href={`/league/${leagueId}/season`} style={{
+            fontSize: 12, fontWeight: 700, padding: "7px 16px", borderRadius: 8, flexShrink: 0,
+            background: "rgba(212,175,55,0.18)", color: "var(--gold)",
+            border: "1px solid rgba(212,175,55,0.35)", textDecoration: "none",
+          }}>
+            Advance bracket →
+          </a>
+        </div>
+      )}
+
       {league.playoffStatus === "IN_PROGRESS" && (
-        <div style={{ padding: "14px 18px", borderRadius: 14, marginBottom: 20, background: "rgba(143,193,232,0.08)", border: "1px solid rgba(143,193,232,0.22)", fontSize: 14, color: "#c7d2e0", lineHeight: 1.6 }}>
-          <strong style={{ color: "var(--accent-strong)" }}>Playoffs are here!</strong>{" "}
-          The format changes to head-to-head — your team now faces one opponent each round. Highest score advances.
+        <div style={{ padding: "14px 18px", borderRadius: 14, background: "rgba(143,193,232,0.08)", border: "1px solid rgba(143,193,232,0.22)", fontSize: 14, color: "#c7d2e0", lineHeight: 1.6 }}>
+          {currentRoundLabel === "Final"
+            ? <><strong style={{ color: "var(--accent-strong)" }}>This is the Final.</strong>{" "}One matchup decides the champion. Highest score wins.</>
+            : <><strong style={{ color: "var(--accent-strong)" }}>{currentRoundLabel || "Playoffs are here!"}.</strong>{" "}Head-to-head — one team advances per matchup. Highest score wins.</>
+          }
         </div>
       )}
 

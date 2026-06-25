@@ -847,7 +847,7 @@ function PlayerPanel({
                             <button
                               style={styles.starBtn}
                               onClick={() => queue.includes(p.id) ? removeFromQueue(p.id) : addToQueue(p.id)}
-                              title={queue.includes(p.id) ? "Remove from queue" : "Add to queue"}
+                              title={queue.includes(p.id) ? "Remove from My List" : "Add to My List"}
                             >
                               {queue.includes(p.id)
                                 ? <svg width="16" height="16" viewBox="0 0 24 24" fill="var(--accent-strong)" stroke="var(--accent-strong)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
@@ -891,12 +891,12 @@ function PlayerPanel({
                       )}
                       <span style={{ color: "var(--muted)", fontSize: 11 }} title={p.team ? undefined : "Free agent — not currently on a PWHL roster"}>{p.team ?? "FA"}</span>
                       <div style={{ display: "flex", gap: 4 }}>
-                        <button style={styles.queueBtn} onClick={() => moveInQueue(p.id, -1)} disabled={i === 0} aria-label={`Move ${p.name} up in queue`}>↑</button>
-                        <button style={styles.queueBtn} onClick={() => moveInQueue(p.id, 1)} disabled={i === queuedPlayers.length - 1} aria-label={`Move ${p.name} down in queue`}>↓</button>
+                        <button style={styles.queueBtn} onClick={() => moveInQueue(p.id, -1)} disabled={i === 0} aria-label={`Move ${p.name} up in list`}>↑</button>
+                        <button style={styles.queueBtn} onClick={() => moveInQueue(p.id, 1)} disabled={i === queuedPlayers.length - 1} aria-label={`Move ${p.name} down in list`}>↓</button>
                         {isMyTurn && (
                           <button style={{ ...styles.btnPick, fontSize: 11, padding: "3px 8px" }} onClick={() => onPick(p.id)} aria-label={`Draft ${p.name}`}>Pick</button>
                         )}
-                        <button style={{ ...styles.queueBtn, color: "var(--red)" }} onClick={() => removeFromQueue(p.id)} aria-label={`Remove ${p.name} from queue`}>✕</button>
+                        <button style={{ ...styles.queueBtn, color: "var(--red)" }} onClick={() => removeFromQueue(p.id)} aria-label={`Remove ${p.name} from list`}>✕</button>
                       </div>
                     </div>
                   );
@@ -996,7 +996,7 @@ function DraftRoomContent({
   socket: ReturnType<typeof useDraftSocket>;
   firstWeekStartDate: string | null;
 }) {
-  const { connStatus, draft, available, lastError, start, makePick, listAvailable, setQueue, pause, resume } =
+  const { connStatus, timedOut, draft, available, lastError, start, makePick, listAvailable, setQueue, pause, resume } =
     socket;
 
   const isMobile = useIsMobile(900);

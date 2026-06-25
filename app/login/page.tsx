@@ -133,6 +133,9 @@ export default function LoginPage() {
           ) : (
             <>
               <h2 style={{ margin: "0 0 6px", fontSize: 20, fontWeight: 700 }}>Sign in</h2>
+              <p style={{ color: "var(--faint)", marginTop: 0, marginBottom: 8, fontSize: 13, lineHeight: 1.6 }}>
+                Enter your email and we&apos;ll send you a sign-in link — no password needed.
+              </p>
               <p style={{ color: "var(--faint)", marginTop: 0, marginBottom: 20, fontSize: 13, lineHeight: 1.6 }}>
                 Don&apos;t have an account?{" "}
                 <Link href={registerHref} style={{ color: "var(--accent-strong)", textDecoration: "none", fontWeight: 600 }}>
