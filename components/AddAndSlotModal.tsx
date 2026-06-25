@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import type { FreeAgentRow, RosterPlayerRow } from "@/app/team/[teamId]/roster/RosterManager";
 
 // Mirrors eligibleSlots() from lib/lineup.ts — client-safe, no Prisma dependency
@@ -48,6 +48,19 @@ export default function AddAndSlotModal({
 }: Props) {
   const [slotting, setSlotting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    dialogRef.current?.focus();
+  }, []);
+
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") onComplete();
+    }
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [onComplete]);
 
   // If the roster is full (all slots occupied including bench), show a blocking message.
   const isRosterFull =
@@ -108,12 +121,19 @@ export default function AddAndSlotModal({
       display: "flex", alignItems: "center", justifyContent: "center",
       padding: 16,
     }}>
-      <div style={{
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="add-slot-dialog-title"
+        tabIndex={-1}
+        style={{
         background: "var(--card)",
         border: "1px solid var(--border)",
         borderRadius: 16, padding: 24, maxWidth: 420, width: "100%",
         display: "flex", flexDirection: "column", gap: 16,
         boxShadow: "0 20px 60px rgba(0,0,0,0.5)",
+        outline: "none",
       }}>
         {/* Header */}
         <div>
@@ -125,7 +145,7 @@ export default function AddAndSlotModal({
             }}>
               {player.position[0]}
             </span>
-            <span style={{ fontWeight: 700, fontSize: 16, color: "var(--text)" }}>
+            <span id="add-slot-dialog-title" style={{ fontWeight: 700, fontSize: 16, color: "var(--text)" }}>
               {player.name}
             </span>
           </div>

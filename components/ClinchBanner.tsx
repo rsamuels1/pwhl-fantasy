@@ -20,8 +20,6 @@ export default function ClinchBanner({ leagueId, season, seed, clinchWeek, teamN
     if (!localStorage.getItem(storageKey)) setVisible(true);
   }, [storageKey]);
 
-  if (!visible) return null;
-
   function dismiss() {
     localStorage.setItem(storageKey, "1");
     setVisible(false);
@@ -33,8 +31,16 @@ export default function ClinchBanner({ leagueId, season, seed, clinchWeek, teamN
     return n + (s[(v - 20) % 10] ?? s[v] ?? s[0]);
   };
 
+  const srText = visible
+    ? `Playoff berth clinched. ${teamName} clinched the ${ordinal(seed)} seed in Week ${clinchWeek}.`
+    : "";
+
   return (
-    <div style={{
+    <>
+      <div role="status" aria-live="polite" aria-atomic="true" className="visually-hidden">
+        {srText}
+      </div>
+      {!visible ? null : <div style={{
       background: "linear-gradient(135deg, rgba(212,175,55,.13), rgba(212,175,55,.04))",
       border: "1px solid rgba(212,175,55,0.35)",
       borderRadius: 16, padding: "16px 20px",
@@ -72,6 +78,7 @@ export default function ClinchBanner({ leagueId, season, seed, clinchWeek, teamN
           ✕
         </button>
       </div>
-    </div>
+    </div>}
+    </>
   );
 }

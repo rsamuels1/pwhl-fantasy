@@ -63,7 +63,7 @@ export default async function LeagueLayout({ children, params }: LeagueLayoutPro
         <header style={{ marginBottom: 20 }}>
           <div style={{ display: "flex", flexWrap: "wrap", alignItems: "baseline", justifyContent: "space-between", gap: 12 }}>
             <div style={{ display: "flex", alignItems: "baseline", gap: 12 }}>
-              <Link href="/dashboard" style={{ display: "flex", alignItems: "center", opacity: 0.7, transition: "opacity 0.15s" }}>
+              <Link href="/dashboard" aria-label="PWHL GM — back to dashboard" style={{ display: "flex", alignItems: "center", opacity: 0.7, transition: "opacity 0.15s" }}>
                 <LogoShield size={22} />
               </Link>
               <span style={{ color: "var(--text)", fontSize: 17, fontWeight: 700 }}>{league?.name ?? "League"}</span>
@@ -85,7 +85,7 @@ export default async function LeagueLayout({ children, params }: LeagueLayoutPro
                     border: "1px solid rgba(143,193,232,0.3)",
                   }}
                 >
-                  My Franchise →
+                  My Franchise <span aria-hidden="true">→</span>
                 </Link>
               )}
             </div>
@@ -94,6 +94,7 @@ export default async function LeagueLayout({ children, params }: LeagueLayoutPro
 
 
         <nav
+          aria-label="League navigation"
           style={{
             display: "flex",
             flexWrap: "wrap",
@@ -110,6 +111,7 @@ export default async function LeagueLayout({ children, params }: LeagueLayoutPro
               <Link
                 key={item.href}
                 href={item.href}
+                aria-current={isActive ? "page" : undefined}
                 style={{
                   display: "inline-flex",
                   alignItems: "center",

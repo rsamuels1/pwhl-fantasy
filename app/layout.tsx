@@ -4,6 +4,7 @@ import { headers } from "next/headers";
 import Script from "next/script";
 import "./globals.css";
 import { LogoWordmark } from "@/components/LogoShield";
+import RouteAnnouncer from "@/components/RouteAnnouncer";
 
 export const metadata: Metadata = {
   title: "PWHL GM",
@@ -41,13 +42,15 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         </Script>
       </head>
       <body className="app-shell">
+        <RouteAnnouncer />
+        <a href="#main-content" className="skip-link">Skip to main content</a>
         {!hideNav && (
           <header className="site-header">
             <div className="site-header-inner">
-              <Link href="/" className="site-brand">
+              <Link href="/" className="site-brand" aria-label="PWHL GM — home">
                 <LogoWordmark />
               </Link>
-              <nav className="nav-links">
+              <nav className="nav-links" aria-label="Site navigation">
                 <Link href="/" className="nav-link">Home</Link>
                 <Link href="/leagues" className="nav-link">Leagues</Link>
                 {user && (
@@ -66,7 +69,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             </div>
           </header>
         )}
-        <div className="page-width">
+        <div id="main-content" className="page-width" tabIndex={-1}>
           {children}
         </div>
       </body>

@@ -316,6 +316,14 @@ survives DB resets and schema migrations.
      - **LL-020: Team-scoped Morning Skate routes** ✅ — `app/team/[teamId]/morning-skate/page.tsx` and `[editionId]/page.tsx` redirect to league-scoped equivalents via `requireTeamOwner` + `redirect()`; `MorningSkatePreview` accepts `teamId?` prop and links to team-scoped URL when provided
      - **LL-016: Matchup page Z0 consolidation** ✅ — two conditional `<MorningSkatePreview>` blocks (setup-phase only Z0 + always-on Z2.5) replaced with single unconditional Z0 with `teamId` prop in `app/team/[teamId]/matchup/page.tsx`
      - **LL-016: Commissioner overview reorder** ✅ — left column in `app/league/[leagueId]/page.tsx` now: Morning Skate preview → commissioner action strip → race table; Morning Skate is always the first thing commissioners see
+   - **WCAG 2.2 AA Accessibility Audit — Sprint 37** ✅ (22 items shipped; Jun 25, 2026; no schema changes):
+     - **Utilities** ✅ — `.visually-hidden`, `.skip-link` CSS in `globals.css`; `components/RouteAnnouncer.tsx` SPA navigation announcer; skip-to-main link + `id="main-content"` in `app/layout.tsx`
+     - **Live regions** ✅ — `MilestoneToast`, `ClinchBanner` always-present `role="status" aria-live="polite"` (not conditionally rendered); `LiveScoreRefresh` clear-then-set with `requestAnimationFrame`; `ScoreDisplay` `prefers-reduced-motion` + `aria-hidden` on animated span
+     - **Dialogs** ✅ — `ChampionshipBanner` single `role="dialog"` on card + Escape key; `FeedbackWidget` focus trap + Escape + `aria-pressed`; `AddAndSlotModal` focus on mount + Escape; `InfoTooltip` `role="tooltip"` + Escape
+     - **Forms** ✅ — `CommissionerRecoveryTools` all four sections labeled; login/register/invite error `role="alert"`; `NotificationBell` `aria-expanded`/`aria-haspopup`/`aria-controls` + focus management
+     - **Navigation** ✅ — `TeamNav` + `BottomNav` + league layout nav all get `aria-label` + `aria-current="page"`; all decorative SVGs `aria-hidden="true" focusable="false"`
+     - **Interactive** ✅ — `InlineLineupEditor` `<div onClick>` → `<button aria-pressed>`; `DraftRoom` `role="timer"` + single assertive 10s warning + `role="log"` + on-clock `role="alert"`; `StatChip` emoji `aria-hidden`
+     - **Page titles** ✅ — dashboard + standings get `export const metadata` with descriptive titles
 7. Public launch ~early Nov, drafts ~1 week before opener
 
 ## Draft room UI (`app/draft/[leagueId]/`)

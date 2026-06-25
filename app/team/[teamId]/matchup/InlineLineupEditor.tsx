@@ -119,11 +119,14 @@ export default function InlineLineupEditor({ leagueId, teamId, active, bench }: 
         const isSelected = p.playerId === selectedId;
         const isZero = zeroGameIds.has(p.playerId);
         return (
-          <div
+          <button
             key={p.playerId}
+            type="button"
+            aria-pressed={isSelected}
+            aria-label={`${p.name}, ${SLOT_LABEL[p.slot] ?? p.slot} slot${isZero ? ", no games this period" : ""}${isSelected ? ", selected — pick a bench player to swap" : ""}`}
             onClick={() => !isPending && selectActive(p.playerId)}
             style={{
-              display: "flex", alignItems: "center", gap: 10,
+              display: "flex", alignItems: "center", gap: 10, width: "100%", textAlign: "left",
               padding: "8px 10px", borderRadius: 8, marginBottom: 4, cursor: "pointer",
               background: isSelected
                 ? "rgba(143,193,232,0.15)"
@@ -138,7 +141,7 @@ export default function InlineLineupEditor({ leagueId, teamId, active, bench }: 
               transition: "background 0.1s",
             }}
           >
-            <span style={{
+            <span aria-hidden="true" style={{
               width: 28, height: 28, borderRadius: 6, flexShrink: 0,
               background: `${SLOT_COLOR[p.slot] ?? "var(--faint)"}22`,
               color: SLOT_COLOR[p.slot] ?? "var(--faint)",
@@ -149,10 +152,10 @@ export default function InlineLineupEditor({ leagueId, teamId, active, bench }: 
             </span>
             <span style={{ flex: 1, fontSize: 14, fontWeight: isSelected ? 600 : 400 }}>{p.name}</span>
             {p.teamAbbr && (
-              <span style={{ fontSize: 11, color: "var(--faint)" }}>{p.teamAbbr}</span>
+              <span aria-hidden="true" style={{ fontSize: 11, color: "var(--faint)" }}>{p.teamAbbr}</span>
             )}
             {p.gamesThisPeriod !== null && (
-              <span style={{
+              <span aria-hidden="true" style={{
                 fontSize: 11, fontWeight: 600, padding: "2px 6px", borderRadius: 4,
                 background: p.gamesThisPeriod === 0 ? "rgba(100,116,139,0.15)" : "rgba(143,193,232,0.15)",
                 color: p.gamesThisPeriod === 0 ? "var(--faint)" : "var(--accent-strong)",
@@ -160,7 +163,7 @@ export default function InlineLineupEditor({ leagueId, teamId, active, bench }: 
                 {p.gamesThisPeriod === 0 ? "0 gm" : `${p.gamesThisPeriod} gm`}
               </span>
             )}
-          </div>
+          </button>
         );
       })}
 
@@ -173,11 +176,14 @@ export default function InlineLineupEditor({ leagueId, teamId, active, bench }: 
       {bench.map((p) => {
         const isEligible = selected ? canSwap(selected, p) : false;
         return (
-          <div
+          <button
             key={p.playerId}
+            type="button"
+            disabled={!isEligible || isPending}
+            aria-label={`${p.name}, bench${isEligible ? " — eligible swap target, activate" : ""}`}
             onClick={() => isEligible && !isPending && doSwap(p)}
             style={{
-              display: "flex", alignItems: "center", gap: 10,
+              display: "flex", alignItems: "center", gap: 10, width: "100%", textAlign: "left",
               padding: "8px 10px", borderRadius: 8, marginBottom: 4,
               cursor: isEligible ? "pointer" : "default",
               background: isEligible ? "rgba(143,193,232,0.08)" : "var(--bg-raised)",
@@ -186,7 +192,7 @@ export default function InlineLineupEditor({ leagueId, teamId, active, bench }: 
               transition: "background 0.1s, opacity 0.1s",
             }}
           >
-            <span style={{
+            <span aria-hidden="true" style={{
               width: 28, height: 28, borderRadius: 6, flexShrink: 0,
               background: "rgba(100,116,139,0.15)", color: "var(--faint)",
               display: "flex", alignItems: "center", justifyContent: "center",
@@ -196,10 +202,10 @@ export default function InlineLineupEditor({ leagueId, teamId, active, bench }: 
             </span>
             <span style={{ flex: 1, fontSize: 14 }}>{p.name}</span>
             {p.teamAbbr && (
-              <span style={{ fontSize: 11, color: "var(--faint)" }}>{p.teamAbbr}</span>
+              <span aria-hidden="true" style={{ fontSize: 11, color: "var(--faint)" }}>{p.teamAbbr}</span>
             )}
             {p.gamesThisPeriod !== null && (
-              <span style={{
+              <span aria-hidden="true" style={{
                 fontSize: 11, fontWeight: 600, padding: "2px 6px", borderRadius: 4,
                 background: p.gamesThisPeriod === 0 ? "rgba(100,116,139,0.15)" : "rgba(143,193,232,0.15)",
                 color: p.gamesThisPeriod === 0 ? "var(--faint)" : "var(--accent-strong)",
@@ -208,9 +214,9 @@ export default function InlineLineupEditor({ leagueId, teamId, active, bench }: 
               </span>
             )}
             {isEligible && (
-              <span style={{ fontSize: 11, color: "var(--accent-strong)", fontWeight: 600 }}>Start ↑</span>
+              <span aria-hidden="true" style={{ fontSize: 11, color: "var(--accent-strong)", fontWeight: 600 }}>Start ↑</span>
             )}
-          </div>
+          </button>
         );
       })}
     </div>

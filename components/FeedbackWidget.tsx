@@ -24,8 +24,52 @@ export default function FeedbackWidget({ leagueId }: Props) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [mounted, setMounted] = useState(false);
   const overlayRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => { setMounted(true); }, []);
+
+  // Focus management: move focus into dialog on open, restore on close
+  useEffect(() => {
+    if (open) {
+      closeButtonRef.current?.focus();
+    } else {
+      triggerRef.current?.focus();
+    }
+  }, [open]);
+
+  // Escape closes; Tab traps focus inside dialog
+  useEffect(() => {
+    if (!open) return;
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        setOpen(false);
+        return;
+      }
+      if (e.key === "Tab") {
+        const dialog = overlayRef.current?.querySelector<HTMLElement>('[role="dialog"]');
+        if (!dialog) return;
+        const focusable = Array.from(
+          dialog.querySelectorAll<HTMLElement>(
+            'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])'
+          )
+        );
+        if (focusable.length === 0) return;
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    }
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [open]);
 
   // Auto-close after success
   useEffect(() => {
@@ -88,8 +132,10 @@ export default function FeedbackWidget({ leagueId }: Props) {
     <>
       {/* Trigger button — fixed bottom-right */}
       <button
+        ref={triggerRef}
         onClick={() => setOpen(true)}
         aria-label="Send feedback"
+        aria-haspopup="dialog"
         style={{
           position: "fixed",
           bottom: 80,
@@ -139,10 +185,12 @@ export default function FeedbackWidget({ leagueId }: Props) {
             }}
             role="dialog"
             aria-modal="true"
-            aria-label="Send feedback"
+            aria-labelledby="feedback-dialog-title"
           >
             {/* Close button */}
             <button
+              ref={closeButtonRef}
+              type="button"
               onClick={() => setOpen(false)}
               aria-label="Close feedback form"
               style={{
@@ -161,21 +209,23 @@ export default function FeedbackWidget({ leagueId }: Props) {
               ×
             </button>
 
-            <h2 style={{ margin: "0 0 16px", fontSize: 16, fontWeight: 700, color: "var(--text)" }}>
+            <h2 id="feedback-dialog-title" style={{ margin: "0 0 16px", fontSize: 16, fontWeight: 700, color: "var(--text)" }}>
               Send Feedback
             </h2>
 
             {success ? (
-              <div style={{ textAlign: "center", padding: "24px 0", color: "#22c55e", fontSize: 15, fontWeight: 600 }}>
+              <div role="status" style={{ textAlign: "center", padding: "24px 0", color: "#22c55e", fontSize: 15, fontWeight: 600 }}>
                 Thanks for the feedback!
               </div>
             ) : (
               <>
                 {/* Type selector */}
-                <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
+                <div role="group" aria-label="Feedback type" style={{ display: "flex", gap: 8, marginBottom: 16 }}>
                   {FEEDBACK_TYPES.map((ft) => (
                     <button
                       key={ft.value}
+                      type="button"
+                      aria-pressed={type === ft.value}
                       onClick={() => setType(ft.value)}
                       style={{
                         flex: 1,
@@ -195,7 +245,12 @@ export default function FeedbackWidget({ leagueId }: Props) {
                 </div>
 
                 {/* Textarea */}
+                <label htmlFor="feedback-body" className="visually-hidden">Your feedback</label>
                 <textarea
+                  ref={textareaRef}
+                  id="feedback-body"
+                  aria-describedby={error ? "feedback-error" : "feedback-count"}
+                  aria-invalid={!!error}
                   value={body}
                   onChange={(e) => setBody(e.target.value)}
                   placeholder={
@@ -221,15 +276,16 @@ export default function FeedbackWidget({ leagueId }: Props) {
                     lineHeight: 1.5,
                   }}
                 />
-                <div style={{ fontSize: 11, color: "var(--faint)", textAlign: "right", marginTop: 4 }}>
+                <div id="feedback-count" style={{ fontSize: 11, color: "var(--faint)", textAlign: "right", marginTop: 4 }}>
                   {body.length}/2000
                 </div>
 
                 {error && (
-                  <div style={{ marginTop: 8, fontSize: 13, color: "#f87171" }}>{error}</div>
+                  <div id="feedback-error" role="alert" style={{ marginTop: 8, fontSize: 13, color: "#f87171" }}>{error}</div>
                 )}
 
                 <button
+                  type="button"
                   onClick={handleSubmit}
                   disabled={isSubmitting}
                   style={{

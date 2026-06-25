@@ -30,21 +30,50 @@ export default function NotificationBell({
   const [count, setCount] = useState(initialCount);
   const [notifications, setNotifications] = useState<Notification[] | null>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
 
+  // Close on click-outside or Escape; restore focus on close
   useEffect(() => {
     if (!open) return;
     function handleClickOutside(e: MouseEvent) {
       if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
         setOpen(false);
+        triggerRef.current?.focus();
+      }
+    }
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        setOpen(false);
+        triggerRef.current?.focus();
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [open]);
+
+  // Move focus into panel when opened
+  useEffect(() => {
+    if (open) {
+      const firstFocusable = panelRef.current?.querySelector<HTMLElement>(
+        "a, button, [tabindex]:not([tabindex='-1'])"
+      );
+      if (firstFocusable) {
+        firstFocusable.focus();
+      } else {
+        panelRef.current?.focus();
+      }
+    }
   }, [open]);
 
   const openDropdown = useCallback(async () => {
-    setOpen((prev) => !prev);
-    if (notifications !== null) return;
+    const next = !open;
+    setOpen(next);
+    if (!next || notifications !== null) return;
 
     const res = await fetch(`/api/leagues/${leagueId}/notifications`);
     if (!res.ok) return;
@@ -59,13 +88,19 @@ export default function NotificationBell({
         body: JSON.stringify({ action: "markAllRead" }),
       });
     }
-  }, [leagueId, notifications, count]);
+  }, [leagueId, notifications, count, open]);
+
+  const bellLabel = count > 0 ? `Notifications, ${count} unread` : "Notifications";
 
   return (
     <div ref={wrapperRef} style={{ position: "relative", display: "inline-block" }}>
       <button
+        ref={triggerRef}
         onClick={openDropdown}
-        aria-label="Notifications"
+        aria-label={bellLabel}
+        aria-expanded={open}
+        aria-haspopup="true"
+        aria-controls="notification-panel"
         style={{
           background: "none",
           border: "none",
@@ -75,9 +110,10 @@ export default function NotificationBell({
           color: "var(--dim)",
         }}
       >
-        🔔
+        <span aria-hidden="true">🔔</span>
         {count > 0 && (
           <span
+            aria-hidden="true"
             style={{
               position: "absolute",
               top: 0,
@@ -99,6 +135,11 @@ export default function NotificationBell({
 
       {open && (
         <div
+          id="notification-panel"
+          ref={panelRef}
+          role="region"
+          aria-label="Notifications"
+          tabIndex={-1}
           style={{
             position: "fixed",
             right: "16px",
@@ -110,6 +151,7 @@ export default function NotificationBell({
             zIndex: 9999,
             boxShadow: "0 8px 32px rgba(0,0,0,0.6)",
             overflow: "hidden",
+            outline: "none",
           }}
         >
           <div
@@ -124,7 +166,7 @@ export default function NotificationBell({
             Notifications
           </div>
           {notifications === null ? (
-            <div style={{ padding: "12px 14px", fontSize: "13px", color: "var(--dim)" }}>
+            <div role="status" style={{ padding: "12px 14px", fontSize: "13px", color: "var(--dim)" }}>
               Loading…
             </div>
           ) : notifications.length === 0 ? (
