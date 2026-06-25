@@ -1472,11 +1472,11 @@ Sprint 18 ops tasks (OPS-001/002/003) advance GATE-1, GATE-2, GATE-3 to IN PROGR
 - [ ] DB connection pool: Neon limits tested; Prisma connection pooling configured — pending report detail
 - [ ] Vercel function cold-start behavior validated — pending report detail
 
-**GATE-3: Ops Readiness** · ⚠ CONDITIONAL PASS (OPS-003 — one manual action pending)
+**GATE-3: Ops Readiness** · ✅ PASS
 - [x] `process-waivers` cron verified at 08:00 UTC (03:00 ET) in `vercel.json` ✅
 - [x] `check-incomplete-lineups` confirmed in `vercel.json` + route shipped ✅
 - [x] `CRON_SECRET` guard implemented in both cron routes ✅
-- [ ] `CRON_SECRET` env var **must be set manually in Vercel production dashboard before Jul 7** ⚠
+- [x] `CRON_SECRET` env var confirmed set in Vercel production dashboard (`pwhl-gm-prod`) ✅
 - [ ] Error monitoring / alerting configured (Sentry or equivalent) — P1 post-beta
 - [ ] DB backup policy confirmed for Neon (point-in-time recovery) — manual verification pending
 
