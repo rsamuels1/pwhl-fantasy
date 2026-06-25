@@ -29,8 +29,9 @@ export default function LeagueNav({ leagueId, isCommissioner, playoffStatus, sho
   }, [moreOpen]);
 
   const primaryTabs = [
-    { label: "Standings",  href: `${basePath}/standings`, active: pathname.startsWith(`${basePath}/standings`) },
-    { label: "Scoreboard", href: `${basePath}/matchups`,  active: pathname.startsWith(`${basePath}/matchups`) },
+    { label: "Overview",   href: basePath,                 active: pathname === basePath },
+    { label: "Standings",  href: `${basePath}/standings`,  active: pathname.startsWith(`${basePath}/standings`) },
+    { label: "Scoreboard", href: `${basePath}/matchups`,   active: pathname.startsWith(`${basePath}/matchups`) },
     ...(playoffStatus !== "NOT_STARTED"
       ? [{ label: "Playoffs", href: `${basePath}/bracket`, active: pathname.startsWith(`${basePath}/bracket`) }]
       : []),
