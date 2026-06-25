@@ -151,7 +151,7 @@
 
 Sprint: Backlog (was Sprint 6) | Priority: P2 | Status: ✅ DONE
 
-Core fully implemented: reverse-standings priority, 48h window (`FantasyLeague.waiverWindowHours`), daily cron at `0 8 * * *`, rolling move-to-last reset. Policy documented in `docs/02-engineering/waiver-spec.md`. Post-launch backlog: claim reorder/cancel APIs, per-claim `failureReason` tracking.
+Core fully implemented: reverse-standings priority, 48h window, daily cron at `0 8 * * *`, rolling move-to-last reset. Policy documented in `docs/02-engineering/waiver-spec.md`. Post-launch backlog: claim reorder/cancel APIs, per-claim `failureReason` tracking.
 
 ---
 
@@ -159,7 +159,7 @@ Core fully implemented: reverse-standings priority, 48h window (`FantasyLeague.w
 
 Sprint: Post-Sprint-7 backlog | Priority: P2 | Status: ✅ DONE
 
-Full chain implemented in `computeVpStandings` (`lib/scoring/vp.ts`): VP → Wins → H2H → Points For → deterministic (no random draw needed). Playoff seeding in `lib/services/playoff-service.ts` correctly uses `computeVpStandings`, not a separate sort. Chain documented in an inline comment on the sort comparator (IA-009).
+Full chain implemented in `computeVpStandings` (`lib/scoring/vp.ts`): VP → Wins → H2H → Points For → deterministic (no random draw). Playoff seeding in `lib/services/playoff-service.ts` correctly calls `computeVpStandings`. Chain documented in inline comment.
 
 ---
 
@@ -167,7 +167,7 @@ Full chain implemented in `computeVpStandings` (`lib/scoring/vp.ts`): VP → Win
 
 Sprint: Post-Sprint-7 backlog | Priority: P2 | Status: ✅ DONE
 
-Policy doc: `docs/02-engineering/stat-correction-policy.md`. Windows: regular season ≤7 days after period end; playoffs before `advance-playoff-round` is called; championship locked immediately. Founder re-score endpoint: `POST /api/founder/leagues/[leagueId]/rescore-week` (body `{ week }`), calls `scoreVtfWeek()` idempotently, writes audit `LeagueEvent`. Commissioner self-serve UI deferred post-launch.
+Policy doc: `docs/02-engineering/stat-correction-policy.md`. Founder re-score endpoint: `POST /api/founder/leagues/[leagueId]/rescore-week` (body `{ week }`), calls `scoreVtfWeek()` idempotently, writes audit `LeagueEvent`. Commissioner self-serve UI deferred post-launch.
 
 ---
 
