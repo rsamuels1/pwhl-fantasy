@@ -38,12 +38,17 @@ function TeamNavInner({ teamId, leagueId, playoffStatus, leagueStatus, hasTrophi
     return () => document.removeEventListener("mousedown", handleClick);
   }, [moreOpen]);
 
-  // 5 core tabs; Standings swaps for Playoffs; My Season swaps for Draft Queue
+  // 6 core tabs; Standings swaps for Playoffs; My Season swaps for Draft Queue
   const tabs = [
     {
       label: "Matchup",
       href: `/team/${teamId}/matchup`,
       active: pathname.startsWith(`/team/${teamId}/matchup`),
+    },
+    {
+      label: "Morning Skate",
+      href: `/team/${teamId}/morning-skate`,
+      active: pathname.startsWith(`/team/${teamId}/morning-skate`),
     },
     {
       label: "My Roster",
@@ -92,7 +97,6 @@ function TeamNavInner({ teamId, leagueId, playoffStatus, leagueStatus, hasTrophi
 
   return (
     <nav
-      className="team-nav"
       aria-label="Franchise navigation"
       style={{
         display: "flex",
@@ -100,20 +104,28 @@ function TeamNavInner({ teamId, leagueId, playoffStatus, leagueStatus, hasTrophi
         borderBottom: "1px solid rgba(255,255,255,0.08)",
         marginBottom: 28,
         gap: 0,
+        minWidth: 0,
       }}
     >
-      {tabs.map((tab) => (
-        <Link
-          key={tab.href}
-          href={tab.href}
-          aria-current={tab.active ? "page" : undefined}
-          style={tabStyle(tab.active)}
-        >
-          {tab.label}
-        </Link>
-      ))}
+      {/* Scrollable tab strip — inner div carries overflow-x:auto so the More
+          dropdown (a sibling, not a child) is never clipped */}
+      <div
+        className="team-nav"
+        style={{ display: "flex", flex: "1 1 auto", minWidth: 0, alignItems: "center" }}
+      >
+        {tabs.map((tab) => (
+          <Link
+            key={tab.href}
+            href={tab.href}
+            aria-current={tab.active ? "page" : undefined}
+            style={tabStyle(tab.active)}
+          >
+            {tab.label}
+          </Link>
+        ))}
+      </div>
 
-      {/* More ··· overflow menu */}
+      {/* More ··· overflow menu — outside the scroll container so dropdown isn't clipped */}
       <div ref={moreRef} style={{ position: "relative", flexShrink: 0 }}>
         <button
           onClick={() => setMoreOpen((o) => !o)}

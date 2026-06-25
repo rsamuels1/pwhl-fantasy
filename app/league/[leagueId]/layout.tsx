@@ -1,12 +1,12 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { cookies } from "next/headers";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import BottomNav from "@/components/BottomNav";
 import NotificationBell from "@/components/NotificationBell";
 import FeedbackWidget from "@/components/FeedbackWidget";
 import { LogoShield } from "@/components/LogoShield";
+import LeagueNav from "./LeagueNav";
 
 interface LeagueLayoutProps {
   children: ReactNode;
@@ -41,22 +41,6 @@ export default async function LeagueLayout({ children, params }: LeagueLayoutPro
       : Promise.resolve(0),
   ]);
 
-  const navItems = [
-    { label: "Overview", href: `${basePath}` },
-    { label: "Standings", href: `${basePath}/standings` },
-    { label: "Morning Skate", href: `${basePath}/morning-skate` },
-    { label: "Scoreboard", href: `${basePath}/matchups` },
-    { label: "Playoffs", href: `${basePath}/bracket` },
-    { label: "Records", href: `${basePath}/records` },
-    { label: "Leaders", href: `${basePath}/roster` },
-    { label: "Transactions", href: `${basePath}/transactions` },
-    { label: "How it works", href: `${basePath}/how-it-works` },
-    ...(league?.isReplay && isCommissioner ? [{ label: "Sim →", href: `${basePath}/sim` }] : []),
-  ];
-  const adminItem = isCommissioner
-    ? { label: "⚙ Admin", href: `${basePath}/admin` }
-    : null;
-
   return (
     <div style={{ minHeight: "100vh", background: "var(--bg)", color: "var(--text)" }}>
       <div style={{ maxWidth: 1200, margin: "0 auto", padding: "24px 16px" }}>
@@ -66,7 +50,13 @@ export default async function LeagueLayout({ children, params }: LeagueLayoutPro
               <Link href="/dashboard" aria-label="PWHL GM — back to dashboard" style={{ display: "flex", alignItems: "center", opacity: 0.7, transition: "opacity 0.15s" }}>
                 <LogoShield size={22} />
               </Link>
-              <span style={{ color: "var(--text)", fontSize: 17, fontWeight: 700 }}>{league?.name ?? "League"}</span>
+              {/* League name links back to overview — tap the name to return */}
+              <Link
+                href={basePath}
+                style={{ color: "var(--text)", fontSize: 17, fontWeight: 700, textDecoration: "none" }}
+              >
+                {league?.name ?? "League"}
+              </Link>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               {user && (
@@ -92,70 +82,12 @@ export default async function LeagueLayout({ children, params }: LeagueLayoutPro
           </div>
         </header>
 
-
-        <nav
-          aria-label="League navigation"
-          style={{
-            display: "flex",
-            flexWrap: "wrap",
-            gap: 0,
-            marginBottom: 24,
-            alignItems: "center",
-            borderBottom: "1px solid var(--border)",
-          }}
-        >
-          {navItems.map((item) => {
-            const isActive = item.href === basePath ||
-              (item.href !== basePath && item.href.startsWith(basePath + "/"));
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                aria-current={isActive ? "page" : undefined}
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  padding: "12px 16px",
-                  borderRadius: 0,
-                  background: "transparent",
-                  color: isActive ? "var(--text)" : "var(--faint)",
-                  textDecoration: "none",
-                  fontSize: 13,
-                  fontWeight: isActive ? 600 : 400,
-                  borderBottom: isActive ? "2px solid var(--accent)" : "2px solid transparent",
-                  transition: "color 0.18s ease, border-color 0.18s ease",
-                  marginBottom: "-1px",
-                }}
-              >
-                {item.label}
-              </Link>
-            );
-          })}
-          {adminItem && (
-            <Link
-              href={adminItem.href}
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                justifyContent: "center",
-                padding: "12px 16px",
-                borderRadius: 0,
-                border: "none",
-                borderBottom: "2px solid transparent",
-                color: "var(--faint)",
-                textDecoration: "none",
-                fontSize: 13,
-                fontWeight: 400,
-                marginLeft: "auto",
-                transition: "color 0.18s ease, border-color 0.18s ease",
-                marginBottom: "-1px",
-              }}
-            >
-              {adminItem.label}
-            </Link>
-          )}
-        </nav>
+        <LeagueNav
+          leagueId={leagueId}
+          isCommissioner={isCommissioner}
+          playoffStatus={league?.playoffStatus ?? "NOT_STARTED"}
+          showSim={!!(league?.isReplay && isCommissioner)}
+        />
 
         {league?.betaStatus === "ACTIVE" && (
           <div style={{
