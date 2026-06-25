@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { requireAuth, requireTeamOwner } from "@/lib/auth";
 import { getDevNow } from "@/lib/devTime";
-import { getReplayNow } from "@/lib/replayTime";
+import { getReplayNow, resolveFixturePeriod, type BetaWeekMapping } from "@/lib/replayTime";
 import { getSeasonState } from "@/lib/season";
 import { DEFAULT_SCORING } from "@/lib/scoring";
 import { getWeeklyPerformance } from "@/lib/services/performance-service";
@@ -41,6 +41,11 @@ export default async function SchedulePage({ params }: Props) {
   const nowMs = getReplayNow(leagueInfo, await getDevNow());
   const scoringSettings = parseScoringSettings(leagueInfo.scoringSettings);
 
+  // For beta replay leagues, scoringSettings contains betaWeekMappings that translate
+  // remapped 2026 calendar periods to their actual 2024-25 fixture date windows.
+  const rawSettings = leagueInfo.scoringSettings as Record<string, unknown>;
+  const betaWeekMappings = (rawSettings?.betaWeekMappings as BetaWeekMapping[] | undefined) ?? null;
+
   const seasonState = await getSeasonState(leagueId, nowMs, prisma);
   const activePeriod = seasonState.periods.find((p) => p.status === "ACTIVE")?.period ?? null;
   const upcomingPeriod = seasonState.periods.find((p) => p.status === "UPCOMING")?.period ?? null;
@@ -70,8 +75,10 @@ export default async function SchedulePage({ params }: Props) {
     myPlayersByTeam.set(pwhlTeamId, existing);
   }
 
-  const periodStart = displayPeriod?.startsAt ?? new Date(nowMs);
-  const periodEnd = displayPeriod?.endsAt ?? new Date(nowMs + 14 * 24 * 3600_000);
+  // Resolve fixture period: for beta replay leagues translate remapped 2026 dates to 2024-25 game windows.
+  const fixtureDisplayPeriod = displayPeriod ? resolveFixturePeriod(displayPeriod, betaWeekMappings) : null;
+  const periodStart = fixtureDisplayPeriod?.startsAt ?? new Date(nowMs);
+  const periodEnd = fixtureDisplayPeriod?.endsAt ?? new Date(nowMs + 14 * 24 * 3600_000);
 
   const games = await prisma.game.findMany({
     where: {

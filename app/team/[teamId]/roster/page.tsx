@@ -7,7 +7,7 @@ import type { ScoringSettings } from "@/lib/scoring";
 import { eligibleSlots, lockTime } from "@/lib/lineup";
 import type { RosterSettings } from "@/lib/lineup";
 import { getDevNow } from "@/lib/devTime";
-import { getReplayNow } from "@/lib/replayTime";
+import { getReplayNow, resolveFixturePeriod, type BetaWeekMapping } from "@/lib/replayTime";
 import { getSeasonState } from "@/lib/season";
 import { Position } from "@prisma/client";
 import RosterManager from "./RosterManager";
@@ -149,6 +149,13 @@ export default async function TeamRosterPage({ params, searchParams }: Props) {
   const nextPeriod = seasonState.periods.find((p) => p.status === "UPCOMING")?.period ?? null;
   const projectionPeriod = nextPeriod ?? (periodForGames?.week ? periodForGames : null);
 
+  // For beta replay leagues, translate remapped 2026 calendar periods to 2024-25 fixture windows
+  // so all game-range queries hit actual data rather than returning zero results.
+  const rawLeagueSettings = team.league.scoringSettings as Record<string, unknown>;
+  const betaWeekMappings = (rawLeagueSettings?.betaWeekMappings as BetaWeekMapping[] | undefined) ?? null;
+  const fixturePeriodForGames = periodForGames ? resolveFixturePeriod(periodForGames, betaWeekMappings) : null;
+  const fixtureProjectionPeriod = projectionPeriod ? resolveFixturePeriod(projectionPeriod, betaWeekMappings) : null;
+
   const playerIds = team.roster.map((e) => e.playerId);
   const pwhlTeamIds = [...new Set(team.roster.map((e) => e.player.team?.id).filter((id): id is string => !!id))];
 
@@ -191,10 +198,10 @@ export default async function TeamRosterPage({ params, searchParams }: Props) {
           select: STAT_LINE_SELECT,
         })
       : Promise.resolve([] as RawLine[]),
-    projectionPeriod && pwhlTeamIds.length > 0
+    fixtureProjectionPeriod && pwhlTeamIds.length > 0
       ? prisma.game.findMany({
           where: {
-            startsAt: { gte: projectionPeriod.startsAt, lt: projectionPeriod.endsAt },
+            startsAt: { gte: fixtureProjectionPeriod.startsAt, lt: fixtureProjectionPeriod.endsAt },
             OR: [{ homeTeamId: { in: pwhlTeamIds } }, { awayTeamId: { in: pwhlTeamIds } }],
           },
           select: { homeTeamId: true, awayTeamId: true },
@@ -221,11 +228,11 @@ export default async function TeamRosterPage({ params, searchParams }: Props) {
     thisWeekStatsMap[e.playerId] = buildLineupStats(thisWeekLines as RawLine[], e.playerId, e.player.position, scoring);
   }
 
-  // Games remaining per PWHL team
-  const remainingGameRows = periodForGames && pwhlTeamIds.length > 0
+  // Games remaining per PWHL team — use fixture dates for beta replay leagues
+  const remainingGameRows = fixturePeriodForGames && pwhlTeamIds.length > 0
     ? await prisma.game.findMany({
         where: {
-          startsAt: { gt: now, lt: periodForGames.endsAt },
+          startsAt: { gt: now, lt: fixturePeriodForGames.endsAt },
           OR: [{ homeTeamId: { in: pwhlTeamIds } }, { awayTeamId: { in: pwhlTeamIds } }],
         },
         select: { homeTeamId: true, awayTeamId: true },
@@ -447,10 +454,11 @@ export default async function TeamRosterPage({ params, searchParams }: Props) {
   `;
 
   const faTeamIds = [...new Set(faRows.map((r) => r.pwhlTeamId).filter((id): id is string => !!id))];
-  const faPeriodGames = periodForGames && faTeamIds.length > 0
+  // Use fixture dates for beta replay leagues so FA game counts hit actual data.
+  const faPeriodGames = fixturePeriodForGames && faTeamIds.length > 0
     ? await prisma.game.findMany({
         where: {
-          startsAt: { gte: periodForGames.startsAt, lt: periodForGames.endsAt },
+          startsAt: { gte: fixturePeriodForGames.startsAt, lt: fixturePeriodForGames.endsAt },
           OR: [{ homeTeamId: { in: faTeamIds } }, { awayTeamId: { in: faTeamIds } }],
         },
         select: { homeTeamId: true, awayTeamId: true, startsAt: true },

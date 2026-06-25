@@ -15,7 +15,7 @@ import {
 import { getLeagueActivity } from "./activity";
 import type { ScoringPeriod } from "../scoring/periods";
 import { parseScoringSettings } from "../scoring/settings";
-import { getReplayNow } from "../replayTime";
+import { getReplayNow, resolveFixturePeriod, type BetaWeekMapping } from "../replayTime";
 import { getRoundLabel } from "../playoffs/brackets";
 import { calculatePlayoffRounds } from "../playoffs/lifecycle";
 import { computeVpStandings } from "../scoring/vp";
@@ -244,6 +244,8 @@ export async function getDashboardData(
   });
 
   const nowMs = getReplayNow(league, nowMsArg);
+  const rawSettings = league.scoringSettings as Record<string, unknown>;
+  const betaWeekMappings = (rawSettings?.betaWeekMappings as BetaWeekMapping[] | undefined) ?? null;
   const scoringSettings = parseScoringSettings(league.scoringSettings);
   const scoringMode = league.scoringMode ?? "VTF";
   const isVpMode = scoringMode === "VP";
@@ -311,6 +313,7 @@ export async function getDashboardData(
         lastResult,
         leagueActivity,
         scoringSettings,
+        betaWeekMappings,
         prisma
       );
     }
@@ -345,19 +348,23 @@ export async function getDashboardData(
   } as const;
 
   if (isUpcoming) {
+    // For beta replay leagues, translate the remapped 2026 calendar period to its 2024-25 fixture window
+    // so game-range queries find actual data instead of returning zero results.
+    const fixtureDisplayPeriod = resolveFixturePeriod(displayPeriod, betaWeekMappings);
+
     const [myRoster, myProjected] = await Promise.all([
       prisma.rosterEntry.findMany({
         where: { fantasyTeamId: myTeamId, slot: { notIn: ["BENCH", "IR"] } },
         include: activeRosterInclude,
       }),
-      projectTeamRemainingScore(myTeamId, 0, displayPeriod, scoringSettings, prisma, nowMs),
+      projectTeamRemainingScore(myTeamId, 0, fixtureDisplayPeriod, scoringSettings, prisma, nowMs),
     ]);
 
     const myTeamIds = [...new Set(
       myRoster.map((e) => e.player.team?.id).filter((id): id is string => !!id)
     )];
     const gamesPerTeam = await gamesPerTeamInWindow(
-      myTeamIds, displayPeriod.startsAt, displayPeriod.endsAt, prisma
+      myTeamIds, fixtureDisplayPeriod.startsAt, fixtureDisplayPeriod.endsAt, prisma
     );
 
     const toRow = (e: (typeof myRoster)[number]): PlayerMatchupRow => ({
@@ -457,8 +464,11 @@ export async function getDashboardData(
     }
   }
 
+  // For beta replay leagues, translate the remapped 2026 calendar period to its 2024-25 fixture window.
+  const fixtureDisplayPeriod = resolveFixturePeriod(displayPeriod, betaWeekMappings);
+
   const myProjected = await projectTeamRemainingScore(
-    myTeamId, myScore, displayPeriod, scoringSettings, prisma, nowMs
+    myTeamId, myScore, fixtureDisplayPeriod, scoringSettings, prisma, nowMs
   );
 
   // Load opponent roster for VP mode
@@ -480,7 +490,7 @@ export async function getDashboardData(
           where: { fantasyTeamId: opponentTeamId, slot: { notIn: ["BENCH", "IR"] } },
           include: activeRosterInclude2,
         }),
-        projectTeamRemainingScore(opponentTeamId, opponentScore, displayPeriod, scoringSettings, prisma, nowMs),
+        projectTeamRemainingScore(opponentTeamId, opponentScore, fixtureDisplayPeriod, scoringSettings, prisma, nowMs),
       ])
     : [[], 0] as const;
 
@@ -490,8 +500,8 @@ export async function getDashboardData(
   ].filter((id): id is string => !!id))];
 
   const [gamesPerTeam, gamesPlayedPerTeam] = await Promise.all([
-    gamesPerTeamInWindow(allTeamIds, new Date(nowMs), displayPeriod.endsAt, prisma, { exclusiveStart: true }),
-    gamesPerTeamInWindow(allTeamIds, displayPeriod.startsAt, new Date(nowMs), prisma),
+    gamesPerTeamInWindow(allTeamIds, new Date(nowMs), fixtureDisplayPeriod.endsAt, prisma, { exclusiveStart: true }),
+    gamesPerTeamInWindow(allTeamIds, fixtureDisplayPeriod.startsAt, new Date(nowMs), prisma),
   ]);
 
   const topPerformers = computeTopPerformers(myDetailed.players, 0);
@@ -661,6 +671,7 @@ async function getPlayoffDashboardData(
   lastResult: WeeklyRecap | null,
   leagueActivity: ActivityEvent[],
   scoringSettings: ScoringSettings,
+  betaWeekMappings: BetaWeekMapping[] | null,
   prisma: PrismaClient
 ): Promise<DashboardData> {
   const empty: DashboardData = {
@@ -826,6 +837,8 @@ async function getPlayoffDashboardData(
     startsAt: myMatchup.startsAt,
     endsAt: myMatchup.endsAt,
   };
+  // For beta replay leagues, translate the remapped period to its 2024-25 fixture window.
+  const fixturePeriod = resolveFixturePeriod(period, betaWeekMappings);
 
   const status = nowMs < myMatchup.startsAt.getTime() ? "upcoming" : "active";
 
@@ -871,8 +884,8 @@ async function getPlayoffDashboardData(
   ];
 
   const [gamesPerTeam, gamesPlayedPerTeam] = await Promise.all([
-    gamesPerTeamInWindow(allTeamIds, new Date(nowMs), period.endsAt, prisma, { exclusiveStart: true }),
-    gamesPerTeamInWindow(allTeamIds, period.startsAt, new Date(nowMs), prisma),
+    gamesPerTeamInWindow(allTeamIds, new Date(nowMs), fixturePeriod.endsAt, prisma, { exclusiveStart: true }),
+    gamesPerTeamInWindow(allTeamIds, fixturePeriod.startsAt, new Date(nowMs), prisma),
   ]);
 
   const myPlayers = buildPlayerRows(myDetailed.players, gamesPerTeam);
@@ -886,8 +899,8 @@ async function getPlayoffDashboardData(
   const remainingPlayers = await getRemainingPlayersTonight(myTeamId, scoringSettings, prisma, nowMs);
 
   // Win probability
-  const myProjected = await projectTeamRemainingScore(myTeamId, myScore, period, scoringSettings, prisma, nowMs);
-  const opponentProjected = await projectTeamRemainingScore(opponentTeamId, opponentScore, period, scoringSettings, prisma, nowMs);
+  const myProjected = await projectTeamRemainingScore(myTeamId, myScore, fixturePeriod, scoringSettings, prisma, nowMs);
+  const opponentProjected = await projectTeamRemainingScore(opponentTeamId, opponentScore, fixturePeriod, scoringSettings, prisma, nowMs);
   const { winProbability } = await import("../projections");
   const winProb = winProbability(myProjected, opponentProjected);
 
