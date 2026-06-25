@@ -27,7 +27,6 @@ You need a local PostgreSQL database (or a hosted one). Point `DATABASE_URL` at 
 
 ```
 .
-├── CLAUDE.md                 # READ FIRST — project context, constraints, build order
 ├── prisma/
 │   ├── schema.prisma         # database schema (league data + fantasy data)
 │   └── seed/seed.ts          # mock StatsSource + DB seeding
