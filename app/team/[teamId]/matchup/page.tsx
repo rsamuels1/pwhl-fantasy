@@ -415,7 +415,7 @@ export default async function TeamMatchupPage({
           const activeStarters = activeMatchup.myPlayers.filter(
             (p) => p.slot !== "BENCH" && p.slot !== "IR"
           );
-          if (activeStarters.length === 0) return null;
+          if (activeStarters.length < activeSlotCount) return null;
           return (
             <div style={{
               background: "linear-gradient(135deg, rgba(81,216,138,0.07), rgba(81,216,138,0.03))",
@@ -440,7 +440,7 @@ export default async function TeamMatchupPage({
       )}
 
       {/* ── 1a. Between-weeks lineup nudge ── */}
-      {activeMatchup?.status === "upcoming" && (activeMatchup.myPlayers.length < activeSlotCount) && (
+      {activeMatchup?.status === "upcoming" && (activeMatchup.myPlayers.filter(p => p.slot !== "BENCH" && p.slot !== "IR").length < activeSlotCount) && (
         <div style={{
           background: "rgba(245,201,123,0.08)",
           border: "1px solid rgba(245,201,123,0.30)",
