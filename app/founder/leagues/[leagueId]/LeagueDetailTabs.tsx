@@ -633,8 +633,8 @@ export function LeagueDetailTabs({ leagueId, league, standings, seasonState, dra
                               </div>
                             )}
                             {result && (
-                              <div style={{ marginTop: "0.25rem", fontFamily: "monospace", fontSize: "0.72rem", color: "#22c55e", wordBreak: "break-all" }}>
-                                Invite: {typeof window !== "undefined" ? window.location.origin : ""}{result}
+                              <div style={{ marginTop: "0.25rem", fontSize: "0.72rem", color: "#22c55e" }}>
+                                ✓ Invite email sent
                               </div>
                             )}
                             {err && (

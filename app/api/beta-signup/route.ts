@@ -3,7 +3,25 @@ import { prisma } from "@/lib/db";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+// 5 attempts per IP per 10 minutes
+const LIMIT = 5;
+const WINDOW_MS = 10 * 60 * 1000;
+const attempts = new Map<string, number[]>();
+
+function isRateLimited(ip: string): boolean {
+  const now = Date.now();
+  const hits = (attempts.get(ip) ?? []).filter((t) => now - t < WINDOW_MS);
+  hits.push(now);
+  attempts.set(ip, hits);
+  return hits.length > LIMIT;
+}
+
 export async function POST(req: NextRequest) {
+  const ip = req.headers.get("x-forwarded-for")?.split(",")[0].trim() ?? "unknown";
+  if (isRateLimited(ip)) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  }
+
   let body: unknown;
   try {
     body = await req.json();
