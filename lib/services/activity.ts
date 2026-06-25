@@ -90,13 +90,18 @@ export async function getTransactions(
   if (teamId) where.teamId = teamId;
   if (type) where.type = { in: type.split(",") };
 
+  // Only apply a createdAt upper bound for non-replay leagues using dev sim date.
+  // Replay leagues have replayCurrentDate in 2024-25 fixture time but LeagueEvent.createdAt
+  // is real-world June 2026 time — applying the replay date as a bound would hide all events.
   let ltBound: Date | null = null;
   if (before) ltBound = new Date(before);
-  if (isReplay && nowMs) {
-    const replayBound = new Date(nowMs);
-    ltBound = ltBound
-      ? new Date(Math.min(ltBound.getTime(), replayBound.getTime()))
-      : replayBound;
+  if (!isReplay && nowMs) {
+    const devBound = new Date(nowMs);
+    if (devBound.getTime() < Date.now() - 60_000) {
+      ltBound = ltBound
+        ? new Date(Math.min(ltBound.getTime(), devBound.getTime()))
+        : devBound;
+    }
   }
   if (ltBound) where.createdAt = { lt: ltBound };
 
