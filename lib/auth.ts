@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { redirect, notFound } from "next/navigation";
 import { NextRequest, NextResponse } from "next/server";
+import crypto from "node:crypto";
 import { prisma } from "@/lib/db";
 import type { User, FantasyTeam, FantasyLeague } from "@prisma/client";
 
@@ -185,4 +186,23 @@ export async function apiRequireFounder(
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
   return auth;
+}
+
+// ── Magic link token generation ───────────────────────────────────────────────
+
+/**
+ * Generates a secure magic link token.
+ * rawToken: sent in the email URL (never stored)
+ * tokenHash: SHA-256 of rawToken, stored in DB
+ * expiresAt: 15 minutes from now
+ */
+export function generateMagicLinkToken(): {
+  rawToken: string;
+  tokenHash: string;
+  expiresAt: Date;
+} {
+  const rawToken = crypto.randomBytes(32).toString("hex");
+  const tokenHash = crypto.createHash("sha256").update(rawToken).digest("hex");
+  const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 min
+  return { rawToken, tokenHash, expiresAt };
 }

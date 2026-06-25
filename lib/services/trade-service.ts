@@ -16,6 +16,7 @@ import {
   type TradableRosterEntry,
 } from "@/lib/trades/engine";
 import { createNotification } from "@/lib/services/notification-service";
+import { sendTradeReceived } from "@/lib/services/email-service";
 import { emitEvent } from "@/lib/services/activity";
 import { trackEvent } from "@/lib/analytics";
 import type { RosterSettings } from "@/lib/lineup";
@@ -709,7 +710,7 @@ async function notifyReceiver(
   tradeId: string,
   leagueId: string,
   receiverTeamId: string,
-  _senderTeamId: string,
+  senderTeamId: string,
   reason: "received" | "counter",
   prisma: PrismaClient
 ): Promise<void> {
@@ -722,6 +723,28 @@ async function notifyReceiver(
     teamId: receiverTeamId,
     actionUrl: `/league/${leagueId}/trades/${tradeId}`,
   });
+
+  // Fire-and-forget email when real email is enabled
+  if (process.env.EMAIL_RESEND_ENABLED === "true") {
+    void (async () => {
+      try {
+        const [receiver, senderTeam, league] = await Promise.all([
+          prisma.user.findUnique({ where: { id: ownerId }, select: { email: true, displayName: true } }),
+          prisma.fantasyTeam.findUnique({ where: { id: senderTeamId }, select: { name: true } }),
+          prisma.fantasyLeague.findUnique({ where: { id: leagueId }, select: { name: true } }),
+        ]);
+        if (receiver && senderTeam && league) {
+          await sendTradeReceived(
+            receiver.email,
+            receiver.displayName,
+            senderTeam.name,
+            league.name,
+            `/league/${leagueId}/trades/${tradeId}`
+          );
+        }
+      } catch {}
+    })();
+  }
 }
 
 async function notifyProposer(
