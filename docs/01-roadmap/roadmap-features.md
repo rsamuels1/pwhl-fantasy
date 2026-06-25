@@ -1623,7 +1623,7 @@ Depends On: `CHAMPIONSHIP_WON` NotificationType, `advance-playoff-round` route, 
 
 ## LL-016. League Hub — Homepage Reorganization
 
-Sprint: 27 | Priority: P1 | Effort: M | Status: ✅ DONE (Sprint 27 — partial; Records teaser + Trophy leaderboard shipped; full hub assembly deferred pending LL-013 Morning Skate)
+Sprint: 31 | Priority: P1 | Effort: M | Status: ✅ DONE (Sprint 27 partial → Sprint 31 complete)
 
 Goal: Assemble all Living League systems into a coherent "arena concourse" experience.
 
@@ -1638,11 +1638,9 @@ Depends On: all LL-001 through LL-015
 
 ## LL-020. Newcomer-Mode Morning Skate Reading Layer
 
-Sprint: 26 | Priority: P1 | Effort: M | Status: PLANNED
+Sprint: 31 | Priority: P1 | Effort: M | Status: ✅ DONE (Sprint 31)
 
-Goal: Morning Skate readable for fans who don't speak fantasy shorthand. Headlines lead with PWHL player/team names; acronyms (FP, VP, PPP) expanded inline or wrapped in tap-to-define spans from the LL-017 glossary map. Each edition includes a plain-English "What happened this week" lede. "New here?" link in masthead. No schema change.
-
-Depends On: LL-013, LL-017 (`lib/copy/living-league-glossary.ts`)
+FP/VP/PPP expanded inline on first use per edition via `expand()` helper in `generateEdition()`; "New here? How it works →" link in edition masthead via `EditionData.newHereUrl`; `MorningSkatePreview` accepts `teamId?` prop and links into `/team/[teamId]/morning-skate/[editionId]`; team-scoped redirect routes at `app/team/[teamId]/morning-skate/` → league-scoped equivalents. No schema change.
 
 ---
 

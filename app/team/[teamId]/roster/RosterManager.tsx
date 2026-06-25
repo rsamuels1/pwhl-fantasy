@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useMemo } from "react";
+import { useState, useTransition, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import AddAndSlotModal from "@/components/AddAndSlotModal";
 import WaiverWirePanel from "@/components/WaiverWirePanel";
@@ -97,6 +97,9 @@ export default function RosterManager({
   const [tab, setTab] = useState<Tab>(resolvedDefault);
   const [viewMode, setViewMode] = useState<ViewMode>("table");
   const [roster, setRoster] = useState<RosterPlayerRow[]>(initialRoster);
+  // Sync with server data after router.refresh() delivers new props. Without this,
+  // isFull is stale: after add (12→13) the next add sees isFull=false and fires without a drop.
+  useEffect(() => { setRoster(initialRoster); }, [initialRoster]);
   const [posFilter, setPosFilter] = useState<Position | "ALL">("ALL");
   const [search, setSearch] = useState("");
 

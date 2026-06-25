@@ -1786,6 +1786,43 @@ Goal: Close the most impactful beta feedback bugs — silent trade notifications
 
 ---
 
+## Sprint 30 — "Track A Bug Sweep" · ✅ COMPLETE · Jun 24, 2026 · Track V · P1
+
+Goal: Eliminate the two lingering Track A bugs: BF-012 (false "Roster is full" error after a successful add+drop) and BF-013 (pre-season trades incorrectly blocked).
+
+**All items shipped:**
+
+| Story | Track | Size | Priority | Status |
+|---|---|---|---|---|
+| BF-012 — FA add stale-state fix: added `useEffect(() => { setRoster(initialRoster); }, [initialRoster])` to `RosterManager.tsx`; without it `isFull` was stale after `router.refresh()` | Bug | S | P1 | ✅ DONE |
+| BF-013 — Pre-season trades verified fixed: fix shipped Sprint 18 (`league.playoffStatus !== "NOT_STARTED"` guard in `proposeTrade`); roadmap docs updated to reflect DONE status | Bug | S | P1 | ✅ DONE (verified) |
+
+**No schema changes in this sprint.**
+
+**Result: 2/2 Sprint 30 items shipped.**
+
+---
+
+## Sprint 31 — "Track B: Morning Skate Newcomer Mode + Hub Reorg" · ✅ COMPLETE · Jun 24, 2026 · Track B · P1
+
+Goal: Make the Morning Skate newsletter readable for fans who don't know fantasy shorthand (LL-020) and complete the hub reorganization that LL-016 partially shipped in Sprint 27 — Morning Skate at Z0 on the matchup page and commissioner overview reordered.
+
+**All items shipped:**
+
+| Story | Track | Size | Priority | Status |
+|---|---|---|---|---|
+| LL-020 — Inline acronym expansion: `expand()` helper in `generateEdition()` rewrites FP/VP/PPP on first use per edition; "New here? How it works →" link via `EditionData.newHereUrl` in edition masthead | Feature | M | P1 | ✅ DONE |
+| LL-020 — Team-scoped redirect routes: `app/team/[teamId]/morning-skate/page.tsx` and `[editionId]/page.tsx` redirect to league-scoped equivalents via `requireTeamOwner` + `redirect()` | Feature | S | P1 | ✅ DONE |
+| LL-020 — MorningSkatePreview teamId prop: `MorningSkatePreview` accepts `teamId?`; links to `/team/[teamId]/morning-skate/[editionId]` when provided | Feature | S | P1 | ✅ DONE |
+| LL-016 — Matchup page Z0 consolidation: two conditional `<MorningSkatePreview>` blocks (setup-phase Z0 + Z2.5) replaced with single unconditional Z0 with `teamId` prop | Feature | S | P1 | ✅ DONE |
+| LL-016 — Commissioner overview reorder: left column order is now Morning Skate → commissioner strip → race table (Morning Skate visible first on every page load) | Feature | S | P1 | ✅ DONE |
+
+**No schema changes in this sprint.**
+
+**Result: 5/5 Sprint 31 items shipped.**
+
+---
+
 ## Beyond MVP
 
 - **Q4 2026 (in-season):** Waivers → FAAB; engagement surfaces (#25 analysis, #29 performance dashboard, #30 playoff UX) while the first live season runs. Trade System shipped Sprint 7.
