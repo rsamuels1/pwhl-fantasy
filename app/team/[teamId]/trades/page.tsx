@@ -55,10 +55,14 @@ export default async function TeamTradesPage({ params, searchParams }: Props) {
     league.status !== "COMPLETE";
 
   const incomingTrades = myTrades.filter(
-    (t) => t.receivingTeamId === teamId && (t.status === "PROPOSED" || t.status === "ACCEPTED")
+    (t) =>
+      t.receivingTeamId === teamId &&
+      (t.status === "PROPOSED" || t.status === "ACCEPTED" || t.status === "PENDING_REVIEW")
   );
   const sentTrades = myTrades.filter(
-    (t) => t.proposingTeamId === teamId && (t.status === "PROPOSED" || t.status === "COUNTERED")
+    (t) =>
+      t.proposingTeamId === teamId &&
+      (t.status === "PROPOSED" || t.status === "COUNTERED" || t.status === "PENDING_REVIEW")
   );
 
   // Commissioner sees pending review from their team perspective too
