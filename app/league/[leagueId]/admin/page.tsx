@@ -17,6 +17,8 @@ import TradeSettingsForm from "@/components/TradeSettingsForm";
 import NegativeAwardsToggle from "@/components/NegativeAwardsToggle";
 import PendingTradeReviewList from "@/components/PendingTradeReviewList";
 import CommissionerInviteForm from "@/components/CommissionerInviteForm";
+import { SettingsEditor } from "@/app/league/[leagueId]/settings/SettingsEditor";
+import { parseScoringSettings } from "@/lib/scoring/settings";
 
 const COMMISSIONER_EVENT_TYPES = [
   "COMMISSIONER_FORCE_MOVE",
@@ -30,7 +32,7 @@ const COMMISSIONER_EVENT_TYPES = [
 
 interface Props {
   params: Promise<{ leagueId: string }>;
-  searchParams?: Promise<{ welcome?: string; renewed?: string }>;
+  searchParams?: Promise<{ welcome?: string; renewed?: string; tab?: string }>;
 }
 
 export default async function AdminPage({ params, searchParams }: Props) {
@@ -38,6 +40,8 @@ export default async function AdminPage({ params, searchParams }: Props) {
   const sp = searchParams ? await searchParams : {};
   const isWelcome = sp.welcome === "1";
   const isRenewed = sp.renewed === "1";
+  const activeTab = sp.tab === "rules" ? "rules" : "manage";
+
   const user = await requireAuth(`/league/${leagueId}/admin`);
   await requireCommissioner(leagueId, user.id);
 
@@ -109,6 +113,32 @@ export default async function AdminPage({ params, searchParams }: Props) {
   const state = await getSeasonState(leagueId, nowMs, prisma);
   const isDev = process.env.NODE_ENV !== "production" || league.isReplay;
 
+  // Parse settings for the Rules tab
+  const scoring = parseScoringSettings(league.scoringSettings);
+  const rawRoster = (league.rosterSettings ?? {}) as Record<string, number>;
+  const rawPlayoff = (league.playoffSettings ?? {}) as {
+    teamsInPlayoff?: number;
+    topSeedsWithBye?: number;
+    roundDurationPeriods?: number;
+    higherSeedWinsTies?: boolean;
+  };
+
+  const initialRoster = {
+    forward: rawRoster.forward ?? 3,
+    defense: rawRoster.defense ?? 2,
+    goalie: rawRoster.goalie ?? 1,
+    util: rawRoster.util ?? 1,
+    bench: rawRoster.bench ?? 6,
+    ir: rawRoster.ir ?? 0,
+  };
+
+  const initialPlayoff = {
+    teamsInPlayoff: rawPlayoff.teamsInPlayoff ?? 4,
+    topSeedsWithBye: rawPlayoff.topSeedsWithBye ?? 0,
+    roundDurationPeriods: rawPlayoff.roundDurationPeriods ?? 1,
+    higherSeedWinsTies: rawPlayoff.higherSeedWinsTies ?? true,
+  };
+
   // Derive setup checklist state
   const hasEnoughTeams = league.teams.length >= 2;
   const draftReady = hasEnoughTeams && !!league.draft;
@@ -118,7 +148,7 @@ export default async function AdminPage({ params, searchParams }: Props) {
   const checklistSteps: { label: string; detail: string; done: boolean }[] = [
     {
       label: "League created",
-      detail: `"${league.name}" · Season ${league.season}${league.isReplay ? " · ⏪ Replay" : ""}`,
+      detail: `"${league.name}" · Season ${league.season}${league.isReplay ? " · Replay" : ""}`,
       done: true,
     },
     {
@@ -159,14 +189,28 @@ export default async function AdminPage({ params, searchParams }: Props) {
   // Determine the "next action" step to highlight
   const nextStepIdx = checklistSteps.findIndex((s) => !s.done);
 
+  const tabLinkStyle = (active: boolean): React.CSSProperties => ({
+    padding: "10px 18px",
+    fontSize: 13,
+    fontWeight: active ? 700 : 400,
+    color: active ? "var(--text)" : "var(--faint)",
+    textDecoration: "none",
+    borderBottom: active ? "2px solid var(--accent)" : "2px solid transparent",
+    marginBottom: -1,
+    whiteSpace: "nowrap" as const,
+    display: "inline-block",
+    transition: "color 0.15s",
+  });
+
   return (
     <div style={{ display: "grid", gap: 24 }}>
+      {/* ── Page heading ── */}
       <div>
-        <h1 style={{ fontSize: 28, marginBottom: 6 }}>League setup</h1>
-        <p style={{ color: "var(--dim)" }}>{league.name} · Commissioner controls</p>
+        <h1 style={{ fontSize: 28, marginBottom: 6 }}>Commissioner HQ</h1>
+        <p style={{ color: "var(--dim)" }}>{league.name}</p>
       </div>
 
-      {/* ── Renewed banner ── */}
+      {/* ── Always-visible banners ── */}
       {isRenewed && (
         <div style={{
           padding: "16px 20px", borderRadius: 16,
@@ -175,7 +219,7 @@ export default async function AdminPage({ params, searchParams }: Props) {
           display: "grid", gap: 12,
         }}>
           <p style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "var(--accent-strong)" }}>
-            ✓ New season created!
+            New season created!
           </p>
           <p style={{ margin: 0, fontSize: 13, color: "var(--faint)" }}>
             Set up the draft to get ready for the next season. Invite returning managers to re-join — they need a new link for this league.
@@ -189,7 +233,6 @@ export default async function AdminPage({ params, searchParams }: Props) {
         </div>
       )}
 
-      {/* ── Welcome banner ── */}
       {isWelcome && (
         <div style={{
           padding: "16px 20px", borderRadius: 16,
@@ -197,7 +240,7 @@ export default async function AdminPage({ params, searchParams }: Props) {
           border: "1px solid rgba(52,211,153,0.2)",
         }}>
           <p style={{ margin: "0 0 4px", fontSize: 16, fontWeight: 700, color: "#34d399" }}>
-            ✓ League created!
+            League created!
           </p>
           <p style={{ margin: 0, fontSize: 13, color: "var(--faint)" }}>
             Follow the checklist below to get ready for draft day. Start by inviting your managers.
@@ -205,7 +248,6 @@ export default async function AdminPage({ params, searchParams }: Props) {
         </div>
       )}
 
-      {/* ── Draft paused notice ── */}
       {isDraftPaused && (
         <div style={{
           padding: "14px 20px", borderRadius: 16,
@@ -214,448 +256,449 @@ export default async function AdminPage({ params, searchParams }: Props) {
           display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap",
         }}>
           <p style={{ margin: 0, fontSize: 14, color: "#fbbf24", fontWeight: 600 }}>
-            ⏸ Draft is currently PAUSED
+            Draft is currently PAUSED
           </p>
           <Link href={`/draft/${leagueId}`} style={{
             color: "var(--accent-strong)", fontSize: 13, fontWeight: 600,
             background: "rgba(143,193,232,0.1)", padding: "6px 12px", borderRadius: 8,
             textDecoration: "none",
           }}>
-            Go to draft room →
+            Go to draft room
           </Link>
         </div>
       )}
 
-      {/* ── Setup checklist — hide once all steps are done ── */}
-      {completedCount < checklistSteps.length && <section style={panelStyle}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16, flexWrap: "wrap", gap: 8 }}>
-          <h2 style={{ fontSize: 18, margin: 0 }}>Setup checklist</h2>
-          <span style={{ fontSize: 13, color: progressPct === 100 ? "#34d399" : "var(--dim)", fontWeight: 600 }}>
-            {completedCount}/{checklistSteps.length} complete
+      {/* ── Pending trades attention strip (always visible, above tabs) ── */}
+      {pendingTrades.length > 0 && (
+        <div style={{
+          padding: "12px 18px", borderRadius: 12,
+          background: "rgba(251,191,36,0.07)",
+          border: "1px solid rgba(251,191,36,0.25)",
+          display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12,
+        }}>
+          <span style={{ fontSize: 14, fontWeight: 600, color: "#fbbf24" }}>
+            {pendingTrades.length} trade{pendingTrades.length !== 1 ? "s" : ""} need{pendingTrades.length === 1 ? "s" : ""} your review
           </span>
+          <Link
+            href={`/league/${leagueId}/admin?tab=manage#pending-trades`}
+            style={{ color: "var(--accent-strong)", fontSize: 13, fontWeight: 600, textDecoration: "none" }}
+          >
+            Review trades
+          </Link>
         </div>
-
-        {/* Progress bar */}
-        <div style={{ height: 6, borderRadius: 3, background: "var(--bg-raised)", marginBottom: 20, overflow: "hidden" }}>
-          <div style={{
-            height: "100%", borderRadius: 3,
-            width: `${progressPct}%`,
-            background: progressPct === 100 ? "#34d399" : "linear-gradient(90deg, var(--accent), var(--accent-strong))",
-            transition: "width 0.4s ease",
-          }} />
-        </div>
-
-        <div style={{ display: "grid", gap: 10 }}>
-          {checklistSteps.map((step, i) => {
-            const isNext = i === nextStepIdx;
-            return (
-              <div key={step.label} style={{
-                display: "flex", alignItems: "flex-start", gap: 12,
-                padding: "12px 14px", borderRadius: 12,
-                background: isNext
-                  ? "rgba(143,193,232,0.07)"
-                  : "var(--bg-raised)",
-                border: `1px solid ${isNext
-                  ? "rgba(143,193,232,0.2)"
-                  : "var(--border)"}`,
-              }}>
-                <div style={{
-                  width: 22, height: 22, borderRadius: "50%", flexShrink: 0,
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  fontSize: 12, fontWeight: 700,
-                  background: step.done
-                    ? "rgba(52,211,153,0.15)"
-                    : isNext
-                    ? "rgba(143,193,232,0.15)"
-                    : "var(--surface)",
-                  color: step.done ? "#34d399" : isNext ? "var(--accent-strong)" : "var(--faint)",
-                  border: `1.5px solid ${step.done ? "#34d399" : isNext ? "var(--accent)" : "var(--border)"}`,
-                  marginTop: 1,
-                }}>
-                  {step.done ? "✓" : i + 1}
-                </div>
-                <div>
-                  <div style={{
-                    fontSize: 14, fontWeight: 600,
-                    color: step.done ? "var(--dim)" : "var(--text)",
-                    textDecoration: step.done ? "line-through" : "none",
-                  }}>
-                    {step.label}
-                  </div>
-                  <div style={{ fontSize: 12, color: "var(--faint)", marginTop: 2 }}>{step.detail}</div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </section>}
-
-      {/* ── Invite link ── */}
-      {!draftDone && (
-        <section style={panelStyle}>
-          <h2 style={{ fontSize: 18, marginBottom: 8 }}>Invite managers</h2>
-          <p style={{ color: "var(--dim)", fontSize: 14, marginBottom: 16 }}>
-            Share this link. Anyone who opens it sees your league and can join in one step —
-            no league ID needed.
-          </p>
-          <InviteLinkButton leagueId={leagueId} />
-          <p style={{ marginTop: 12, fontSize: 12, color: "var(--faint)" }}>
-            {league.teams.length}/{league.maxTeams} spots filled
-            {league.maxTeams - league.teams.length > 0
-              ? ` · ${league.maxTeams - league.teams.length} remaining`
-              : " · league full"}
-          </p>
-          <div style={{ marginTop: 20, paddingTop: 16, borderTop: "1px solid var(--border)" }}>
-            <p style={{ fontSize: 13, fontWeight: 600, color: "var(--text)", marginBottom: 8 }}>
-              Or invite by email
-            </p>
-            <CommissionerInviteForm leagueId={leagueId} />
-          </div>
-        </section>
       )}
 
-      {/* ── Teams ── */}
-      <section style={panelStyle}>
-        <h2 style={{ fontSize: 18, marginBottom: 16 }}>
-          Teams ({league.teams.length}/{league.maxTeams})
-        </h2>
-        {league.teams.length > 0 ? (
-          <div style={{ display: "grid", gap: 8, marginBottom: 20 }}>
-            {league.teams.map((t) => (
-              <div key={t.id} style={rowStyle}>
-                <span style={{ fontWeight: 600 }}>{t.name}</span>
-                <span style={{ color: "var(--faint)", fontSize: 13 }}>
-                  #{t.draftOrder ?? "—"} draft order
+      {/* ── Tab bar ── */}
+      <div style={{ borderBottom: "1px solid var(--border)", marginBottom: 4 }}>
+        <Link href={`/league/${leagueId}/admin?tab=manage`} style={tabLinkStyle(activeTab === "manage")}>
+          Manage
+        </Link>
+        <Link href={`/league/${leagueId}/admin?tab=rules`} style={tabLinkStyle(activeTab === "rules")}>
+          Rules
+        </Link>
+      </div>
+
+      {/* ===================================================================
+          TAB: MANAGE
+      =================================================================== */}
+      {activeTab === "manage" && (
+        <div style={{ display: "grid", gap: 24 }}>
+
+          {/* ── Setup checklist — hide once all steps are done ── */}
+          {completedCount < checklistSteps.length && (
+            <section style={panelStyle}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16, flexWrap: "wrap", gap: 8 }}>
+                <h2 style={{ fontSize: 18, margin: 0 }}>Setup checklist</h2>
+                <span style={{ fontSize: 13, color: progressPct === 100 ? "#34d399" : "var(--dim)", fontWeight: 600 }}>
+                  {completedCount}/{checklistSteps.length} complete
                 </span>
               </div>
-            ))}
-          </div>
-        ) : (
-          <p style={{ color: "var(--dim)", marginBottom: 20 }}>
-            No teams yet — share the invite link above to get managers to join.
-          </p>
-        )}
-        {!draftDone && <AddTeamForm leagueId={leagueId} />}
-      </section>
 
-      {/* ── Draft ── */}
-      <section style={panelStyle}>
-        <h2 style={{ fontSize: 18, marginBottom: 16 }}>Draft</h2>
-        {league.draft ? (
-          <div style={{ display: "grid", gap: 16 }}>
-            <div style={{ display: "grid", gap: 8, gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))" }}>
-              <StatTile label="Status" value={league.draft.status.replace("_", " ")} />
-              <StatTile label="Pick timer" value={`${league.draft.pickTimerSecs}s`} />
-              {league.draft.startedAt && (
-                <StatTile label="Started" value={new Date(league.draft.startedAt).toLocaleDateString()} />
-              )}
-              {league.draft.completedAt && (
-                <StatTile label="Completed" value={new Date(league.draft.completedAt).toLocaleDateString()} />
-              )}
-            </div>
-
-            {!draftDone && (
-              <div>
-                {/* Plain-language snake draft primer (UX-056) */}
+              {/* Progress bar */}
+              <div style={{ height: 6, borderRadius: 3, background: "var(--bg-raised)", marginBottom: 20, overflow: "hidden" }}>
                 <div style={{
-                  background: "var(--bg-raised)", border: "1px solid var(--border)",
-                  borderRadius: 12, padding: "14px 16px", marginBottom: 18,
-                }}>
-                  <p style={{ fontSize: 13, fontWeight: 700, color: "var(--text)", margin: "0 0 8px" }}>
-                    How the draft works
-                  </p>
-                  <ul style={{ margin: 0, paddingLeft: 18, display: "grid", gap: 5 }}>
-                    {[
-                      "Each manager takes turns picking one player — 13 rounds total.",
-                      "Round 1: pick 1, pick 2, … pick N. Round 2 reverses: pick N goes first. This is called snake order.",
-                      "You have 30 seconds per pick. Miss your turn and the system auto-picks for you.",
-                      "Fill 3 Forwards, 2 Defense, 1 Goalie, 1 Utility (any skater), and 6 Bench spots.",
-                      "Start the draft from inside the draft room — everyone needs to be connected first.",
-                    ].map((tip, i) => (
-                      <li key={i} style={{ fontSize: 12, color: "var(--dim)", lineHeight: 1.5 }}>{tip}</li>
-                    ))}
-                  </ul>
+                  height: "100%", borderRadius: 3,
+                  width: `${progressPct}%`,
+                  background: progressPct === 100 ? "#34d399" : "linear-gradient(90deg, var(--accent), var(--accent-strong))",
+                  transition: "width 0.4s ease",
+                }} />
+              </div>
+
+              <div style={{ display: "grid", gap: 10 }}>
+                {checklistSteps.map((step, i) => {
+                  const isNext = i === nextStepIdx;
+                  return (
+                    <div key={step.label} style={{
+                      display: "flex", alignItems: "flex-start", gap: 12,
+                      padding: "12px 14px", borderRadius: 12,
+                      background: isNext ? "rgba(143,193,232,0.07)" : "var(--bg-raised)",
+                      border: `1px solid ${isNext ? "rgba(143,193,232,0.2)" : "var(--border)"}`,
+                    }}>
+                      <div style={{
+                        width: 22, height: 22, borderRadius: "50%", flexShrink: 0,
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        fontSize: 12, fontWeight: 700,
+                        background: step.done
+                          ? "rgba(52,211,153,0.15)"
+                          : isNext
+                          ? "rgba(143,193,232,0.15)"
+                          : "var(--surface)",
+                        color: step.done ? "#34d399" : isNext ? "var(--accent-strong)" : "var(--faint)",
+                        border: `1.5px solid ${step.done ? "#34d399" : isNext ? "var(--accent)" : "var(--border)"}`,
+                        marginTop: 1,
+                      }}>
+                        {step.done ? "✓" : i + 1}
+                      </div>
+                      <div>
+                        <div style={{
+                          fontSize: 14, fontWeight: 600,
+                          color: step.done ? "var(--dim)" : "var(--text)",
+                          textDecoration: step.done ? "line-through" : "none",
+                        }}>
+                          {step.label}
+                        </div>
+                        <div style={{ fontSize: 12, color: "var(--faint)", marginTop: 2 }}>{step.detail}</div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+          )}
+
+          {/* ── Invite link ── */}
+          {!draftDone && (
+            <section style={panelStyle}>
+              <h2 style={{ fontSize: 18, marginBottom: 8 }}>Invite managers</h2>
+              <p style={{ color: "var(--dim)", fontSize: 14, marginBottom: 16 }}>
+                Share this link. Anyone who opens it sees your league and can join in one step —
+                no league ID needed.
+              </p>
+              <InviteLinkButton leagueId={leagueId} />
+              <p style={{ marginTop: 12, fontSize: 12, color: "var(--faint)" }}>
+                {league.teams.length}/{league.maxTeams} spots filled
+                {league.maxTeams - league.teams.length > 0
+                  ? ` · ${league.maxTeams - league.teams.length} remaining`
+                  : " · league full"}
+              </p>
+              <div style={{ marginTop: 20, paddingTop: 16, borderTop: "1px solid var(--border)" }}>
+                <p style={{ fontSize: 13, fontWeight: 600, color: "var(--text)", marginBottom: 8 }}>
+                  Or invite by email
+                </p>
+                <CommissionerInviteForm leagueId={leagueId} />
+              </div>
+            </section>
+          )}
+
+          {/* ── Teams ── */}
+          <section style={panelStyle}>
+            <h2 style={{ fontSize: 18, marginBottom: 16 }}>
+              Teams ({league.teams.length}/{league.maxTeams})
+            </h2>
+            {league.teams.length > 0 ? (
+              <div style={{ display: "grid", gap: 8, marginBottom: 20 }}>
+                {league.teams.map((t) => (
+                  <div key={t.id} style={rowStyle}>
+                    <span style={{ fontWeight: 600 }}>{t.name}</span>
+                    <span style={{ color: "var(--faint)", fontSize: 13 }}>
+                      #{t.draftOrder ?? "—"} draft order
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p style={{ color: "var(--dim)", marginBottom: 20 }}>
+                No teams yet — share the invite link above to get managers to join.
+              </p>
+            )}
+            {!draftDone && <AddTeamForm leagueId={leagueId} />}
+          </section>
+
+          {/* ── Draft ── */}
+          <section style={panelStyle}>
+            <h2 style={{ fontSize: 18, marginBottom: 16 }}>Draft</h2>
+            {league.draft ? (
+              <div style={{ display: "grid", gap: 16 }}>
+                <div style={{ display: "grid", gap: 8, gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))" }}>
+                  <StatTile label="Status" value={league.draft.status.replace("_", " ")} />
+                  <StatTile label="Pick timer" value={`${league.draft.pickTimerSecs}s`} />
+                  {league.draft.startedAt && (
+                    <StatTile label="Started" value={new Date(league.draft.startedAt).toLocaleDateString()} />
+                  )}
+                  {league.draft.completedAt && (
+                    <StatTile label="Completed" value={new Date(league.draft.completedAt).toLocaleDateString()} />
+                  )}
                 </div>
 
-                <p style={{ color: "var(--dim)", fontSize: 14, marginBottom: 14 }}>
-                  Send each manager their personal draft room link:
-                </p>
-                <div style={{ display: "grid", gap: 8 }}>
-                  {league.teams.map((t) => (
-                    <div key={t.id} style={rowStyle}>
-                      <span style={{ fontWeight: 600 }}>{t.name}</span>
+                {!draftDone && (
+                  <div>
+                    {/* Plain-language snake draft primer (UX-056) */}
+                    <div style={{
+                      background: "var(--bg-raised)", border: "1px solid var(--border)",
+                      borderRadius: 12, padding: "14px 16px", marginBottom: 18,
+                    }}>
+                      <p style={{ fontSize: 13, fontWeight: 700, color: "var(--text)", margin: "0 0 8px" }}>
+                        How the draft works
+                      </p>
+                      <ul style={{ margin: 0, paddingLeft: 18, display: "grid", gap: 5 }}>
+                        {[
+                          "Each manager takes turns picking one player — 13 rounds total.",
+                          "Round 1: pick 1, pick 2, … pick N. Round 2 reverses: pick N goes first. This is called snake order.",
+                          "You have 30 seconds per pick. Miss your turn and the system auto-picks for you.",
+                          "Fill 3 Forwards, 2 Defense, 1 Goalie, 1 Utility (any skater), and 6 Bench spots.",
+                          "Start the draft from inside the draft room — everyone needs to be connected first.",
+                        ].map((tip, i) => (
+                          <li key={i} style={{ fontSize: 12, color: "var(--dim)", lineHeight: 1.5 }}>{tip}</li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    <p style={{ color: "var(--dim)", fontSize: 14, marginBottom: 14 }}>
+                      Send each manager their personal draft room link:
+                    </p>
+                    <div style={{ display: "grid", gap: 8 }}>
+                      {league.teams.map((t) => (
+                        <div key={t.id} style={rowStyle}>
+                          <span style={{ fontWeight: 600 }}>{t.name}</span>
+                          <Link
+                            href={`/draft/${leagueId}?team=${t.id}`}
+                            style={{
+                              color: "var(--accent-strong)", fontSize: 13, fontWeight: 600,
+                              textDecoration: "none",
+                              background: "rgba(143,193,232,0.1)",
+                              padding: "4px 10px", borderRadius: 8,
+                            }}
+                          >
+                            Open draft room
+                          </Link>
+                        </div>
+                      ))}
+                    </div>
+                    {isDev && (
+                      <AutoDraftButton leagueId={leagueId} />
+                    )}
+                    {!isDev && commTeam && (
                       <Link
-                        href={`/draft/${leagueId}?team=${t.id}`}
+                        href={`/draft/${leagueId}?team=${commTeam.id}`}
                         style={{
-                          color: "var(--accent-strong)", fontSize: 13, fontWeight: 600,
+                          display: "inline-block",
+                          marginTop: 12,
+                          color: "var(--accent-ink)",
+                          fontSize: 14,
+                          fontWeight: 600,
                           textDecoration: "none",
-                          background: "rgba(143,193,232,0.1)",
-                          padding: "4px 10px", borderRadius: 8,
+                          background: "var(--accent)",
+                          padding: "10px 16px",
+                          borderRadius: 8,
+                          transition: "background 0.15s",
                         }}
                       >
-                        Open draft room →
+                        Go to draft room to start
                       </Link>
-                    </div>
-                  ))}
-                </div>
-                {isDev && (
-                  <AutoDraftButton leagueId={leagueId} />
+                    )}
+                    {!isDev && !commTeam && (
+                      <p style={{ marginTop: 12, fontSize: 12, color: "var(--faint)" }}>
+                        You start the draft from inside the draft room once everyone is connected.
+                      </p>
+                    )}
+                  </div>
                 )}
-                {!isDev && commTeam && (
-                  <Link
-                    href={`/draft/${leagueId}?team=${commTeam.id}`}
-                    style={{
-                      display: "inline-block",
-                      marginTop: 12,
-                      color: "var(--accent-ink)",
-                      fontSize: 14,
-                      fontWeight: 600,
-                      textDecoration: "none",
-                      background: "var(--accent)",
-                      padding: "10px 16px",
-                      borderRadius: 8,
-                      transition: "background 0.15s",
-                    }}
-                    onMouseEnter={(e) => {
-                      (e.currentTarget as HTMLElement).style.background = "var(--accent-deep)";
-                    }}
-                    onMouseLeave={(e) => {
-                      (e.currentTarget as HTMLElement).style.background = "var(--accent)";
-                    }}
-                  >
-                    ▶ Go to draft room to start →
-                  </Link>
-                )}
-                {!isDev && !commTeam && (
-                  <p style={{ marginTop: 12, fontSize: 12, color: "var(--faint)" }}>
-                    You start the draft from inside the draft room once everyone is connected.
-                  </p>
+
+                {draftDone && (
+                  <div style={{
+                    padding: "14px 16px", borderRadius: 12,
+                    background: "rgba(52,211,153,0.07)",
+                    border: "1px solid rgba(52,211,153,0.2)",
+                  }}>
+                    <p style={{ margin: 0, color: "#34d399", fontWeight: 600, fontSize: 14 }}>
+                      Draft complete — all rosters are set.
+                    </p>
+                    <p style={{ margin: "6px 0 0", color: "var(--faint)", fontSize: 13 }}>
+                      Start the season below to generate matchups and unlock lineup management.
+                    </p>
+                  </div>
                 )}
               </div>
-            )}
-
-            {draftDone && (
-              <div style={{
-                padding: "14px 16px", borderRadius: 12,
-                background: "rgba(52,211,153,0.07)",
-                border: "1px solid rgba(52,211,153,0.2)",
-              }}>
-                <p style={{ margin: 0, color: "#34d399", fontWeight: 600, fontSize: 14 }}>
-                  ✓ Draft complete — all rosters are set.
+            ) : hasEnoughTeams ? (
+              <div>
+                <p style={{ color: "var(--dim)", marginBottom: 16, fontSize: 14 }}>
+                  You have {league.teams.length} team{league.teams.length !== 1 ? "s" : ""} ready.
+                  Create the draft board to generate pick order and enable the draft room.
                 </p>
-                <p style={{ margin: "6px 0 0", color: "var(--faint)", fontSize: 13 }}>
-                  Start the season below to generate matchups and unlock lineup management.
-                </p>
+                <SetupDraftButton leagueId={leagueId} />
               </div>
-            )}
-          </div>
-        ) : hasEnoughTeams ? (
-          <div>
-            <p style={{ color: "var(--dim)", marginBottom: 16, fontSize: 14 }}>
-              You have {league.teams.length} team{league.teams.length !== 1 ? "s" : ""} ready.
-              Create the draft board to generate pick order and enable the draft room.
-            </p>
-            <SetupDraftButton leagueId={leagueId} />
-          </div>
-        ) : (
-          <p style={{ color: "var(--dim)", fontSize: 14 }}>
-            Add at least 2 teams before setting up the draft.
-          </p>
-        )}
-      </section>
-
-      {/* ── League announcement ── */}
-      <section style={panelStyle}>
-        <h2 style={{ fontSize: 18, marginBottom: 8 }}>League announcement</h2>
-        <p style={{ color: "var(--dim)", fontSize: 14, marginBottom: 16 }}>
-          Pinned to the top of the league overview for every manager. Leave empty to hide it.
-        </p>
-        <AnnouncementForm leagueId={leagueId} initial={league.announcement} />
-      </section>
-
-      {/* ── Season management ── */}
-      <section style={panelStyle}>
-        <h2 style={{ fontSize: 18, marginBottom: 16 }}>Season management</h2>
-        {draftDone ? (
-          league.isReplay ? (
-            <div>
-              <p style={{ color: "var(--dim)", fontSize: 14, marginBottom: 12 }}>
-                Use the <strong>Sim →</strong> page to manage replay league progression.
+            ) : (
+              <p style={{ color: "var(--dim)", fontSize: 14 }}>
+                Add at least 2 teams before setting up the draft.
               </p>
-              <Link
-                href={`/league/${leagueId}/sim`}
-                style={{
-                  display: "inline-block",
-                  padding: "10px 14px",
-                  background: "rgba(143,193,232,0.15)",
-                  border: "1px solid rgba(143,193,232,0.3)",
-                  borderRadius: 8,
-                  color: "var(--accent-strong)",
-                  textDecoration: "none",
-                  fontSize: 13,
-                  fontWeight: 600,
-                }}
-              >
-                Go to Sim →
-              </Link>
-            </div>
-          ) : (
-            <p style={{ color: "var(--dim)", fontSize: 14 }}>
-              Live season — players advance automatically through the PWHL schedule.
-            </p>
-          )
-        ) : (
-          <p style={{ color: "var(--dim)", fontSize: 14 }}>
-            Season controls become available after the draft is complete.
-          </p>
-        )}
-      </section>
+            )}
+          </section>
 
-      {/* ── League settings editor ── */}
-      <section style={panelStyle}>
-        <h2 style={{ fontSize: 18, marginBottom: 16 }}>League settings</h2>
-        {draftDone && (
-          <p style={{ color: "var(--dim)", fontSize: 14, marginBottom: 16 }}>
-            Scoring and roster settings are locked after the draft. You can still update visibility.
-          </p>
-        )}
-        {!draftDone && (
-          <p style={{ color: "var(--dim)", fontSize: 14, marginBottom: 16 }}>
-            Adjust max teams and draft type before the draft begins. Changes are logged in the audit trail.
-          </p>
-        )}
-        <LeagueSettingsEditor
-          leagueId={leagueId}
-          maxTeams={league.maxTeams}
-          draftType={league.draftType}
-          draftDone={draftDone}
-          isPublic={league.isPublic}
-        />
-        {draftDone && (
-          <div style={{ marginTop: 20, paddingTop: 16, borderTop: "1px solid var(--border)" }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text)", marginBottom: 6 }}>
-              Weekly awards
-            </div>
-            <p style={{ fontSize: 12, color: "var(--muted)", marginBottom: 10 }}>
-              Negative awards (Frozen Stick, Heartbreaker, Collapse) can feel discouraging for casual leagues.
-              Turn them off to keep the vibe positive.
+          {/* ── League announcement ── */}
+          <section style={panelStyle}>
+            <h2 style={{ fontSize: 18, marginBottom: 8 }}>League announcement</h2>
+            <p style={{ color: "var(--dim)", fontSize: 14, marginBottom: 16 }}>
+              Pinned to the top of the league overview for every manager. Leave empty to hide it.
             </p>
-            <NegativeAwardsToggle
+            <AnnouncementForm leagueId={leagueId} initial={league.announcement} />
+          </section>
+
+          {/* ── Commissioner recovery tools ── */}
+          {draftDone && (
+            <section style={panelStyle}>
+              <h2 style={{ fontSize: 18, marginBottom: 4 }}>Commissioner tools</h2>
+              <p style={{ color: "var(--dim)", fontSize: 13, marginBottom: 20 }}>
+                Recovery actions for unexpected situations. All actions are logged in the audit trail below.
+              </p>
+              <CommissionerRecoveryTools
+                leagueId={leagueId}
+                teams={teamRows}
+                isDraftPaused={isDraftPaused}
+                isInSeason={league.status === "IN_SEASON"}
+              />
+            </section>
+          )}
+
+          {/* ── Pending trade review ── */}
+          {pendingTrades.length > 0 && (
+            <section id="pending-trades" style={{ ...panelStyle, border: "1px solid rgba(251,191,36,0.25)" }}>
+              <h2 style={{ fontSize: 18, marginBottom: 8, color: "#fbbf24" }}>
+                Trades pending review ({pendingTrades.length})
+              </h2>
+              <p style={{ color: "var(--dim)", fontSize: 14, marginBottom: 16 }}>
+                These trades have been accepted but require your review before executing.
+              </p>
+              <PendingTradeReviewList
+                leagueId={leagueId}
+                trades={pendingTrades}
+                playerNames={Object.fromEntries(pendingPlayers.map((p) => [p.id, `${p.firstName} ${p.lastName}`]))}
+                teamNames={Object.fromEntries(league.teams.map((t) => [t.id, t.name]))}
+              />
+            </section>
+          )}
+
+          {/* ── Audit log ── */}
+          {auditLog.length > 0 && (
+            <section style={panelStyle}>
+              <h2 style={{ fontSize: 18, marginBottom: 16 }}>Audit log</h2>
+              <div style={{ display: "grid", gap: 6 }}>
+                {auditLog.map((entry) => {
+                  const data = entry.data as Record<string, unknown>;
+                  const action = String(data.action ?? entry.type).replace(/^COMMISSIONER_/, "").replace(/_/g, " ");
+                  const target = data.target ? ` · ${data.target}` : "";
+                  return (
+                    <div key={entry.id} style={{
+                      display: "flex", alignItems: "flex-start", gap: 12,
+                      padding: "10px 14px", borderRadius: 10,
+                      background: "var(--bg-raised)",
+                      border: "1px solid var(--border)",
+                      fontSize: 13,
+                    }}>
+                      <span style={{ color: "var(--faint)", flexShrink: 0, minWidth: 120 }}>
+                        {new Date(entry.createdAt).toLocaleDateString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                      </span>
+                      <span style={{ color: "var(--accent-strong)", fontWeight: 600, textTransform: "capitalize" }}>
+                        {action.toLowerCase()}{target}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+          )}
+
+          {/* ── Start next season ── */}
+          {league.playoffStatus === "COMPLETE" && (
+            <section style={{ ...panelStyle, border: "1px solid rgba(143,193,232,0.25)" }}>
+              <h2 style={{ fontSize: 18, marginBottom: 8 }}>Start next season</h2>
+              <p style={{ color: "var(--dim)", fontSize: 14, marginBottom: 16 }}>
+                Create a new league for the next season. Your teams, rosters, and matchup history stay
+                in this league. Managers will need to re-join and re-draft for the new season.
+              </p>
+              <RenewLeagueForm leagueId={leagueId} currentSeason={league.season} />
+            </section>
+          )}
+        </div>
+      )}
+
+      {/* ===================================================================
+          TAB: RULES
+      =================================================================== */}
+      {activeTab === "rules" && (
+        <div style={{ display: "grid", gap: 24 }}>
+
+          {/* League basics (was "League settings" in Manage tab) */}
+          <section style={panelStyle}>
+            <h2 style={{ fontSize: 18, marginBottom: 8 }}>League basics</h2>
+            {draftDone && (
+              <p style={{ color: "var(--dim)", fontSize: 14, marginBottom: 16 }}>
+                Scoring and roster settings are locked after the draft. You can still update visibility.
+              </p>
+            )}
+            {!draftDone && (
+              <p style={{ color: "var(--dim)", fontSize: 14, marginBottom: 16 }}>
+                Adjust max teams and draft type before the draft begins. Changes are logged in the audit trail.
+              </p>
+            )}
+            <LeagueSettingsEditor
               leagueId={leagueId}
-              defaultValue={
-                ((league.scoringSettings as Record<string, unknown>)?.showNegativeAwards ?? true) !== false
-              }
+              maxTeams={league.maxTeams}
+              draftType={league.draftType}
+              draftDone={draftDone}
+              isPublic={league.isPublic}
             />
-          </div>
-        )}
-      </section>
+          </section>
 
-      {/* ── Commissioner recovery tools ── */}
-      {draftDone && (
-        <section style={panelStyle}>
-          <h2 style={{ fontSize: 18, marginBottom: 4 }}>Commissioner tools</h2>
-          <p style={{ color: "var(--dim)", fontSize: 13, marginBottom: 20 }}>
-            Recovery actions for unexpected situations. All actions are logged in the audit trail below.
-          </p>
-          <CommissionerRecoveryTools
+          {/* Scoring / roster / playoff settings */}
+          <SettingsEditor
             leagueId={leagueId}
-            teams={teamRows}
-            isDraftPaused={isDraftPaused}
-            isInSeason={league.status === "IN_SEASON"}
+            leagueName={league.name}
+            season={league.season}
+            status={league.status}
+            draftType={league.draftType}
+            maxTeams={league.maxTeams}
+            teamCount={league.teams.length}
+            isCommissioner={true}
+            isDraftComplete={draftDone}
+            isPlayoffStarted={league.playoffStatus !== "NOT_STARTED"}
+            initialScoring={scoring}
+            initialRoster={initialRoster}
+            initialPlayoff={initialPlayoff}
           />
-        </section>
-      )}
 
-      {/* ── Trade settings ── */}
-      {draftDone && (
-        <section style={panelStyle}>
-          <h2 style={{ fontSize: 18, marginBottom: 8 }}>Trade settings</h2>
-          <p style={{ color: "var(--dim)", fontSize: 14, marginBottom: 16 }}>
-            Control how trades are processed in your league. Changes take effect for new trades immediately.
-          </p>
-          <TradeSettingsForm
-            leagueId={leagueId}
-            tradeReviewHours={league.tradeReviewHours}
-            requireCommissionerTradeApproval={league.requireCommissionerTradeApproval}
-          />
-        </section>
-      )}
+          {/* Trade settings */}
+          {draftDone && (
+            <section style={panelStyle}>
+              <h2 style={{ fontSize: 18, marginBottom: 8 }}>Trade settings</h2>
+              <p style={{ color: "var(--dim)", fontSize: 14, marginBottom: 16 }}>
+                Control how trades are processed in your league. Changes take effect for new trades immediately.
+              </p>
+              <TradeSettingsForm
+                leagueId={leagueId}
+                tradeReviewHours={league.tradeReviewHours}
+                requireCommissionerTradeApproval={league.requireCommissionerTradeApproval}
+              />
+            </section>
+          )}
 
-      {/* ── Pending trade review ── */}
-      {pendingTrades.length > 0 && (
-        <section id="pending-trades" style={{ ...panelStyle, border: "1px solid rgba(251,191,36,0.25)" }}>
-          <h2 style={{ fontSize: 18, marginBottom: 8, color: "#fbbf24" }}>
-            Trades pending review ({pendingTrades.length})
-          </h2>
-          <p style={{ color: "var(--dim)", fontSize: 14, marginBottom: 16 }}>
-            These trades have been accepted but require your review before executing.
-          </p>
-          <PendingTradeReviewList
-            leagueId={leagueId}
-            trades={pendingTrades}
-            playerNames={Object.fromEntries(pendingPlayers.map((p) => [p.id, `${p.firstName} ${p.lastName}`]))}
-            teamNames={Object.fromEntries(league.teams.map((t) => [t.id, t.name]))}
-          />
-        </section>
-      )}
-
-      {/* ── Audit log ── */}
-      {auditLog.length > 0 && (
-        <section style={panelStyle}>
-          <h2 style={{ fontSize: 18, marginBottom: 16 }}>Audit log</h2>
-          <div style={{ display: "grid", gap: 6 }}>
-            {auditLog.map((entry) => {
-              const data = entry.data as Record<string, unknown>;
-              const action = String(data.action ?? entry.type).replace(/^COMMISSIONER_/, "").replace(/_/g, " ");
-              const target = data.target ? ` · ${data.target}` : "";
-              return (
-                <div key={entry.id} style={{
-                  display: "flex", alignItems: "flex-start", gap: 12,
-                  padding: "10px 14px", borderRadius: 10,
-                  background: "var(--bg-raised)",
-                  border: "1px solid var(--border)",
-                  fontSize: 13,
-                }}>
-                  <span style={{ color: "var(--faint)", flexShrink: 0, minWidth: 120 }}>
-                    {new Date(entry.createdAt).toLocaleDateString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
-                  </span>
-                  <span style={{ color: "var(--accent-strong)", fontWeight: 600, textTransform: "capitalize" }}>
-                    {action.toLowerCase()}{target}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-        </section>
-      )}
-
-      {/* ── Start next season ── */}
-      {league.playoffStatus === "COMPLETE" && (
-        <section style={{ ...panelStyle, border: "1px solid rgba(143,193,232,0.25)" }}>
-          <h2 style={{ fontSize: 18, marginBottom: 8 }}>Start next season</h2>
-          <p style={{ color: "var(--dim)", fontSize: 14, marginBottom: 16 }}>
-            Create a new league for the next season. Your teams, rosters, and matchup history stay
-            in this league. Managers will need to re-join and re-draft for the new season.
-          </p>
-          <RenewLeagueForm leagueId={leagueId} currentSeason={league.season} />
-        </section>
-      )}
-
-      {/* ── League settings ── */}
-      <section style={{ ...panelStyle, borderColor: "var(--border)" }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <h2 style={{ fontSize: 16, margin: 0, color: "var(--dim)" }}>League settings</h2>
-          <Link href={`/league/${leagueId}/settings`} style={{ color: "var(--accent)", fontSize: 13 }}>
-            View / edit →
-          </Link>
+          {/* Weekly awards toggle */}
+          {draftDone && (
+            <section style={panelStyle}>
+              <h2 style={{ fontSize: 18, marginBottom: 8 }}>Weekly awards</h2>
+              <p style={{ fontSize: 13, color: "var(--muted)", marginBottom: 10 }}>
+                Negative awards (Frozen Stick, Heartbreaker, Collapse) can feel discouraging for casual leagues.
+                Turn them off to keep the vibe positive.
+              </p>
+              <NegativeAwardsToggle
+                leagueId={leagueId}
+                defaultValue={
+                  ((league.scoringSettings as Record<string, unknown>)?.showNegativeAwards ?? true) !== false
+                }
+              />
+            </section>
+          )}
         </div>
-        <div style={{ display: "grid", gap: 8, marginTop: 14 }}>
-          <Row label="Season" value={league.season} />
-          <Row label="Draft type" value={league.draftType} />
-          <Row label="Max teams" value={String(league.maxTeams)} />
-          <Row label="Playoff status" value={league.playoffStatus.replace("_", " ")} />
-        </div>
-      </section>
+      )}
     </div>
   );
 }

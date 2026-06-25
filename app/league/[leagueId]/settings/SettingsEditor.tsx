@@ -180,13 +180,6 @@ function Toggle({ value, onChange, disabled }: { value: boolean; onChange: (v: b
   );
 }
 
-function CommBtn({ children, amber, onClick }: { children: React.ReactNode; amber?: boolean; onClick?: () => void }) {
-  return (
-    <button onClick={onClick} style={{ background: amber ? "rgba(214,169,78,0.10)" : "rgba(150,160,200,0.06)", border: amber ? "1px solid rgba(214,169,78,0.32)" : "1px solid rgba(150,160,200,0.16)", color: amber ? "#e3c989" : "#e7eaf3", padding: "11px 16px", borderRadius: 10, fontSize: 12.5, fontWeight: 600, fontFamily: "Archivo,sans-serif", cursor: "pointer" }}>
-      {children}
-    </button>
-  );
-}
 
 // ---------------------------------------------------------------------------
 // Main editor
@@ -307,7 +300,7 @@ export function SettingsEditor({
       {/* Title block */}
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 18, flexWrap: "wrap" as const, marginBottom: 24 }}>
         <div>
-          <h1 style={{ fontSize: 26, fontWeight: 800, letterSpacing: "-0.02em", color: "var(--text)", margin: 0 }}>League Settings</h1>
+          <h1 style={{ fontSize: 26, fontWeight: 800, letterSpacing: "-0.02em", color: "var(--text)", margin: 0 }}>League Rules</h1>
           <div style={{ fontSize: 13, color: "var(--dim)", marginTop: 5, lineHeight: 1.5 }}>
             Configure scoring, roster structure, and playoffs for <strong style={{ color: "var(--muted)" }}>{leagueName}</strong>.
           </div>
@@ -429,20 +422,6 @@ export function SettingsEditor({
           </div>
         </section>
       </div>
-
-      {/* Commissioner Tools */}
-      {isCommissioner && (
-        <section style={{ ...card, border: "1px solid rgba(214,169,78,0.20)" }}>
-          <SectionBar title="Commissioner Tools" amber />
-          <SubNote>League-wide actions. Use with care during an active season.</SubNote>
-          <div style={{ display: "flex", gap: 11, flexWrap: "wrap" as const }}>
-            <CommBtn onClick={() => router.push(`/league/${leagueId}/season`)}>Advance week</CommBtn>
-            <CommBtn onClick={() => router.push(`/league/${leagueId}/admin`)}>Post announcement</CommBtn>
-            <CommBtn onClick={() => router.push(`/league/${leagueId}/admin`)}>Recovery tools</CommBtn>
-            <CommBtn amber onClick={() => router.push(`/league/${leagueId}/admin`)}>Start playoffs</CommBtn>
-          </div>
-        </section>
-      )}
 
       {/* Floating save bar */}
       {dirty && (

@@ -4,8 +4,8 @@ import { requireAuth, requireLeagueMember } from "@/lib/auth";
 import { parseScoringSettings } from "@/lib/scoring/settings";
 import { SettingsEditor } from "./SettingsEditor";
 
-export default async function SettingsPage({ params }: { params: { leagueId: string } }) {
-  const leagueId = params.leagueId;
+export default async function SettingsPage({ params }: { params: Promise<{ leagueId: string }> }) {
+  const { leagueId } = await params;
   const user = await requireAuth(`/league/${leagueId}/settings`);
   await requireLeagueMember(leagueId, user.id);
 
