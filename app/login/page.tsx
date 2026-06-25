@@ -217,8 +217,8 @@ export default function LoginPage() {
                   }}
                 >
                   {showPassword
-                    ? "Forgot your password? Email me a sign-in link instead"
-                    : "Sign in with a password instead"}
+                    ? "← Email me a sign-in link instead"
+                    : "Have a password? Sign in with it instead"}
                 </button>
               </form>
             </>
