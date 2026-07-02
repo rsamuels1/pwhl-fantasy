@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { sendBetaSignupConfirmation } from "@/lib/services/email-service";
+import { logger } from "@/lib/logger";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -47,6 +49,9 @@ export async function POST(req: NextRequest) {
     await prisma.betaSignup.create({
       data: { email: normalizedEmail, wantsToCommission: commissionar },
     });
+
+    void sendBetaSignupConfirmation(normalizedEmail)
+      .catch((err) => logger.error("sendBetaSignupConfirmation failed", err));
 
     return NextResponse.json({ success: true }, { status: 201 });
   } catch {
