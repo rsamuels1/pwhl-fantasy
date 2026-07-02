@@ -183,13 +183,11 @@ export default function LeagueExplorer() {
             </div>
             <div>
               <label style={{ display: "block", fontSize: "0.72rem", color: "#666", marginBottom: "0.3rem" }}>
-                Draft date <span style={{ color: "#555" }}>(July 6–12, 2026)</span>
+                Draft date
               </label>
               <input
                 type="date"
                 value={betaDraftDate}
-                min="2026-07-06"
-                max="2026-07-12"
                 onChange={(e) => setBetaDraftDate(e.target.value)}
                 required
                 style={{ ...inputStyle, width: "auto" }}
