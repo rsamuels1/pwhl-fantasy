@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 export default function InviteJoinForm({
   leagueId,
@@ -14,6 +15,7 @@ export default function InviteJoinForm({
   const [teamName, setTeamName] = useState("");
   const [email, setEmail] = useState(prefillEmail ?? "");
   const [displayName, setDisplayName] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -22,6 +24,12 @@ export default function InviteJoinForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+
+    if (password && password.length < 8) {
+      setError("Password must be at least 8 characters.");
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -33,6 +41,7 @@ export default function InviteJoinForm({
           teamName,
           ownerEmail: email,
           ownerName: displayName || email.split("@")[0],
+          password,
         }),
       });
 
@@ -92,6 +101,19 @@ export default function InviteJoinForm({
         />
       </label>
 
+      <label className="form-label">
+        Password{" "}
+        <span style={{ color: "var(--faint)", fontWeight: 400 }}>(leave blank if already signed in)</span>
+        <input
+          className="form-input"
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder="At least 8 characters"
+          autoComplete="new-password"
+        />
+      </label>
+
       {error && <p role="alert" style={{ color: "#f87171", fontSize: 13, margin: 0 }}>{error}</p>}
 
       <button
@@ -101,6 +123,13 @@ export default function InviteJoinForm({
       >
         {loading ? "Joining…" : "Join league →"}
       </button>
+
+      <p style={{ fontSize: 12, color: "var(--faint)", margin: 0 }}>
+        Already have an account?{" "}
+        <Link href="/login" style={{ color: "var(--accent-strong)", textDecoration: "none" }}>
+          Sign in first →
+        </Link>
+      </p>
     </form>
   );
 }

@@ -9,8 +9,6 @@ export default function LoginPage() {
   const [returnTo, setReturnTo] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [sent, setSent] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -20,7 +18,7 @@ export default function LoginPage() {
     const err = params.get("error");
     if (err === "invalid_token") {
       setStatus(
-        "This sign-in link has expired or has already been used. Request a new one below."
+        "This sign-in link has expired or has already been used. Use Forgot password to get a new one."
       );
     } else if (err === "missing_token") {
       setStatus("Invalid sign-in link. Please request a new one.");
@@ -32,20 +30,14 @@ export default function LoginPage() {
     setStatus(null);
     setLoading(true);
     try {
-      const body: Record<string, string> = { email, returnTo };
-      if (showPassword && password) {
-        body.password = password;
-      }
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
+        body: JSON.stringify({ email, password, returnTo }),
       });
       const data = await res.json();
       if (!res.ok) {
         setStatus(data?.error || "Unable to log in.");
-      } else if (data.sent) {
-        setSent(true);
       } else {
         router.push(data.redirectTo ?? "/dashboard");
       }
@@ -59,6 +51,10 @@ export default function LoginPage() {
   const registerHref = returnTo
     ? `/register?returnTo=${encodeURIComponent(returnTo)}`
     : "/register";
+
+  const forgotHref = returnTo
+    ? `/forgot-password?returnTo=${encodeURIComponent(returnTo)}`
+    : "/forgot-password";
 
   return (
     <main style={pageStyle}>
@@ -110,122 +106,71 @@ export default function LoginPage() {
 
         {/* Right — form */}
         <div style={formPanelStyle}>
-          {sent ? (
-            /* Success panel — shown after magic link is sent */
-            <div>
-              <h2 style={{ margin: "0 0 16px", fontSize: 20, fontWeight: 700 }}>
-                Check your email
-              </h2>
-              <p style={{ fontSize: 14, color: "var(--text)", lineHeight: 1.6, marginBottom: 8 }}>
-                We sent a sign-in link to <strong>{email}</strong>. It expires in 15 minutes.
-              </p>
-              <p style={{ fontSize: 12, color: "var(--faint)", marginBottom: 24 }}>
-                Check your spam folder if you don&apos;t see it.
-              </p>
-              <button
-                type="button"
-                onClick={() => setSent(false)}
-                style={{ background: "none", border: "1px solid var(--border)", color: "var(--dim)", fontSize: 13, cursor: "pointer", padding: "8px 14px", borderRadius: 8 }}
-              >
-                Use a different email
-              </button>
-            </div>
-          ) : (
-            <>
-              <h2 style={{ margin: "0 0 6px", fontSize: 20, fontWeight: 700 }}>Sign in</h2>
-              <p style={{ color: "var(--faint)", marginTop: 0, marginBottom: 8, fontSize: 13, lineHeight: 1.6 }}>
-                Enter your email and we&apos;ll send you a sign-in link — no password needed.
-              </p>
-              <p style={{ color: "var(--faint)", marginTop: 0, marginBottom: 20, fontSize: 13, lineHeight: 1.6 }}>
-                Don&apos;t have an account?{" "}
-                <Link href={registerHref} style={{ color: "var(--accent-strong)", textDecoration: "none", fontWeight: 600 }}>
-                  Create one →
-                </Link>
-              </p>
+          <h2 style={{ margin: "0 0 6px", fontSize: 20, fontWeight: 700 }}>Sign in</h2>
+          <p style={{ color: "var(--faint)", marginTop: 0, marginBottom: 8, fontSize: 13, lineHeight: 1.6 }}>
+            Sign in with your email and password.
+          </p>
+          <p style={{ color: "var(--faint)", marginTop: 0, marginBottom: 20, fontSize: 13, lineHeight: 1.6 }}>
+            Don&apos;t have an account?{" "}
+            <Link href={registerHref} style={{ color: "var(--accent-strong)", textDecoration: "none", fontWeight: 600 }}>
+              Create one →
+            </Link>
+          </p>
 
-              {status && (
-                <p role="alert" style={{ color: "#f87171", marginBottom: 14, fontSize: 13, padding: "10px 14px", borderRadius: 8, background: "rgba(248,113,113,0.07)", border: "1px solid rgba(248,113,113,0.2)" }}>
-                  {status}
-                </p>
-              )}
-
-              <form onSubmit={handleSubmit} style={{ display: "grid", gap: 14 }}>
-                <label style={labelStyle}>
-                  Email
-                  <input
-                    style={inputStyle}
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                    autoFocus
-                    placeholder="you@example.com"
-                    autoComplete="email"
-                  />
-                </label>
-
-                {/* Primary action — magic link */}
-                {!showPassword && (
-                  <button
-                    type="submit"
-                    style={buttonStyle}
-                    disabled={loading || !email}
-                  >
-                    {loading ? "Sending…" : "Email me a sign-in link →"}
-                  </button>
-                )}
-
-                {/* Password fallback — hidden by default */}
-                {showPassword && (
-                  <>
-                    <label style={labelStyle}>
-                      Password
-                      <input
-                        style={inputStyle}
-                        type="password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        placeholder="Your password"
-                        autoComplete="current-password"
-                      />
-                    </label>
-                    <button
-                      type="submit"
-                      style={buttonStyle}
-                      disabled={loading || !email || !password}
-                    >
-                      {loading ? "Signing in…" : "Sign in →"}
-                    </button>
-                  </>
-                )}
-
-                {/* Toggle between magic link and password */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowPassword((v) => {
-                      if (v) setPassword(""); // clear on way back to magic link
-                      return !v;
-                    });
-                    setStatus(null);
-                  }}
-                  style={{
-                    background: "none",
-                    border: "none",
-                    color: "var(--faint)",
-                    fontSize: 12,
-                    cursor: "pointer",
-                    padding: "2px 0",
-                    textAlign: "left",
-                  }}
-                >
-                  {showPassword
-                    ? "← Email me a sign-in link instead"
-                    : "Have a password? Sign in with it instead"}
-                </button>
-              </form>
-            </>
+          {status && (
+            <p role="alert" style={{ color: "#f87171", marginBottom: 14, fontSize: 13, padding: "10px 14px", borderRadius: 8, background: "rgba(248,113,113,0.07)", border: "1px solid rgba(248,113,113,0.2)" }}>
+              {status}
+            </p>
           )}
+
+          <form onSubmit={handleSubmit} style={{ display: "grid", gap: 14 }}>
+            <label style={labelStyle}>
+              Email
+              <input
+                style={inputStyle}
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                autoFocus
+                placeholder="you@example.com"
+                autoComplete="email"
+              />
+            </label>
+
+            <label style={labelStyle}>
+              Password
+              <input
+                style={inputStyle}
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Your password"
+                autoComplete="current-password"
+                required
+              />
+            </label>
+
+            <button
+              type="submit"
+              style={buttonStyle}
+              disabled={loading || !email || !password}
+            >
+              {loading ? "Signing in…" : "Sign in →"}
+            </button>
+
+            <Link
+              href={forgotHref}
+              style={{
+                color: "var(--faint)",
+                fontSize: 12,
+                textDecoration: "none",
+                padding: "2px 0",
+              }}
+            >
+              Forgot password?
+            </Link>
+          </form>
         </div>
 
       </div>

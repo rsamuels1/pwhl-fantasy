@@ -14,6 +14,7 @@ export default async function CreateLeaguePage({ searchParams }: Props) {
 
   const sp = searchParams ? await searchParams : {};
   const startAsReplay = sp.replay === "1";
+  const hasAutoDisplayName = user.displayName === user.email.split("@")[0];
 
-  return <CreateLeagueWizard userDisplayName={user.displayName} startAsReplay={startAsReplay} />;
+  return <CreateLeagueWizard userDisplayName={user.displayName} startAsReplay={startAsReplay} hasAutoDisplayName={hasAutoDisplayName} />;
 }
