@@ -117,13 +117,13 @@ export default async function Home() {
             }}>
               <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", gap: 14, alignItems: "center" }}>
                 <div style={{ textAlign: "center" }}>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text)", marginBottom: 7 }}>Northwind</div>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text)", marginBottom: 7 }}>Poulin Rouge</div>
                   <div className="font-stats" style={{ fontSize: 46, fontWeight: 700, lineHeight: 0.8, color: "var(--text)" }}>48.2</div>
                   <div style={{ fontSize: 10.5, color: "var(--green)", marginTop: 6, fontWeight: 600 }}>52% win</div>
                 </div>
                 <div style={{ fontSize: 11, color: "var(--faint)", fontWeight: 600, letterSpacing: "0.08em" }}>VS</div>
                 <div style={{ textAlign: "center" }}>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text)", marginBottom: 7 }}>Granite City</div>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text)", marginBottom: 7 }}>Icing Queens</div>
                   <div className="font-stats" style={{ fontSize: 46, fontWeight: 700, lineHeight: 0.8, color: "var(--muted)" }}>44.8</div>
                   <div style={{ fontSize: 10.5, color: "var(--dim)", marginTop: 6, fontWeight: 600 }}>48% win</div>
                 </div>
@@ -293,10 +293,10 @@ export default async function Home() {
 // ── Static data ──────────────────────────────────────────────────────────────
 
 const MINI_STANDINGS = [
-  { rank: 1, name: "Northwind",   vp: 16, you: true  },
-  { rank: 2, name: "Granite City", vp: 15, you: false },
-  { rank: 3, name: "Harbour City", vp: 13, you: false },
-  { rank: 4, name: "Steel & Co",   vp: 12, you: false },
+  { rank: 1, name: "Poulin Rouge",    vp: 16, you: true  },
+  { rank: 2, name: "Icing Queens",    vp: 15, you: false },
+  { rank: 3, name: "Knight Fever",    vp: 13, you: false },
+  { rank: 4, name: "Spooner or Later", vp: 12, you: false },
 ];
 
 const PILLARS = [

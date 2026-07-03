@@ -209,13 +209,13 @@ export async function apiRequireFounder(
  * tokenHash: SHA-256 of rawToken, stored in DB
  * expiresAt: 15 minutes from now
  */
-export function generateMagicLinkToken(): {
+export function generateMagicLinkToken(expiresInMs = 15 * 60 * 1000): {
   rawToken: string;
   tokenHash: string;
   expiresAt: Date;
 } {
   const rawToken = crypto.randomBytes(32).toString("hex");
   const tokenHash = crypto.createHash("sha256").update(rawToken).digest("hex");
-  const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 min
+  const expiresAt = new Date(Date.now() + expiresInMs);
   return { rawToken, tokenHash, expiresAt };
 }

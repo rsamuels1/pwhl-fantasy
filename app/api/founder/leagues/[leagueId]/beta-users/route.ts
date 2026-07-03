@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { apiRequireFounder } from "@/lib/auth";
+import { apiRequireFounder, generateMagicLinkToken } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { sendBetaWelcome } from "@/lib/services/email-service";
+import { logger } from "@/lib/logger";
+
+const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://beta.fantasy.dykedb.org";
 
 // POST /api/founder/leagues/[leagueId]/beta-users
 // Assigns a beta signup as commissioner or manager in a league.
@@ -100,10 +105,24 @@ export async function POST(
     inviteUrl = `/login?returnTo=/team/${teamId}/matchup`;
   }
 
+  // Generate a 7-day magic link so the beta invite email is a one-click login.
+  const { rawToken, tokenHash, expiresAt } = generateMagicLinkToken(SEVEN_DAYS_MS);
+  await prisma.user.update({
+    where: { id: user.id },
+    data: { magicLinkToken: tokenHash, magicLinkExpiresAt: expiresAt },
+  });
+
+  const magicLinkUrl = `${APP_URL}/api/auth/verify?token=${rawToken}&returnTo=${encodeURIComponent(inviteUrl)}`;
+
+  void sendBetaWelcome(email, user.displayName, body.role, magicLinkUrl).catch((err) =>
+    logger.error("sendBetaWelcome failed", err)
+  );
+
   return NextResponse.json({
     role: body.role,
     userId: user.id,
     teamId,
     inviteUrl,
+    emailSent: true,
   });
 }
