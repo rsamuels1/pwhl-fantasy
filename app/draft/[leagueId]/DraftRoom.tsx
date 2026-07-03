@@ -433,6 +433,15 @@ function DraftRoomContent({
     [setQueue]
   );
 
+  // Re-send the queue after a reconnect so the server doesn't lose it.
+  const prevConnStatus = useRef(connStatus);
+  useEffect(() => {
+    if (prevConnStatus.current !== "open" && connStatus === "open" && queue.length > 0) {
+      setQueue(queue);
+    }
+    prevConnStatus.current = connStatus;
+  }, [connStatus, queue, setQueue]);
+
   return (
     <div style={styles.root}>
       <TopBar
@@ -575,6 +584,7 @@ function DraftRoomContent({
                 queue={queue}
                 initialStats={initialStats}
                 initialStatSeason={statSeason}
+                connStatus={connStatus}
                 onPick={makePick}
                 onSearch={listAvailable}
                 onSetQueue={handleSetQueue}
@@ -653,6 +663,7 @@ function DraftRoomContent({
               queue={queue}
               initialStats={initialStats}
               initialStatSeason={statSeason}
+              connStatus={connStatus}
               onPick={makePick}
               onSearch={listAvailable}
               onSetQueue={handleSetQueue}
