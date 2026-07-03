@@ -6,6 +6,8 @@
 
 CREATE TYPE "ScoringMode" AS ENUM ('VP', 'H2H', 'VTF');
 
+ALTER TABLE "FantasyLeague" ALTER COLUMN "scoringMode" DROP DEFAULT;
+
 ALTER TABLE "FantasyLeague"
   ALTER COLUMN "scoringMode" TYPE "ScoringMode"
   USING "scoringMode"::"ScoringMode";
