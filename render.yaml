@@ -3,7 +3,7 @@ services:
     name: pwhl-draft-server
     runtime: node
     plan: standard         # upgrade from starter before draft week — 2 GB RAM, faster CPU
-    buildCommand: npm install
+    buildCommand: npm install && npx prisma generate
     startCommand: npx tsx scripts/draft-server.ts
     healthCheckPath: /health
     envVars:
