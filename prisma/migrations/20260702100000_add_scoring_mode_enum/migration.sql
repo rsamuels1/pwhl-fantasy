@@ -4,7 +4,10 @@
 -- expects a ScoringMode enum type, which was only created via db push on
 -- staging but never captured in a migration file.
 
-CREATE TYPE "ScoringMode" AS ENUM ('VP', 'H2H', 'VTF');
+DO $$ BEGIN
+  CREATE TYPE "ScoringMode" AS ENUM ('VP', 'H2H', 'VTF');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 ALTER TABLE "FantasyLeague" ALTER COLUMN "scoringMode" DROP DEFAULT;
 
