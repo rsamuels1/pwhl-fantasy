@@ -15,6 +15,9 @@ const mockPrisma = {
   user: {
     findUnique: vi.fn(),
   },
+  session: {
+    findUnique: vi.fn(),
+  },
   fantasyTeam: {
     findFirst: vi.fn(),
   },
@@ -50,10 +53,22 @@ const FAKE_TEAM = { id: "team-1", leagueId: "league-1", ownerId: "user-1" };
 const FAKE_LEAGUE = { id: "league-1", commissionerId: "user-1", playoffStatus: "NOT_STARTED" };
 const LEAGUE_ID = "league-1";
 
+// apiRequireAuth resolves the current user via a Session row keyed by cookie token,
+// not a direct user lookup — tests authenticate by mocking session.findUnique.
+function mockAuthenticatedAs(user: typeof FAKE_USER) {
+  mockPrisma.session.findUnique.mockResolvedValue({
+    token: "valid-token",
+    userId: user.id,
+    expiresAt: new Date(Date.now() + 60 * 60 * 1000),
+    user,
+  });
+}
+
 beforeEach(() => {
   vi.clearAllMocks();
-  // Default: no user (unauthenticated)
+  // Default: no session (unauthenticated)
   mockPrisma.user.findUnique.mockResolvedValue(null);
+  mockPrisma.session.findUnique.mockResolvedValue(null);
   mockPrisma.fantasyTeam.findFirst.mockResolvedValue(null);
   mockPrisma.fantasyLeague.findUnique.mockResolvedValue(null);
 });
@@ -69,7 +84,7 @@ describe("GET /api/leagues/[leagueId]/standings", () => {
   });
 
   it("returns 403 when authenticated but not a league member", async () => {
-    mockPrisma.user.findUnique.mockResolvedValue(FAKE_USER);
+    mockAuthenticatedAs(FAKE_USER);
     // fantasyTeam.findFirst returns null → not a member
     mockPrisma.fantasyTeam.findFirst.mockResolvedValue(null);
 
@@ -98,7 +113,7 @@ describe("PUT /api/leagues/[leagueId]/lineup", () => {
   });
 
   it("returns 403 when authenticated non-member tries to set lineup", async () => {
-    mockPrisma.user.findUnique.mockResolvedValue(FAKE_USER);
+    mockAuthenticatedAs(FAKE_USER);
     mockPrisma.fantasyTeam.findFirst.mockResolvedValue(null); // not a member
 
     const { PUT } = await import("../app/api/leagues/[leagueId]/lineup/route");
@@ -128,7 +143,7 @@ describe("POST /api/leagues/[leagueId]/season", () => {
   });
 
   it("returns 403 when authenticated non-commissioner tries to advance season", async () => {
-    mockPrisma.user.findUnique.mockResolvedValue(FAKE_USER);
+    mockAuthenticatedAs(FAKE_USER);
     // League exists but commissionerId is different
     mockPrisma.fantasyLeague.findUnique.mockResolvedValue({
       ...FAKE_LEAGUE,
@@ -177,7 +192,7 @@ describe("POST /api/leagues/[leagueId]/commissioner/force-move", () => {
   });
 
   it("returns 403 when authenticated non-commissioner calls force-move", async () => {
-    mockPrisma.user.findUnique.mockResolvedValue(FAKE_USER);
+    mockAuthenticatedAs(FAKE_USER);
     mockPrisma.fantasyLeague.findUnique.mockResolvedValue({
       ...FAKE_LEAGUE,
       commissionerId: "different-user-id",
