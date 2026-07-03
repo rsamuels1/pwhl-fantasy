@@ -610,9 +610,24 @@ export async function buildEngineState(leagueId: string): Promise<{
   rosterSettings: Record<string, number>;
   leagueSeason: string;
 }> {
+  // Use an explicit select to avoid deserializing scoringMode, which is a
+  // PostgreSQL ENUM column that older cached Prisma clients misread as String.
   const league = await prisma.fantasyLeague.findUniqueOrThrow({
     where: { id: leagueId },
-    include: { draft: true, teams: true },
+    select: {
+      id: true,
+      commissionerId: true,
+      season: true,
+      rosterSettings: true,
+      draft: true,
+      teams: {
+        select: {
+          id: true,
+          draftOrder: true,
+          ownerId: true,
+        },
+      },
+    },
   });
   if (!league.draft) throw new Error("League has no draft");
 
