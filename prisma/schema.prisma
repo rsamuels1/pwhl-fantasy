@@ -95,17 +95,26 @@ model User {
   email                   String                   @unique
   displayName             String
   passwordHash            String?
-  sessionToken            String?   @unique
   magicLinkToken          String?   @unique
   magicLinkExpiresAt      DateTime?
   onboardingCompletedAt   DateTime?
   createdAt               DateTime                 @default(now())
   updatedAt               DateTime                 @updatedAt
+  sessions                Session[]
   ownedLeagues            FantasyLeague[]          @relation("Commissioner")
   memberships             FantasyTeam[]
   notifications           Notification[]
   notificationPreferences NotificationPreference[]
   feedbackSubmissions     FeedbackSubmission[]
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model FantasyLeague {
