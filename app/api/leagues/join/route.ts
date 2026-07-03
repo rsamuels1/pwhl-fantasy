@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/db";
 import { generateShortId } from "@/lib/id";
 import { setAuthCookie, createSession, USER_SESSION_COOKIE } from "@/lib/auth";
@@ -10,6 +11,7 @@ export async function POST(req: NextRequest) {
     const teamName = String(body.teamName || "").trim();
     let ownerEmail = String(body.ownerEmail || "").trim();
     const ownerName = String(body.ownerName || "").trim();
+    const password = body.password ? String(body.password) : null;
 
     // Check if user is already authenticated (via session cookie)
     const sessionEmail = req.cookies.get(USER_SESSION_COOKIE)?.value;
@@ -30,6 +32,14 @@ export async function POST(req: NextRequest) {
 
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({ where: { email: ownerEmail } });
+
+    // New users must supply a password so they can log back in
+    if (!existingUser && !password) {
+      return NextResponse.json(
+        { error: "A password is required to create your account." },
+        { status: 400 }
+      );
+    }
     
     // Check if user already owns a team in this league (before any updates)
     if (existingUser) {
@@ -50,11 +60,12 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Create or update user
+    // Create or update user — hash password only for new accounts
+    const passwordHash = (!existingUser && password) ? await bcrypt.hash(password, 10) : undefined;
     const owner = await prisma.user.upsert({
       where: { email: ownerEmail },
       update: { displayName: ownerName || ownerEmail.split("@")[0] },
-      create: { email: ownerEmail, displayName: ownerName || ownerEmail.split("@")[0] },
+      create: { email: ownerEmail, displayName: ownerName || ownerEmail.split("@")[0], passwordHash },
     });
 
     // Get current team count for draft order
