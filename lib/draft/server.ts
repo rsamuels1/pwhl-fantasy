@@ -264,9 +264,11 @@ class DraftRoom {
         bestAvailable,
       });
 
-      // If no pickId was found (queue empty + no bestAvailable), the engine returns
-      // no effects and doesn't reschedule. Retry in 5s so the draft never stalls.
+      // If no pickId was found (queue empty + no bestAvailable), only retry when
+      // the draft is still IN_PROGRESS. A PAUSED/PENDING state means the commissioner
+      // deliberately stopped it — don't loop indefinitely and auto-pick on resume.
       if (result.effects.length === 0) {
+        if (this.state.status !== "IN_PROGRESS") return;
         logger.error("[draft] onTimeout: no pick resolved — retrying in 5s");
         setTimeout(() => void this.onTimeout(), 5000);
         return;
