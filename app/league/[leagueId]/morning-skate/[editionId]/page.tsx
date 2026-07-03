@@ -13,9 +13,14 @@ export default async function MorningSkateEditionPage({
   const user = await requireAuth(`/league/${leagueId}/morning-skate/${editionId}`);
   await requireLeagueMember(leagueId, user.id);
 
-  const edition = await prisma.morningSkateEdition.findFirst({
-    where: { id: editionId, leagueId },
-  });
+  let edition: Awaited<ReturnType<typeof prisma.morningSkateEdition.findFirst>> = null;
+  try {
+    edition = await prisma.morningSkateEdition.findFirst({
+      where: { id: editionId, leagueId },
+    });
+  } catch {
+    // Table may not exist in older DB environments (P2021)
+  }
   if (!edition) notFound();
 
   const data = edition.data as unknown as EditionData;

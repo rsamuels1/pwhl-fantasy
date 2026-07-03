@@ -9,10 +9,15 @@ export default async function TeamMorningSkatePage({ params }: { params: Promise
   const team = await requireTeamOwner(teamId, user.id);
   const { id: leagueId } = team.league;
 
-  const editions = await prisma.morningSkateEdition.findMany({
-    where: { leagueId },
-    orderBy: { createdAt: "desc" },
-  });
+  let editions: Awaited<ReturnType<typeof prisma.morningSkateEdition.findMany>> = [];
+  try {
+    editions = await prisma.morningSkateEdition.findMany({
+      where: { leagueId },
+      orderBy: { createdAt: "desc" },
+    });
+  } catch {
+    // Table may not exist in older DB environments (P2021); treat as empty
+  }
 
   const fmt = (d: Date) =>
     new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric" }).format(d);
