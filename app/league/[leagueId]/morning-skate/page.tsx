@@ -13,10 +13,15 @@ export default async function MorningSkateArchivePage({
   const user = await requireAuth(`/league/${leagueId}/morning-skate`);
   await requireLeagueMember(leagueId, user.id);
 
-  const editions = await prisma.morningSkateEdition.findMany({
-    where: { leagueId },
-    orderBy: { createdAt: "desc" },
-  });
+  let editions: Awaited<ReturnType<typeof prisma.morningSkateEdition.findMany>> = [];
+  try {
+    editions = await prisma.morningSkateEdition.findMany({
+      where: { leagueId },
+      orderBy: { createdAt: "desc" },
+    });
+  } catch {
+    // Table may not exist in older DB environments (P2021); treat as empty
+  }
 
   const fmt = (d: Date) =>
     new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric" }).format(d);

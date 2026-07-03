@@ -264,11 +264,16 @@ export default async function TeamMatchupPage({
   }
 
   // ── S28-002: Morning Skate edition preview ───────────────────────────────────
-  const latestEditionRaw = await prisma.morningSkateEdition.findFirst({
-    where: { leagueId },
-    orderBy: { createdAt: "desc" },
-    select: { id: true, leagueId: true, data: true },
-  });
+  let latestEditionRaw = null;
+  try {
+    latestEditionRaw = await prisma.morningSkateEdition.findFirst({
+      where: { leagueId },
+      orderBy: { createdAt: "desc" },
+      select: { id: true, leagueId: true, data: true },
+    });
+  } catch {
+    // Table may not exist in older DB environments (P2021); treat as no edition
+  }
   const latestEdition = latestEditionRaw
     ? { ...latestEditionRaw, data: latestEditionRaw.data as unknown as EditionData }
     : null;
