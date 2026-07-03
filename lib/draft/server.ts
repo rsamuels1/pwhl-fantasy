@@ -1,4 +1,4 @@
-// lib/draft/server.ts — deployed 2026-07-03
+// lib/draft/server.ts — deployed 2026-07-03 r2
 // The IO layer. Owns the websocket connections, the real setTimeout-based clock,
 // and database persistence. All decisions are delegated to the pure engine in
 // engine.ts — this file only performs the effects the engine returns.
