@@ -720,8 +720,15 @@ export function startDraftServer(port = 8080) {
       } catch {
         return;
       }
-      const room = await getRoom(leagueId);
-      await room.handle(ws, msg);
+      try {
+        const room = await getRoom(leagueId);
+        await room.handle(ws, msg);
+      } catch (err) {
+        logger.error("[draft] message handler error", err);
+        // Clear failed room so the next connection can retry buildEngineState.
+        roomPromises.delete(leagueId);
+        ws.close(1011, "internal server error");
+      }
     });
 
     ws.on("close", async () => {
