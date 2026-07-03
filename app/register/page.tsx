@@ -8,7 +8,6 @@ export default function RegisterPage() {
   const router = useRouter();
   const [returnTo, setReturnTo] = useState("");
   const [email, setEmail] = useState("");
-  const [displayName, setDisplayName] = useState("");
   const [password, setPassword] = useState("");
   const [status, setStatus] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -32,7 +31,7 @@ export default function RegisterPage() {
       const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, displayName, password, returnTo }),
+        body: JSON.stringify({ email, password, returnTo }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -130,18 +129,6 @@ export default function RegisterPage() {
                 autoFocus
                 placeholder="you@example.com"
                 autoComplete="email"
-              />
-            </label>
-
-            <label style={labelStyle}>
-              Display name{" "}
-              <span style={{ fontWeight: 400, color: "var(--faint)" }}>(optional)</span>
-              <input
-                style={inputStyle}
-                value={displayName}
-                onChange={(e) => setDisplayName(e.target.value)}
-                placeholder="Your public name in the league"
-                autoComplete="nickname"
               />
             </label>
 

@@ -90,9 +90,10 @@ const SIZE_OPTIONS: { value: number; label: string; note: string }[] = [
 interface Props {
   userDisplayName: string;
   startAsReplay: boolean;
+  hasAutoDisplayName: boolean;
 }
 
-export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: Props) {
+export default function CreateLeagueWizard({ userDisplayName, startAsReplay, hasAutoDisplayName }: Props) {
   const router = useRouter();
   const { capture } = useAnalytics();
   const prevStepRef = useRef<number | null>(null);
@@ -108,6 +109,7 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
   const [draftDate, setDraftDate] = useState("");
   const [draftTime, setDraftTime] = useState("19:00");
   const [teamName, setTeamName] = useState(`${userDisplayName}'s Team`);
+  const [managerName, setManagerName] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [createdLeagueId, setCreatedLeagueId] = useState<string | null>(null);
@@ -221,6 +223,18 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
     setLoading(true);
     setError(null);
     try {
+      const resolvedName = (hasAutoDisplayName && managerName.trim()) ? managerName.trim() : userDisplayName;
+
+      // Persist new display name if the user chose one
+      if (hasAutoDisplayName && managerName.trim()) {
+        await fetch("/api/user/profile", {
+          method: "PATCH",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ displayName: managerName.trim() }),
+        });
+      }
+
       const res = await fetch("/api/leagues/join", {
         method: "POST",
         credentials: "include",
@@ -229,7 +243,7 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
           leagueId: createdLeagueId,
           teamName: teamName.trim(),
           ownerEmail: "",
-          ownerName: userDisplayName,
+          ownerName: resolvedName,
         }),
       });
       const data = await res.json();
@@ -816,9 +830,26 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
               <div>
                 <h1 style={{ margin: "0 0 6px", fontSize: 22 }}>Create your team</h1>
                 <p style={{ margin: 0, color: "var(--faint)", fontSize: 14 }}>
-                  You&apos;ll be the commissioner, but you also need a team to draft and play. Choose your team name.
+                  You&apos;ll be the commissioner, but you also need a team to draft and play.
                 </p>
               </div>
+
+              {hasAutoDisplayName && (
+                <label className="form-label">
+                  Your manager name
+                  <input
+                    className="form-input"
+                    value={managerName}
+                    onChange={(e) => setManagerName(e.target.value)}
+                    maxLength={80}
+                    placeholder="How other managers will know you"
+                    autoFocus
+                  />
+                  <span style={{ fontSize: 11, color: "var(--faint)", marginTop: 4, display: "block" }}>
+                    This appears in all your leagues — you can change it in account settings.
+                  </span>
+                </label>
+              )}
 
               <label className="form-label">
                 Team name
@@ -828,7 +859,7 @@ export default function CreateLeagueWizard({ userDisplayName, startAsReplay }: P
                   onChange={(e) => setTeamName(e.target.value)}
                   maxLength={50}
                   placeholder="e.g. Poulin Power Play"
-                  autoFocus
+                  autoFocus={!hasAutoDisplayName}
                 />
                 <span style={{ fontSize: 11, color: teamName.length > 45 ? "var(--amber)" : "var(--faint)", marginTop: 4, display: "block" }}>
                   {teamName.length}/50
