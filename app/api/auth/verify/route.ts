@@ -45,7 +45,13 @@ export async function GET(req: NextRequest) {
 
   // Reject open redirects — only allow same-origin paths
   const safePath = returnTo.startsWith("/") ? returnTo : "/dashboard";
-  const response = NextResponse.redirect(new URL(safePath, req.url));
+
+  // Passwordless users need to set a password before continuing
+  const destination = !user.passwordHash
+    ? `/set-password?returnTo=${encodeURIComponent(safePath)}`
+    : safePath;
+
+  const response = NextResponse.redirect(new URL(destination, req.url));
   setAuthCookie(response, await createSession(user.id));
   return response;
 }

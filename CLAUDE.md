@@ -69,12 +69,12 @@ Three environments. Full runbook: `docs/04-operations/environments.md`.
 
 | Environment | Vercel project | Branch | Domain | Database |
 |---|---|---|---|---|
-| **Beta** | `pwhl-gm-beta` | `release/beta-v1` | `beta.fantasy.dykedb.org` | Neon branch: `main` |
-| **Production** | `pwhl-fantasy` | `main` | `fantasy.dykedb.org` | Neon branch: `main` |
+| **Beta** | `pwhl-gm-beta` | `release/beta-v1` | `beta.fantasy.dykedb.org` | Neon branch: `beta` |
+| **Production** | `pwhl-fantasy` | `main` | `fantasy.dykedb.org` | Neon branch: `production` |
 | **Staging** | `pwhl-fantasy` | `dev` | `fantasydev.dykedb.org` | Neon branch: `preview` |
 
 **Key rules:**
-- `DATABASE_URL` is the isolation boundary — staging must point at the Neon `preview` branch, never `main`.
+- `DATABASE_URL` is the isolation boundary — staging must point at the Neon `preview` branch, beta at `beta`, production at `production`.
 - `BETA_HOST` env var controls which host is locked to just the `/beta` waitlist page (defaults to `"fantasy.dykedb.org"`). Unauthenticated users on the BETA_HOST domain can only reach `/` and `/beta` — `/register`, `/login`, `/create-league`, `/invite`, and all league API routes are blocked. Approved testers use `beta.fantasy.dykedb.org` for the full app. Set `BETA_HOST` to `""` when ready to open `fantasy.dykedb.org` to the public.
 - `BETA_SITE_HOST` env var identifies the beta-test subdomain (defaults to `"beta.fantasy.dykedb.org"`). Set in the `pwhl-gm-beta` Vercel project. When a league creation request arrives from this host, `POST /api/leagues/create` rejects any non-replay league with a 403 — only Beta Replay Leagues (`useBetaReplay: true`) can be created there. Staging (`fantasydev.dykedb.org`) never matches and remains unrestricted.
 - `ALLOW_SIM_DATE` must NOT be set in Production — it would let any user rewind the clock for all live leagues.

@@ -1,4 +1,4 @@
-// lib/draft/server.ts
+// lib/draft/server.ts — deployed 2026-07-03
 // The IO layer. Owns the websocket connections, the real setTimeout-based clock,
 // and database persistence. All decisions are delegated to the pure engine in
 // engine.ts — this file only performs the effects the engine returns.
@@ -192,8 +192,14 @@ class DraftRoom {
         this.send(ws, { type: "ERROR", ...result.error });
         return;
       }
+      const prevStateMp = this.state;
       this.state = result.state;
-      await this.runEffects(result.effects);
+      try {
+        await this.runEffects(result.effects);
+      } catch (err) {
+        this.state = prevStateMp; // roll back so reconnect retries the same pick slot
+        throw err;
+      }
     }
 
     if (msg.type === "PAUSE") {
@@ -241,15 +247,53 @@ class DraftRoom {
     try {
       const slot = this.state.order[this.state.currentOverall - 1];
       const teamId = slot?.fantasyTeamId ?? "";
-      const bestAvailable = await this.bestAvailablePlayerIds(teamId);
+
+      // bestAvailablePlayerIds queries the DB; catch failures so a transient DB
+      // error never permanently stalls the draft — the queue still works without it.
+      let bestAvailable: string[] = [];
+      try {
+        bestAvailable = await this.bestAvailablePlayerIds(teamId);
+      } catch (err) {
+        logger.error("[draft] bestAvailablePlayerIds failed — using queue only", err);
+      }
+
       const result = reduce(this.state, {
         kind: "TIMEOUT",
         nowMs: Date.now(),
         timerConfig: this.timerConfig,
         bestAvailable,
       });
+
+      // If no pickId was found (queue empty + no bestAvailable), only retry when
+      // the draft is still IN_PROGRESS. A PAUSED/PENDING state means the commissioner
+      // deliberately stopped it — don't loop indefinitely and auto-pick on resume.
+      if (result.effects.length === 0) {
+        if (this.state.status !== "IN_PROGRESS") return;
+        logger.error("[draft] onTimeout: no pick resolved — retrying in 5s");
+        setTimeout(() => void this.onTimeout(), 5000);
+        return;
+      }
+
+      const prevState = this.state;
       this.state = result.state;
-      await this.runEffects(result.effects);
+      try {
+        await this.runEffects(result.effects);
+      } catch (err) {
+        // Roll back so the retry fires for the same pick slot, not a later one.
+        this.state = prevState;
+        // P2002 means the player is already on a roster (e.g. a previous partial
+        // write that left a dangling RosterEntry). Mark them taken in the rolled-back
+        // state so the retry engine skips them and picks someone else.
+        if ((err as { code?: string })?.code === "P2002") {
+          const failedId = result.state.completed.at(-1)?.playerId;
+          if (failedId) this.state.draftedPlayerIds.add(failedId);
+        }
+        logger.error("[draft] onTimeout runEffects failed — rescheduling in 5s", err);
+        setTimeout(() => void this.onTimeout(), 5000);
+      }
+    } catch (err) {
+      logger.error("[draft] onTimeout outer error — rescheduling in 5s", err);
+      setTimeout(() => void this.onTimeout(), 5000);
     } finally {
       this.pickInFlight = false;
     }
@@ -363,7 +407,10 @@ class DraftRoom {
       switch (e.kind) {
         case "PERSIST_PICK":
           await this.persistPick(e.pick);
-          await this.emitDraftPickEvent(e.pick);
+          // Fire-and-forget: activity log failure must never block BROADCAST_PICK
+          void this.emitDraftPickEvent(e.pick).catch((err) =>
+            logger.error("[draft] emitDraftPickEvent failed", err)
+          );
           break;
         case "BROADCAST_PICK":
           this.broadcast({
@@ -444,9 +491,7 @@ class DraftRoom {
   // Persist the pick AND advance the draft's currentPick atomically, plus add
   // the player to the drafting team's roster. Writing immediately is what lets a
   // restart rebuild state from the DB.
-  // P2002 (unique constraint on RosterEntry.fantasyTeamId_playerId) means the player
-  // was already drafted by another team — treat as a no-op; the in-memory engine
-  // already deduplicates via draftedPlayerIds, so this is a safety net only.
+  // Always throws on failure — callers must roll back in-memory state and retry.
   private async persistPick(pick: CompletedPick) {
     try {
       await prisma.$transaction([
@@ -469,11 +514,12 @@ class DraftRoom {
         }),
       ]);
     } catch (e: unknown) {
-      if ((e as { code?: string })?.code === "P2002") {
-        console.error(`[Draft] Pick ${pick.overall} skipped: player ${pick.playerId} already on a roster`);
-        return;
-      }
-      throw e;
+      const code = (e as { code?: string })?.code;
+      logger.error(
+        `[draft] persistPick failed overall=${pick.overall} player=${pick.playerId} team=${pick.fantasyTeamId} draftId=${this.state.draftId} code=${code ?? "?"}`,
+        e
+      );
+      throw e; // always re-throw; caller handles rollback and retry
     }
   }
 
@@ -610,9 +656,24 @@ export async function buildEngineState(leagueId: string): Promise<{
   rosterSettings: Record<string, number>;
   leagueSeason: string;
 }> {
+  // Use an explicit select to avoid deserializing scoringMode, which is a
+  // PostgreSQL ENUM column that older cached Prisma clients misread as String.
   const league = await prisma.fantasyLeague.findUniqueOrThrow({
     where: { id: leagueId },
-    include: { draft: true, teams: true },
+    select: {
+      id: true,
+      commissionerId: true,
+      season: true,
+      rosterSettings: true,
+      draft: true,
+      teams: {
+        select: {
+          id: true,
+          draftOrder: true,
+          ownerId: true,
+        },
+      },
+    },
   });
   if (!league.draft) throw new Error("League has no draft");
 
@@ -720,8 +781,15 @@ export function startDraftServer(port = 8080) {
       } catch {
         return;
       }
-      const room = await getRoom(leagueId);
-      await room.handle(ws, msg);
+      try {
+        const room = await getRoom(leagueId);
+        await room.handle(ws, msg);
+      } catch (err) {
+        logger.error("[draft] message handler error", err);
+        // Clear failed room so the next connection can retry buildEngineState.
+        roomPromises.delete(leagueId);
+        ws.close(1011, "internal server error");
+      }
     });
 
     ws.on("close", async () => {

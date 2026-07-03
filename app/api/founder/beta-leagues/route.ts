@@ -41,16 +41,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid draftStartsAt date" }, { status: 400 });
   }
 
-  // Validate draft date is within July 6–12, 2026.
-  const minDate = new Date("2026-07-06T00:00:00Z");
-  const maxDate = new Date("2026-07-12T23:59:59Z");
-  if (draftDate < minDate || draftDate > maxDate) {
-    return NextResponse.json(
-      { error: "draftStartsAt must be within July 6–12, 2026" },
-      { status: 400 }
-    );
-  }
-
   const email = body.commissionerEmail.trim().toLowerCase();
 
   // The 2025-26 fixture has 20 derived weeks — pick 4 randomly.

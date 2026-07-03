@@ -66,6 +66,8 @@ export async function renewLeague(
         scoringMode: league.scoringMode,
         rulesVersion: league.rulesVersion,
         scoringVersion: league.scoringVersion,
+        isReplay: league.isReplay,
+        replayCurrentDate: league.isReplay ? null : undefined,
         draftStartsAt: overrides.draftStartsAt !== undefined
           ? overrides.draftStartsAt
           : null,

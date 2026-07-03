@@ -41,22 +41,28 @@ export function clearAuthCookie(response: NextResponse) {
   });
 }
 
-/** Creates an opaque session token, stores it on the user, and returns it for the cookie. */
+/** Creates a session row and returns the token for the cookie. Supports multiple concurrent sessions. */
 export async function createSession(userId: string): Promise<string> {
   const token = crypto.randomUUID();
-  await prisma.user.update({ where: { id: userId }, data: { sessionToken: token } });
+  const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+  await prisma.session.create({ data: { userId, token, expiresAt } });
   return token;
 }
 
-/** Clears the session token for the given opaque token value (idempotent). */
+/** Deletes a specific session by token (idempotent). */
 export async function clearSession(token: string): Promise<void> {
-  await prisma.user.updateMany({ where: { sessionToken: token }, data: { sessionToken: null } });
+  await prisma.session.deleteMany({ where: { token } });
 }
 
 export async function getCurrentUser(): Promise<User | null> {
   const token = await getAuthCookie();
   if (!token) return null;
-  return prisma.user.findUnique({ where: { sessionToken: token } });
+  const session = await prisma.session.findUnique({
+    where: { token },
+    include: { user: true },
+  });
+  if (!session || session.expiresAt < new Date()) return null;
+  return session.user;
 }
 
 // ── Page-level guards (throw/redirect) ───────────────────────────────────────
@@ -138,9 +144,9 @@ export async function apiRequireAuth(
 ): Promise<User | NextResponse> {
   const token = req.cookies.get(USER_SESSION_COOKIE)?.value;
   if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  const user = await prisma.user.findUnique({ where: { sessionToken: token } });
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  return user;
+  const session = await prisma.session.findUnique({ where: { token }, include: { user: true } });
+  if (!session || session.expiresAt < new Date()) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  return session.user;
 }
 
 // Returns the user's FantasyTeam in the league, or a 403 NextResponse.
@@ -209,13 +215,13 @@ export async function apiRequireFounder(
  * tokenHash: SHA-256 of rawToken, stored in DB
  * expiresAt: 15 minutes from now
  */
-export function generateMagicLinkToken(): {
+export function generateMagicLinkToken(expiresInMs = 15 * 60 * 1000): {
   rawToken: string;
   tokenHash: string;
   expiresAt: Date;
 } {
   const rawToken = crypto.randomBytes(32).toString("hex");
   const tokenHash = crypto.createHash("sha256").update(rawToken).digest("hex");
-  const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 min
+  const expiresAt = new Date(Date.now() + expiresInMs);
   return { rawToken, tokenHash, expiresAt };
 }

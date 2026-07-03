@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { apiRequireFounder } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { sendBetaInvite } from "@/lib/services/email-service";
+import { logger } from "@/lib/logger";
 
 const VALID_STATUSES = ["NONE", "INVITED", "ACCEPTED", "ACTIVE", "RENEWED"] as const;
 type BetaStatus = typeof VALID_STATUSES[number];
@@ -33,8 +35,19 @@ export async function PATCH(
   const updated = await prisma.fantasyLeague.update({
     where: { id: leagueId },
     data: { betaStatus: betaStatus as BetaStatus },
-    select: { betaStatus: true },
+    select: {
+      betaStatus: true,
+      commissioner: { select: { email: true, displayName: true } },
+    },
   });
+
+  if (betaStatus === "INVITED" && updated.commissioner?.email) {
+    void sendBetaInvite(
+      updated.commissioner.email,
+      updated.commissioner.displayName,
+      leagueId
+    ).catch((err) => logger.error("sendBetaInvite failed", err));
+  }
 
   return NextResponse.json({ betaStatus: updated.betaStatus });
 }

@@ -38,11 +38,12 @@ export function middleware(req: NextRequest) {
     return NextResponse.redirect(url, 307);
   }
 
-  // League / team / founder pages — redirect to login with returnTo
+  // League / team / founder / account pages — redirect to login with returnTo
   if (
     pathname.startsWith("/league/") ||
     pathname.startsWith("/team/") ||
-    pathname.startsWith("/founder")
+    pathname.startsWith("/founder") ||
+    pathname === "/account"
   ) {
     if (!cookie) {
       const url = req.nextUrl.clone();
@@ -52,15 +53,16 @@ export function middleware(req: NextRequest) {
     }
   }
 
-  // League + founder API routes — return 401 (except join and create, which handle their own
-  // auth/identity logic and support both authenticated and unauthenticated callers)
+  // League + founder + user profile API routes — return 401 (except join and create,
+  // which handle their own auth/identity logic and support unauthenticated callers)
   if (
     (
       pathname.startsWith("/api/leagues/") &&
       !pathname.startsWith("/api/leagues/join") &&
       !pathname.startsWith("/api/leagues/create")
     ) ||
-    pathname.startsWith("/api/founder/")
+    pathname.startsWith("/api/founder/") ||
+    pathname.startsWith("/api/user/profile")
   ) {
     if (!cookie) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -83,6 +85,7 @@ export const config = {
     "/team/:path*",
     "/founder/:path*",
     "/founder",
+    "/account",
     "/api/leagues/:path*",
     "/api/founder/:path*",
     // Catch-all for beta-domain lockdown (excludes static files)
