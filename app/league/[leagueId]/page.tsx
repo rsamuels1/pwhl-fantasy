@@ -83,8 +83,7 @@ export default async function LeagueOverviewPage({
   }
 
   const scoringMode = league.scoringMode ?? "H2H";
-  const isVpMode = scoringMode === "VP" || scoringMode === "H2H";
-  const isVtfMode = isVpMode;
+  const isVtfMode = scoringMode === "VTF";
   const isH2h = scoringMode === "H2H";
 
   const matchupInput = matchups.map((m) => ({
@@ -310,11 +309,16 @@ export default async function LeagueOverviewPage({
     ((league.scoringSettings as Record<string, unknown>)?.showNegativeAwards ?? true) !== false;
 
   // Morning Skate: latest edition for the preview card
-  const latestEditionRaw = await prisma.morningSkateEdition.findFirst({
-    where: { leagueId },
-    orderBy: { createdAt: "desc" },
-    select: { id: true, leagueId: true, data: true },
-  });
+  let latestEditionRaw = null;
+  try {
+    latestEditionRaw = await prisma.morningSkateEdition.findFirst({
+      where: { leagueId },
+      orderBy: { createdAt: "desc" },
+      select: { id: true, leagueId: true, data: true },
+    });
+  } catch {
+    // Table may not exist in older DB environments (P2021); treat as no edition
+  }
   const latestEdition = latestEditionRaw
     ? { ...latestEditionRaw, data: latestEditionRaw.data as unknown as EditionData }
     : null;
