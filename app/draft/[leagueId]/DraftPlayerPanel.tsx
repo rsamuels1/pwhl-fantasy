@@ -55,6 +55,7 @@ export function PlayerPanel({
   queue,
   initialStats,
   initialStatSeason,
+  connStatus,
   onPick,
   onSearch,
   onSetQueue,
@@ -66,6 +67,7 @@ export function PlayerPanel({
   queue: string[];
   initialStats: PlayerStats[];
   initialStatSeason: string | null;
+  connStatus: string;
   onPick: (playerId: string) => void;
   onSearch: (q: string) => void;
   onSetQueue: (ids: string[]) => void;
@@ -85,6 +87,7 @@ export function PlayerPanel({
 
   const onClock = draft.order.find((s) => s.overall === draft.currentOverall);
   const isMyTurn = draft.status === "IN_PROGRESS" && onClock?.fantasyTeamId === teamId;
+  const canPick = isMyTurn && connStatus === "open";
   const drafted = new Set(draft.draftedPlayerIds);
 
   // Only hit the API for filtered searches — initial full list comes from SSR props.
@@ -279,6 +282,7 @@ export function PlayerPanel({
                 <table style={{ ...styles.table, width: "100%", minWidth: 560 }}>
                   <thead style={{ position: "sticky", top: 0, background: "var(--bg)", zIndex: 1 }}>
                     <tr style={{ color: "var(--muted)", fontSize: 11, textTransform: "uppercase" }}>
+                      {isMyTurn && <th style={styles.th} />}
                       <th style={styles.th}>Pos</th>
                       <th style={styles.th}>Tm</th>
                       <th style={{ ...styles.th, minWidth: 130 }}>Player</th>
@@ -301,6 +305,22 @@ export function PlayerPanel({
                   <tbody>
                     {rows.map(({ player: p, stats: s }) => (
                       <tr key={p.id} className="draft-player-row" style={styles.playerRow}>
+                        {isMyTurn && (
+                          <td style={{ padding: "5px 6px" }}>
+                            <button
+                              style={{
+                                ...styles.btnPick,
+                                ...(canPick ? {} : { opacity: 0.5, cursor: "not-allowed" as const }),
+                              }}
+                              onClick={() => canPick && onPick(p.id)}
+                              disabled={!canPick}
+                              title={canPick ? `Draft ${p.name}` : "Reconnecting…"}
+                              aria-label={`Draft ${p.name}`}
+                            >
+                              Pick
+                            </button>
+                          </td>
+                        )}
                         <td style={{ padding: "5px 6px" }}><PosTag pos={p.position} /></td>
                         <td style={{ padding: "5px 6px", color: "var(--muted)", fontSize: 11, whiteSpace: "nowrap" }} title={p.team ? undefined : "Free agent — not currently on a PWHL roster"}>{p.team ?? "FA"}</td>
                         <td style={{ padding: "5px 6px", fontSize: 13, whiteSpace: "nowrap" }}>{p.name}</td>
@@ -314,21 +334,16 @@ export function PlayerPanel({
                           );
                         })}
                         <td style={{ padding: "5px 6px", textAlign: "right" }}>
-                          <div style={{ display: "flex", gap: 6, justifyContent: "flex-end" }}>
-                            {isMyTurn && (
-                              <button style={styles.btnPick} onClick={() => onPick(p.id)} aria-label={`Draft ${p.name}`}>Pick</button>
-                            )}
-                            <button
-                              style={styles.starBtn}
-                              onClick={() => queue.includes(p.id) ? removeFromQueue(p.id) : addToQueue(p.id)}
-                              title={queue.includes(p.id) ? "Remove from My List" : "Add to My List"}
-                            >
-                              {queue.includes(p.id)
-                                ? <svg width="16" height="16" viewBox="0 0 24 24" fill="var(--accent-strong)" stroke="var(--accent-strong)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-                                : <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-                              }
-                            </button>
-                          </div>
+                          <button
+                            style={styles.starBtn}
+                            onClick={() => queue.includes(p.id) ? removeFromQueue(p.id) : addToQueue(p.id)}
+                            title={queue.includes(p.id) ? "Remove from My List" : "Add to My List"}
+                          >
+                            {queue.includes(p.id)
+                              ? <svg width="16" height="16" viewBox="0 0 24 24" fill="var(--accent-strong)" stroke="var(--accent-strong)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                              : <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                            }
+                          </button>
                         </td>
                       </tr>
                     ))}
@@ -368,7 +383,13 @@ export function PlayerPanel({
                         <button style={styles.queueBtn} onClick={() => moveInQueue(p.id, -1)} disabled={i === 0} aria-label={`Move ${p.name} up in list`}>↑</button>
                         <button style={styles.queueBtn} onClick={() => moveInQueue(p.id, 1)} disabled={i === queuedPlayers.length - 1} aria-label={`Move ${p.name} down in list`}>↓</button>
                         {isMyTurn && (
-                          <button style={{ ...styles.btnPick, fontSize: 11, padding: "3px 8px" }} onClick={() => onPick(p.id)} aria-label={`Draft ${p.name}`}>Pick</button>
+                          <button
+                            style={{ ...styles.btnPick, fontSize: 11, padding: "3px 8px", ...(canPick ? {} : { opacity: 0.5, cursor: "not-allowed" as const }) }}
+                            onClick={() => canPick && onPick(p.id)}
+                            disabled={!canPick}
+                            title={canPick ? `Draft ${p.name}` : "Reconnecting…"}
+                            aria-label={`Draft ${p.name}`}
+                          >Pick</button>
                         )}
                         <button style={{ ...styles.queueBtn, color: "var(--red)" }} onClick={() => removeFromQueue(p.id)} aria-label={`Remove ${p.name} from list`}>✕</button>
                       </div>

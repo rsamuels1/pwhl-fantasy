@@ -241,15 +241,36 @@ class DraftRoom {
     try {
       const slot = this.state.order[this.state.currentOverall - 1];
       const teamId = slot?.fantasyTeamId ?? "";
-      const bestAvailable = await this.bestAvailablePlayerIds(teamId);
+
+      // bestAvailablePlayerIds queries the DB; catch failures so a transient DB
+      // error never permanently stalls the draft — the queue still works without it.
+      let bestAvailable: string[] = [];
+      try {
+        bestAvailable = await this.bestAvailablePlayerIds(teamId);
+      } catch (err) {
+        logger.error("[draft] bestAvailablePlayerIds failed — using queue only", err);
+      }
+
       const result = reduce(this.state, {
         kind: "TIMEOUT",
         nowMs: Date.now(),
         timerConfig: this.timerConfig,
         bestAvailable,
       });
+
+      // If no pickId was found (queue empty + no bestAvailable), the engine returns
+      // no effects and doesn't reschedule. Retry in 5s so the draft never stalls.
+      if (result.effects.length === 0) {
+        logger.error("[draft] onTimeout: no pick resolved — retrying in 5s");
+        setTimeout(() => void this.onTimeout(), 5000);
+        return;
+      }
+
       this.state = result.state;
       await this.runEffects(result.effects);
+    } catch (err) {
+      logger.error("[draft] onTimeout runEffects failed — rescheduling in 5s", err);
+      setTimeout(() => void this.onTimeout(), 5000);
     } finally {
       this.pickInFlight = false;
     }
