@@ -258,6 +258,28 @@ export default function RosterManager({
         </div>
       )}
 
+      {/* ── Incomplete roster banner ── */}
+      {isOwnRoster && !isFull && (
+        <div style={{
+          padding: "10px 16px", borderRadius: 10, fontSize: 13,
+          background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.25)",
+          color: "var(--amber)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap",
+        }}>
+          <span>
+            Your roster has {maxRosterSize - roster.length} open {maxRosterSize - roster.length === 1 ? "spot" : "spots"} — add free agents to fill it out.
+          </span>
+          <button
+            onClick={() => setTab("freeAgents")}
+            style={{
+              fontSize: 12, fontWeight: 700, padding: "5px 12px", borderRadius: 8, border: "none",
+              cursor: "pointer", background: "rgba(245,158,11,0.15)", color: "var(--amber)", whiteSpace: "nowrap",
+            }}
+          >
+            Browse free agents →
+          </button>
+        </div>
+      )}
+
       {/* ── Team selector ── */}
       {!hideViewingSelector && (
         <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
