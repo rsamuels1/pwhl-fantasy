@@ -453,12 +453,15 @@ class DraftRoom {
           // Auto-start season so matchup rows exist immediately
           const league = await prisma.fantasyLeague.findUnique({
             where: { id: this.leagueId },
-            select: { isReplay: true },
+            select: { isReplay: true, betaStatus: true },
           });
           try {
             await startSeason(this.leagueId, prisma);
-            // For replay leagues, set replayCurrentDate to the first period's start
-            if (league?.isReplay) {
+            // For replay leagues, set replayCurrentDate to the first period's start.
+            // Real-time beta leagues (betaStatus "ACTIVE") must keep replayCurrentDate
+            // null forever — that's what advance-beta-seasons's cron query relies on
+            // to find them. Stamping it here would make them invisible to that cron.
+            if (league?.isReplay && league.betaStatus !== "ACTIVE") {
               const state = await getSeasonState(this.leagueId, Date.now(), prisma);
               const firstPeriod = state.periods[0];
               if (firstPeriod) {

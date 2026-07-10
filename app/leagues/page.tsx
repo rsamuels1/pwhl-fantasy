@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/db";
+import { getCurrentUser } from "@/lib/auth";
 
 const STATUS_LABEL: Record<string, string> = {
   PRE_DRAFT: "Drafting soon",
@@ -13,6 +14,25 @@ const PLAYOFF_LABEL: Record<string, string> = {
 };
 
 export default async function LeaguesPage() {
+  const user = await getCurrentUser();
+
+  // My leagues: leagues the current user belongs to (owns a team in), public or not.
+  const myTeams = user
+    ? await prisma.fantasyTeam.findMany({
+        where: { ownerId: user.id },
+        select: {
+          id: true,
+          league: {
+            select: {
+              id: true, name: true, season: true, status: true, playoffStatus: true,
+              _count: { select: { teams: true } },
+            },
+          },
+        },
+        orderBy: { createdAt: "desc" },
+      })
+    : [];
+
   // Showcase: public leagues actively in season (most interesting to new visitors)
   const showcaseLeagues = await prisma.fantasyLeague.findMany({
     where: { isPublic: true, status: "IN_SEASON" },
@@ -44,6 +64,45 @@ export default async function LeaguesPage() {
             Join an open league or start your own franchise. Each league drafts real PWHL players and competes for the full season.
           </p>
         </header>
+
+        {/* ── My leagues: leagues I belong to (public or private) ── */}
+        {user && myTeams.length > 0 && (
+          <section>
+            <h2 style={{ fontSize: 13, fontWeight: 700, color: "var(--faint)", textTransform: "uppercase", letterSpacing: "0.12em", margin: "0 0 14px" }}>
+              My leagues
+            </h2>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 12 }}>
+              {myTeams.map(({ id: teamId, league }) => {
+                const playoffLabel = PLAYOFF_LABEL[league.playoffStatus];
+                const statusLabel = STATUS_LABEL[league.status] ?? league.status;
+                return (
+                  <Link key={teamId} href={`/team/${teamId}/matchup`} style={{
+                    display: "block", padding: "18px 20px", borderRadius: 16, textDecoration: "none",
+                    background: "var(--surface)", border: "1px solid var(--border)",
+                  }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ fontSize: 14, fontWeight: 700, color: "var(--text)", marginBottom: 3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                          {league.name}
+                        </div>
+                        <div style={{ fontSize: 12, color: "var(--faint)" }}>
+                          {league.season} · {league._count.teams} managers
+                        </div>
+                      </div>
+                      <span style={{
+                        fontSize: 10, fontWeight: 700, padding: "3px 8px", borderRadius: 20, flexShrink: 0,
+                        background: league.status === "IN_SEASON" ? "rgba(81,216,138,0.12)" : "var(--border)",
+                        color: league.status === "IN_SEASON" ? "var(--green)" : "var(--dim)",
+                      }}>
+                        {playoffLabel ?? statusLabel}
+                      </span>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          </section>
+        )}
 
         {/* ── Showcase: active in-season leagues ── */}
         {showcaseLeagues.length > 0 && (
