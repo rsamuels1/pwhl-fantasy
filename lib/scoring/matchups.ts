@@ -17,6 +17,18 @@ import {
   type ScoringBreakdown,
 } from "./index";
 import { derivePeriods, type ScoringPeriod } from "./periods";
+import { resolveFixturePeriod, toFixtureNow, type BetaWeekMapping } from "../replayTime";
+
+// Beta replay leagues store REMAPPED real-calendar dates on ScoringPeriod/Matchup
+// rows (for period lifecycle/lock detection), but the actual StatLine/Game rows
+// live at their original 2025-26 fixture dates. `scoringSettings.betaWeekMappings`
+// (present on the raw JSON, not part of the typed ScoringSettings) bridges the two.
+// Every function below that queries StatLine by date range must translate through
+// this before querying — otherwise a beta league's live/in-progress score reads 0
+// all week even though the underlying fixture games have "already" happened.
+function betaMappingsFrom(scoringSettings: ScoringSettings): BetaWeekMapping[] | undefined {
+  return (scoringSettings as unknown as { betaWeekMappings?: BetaWeekMapping[] }).betaWeekMappings;
+}
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 
@@ -58,15 +70,17 @@ export async function computeTeamScore(
   if (entries.length === 0) return 0;
   const playerIds = entries.map((e) => e.playerId);
 
-  const upperBound = nowMs
-    ? new Date(Math.min(nowMs, period.endsAt.getTime()))
-    : period.endsAt;
+  const scoringPeriod = resolveFixturePeriod(period, betaMappingsFrom(scoringSettings));
+  const scoringNowMs = nowMs != null ? toFixtureNow(nowMs, period, scoringPeriod) : undefined;
+  const upperBound = scoringNowMs
+    ? new Date(Math.min(scoringNowMs, scoringPeriod.endsAt.getTime()))
+    : scoringPeriod.endsAt;
 
   const lines = await prisma.statLine.findMany({
     where: {
       playerId: { in: playerIds },
       game: {
-        startsAt: { gte: period.startsAt, lt: upperBound },
+        startsAt: { gte: scoringPeriod.startsAt, lt: upperBound },
       },
     },
     include: { player: { select: { position: true } } },
@@ -140,10 +154,12 @@ export async function computeTeamScoreDetailed(
   const playerMap = new Map(entries.map((e) => [e.playerId, e.player]));
   const slotMap = new Map(entries.map((e) => [e.playerId, e.slot]));
 
+  const scoringPeriod = resolveFixturePeriod(period, betaMappingsFrom(scoringSettings));
+  const scoringNowMs = nowMs != null ? toFixtureNow(nowMs, period, scoringPeriod) : undefined;
   const lines = await prisma.statLine.findMany({
     where: {
       playerId: { in: playerIds },
-      game: { startsAt: { gte: period.startsAt, lt: nowMs ? new Date(Math.min(nowMs, period.endsAt.getTime())) : period.endsAt } },
+      game: { startsAt: { gte: scoringPeriod.startsAt, lt: scoringNowMs ? new Date(Math.min(scoringNowMs, scoringPeriod.endsAt.getTime())) : scoringPeriod.endsAt } },
     },
     include: { player: { select: { position: true } } },
   });
@@ -607,19 +623,10 @@ export async function scoreVtfWeek(
   });
   const settings = parseScoringSettings(league.scoringSettings);
 
-  // Beta leagues store period dates in real July time for lifecycle/lock detection,
-  // but stat lines live at their original fixture dates. Swap in the fixture window
-  // before scoring so the stat line query actually finds data.
-  const rawSettings = league.scoringSettings as Record<string, unknown>;
-  const betaWeekMappings = rawSettings?.betaWeekMappings as
-    | { week: number; fixtureStart: string; fixtureEnd: string }[]
-    | undefined;
-  const fixtureMapping = betaWeekMappings?.find((m) => m.week === week);
-  const scoringPeriod: ScoringPeriod = fixtureMapping
-    ? { week, startsAt: new Date(fixtureMapping.fixtureStart), endsAt: new Date(fixtureMapping.fixtureEnd) }
-    : period;
-
-  const scores = await computeAllTeamScores(leagueId, scoringPeriod, settings, prisma);
+  // computeAllTeamScores → computeTeamScore internally translates `period` through
+  // scoringSettings.betaWeekMappings (real-calendar dates → original fixture dates)
+  // when present, so beta leagues score correctly without special-casing here.
+  const scores = await computeAllTeamScores(leagueId, period, settings, prisma);
 
   // Persist cached scores to all matchup rows for the week.
   const matchups = await prisma.matchup.findMany({

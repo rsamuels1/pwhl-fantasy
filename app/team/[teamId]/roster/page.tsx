@@ -157,6 +157,17 @@ export default async function TeamRosterPage({ params, searchParams }: Props) {
   const betaWeekMappings = (rawLeagueSettings?.betaWeekMappings as BetaWeekMapping[] | undefined) ?? null;
   const fixturePeriodForGames = periodForGames ? resolveFixturePeriod(periodForGames, betaWeekMappings) : null;
   const fixtureProjectionPeriod = projectionPeriod ? resolveFixturePeriod(projectionPeriod, betaWeekMappings) : null;
+  const fixtureLastCompletedPeriod = lastCompletedEntry
+    ? resolveFixturePeriod(lastCompletedEntry.period, betaWeekMappings)
+    : null;
+  // Games remaining / lock detection / "this week" stat queries — use fixture dates
+  // for beta replay leagues. fixtureNowForGames translates the display-calendar "now"
+  // to its fixture-equivalent so range queries match the fixture game startsAt values.
+  // periodForGames === activePeriod whenever activePeriod is set, so this is also the
+  // correctly fixture-translated bound for the "this week" queries below.
+  const fixtureNowForGames = fixturePeriodForGames && periodForGames
+    ? new Date(toFixtureNow(nowMs, periodForGames, fixturePeriodForGames))
+    : now;
 
   const playerIds = team.roster.map((e) => e.playerId);
   const pwhlTeamIds = [...new Set(team.roster.map((e) => e.player.team?.id).filter((id): id is string => !!id))];
@@ -172,20 +183,20 @@ export default async function TeamRosterPage({ params, searchParams }: Props) {
           select: STAT_LINE_SELECT,
         })
       : Promise.resolve([] as RawLine[]),
-    lastCompletedEntry && playerIds.length > 0
+    fixtureLastCompletedPeriod && playerIds.length > 0
       ? prisma.statLine.findMany({
           where: {
             playerId: { in: playerIds },
-            game: { startsAt: { gte: lastCompletedEntry.period.startsAt, lt: lastCompletedEntry.period.endsAt } },
+            game: { startsAt: { gte: fixtureLastCompletedPeriod.startsAt, lt: fixtureLastCompletedPeriod.endsAt } },
           },
           select: STAT_LINE_SELECT,
         })
       : Promise.resolve([] as RawLine[]),
-    activePeriod && playerIds.length > 0
+    fixturePeriodForGames && activePeriod && playerIds.length > 0
       ? prisma.statLine.findMany({
           where: {
             playerId: { in: playerIds },
-            game: { startsAt: { gte: activePeriod.startsAt, lte: now } },
+            game: { startsAt: { gte: fixturePeriodForGames.startsAt, lte: fixtureNowForGames } },
           },
           select: STAT_LINE_SELECT,
         })
@@ -209,10 +220,10 @@ export default async function TeamRosterPage({ params, searchParams }: Props) {
           select: { homeTeamId: true, awayTeamId: true },
         })
       : Promise.resolve([] as { homeTeamId: string; awayTeamId: string }[]),
-    activePeriod && pwhlTeamIds.length > 0
+    fixturePeriodForGames && activePeriod && pwhlTeamIds.length > 0
       ? prisma.game.findMany({
           where: {
-            startsAt: { gte: activePeriod.startsAt, lte: now },
+            startsAt: { gte: fixturePeriodForGames.startsAt, lte: fixtureNowForGames },
             OR: [{ homeTeamId: { in: pwhlTeamIds } }, { awayTeamId: { in: pwhlTeamIds } }],
           },
           select: { homeTeamId: true, awayTeamId: true, startsAt: true },
@@ -231,11 +242,6 @@ export default async function TeamRosterPage({ params, searchParams }: Props) {
   }
 
   // Games remaining per PWHL team — use fixture dates for beta replay leagues.
-  // fixtureNow translates the display-calendar "now" to its fixture-equivalent so
-  // the gt lower bound matches the fixture game startsAt values.
-  const fixtureNowForGames = fixturePeriodForGames && periodForGames
-    ? new Date(toFixtureNow(nowMs, periodForGames, fixturePeriodForGames))
-    : now;
   const remainingGameRows = fixturePeriodForGames && pwhlTeamIds.length > 0
     ? await prisma.game.findMany({
         where: {
@@ -363,15 +369,15 @@ export default async function TeamRosterPage({ params, searchParams }: Props) {
         viewedIds.length > 0
           ? prisma.statLine.findMany({ where: { playerId: { in: viewedIds }, game: { season } }, select: STAT_LINE_SELECT })
           : Promise.resolve([]),
-        lastCompletedEntry && viewedIds.length > 0
-          ? prisma.statLine.findMany({ where: { playerId: { in: viewedIds }, game: { startsAt: { gte: lastCompletedEntry.period.startsAt, lt: lastCompletedEntry.period.endsAt } } }, select: STAT_LINE_SELECT })
+        fixtureLastCompletedPeriod && viewedIds.length > 0
+          ? prisma.statLine.findMany({ where: { playerId: { in: viewedIds }, game: { startsAt: { gte: fixtureLastCompletedPeriod.startsAt, lt: fixtureLastCompletedPeriod.endsAt } } }, select: STAT_LINE_SELECT })
           : Promise.resolve([]),
-        activePeriod && viewedIds.length > 0
-          ? prisma.statLine.findMany({ where: { playerId: { in: viewedIds }, game: { startsAt: { gte: activePeriod.startsAt, lte: now } } }, select: STAT_LINE_SELECT })
+        fixturePeriodForGames && activePeriod && viewedIds.length > 0
+          ? prisma.statLine.findMany({ where: { playerId: { in: viewedIds }, game: { startsAt: { gte: fixturePeriodForGames.startsAt, lte: fixtureNowForGames } } }, select: STAT_LINE_SELECT })
           : Promise.resolve([]),
-        activePeriod && viewedPwhlTeamIds.length > 0
+        fixturePeriodForGames && activePeriod && viewedPwhlTeamIds.length > 0
           ? prisma.game.findMany({
-              where: { startsAt: { gte: activePeriod.startsAt, lte: now }, OR: [{ homeTeamId: { in: viewedPwhlTeamIds } }, { awayTeamId: { in: viewedPwhlTeamIds } }] },
+              where: { startsAt: { gte: fixturePeriodForGames.startsAt, lte: fixtureNowForGames }, OR: [{ homeTeamId: { in: viewedPwhlTeamIds } }, { awayTeamId: { in: viewedPwhlTeamIds } }] },
               select: { homeTeamId: true, awayTeamId: true, startsAt: true },
             })
           : Promise.resolve([] as { homeTeamId: string; awayTeamId: string; startsAt: Date }[]),
