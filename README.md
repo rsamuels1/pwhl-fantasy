@@ -1,9 +1,75 @@
-# PWHL GM
+# 🏒 PWHL GM
 
-A fantasy sports web app for the Professional Women's Hockey League, targeting the
-2026-27 season (12 teams). Create leagues, draft real players the week before the
-opener, set lineups, and compete in weekly head-to-head matchups scored from real stats.
+A fantasy hockey platform built specifically for the Professional Women’s Hockey League.
 
+PWHL GM lets fans create leagues, draft real players, set lineups, and compete in weekly head-to-head matchups scored from real player performance. The product is being built around the 2026–27 PWHL season.
+
+## Why I Built It
+
+The PWHL is still a young league, which means a lot of the fantasy infrastructure that exists around established sports simply doesn’t exist yet.
+
+I wanted to explore what a fantasy product designed specifically for the PWHL could look like — not just a reskinned version of an existing men’s hockey product.
+
+The core question was:
+
+**What would make following the league more engaging over an entire season — and give fans a reason to keep coming back?**
+
+That led me toward persistent leagues, real player data, weekly matchups, playoffs, and season history rather than treating fantasy as a disposable one-season game.
+
+## What I Built
+
+- League creation and management
+- Real-player fantasy rosters
+- Live draft experience
+- Weekly head-to-head matchups
+- Configurable scoring
+- Lineup management
+- Standings
+- Playoff brackets and playoff matchups
+- Persistent league and season history
+- Data ingestion designed to support a future real-world PWHL stats source
+
+## Product Decisions
+
+### Treat the draft as the highest-risk experience
+
+The live draft room is one of the most important — and most failure-prone — moments in a fantasy product.
+
+I treated it as a high-risk feature early rather than leaving it until the end, so I could learn about timing, state management, roster constraints, and user flow before the rest of the product became dependent on it.
+
+### Separate fantasy logic from the stats source
+
+There’s no official PWHL fantasy API, which creates a dependency I don’t control.
+
+Instead of coupling the product to one data source, I created a `StatsSource` interface between the fantasy product and the underlying PWHL data.
+
+That lets the product develop against mock data today while leaving room to swap in a licensed, scraped, or manual data source later.
+
+### Recompute scores instead of treating them as truth
+
+Fantasy points are calculated from raw stat lines rather than stored as the permanent source of truth.
+
+That means a league can change its scoring rules and historical matchups can be recalculated correctly.
+
+Cached scores can make the product faster, but the underlying player performance remains authoritative.
+
+### Add playoffs without breaking the regular season
+
+The playoff system sits on top of the existing league model rather than creating a separate product path.
+
+Regular-season standings continue to operate normally, while playoff matchups, rounds, bracket generation, and playoff state are layered onto the same underlying system.
+
+That keeps the model simpler while still allowing the fantasy experience to evolve.
+
+## My Role
+
+**Everything.**
+
+Product strategy, feature definition, UX decisions, data modeling, architecture, development, testing, and iteration.
+
+I use AI-assisted development heavily, which lets me move quickly from product question → working implementation → learning.
+
+This project is partly about fantasy hockey, but it’s also an experiment in how much closer a product manager can get to the build-and-learn loop when the distance between product thinking and implementation becomes very small.
 ## Quick start
 
 ```bash
